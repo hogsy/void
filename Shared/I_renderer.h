@@ -89,7 +89,7 @@ struct I_Renderer
 	virtual bool InitRenderer()=0;
 	virtual bool Shutdown()=0;
 
-	virtual void DrawFrame(vector_t *origin,vector_t *angles) =0;
+	virtual void DrawFrame(vector_t *origin,vector_t *angles, vector_t *blend) =0;
 
 	//Get other interfaces
 	virtual I_ConsoleRenderer * GetConsole()=0;

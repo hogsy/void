@@ -3,6 +3,7 @@
 
 world_t	*g_pWorld;
 extern I_Renderer   *g_pRender;
+int PointContents(vector_t &v);
 
 using namespace VoidClient;
 
@@ -254,18 +255,32 @@ void CClient::RunFrame()
 											    eye.origin.y, 
 												eye.origin.z);
 		}
-/*		for (unsigned int i = 0; i < g_pWorld->header.num_sectors; i++)
+
+		// FIXME - put this in game dll
+		vector_t screenblend;
+		if (PointContents(eye.origin) & CONTENTS_SOLID)
 		{
-			if (eye.origin.sector == &g_pWorld->sectors[i])
-				m_rHud->HudPrintf(0,60,0, "in sector %d", i);
+			VectorSet(&screenblend, 0.4f, 0.4f, 0.4f);
 		}
-*/
-		g_pRender->DrawFrame(&eye.origin,&eye.angles);
+		else if (PointContents(eye.origin) & CONTENTS_WATER)
+		{
+			VectorSet(&screenblend, 0, 1, 1);
+		}
+		else if (PointContents(eye.origin) & CONTENTS_LAVA)
+		{
+			VectorSet(&screenblend, 1, 0, 0);
+		}
+		else
+		{
+			VectorSet(&screenblend, 1, 1, 1);
+		}
+
+		g_pRender->DrawFrame(&eye.origin,&eye.angles, &screenblend);
 	}
 	else
 	{
 		//draw the console or menues etc
-		g_pRender->DrawFrame(0,0);
+		g_pRender->DrawFrame(0,0,0);
 	}
 
 
