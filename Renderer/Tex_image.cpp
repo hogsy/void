@@ -144,24 +144,26 @@ Read a texture from the given path
 */
 bool CImageReader::Read(const char * file, TextureData &imgData)
 {
-	char filename[MAX_PATH];
+	char tgafilename[MAX_PATH];
+	char pcxfilename[MAX_PATH];
+	char jpgfilename[MAX_PATH];
 	bool err = false;
 
 	//default to a tga
-	sprintf(filename,"%s.tga",file);
-	if(m_fileReader.Open(filename) == true)
+	sprintf(tgafilename,"%s.tga",file);
+	sprintf(pcxfilename,"%s.pcx",file);
+	sprintf(jpgfilename,"%s.jpg",file);
+
+	if(m_fileReader.Open(tgafilename) == true)
 		err = Read_TGA(imgData);
+	else if (m_fileReader.Open(pcxfilename) == true)
+		err = Read_PCX(imgData);
+	else if (m_fileReader.Open(jpgfilename) == true)
+		err = Read_JPG(imgData);
 	else
 	{
-		//Now try pcx
-		sprintf(filename,"%s.pcx",file);
-		if(m_fileReader.Open(filename) == true)
-			err = Read_PCX(imgData);
-		else
-		{
-			ComPrintf("CImageReader::Read: Couldnt open %s\n",filename);
-			return false;
-		}
+		ComPrintf("CImageReader::Read: Couldnt open %s\n",file);
+		return false;
 	}
 
 	//Create mipmaps if needed
@@ -358,62 +360,99 @@ Read a jpeg
 */
 bool CImageReader::Read_JPG(TextureData &imgData)
 {
-/*	JPEG_CORE_PROPERTIES jcprop;
+	JPEG_CORE_PROPERTIES image;
+	ZeroMemory( &image, sizeof( JPEG_CORE_PROPERTIES ) );
 
-	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
-
-	if(ijlInit( &jcprop ) != IJL_OK ) 
+	if(ijlInit(&image) != IJL_OK)
 	{
-		ComPrintf("CImageReader::Read_JPG: Unable to initialize the Intel JPEG library\n");
+        ComPrintf("CImageReader::Read_JPG() : Cannot initialize Intel JPEG library\n");
 		return false;
 	}
 
-	jcprop.JPGBytes = m_fileReader.GetData();
-	jcprop.JPGSizeBytes = m_fileReader.GetSize();
+	// read entire file into a buffer
+	image.JPGSizeBytes = m_fileReader.GetSize();
+	byte *jbuff = new byte[image.JPGSizeBytes];
+	if (!jbuff)
+		return false;
 
-	if(ijlRead( &jcprop, IJL_JBUFF_READPARAMS ) != IJL_OK )
+	m_fileReader.Read(jbuff, image.JPGSizeBytes, 1);
+	image.JPGBytes = jbuff;
+
+	IJLERR jerr = ijlRead(&image, IJL_JBUFF_READPARAMS);
+	if (jerr != IJL_OK)
 	{
-		ComPrintf("CImageReader::Read_JPG: Unable to read jpeg header\n");
+		ComPrintf("CImageReader::Read_JPG() : Cannot read JPEG file header\n");
+		delete [] jbuff;
 		return false;
 	}
 
-	if(jcprop.JPGChannels != IMG_RGB)
-	{
-		ComPrintf("CImageReader::Read_JPB: Image is not RGB\n");
-		ijlFree( &jcprop );
-		return false;
-	}
 
-	m_width=jcprop.JPGWidth;
-	m_height=jcprop.JPGHeight;
-
+	// Set up local data.
+	m_width = image.JPGWidth;
+	m_height= image.JPGHeight;
+	m_format= IMG_RGB;
 	ConfirmMipData();
-	memset(m_mipmapdata[m_miplevels-1], 0, m_width * m_height * jcprop.JPGChannels);
+	memset(m_mipmapdata[m_miplevels-1], 0xFF, m_width * m_height * (int)m_format);
 
-	jcprop.DIBWidth    = jcprop.JPGWidth;
-	jcprop.DIBHeight   = jcprop.JPGHeight;
-	jcprop.DIBChannels = jcprop.JPGChannels;
-	jcprop.DIBBytes    = m_mipmapdata[m_miplevels-1]; 
-	jcprop.DIBColor	   = IJL_RGB;
-	
-	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
+	// Set up the info on the desired DIB properties.
+	image.DIBWidth = m_width;
+	image.DIBHeight = m_height; // Implies a bottom-up DIB.
+	image.DIBChannels = 3;
+	image.DIBColor = IJL_BGR;
+	image.DIBPadBytes = 0;
+	image.DIBBytes = m_mipmapdata[m_miplevels-1];
+
+
+	// Set the JPG color space ... this will always be
+	// somewhat of an educated guess at best because JPEG
+	// is "color blind" (i.e., nothing in the bit stream
+	// tells you what color space the data was encoded from).
+	// However, in this example we assume that we are
+	// reading JFIF files which means that 3 channel images
+	// are in the YCbCr color space and 1 channel images are
+	// in the Y color space.
+	switch(image.JPGChannels)
 	{
-		ComPrintf("CImageReader::Read_JPG: Can't read jpeg file\n");
-		h = m_height = 0;
-		w = m_width = 0;
+		case 1:
+		{
+			image.JPGColor = IJL_G;
+			break;
+		}
+		case 3:
+		{
+			image.JPGColor = IJL_YCBCR;
+			break;
+		}
+		default:
+		{
+			// This catches everything else, but no
+			// color twist will be performed by the IJL.
+			image.DIBColor = (IJL_COLOR)IJL_OTHER;
+			image.JPGColor = (IJL_COLOR)IJL_OTHER;
+			break;
+		}
+	}
+
+
+	// Now get the actual JPEG image data into the pixel buffer.
+
+	if (ijlRead(&image, IJL_JBUFF_READWHOLEIMAGE) != IJL_OK)
+	{
+		ComPrintf("CImageReader::Read_JPG() : Error reading JPEG\n");
+		delete [] jbuff;
 		return false;
 	}
 
-	if( ijlFree( &jcprop ) != IJL_OK ) 
-	{
-		ComPrintf("CImageReader::Read_JPG: Can't free intel jpeg library!\n");
-		return false;
-	}
+	// Clean up the IntelR JPEG Library.
+	ijlFree(&image);
+	delete [] jbuff;
 
-	m_format=IMG_RGB;
+	imgData.height = m_height;
+	imgData.width = m_width;
+	imgData.data = &m_mipmapdata[0];
+	imgData.format = m_format;
+	imgData.numMipMaps = m_miplevels;
 	return true;
-*/
-	return false;
 }
 
 
