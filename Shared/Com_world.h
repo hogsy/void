@@ -36,6 +36,7 @@ public:
 	const char* GetKeyString(int ent, const char * keyName) const;
 
 	void DestroyLightData(void);
+	void DestroyVisData(void);
 	void SetLightData(unsigned char *data, int len, bspf_texdef_t *defs, int numdefs);
 
 	//the world should be loaded and destroyed using these

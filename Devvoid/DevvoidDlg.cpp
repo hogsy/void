@@ -23,6 +23,12 @@ struct LightParms
 	int	samples;
 };
 
+struct VisParms
+{
+	char szFileName[_MAX_PATH];
+	char szPath[_MAX_PATH];
+};
+
 UINT BeginBSPCompile( LPVOID pParam );
 UINT BeginVisCompile( LPVOID pParam );
 UINT BeginLightMapCompile( LPVOID pParam );
@@ -533,13 +539,13 @@ void CDevvoidDlg::OnVis()
 		return;
 	}
 
-	char * fileName = new char [_MAX_PATH];
-	sprintf(fileName,"%s/%s", DEFAULT_WORLDS_DIR, szListItem);
+	VisParms *pVisParms = new VisParms;
+	sprintf(pVisParms->szPath,"%s/%s", GetVoidPath(), DEFAULT_GAME_DIR);
+	sprintf(pVisParms->szFileName,"%s/%s",DEFAULT_WORLDS_DIR,szListItem);
 
-	m_curFile = szListItem;
 	BeginCompileThread();
 
-	if(!AfxBeginThread(BeginVisCompile,(void*)fileName))
+	if(!AfxBeginThread(BeginVisCompile,(void*)pVisParms))
 	{
 		AfxMessageBox("CDevvoidDlg::OnCompile::Unable to spawn BSP thread");
 		return;
@@ -782,12 +788,13 @@ UINT BeginLightMapCompile( LPVOID pParam )
 Vis
 ================================================
 */
-void CompileVis(const char * szFileName);
+void CompileVis(const char * szPath, const char * szFileName);
 UINT BeginVisCompile( LPVOID pParam )
 {
-	char * visFile = (char*)pParam;
-	CompileVis(visFile);
-	delete [] visFile;
+	VisParms *pVis = (VisParms *)pParam;
+
+	CompileVis(pVis->szPath, pVis->szFileName);
+	delete [] pVis;
 
 	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndVis();
 	return 0;

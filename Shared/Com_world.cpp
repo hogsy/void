@@ -144,7 +144,7 @@ bool CWorld::WriteToFile(const char * szPath) const
 	AddLump(fout, header, LUMP_ENTITIES,	entities,		nentities	*sizeof(bspf_entity_t));
 	AddLump(fout, header, LUMP_KEYS,		keys,			nkeys		*sizeof(key_t));
 	AddLump(fout, header, LUMP_LIGHTDEF,	lightdefs,		nlightdefs	*sizeof(bspf_texdef_t));
-	AddLump(fout, header, LUMP_LEAF_VIS,	leafvis,		leafvis_size);
+	AddLump(fout, header, LUMP_LEAF_VIS,	leafvis,		leafvis_size*nleafs);
 	AddLump(fout, header, LUMP_LIGHTMAP,	lightdata,		light_size);
 
 	// rewrite the header with offset info
@@ -501,6 +501,15 @@ void CWorld::DestroyWorld(CWorld * pWorld)
 	}
 }
 
+void CWorld::DestroyVisData(void)
+{
+	if (leafvis)
+	{
+		operator delete(leafvis);
+		leafvis = NULL;
+		leafvis_size = 0;
+	}
+}
 
 void CWorld::DestroyLightData(void)
 {
