@@ -9,6 +9,21 @@
 
 #if 0
 
+
+enum
+{
+	MULTICAST_NONE,
+	MULTICAST_ALL,
+	MULTICAST_PVS,
+	MULTICAST_PHS,
+	
+	//all except the given chanID
+	MULTICAST_ALL_X,	
+	MULTICAST_PVS_X,
+	MULTICAST_PHS_X
+};
+
+
 const int ENT_MAXCLASSNAME = 32
 
 

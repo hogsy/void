@@ -54,7 +54,7 @@ private:
 	ushort	port;
 	bool	valid;
 
-	static char  m_szLocalAddress[MAX_IPADDR_LEN];
+	static char  m_szLocalAddress[NET_IPADDRLEN];
 };
 
 }

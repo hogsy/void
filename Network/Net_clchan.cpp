@@ -1,11 +1,8 @@
 #include "Net_server.h"
 #include "Net_clchan.h"
 
-
 using namespace VoidNet;
 
-//======================================================================================
-//======================================================================================
 /*
 ======================================
 Constructor/Destructor
@@ -105,7 +102,7 @@ bool CNetClChan::ReadyToSend()
 		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf].GetSize() <
 		   m_netChan.m_buffer.GetMaxSize())
 		{
-ComPrintf("SV Writing to backbuffer\n");
+ComPrintf("SV Writing to backbuffer for %s\n", m_netChan.GetAddrString());
 			//Write to sock buffer
 			m_netChan.m_buffer.WriteBuffer(m_backBuffer[m_numBuf]);
 			//reset buffer. 
@@ -133,15 +130,33 @@ ComPrintf("SV Writing to backbuffer\n");
 }
 
 //======================================================================================
+//Network Server Channel funcs
 //======================================================================================
 
 bool CNetServer::ChanCanSend(int chanId)
 {	return (m_clChan[chanId].m_bSend && m_clChan[chanId].m_netChan.CanSend());
 }
 
+void CNetServer::ChanBeginWrite(const MultiCastSet &set, byte msgid, int estSize)
+{
+	ChanFinishWrite();
+
+	for(int i=0; i< SV_MAX_CLIENTS; i++)
+	{
+		if(set.dest[i])
+		{
+			m_multicastInfo.dest[i] = set.dest[i];
+			m_clChan[i].MakeSpace(estSize);
+			ChanWriteByte(msgid);
+		}
+	}
+}
+
 
 void CNetServer::ChanBeginWrite(int chanId, byte msgid, int estSize)
 {
+	ChanFinishWrite();
+
 	m_curChanId = chanId;
 	m_clChan[chanId].MakeSpace(estSize);
 	ChanWriteByte(msgid);
@@ -248,9 +263,12 @@ void CNetServer::ChanWriteData(byte * data, int len)
 }
 
 void CNetServer::ChanFinishWrite()
-{	m_curChanId = 0;
+{	
+	m_curChanId = -1;
+	m_multicastInfo.Reset();
 }
 	
+
 
 const NetChanState & CNetServer::ChanGetState(int chanId) const
 {	return m_clChan[chanId].m_netChan.m_state;

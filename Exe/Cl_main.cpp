@@ -121,7 +121,7 @@ bool CClient::LoadWorld(const char *worldname)
 {
 	char mappath[COM_MAXPATH];
 	
-	strcpy(mappath,szWORLDDIR);
+	strcpy(mappath,GAME_WORLDSDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
@@ -141,7 +141,6 @@ bool CClient::LoadWorld(const char *worldname)
 
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
-
 	
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
@@ -410,8 +409,8 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_CONNECT:
 		{
-			char addr[MAX_IPADDR_LEN];
-			parms.StringTok(1,addr,MAX_IPADDR_LEN);
+			char addr[NET_IPADDRLEN];
+			parms.StringTok(1,addr,NET_IPADDRLEN);
 			m_pNetCl->ConnectTo(addr);
 			break;
 		}

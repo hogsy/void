@@ -11,10 +11,38 @@ struct world_t;
 
 /*
 ======================================
+interface exported by the main server
+class to game dlls
+======================================
+*/
+struct I_GameHandler
+{
+	virtual void BroadcastPrint(const char * msg)=0;
+	virtual void ClientPrint(int clNum, const char * msg)=0;
+
+	virtual NetChanWriter & GetNetChanWriter() =0;
+
+	virtual void DebugPrint(const char * msg)=0;
+	virtual void FatalError(const char * msg)=0;
+
+	virtual void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten) =0;
+	virtual void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten) =0;
+
+	virtual void ExecCommand(const char * cmd)=0;
+
+	virtual int  RegisterModel(const char * model)=0;
+	virtual int  RegisterSound(const char * image)=0;
+	virtual int  RegisterImage(const char * sound)=0;
+};
+
+
+/*
+======================================
 The Main Server class
 ======================================
 */
 class CServer : public I_Server,
+				public I_GameHandler,
 				public I_ConHandler
 {
 public:
@@ -35,13 +63,26 @@ public:
 	void OnClientDrop(int clNum, EDisconnectReason reason);
 	void WriteGameStatus(CBuffer &buffer);
 
-	//Console Handler Interface
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	//Game Interface
+	void ExecCommand(const char * cmd);
+	void DebugPrint(const char * msg);
+	void FatalError(const char * msg);
+
+	void BroadcastPrint(const char * msg);
+	void ClientPrint(int clNum, const char * msg);
+
+	NetChanWriter & GetNetChanWriter();
+
+	void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten);
+	void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten);
 
 	int  RegisterModel(const char * model);
 	int  RegisterSound(const char * image);
 	int  RegisterImage(const char * sound);
+
+	//Console Handler Interface
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 private:
 

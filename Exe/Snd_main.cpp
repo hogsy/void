@@ -268,9 +268,10 @@ of range now, and silence them
 */
 void CSoundManager::RunFrame()
 {
-	if(m_cSndFps.fval + m_fLastFrame > System::g_fcurTime)
+	if(m_fLastFrame > System::g_fcurTime)
 		return;
-	m_fLastFrame = System::g_fcurTime;
+	m_fLastFrame = System::g_fcurTime + 1/m_cSndFps.fval;
+
 
 	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 
@@ -937,7 +938,7 @@ namespace VoidSound
 
 	//Volume = 10, atten = 10 . range = 10000
 	float GetMuteDist(float volume, int attenuation)
-	{	return ((volume * 20) * (attenuation));
+	{	return ((volume * 25) * (attenuation));
 	}
 }
 

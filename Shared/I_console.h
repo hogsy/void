@@ -99,7 +99,7 @@ struct I_Console
 							  I_ConHandler * handler)=0;	//the class registering the command
 
 	//Print Functions
-	virtual void ComPrint(char* text)=0;
+	virtual void ComPrint(const char* text)=0;
 
 	//pass a string to be exec'ed
 	virtual bool ExecString(const char *string)=0;

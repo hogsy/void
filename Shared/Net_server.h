@@ -142,6 +142,7 @@ public:
 	//NetChanWriter Implementation
 	bool ChanCanSend(int chanId);
 	void ChanBeginWrite(int chanId, byte msgid, int estSize);
+	void ChanBeginWrite(const MultiCastSet &set, byte msgid, int estSize);
 	void ChanWriteByte(byte b);
 	void ChanWriteChar(char c);
 	void ChanWriteShort(short s);
@@ -191,27 +192,26 @@ private:
 	void SendSpawnParms(int chanId);
 
 	//===================================================
-
-	struct NetChallenge;
-	NetChallenge  * m_challenges;
-
-	I_Server      * m_pServer;		//Main Server
-
-	NetSignOnBufs	m_signOnBufs;
-
-	VoidNet::CNetSocket * m_pSock;	//The Socket
-	VoidNet::CNetClChan * m_clChan;	//Client channels
-
-	const ServerState * m_pSvState;	//Server Status
-
-	char	m_szLocalAddr[MAX_IPADDR_LEN];
-	
 	CBuffer	m_recvBuf;
 	CBuffer	m_sendBuf;
 
+	struct NetChallenge;
+	NetChallenge		* m_challenges;
+
+	I_Server			* m_pServer;	//Main Server
+	const ServerState	* m_pSvState;	//Server Status
+
+	VoidNet::CNetSocket * m_pSock;		//The Socket
+	VoidNet::CNetClChan * m_clChan;		//Client channels
+
+	char	m_szLocalAddr[NET_IPADDRLEN];
 	char	m_printBuffer[512];
+
+	NetSignOnBufs	m_signOnBufs;
 	
-	int		m_curChanId;
+	//CNetChan destination data
+	int				m_curChanId;
+	MultiCastSet	m_multicastInfo;
 };
 
 #endif

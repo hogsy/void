@@ -19,20 +19,21 @@ enum
 Other misc shared definitions
 ======================================
 */
-const char szWORLDDIR[]     = "Worlds/";
+const int  NET_TIMEOUT_INTERVAL= 10;	//10 seconds
+const int  NET_PACKET_HEADER   = 8;
+const int  NET_IPADDRLEN	   = 24;
+const int  NET_MAXDATAGRAMSIZE = 1450;
+const int  NET_MAXBUFFERSIZE   = 2900;
 
+const int  SV_MAX_CLIENTS  = 16;
 const int  SV_DEFAULT_PORT = 20010;
+
 const int  CL_DEFAULT_PORT = 20011;
 
-const int  SV_MAX_CLIENTS = 16;
-
-const int  NET_TIMEOUT_INTERVAL= 10;	//10 seconds of silence
-const int  NET_PACKET_HEADER   = 8;
-
-const int  MAX_IPADDR_LEN	  = 24;
-const int  MAX_DATAGRAM_SIZE  =	1450;
-const int  MAX_BUFFER_SIZE	  = 2900;
-
+//This needs to be defined for the library to link
+namespace System {
+	float GetCurTime();
+}
 
 /*
 ======================================
@@ -85,7 +86,8 @@ struct ServerState
 	char	worldname[32];	//Map name
 	int		levelId;		//Current map id
 	
-	char	localAddr[MAX_IPADDR_LEN];	//Force server address
+	//Force server address
+	char	localAddr[NET_IPADDRLEN];	
 	short	port;			//Force server portnum
 	
 	char	hostName[32];	//Server name
@@ -94,27 +96,55 @@ struct ServerState
 
 /*
 ======================================
-Write to Client Network Channels
+Simple Multicast struct
+Can use this to have the Network server
+write a to bunch of clients
 ======================================
 */
-enum
+struct MultiCastSet
 {
-	MULTICAST_NONE,
-	MULTICAST_ALL,
-	MULTICAST_PVS,
-	MULTICAST_PHS,
+	MultiCastSet() 
+	{	Reset();
+	}
 	
-	//all except the given chanID
-	MULTICAST_ALL_X,	
-	MULTICAST_PVS_X,
-	MULTICAST_PHS_X
+	//every one but the given client
+	explicit MultiCastSet(int clNum) 
+	{	memset(&dest,true, sizeof(bool) * SV_MAX_CLIENTS);
+		dest[clNum] = false;
+	}
+
+	MultiCastSet(const MultiCastSet &set)
+	{	for(int i=0; i<SV_MAX_CLIENTS; i++)
+			dest[i] = set.dest[i];
+	}
+
+	MultiCastSet & operator = (const MultiCastSet &set)
+	{	for(int i=0; i<SV_MAX_CLIENTS; i++)
+			dest[i] = set.dest[i];
+		return *this;
+	}
+
+	void Reset() 
+	{ memset(&dest,false, sizeof(bool) * SV_MAX_CLIENTS); 
+	}
+	
+	bool dest[SV_MAX_CLIENTS];
 };
 
+/*
+======================================
+Network channel writer
+chanID correponds to clientNum
+======================================
+*/
 struct NetChanWriter
 {
 	virtual bool ChanCanSend(int chanId)=0;
-
+	
 	virtual void ChanBeginWrite(int chanId, byte msgid, int estSize)=0;
+	virtual void ChanBeginWrite(const MultiCastSet &set, 
+								byte msgid, int estSize)=0;
+
 	virtual void ChanWriteByte(byte b)=0;
 	virtual void ChanWriteChar(char c)=0;
 	virtual void ChanWriteShort(short s)=0;
@@ -136,9 +166,7 @@ game/frame time variables
 ======================================
 */
 namespace System
-{
-	extern float	g_fframeTime;		//Frametime
-	extern float	g_fcurTime;			//Current Timer
+{	extern float	g_fcurTime;			//Current Timer
 }
 
 #endif

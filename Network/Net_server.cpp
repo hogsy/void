@@ -79,9 +79,9 @@ bool CNetServer::Init()
 	ulong	addrFlags=0;
 	char  * pAddrString=0;
 	bool	bFoundAddr = false;
-	char	szBestAddr[MAX_IPADDR_LEN];
+	char	szBestAddr[NET_IPADDRLEN];
 	
-	memset(szBestAddr,0,MAX_IPADDR_LEN);
+	memset(szBestAddr,0,NET_IPADDRLEN);
 	
 	for (int i=0; i<numAddrs; i++) 
 	{

@@ -433,7 +433,7 @@ void CServer::LoadWorld(const char * mapname)
 	char worldname[64];
 
 	strcpy(worldname, mapname);
-	strcpy(mappath, szWORLDDIR);
+	strcpy(mappath, GAME_WORLDSDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
@@ -676,6 +676,45 @@ int CServer::RegisterImage(const char * image)
 	strcpy(m_imageList[i].name,image);
 	return i;
 }
+
+
+
+//======================================================================================
+//======================================================================================
+
+void CServer::ExecCommand(const char * cmd)
+{	System::GetConsole()->ExecString(cmd);
+}
+
+void CServer::DebugPrint(const char * msg)
+{	System::GetConsole()->ComPrint(msg);
+}
+
+//kill server here ?
+void CServer::FatalError(const char * msg)
+{
+}
+
+void CServer::BroadcastPrint(const char * msg)
+{	m_net.BroadcastPrintf(msg);
+}
+void CServer::ClientPrint(int clNum, const char * msg)
+{	m_net.ClientPrintf(clNum,msg);
+}
+
+NetChanWriter & CServer::GetNetChanWriter()
+{	return (reinterpret_cast<NetChanWriter &>(m_net));
+}
+
+void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
+{
+}
+
+void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
+{
+}
+
+
 
 
 

@@ -13,6 +13,8 @@ typedef int hSnd;
 typedef int hMdl;
 typedef int hImg;
 
+const char GAME_WORLDSDIR[]  = "Worlds/";
+
 const int GAME_MAXMODELS	= 256;
 const int GAME_MAXSOUNDS	= 256;
 const int GAME_MAXIMAGES	= 256;

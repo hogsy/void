@@ -64,7 +64,7 @@ public:
 
 	void RegisterCVar(CVarBase * var,I_ConHandler * handler=0);
 	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
-	void ComPrint(char* text);
+	void ComPrint(const char* text);
 	bool ExecString(const char *string);
 
 	//looks through config file to see if any parms match the given token

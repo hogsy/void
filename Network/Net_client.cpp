@@ -11,15 +11,15 @@ Constructor
 */
 CNetClient::CNetClient(I_NetClientHandler * client): 
 						m_pClient(client),
-						m_buffer(MAX_BUFFER_SIZE),
-						m_reliableBuf(MAX_BUFFER_SIZE)
+						m_buffer(NET_MAXBUFFERSIZE),
+						m_reliableBuf(NET_MAXBUFFERSIZE)
 {
 	m_pSock = new CNetSocket(&m_buffer);
 	
 	m_pNetChan = new CNetChan();
 	m_pNetChan->Reset();
 
-	memset(m_szServerAddr,0,MAX_IPADDR_LEN);
+	memset(m_szServerAddr,0,NET_IPADDRLEN);
 
 	m_bLocalServer = false;
 	
@@ -438,7 +438,7 @@ void CNetClient::Disconnect(bool serverPrompted)
 
 	m_pNetChan->Reset();
 	
-	memset(m_szServerAddr,0, MAX_IPADDR_LEN);
+	memset(m_szServerAddr,0, NET_IPADDRLEN);
 	m_bLocalServer = false;
 	
 	m_levelId = 0;
@@ -461,7 +461,7 @@ Disconnect and reconnect
 */
 void CNetClient::Reconnect(bool serverPrompted)
 {
-	char svaddr[MAX_IPADDR_LEN];
+	char svaddr[NET_IPADDRLEN];
 	strcpy(svaddr,m_szServerAddr);
 	Disconnect(serverPrompted);
 	ConnectTo(svaddr);

@@ -522,6 +522,8 @@ namespace System
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
+	float GetCurTime() { return g_fcurTime; }
+
 	void SetGameState(eGameState state) 
 	{
 		if(state == g_pVoid->m_gameState)

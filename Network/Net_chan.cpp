@@ -11,9 +11,9 @@ using namespace VoidNet;
 Constructor/Destructor
 ======================================
 */
-CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
-					   m_reliableBuffer(MAX_DATAGRAM_SIZE),
-					   m_sendBuffer(MAX_DATAGRAM_SIZE),
+CNetChan::CNetChan() : m_buffer(NET_MAXDATAGRAMSIZE),
+					   m_reliableBuffer(NET_MAXDATAGRAMSIZE),
+					   m_sendBuffer(NET_MAXDATAGRAMSIZE),
 					   m_pRecvBuffer(0)
 {	Reset();
 }

@@ -85,7 +85,7 @@ void CConsole::SetConsoleRenderer(I_ConsoleRenderer * prcons)
 print a string to debugging window	
 ===============================================
 */
-void CConsole::ComPrint(char* text)
+void CConsole::ComPrint(const char* text)
 {
 	if (!text)
 		return;

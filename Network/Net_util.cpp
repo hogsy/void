@@ -7,7 +7,7 @@ using namespace VoidNet;
 //Network Address class
 //======================================================================================
 
-char CNetAddr::m_szLocalAddress[MAX_IPADDR_LEN];
+char CNetAddr::m_szLocalAddress[NET_IPADDRLEN];
 void CNetAddr::SetLocalServerAddr(const char * localaddy)
 {	strcpy(m_szLocalAddress, localaddy);
 }
