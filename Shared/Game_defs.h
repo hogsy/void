@@ -213,24 +213,24 @@ struct AnimState
 
 	AnimState(const AnimState &anim)
 		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
-		  currentFrame (0), frac (0)	{}
+		  currentFrame (anim.currentFrame), frac (0.0f)	{}
 	
 	AnimState & operator = (const AnimState &anim)
 	{
 		frameBegin = anim.frameBegin;
 		frameEnd = anim.frameEnd;
 		totalFrames = anim.totalFrames;
-		currentFrame = 0;
+		currentFrame = anim.currentFrame;
 		frac = 0;
 		return *this;
 	}
 
-	void Set(int begin, int end, int totFrames=0) 
+	void Set(int begin, int end) 
 	{
 		frameBegin = begin;
 		frameEnd = end;
-		totalFrames = totFrames;
-		currentFrame=0;
+		currentFrame= begin;
+		totalFrames = begin - end;
 		frac = 0;
 	}
 

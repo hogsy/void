@@ -42,7 +42,7 @@ struct ClEntity : public BaseEntity
 	bool inUse;
 
 	AnimState	animInfo;
-
+	
 	CacheType	sndCache;
 	CacheType	mdlCache;
 };
@@ -62,6 +62,8 @@ struct ClClient : public ClEntity
 	{
 		ClEntity::Reset();
 
+		clAnim = 0;
+
 		memset(name,0,CL_MAXNAME);
 		memset(model,0,CL_MAXMODELNAME);
 		gravity = friction = maxSpeed = 0.0f;
@@ -69,7 +71,9 @@ struct ClClient : public ClEntity
 	
 	char name[CL_MAXNAME];
 	//fix me, changed to pointer to list of loaded char resources
-	char model[CL_MAXMODELNAME];		
+	char model[CL_MAXMODELNAME];
+	
+	int   clAnim;
 
 	//for local prediction
 	float gravity;

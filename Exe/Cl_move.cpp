@@ -88,8 +88,8 @@ void CGameClient::UpdateViewAngles()
 		m_pGameClient->angles.YAW -= 2*PI;
 
 	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
-	if (m_pGameClient->angles.PITCH < -PI/2)
-		m_pGameClient->angles.PITCH = -PI/2;
+	if (m_pGameClient->angles.PITCH <= -PI/2)
+		m_pGameClient->angles.PITCH = (-PI/2);
 	if (m_pGameClient->angles.PITCH > PI/2)
 		m_pGameClient->angles.PITCH = PI/2;
 
@@ -137,6 +137,12 @@ Perform the actual move
 */
 void CGameClient::UpdatePosition()
 {
+	if(!m_cvClip.bval)
+	{
+		EntMove::NoClipMove(m_pGameClient, m_pGameClient->velocity, m_fFrameTime);
+		return;
+	}
+
 	EntMove::ClientMove(m_pGameClient, m_fFrameTime);
 
 	TraceInfo traceInfo;

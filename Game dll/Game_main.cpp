@@ -142,8 +142,10 @@ void CGame::RunFrame(float curTime)
 			pClient = clients[i];
 			pClient->angles = pClient->clCmd.angles;
 			
+			//Doing nothing
 			if(pClient->clCmd.moveFlags == 0)
 				clAnim = PLAYER_STAND;
+			//Only crouching
 			else if(pClient->clCmd.moveFlags == ClCmd::CROUCH)
 				clAnim = PLAYER_CROUCH_STAND;
 			else if(pClient->clCmd.moveFlags & ClCmd::JUMP)
@@ -155,11 +157,22 @@ void CGame::RunFrame(float curTime)
 					clAnim = PLAYER_CROUCH_WALK;
 			}
 
-			if(clAnim != pClient->animSeq)
+/*			if(clAnim != pClient->animSeq)
 			{
-				pClient->animSeq = clAnim;
-				pClient->animSeq |= 255; 
+				if(clAnim == PLAYER_STAND)
+					ComPrintf("Client Stand\n");
+				else if(clAnim == PLAYER_RUN)
+					ComPrintf("Client Run\n");
+				else if(clAnim == PLAYER_JUMP)
+					ComPrintf("Client Jump\n");
+				else if(clAnim == PLAYER_CROUCH_STAND)
+					ComPrintf("Client Crouch\n");
+				else if(clAnim == PLAYER_CROUCH_WALK)
+					ComPrintf("Client Crouch Walk\n");
 			}
+*/
+			pClient->animSeq = clAnim;
+			pClient->clCmd.Reset();
 		}
 			
 

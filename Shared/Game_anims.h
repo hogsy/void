@@ -91,51 +91,73 @@ enum
 	DEATH3_END = 197,
 };
 
-
 void SetAnim(AnimState &animState, EPlayerAnim anim)
 {
 	switch(anim)
 	{
 	case PLAYER_STAND:
 		animState.Set(STAND_BEGIN,STAND_END);
+		break;
 	case PLAYER_RUN:
 		animState.Set(RUN_BEGIN,RUN_END);
+		break;
 	case PLAYER_ATTACK:
 		animState.Set(ATTACK_BEGIN,ATTACK_END);
+		break;
 	case PLAYER_PAIN1:
 		animState.Set(PAIN1_BEGIN,PAIN1_END);
+		break;
 	case PLAYER_PAIN2:
 		animState.Set(PAIN2_BEGIN,PAIN2_END);
+		break;
 	case PLAYER_PAIN3:
 		animState.Set(PAIN3_BEGIN,PAIN3_END);
+		break;
 	case PLAYER_JUMP:
 		animState.Set(JUMP_BEGIN,JUMP_END);
+		break;
 	case PLAYER_FLIP:
 		animState.Set(FLIP_BEGIN,FLIP_END);
+		break;
 	case PLAYER_SALUTE:
 		animState.Set(SALUTE_BEGIN,SALUTE_END);
+		break;
 	case PLAYER_TAUNT:
 		animState.Set(TAUNT_BEGIN,TAUNT_END);
+		break;
 	case PLAYER_WAVE:
 		animState.Set(WAVE_BEGIN,WAVE_END);
+		break;
 	case PLAYER_POINT:
 		animState.Set(POINT_BEGIN,POINT_END);
+		break;
 	case PLAYER_CROUCH_STAND:
 		animState.Set(CROUCH_STAND_BEGIN,CROUCH_STAND_END);
+		break;
 	case PLAYER_CROUCH_WALK:
 		animState.Set(CROUCH_WALK_BEGIN,CROUCH_WALK_END);
+		break;
 	case PLAYER_CROUCH_ATTACK:
 		animState.Set(CROUCH_ATTACK_BEGIN,CROUCH_ATTACK_END);
+		break;
 	case PLAYER_CROUCH_PAIN:
 		animState.Set(CROUCH_PAIN_BEGIN,CROUCH_PAIN_END);
+		break;
 	case PLAYER_CROUCH_DEATH:
 		animState.Set(CROUCH_DEATH_BEGIN,CROUCH_DEATH_END);
+		break;
 	case PLAYER_DEATH1:
 		animState.Set(DEATH1_BEGIN,DEATH1_END);
+		break;
 	case PLAYER_DEATH2:
 		animState.Set(DEATH2_BEGIN,DEATH2_END);
+		break;
 	case PLAYER_DEATH3:
 		animState.Set(DEATH3_BEGIN,DEATH3_END);
+		break;
+	default:
+		animState.Set(0,0);
+		break;
 	}
 }
 
