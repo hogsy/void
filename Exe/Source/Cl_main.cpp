@@ -240,7 +240,7 @@ bool CClient::LoadWorld(world_t *world)
 	
 	ComPrintf("CClient::Load World: OK\n");
 
-	System::g_gameState = INGAME;
+	System::SetGameState(INGAME);
 	return true;
 }
 
@@ -535,7 +535,7 @@ bool CClient::Disconnect()
 	if(m_ingame)
 		UnloadWorld();
 	CloseNet();
-	System::g_gameState = INCONSOLE;
+	System::SetGameState(INCONSOLE);
 //	g_pWorld = 0;
 	return true;
 }

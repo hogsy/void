@@ -3,6 +3,7 @@
 
 extern CFileSystem * g_pFileSystem;
 
+
 /*
 ==========================================
 Constructor and Destructor
@@ -18,10 +19,7 @@ CFileBuffer::CFileBuffer(int bufsize)
 	m_buffersize = bufsize;
 	if(m_buffersize)
 	{	
-		//m_buffer = (byte*)MALLOC(m_buffersize);
-		m_buffer = (byte*)::HeapAlloc(::GetProcessHeap(),
-									  HEAP_GENERATE_EXCEPTIONS,
-									  m_buffersize);
+		m_buffer = (byte*)g_pMemManager->HeapAlloc(m_buffersize);
 	}
 }
 
@@ -31,8 +29,7 @@ CFileBuffer::~CFileBuffer()
 		delete [] m_filename;
 	if(m_buffer)
 	{
-		::HeapFree(::GetProcessHeap(),0, m_buffer);
-		//free(m_buffer);
+		g_pMemManager->HeapFree(m_buffer);
 	}
 
 }
@@ -83,8 +80,7 @@ void CFileBuffer::Close()
 	//Don't release the buffer is using it statically
 	if(m_buffer)
 	{
-		::HeapFree(::GetProcessHeap(),0, m_buffer);
-//		free(m_buffer);
+		g_pMemManager->HeapFree(m_buffer);
 		m_buffer = 0;
 	}
 

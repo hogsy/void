@@ -5,23 +5,15 @@
 #include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
+#include "Com_mem.h"
 
 //========================================================================================
-HWND		g_hWnd;
-HINSTANCE	g_hInst;
-char		g_exedir[COM_MAXPATH];
+//The memory manager object
+I_MemManager * g_pMemManager=0;
+CMemManager    m_MemManager;
 
-namespace System
-{
-eGameState	g_gameState;
-}
-
-//========================================================================================
-CVoid		* g_pVoid =0;		//The game
-world_t		* g_pWorld=0;		//The World
-
-//Subsystems
 //======================================================================================
+//Subsystems
 
 I_Renderer  * g_pRender  =0;	//Renderer
 CConsole	* g_pConsole =0;	//Console
@@ -38,19 +30,7 @@ CMusic		* g_pMusic=0;		//Music Subsystem
 CServer		* g_pServer=0;		//Network Server
 #endif
 
-//======================================================================================
-//Global access functions for private data
-//======================================================================================
-
-namespace System
-{
-
-HINSTANCE	GetHInstance(){ return g_hInst; }
-HWND		GetHwnd()	  { return g_hWnd;  }
-const char* GetExeDir()	  { return g_exedir;}
-
-}
-
+world_t		* g_pWorld=0;		//The World
 
 //======================================================================================
 //Console loopback func
@@ -63,39 +43,52 @@ static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + s
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
 
+//======================================================================================
+//Global access functions for private data
+//======================================================================================
+
+namespace System
+{
+	const char* GetExePath()    { return g_pVoid->GetExePath();		}
+	const char* GetCurrentPath(){ return g_pVoid->GetCurrentPath(); }
+	eGameState  GetGameState()  { return g_pVoid->GetGameState();   }
+	void SetGameState(eGameState state) { g_pVoid->SetGameState(state); }
+}
 
 /*
 ==========================================
 Constructor
 ==========================================
 */
-CVoid::CVoid(HINSTANCE hInstance, 
-			 HINSTANCE hPrevInstance, 
-		     LPSTR lpCmdLine)
+CVoid::CVoid(const char * cmdLine)
 {
-	g_hInst = hInstance;
+	//Hack. 
+	//Some constructors need to access the System:: funcs, and those depends on the 
+	//g_pVoid pointer.but that doesnt get set until this constructor returns
+	g_pVoid = this;
 
-	_getcwd(g_exedir,COM_MAXPATH);		//Current Working directory
+	_getcwd(m_exePath,COM_MAXPATH);		//Current Working directory
 
 	//Create timer
-	g_pTime = new CTime();						
+	m_pTime = new CTime();						
 
 	//Create the game console
 	g_pConsole = new CConsole();
+
+	//Export structure
+	m_pExport = new VoidExport();
+	m_pExport->console    = (I_Console*)g_pConsole;
+	m_pExport->memManager = (I_MemManager*)&m_MemManager;
 	
 	//Create the file system
-	g_pFileSystem = FILESYSTEM_Create(g_pConsole);
+	m_pFileSystem = FILESYSTEM_Create(m_pExport);
 	
 	//Create the input system
 	g_pInput= new CInput();					
 	
-	//Export structure
-	g_pExport= new VoidExport_t(&System::g_fcurTime, &System::g_fframeTime);
-	g_pExport->vconsole = (I_Console*)g_pConsole;
-	
 	//Create the Renderer
-	g_pRender= RENDERER_Create(g_pExport); 
-	g_pRinfo = RENDERER_GetParms();
+	g_pRender = RENDERER_Create(m_pExport); 
+	m_pRParms = RENDERER_GetParms();
 	
 	//Create the client
 	g_pClient = new CClient();		
@@ -116,13 +109,12 @@ CVoid::CVoid(HINSTANCE hInstance,
 #endif
 
 	//Set game state - full screen console - not connected
-	System::g_gameState = INCONSOLE;
+	m_gameState = INCONSOLE;
 
 	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("map",CMD_MAP,this );
 	System::GetConsole()->RegisterCommand("connect",CMD_MAP,this);
-
 //	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
 
@@ -131,7 +123,6 @@ CVoid::CVoid(HINSTANCE hInstance,
 Destructor
 ==========================================
 */
-
 CVoid::~CVoid() 
 {
 #ifndef __VOIDALPHA	
@@ -165,18 +156,18 @@ CVoid::~CVoid()
 		g_pInput = 0;
 	}
 
-	if(g_pTime)
-	{	delete g_pTime;
-		g_pTime = 0;
+	if(m_pTime)
+	{	delete m_pTime;
+		m_pTime = 0;
 	}
 
 	//Free the Renderer Interface
 	RENDERER_Free();
 
-	if(g_pExport)
+	if(m_pExport)
 	{
-		delete g_pExport;
-		g_pExport = 0;
+		delete m_pExport;
+		m_pExport = 0;
 	}
 
 	FILESYSTEM_Free();
@@ -195,7 +186,6 @@ Intializes all the subsystems
 */
 bool CVoid::Init()
 {
-
 	//================================
 	//We parse the command line and exec configs now
 	//once all the subsystems have registers their vars
@@ -209,23 +199,12 @@ bool CVoid::Init()
 
 	//================================
 	//Create the window
-	g_hWnd = CreateWindow(VOID_MAINWINDOWCLASS, 
-						  VOID_MAINWINDOWTITLE,
-						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
-						  CW_USEDEFAULT, 
-						  CW_USEDEFAULT, 
-						  640,
-						  480,
-						  HWND_DESKTOP, 
-						  NULL, 
-						  g_hInst,
-						  NULL);
-	if(!g_hWnd)
+	if(!CreateVoidWindow())
 	{
 		Error("CVoid::Init:Error Creating Window\n");
 		return false;
 	}
-	g_pRinfo->hWnd = g_hWnd;
+	m_pRParms->hWnd = System::GetHwnd();
 
 
 	//================================
@@ -239,7 +218,7 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize FileSystem
-	if(!g_pFileSystem->Init(g_exedir,VOID_DEFAULTGAMEDIR))
+	if(!m_pFileSystem->Init(m_exePath,VOID_DEFAULTGAMEDIR))
 	{
 		Error("CVoid::Init:Error Initializing File System\n");
 		return false;
@@ -263,13 +242,13 @@ bool CVoid::Init()
 
 	//================================
 	//Timer
-	g_pTime->Init();
+	m_pTime->Init();
 
 
 	//================================
 	//Update and Show window
-	ShowWindow(g_hWnd, SW_NORMAL); 
-	UpdateWindow(g_hWnd);
+	ShowWindow(System::GetHwnd(), SW_NORMAL); 
+	UpdateWindow(System::GetHwnd());
 
 	//================================
 	//Input
@@ -328,7 +307,7 @@ bool CVoid::Init()
 #endif
 
 	//Start timer
-	g_pTime->Reset();
+	m_pTime->Reset();
 
 	//Set focus to console
 	GetInputFocusManager()->SetKeyListener(g_pConsole,true);
@@ -343,8 +322,7 @@ bool CVoid::Init()
 Shutdown all the subsystems
 ==========================================
 */
-
-bool CVoid :: Shutdown()
+bool CVoid::Shutdown()
 {
 	//Subsystem shutdown proceedures
 	//=============================
@@ -388,7 +366,7 @@ bool CVoid :: Shutdown()
 
 	//console
 	char configname[128];
-	sprintf(configname,"%s\\void.cfg",g_exedir);
+	sprintf(configname,"%s\\void.cfg",m_exePath);
 	WriteConfig(configname);
 
 	if(g_pConsole)
@@ -399,8 +377,6 @@ bool CVoid :: Shutdown()
 	return true;
 }
 
-
-
 /*
 ==========================================
 The Game Loop
@@ -408,7 +384,7 @@ The Game Loop
 */
 void CVoid::RunFrame()
 {
-	g_pTime->Update();
+	m_pTime->Update();
 	
 	//Run Input frame
 	g_pInput->UpdateCursor();
@@ -476,7 +452,7 @@ bool CVoid::InitServer(char *map)
 	char mapname[128];
 	
 	strcpy(mapname, map);
-	Util_DefaultExtension(mapname,".bsp");
+	Util::DefaultExtension(mapname,".bsp");
 	
 //	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
 	
@@ -542,7 +518,6 @@ bool CVoid::InitServer(char *map)
 	return true;
 }
 
-
 /*
 ======================================
 Shutdown game
@@ -564,7 +539,7 @@ bool CVoid::ShutdownServer()
 		world_destroy(g_pWorld);
 	g_pWorld = 0;
 */
-	System::g_gameState = INCONSOLE;
+	m_gameState = INCONSOLE;
 	ComPrintf("CVoid::ShutdownGame: OK\n");
 	return true;
 }
@@ -643,14 +618,14 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 {
 	if(focus==false)
 	{
-		g_pRinfo->active = false;
+		m_pRParms->active = false;
 		return;
 	}
 
-	g_pRinfo->active = true;
+	m_pRParms->active = true;
 
 	//Change the size of the rendering window
-	if (g_pRender && !(g_pRinfo->rflags & RFLAG_FULLSCREEN))
+	if (g_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
 		g_pRender->Resize();
 
 	//Set Window extents for input if full screen
@@ -667,17 +642,17 @@ void CVoid::Activate(bool focus)
 {
 	if (focus == false)
 	{
-		g_pRinfo->active = false;
+		m_pRParms->active = false;
 //		if(g_pInput)
 //			g_pInput->UnAcquire();
 	}
 	else 
 	{
-		g_pRinfo->active = true;
+		m_pRParms->active = true;
 		if(g_pInput)
 			g_pInput->Acquire();
 
-		if (g_pRender && (g_pRinfo->rflags & RFLAG_FULLSCREEN))
+		if (g_pRender && (m_pRParms->rflags & RFLAG_FULLSCREEN))
 			g_pRender->Resize();
 	}
 }
@@ -689,8 +664,8 @@ Get Focus Event
 */
 void CVoid::OnFocus()
 {
-	if (g_pRinfo)
-		g_pRinfo->active = true;
+	if (m_pRParms)
+		m_pRParms->active = true;
 	
 	//Input Focus
 	if(g_pInput)
@@ -710,8 +685,8 @@ void CVoid::LostFocus()
 		g_pInput->UnAcquire();
 	
 	//stop rendering
-	if (g_pRinfo)
-		g_pRinfo->active = false;
+	if (m_pRParms)
+		m_pRParms->active = false;
 }
 
 
@@ -719,12 +694,29 @@ void CVoid::LostFocus()
 //Other Utility Functions
 //==============================================================================================
 
+const char * CVoid::GetCurrentPath() const
+{	return m_pFileSystem->GetCurrentPath();
+}
+
+const char * CVoid::GetExePath() const
+{	return m_exePath;
+}
+
+eGameState  CVoid::GetGameState()  const
+{	return m_gameState;
+}
+void CVoid::SetGameState(eGameState state)
+{	m_gameState = state;
+}
+
+
+
 /*
 ==========================================
 Parse Command line, update any CVar values
 ==========================================
 */
-void CVoid::ParseCmdLine(LPSTR lpCmdLine)
+void CVoid::ParseCmdLine(const char * lpCmdLine)
 {
 	ComPrintf("CVoid::Command Line :%s\n",lpCmdLine);
 //	ComPrintf("CVoid::Current Working Directory :%s\n", g_exedir);
@@ -749,7 +741,7 @@ void CVoid::Error(char *error, ...)
 	MessageBox(NULL, textBuffer, "Error", MB_OK);
 
 	//Win32
-	PostMessage(g_hWnd,				// handle of destination window 
+	PostMessage(System::GetHwnd(),	// handle of destination window 
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);
@@ -791,7 +783,7 @@ void CVoid::CFuncQuit(int argc, char** argv)
 	ComPrintf("CVoid::Quit\n");
 	
 	//Win32 func
-	PostMessage(g_hWnd,				// handle of destination window 
+	PostMessage(System::GetHwnd(),	// handle of destination window 
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);					// second message parameter 
@@ -881,18 +873,18 @@ void CFuncConnect(int argc, char ** argv)
 */
 void CToggleConsole(int argc, char** argv)
 {
-	if(System::g_gameState == INGAMECONSOLE)
+	if(g_pVoid->GetGameState() == INGAMECONSOLE)
 	{
-		System::g_gameState = INGAME;
+		g_pVoid->SetGameState(INGAME);
 		g_pConsole->Toggle(false);
 		g_pClient->SetInputState(true);
 	}
-	else if(System::g_gameState == INGAME)
+	else if(g_pVoid->GetGameState() == INGAME)
 	{
 		GetInputFocusManager()->SetCursorListener(0);
 		GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
-		System::g_gameState = INGAMECONSOLE;
+		g_pVoid->SetGameState(INGAMECONSOLE);
 		g_pConsole->Toggle(true);
 	}
 }

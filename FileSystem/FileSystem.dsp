@@ -155,6 +155,10 @@ SOURCE=..\Shared\I_file.h
 
 SOURCE=..\Shared\I_filesystem.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_mem.h
+# End Source File
 # End Group
 # End Target
 # End Project

@@ -8,7 +8,7 @@
 #endif
 
 #include "Com_defs.h"
-#include "I_console.h"
+#include "I_void.h"
 
 //====================================================================================
 //Pre-declarations
@@ -92,7 +92,7 @@ private:
 
 //====================================================================================
 
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Console * pconsole);
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp);
 FILESYSTEM_API void FILESYSTEM_Free();
 
 #endif

@@ -473,7 +473,7 @@ void CSound::SPlay(int argc,  char** argv)
 		
 		wavename = new char[(strlen(argv[1])+4)];			//was a filename entered ?
 		strcpy(wavename,argv[1]);
-		Util_GetExtension(wavename,ext);
+		Util::GetExtension(wavename,ext);
 		if(!strlen(ext))									//no extension entered, add a .wav etc
 			strcat(wavename,".wav");
 
@@ -531,7 +531,7 @@ void CSound::Play(char *name,bool loop)
 		
 	wavename = new char[(strlen(name)+4)];			//was a filename entered ?
 	strcpy(wavename,name);
-	Util_GetExtension(wavename,ext);
+	Util::GetExtension(wavename,ext);
 	if(ext && !strlen(ext))									//no extension entered, add a .wav etc
 		strcat(wavename,".wav");
 

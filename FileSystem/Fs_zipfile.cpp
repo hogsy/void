@@ -545,10 +545,7 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	{
 		if(!buffersize)
 		{
-//			*ibuffer= (byte*)MALLOC(entry->filelen);
-			*ibuffer = (byte*)::HeapAlloc(::GetProcessHeap(),
-									  HEAP_GENERATE_EXCEPTIONS,
-									  entry->filelen);
+			*ibuffer = (byte*)g_pMemManager->HeapAlloc(entry->filelen);
 		}
 		else
 		{

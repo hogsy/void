@@ -1,16 +1,22 @@
-#ifndef _UTIL_SYS
-#define _UTIL_SYS
+#ifndef VOID_MISC_UTILITY
+#define VOID_MISC_UTILITY
 
-/*
-Other utility funcs
-*/
+#include "Com_defs.h"
 
-void   Util_GetExtension(const char *filename, char *ext);
-void   Util_RemoveExtension(const char *in, char *out);
-void   Util_FindExtension(const char*filename, char *out);
-void   Util_GetFilePath(const char *file, char *path);
-void   Util_DefaultExtension (char *path, const char *extension);
-void   Util_ErrorMessage(HRESULT hr, const char* str);
-void   Util_ErrorMessageBox(HRESULT hr, const char* str);
+//======================================================================================
+//======================================================================================
+
+namespace Util
+{
+
+void   GetExtension(const char *filename, char *ext);
+void   RemoveExtension(const char *in, char *out);
+void   FindExtension(const char*filename, char *out);
+void   GetFilePath(const char *file, char *path);
+void   DefaultExtension (char *path, const char *extension);
+void   PrintErrorMessage(HRESULT hr, const char* str);
+void   ErrorMessageBox(HRESULT hr, const char* str);
+
+}
 
 #endif

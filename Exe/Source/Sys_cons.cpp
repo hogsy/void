@@ -46,7 +46,7 @@ CConsole::CConsole()
 
 	//open logfile
 	char debugfilename[128];
-	strcpy(debugfilename,System::GetExeDir());
+	strcpy(debugfilename,System::GetExePath());
 	strcat(debugfilename,"//vdebug.log");
 	m_pflog = fopen(debugfilename, "w");
 }
@@ -377,7 +377,7 @@ Runs a Config file
 void CConsole::ExecConfig(const char *filename)
 {
 	char file[128];
-	sprintf(file,"%s/%s",System::GetExeDir(),filename);
+	sprintf(file,"%s/%s",System::GetExePath(),filename);
 
 	FILE * fpcfg=fopen(file,"r");
 	if(fpcfg == NULL)

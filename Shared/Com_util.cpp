@@ -1,7 +1,10 @@
-#include "Sys_hdr.h"
-#include "Util_sys.h"
+#include "Com_util.h"
 
-//winbase.h 
+//======================================================================================
+//======================================================================================
+
+namespace Util
+{
 
 /*
 =======================================
@@ -10,22 +13,16 @@ passed to it
 MAX of 8 chars for an extension
 =======================================
 */
-
-void Util_GetExtension(const char *filename, char *ext)
+void GetExtension(const char *filename, char *ext)
 {
-//	static char exten[8];
-	int		i;
-//	memset(exten,0,8);
-
 	while (*filename && *filename != '.')
 		filename++;
 	if (!*filename)
 		return;
 	filename++;
-	for (i=0 ; i<7 && *filename ; i++,filename++)
+	for (int i=0 ; i<7 && *filename ; i++,filename++)
 		ext[i] = *filename;
 	ext[i] = 0;
-//	return exten;
 }
 
 /*
@@ -33,8 +30,7 @@ void Util_GetExtension(const char *filename, char *ext)
 Removes the file extension of a given file
 =======================================
 */
-
-void Util_RemoveExtension (const char *in, char *out)
+void RemoveExtension (const char *in, char *out)
 {
 	while (*in && *in != '.')
 		*out++ = *in++;
@@ -47,8 +43,7 @@ void Util_RemoveExtension (const char *in, char *out)
 Get File Path
 =======================================
 */
-
-void Util_GetFilePath(const char *file, char *path)
+void GetFilePath(const char *file, char *path)
 {
 	const char *s;
 	
@@ -58,7 +53,6 @@ void Util_GetFilePath(const char *file, char *path)
 	//go back until we get to a /
 	while (s != file && *s != '/')
 		s--;
-
 	//copy everything before the / to path
 	strncpy (path,file, s-file);
 	path[s-file] = 0;
@@ -71,8 +65,7 @@ with the passed filename and returns the
 extension of the file if found
 =======================================
 */
-
-void   Util_FindExtension(const char*filename, char *out)
+void  FindExtension(const char*filename, char *out)
 {
 	WIN32_FIND_DATA FileData; 
 	HANDLE hSearch;
@@ -81,29 +74,30 @@ void   Util_FindExtension(const char*filename, char *out)
 			
 	// Start searching for file
 	// the filename SHOULD include the path before the file
-//	temp = new char[strlen(filename)+3];
 	strcpy(temp,filename);
 	strcat(temp,".*");
-	g_pCons->dprintf("Searching for file: %s\n",temp);
+	ComPrintf("Searching for file: %s\n",temp);
 	
 	hSearch = FindFirstFile(temp, &FileData); 
 		
 	if (hSearch == INVALID_HANDLE_VALUE) 
 		return;
 	
-	g_pCons->dprintf("Found : %s\n",FileData.cFileName);
+	ComPrintf("Found : %s\n",FileData.cFileName);
 	FindClose(hSearch);
 
-	Util_GetExtension(FileData.cFileName,ext);
+	GetExtension(FileData.cFileName,ext);
 	strcat(out,ext);
 	return;
 }
 
 
-/**********************************************
-make sure a filename has the extension
-**********************************************/
-void Util_DefaultExtension (char *path, const char *extension)
+/*
+==========================================
+Make sure the file has the given extension
+==========================================
+*/
+void DefaultExtension (char *path, const char *extension)
 {
 	char    *src;
 //
@@ -111,33 +105,31 @@ void Util_DefaultExtension (char *path, const char *extension)
 // (extension should include the .)
 //
 	src = path + strlen(path) - 1;
-
 	while (*src != '/' && src != path)
 	{
 		if (*src == '.')	// it has an extension
 		{
 			char ext[4];
-			Util_GetExtension(path,ext);
+			GetExtension(path,ext);
 			if(strcmp(ext,extension))
 			{	
-				Util_RemoveExtension(path,path);
-				Util_DefaultExtension(path,extension);
+				RemoveExtension(path,path);
+				DefaultExtension(path,extension);
 			}
 			return;                 
 		}
 		src--;
 	}
-
 	strcat (path, extension);
 }
 
 
 /*
 =======================================
-  prints HR Error message
+prints HR Error message
 =======================================
 */
-void Util_ErrorMessage( HRESULT hr, const char* str)
+void PrintErrorMessage( HRESULT hr, const char* str)
 
 {
 	void* pMsgBuf ;
@@ -154,17 +146,20 @@ void Util_ErrorMessage( HRESULT hr, const char* str)
 
 	// Display the string.
 	if(str)
-		g_pCons->dprintf("%s - Error %d - %s\n",str,hr,pMsgBuf);
+		ComPrintf("%s - Error %d - %s\n",str,hr,pMsgBuf);
 	else
-		g_pCons->dprintf("::Error %d - %s\n",hr,pMsgBuf);
+		ComPrintf("::Error %d - %s\n",hr,pMsgBuf);
 
 	// Free the buffer.
 	LocalFree( pMsgBuf ) ;
-
 }
 
-
-void  Util_ErrorMessageBox(HRESULT hr, const char* str)
+/*
+==========================================
+Print HR error message box
+==========================================
+*/
+void ErrorMessageBox(HRESULT hr, const char* str)
 {
 	void* pMsgBuf ;
 	 
@@ -191,6 +186,7 @@ void  Util_ErrorMessageBox(HRESULT hr, const char* str)
 
 	// Free the buffer.
 	LocalFree( pMsgBuf ) ;
-
 }
 
+
+}

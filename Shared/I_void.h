@@ -2,30 +2,26 @@
 #define INC_VOID_EXPORT
 
 #include "I_console.h"
+#include "I_mem.h"
 
 /*
 ==========================================
-This is what the exe exports
+Exe Exports
 ==========================================
 */
-struct VoidExport_t
+
+struct I_Void
 {
-	VoidExport_t(float * icurtime,
-				 float * iframetime) :  curtime(icurtime), frametime(iframetime)
-	{}
+	I_Void()  { console = 0; memManager = 0; }
+	virtual ~I_Void() { console = 0; memManager = 0; }
 
-	~VoidExport_t()
-	{
-		curtime = 0;
-		frametime = 0;
-		vconsole = 0;
-	}
-	
-	float* curtime;
-	float* frametime;
+	virtual float & GetCurTime()=0;
+	virtual float & GetFrameTime()=0;
+	virtual const char * GetCurPath()=0;
 
-	//Add interfaces here
-	I_Console * vconsole;
+	//Interfaces
+	I_Console     * console;
+	I_MemManager  * memManager;
 };
 
 

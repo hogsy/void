@@ -170,11 +170,11 @@ void MusPlay(int argc, char** argv)
 	strcat(musinfo.name,argv[1]);
 
 	char	ext[4];		//extension
-	Util_GetExtension(argv[1],ext);
+	Util::GetExtension(argv[1],ext);
 
 	if(!strlen(ext))	//no extension entered, lets see if we can findit
 	{	
-		Util_FindExtension(musinfo.name,ext);
+		Util::FindExtension(musinfo.name,ext);
 		strcat(musinfo.name,".");	
 		strcat(musinfo.name,ext);
 	}

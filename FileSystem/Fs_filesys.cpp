@@ -285,10 +285,7 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 
 				if(!buffersize)
 				{
-//					*ibuffer= (byte*)MALLOC(size);
-					*ibuffer = (byte*)::HeapAlloc(::GetProcessHeap(),
-									  HEAP_GENERATE_EXCEPTIONS,
-									  size);
+					*ibuffer = (byte*)g_pMemManager->HeapAlloc(size);
 				}
 				else
 				{

@@ -3,53 +3,13 @@
 EXE STUFF TO DO
 
 Console stuff
-
 -Clear				(clear)
 -Home and End,	     go to top and bottom	
 -paste from windows console
 
-//FSystem
--Directory listing	(dir)
 
-
-
-
-
-//fmodvc.lib
-
-
-struct A{
-   A();
-  ~A();
-   void         Blah3();
-   virtual void Blah4();
-   int          Blah5(int x);
-   virtual long Blah6(const char* c) const;
-   static void  Blah7(int x);
-};
-
-//Function pointer declarations
-void (A::*pFunction1)()                  = &A::A;     //Error. Impossible
-void (A::*pFunction2)()                  = &A::~A;    //Error with VC++, but it shouldn't be.
-void (A::*pFunction3)()                  = &A::Blah3; //  
-void (A::*pFunction4)()                  = &A::Blah4; //Note that virtual functions work fine
-int  (A::*pFunction5)(int)               = &A::Blah5; //  and execute just as if they were
-long (A::*pFunction6)(const char*) const = &A::Blah6; //  called by the normal method.
-void (*pFunction7)(int)                  = &A::Blah7; //Notice that we don't use "A::"
-void (A::*pFunction3Array[10])();                     //Declare array of function pointers.
-
-//Function pointer typedefs to match the above declarations with examples on the right
-typedef void (A::*Blah3PtrType)();             //Blah3PtrType pFunction3 = &A::Blah3;
-typedef void (A::*Blah4PtrType)();             //Blah4PtrType pFunction4 = &A::Blah4;
-typedef int  (A::*Blah5PtrType)(int);          //Blah5PtrType pFunction5 = &A::Blah5;
-typedef long (A::*Blah6PtrType)(const char*);  //Blah6PtrType pFunction6 = &A::Blah6;
-typedef void (*Blah7PtrType)(int);             //Blah7PtrType pFunction7 = &A::Blah7;
-
-//More examples of function pointer usage.
-A a, *pA;                            //Declare an object and a pointer to an object
-(a.*pFunction3)();                   //Same as a.Blah1();
-(pA->*pFunction3)();                 //Same as pA->Blah1();
-pFunction3Array[0] = &A:: Blah3;     //Note that Blah4 is virtual and Blah3 isn't, yet can
-pFunction3Array[1] = &A:: Blah4;     //   be assigned to the same function ptr type. Cool. 
-(a.*pFunction3Array[0])();           //Call the 3rd member of the array. Same as a.Blah1();
-(pA->*pFunction3Array[1])();         //Call the 2nd member of the array. Same as pA->Blah1();
+CVars. change to use handlers
+clean up input classes.
+error/logging/handling
+proper cleaner gl driver code
+CVar/Command/CmdLine Parms class

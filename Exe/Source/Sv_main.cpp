@@ -81,7 +81,7 @@ bool CServer::InitGame(char *mapname)
 {
 	char worldname[128];
 	
-	Util_DefaultExtension(mapname,".bsp");
+	Util::DefaultExtension(mapname,".bsp");
 //	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
 //	sprintf(worldname,"%s\\worlds\\%s",g_exedir,mapname);
 
@@ -97,7 +97,7 @@ bool CServer::InitGame(char *mapname)
 		return false;
 	}
 
-	Util_RemoveExtension(mapname,m_mapname);
+	Util::RemoveExtension(mapname,m_mapname);
 
 	if(m_socket != INVALID_SOCKET)
 		closesocket(m_socket);

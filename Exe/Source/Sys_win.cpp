@@ -1,11 +1,25 @@
 #include "Sys_main.h"
-#include "Util_sys.h"
 #include "resources.h"	
 
+//======================================================================================
+//======================================================================================
 
-extern HWND	g_hWnd;
-
+//Private Info
+static HWND			m_hWnd;
+static HINSTANCE	m_hInst;
 static bool RegisterWindow(HINSTANCE hInst);
+
+CVoid		* g_pVoid=0;		//The game
+
+namespace System
+{
+
+	HINSTANCE	GetHInstance(){ return m_hInst; }
+	HWND		GetHwnd()	  { return m_hWnd;  }
+}
+
+//======================================================================================
+//======================================================================================
 
 /*
 ==========================================
@@ -17,7 +31,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 				   LPSTR lpCmdLine,
 				   int nCmdShow)
 {
-	InitMemReporting();
+	m_hInst = hInst;
 
 	if(!RegisterWindow(hInst))
 	{
@@ -25,20 +39,19 @@ int WINAPI WinMain(HINSTANCE hInst,
 		return -1;
 	}
 
-	g_pVoid = new CVoid(hInst, hPrevInst, lpCmdLine);
+	g_pVoid = new CVoid(lpCmdLine);
 	if(!g_pVoid->Init()) 
 	{
 		g_pVoid->Error("Error Initializing Subsystems\n");
 		g_pVoid->Shutdown();
 		delete g_pVoid;
-		EndMemReporting();
 		return -1;
 	}
 
 	MSG msg;
 	while (1)
 	{
-		if(PeekMessage(&msg,g_hWnd,NULL, 0, PM_REMOVE)) 
+		if(PeekMessage(&msg,m_hWnd,NULL, 0, PM_REMOVE)) 
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -48,11 +61,11 @@ int WINAPI WinMain(HINSTANCE hInst,
 
 /*	while(1)
 	{
-		if(PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE))
+		if(PeekMessage(&msg,m_hWnd,0,0, PM_NOREMOVE))
 		{
 			do
 			{
-				if(!GetMessage(&msg,g_hWnd,0,0))
+				if(!GetMessage(&msg,m_hWnd,0,0))
 				{
 					g_pVoid->Shutdown();
 					delete g_pVoid;
@@ -64,7 +77,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 
-			}while (PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE));
+			}while (PeekMessage(&msg,m_hWnd,0,0, PM_NOREMOVE));
 		}
 		else
 		{
@@ -75,7 +88,6 @@ int WINAPI WinMain(HINSTANCE hInst,
 	//Will never get executed
 	g_pVoid->Shutdown();
 	delete g_pVoid;  
-	EndMemReporting();
 	return -1;
 }
 
@@ -124,13 +136,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			g_pVoid->OnFocus();
 			break;
 		}
-	case WM_ENTERSIZEMOVE:
+/*	case WM_ENTERSIZEMOVE:
 	case WM_ENTERMENULOOP:
 		{
 //			if(g_pInput)
 //				g_pInput->UnAcquire();
 			break;
 		}
+*/
 	case WM_KILLFOCUS:
 		{
 			g_pVoid->LostFocus();
@@ -144,7 +157,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			//Cleanup
 			g_pVoid->Shutdown();
 			delete g_pVoid;
-			EndMemReporting();
 			exit(0);
 			break; 
 		}
@@ -180,3 +192,26 @@ static bool RegisterWindow(HINSTANCE hInst)
 	return true;
 }
 
+
+/*
+==========================================
+Window Creation func
+==========================================
+*/
+bool CVoid::CreateVoidWindow()
+{
+	m_hWnd = CreateWindow(VOID_MAINWINDOWCLASS, 
+						  VOID_MAINWINDOWTITLE,
+						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
+						  CW_USEDEFAULT, 
+						  CW_USEDEFAULT, 
+						  640,
+						  480,
+						  HWND_DESKTOP, 
+						  NULL, 
+						  m_hInst,
+						  NULL);
+	if(!m_hWnd)
+		return false;
+	return true;
+}

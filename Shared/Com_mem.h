@@ -1,34 +1,54 @@
-#ifndef VOID_MEMORY_MANAGER
-#define VOID_MEMORY_MANAGER
+#ifndef VOID_SYS_MEMORYMANAGER
+#define VOID_SYS_MEMORYMANAGER
+
+//======================================================================================
+//======================================================================================
 
 #include "Com_defs.h"
+#include "I_mem.h"
 
-//Class to manage big chunks of memory
 
-#define COM_MAXHUNKS			256
-#define COM_DEFAULTHUNKSIZE		(1024*1024*4)
-
-class CMemManager
+class CMemManager : public I_MemManager 
 {
 public:
-	CMemManager(int defhunksize);
+
+	CMemManager();
 	~CMemManager();
 
-	bool  Init();
+	void Init(void);
+	void Shutdown(void);
+	
+	void * Malloc(uint size);
+	void * Realloc(void *mem, uint size);
+	void Free(void *mem);
 
-	uint  CreateHunk(const char * name, uint size);	 //-1 if invalid
-	void* AllocHunk(uint size, uint id);
-	void  FreeHunk(uint id);
-	void  ResetHunk(uint id);
+#ifdef _DEBUG
+	void * MallocDbg(uint size, const char * file, int line);
+	void * ReallocDbg(void *mem, uint size, const char * file, int line);
+	void FreeDbg(void *mem);
+#endif
 	
-	uint  GetHunkMaxSize(uint id);
-	uint  GetHunkCurSize(uint id);
-	void* GetHunkAddr(uint id);
-	const char * GetHunkName(uint id);
-	
-	uint  GetHunkByName(const char * name);			//-1 if invalid
+	void * HeapAlloc(uint size);
+	void HeapFree(void * mem);
+
+	void PrintDebug();
+	void ValidateHeap();
+
+private:
+
+	ulong m_numAllocations;
+	ulong m_numAllocated;
+	ulong m_memAllocated;
+
+	ulong m_numHeapAllocs;
+	ulong m_numHeapAllocated;
+	ulong m_memHeapAllocated;
+
+	HANDLE m_hHeap;
+
+#ifdef _DEBUG
+	HFILE	* h_memfile;
+#endif
 };
-
-extern CMemManager * g_pMem;
 
 #endif

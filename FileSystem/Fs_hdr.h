@@ -5,6 +5,7 @@
 #pragma warning(disable : 4786)		// bleh, template names expand to more than what vc can handle
 
 #include "Com_defs.h"
+#include "I_mem.h"
 
 //======================================================================================
 //======================================================================================

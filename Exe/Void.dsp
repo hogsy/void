@@ -135,6 +135,10 @@ SOURCE=.\Source\Sys_cvar.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Sys_exp.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Sys_main.cpp
 # End Source File
 # Begin Source File
@@ -180,38 +184,6 @@ SOURCE=..\Shared\clip.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_cvar.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_mem.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_mem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_console.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_file.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_filesystem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_hud.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_renderer.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_void.h
 # End Source File
 # Begin Source File
 
@@ -370,14 +342,6 @@ SOURCE=.\Source\In_mouse.cpp
 SOURCE=.\Source\In_mouse.h
 # End Source File
 # End Group
-# Begin Group "Docs"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\q3netinfo
-# End Source File
-# End Group
 # Begin Group "Util"
 
 # PROP Default_Filter ""
@@ -395,6 +359,14 @@ SOURCE=..\Shared\Com_list.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_mem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_mem.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_parms.h
 # End Source File
 # Begin Source File
@@ -403,11 +375,43 @@ SOURCE=..\Shared\Com_queue.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Util_sys.cpp
+SOURCE=..\Shared\Com_util.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Util_sys.h
+SOURCE=..\Shared\Com_util.h
+# End Source File
+# End Group
+# Begin Group "Interface"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\I_console.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_file.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_filesystem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_hud.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_mem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_renderer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_void.h
 # End Source File
 # End Group
 # Begin Source File

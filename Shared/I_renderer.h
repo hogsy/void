@@ -92,7 +92,8 @@ struct I_Renderer
 };
 
 
-RENDERER_API I_Renderer   * RENDERER_Create(VoidExport_t * vexp);
+//RENDERER_API I_Renderer   * RENDERER_Create(VoidExport_t * vexp);
+RENDERER_API I_Renderer   * RENDERER_Create(I_Void * vexp);
 RENDERER_API RenderInfo_t * RENDERER_GetParms();
 RENDERER_API void RENDERER_Free();
 
