@@ -106,6 +106,12 @@ inline void VectorInv(vector_t &dest)
 	dest.z = -dest.z;
 }
 
+inline void VectorInv2(vector_t &src, vector_t &dest)
+{	dest.x = -src.x;
+	dest.y = -src.y;
+	dest.z = -src.z;
+}
+
 }
 
 
@@ -128,6 +134,7 @@ void	VectorSet(vector_t *a, float x, float y, float z);
 #define VectorAdd2(a, b)	{ a.x+=b.x; a.y+=b.y; a.z+=b.z; }
 #define VectorSub(a, b, c)  { c.x=a.x-b.x; c.y=a.y-b.y; c.z=a.z-b.z; }
 #define VectorInv(a)	    { a.x=-a.x; a.y=-a.y; a.z=-a.z; }
+#define VectorInv2(a, b)	    { b.x=-a.x; b.y=-a.y; b.z=-a.z; }
 
 void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
 
