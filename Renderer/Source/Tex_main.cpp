@@ -247,7 +247,13 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 // FIXME - temp hack to get lightmapping working
 	if (!map->nlightdefs || !map->light_size)
+	{
+		m_texReader->UnlockBuffer();
+		m_texReader->UnlockMipMapBuffer();
+
+		m_loaded = ALL_TEXTURES;
 		return true;
+	}
 
 	tex->num_lightmaps = map->nlightdefs;
 

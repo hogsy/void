@@ -1,3 +1,67 @@
+#include "Net_sock.h"
+#include "Sys_hdr.h"
+
+
+/*
+==========================================
+
+==========================================
+
+CNetSocket::CNetSocket()
+{
+}
+
+CNetSocket::~CNetSocket()
+{
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+
+
 #include "Net_util.h"
 #include "Net_sock.h"
 #include "Sys_hdr.h"
@@ -552,3 +616,5 @@ void CSocket::SockError(char *err)
 }
 
 
+
+#endif

@@ -1,20 +1,43 @@
-#ifndef _V_SOCKET
-#define _V_SOCKET
+#ifndef VOID_NET_SOCKET
+#define VOID_NET_SOCKET
 
 #include <winsock2.h>
-#include "Net_defs.h"
+#include <ws2tcpip.h>
 
-/*
-=====================================
-Socket handling class
+namespace VoidNet {
 
-encapsulates sending and receiving
-is not aware of the game protocol 
-and packet construction is consquently 
-not done here.
-=====================================
-*/
+const int MAX_INTERFACES = 10;
 
+class CNetSocket
+{
+public:
+	CNetSocket();
+	~CNetSocket();
+
+	bool Create(int addrfamily, int type, int proto);
+	void Close();
+
+//	int GetInterfaceList(INTERFACE_INFO &addr[MAX_INTERFACES]);
+
+private:
+
+	SOCKET	m_sock;
+
+};
+
+}
+
+
+#endif
+
+
+
+
+
+
+
+
+#if 0
 class CSocket
 {
 public:

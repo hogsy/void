@@ -1,3 +1,8 @@
+
+
+
+#if 0
+
 #ifndef _NET_DEFS
 #define _NET_DEFS
 
@@ -338,5 +343,9 @@ Client Request Packet formats
 #define	svc_centerprint		26	// [string] to put in center of the screen
 
 #define	svc_spawnstaticsound	29	// [coord3] [byte] samp [byte] vol [byte] aten
+
+
+#endif
+
 
 #endif

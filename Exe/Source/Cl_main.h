@@ -81,12 +81,13 @@ private:
 	CVar 	m_clrate;
 	CVar 	m_noclip;
 
+/*
 	unsigned int	m_recvseq;		//packet num
 	CNBuffer		m_recvBuf;		//network buffer we read from
 
 	unsigned int	m_sendseq;		//packet num
 	CNBuffer		m_sendBuf;		//network buffer we write to
-
+*/
 	world_t    *m_world;
 
 	friend class CClientCmdHandler;
@@ -94,7 +95,7 @@ private:
 
 	I_RHud *	m_rHud;
 
-	CSocket	 	m_sock;
+//	CSocket	 	m_sock;
 	
 	char		m_svipaddr[16];		//addr we are currently connected to
 	int			m_svport;

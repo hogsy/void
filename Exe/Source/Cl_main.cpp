@@ -15,7 +15,7 @@ Constructor
 ======================================
 */
 
-CClient::CClient():	m_sock(&m_recvBuf,&m_sendBuf),
+CClient::CClient():	//m_sock(&m_recvBuf,&m_sendBuf),
 					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
 					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
@@ -46,8 +46,8 @@ CClient::CClient():	m_sock(&m_recvBuf,&m_sendBuf),
 	m_acceleration = 400.0f;
 	m_maxvelocity =  200.0f;
 
-	m_sendseq = 0;
-	m_recvseq = 0;
+//	m_sendseq = 0;
+//	m_recvseq = 0;
 
 	m_rHud = 0;
 
@@ -86,7 +86,7 @@ we actually try to connect to a server
 */
 bool CClient::InitNet()
 {
-	ComPrintf("CClient::InitNet:%s:%s\n",g_computerName,g_ipaddr);
+//	ComPrintf("CClient::InitNet:%s:%s\n",g_computerName,g_ipaddr);
 
 
 #ifndef __VOIDALPHA
@@ -132,8 +132,8 @@ bool CClient::CloseNet()
 	m_connected = false;
 	m_ingame = false;
 
-	m_sendseq = 0;
-	m_recvseq = 0;
+//	m_sendseq = 0;
+//	m_recvseq = 0;
 
 #ifndef __VOIDALPHA
 	return m_sock.Close();

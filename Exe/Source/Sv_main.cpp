@@ -1,18 +1,225 @@
-#if 0
+#include "Net_sock.h"
+#include "Sv_main.h"
 
+namespace
+{
+}
+
+using namespace VoidServer;
+using namespace VoidNet;
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Constructor/Destructor
+==========================================
+*/
+CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
+					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
+{
+	
+	System::GetConsole()->RegisterCVar(&m_cPort,this);
+	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
+}
+
+
+CServer::~CServer()
+{
+}
+
+
+/*
+==========================================
+Initialize the listener socket
+gets computer names and addy
+==========================================
+*/
+bool CServer::Init()
+{
+	SOCKET s;
+	int wsError;
+	DWORD bytesReturned;
+	INTERFACE_INFO localAddr[10];  // Assume there will be no more than 10 IP interfaces 
+	char* pAddrString;
+	SOCKADDR_IN* pAddrInet;
+	u_long SetFlags;
+	
+	int numLocalAddr; 
+
+	if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
+	{
+		ComPrintf("Socket creation failed\n");
+     	return false;
+   	}
+
+	wsError = WSAIoctl(s, SIO_GET_INTERFACE_LIST, 
+						NULL, 0, 
+						&localAddr, sizeof(localAddr), 
+						&bytesReturned, 
+						NULL, NULL);
+
+	if (wsError == SOCKET_ERROR)
+	{
+		ComPrintf("WSAIoctl fails with error %d\n", GetLastError());
+		closesocket(s);
+		return false;
+	}
+
+	closesocket(s);
+
+	// Display interface information
+	numLocalAddr = (bytesReturned/sizeof(INTERFACE_INFO));
+	for (int i=0; i<numLocalAddr; i++) 
+	{
+		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiAddress;
+		pAddrString = inet_ntoa(pAddrInet->sin_addr);
+		if (pAddrString)
+			ComPrintf("IP: %s  ", pAddrString);
+
+		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiNetmask;
+		pAddrString = inet_ntoa(pAddrInet->sin_addr);
+		if (pAddrString)
+			ComPrintf(" SubnetMask: %s ", pAddrString);
+
+		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiBroadcastAddress;
+		pAddrString = inet_ntoa(pAddrInet->sin_addr);
+		if (pAddrString)
+			ComPrintf(" Bcast Addr: %s\n", pAddrString);
+
+		SetFlags = localAddr[i].iiFlags;
+		if (SetFlags & IFF_UP)
+			ComPrintf("This interface is up");
+		if (SetFlags & IFF_BROADCAST)
+			ComPrintf(", broadcasts are supported");
+		if (SetFlags & IFF_MULTICAST)
+			ComPrintf(", and so are multicasts");
+		if (SetFlags & IFF_LOOPBACK)
+			ComPrintf(". BTW, this is the loopback interface");
+		if (SetFlags & IFF_POINTTOPOINT)
+			ComPrintf(". BTW, this is a point-to-point link");
+		ComPrintf("\n\n");
+	}
+
+/*
+	//init listener sock
+	struct hostent *hp;
+	unsigned long ulNameLength = sizeof(g_computerName);
+
+	if(!GetComputerName(g_computerName, &ulNameLength))
+	{
+		ComPrintf("InitWinsock:Error: couldnt find computer name\n");
+		return false;
+	}
+	hp = gethostbyname(g_computerName);							
+  
+	if (hp == NULL)	
+	{						
+		ComPrintf("InitWinsock:ERROR:Couldnt find hostname\n");
+		return false;
+	}
+
+	IN_ADDR HostAddr;
+	memcpy(&HostAddr,hp->h_addr_list[0],sizeof(HostAddr));
+	sprintf(g_ipaddr, "%s", inet_ntoa(HostAddr));
+	return true;
+*/
+	return true;
+}
+
+
+/*
+==========================================
+
+==========================================
+*/
+void CServer::Shutdown()
+{
+}
+
+
+/*
+==========================================
+
+==========================================
+*/
+void CServer::RunFrame()
+{
+}
+
+/*
+==========================================
+
+==========================================
+*/
+bool CServer::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+{
+	return false;
+}
+
+/*
+==========================================
+
+==========================================
+*/
+void CServer::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+}
+
+namespace VoidNet
+{
+
+/*
+==========================================
+
+==========================================
+*/
+bool InitNetwork()
+{
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	int err; 
+	
+	wVersionRequested = MAKEWORD( 2, 0 ); 
+	err = WSAStartup( wVersionRequested, &wsaData );
+	
+	if (err) 
+	{
+		ComPrintf("CServer::InitNetwork:Error: WSAStartup Failed\n");
+		return false;
+	} 
+	
+	//Confirm Version
+	if ( LOBYTE( wsaData.wVersion ) != 2 ||
+         HIBYTE( wsaData.wVersion ) != 0 ) 
+	{
+		/* Tell the user that we couldn't find a usable 
+		   WinSock DLL.                                 */    
+		WSACleanup();
+		return false; 
+	}  
+	// The WinSock DLL is acceptable. Proceed. 
+	return true;
+}
+
+void ShutdownNetwork()
+{
+	WSACleanup();
+}
+
+}
+
+
+
+
+
+#if 0
 #include "Sv_main.h"
 #include "Sv_client.h"
-#include <time.h>
-
-
-CVar	* CServer::m_port;
-CVar	* CServer::m_hostname;
-CVar	* CServer::m_dedicated;
-CVar	* CServer::m_maxclients;
-CVar	* CServer::m_game;
-
 CNetClients g_netclients;
-
 char		g_gamedir[MAXPATH];
 
 

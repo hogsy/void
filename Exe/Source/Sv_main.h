@@ -1,8 +1,71 @@
+#ifndef VOID_NETWORK_SERVER
+#define VOID_NETWORK_SERVER
+
+#include "Sys_hdr.h"
+
+/*
+==========================================
+Public defs
+==========================================
+*/
+namespace VoidNet
+{
+	bool InitNetwork();
+	void ShutdownNetwork();
+}
+
+/*
+==========================================
+Private defs
+==========================================
+*/
+namespace VoidServer
+{
+}
+
+/*
+==========================================
+Game independent network server
+==========================================
+*/
+class CServer : public I_CVarHandler,
+				public I_CmdHandler
+{
+public:
+
+	CServer();
+	~CServer();
+
+	bool Init();
+	void Shutdown();
+
+	void RunFrame();
+
+	//CVar Handler
+	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+
+	//Cmd Handler
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
+private:
+
+	CVar	m_cPort;		//Listen port
+	CVar 	m_cHostname;	//Hostname
+	CVar 	m_cMaxClients;	//Max Clients
+	CVar	m_cGame;		//Game Dir
+};
+
+
+
+
+//======================================================================================
+//======================================================================================
+
+
+
+
+
 #if 0
-
-
-#ifndef _V_NETMAIN
-#define _V_NETMAIN
 
 #include "Sys_hdr.h"
 #include "Net_defs.h"

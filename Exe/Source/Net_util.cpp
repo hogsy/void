@@ -1,3 +1,6 @@
+#if 0
+
+
 #include <winsock2.h>
 #include "Net_util.h"
 
@@ -667,4 +670,8 @@ void CBaseNBuffer::Reset()
 	cursize =0; 
 	memset(data,0,maxsize);
 }
+
+
+
+#endif
 

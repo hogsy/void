@@ -315,6 +315,10 @@ SOURCE=.\Source\Net_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Net_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Net_sock.cpp
 # End Source File
 # Begin Source File
@@ -333,18 +337,6 @@ SOURCE=.\Source\Net_util.h
 # Begin Group "Server"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Sv_client.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Sv_client.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Sv_ents.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Sv_main.cpp

@@ -1,19 +1,15 @@
 EXE
 ==============================================================
 
-//now
-get cdaudio working
-
 //soon
 add 3d sound buffers and a listener
 CVar/Command/CmdLine Parms class
 error/logging/handling
-mp3 playback via freeamp
 
 //low priority, would be nice to have
-Clear			clear
-Home and End,	go to top and bottom
+console funcs for clear and home/end
 mpeg playback via wm services
+mp3 playback via freeamp
 get a basic directMusic interface going, will have to write a loader stream for that
 
 
@@ -26,4 +22,3 @@ gl driver issues with 3dfx cars?
 
 
 console printing is messy, line breaks dont show up properly
-

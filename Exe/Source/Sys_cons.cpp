@@ -7,13 +7,14 @@
 #define CMD_TEST		3
 
 //Console toggle hack, FIXME
-void CToggleConsole(int argc, char** argv);			
+//void CToggleConsole(int argc, char** argv);			
 
 //======================================================================================
 //======================================================================================
 
 namespace System
-{	I_Console * GetConsole() {	return g_pConsole; }
+{	
+	I_Console * GetConsole() {	return g_pConsole; }
 }
 
 /*
@@ -69,7 +70,7 @@ CConsole::CConsole()
 	char debugfilename[128];
 	strcpy(debugfilename,System::GetExePath());
 	strcat(debugfilename,"//vdebug.log");
-	m_pflog = fopen(debugfilename, "w");
+	m_pflog = fopen(debugfilename, "wc");
 }
 
 /*
@@ -171,7 +172,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			case '`':
 			{
 				m_conString.erase();
-				CToggleConsole(1,0);
+				System::ToggleConsole(); //1,0);
 				break;
 			}
 			case INKEY_ENTER:
@@ -410,7 +411,11 @@ void CConsole::ExecConfig(const char *filename)
 	ComPrintf("CConsole::Exec'ed %s\n",file);
 }
 
-
+/*
+==========================================
+Handle Console command
+==========================================
+*/
 void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 {
 	switch(cmdId)
@@ -422,15 +427,14 @@ void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		CCmdList(numArgs,szArgs);
 		break;
 	case CMD_TOGGLECONS:
-		CToggleConsole(numArgs,szArgs);
+		System::ToggleConsole();
+		//CToggleConsole(numArgs,szArgs);
 		break;
 	case CMD_TEST:
 		CFunctest(numArgs,szArgs);
 		break;
 	}
 }
-
-
 
 /*
 =====================================

@@ -1,3 +1,6 @@
+#if 0
+
+
 #ifndef _NET_UTIL
 #define _NET_UTIL
 
@@ -91,5 +94,8 @@ private:
 	int	  LongSwap(int i);
 	void  Write (void *data, int length);
 };
+
+#endif
+
 
 #endif

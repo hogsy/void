@@ -1,36 +1,36 @@
 #include "Sys_main.h"
 #include "Sys_cons.h"
-#include "Sv_main.h"
 #include "Cl_main.h"
 #include "Com_hunk.h"
 
 #include <objbase.h>
 #include <direct.h>
 
-//========================================================================================
-//The memory manager objects
+/*
+==========================================
+Memory Managers
+==========================================
+*/
 CMemManager		g_memManager("mem_exe.log");
 CHunkMem		m_HunkManager;
 
-//======================================================================================
-//Subsystems
-
+/*
+==========================================
+Subsystems
+==========================================
+*/
 I_Renderer  *	g_pRender  =0;	//Renderer
 CConsole	*	g_pConsole =0;	//Console
 CClient		*	g_pClient  =0;	//Client and UI
 
-
-#ifndef __VOIDALPHA
-CServer		*	g_pServer=0;	//Network Server
-#endif
-
 world_t		*	g_pWorld=0;		//The World
 extern CVoid*	g_pVoid;
 
-//======================================================================================
-//Console loopback func
-//======================================================================================
-
+/*
+==========================================
+Private Definitions
+==========================================
+*/
 namespace
 {
 	enum
@@ -40,21 +40,8 @@ namespace
 	};
 }
 
-//this should be non-static so the console can access it
-void CToggleConsole(int argc, char** argv);			
-
 //======================================================================================
-//Global access functions for private data
 //======================================================================================
-
-namespace System
-{
-	const char* GetExePath()    { return g_pVoid->m_exePath; } 
-	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
-	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
-	void SetGameState(eGameState state) { g_pVoid->m_gameState = state; }
-	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
-}
 
 /*
 ==========================================
@@ -68,7 +55,8 @@ CVoid::CVoid(const char * cmdLine)
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
 
-	_getcwd(m_exePath,COM_MAXPATH);		//Current Working directory
+	//Current Working directory
+	_getcwd(m_exePath,COM_MAXPATH);		
 
 	//Create timer
 	m_pTime = new CTime();						
@@ -94,11 +82,9 @@ CVoid::CVoid(const char * cmdLine)
 	//Create the client
 	g_pClient = new CClient();		
 
-#ifndef __VOIDALPHA
 	//Network Sys
-	g_pServer = new CServer();
-#endif
-	
+	m_pServer = new CServer();
+
 #ifdef INCLUDE_SOUND
 	//Sound
 	m_pSound = new CSoundManager();
@@ -125,66 +111,34 @@ Destructor
 */
 CVoid::~CVoid() 
 {
-#ifndef __VOIDALPHA	
-	if(g_pServer)
-	{	delete g_pServer;	
-		g_pServer = 0;
-	}
-#endif
+	if(m_pServer)	delete m_pServer;	
+	if(g_pClient) 	delete g_pClient;
 	
-	if(g_pClient)
-	{	delete g_pClient;
-		g_pClient = 0;
-	}
-
 #ifdef INCLUDE_SOUND
-	if(m_pSound)
-	{	delete m_pSound;
-		m_pSound = 0;
-	}
-
+	if(m_pSound)	delete m_pSound;
 #endif
 
 #ifdef INCLUDE_MUSIC
-	if(m_pMusic)
-	{	delete m_pMusic;
-		m_pMusic = 0;
-	}
+	if(m_pMusic)	delete m_pMusic;
 #endif
 	
-	if(m_pInput)
-	{	delete m_pInput;
-		m_pInput = 0;
-	}
-
-	if(m_pTime)
-	{	delete m_pTime;
-		m_pTime = 0;
-	}
-
-	//Free the Renderer Interface
-	RENDERER_Free();
+	if(m_pInput)	delete m_pInput;
 	
-	FILESYSTEM_Free();
+	if(m_pTime)		delete m_pTime;
 
-	if(m_pExport)
-	{
-		delete m_pExport;
-		m_pExport = 0;
-	}
+	RENDERER_Free();	//Free the Renderer Interface
+	FILESYSTEM_Free();	//Free the file system
+
+	if(m_pExport)	delete m_pExport;
 
 	m_HunkManager.PrintStats();
 
-	if(g_pConsole)
-	{		delete g_pConsole;
-		g_pConsole = 0;
-	}
+	if(g_pConsole)	delete g_pConsole;
 }
 
 /*
 ==========================================
-CVoid::Init
-Intializes all the subsystems
+Initialize all the subsystems
 ==========================================
 */
 bool CVoid::Init()
@@ -244,14 +198,13 @@ bool CVoid::Init()
 	}
 
 	//================================
-	//Timer
-	m_pTime->Init();
-
-
-	//================================
 	//Update and Show window
 	ShowWindow(System::GetHwnd(), SW_NORMAL); 
 	UpdateWindow(System::GetHwnd());
+
+	//================================
+	//Timer
+	m_pTime->Init();
 
 	//================================
 	//Input
@@ -261,24 +214,22 @@ bool CVoid::Init()
 		return false;
 	}
 
-#ifndef __VOIDALPHA
-	if(!InitWinsock())
-	{
-		Error("CVoid::Init: Couldnt init Winsock");
-		return false;
-	}
 	//================================
 	//Server
-	if(!g_pServer->Init())
+	if(!VoidNet::InitNetwork())
 	{
-		Error("CVoid::Init: Could not Initialize Winsock");
+		Error("CVoid::Init: Could not initalize Winsock");
 		return false;
 	}
-#endif
+	if(!m_pServer->Init())
+	{
+		Error("CVoid::Init: Could not Initialize server");
+		return false;
+	}
 
-#ifdef INCLUDE_SOUND
 	//================================
 	//Sound 
+#ifdef INCLUDE_SOUND
 	if(!m_pSound->Init())
 	{
 		ComPrintf("CVoid::Init: couldnt init sound system\n");
@@ -287,9 +238,9 @@ bool CVoid::Init()
 	}
 #endif
 
-#ifdef INCLUDE_MUSIC
 	//================================
 	//Music
+#ifdef INCLUDE_MUSIC
 	if(!m_pMusic->Init())
 	{
 		ComPrintf("CVoid::Init: couldnt init music system\n");
@@ -334,16 +285,10 @@ bool CVoid::Shutdown()
 	
 	ShutdownServer();
 
-#ifndef __VOIDALPHA
-	if(g_pServer && g_pServer->m_active)
-	{
-		if(!ShutdownServer())
-		{
-			ComPrintf("CVoid::Shutdown: couldnt shutdown game\n");
-			return false;
-		}
-	}
-#endif
+	VoidNet::ShutdownNetwork();
+
+	if(m_pServer)
+		m_pServer->Shutdown();
 
 #ifdef INCLUDE_SOUND
 	//Sound
@@ -812,25 +757,37 @@ void CVoid::CFuncMap(int argc, char** argv)
 	ComPrintf("CVoid::Map: invalid arguments\n");
 }
 
+//======================================================================================
+//======================================================================================
+
 /*
-=====================================
-
-=====================================
+==========================================
+Global Access funcs
+==========================================
 */
-void CToggleConsole(int argc, char** argv)
+namespace System
 {
-	if(System::GetGameState() == INGAMECONSOLE)
-	{
-		System::SetGameState(INGAME);
-		g_pConsole->Toggle(false);
-		g_pClient->SetInputState(true);
-	}
-	else if(System::GetGameState() == INGAME)
-	{
-		System::GetInputFocusManager()->SetCursorListener(0);
-		System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+	const char* GetExePath()    { return g_pVoid->m_exePath; } 
+	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
+	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
+	void SetGameState(eGameState state) { g_pVoid->m_gameState = state; }
+	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
-		System::SetGameState(INGAMECONSOLE);
-		g_pConsole->Toggle(true);
+	void ToggleConsole()
+	{
+		if(GetGameState() == INGAMECONSOLE)
+		{
+			SetGameState(INGAME);
+			g_pConsole->Toggle(false);
+			g_pClient->SetInputState(true);
+		}
+		else if(GetGameState() == INGAME)
+		{
+			GetInputFocusManager()->SetCursorListener(0);
+			GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+
+			SetGameState(INGAMECONSOLE);
+			g_pConsole->Toggle(true);
+		}
 	}
 }

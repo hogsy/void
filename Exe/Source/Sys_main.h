@@ -9,6 +9,7 @@
 #include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
+#include "Sv_main.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
 #include "Sys_exp.h"
@@ -55,30 +56,33 @@ public:
 
 private:
 
-	//Give these friend access
+	//Give this friend access
 	friend const char * System::GetExePath();
 	friend const char * System::GetCurrentPath();
 	friend eGameState   System::GetGameState();
 	friend void	System::SetGameState(eGameState state);
 	friend I_InputFocusManager * System::GetInputFocusManager();
+	friend void System::ToggleConsole();
 
+	//Private vars
 	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
-
+	
+	RenderInfo_t * m_pRParms;		//Current Renderering info
+	VoidExport   * m_pExport;		//Exported Data
+	CServer		 * m_pServer;		//Server
 	CInput		 * m_pInput;		//Input 
-	CTime		 * m_pTime;			//Timer Class
+	CTime		 * m_pTime;			//Timer
 	CFileSystem  * m_pFileSystem;	//FileSystem
 
 #ifdef INCLUDE_MUSIC
-	CMusic		 * m_pMusic;
+	CMusic		 * m_pMusic;		//Music subsystem
 #endif
-
 #ifdef INCLUDE_SOUND
-	CSoundManager* m_pSound;		//Sound Subsystem
+	CSoundManager* m_pSound;		//Sound subsystem
 #endif
 
-	RenderInfo_t * m_pRParms;		//Current Renderering info
-	VoidExport   * m_pExport;		//Exported Data
+	//Private Member funcs
 
 	bool CreateVoidWindow();
 	void ParseCmdLine(const char * cmdLine);	//Parse Cmd Line
@@ -88,7 +92,6 @@ private:
 
 	void CFuncQuit();						//quit game
 	void CFuncMap(int argc, char** argv);	//start local server with map + connect to it
-
 };
 
 #endif
