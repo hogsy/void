@@ -1,6 +1,5 @@
 #include "Sv_main.h"
 #include "World.h"
-#include "Game_ents.h"
 #include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
@@ -434,7 +433,7 @@ void CServer::LoadWorld(const char * mapname)
 	strcpy(worldname, mapname);
 	strcpy(mappath, szWORLDDIR);
 	strcat(mappath, worldname);
-	Util::SetDefaultExtension(mappath,".bsp");
+	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
 	//Shutdown if currently active
 	if(m_active)

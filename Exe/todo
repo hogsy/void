@@ -3,7 +3,6 @@ EXE
 -Seperate client / client game code
 -Seperate server/ server game code
 -Move client movement to server
--Associate void worlds with exe and add opening by doubleclick
 
 headers
 Client/ClGame header

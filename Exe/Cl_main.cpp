@@ -130,7 +130,7 @@ bool CClient::LoadWorld(const char *worldname)
 	
 	strcpy(mappath,szWORLDDIR);
 	strcat(mappath, worldname);
-	Util::SetDefaultExtension(mappath,".bsp");
+	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
 	g_pWorld = world_create(mappath);
 	if(!g_pWorld)

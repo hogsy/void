@@ -136,7 +136,7 @@ ComPrintf("SV Writing to backbuffer\n");
 //======================================================================================
 
 bool CNetServer::ChanCanSend(int chanId)
-{	return m_clChan[chanId].m_netChan.CanSend();
+{	return (m_bSend && m_clChan[chanId].m_netChan.CanSend());
 }
 
 
