@@ -63,23 +63,29 @@ bool CTextureManager::Init()
 		m_numBaseTextures =  count +1;
 
 	//Alloc space for base textures
-	tex->base_names = new GLuint[m_numBaseTextures];
-	if (tex->base_names == NULL) 
-	{
-		FError("CTextureManager::Init:No mem for base texture names");
-		return false;
-	}
+	tex->bin_base = g_pRast->TextureBinInit(m_numBaseTextures);
 
 	ConPrint("CTextureManager::Init:Creating base textures");
 
-	m_texReader->LockBuffer(TEX_MAXTEXTURESIZE);
-
-	//Generate and load base textures
-	glGenTextures(m_numBaseTextures, tex->base_names);
+	// load base textures
 	for(count=0;count<m_numBaseTextures;count++)
 	{
 		LoadTexture(BaseTextureList[count]);
 
+		// create all mipmaps
+		const tex_load_t *tdata = m_texReader->GetData();
+		int mipcount = tdata->mipmaps - 1;
+		while (mipcount > 0)
+		{
+			m_texReader->ImageReduce(mipcount);
+			mipcount--;
+		}
+
+		g_pRast->TextureLoad(tex->bin_base, count, tdata);
+
+
+
+/*
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -107,10 +113,9 @@ bool CTextureManager::Init()
 				 ext_format,
 				 GL_UNSIGNED_BYTE,
 				 m_texReader->GetData());
+*/
 		
-		m_texReader->Reset();
 	}
-	m_texReader->UnlockBuffer();
 	m_loaded = BASE_TEXTURES;
 	return true;
 }
@@ -131,9 +136,8 @@ bool CTextureManager::Shutdown()
 
 	ConPrint("CTextureManager::Shutdown:Destroying base textures :");
 
-	glDeleteTextures(m_numBaseTextures, tex->base_names);
-	delete [] tex->base_names;
-	
+	g_pRast->TextureBinDestroy(tex->bin_base);
+
 	delete tex;	
 	tex = 0;
 
@@ -163,54 +167,56 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	uint   mipcount = 0,
 		   t=0,m=0;
 
-	tex->num_lightmaps= 0;
-	tex->num_textures = 0;
-	
-	//Count number of textures
-	while (map->textures[tex->num_textures][0] != '\0')
-		tex->num_textures++;
-	
-	tex->tex_names = new GLuint[tex->num_textures];
-	if (tex->tex_names == NULL) 
-	{
-		FError("mem for texture names");
-		return false;
-	}
+	m_numWorldTextures = 0;
 
+	//Count number of textures
+	while (map->textures[m_numWorldTextures][0] != '\0')
+		m_numWorldTextures++;
+
+	tex->bin_world = g_pRast->TextureBinInit(m_numWorldTextures);
+
+	// allocate the poly cache
 	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
-		tex->polycaches[i] = new cpoly_t* [tex->num_textures];
+		tex->polycaches[i] = new cpoly_t* [m_numWorldTextures];
 		if (!tex->polycaches[i]) 
 		{
 			FError("mem for map tex cache");
 			return false;
 		}
-		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * tex->num_textures);
+		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * m_numWorldTextures);
 	}
 
-	tex->dims = new dimension_t[tex->num_textures];
+	// allocate dim's
+	tex->dims = new dimension_t[m_numWorldTextures];
 	if (!tex->dims) 
 	{
 		FError("mem for map tex dims");
 		return false;
 	}
 
-	m_numWorldTextures = tex->num_textures;
-	
-	glGenTextures(tex->num_textures, tex->tex_names);
-
-	m_texReader->LockBuffer(TEX_MAXTEXTURESIZE);
-	m_texReader->LockMipMapBuffer(TEX_MAXMIPMAPSIZE);
-
-	for (t = 0; t < tex->num_textures; t++)
+	for (t=0; t<m_numWorldTextures; t++)
 	{
+
 		LoadTexture(map->textures[t]);
-		mipcount = m_texReader->GetMipCount();
-			
+
 		//Set initial dimensions
 		tex->dims[t][0] = m_texReader->GetWidth();
 		tex->dims[t][1] = m_texReader->GetHeight();
 
+		// create all mipmaps
+		const tex_load_t *tdata = m_texReader->GetData();
+		mipcount = tdata->mipmaps - 1;
+		while (mipcount > 0)
+		{
+			m_texReader->ImageReduce(mipcount);
+			mipcount--;
+		}
+
+		g_pRast->TextureLoad(tex->bin_world, t, tdata);
+
+
+/*
 		glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -253,30 +259,22 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 						 GL_UNSIGNED_BYTE,
 						 m_texReader->GetData());
 		}
-		m_texReader->Reset();
+*/
 	}
 
 // FIXME - temp hack to get lightmapping working
 	if (!map->nlightdefs || !map->light_size)
 	{
-		m_texReader->UnlockBuffer();
-		m_texReader->UnlockMipMapBuffer();
-
 		m_loaded = ALL_TEXTURES;
 		return true;
 	}
 
-	tex->num_lightmaps = map->nlightdefs;
-
-	tex->light_names = new GLuint[tex->num_lightmaps];
-	if (tex->light_names == NULL) 
-		FError("mem for lightmap names");
-
-	glGenTextures(tex->num_lightmaps, tex->light_names);
+	tex->bin_light = g_pRast->TextureBinInit(map->nlightdefs);	// each lightdef has a unique lightmap
 
 	unsigned char *ptr = map->lightdata;
-	for (t = 0; t < tex->num_lightmaps; t++)
+	for (t = 0; t < g_pRast->TextureCount(tex->bin_light); t++)
 	{
+/*
 		m_texReader->ReadLightMap(&ptr);
 		mipcount = m_texReader->GetMipCount();
 
@@ -324,10 +322,8 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 						 m_texReader->GetData());
 		}
 		m_texReader->Reset();
+		*/
 	}
-
-	m_texReader->UnlockBuffer();
-	m_texReader->UnlockMipMapBuffer();
 
 	m_loaded = ALL_TEXTURES;
 	return true;
@@ -344,14 +340,13 @@ bool CTextureManager::UnloadWorldTextures()
 	if(m_loaded != ALL_TEXTURES)
 		return true;
 
-	if (!tex || !tex->num_textures)
+	if (!tex)
 		return false;
 
 	ConPrint("Destroying map textures: ");
 
-	glDeleteTextures(tex->num_textures, tex->tex_names);
-	delete [] tex->tex_names;
-	tex->num_textures = 0;
+	g_pRast->TextureBinDestroy(tex->bin_world);
+	tex->bin_world = -1;
 
 	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
@@ -360,11 +355,10 @@ bool CTextureManager::UnloadWorldTextures()
 	}
 
 	// free lightmaps
-	if (tex->num_lightmaps)
+	if (tex->bin_light != -1)
 	{
-		glDeleteTextures(tex->num_lightmaps, tex->light_names);
-		delete [] tex->light_names;
-		tex->num_lightmaps = 0;
+		g_pRast->TextureBinDestroy(tex->bin_light);
+		tex->bin_light = -1;
 	}
 
 	if(tex->dims)
@@ -390,8 +384,5 @@ void CTextureManager::LoadTexture(const char *filename)
 	sprintf(texname,"%s/%s",m_textureDir,filename);
 
 	if(!m_texReader->Read(texname))
-	{
-		m_texReader->Reset();
 		m_texReader->DefaultTexture();
-	}
 }

@@ -14,31 +14,28 @@ purge the model cache
 ************************************************/
 void model_cache_purge(void)
 {
-
-	glDisable(GL_BLEND);
-	glDepthFunc(GL_LEQUAL);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 
 	for (int m=0; m<used_models; m++)
 	{
 		// fixme - set skin here!!
-		glPushMatrix();
-		glTranslatef(model_cache[m].origin.x,
-					 model_cache[m].origin.z,
-					-model_cache[m].origin.y);
-		glRotatef( model_cache[m].angles.ROLL  * 180/PI, 0, 0, 1);
-		glRotatef(-model_cache[m].angles.PITCH * 180/PI, 1, 0, 0);
-		glRotatef( model_cache[m].angles.YAW   * 180/PI, 0, 1, 0);
+		g_pRast->MatrixPush();
+
+		g_pRast->MatrixTranslate(model_cache[m].origin);
+
+
+		g_pRast->MatrixRotateZ( model_cache[m].angles.ROLL  * 180/PI);
+		g_pRast->MatrixRotateX(-model_cache[m].angles.PITCH * 180/PI);
+		g_pRast->MatrixRotateY( model_cache[m].angles.YAW   * 180/PI);
 
 		model_draw(model_cache[m].model_num, model_cache[m].frame);
 
-		glPopMatrix();
+		g_pRast->MatrixPop();
 	}
 
 	used_models = 0;
 	tmodel = &model_cache[0];
-
-	glDepthFunc(GL_ALWAYS);
-	glEnable(GL_BLEND);
 }
 
 

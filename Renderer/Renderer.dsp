@@ -125,26 +125,6 @@ SOURCE=.\Source\Ren_main.cpp
 SOURCE=.\Source\Ren_main.h
 # End Source File
 # End Group
-# Begin Group "OpenGL"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\gl.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\gl.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Gl_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Gl_main.h
-# End Source File
-# End Group
 # Begin Group "Console"
 
 # PROP Default_Filter ""
@@ -183,18 +163,6 @@ SOURCE=.\Source\Tex_main.cpp
 # Begin Source File
 
 SOURCE=.\Source\Tex_main.h
-# End Source File
-# End Group
-# Begin Group "Light"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Light_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Light_main.h
 # End Source File
 # End Group
 # Begin Group "Models"
@@ -357,6 +325,26 @@ SOURCE=..\Shared\I_void.h
 SOURCE=.\Source\Dll_main.cpp
 # End Source File
 # End Group
+# Begin Group "OpenGL"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\gl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_driver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_rast.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_rast.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\Com_defs.h
@@ -364,6 +352,10 @@ SOURCE=..\Shared\Com_defs.h
 # Begin Source File
 
 SOURCE=..\plan\js.plan
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Rasterizer.h
 # End Source File
 # Begin Source File
 

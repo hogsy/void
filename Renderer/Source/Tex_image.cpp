@@ -40,18 +40,17 @@ CImageReader::CImageReader()
 	width = height = 0;
 	format = IMG_NONE;
 
-	buffersize = 0;
-	data = 0;
-	
-	mipbuffersize = 0;
-	mipmapdata = 0;
+	for (int i=0; i<MAX_MIPMAPS; i++)
+		mipmapdata[i] = NULL;
 }
 
 CImageReader::~CImageReader()		
-{	
-	UnlockBuffer();
-	UnlockMipMapBuffer();
-	Reset();
+{
+	for (int i=0; i<MAX_MIPMAPS; i++)
+	{
+		if (mipmapdata[i])
+			g_pHunkManager->HunkFree(mipmapdata[i]);
+	}
 }
 
 /*
@@ -59,7 +58,7 @@ CImageReader::~CImageReader()
 Key the transparent color
 ==========================================
 */
-void CImageReader::ColorKey()
+void CImageReader::ColorKey(unsigned char *data)
 {
 	if(!data || format != IMG_RGBA)
 		return;
@@ -78,7 +77,7 @@ void CImageReader::ColorKey()
 ==========================================
 Reset the image data
 ==========================================
-*/
+
 void CImageReader::Reset()
 {
 	//Dont release data buffer if its statically alloced
@@ -91,7 +90,7 @@ void CImageReader::Reset()
 	width = 0;
 	format = IMG_NONE;
 }
-
+*/
 /*
 ==========================================
 Load a default image 
@@ -103,15 +102,11 @@ bool CImageReader::DefaultTexture()
 	width = DEFAULT_TEXTURE_WIDTH;
 	height = DEFAULT_TEXTURE_HEIGHT;
 
-	// all raw pic data is 32 bits
-	if(buffersize < width * height * 3)
-	{
-		buffersize = width * height * 3;
-		LockBuffer(buffersize);
-	}
+	int m = ConfirmMipData();
+
 
 	for (int p = 0; p < width * height * 3; p++)
-		data[p] = rand();
+		mipmapdata[m][p] = rand();
 
 	format = IMG_RGB;
 	return true;
@@ -124,9 +119,6 @@ Read a texture from the given path
 */
 bool CImageReader::Read(const char * file)
 {
-	if(data)
-		Reset();
-
 	char filename[MAX_PATH];
 	bool err = false;
 
@@ -221,12 +213,8 @@ bool CImageReader::Read_PCX()
 	width = header.width - header.x + 1;
 	height= header.height - header.y + 1;
 
-	if(buffersize < width * height * bpp)
-	{
-		buffersize = width * height * bpp;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0xFF, width * height * bpp);
+	int m = ConfirmMipData();
+	memset(mipmapdata[m], 0xFF, width * height * bpp);
 
 	byte ch;
 	int number, color;
@@ -253,7 +241,7 @@ bool CImageReader::Read_PCX()
 
 				for (index = 0; index < number; index++)
 				{
-					data[(county * bpp * (width)) + (bpp * countx) + color] = ch;
+					mipmapdata[m][(county * bpp * (width)) + (bpp * countx) + color] = ch;
 					countx++;
 				}
 			}
@@ -261,7 +249,9 @@ bool CImageReader::Read_PCX()
 	}
 
 	if (colorkey)
-		ColorKey();
+		ColorKey(mipmapdata[m]);
+
+	loaddata.format = format;
 	return true;
 }
 
@@ -305,29 +295,27 @@ bool CImageReader::Read_TGA()
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();
 
-	if(buffersize < width * height * (int)format)
-	{
-		buffersize = width * height * (int)format;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0xFF, width * height * (int)format);
+	int m = ConfirmMipData();
+	memset(mipmapdata[m], 0xFF, width * height * (int)format);
 
 	for (int h= height-1; h>=0; h--)
 	{
 		for (int w=0; w<width; w++)
 		{
-			data[h*width*(int)format + w*(int)format + 2] = m_fileReader.GetChar();
-			data[h*width*(int)format + w*(int)format + 1] = m_fileReader.GetChar();
-			data[h*width*(int)format + w*(int)format    ] = m_fileReader.GetChar();
+			mipmapdata[m][h*width*(int)format + w*(int)format + 2] = m_fileReader.GetChar();
+			mipmapdata[m][h*width*(int)format + w*(int)format + 1] = m_fileReader.GetChar();
+			mipmapdata[m][h*width*(int)format + w*(int)format    ] = m_fileReader.GetChar();
 
 			if (bpp == 4)
-				data[h*width*(int)format + w*(int)format + 3] = m_fileReader.GetChar();
+				mipmapdata[m][h*width*(int)format + w*(int)format + 3] = m_fileReader.GetChar();
 		}
 	}
 
 
 	if (colorkey)
-		ColorKey();
+		ColorKey(mipmapdata[m]);
+
+	loaddata.format = format;
 
 	return true;
 }
@@ -368,17 +356,13 @@ bool CImageReader::Read_JPG()
 	width=jcprop.JPGWidth;
 	height=jcprop.JPGHeight;
 
-	if(buffersize < jcprop.JPGWidth * jcprop.JPGHeight * jcprop.JPGChannels)
-	{
-		buffersize = width * height * jcprop.JPGChannels;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0, width * height * jcprop.JPGChannels);
+	int m = ConfirmMipData();
+	memset(mipmapdata[m], 0, width * height * jcprop.JPGChannels);
 
 	jcprop.DIBWidth    = jcprop.JPGWidth;
 	jcprop.DIBHeight   = jcprop.JPGHeight;
 	jcprop.DIBChannels = jcprop.JPGChannels;
-	jcprop.DIBBytes    = data; 
+	jcprop.DIBBytes    = mipmapdata[m]; 
 	jcprop.DIBColor	   = IJL_RGB;
 	
 	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
@@ -395,6 +379,7 @@ bool CImageReader::Read_JPG()
 		return false;
 	}
 	format=IMG_RGB;
+	loaddata.format = format;
 	return true;
 }
 
@@ -448,13 +433,16 @@ Reduce the Size of the image by 2x
 Used for mip maps
 ==========================================
 */
-void CImageReader::ImageReduce()
+void CImageReader::ImageReduce(int m)
 {
 	DWORD color;
 	int r=0, c=0, s=0;
 	
 	int	sfactor = 1;
 	int	tfactor = 1;
+
+	if (m==0)
+		return;
 
 	width /=2;
 	height /=2;
@@ -480,17 +468,18 @@ void CImageReader::ImageReduce()
 		{
 			for (s = 0; s < bpp; s++)
 			{
-                color =  data[ ((2*r)		  *width*bpp*2) + ((2*c)		 *bpp)+ s];
-                color += data[ ((2*r)		  *width*bpp*2) + ((2*c)+sfactor)*bpp + s];
-                color += data[(((2*r)+tfactor)*width*bpp*2) + ((2*c)		 *bpp)+ s];
-                color += data[(((2*r)+tfactor)*width*bpp*2) + ((2*c)+sfactor)*bpp + s];
+                color =  mipmapdata[m][ ((2*r)		  *width*bpp*2) + ((2*c)		  *bpp)+ s];
+                color += mipmapdata[m][ ((2*r)		  *width*bpp*2)  + ((2*c)+sfactor)*bpp + s];
+                color += mipmapdata[m][(((2*r)+tfactor)*width*bpp*2) + ((2*c)		  *bpp)+ s];
+                color += mipmapdata[m][(((2*r)+tfactor)*width*bpp*2) + ((2*c)+sfactor)*bpp + s];
                 color /= 4;
 
-				mipmapdata[(r*width*bpp) + (c*bpp) + s] = (byte) color;
+				mipmapdata[m-1][(r*width*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
 	}
-	memcpy(data,mipmapdata, size);
+
+	loaddata.mipdata[m-1] = mipmapdata[m-1];
 }
 
 
@@ -514,30 +503,59 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 	if (!width || !height)
 		return false;
 
-	if(buffersize < width * height * 3)
-	{
-		buffersize = width * height * 3;
-		LockBuffer(buffersize);
-	}
+	int m = ConfirmMipData();
 
 	for (int p = 0; p < width * height * 3; p++)
 	{
-		data[p] = **stream;
+		mipmapdata[m][p] = **stream;
 		(*stream)++;
 	}
 	format = IMG_RGB;
+	loaddata.format = format;
 	return true;
 }
 
 //======================================================================================
 //======================================================================================
 
+
+/*
+==========================================
+allocate / make sure we already have allocated
+all the memory we will need for all mipmaps
+==========================================
+*/
+int CImageReader::ConfirmMipData(void)
+{
+	int mips = GetMipCount();
+
+	for (int m=mips-1; m>=0; m--)
+	{
+		if (mipmapdata[m])
+			break;;
+
+		mipmapdata[m] = (unsigned char*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
+		if (!mipmapdata[m])
+		{
+			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
+			return (mips-1);
+		}
+	}
+
+	loaddata.width = width;
+	loaddata.height= height;
+	loaddata.mipdata[mips-1] = mipmapdata[mips-1];
+	loaddata.mipmaps = mips;
+
+	return (mips-1);
+}
+
 /*
 ==========================================
 Lock a static buffer to do texture i/o
 avoid continously allocing and freeing memory
 ==========================================
-*/
+
 void CImageReader::LockBuffer(int size)
 {
 	UnlockBuffer();
@@ -581,7 +599,7 @@ void CImageReader::UnlockMipMapBuffer()
 		mipmapdata = 0;
 	}
 }
-
+*/
 
 //======================================================================================
 //======================================================================================
@@ -605,7 +623,7 @@ CImageWriter::CImageWriter(CImageReader * pImage)
 {
 	m_height = pImage->GetHeight();
 	m_width = pImage->GetWidth();
-	m_pData = pImage->GetData();
+	m_pData = pImage->GetImageData();
 }
 
 CImageWriter::~CImageWriter()

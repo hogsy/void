@@ -82,7 +82,7 @@ void ScreenShot(const char *name, EImageFileFormat type)
 		Error("ScreenShot:No mem to capture screendata");
 		return;
 	}
-	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	g_pRast->ScreenShot(data);
 
 	CImageWriter imageWriter(width,height,data);
 	imageWriter.Write(checkname,type);
@@ -150,14 +150,7 @@ bool CVar_Fov(const CVar * var, int val)
 
 	if (val>=10 && val<= 170)
 	{
-		g_rInfo.fov = val * PI/180;
-		float x = (float) tan(g_rInfo.fov * 0.5f);
-		float z = x * 0.75f;						// always render in a 3:4 aspect ratio
-
-		/* set viewing projection */
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glFrustum(-x, x, -z, z, 1, 10000);
+		g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 		return true;
 	}
 	return false;
@@ -178,10 +171,12 @@ bool CVar_VidSynch(const CVar * var, int val)
 
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
+/*
 		if (val)
 			wglSwapIntervalEXT(1);
 		else
 			wglSwapIntervalEXT(0);
+*/
 		return true;
 	}
 	ComPrintf("Video card doesnt support VidSynch\n");

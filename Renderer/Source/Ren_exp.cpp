@@ -3,11 +3,12 @@
 #include "Ren_main.h"
 #include "Ren_cache.h"
 #include "Ren_beam.h"
-#include "Gl_main.h"
 #include "Hud_main.h"
 #include "Tex_main.h"
 #include "Mdl_main.h"
 #include "Con_main.h"
+
+#include "gl_rast.h"
 
 //======================================================================================
 //======================================================================================
@@ -38,11 +39,17 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
 	g_prHud = new CRHud();
-	
-	g_pGL	= new CGLUtil();
-	if(!g_pGL->IsDriverLoaded())
+
+	g_pRast = new COpenGLRast();
+	if (!g_pRast)
 	{
-		ConPrint("Unable to load opengl driver");
+		ConPrint("Couldn't Initialize Rasterizer!");
+		Shutdown();
+		return;
+	}
+
+	if (g_pRast->Init())
+	{
 		Shutdown();
 		return;
 	}
@@ -62,11 +69,11 @@ CRenExp::~CRenExp()
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;
-	
-	if(g_pGL)
-		delete g_pGL;
-	g_pGL = 0;
-	
+
+	if (g_pRast)
+		delete (g_pRast);
+	g_pRast = 0;
+
 	if(g_prHud)
 		delete g_prHud;
 	g_prHud = 0;
@@ -119,9 +126,9 @@ bool CRenExp::InitRenderer()
 	ConPrint("\n***** Renderer Intialization *****\n\n");
 
 	//Start up opengl
-	if(!g_pGL->Init())
+	if(!g_pRast->Init())
 	{
-		ConPrint("CRenExp::InitRenderer:Failed to Init Opengl");
+		ConPrint("CRenExp::InitRenderer:Failed to Init Rasterizer");
 		Shutdown();
 		return false;
 	}
@@ -154,7 +161,7 @@ bool CRenExp::Shutdown(void)
 	beam_shutdown();
 
 	g_pTex->Shutdown();
-	g_pGL->Shutdown();
+	g_pRast->Shutdown();
 	g_prCons->Shutdown();
 	return true;
 }
@@ -197,11 +204,7 @@ void CRenExp::DrawFrame(vector_t *origin, vector_t *angles, vector_t *blend)
 
 // make sure all was well
 #ifdef _DEBUG
-	int err = glGetError();
-	if (err != GL_NO_ERROR)
-	{
-		ConPrint("CRenExp::DrawFrame:GL ERROR: %s", err);
-	}
+	g_pRast->ReportErrors();
 #endif
 
 }
@@ -217,7 +220,7 @@ void CRenExp::MoveWindow(int x, int y)
 	//Update new xy-coords if in windowed mode
 	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
 	{	
-		g_pGL->SetWindowCoords(x,y);
+		g_pRast->SetWindowCoords(x,y);
 	}
 }
 
@@ -230,7 +233,7 @@ void CRenExp::Resize()
 {
 	if (g_rInfo.ready)
 	{
-		g_pGL->Resize();
+		g_pRast->Resize();
 		g_prCons->UpdateRes();
 	}
 }
@@ -245,8 +248,6 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 {
 	if(!world && level)
 	{
-		_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
-
 		if(!g_pTex->UnloadWorldTextures())
 		{
 			ConPrint("CRenExp::LoadWorld::Error Unloading textures\n");
@@ -279,8 +280,6 @@ bool CRenExp::UnloadWorld()
 	// get rid of all the old textures, load the new ones
 	if(world)
 	{
-		_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
-		
 		g_pTex->UnloadWorldTextures();
 		model_destroy_map();
 
@@ -301,12 +300,10 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 								 unsigned int bpp, 
 								 bool fullscreen)
 {
-	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
-	
 	// shut the thing down
 	g_pTex->Shutdown();
 
-	g_pGL->UpdateDisplaySettings(width,height,bpp,fullscreen);
+	g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
 
 	if(!g_pTex->Init())
 	{
@@ -338,11 +335,10 @@ bool CRenExp::Restart(void)
 {
 	g_pTex->Shutdown();
 
-	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
-	
+
 	// shut the thing down
-	g_pGL->Shutdown();
-	g_pGL->Init();
+	g_pRast->Shutdown();
+	g_pRast->Init();
 
 	//Start up the texture manager
 	if(!g_pTex->Init())

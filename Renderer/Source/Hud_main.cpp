@@ -96,8 +96,8 @@ void CHudMessage::Draw()
 	x1 = x;
 	x2 = x1 + 8;
 
-	glBegin(GL_QUADS);
-	glColor4f(1, 1, 1, 1);
+	g_pRast->PolyStart(VRAST_QUADS);
+	g_pRast->PolyColor4f(1, 1, 1, 1);
 
 	float s, t;
 	for (int c = 0; c < len; c++)
@@ -105,25 +105,24 @@ void CHudMessage::Draw()
 		s = (data[c] % 16) * 0.0625f;
 		t = (data[c] / 16) * 0.0625f;
 
-		glTexCoord2f(s, t);
-		glVertex2i(x1, y1);
+		g_pRast->PolyTexCoord(s, t);
+		g_pRast->PolyVertexi(x1, y1);
 
-		glTexCoord2f(s + 0.0625f, t);
-		glVertex2i(x2, y1);
+		g_pRast->PolyTexCoord(s + 0.0625f, t);
+		g_pRast->PolyVertexi(x2, y1);
 
-		glTexCoord2f(s + 0.0625f, t + 0.0625f);
-		glVertex2i(x2, y2);
+		g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
+		g_pRast->PolyVertexi(x2, y2);
 
-		glTexCoord2f(s, t + 0.0625f);
-		glVertex2i(x1, y2);
+		g_pRast->PolyTexCoord(s, t + 0.0625f);
+		g_pRast->PolyVertexi(x1, y2);
 
 		//move to the right one character
 		x1 = x2;
 		x2 += 8;
-
 	}
 
-	glEnd();
+	g_pRast->PolyEnd();
 
 	//Expire items who have passed the time limit
 	if(time >= GetCurTime())
@@ -177,17 +176,13 @@ void CRHud::DrawHud()
 	//Print Messages 
 
 	//transform
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
+	g_pRast->MatrixReset();
+	g_pRast->ProjectionMode(VRAST_ORTHO);
 
-	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
-	glDisable(GL_DEPTH_TEST);
+	g_pRast->TextureSet(tex->bin_base, 0);
+	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
 	for(int i=0;i<MAX_MESSAGES;i++)
 	{
 		if(m_hmessages[i].inuse)
@@ -195,10 +190,6 @@ void CRHud::DrawHud()
 			m_hmessages[i].Draw();
 		}
 	}
-
-	//restore everything
-	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
 }
 
 

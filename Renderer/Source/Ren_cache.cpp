@@ -1,14 +1,12 @@
 #include "Ren_cache.h"
 #include "Tex_hdr.h"
 #include "Mdl_cache.h"
-#include "Light_main.h"
 
 
 
 poly_t *cache_polys;
 extern poly_t *tpoly;
 int used_polys;
-extern light_info_t light;
 extern bool			lights_available;
 
 // !!! only map polys are cached !!!
@@ -99,7 +97,7 @@ draw a poly
 void r_draw_world_poly(poly_t *p, dimension_t dim)
 {
 	float s, t;
-	glBegin(GL_TRIANGLE_FAN);
+	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 
 	for (int v = 0; v < p->num_vertices; v++)
 	{
@@ -116,13 +114,11 @@ void r_draw_world_poly(poly_t *p, dimension_t dim)
 		s /= dim[0];
 		t /= dim[1];
 
-		glTexCoord2f(s, t);
-		glVertex3f(  p->vertices[v].x,
-					 p->vertices[v].z, 
-					-p->vertices[v].y);
-
+		g_pRast->PolyTexCoord(s, t);
+		g_pRast->PolyVertexf(p->vertices[v]);
 	}
-	glEnd();
+
+	g_pRast->PolyEnd();
 }
 
 void r_draw_light_poly(poly_t *p)
@@ -131,9 +127,8 @@ void r_draw_light_poly(poly_t *p)
 		return;
 
 	float s, t;
-	glBindTexture(GL_TEXTURE_2D, tex->light_names[p->lightdef]);
-
-	glBegin(GL_TRIANGLE_FAN);
+	g_pRast->TextureSet(tex->bin_light, p->lightdef);
+	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 	for (int v = 0; v < p->num_vertices; v++)
 	{
 		s = p->vertices[v].x * world->lightdefs[p->lightdef].vecs[0][0] + 
@@ -146,27 +141,25 @@ void r_draw_light_poly(poly_t *p)
 			p->vertices[v].z * world->lightdefs[p->lightdef].vecs[1][2] + 
 			world->lightdefs[p->lightdef].vecs[1][3];
 
-		glTexCoord2f(s, t);
-		glVertex3f(  p->vertices[v].x,
-					 p->vertices[v].z, 
-					-p->vertices[v].y);
-
+		g_pRast->PolyTexCoord(s, t);
+		g_pRast->PolyVertexf(p->vertices[v]);
 	}
-	glEnd();
+	g_pRast->PolyEnd();
 }
 
 
 void r_draw_multi_poly(poly_t *p, dimension_t dim)
 {
+/*
 	// skip polys without a lightmap
 	if (p->lightdef == -1)
 		return;
 
 	float s, t, ls, lt;
 
-	glBindTexture(GL_TEXTURE_2D, tex->light_names[p->lightdef]);
+	g_pRast->TextureSet(tex->bin_light, p->lightdef);
+	g_pRast->PolyStart();
 
-	glBegin(GL_TRIANGLE_FAN);
 	for (int v = 0; v < p->num_vertices; v++)
 	{
 		// world tex coords
@@ -204,6 +197,7 @@ void r_draw_multi_poly(poly_t *p, dimension_t dim)
 
 	}
 	glEnd();
+*/
 }
 
 
@@ -214,7 +208,7 @@ void cache_purge_single()
 {
 	bool lightmaps = ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT));
 
-	glColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
+	g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
 
 	//
 	// single texture / multi pass rendering
@@ -226,17 +220,16 @@ void cache_purge_single()
 		{
 		// zfill
 		case CACHE_PASS_ZFILL*2:		// texture
-			glDisable(GL_BLEND);
-			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_ALWAYS);
+			g_pRast->DepthFunc(VRAST_DEPTH_FILL);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
 			break;
+
 
 		case CACHE_PASS_ZFILL*2+1:		// lightmap
 			if (lightmaps)
 			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-				glDisable(GL_DEPTH_TEST);
+				g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
 			}
 			else
 				continue;	// lighting not available or in fullbright
@@ -245,18 +238,15 @@ void cache_purge_single()
 
 		// zbuffer
 		case CACHE_PASS_ZBUFFER*2:		// texture
-			glDisable(GL_BLEND);
-			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LEQUAL);
+			g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
 			break;
 
 		case CACHE_PASS_ZBUFFER*2+1:	// lightmap
 			if (lightmaps)
 			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-				glEnable(GL_DEPTH_TEST);
-				glDepthFunc(GL_LEQUAL);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
+				g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			}
 			else
 				continue;	// lighting not available or in fullbright
@@ -265,25 +255,19 @@ void cache_purge_single()
 
 		// alphablend
 		case CACHE_PASS_ALPHABLEND*2:		// texture
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LEQUAL);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+			g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			if (lightmaps)
-				glColor4f(fullblend->x, fullblend->y, fullblend->z, 0.2f);
+				g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 0.2f);
 			else
-				glColor4f(fullblend->x, fullblend->y, fullblend->z, 0.4f);
-
+				g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 0.4f);
 			break;
 
 		case CACHE_PASS_ALPHABLEND*2+1:		// lightmap
 			if (lightmaps)
 			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-				glEnable(GL_DEPTH_TEST);
-				glDepthFunc(GL_LEQUAL);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
+				g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			}
 			else
 				continue;	// lighting not available or in fullbright
@@ -294,7 +278,7 @@ void cache_purge_single()
 		}
 
 
-		for(uint t=0; t<tex->num_textures; t++)
+		for(uint t=0; t<g_pRast->TextureCount(tex->bin_world); t++)
 		{
 			// only bind if we have a poly that uses it
 			if (!tex->polycaches[pass/2][t])
@@ -302,8 +286,7 @@ void cache_purge_single()
 
 			// only bind world texture once for all polys that use it
 			if (pass%2 == 0)
-				glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
-
+				g_pRast->TextureSet(tex->bin_world, t);
 
 			for (cpoly_t *p=tex->polycaches[pass/2][t]; p; p=p->next)
 			{
@@ -323,11 +306,11 @@ void cache_purge_multi()
 	// arb multi texturing
 	//
 	
-
+/*
 	// world textures are unit 0, lightmaps are unit 1
 	// set up blending
 
-	glColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
+	g_pRast->PolyColor4(*fullblend, 1);
 
 	for (int pass=0; pass<CACHE_PASS_NUM; pass++)
 	{
@@ -397,6 +380,8 @@ void cache_purge_multi()
 	glDisable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glEnable(GL_TEXTURE_2D);
+
+*/
 }
 
 
@@ -416,7 +401,7 @@ void cache_purge(void)
 	// free all the polys that are cached
 	for (int p=0; p<CACHE_PASS_NUM; p++)
 	{
-		for(uint t=0; t<tex->num_textures; t++)
+		for(uint t=0; t<g_pRast->TextureCount(tex->bin_world); t++)
 		{
 			return_poly(tex->polycaches[p][t]);
 			tex->polycaches[p][t] = NULL;

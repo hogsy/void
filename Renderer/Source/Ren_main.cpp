@@ -63,20 +63,15 @@ Renderer Initiation - set up initial render state
 ***********************/
 void r_init(void)
 {
-	glClearColor(.1, .1, .1, 1);
+//	glClearColor(.1, .1, .1, 1);
 
 	float x = (float) tan(g_rInfo.fov * 0.5f);
 	float z = x * 0.75f;						// always render in a 3:4 aspect ratio
 
 	/* set viewing projection */
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glFrustum(-x, x, -z, z, 1, 10000);
+	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 
-	/* position viewer */
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
+/*
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -91,15 +86,17 @@ void r_init(void)
 	glDepthFunc(GL_ALWAYS);
 
 	glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
-
+*/
 
 	// reset last r_vidsynch
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
+/*
 		if (g_pVidSynch->ival)
 			wglSwapIntervalEXT(1);
 		else
 			wglSwapIntervalEXT(0);
+*/
 	}
 
 	g_rInfo.ready = true;
@@ -250,20 +247,19 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(eye.origin);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	g_pRast->ClearBuffers(VRAST_COLOR_BUFFER | VRAST_DEPTH_BUFFER);
 
 // set up the view transformation
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
+	g_pRast->MatrixReset();
 
-	glRotatef( eye.angles.ROLL  * 180/PI, 0, 0, 1);
-	glRotatef(-eye.angles.PITCH * 180/PI, 1, 0, 0);
-	glRotatef( eye.angles.YAW   * 180/PI, 0, 1, 0);
-	glTranslatef(-eye.origin.x, -eye.origin.z, eye.origin.y);
+	g_pRast->MatrixRotateZ( eye.angles.ROLL  * 180/PI);
+	g_pRast->MatrixRotateX(-eye.angles.PITCH * 180/PI);
+	g_pRast->MatrixRotateY( eye.angles.YAW   * 180/PI);
+	g_pRast->MatrixTranslate(eye.origin);
+
 
 	r_draw_world();
-
-	glPopMatrix();
 
 // display any messages
 	g_prHud->DrawHud();
@@ -271,8 +267,7 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 // draw the console if we need to
 	g_prCons->Draw();
 
-	glFlush();
-	_SwapBuffers(g_rInfo.hDC);
+	g_pRast->FrameEnd();
 }
 
 
@@ -284,10 +279,7 @@ Just draw the console
 
 void r_drawcons()
 {
-	glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
-	
+	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
 	g_prCons->Draw();
-
-	glFlush();
-	_SwapBuffers(g_rInfo.hDC);
+	g_pRast->FrameEnd();
 }

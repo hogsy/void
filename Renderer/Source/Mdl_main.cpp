@@ -63,11 +63,11 @@ void model_draw(int mindex, float frame)
 
 
 		if (num_cmds > 0)
-			glBegin(GL_TRIANGLE_STRIP);
+			g_pRast->PolyStart(VRAST_TRIANGLE_STRIP);
 		else
 		{
 			num_cmds *= -1;
-			glBegin(GL_TRIANGLE_FAN);
+			g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 		}
 
 		for (i = 0; i < num_cmds; i++)
@@ -98,13 +98,13 @@ void model_draw(int mindex, float frame)
 				v.z /= 2;
 			}
 
-			glTexCoord2f(cmd->s, cmd->t);
-			glVertex3f(v.x, v.z, -v.y);
+			g_pRast->PolyTexCoord(cmd->s, cmd->t);
+			g_pRast->PolyVertexf(v);
 
 			ptr += 3;
 		}
 
-		glEnd();
+		g_pRast->PolyEnd();
 
 		num_cmds = *(int*)ptr;
 	}

@@ -1,6 +1,5 @@
 
 #include "standard.h"
-#include "light_main.h"
 #include "Tex_image.h"
 
 #define LIGHT_VERSION	1

@@ -27,7 +27,7 @@ typedef struct
 
 	void			*cmds;		// the glcommand list
 	model_frame_t	*frames;
-	GLuint			*skins;		// opengl texture names for the skins
+	int				skin_bin;	// rasterizer texture bin for skins
 } model_t;
 
 

@@ -10,23 +10,21 @@ struct tex_t
 {
 	tex_t() 
 	{ 
-		num_textures = 0;
-		num_lightmaps = 0;
-		base_names = 0;
-		tex_names = 0;
-		light_names = 0;
+		bin_base = -1;
+		bin_world = -1;
+		bin_light = -1;
+
 		dims = 0;
 		for (int i=0; i<CACHE_PASS_NUM; i++)
 			polycaches[i] = 0;
 	}
 
-	unsigned int num_textures;
-	unsigned int num_lightmaps;
-	GLuint		*base_names;
-	GLuint		*tex_names;
-	GLuint		*light_names;
+	int bin_base;
+	int bin_world;
+	int bin_light;
+
 	dimension_t	*dims;
-	cpoly_t		**polycaches[CACHE_PASS_NUM];	// [0] - zfill, [1] - zbuffered
+	cpoly_t		**polycaches[CACHE_PASS_NUM];
 };
 
 extern tex_t *tex;

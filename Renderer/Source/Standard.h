@@ -9,10 +9,10 @@
 
 #include "I_hunkmem.h"
 #include "I_renderer.h"
+#include "Rasterizer.h"
 
 #include "Com_cvar.h"
 
-#include "gl.h"
 #include "3dMath.h"
 #include "World.h"
 
@@ -23,6 +23,10 @@ extern RenderInfo_t g_rInfo;
 
 //Console Interface for registering CVars
 extern I_Console *  g_pConsole;
+
+// Rasterizer Interface
+extern I_Rasterizer  * g_pRast;
+
 
 //The World
 extern world_t	*world;

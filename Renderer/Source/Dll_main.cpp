@@ -4,6 +4,7 @@
 I_Console	  *	g_pConsole=0;
 I_Void		  *	g_pVoidExp=0;
 I_HunkManager * g_pHunkManager=0;
+I_Rasterizer  * g_pRast;
 CRenExp		  * g_pRenExp=0;
 CMemManager		g_memManager("mem_ren.log");
 

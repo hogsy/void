@@ -41,9 +41,6 @@ typedef struct RenderInfo_t
 
 	HWND		hWnd;		//Window information
 
-	HDC			hDC;		//device context
-	HGLRC		hRC;		//the gl rendering context
-
 	bool		active;		//in the window active?
 	bool		ready;
 

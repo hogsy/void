@@ -14,13 +14,23 @@ enum EImageFileFormat
 	FORMAT_JPG
 };
 
-enum EImageFormat
+
+const int mipdatasizes[MAX_MIPMAPS] = 
 {
-	IMG_NONE = 0,
-	IMG_ALPHA =1,
-	IMG_RGB   =3,
-	IMG_RGBA  =4
+	1*1*4*4,
+	2*2*4*4,
+	4*4*4*4,
+	8*8*4*4,
+	16*16*4*4,
+	32*32*4*4,
+	64*64*4*4,
+	128*128*4*4,
+	256*256*4*4,
+	512*512*4*4,
+	1024*1024*4*4
 };
+
+
 
 //======================================================================================
 
@@ -38,7 +48,8 @@ public:
 
 	const int & GetHeight() const { return height;}		//Height
 	const int & GetWidth()  const { return width; }		//Width
-	const byte * GetData()   const { return data; }
+	const tex_load_t * GetData()   const { return &loaddata; }
+	const byte * GetImageData()    { return mipmapdata[GetMipCount()-1]; }
 	const EImageFormat & GetFormat()  const { return format; }	//BYTES per pixel
 
 	bool Read(const char * file);
@@ -48,26 +59,28 @@ public:
 	bool ReadLightMap(unsigned char **stream);	
 
 	int  GetMipCount();
-	void ImageReduce();			//Reduce image data by 2x. used to create mipmaps
+	int  ConfirmMipData();		//allocate mem if we need to
+	void ImageReduce(int m);			//Reduce image data by 2x. used to create mipmaps
 	
-	void Reset();
+//	void Reset();
 	bool DefaultTexture();
-	void ColorKey();			//Only works for RGBA images
+	void ColorKey(unsigned char *data);			//Only works for RGBA images
 
 	//Hack until a full featured memory manager is done
 	//static buffer is locked for all i/o when loading map textures for speed
-	void LockBuffer(int size);
-	void LockMipMapBuffer(int size);
-	void UnlockBuffer();
-	void UnlockMipMapBuffer();
+//	void LockBuffer(int size);
+//	void LockMipMapBuffer(int size);
+//	void UnlockBuffer();
+//	void UnlockMipMapBuffer();
 
 protected:
 
-	int		buffersize;
-	int		mipbuffersize;
+//	int		buffersize;
+//	int		mipbuffersize;
 	
-	byte *	mipmapdata;
-	byte *	data;
+	byte *	mipmapdata[MAX_MIPMAPS];;
+	tex_load_t	loaddata;
+//	byte *	data;
 	
 	int		width,
 			height;

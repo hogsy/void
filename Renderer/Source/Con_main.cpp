@@ -173,41 +173,34 @@ void CRConsole::Draw()
 	float fbot = (float)bottom/255;
 
 	// transform
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
-	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D, tex->base_names[1]);
-	
-	glBegin(GL_QUADS);
+	g_pRast->ProjectionMode(VRAST_ORTHO);
+	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+	g_pRast->TextureSet(tex->bin_base, 1);
 
-	glColor4f(ftop, ftop, ftop, ftop);
-	glTexCoord2f(0, 0);
-	glVertex2i(0, g_rInfo.height);
-	glTexCoord2f(1, 0);
-	glVertex2i(g_rInfo.width, g_rInfo.height);
+	g_pRast->PolyStart(VRAST_QUADS);
+
+	g_pRast->PolyColor4f(ftop, ftop, ftop, ftop);
+	g_pRast->PolyTexCoord(0, 0);
+	g_pRast->PolyVertexi(0, g_rInfo.height);
+	g_pRast->PolyTexCoord(1, 0);
+	g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height);
 	
-	glColor4f(fbot, fbot, fbot, fbot);
-	glTexCoord2f(1, 1);
+	g_pRast->PolyColor4f(fbot, fbot, fbot, fbot);
+	g_pRast->PolyTexCoord(1, 1);
 	if(m_fullscreen)
-		glVertex2i(g_rInfo.width, 0);
+		g_pRast->PolyVertexi(g_rInfo.width, 0);
 	else
-		glVertex2i(g_rInfo.width, g_rInfo.height/2);
-	glTexCoord2f(0, 1);
+		g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height/2);
+	g_pRast->PolyTexCoord(0, 1);
 	if(m_fullscreen)
-		glVertex2i(0, 0);
+		g_pRast->PolyVertexi(0, 0);
 	else
-		glVertex2i(0, g_rInfo.height/2);
+		g_pRast->PolyVertexi(0, g_rInfo.height/2);
 	
-	glEnd();
+	g_pRast->PolyEnd();
 
 	//print all our text over the top
 	PrintBuffer(top, bottom);
-
-	//restore stuff
-	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -237,8 +230,8 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 	fbot = (float)a / 255;
 
 
-	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
-	glBegin(GL_QUADS);
+	g_pRast->TextureSet(tex->bin_base, 0);
+	g_pRast->PolyStart(VRAST_QUADS);
 
 	//Text positioning
 	//Find starting position
@@ -295,25 +288,21 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 				s = (m_statusline[start] % 16) * 0.0625f;
 				t = (m_statusline[start] / 16) * 0.0625f;
 
-				glColor4f(ftop, ftop, ftop, ftop);
-				glColor4f(1, 1, 1, ftop);
-				glTexCoord2f(s, t);
-				glVertex2i(x1, y1);
+				g_pRast->PolyColor4f(1, 1, 1, ftop);
+				g_pRast->PolyTexCoord(s, t);
+				g_pRast->PolyVertexi(x1, y1);
 
-				glColor4f(ftop, ftop, ftop, ftop);
-				glColor4f(1, 1, 1, ftop);
-				glTexCoord2f(s + 0.0625f, t);
-				glVertex2i(x2, y1);
+				g_pRast->PolyColor4f(1, 1, 1, ftop);
+				g_pRast->PolyTexCoord(s + 0.0625f, t);
+				g_pRast->PolyVertexi(x2, y1);
 
-				glColor4f(fbot, fbot, fbot, fbot);
-				glColor4f(1, 1, 1, fbot);
-				glTexCoord2f(s + 0.0625f, t + 0.0625f);
-				glVertex2i(x2, y2);
+				g_pRast->PolyColor4f(1, 1, 1, fbot);
+				g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
+				g_pRast->PolyVertexi(x2, y2);
 		
-				glColor4f(fbot, fbot, fbot, fbot);
-				glColor4f(1, 1, 1, fbot);
-				glTexCoord2f(s, t + 0.0625f);
-				glVertex2i(x1, y2);
+				g_pRast->PolyColor4f(1, 1, 1, fbot);
+				g_pRast->PolyTexCoord(s, t + 0.0625f);
+				g_pRast->PolyVertexi(x1, y2);
 
 				//move to the right one character
 				x1 = x2;
@@ -331,25 +320,21 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 		s = ('_' % 16) * 0.0625f;
 		t = ('_' / 16) * 0.0625f;
 
-		glColor4f(ftop, ftop, ftop, ftop);
-		glColor4f(1, 1, 1, ftop);
-		glTexCoord2f(s, t);
-		glVertex2i(x1, 8);
+		g_pRast->PolyColor4f(1, 1, 1, ftop);
+		g_pRast->PolyTexCoord(s, t);
+		g_pRast->PolyVertexi(x1, 8);
 
-		glColor4f(ftop, ftop, ftop, ftop);
-		glColor4f(1, 1, 1, ftop);
-		glTexCoord2f(s + 0.0625f, t);
-		glVertex2i(x2, 8);
+		g_pRast->PolyColor4f(1, 1, 1, ftop);
+		g_pRast->PolyTexCoord(s + 0.0625f, t);
+		g_pRast->PolyVertexi(x2, 8);
 
-		glColor4f(fbot, fbot, fbot, fbot);
-		glColor4f(1, 1, 1, fbot);
-		glTexCoord2f(s + 0.0625f, t + 0.0625f);
-		glVertex2i(x2, 0);
+		g_pRast->PolyColor4f(1, 1, 1, fbot);
+		g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
+		g_pRast->PolyVertexi(x2, 0);
 
-		glColor4f(fbot, fbot, fbot, fbot);
-		glColor4f(1, 1, 1, fbot);
-		glTexCoord2f(s, t + 0.0625f);
-		glVertex2i(x1, 0);
+		g_pRast->PolyColor4f(1, 1, 1, fbot);
+		g_pRast->PolyTexCoord(s, t + 0.0625f);
+		g_pRast->PolyVertexi(x1, 0);
 	}
 
 
@@ -373,21 +358,21 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 				t = (m_seperatorchar / 16) * 0.0625f;
 			}
 
-			glColor4f(ftop, ftop, ftop, ftop);
-			glTexCoord2f(s, t);
-			glVertex2i(x1, y1);
+			g_pRast->PolyColor4f(1, 1, 1, ftop);
+			g_pRast->PolyTexCoord(s, t);
+			g_pRast->PolyVertexi(x1, y1);
 
-			glColor4f(ftop, ftop, ftop, ftop);
-			glTexCoord2f(s + 0.0625f, t);
-			glVertex2i(x2, y1);
+			g_pRast->PolyColor4f(1, 1, 1, ftop);
+			g_pRast->PolyTexCoord(s + 0.0625f, t);
+			g_pRast->PolyVertexi(x2, y1);
 
-			glColor4f(fbot, fbot, fbot, fbot);
-			glTexCoord2f(s + 0.0625f, t + 0.0625f);
-			glVertex2i(x2, y2);
+			g_pRast->PolyColor4f(1, 1, 1, fbot);
+			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
+			g_pRast->PolyVertexi(x2, y2);
 	
-			glColor4f(fbot, fbot, fbot, fbot);
-			glTexCoord2f(s, t + 0.0625f);
-			glVertex2i(x1, y2);
+			g_pRast->PolyColor4f(1, 1, 1, fbot);
+			g_pRast->PolyTexCoord(s, t + 0.0625f);
+			g_pRast->PolyVertexi(x1, y2);
 
 			//move to the right one character
 			x1 = x2;
@@ -420,28 +405,28 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
 
 
-			glColor4f(ftop, ftop, ftop, ftop);
-			glTexCoord2f(s, t);
-			glVertex2i(x1, y1);
+			g_pRast->PolyColor4f(1, 1, 1, ftop);
+			g_pRast->PolyTexCoord(s, t);
+			g_pRast->PolyVertexi(x1, y1);
 
-			glColor4f(ftop, ftop, ftop, ftop);
-			glTexCoord2f(s + 0.0625f, t);
-			glVertex2i(x2, y1);
+			g_pRast->PolyColor4f(1, 1, 1, ftop);
+			g_pRast->PolyTexCoord(s + 0.0625f, t);
+			g_pRast->PolyVertexi(x2, y1);
 
-			glColor4f(fbot, fbot, fbot, fbot);
-			glTexCoord2f(s + 0.0625f, t + 0.0625f);
-			glVertex2i(x2, y2);
+			g_pRast->PolyColor4f(1, 1, 1, fbot);
+			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
+			g_pRast->PolyVertexi(x2, y2);
 
-			glColor4f(fbot, fbot, fbot, fbot);
-			glTexCoord2f(s, t + 0.0625f);
-			glVertex2i(x1, y2);
+			g_pRast->PolyColor4f(1, 1, 1, fbot);
+			g_pRast->PolyTexCoord(s, t + 0.0625f);
+			g_pRast->PolyVertexi(x1, y2);
 
 		    //move to the right one character
 			x1 = x2;
 			x2 += 8;
 		}
 	}
-	glEnd();
+	g_pRast->PolyEnd();
 }
 
 
