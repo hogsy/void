@@ -226,7 +226,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					
 					//Print all the matched entries
 					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
-						ComPrintf("%s\n", *it);
+						ComPrintf("%s\n", it->c_str());
 					m_conString.assign(matchingNames.back());
 				}
 				break;
