@@ -100,7 +100,7 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 DrawModel 
 =======================================
 */
-void CModelManager::DrawModel(const ClEntity &state)
+void CModelManager::DrawModel(ClEntity &state)
 {
 	// add model to list to be drawn
 	drawmodel_t *ndm = drawmodelGet();
@@ -188,22 +188,31 @@ void CModelManager::Purge(void)
 
 		// add this model transform to the stack
 		g_pRast->MatrixTranslate(walk->state->origin.x, walk->state->origin.y, walk->state->origin.z);
+		g_pRast->MatrixRotateZ((walk->state->angles.YAW - PI/2)   * 180/PI);
+		g_pRast->MatrixRotateX(-walk->state->angles.PITCH  * 180/PI);
+		g_pRast->MatrixRotateY(walk->state->angles.ROLL * 180/PI);
 
-		g_pRast->MatrixRotateZ(walk->state->angles.YAW   * 180/PI);
-		g_pRast->MatrixRotateY(-walk->state->angles.PITCH  * 180/PI);
-		g_pRast->MatrixRotateX(walk->state->angles.ROLL * 180/PI);
+		// do we need to move to the next frame?
+		walk->state->animInfo.frac += GetFrameTime()*10.0f;
+		if (walk->state->animInfo.frac > 1)
+		{
+			// have to move to next frame
+			walk->state->animInfo.frac -= 1;
+			walk->state->animInfo.currentFrame++;
+			if (walk->state->animInfo.currentFrame > walk->state->animInfo.frameEnd)
+				walk->state->animInfo.currentFrame = walk->state->animInfo.frameBegin;
+		}
 
-//		walk->state->animInfo.
-		int nextframe = walk->state->animInfo.currentFrame + 1;
+		// find the next frame
+		int nextframe;
+		nextframe = walk->state->animInfo.currentFrame+1;
 		if (nextframe > walk->state->animInfo.frameEnd)
 			nextframe = walk->state->animInfo.frameBegin;
-		float frac = GetCurTime();
-		frac -= floor(frac);
 
 		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
 																   walk->state->animInfo.currentFrame,
 																   nextframe,
-																   frac);
+																   walk->state->animInfo.frac);
 		g_pRast->MatrixPop();
 
 		drawmodelRelease(walk);

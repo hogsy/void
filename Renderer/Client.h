@@ -19,7 +19,7 @@ public:
 	inline int LoadModel(const char *model, CacheType cache, int index=-1)
 	{	return CModelManager::LoadModel(model, cache, index);	
 	}
-	inline void DrawModel(const ClEntity &state)
+	inline void DrawModel(ClEntity &state)
 	{	CModelManager::DrawModel(state);	
 	}
 	inline void UnloadModel(CacheType cache, int index)

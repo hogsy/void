@@ -26,7 +26,7 @@ public:
 	int LoadModel(const char *model, CacheType cache, int index=-1);
 
 	// add the model to the render cache
-	void DrawModel(const ClEntity &state);
+	void DrawModel(ClEntity &state);
 	void Purge(void);
 
 	// unload models from memory
@@ -47,7 +47,8 @@ private:
 		drawmodel_t() { state = 0; next = 0; }
 		~drawmodel_t() { state = 0; next = 0; }
 
-		const ClEntity *state;
+		// cant be const because renderer needs to update fraction
+		ClEntity *state;
 		drawmodel_t *next;
 	};
 
