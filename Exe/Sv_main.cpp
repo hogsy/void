@@ -496,7 +496,9 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 			{
 				if(!m_clients[i] ||!m_clients[i]->spawned)
 					continue;
-				buffer.WriteShort(m_clients[i]->num);
+
+				buffer.WriteByte(SV_CLFULLINFO);
+				buffer.WriteByte(m_clients[i]->num);
 				buffer.WriteString(m_clients[i]->name);
 				buffer.WriteShort(m_clients[i]->modelIndex);
 				buffer.WriteString(m_clients[i]->modelName);

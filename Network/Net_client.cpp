@@ -145,7 +145,6 @@ void CNetClient::SendUpdate()
 				m_pNetChan->m_buffer.WriteInt(m_levelId);
 				m_pNetChan->m_buffer.WriteByte(m_spawnLevel);
 				m_pNetChan->m_buffer.WriteInt(m_spawnNextPacket);
-				
 				m_pNetChan->PrepareTransmit();
 				m_pSock->SendTo(m_pNetChan);
 			}
@@ -425,6 +424,7 @@ void CNetClient::Disconnect(bool serverPrompted)
 		//Did the server prompt us to disconnect ?
 		if(!serverPrompted)
 		{
+m_pClient->Print("CL: Telling server we disconnect %s\n", m_pNetChan->GetAddrString());
 			//send disconnect message if remote
 			m_pNetChan->m_buffer.Reset();
 			m_pNetChan->m_buffer.WriteByte(CL_DISCONNECT);
@@ -462,6 +462,7 @@ void CNetClient::Reconnect(bool serverPrompted)
 	char svaddr[NET_IPADDRLEN];
 	strcpy(svaddr,m_szServerAddr);
 	Disconnect(serverPrompted);
+
 	ConnectTo(svaddr);
 	m_pClient->Print("CL: Reconnecting ...\n");
 }

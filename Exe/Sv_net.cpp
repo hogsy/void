@@ -27,6 +27,7 @@ bool CServer::ValidateClConnection(int clNum,
 			  strlen(m_clients[clNum]->skinName) + 10;
 
 	GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X,clNum);
+	
 	m_net.ChanBeginWrite(m_multiCastSet, SV_CLFULLINFO, len);
 	m_net.ChanWriteByte(m_clients[clNum]->num);
 	m_net.ChanWriteString(m_clients[clNum]->name);
@@ -47,6 +48,12 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
+/*
+	if(packetId != CL_MOVE)
+	{
+ComPrintf("SV :message from %s\n", m_clients[clNum]);
+	}
+*/
 	while(packetId != 255)
 	{
 		switch(packetId)
@@ -94,6 +101,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 			}
 		case CL_DISCONNECT:
 			{
+ComPrintf("SV: %d - %s wants to disconnect\n", clNum, m_clients[clNum]->name);
 				m_net.SendDisconnect(clNum,DR_CLQUIT);
 				break;
 			}

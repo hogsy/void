@@ -575,14 +575,16 @@ void CNetServer::SendDisconnect(int chanId, const DisconnectReason &reason)
 	if(m_clChan[chanId].m_state == CL_FREE)
 		return;
 
-	m_clChan[chanId].m_netChan.m_buffer.Reset();
-	m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_DISCONNECT);
-
+	//Let the client know of the reason if the server is disconnecting it
+	//Dont bother if it was on its own request
 	if(reason.disconnectMsg)
+	{
+		m_clChan[chanId].m_netChan.m_buffer.Reset();
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_DISCONNECT);
 		m_clChan[chanId].m_netChan.m_buffer.WriteString(reason.disconnectMsg);
-	
-	m_clChan[chanId].m_netChan.PrepareTransmit();
-	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
+		m_clChan[chanId].m_netChan.PrepareTransmit();
+		m_pSock->SendTo(&m_clChan[chanId].m_netChan);
+	}
 
 	//Let the main server know that this client is disconnecting
 	m_pServer->OnClientDrop(chanId,reason);
@@ -610,6 +612,7 @@ void CNetServer::ReadPackets()
 		//then it should belong to a client
 		for(int i=0;i<m_pSvState->maxClients;i++)
 		{
+//ComPrintf("Msg from :
 			//match client
 			if(m_clChan[i].m_netChan.MatchAddr(m_pSock->GetSource()))
 			{
@@ -624,7 +627,7 @@ void CNetServer::ReadPackets()
 				break;
 			}
 		}
-//ComPrintf("SV: unknown packet from %s\n", m_pSock->GetSource().ToString());
+//ComPrintf("SV: Unknown packet from %s\n", m_pSock->GetSource().ToString());
 	}
 }
 
@@ -640,6 +643,20 @@ void CNetServer::SendPackets()
 		if(m_clChan[i].m_state < CL_CONNECTED)
 			continue;
 
+		//Check timeout
+		if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::GetCurTime())
+		{
+			SendDisconnect(i,DR_CLTIMEOUT);
+			continue;
+		}
+
+		//Check overflow
+		if(m_clChan[i].m_bDropClient)
+		{
+			SendDisconnect(i,DR_CLOVERFLOW);
+			continue;
+		}
+
 		//Will fail if we didnt receive a packet from 
 		//this client this frame, or if channels chokes
 		if(!m_clChan[i].ReadyToSend())
@@ -648,20 +665,6 @@ void CNetServer::SendPackets()
 		//In game clients
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
-			//Check timeout
-			if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::GetCurTime())
-			{
-				SendDisconnect(i,DR_CLTIMEOUT);
-				continue;
-			}
-
-			//Check overflow
-			if(m_clChan[i].m_bDropClient)
-			{
-				SendDisconnect(i,DR_CLOVERFLOW);
-				continue;
-			}
-			
 			//flag resends if no response to a reliable packet
 			m_clChan[i].m_netChan.PrepareTransmit();
 			m_pSock->SendTo(&m_clChan[i].m_netChan);

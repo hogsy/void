@@ -158,7 +158,7 @@ void CNetChan::PrepareTransmit()
 	
 	//Add unreliable message if it has space
 	if(m_buffer.GetSize() &&
-	  (m_sendBuffer.GetSize() + m_buffer.GetSize() > m_sendBuffer.GetMaxSize()))
+	  ((m_sendBuffer.GetSize() + m_buffer.GetSize()) < m_sendBuffer.GetMaxSize()))
 		m_sendBuffer.WriteBuffer(m_buffer);
 
 	//increment outgoing sequence
