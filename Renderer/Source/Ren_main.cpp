@@ -66,9 +66,6 @@ void r_init(void)
 {
 //	glClearColor(.1, .1, .1, 1);
 
-	float x = (float) tan(g_rInfo.fov * 0.5f);
-	float z = x * 0.75f;						// always render in a 3:4 aspect ratio
-
 	/* set viewing projection */
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 
@@ -193,10 +190,9 @@ void build_frust(void)
 	vector_t a, b, c, d, center;
 	float x, z;
 
-	x = (float) tan(g_rInfo.fov * 0.5f);
+	x = (float) tan(g_pFov->ival * 0.5f * PI/180);
 	z = x * 0.75f;			// always render in a 3:4 aspect ratio
 
-//	VectorAdd(eye.origin, forward, center);
 	VectorAdd(camera->origin, forward, center);
 
 	VectorMA(&center, -x, &right, &a);

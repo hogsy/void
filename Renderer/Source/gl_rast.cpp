@@ -696,12 +696,12 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 	if (texdata->format == IMG_RGB)
 	{
 		ext_format = GL_RGB;
-		int_format = GL_RGB8;
+		int_format = g_p32BitTextures->bval ? GL_RGB8 : GL_RGB5;
 	}
 	else
 	{
 		ext_format = GL_RGBA;
-		int_format = GL_RGBA8;
+		int_format = g_p32BitTextures->bval ? GL_RGBA8 : GL_RGBA4;
 	}
 
 	int w = texdata->width;
@@ -713,11 +713,11 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		{
 			glTexImage2D(GL_TEXTURE_2D,
 					 texdata->mipmaps - m - 1,
-					 GL_RGB, //int_format,
+					 int_format,
 					 w,
 					 h,
 					 0,
-					 GL_RGB, //ext_format,
+					 ext_format,
 					 GL_UNSIGNED_BYTE,
 					 texdata->mipdata[m]);
 
@@ -883,9 +883,7 @@ void COpenGLRast::ProjectionMode(EProjectionMode mode)
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
-
-		// FIXME - access fov here
-		x = (float) tan(90.0f*(PI/180) * 0.5f);
+		x = (float) tan(g_pFov->ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		glFrustum(-x, x, -z, z, 1, 10000);
 		break;

@@ -97,10 +97,11 @@ private:
 	D3DLVERTEX			mVerts[16000];
 
 
-	float		mTexCoords[2];
 	vector_t	mColor;
 	float		mAlpha;
 	EPolyType	mType;
+
+	bool		mVidSynch;
 
 	HRESULT		mhError;
 	bool	m_bInitialized;

@@ -19,6 +19,7 @@ CRastD3DX::CRastD3DX()
 	m_pvbVertices = NULL;
 	mhError = S_OK;
 	m_matView = NULL;
+	mVidSynch = false;
 
 	mNumVerts = 0;
 }
@@ -391,9 +392,10 @@ int CRastD3DX::TextureBinInit(int num)
 			if (!mTexBins[i].tex_surfs)
 				FError("d3dx - not enough mem for texture surf pointers");
 
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFG_LINEAR);
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTFP_POINT);
+
 //			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 //			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 
@@ -404,6 +406,10 @@ int CRastD3DX::TextureBinInit(int num)
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT );
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 
 			for (int t=0; t<num; t++)
 				mTexBins[i].tex_surfs[t] = NULL;
@@ -479,12 +485,12 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 	if (texdata->format == IMG_RGB)
 	{
 		ext_format = D3DX_SF_R8G8B8;
-		int_format = D3DX_SF_R8G8B8;
+		int_format = g_p32BitTextures->bval ? D3DX_SF_R8G8B8 : D3DX_SF_R5G6B5;
 	}
 	else
 	{
 		ext_format = D3DX_SF_A8R8G8B8;
-		int_format = D3DX_SF_A8R8G8B8;
+		int_format = g_p32BitTextures->bval ? D3DX_SF_A8R8G8B8 : D3DX_SF_A4R4G4B4;
 	}
 
 	DWORD mipmap = texdata->mipmap ? 0 : D3DX_TEXTURE_NOMIPMAP;
@@ -643,24 +649,26 @@ void CRastD3DX::PolyEnd(void)
 
 void CRastD3DX::PolyVertexf(vector_t &vert)
 {
-	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(vert.x, vert.z, -vert.y),
-									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
-									RGBA_MAKE(255, 255, 255, 255),
-									mTexCoords[0], mTexCoords[1]);
+	mVerts[mNumVerts].color		= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
+	mVerts[mNumVerts].specular	= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
+	mVerts[mNumVerts].x =  vert.x;
+	mVerts[mNumVerts].y =  vert.z;
+	mVerts[mNumVerts].z = -vert.y;
 	mNumVerts++;
 }
 void CRastD3DX::PolyVertexi(int x, int y)
 {
-	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(x, y, 0),
-									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
-									RGBA_MAKE(255, 255, 255, 255),
-									mTexCoords[0], mTexCoords[1]);
+	mVerts[mNumVerts].color		= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
+	mVerts[mNumVerts].specular	= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
+	mVerts[mNumVerts].x = x;
+	mVerts[mNumVerts].y = y;
+	mVerts[mNumVerts].z = 0;
 	mNumVerts++;
 }
 void CRastD3DX::PolyTexCoord(float s, float t)
 {
-	mTexCoords[0] = s;
-	mTexCoords[1] = t;
+	mVerts[mNumVerts].tu = s;
+	mVerts[mNumVerts].tv = t;
 }
 void CRastD3DX::PolyColor3f(float r, float g, float b)
 {
@@ -718,8 +726,7 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
-		// FIXME - access fov here
-		x = (float) tan(90.0f*(PI/180) * 0.5f);
+		x = (float) tan(g_pFov->ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		D3DXMatrixPerspectiveOffCenter(&m_matProjection, -x, x, -z, z, 1, 10000);
 		break;
@@ -766,7 +773,7 @@ void CRastD3DX::FrameEnd(void)
 	m_pD3DDevice->EndScene();
 	// Update frame
   
-	HRESULT hr = m_pD3DX->UpdateFrame(0);
+	HRESULT hr = m_pD3DX->UpdateFrame(/*mVidSynch ? 0 : */D3DX_UPDATE_NOVSYNC);
 	if (FAILED(hr))
 		mhError = hr;
 
@@ -793,4 +800,5 @@ SetVidSynch - assumes that it can be done
 */
 void CRastD3DX::SetVidSynch(int v)
 {
+	mVidSynch = v ? true : false;
 }

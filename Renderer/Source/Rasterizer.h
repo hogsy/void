@@ -148,5 +148,9 @@ protected:
 
 extern I_Rasterizer *g_pRast;
 
+// cvars the rasterizers use
+extern CVar *	g_p32BitTextures;
+extern CVar *	g_pFov;
+
 #endif
 
