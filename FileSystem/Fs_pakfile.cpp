@@ -332,7 +332,7 @@ uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 		ComPrintf("CPakFile::Read: Invalid parameters :%s\n",m_openFiles[handle].file->filename);
 		return 0;
 	}
-	
+
 	uint bytes_req = size * count;
 
 	if(m_openFiles[handle].curpos + bytes_req > m_openFiles[handle].file->filelen)
@@ -343,7 +343,7 @@ uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	}
 
 	::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
-	
+
 	int items_read = ::fread(buf,size,count,m_fp);
 	if(items_read != count) 
 		ComPrintf("CPakFile::Read: Warning, only read %d of %d items for %s\n",

@@ -94,12 +94,11 @@ uint CFileBuffer::Read(void *buf,uint size, uint count)
 		return 0;
 	}
 
+	// don't really want to read anything
 	if(!size || !count)
-	{
-		ComPrintf("CFileReader::Read: Can't read 0 bytes. Size(%d), Count(%d) :%s\n", size,count,m_filename);
 		return 0;
-	}
-	
+
+
 	uint bytes_req = size * count;
 	if(m_curpos + bytes_req > m_size)
 	{
