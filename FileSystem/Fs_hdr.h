@@ -6,6 +6,7 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
+#include "Com_cvar.h"
 #include "I_hunkmem.h"
 
 //======================================================================================
