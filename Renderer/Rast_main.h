@@ -168,12 +168,15 @@ public:
 
 	virtual void SetFocus(void)=0;
 
+	unsigned int GetNumTris(void)	{ return mTrisDrawn;	}
+
 	void ConAlpha(byte t, byte b)	{	mConAlphaTop = t;	mConAlphaBot = b;	}
 
 
 private:
 	void DrawLayer(int l);
 	virtual void TextureSet(int bin, int texnum)=0;
+
 
 protected:
 	CVar    m_cWndX;        //Windowed X pos
@@ -215,6 +218,8 @@ protected:
 
 	byte		mConAlphaTop;	// alpha value used for generating console alpha's
 	byte		mConAlphaBot;
+
+	unsigned int	mTrisDrawn;	// number of tris pushed through per frame
 };
 
 

@@ -671,6 +671,8 @@ ClearBuffers
 */
 void CRastD3DX::ClearBuffers(int buffers)
 {
+	mTrisDrawn = 0;
+
 	HRESULT hr = m_pD3DDevice->BeginScene();
 	if (FAILED(hr))
 	{

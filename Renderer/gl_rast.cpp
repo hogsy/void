@@ -879,6 +879,7 @@ ClearBuffers
 */
 void COpenGLRast::ClearBuffers(int buffers)
 {
+	mTrisDrawn = 0;
 	glClearColor(0, 0, 1, 1);
 	int b = 0;
 

@@ -104,6 +104,10 @@ void CRasterizer::PolyEnd(void)
 	if (mMaxIndices < mNumIndices)
 		mMaxIndices = mNumIndices;
 
+	// 3 indices per triangle
+	mTrisDrawn += mNumIndices / 3;
+
+
 	// generate texture coord data
 	// put it in separate arrays cause we might need to do tcmod's and don't want to have to re-evaluate them
 	if (mUseTexDef)

@@ -229,6 +229,8 @@ void CRenExp::Draw(const CCamera * camera)
 	if(camera)
 	{
 		r_drawframe(camera);
+		if (world)
+			m_pHud->Printf(0, 160, 0, "tris: %d", g_pRast->GetNumTris());
 		m_pHud->DrawHud();
 	}
 	m_pRConsole->Draw();
