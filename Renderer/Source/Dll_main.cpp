@@ -10,7 +10,7 @@ exported by the dll
 */
 
 static HFILE * g_hmemlog;
-extern RenderInfo_t* rInfo;
+extern RenderInfo_t g_rInfo;
 
 /*
 ==========================================
@@ -80,7 +80,7 @@ RENDERER_API void RENDERER_Free()
 
 
 RENDERER_API RenderInfo_t * RENDERER_GetParms()
-{	return rInfo;
+{	return &g_rInfo;
 }
 
 

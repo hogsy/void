@@ -20,7 +20,7 @@ CVar *  CRenExp::m_cWndY=0;		//Windowed Y pos
 CVar *  CRenExp::m_cGLExt=0;	//Store GL Exts
 
 //Global Vars
-RenderInfo_t* rInfo=0;			//Shared Rendering Info
+RenderInfo_t g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
 
 float		* g_pCurTime=0;		//Current Timer
@@ -40,8 +40,6 @@ saved rendering info
 
 CRenExp::CRenExp(VoidExport_t * pVExp)
 {
-	rInfo = new RenderInfo_t();
-
 	m_pImport = pVExp;
 	
 	//Set Global Time pointers
@@ -93,12 +91,6 @@ CRenExp::~CRenExp()
 	if(g_prCons)
 		delete g_prCons;
 	g_prCons = 0;
-
-	if(rInfo)
-		delete rInfo;
-	rInfo = 0;
-	
-	rInfo = 0;
 }
 
 
@@ -116,9 +108,9 @@ bool CRenExp::InitRenderer()
 
 
 	//Setup initial state
-	rInfo->bpp = (int)m_cBpp->value;
+	g_rInfo.bpp = (int)m_cBpp->value;
 	if(m_cFull->value)
-		rInfo->rflags |= RFLAG_FULLSCREEN;
+		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 
 	//parse width and height out of string
 	char *c = strchr(m_cRes->string, ' ');
@@ -129,12 +121,12 @@ bool CRenExp::InitRenderer()
 		//Read Width
 		int i = c - m_cRes->string;
 		strncpy(tmp,m_cRes->string,i);
-		sscanf(tmp,"%d",&rInfo->width);
+		sscanf(tmp,"%d",&g_rInfo.width);
 
 		//Read Height
 		c++;
 		strcpy(tmp,m_cRes->string+i+1);
-		sscanf(tmp,"%d",&rInfo->height);
+		sscanf(tmp,"%d",&g_rInfo.height);
 	}
 
 	//Intialize the Console now
@@ -177,7 +169,7 @@ bool CRenExp::Shutdown(void)
 {
 	//Update Win Pos
 /*	RECT rect;
-	if(GetWindowRect(rInfo->hWnd, &rect))
+	if(GetWindowRect(g_rInfo.hWnd, &rect))
 	{
 		if(rect.left >= 40)
 			m_cWndX->Set((float)rect.left);
@@ -235,7 +227,7 @@ DrawFrame
 void CRenExp::DrawFrame(vector_t *origin, vector_t *angles)
 {
 // FIXME - don't *always* do this
-//	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+//	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 
 	//draw fullscreen console
 	if (world == NULL)
@@ -267,7 +259,7 @@ On Move Window
 void CRenExp::MoveWindow(int x, int y)
 {
 	//Update new xy-coords if in windowed mode
-	if(rInfo && !(rInfo->rflags & RFLAG_FULLSCREEN))
+	if(!g_rInfo.rflags & RFLAG_FULLSCREEN)
 	{	g_pGL->SetWindowCoords(x,y);
 	}
 }
@@ -279,7 +271,7 @@ On Resize Window
 */
 void CRenExp::Resize()
 {
-	if (rInfo && rInfo->ready)
+	if (g_rInfo.ready)
 	{
 		g_pGL->Resize();
 		g_prCons->UpdateRes();
@@ -296,7 +288,7 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 {
 	if(!world)
 	{
-		_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+		_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 
 		if(!g_pTex->UnloadWorldTextures())
 		{
@@ -330,7 +322,7 @@ bool CRenExp::UnloadWorld()
 	// get rid of all the old textures, load the new ones
 	if(world)
 	{
-		_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+		_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 		
 		g_pTex->UnloadWorldTextures();
 		model_destroy_map();
@@ -351,7 +343,7 @@ change res or to/from fullscreen
 void CRenExp::ChangeDispSettings(unsigned int width, unsigned int height, unsigned int bpp, 
 								 unsigned int fullscreen)
 {
-	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	
 	// shut the thing down
 	g_pTex->Shutdown();
@@ -389,7 +381,7 @@ bool CRenExp::Restart(void)
 {
 	g_pTex->Shutdown();
 
-	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	
 	// shut the thing down
 	g_pGL->Shutdown();
@@ -442,25 +434,25 @@ bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 		{
 			if(temp <= 0)
 			{
-				if(!(rInfo->rflags & RFLAG_FULLSCREEN))
+				if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
 				{	ConPrint("Already in windowed mode\n");
 					return false;
 				}
 				ConPrint("Switching to windowed mode\n");
 				
-				if(rInfo->ready)
-					g_pRenExp->ChangeDispSettings(rInfo->width, rInfo->height, rInfo->bpp, false);
+				if(g_rInfo.ready)
+					g_pRenExp->ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
 			}
 			else if( temp > 0)
 			{
-				if(rInfo->rflags & RFLAG_FULLSCREEN)
+				if(g_rInfo.rflags & RFLAG_FULLSCREEN)
 				{	ConPrint("Already in fullscreen mode\n");
 					return false;
 				}
 				ConPrint("Switching to fullscreen mode\n");
 				
-				if(rInfo->ready)
-					g_pRenExp->ChangeDispSettings(rInfo->width, rInfo->height, rInfo->bpp, true);
+				if(g_rInfo.ready)
+					g_pRenExp->ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
 			}
 			return true;
 		}
@@ -485,25 +477,25 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 		if(!sscanf(argv[1],"%d",&x))
 		{
 			ConPrint("CVar_Res::Bad entry for Horizontal Resolution, Defaulting\n");
-			x = rInfo->width;
+			x = g_rInfo.width;
 		}
 		if(!sscanf(argv[2],"%d",&y))
 		{
 			ConPrint("CVar_Res::Bad entry for Vertical Resolution, Defaulting\n");
-			y = rInfo->height;
+			y = g_rInfo.height;
 		}
 
 		// no go if we're not changing
-		if ((rInfo->width == x) && (rInfo->height == y))
+		if ((g_rInfo.width == x) && (g_rInfo.height == y))
 		{
 			ConPrint("Already running in given resolution\n");
 			return false;
 		}
 
-		ConPrint("Switching to %d x %d x %d bpp\n", x,y, rInfo->bpp );
+		ConPrint("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
 
-		if(rInfo->ready)
-			g_pRenExp->ChangeDispSettings(x, y, rInfo->bpp, (rInfo->rflags & RFLAG_FULLSCREEN) ? true : false);
+		if(g_rInfo.ready)
+			g_pRenExp->ChangeDispSettings(x, y, g_rInfo.bpp, (g_rInfo.rflags & RFLAG_FULLSCREEN) ? true : false);
 		return true;
 	}
 	return false;
@@ -523,20 +515,20 @@ bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 	{
 		int bpp=0;
 		if(!sscanf(argv[1],"%d",&bpp))
-			bpp  = rInfo->bpp;
+			bpp  = g_rInfo.bpp;
 
 		// no go if we're not changing
-		if (bpp == rInfo->bpp)
+		if (bpp == g_rInfo.bpp)
 		{
 			ConPrint("Bad Entry or already at given bpp\n");
 			return false;
 		}
 
-		ConPrint("Switching to %d by %d at %d bpp\n", rInfo->width,rInfo->height,bpp );
+		ConPrint("Switching to %d by %d at %d bpp\n", g_rInfo.width,g_rInfo.height,bpp );
 
-		if(rInfo->ready)
-		g_pRenExp->ChangeDispSettings(rInfo->width,rInfo->height,bpp, 
-						(rInfo->rflags & RFLAG_FULLSCREEN) ? true : false);
+		if(g_rInfo.ready)
+		g_pRenExp->ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
+						(g_rInfo.rflags & RFLAG_FULLSCREEN) ? true : false);
 		return true;
 	}
 	return false;

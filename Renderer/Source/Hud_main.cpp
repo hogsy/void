@@ -1,6 +1,7 @@
 #include "Standard.h"
 #include "Hud_main.h"
-#include "Tex_main.h"
+//#include "Tex_main.h"
+#include "Tex_hdr.h"
 
 CRHud	  * g_prHud;
 
@@ -89,7 +90,7 @@ void CHudMessage::Draw()
 	int y1, y2;
 	int x1, x2;
 
-	y1 = rInfo->height - y;
+	y1 = g_rInfo.height - y;
 	y2 = y1 - 8;
 
 	x1 = x;
@@ -179,7 +180,7 @@ void CRHud::DrawHud()
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, rInfo->width, 0, rInfo->height, -1, 1);
+	glOrtho(0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
 
 	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
 	glDisable(GL_DEPTH_TEST);

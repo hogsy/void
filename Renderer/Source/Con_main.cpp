@@ -2,7 +2,8 @@
 
 #include "Standard.h"
 
-#include "Tex_main.h"
+//#include "Tex_main.h"
+#include "Tex_hdr.h"
 #include "Hud_main.h"
 
 #define CONBACK_INDEX			1
@@ -141,10 +142,10 @@ Used for updating Resolutions etc
 void CRConsole::UpdateRes()
 {
 	if(m_fullscreen)
-		m_maxlines = rInfo->height / 8;
+		m_maxlines = g_rInfo.height / 8;
 	else
-		m_maxlines = rInfo->height  / 16;
-	m_maxchars =  rInfo->width / 8;
+		m_maxlines = g_rInfo.height  / 16;
+	m_maxchars =  g_rInfo.width / 8;
 }
 
 
@@ -231,7 +232,7 @@ void CRConsole::Draw()
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, rInfo->width, 0, rInfo->height, -1, 1);
+	glOrtho(0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
 
 	glDisable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D, tex->base_names[1]);
@@ -240,20 +241,20 @@ void CRConsole::Draw()
 
 	glColor4f(ftop, ftop, ftop, ftop);
 	glTexCoord2f(0, 0);
-	glVertex2i(0, rInfo->height);
+	glVertex2i(0, g_rInfo.height);
 
 
 	glTexCoord2f(1, 0);
-	glVertex2i(rInfo->width, rInfo->height);
+	glVertex2i(g_rInfo.width, g_rInfo.height);
 
 
 	glColor4f(fbot, fbot, fbot, fbot);
 	glTexCoord2f(1, 1);
 
 	if(m_fullscreen)
-		glVertex2i(rInfo->width, 0);
+		glVertex2i(g_rInfo.width, 0);
 	else
-		glVertex2i(rInfo->width, rInfo->height/2);
+		glVertex2i(g_rInfo.width, g_rInfo.height/2);
 
 
 	glTexCoord2f(0, 1);
@@ -261,7 +262,7 @@ void CRConsole::Draw()
 	if(m_fullscreen)
 		glVertex2i(0, 0);
 	else
-		glVertex2i(0, rInfo->height/2);
+		glVertex2i(0, g_rInfo.height/2);
 
 
 	glEnd();
@@ -326,7 +327,7 @@ void CRConsole::PrintBuffer()
 	int end = 0;
 	
 	//Set starting position for printing
-	y2 = (m_fullscreen ? 0 : rInfo->height/2);
+	y2 = (m_fullscreen ? 0 : g_rInfo.height/2);
 	y1 = y2 + 8;
 	x1 = 0;
 	x2 = 8;

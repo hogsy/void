@@ -31,7 +31,7 @@ typedef unsigned char byte;
 #define MAX_VERTS_PER_POLY 64
 
 
-extern RenderInfo_t* rInfo;
+extern RenderInfo_t g_rInfo;
 
 extern float * g_pCurTime;		//Current Time
 extern float * g_pFrameTime;	//Frame Time

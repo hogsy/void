@@ -3,20 +3,45 @@
 
 #include "Standard.h"
 
+enum EImageFormat
+{
+	FORMAT_NONE,
+	FORMAT_TGA,
+	FORMAT_PCX
+};
+
 /*
 ==========================================
-Image File Class
+ImageReader Class
 ==========================================
 */
-class CImage
+class CImageReader
 {
 public:
-	enum EImageFormat
-	{
-		FORMAT_NONE,
-		FORMAT_TGA,
-		FORMAT_PCX
-	};
+
+	CImageReader();
+	virtual ~CImageReader();
+
+	int GetHeight() { return height;}
+	int GetWidth()  { return width; }
+	
+	EImageFormat GetFormat(){ return format; }
+	byte *		 GetData()  { return data; }
+	
+
+	bool Read(const char *file);				//Read texture from path
+	bool ReadLightMap(unsigned char **stream);	//Read lightmap textures from world file
+
+	int  GetMipCount();
+	void ImageReduce();			//Reduce image data by 2, used for mip maps
+	
+	void Reset();
+	bool DefaultTexture();
+	void ColorKey();
+
+	static void SetTextureDir(const char * dir);
+
+protected:
 
 	byte *			data;
 	int				width,
@@ -24,36 +49,44 @@ public:
 	int				type;
 	EImageFormat	format;
 
-	static  char m_texturepath[MAX_PATH];
-
-	CImage();
-	~CImage();
-
-	bool Read(const char *file);		//Read texture from path
-	bool Read(unsigned char **stream);	//Read lightmap textures from world file
-	
-	void Write(const char *name, EImageFormat iformat=FORMAT_NONE);
-
-	void ImageReduce();			//Reduce image data by 2, used for mip maps
-
-	bool SnapShot();			//Fills itself with data on screen
-	void Reset();
-	bool DefaultTexture();
-	void ColorKey();
-
-private:
-
-	static  byte *m_filebuffer;
-
 	bool	Read_PCX();
 	bool	Read_TGA();
 
+	CFileBuffer m_fileReader;
+
+	static  char m_texturepath[MAX_PATH];
+};
+
+/*
+==========================================
+ImageWriter
+==========================================
+*/
+
+class CImageWriter
+{
+public:
+
+	CImageWriter(int iwidth, int iheight, 
+				 const byte * idata);
+	CImageWriter(CImageReader * pImage);
+
+	virtual ~CImageWriter();
+
+	void Write(const char *name, EImageFormat iformat=FORMAT_TGA);
+
+protected:
+
+	int		m_width, m_height;
+	const   byte * m_pData;
+
 	void	Write_TGA( FILE *fp);
 	void	Write_PCX( FILE *fp);
-
-//	CFileReader m_fileReader;
-	CFileBuffer m_fileReader;
 };
+
+
+//======================================================================================
+//======================================================================================
 
 void	ImageReduce32(byte *dest, byte *src, int nwidth, int nheight);
 void	ImageReduce24(byte *dest, byte *src, int nwidth, int nheight);

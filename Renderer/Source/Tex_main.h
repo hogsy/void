@@ -1,21 +1,7 @@
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#ifndef TEXTUREMANAGER_H
+#define TEXTUREMANAGER_H
 
 #include "Tex_image.h"
-#include "Ren_cache.h"
-
-typedef int dimension_t[2];
-typedef struct
-{
-	unsigned int num_textures;
-	unsigned int num_lightmaps;
-	GLuint		*base_names;
-	GLuint		*tex_names;
-	GLuint		*light_names;
-	dimension_t	*dims;
-	cpoly_t		**polycaches;
-} tex_t;
-
 
 class CTextureManager
 {
@@ -23,8 +9,8 @@ public:
 	CTextureManager();
 	~CTextureManager();
 
-	bool Init();	//Loads base game textures
-	bool Shutdown();//Unload everything
+	bool Init();		//Loads base game textures
+	bool Shutdown();	//Unload everything
 	
 	bool LoadWorldTextures(world_t *map);
 	bool UnloadWorldTextures();
@@ -38,19 +24,15 @@ private:
 		ALL_TEXTURES
 	};
 
-	int			m_numBaseTextures;
-	int			m_numWorldTextures;
+	int				m_numBaseTextures;
+	int				m_numWorldTextures;
+	ETextures		m_loaded;
 
-	ETextures	m_loaded;
+	CImageReader	m_texReader;
 
-	int  LoadTexture(CImage *texture, unsigned char **stream);
-	int  LoadTexture(CImage *texture, const char *filename);
-	bool LoadBaseTexture(CImage *texture,const char *filename);
+	void LoadTexture(const char *filename);
 };
 
-
-extern tex_t *tex;
 extern CTextureManager * g_pTex;
-
 
 #endif

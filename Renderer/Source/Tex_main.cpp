@@ -1,4 +1,5 @@
 #include "Standard.h"
+#include "Tex_hdr.h"
 #include "Tex_main.h"
 
 const char * BaseTextureList[] =
@@ -22,6 +23,8 @@ CTextureManager::CTextureManager()
 	m_loaded = NO_TEXTURES;
 	m_numBaseTextures = 0;
 	m_numWorldTextures = 0;
+
+	CImageReader::SetTextureDir("textures");
 }
 
 /*
@@ -30,7 +33,7 @@ Destructor
 ==========================================
 */
 CTextureManager::~CTextureManager()
-{
+{	m_texReader.Reset();
 }
 
 
@@ -43,14 +46,12 @@ Load base game textures
 bool CTextureManager::Init()
 {
 	//allocate all mem
-	tex = new tex_t;
+	tex = new tex_t();
 	if (tex == NULL) 
+	{
 		FError("CTextureManager::Init:No mem for tex struct");
-	memset (tex, 0, sizeof(tex_t));
-
-	strcpy(CImage::m_texturepath,"textures");
-
-	ConPrint("CTextureManager::Init:Creating base textures");
+		return false;
+	}
 
 	//Get count of base textures
 	for(int count=0;BaseTextureList[count];count++);
@@ -59,14 +60,20 @@ bool CTextureManager::Init()
 	//Alloc space for base textures
 	tex->base_names = new GLuint[m_numBaseTextures];
 	if (tex->base_names == NULL) 
+	{
 		FError("CTextureManager::Init:No mem for base texture names");
+		return false;
+	}
+
+	ConPrint("CTextureManager::Init:Creating base textures");
 
 	//Generate and load base textures
-	CImage texture;
 	glGenTextures(m_numBaseTextures, tex->base_names);
 	for(count=0;count<m_numBaseTextures;count++)
 	{
-		LoadBaseTexture(&texture,BaseTextureList[count]);
+		LoadTexture(BaseTextureList[count]);
+		m_texReader.ColorKey();
+
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -77,13 +84,14 @@ bool CTextureManager::Init()
 		glTexImage2D(GL_TEXTURE_2D,
 				 0,
 				 GL_RGBA,
-				 texture.width,
-				 texture.height,
+				 m_texReader.GetWidth(),
+				 m_texReader.GetHeight(),
 				 0,
 				 GL_RGBA,
 				 GL_UNSIGNED_BYTE,
-				 texture.data);
-		texture.Reset();
+				 m_texReader.GetData());
+		
+		m_texReader.Reset();
 	}
 	m_loaded = BASE_TEXTURES;
 	return true;
@@ -109,7 +117,7 @@ bool CTextureManager::Shutdown()
 	delete [] tex->base_names;	//free (tex->base_names);
 
 	delete tex;	//free (tex);
-	tex = NULL;
+	tex = 0;
 
 	m_loaded = NO_TEXTURES;
 
@@ -139,35 +147,44 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 	tex->num_lightmaps= 0;
 	tex->num_textures = 0;
+	
 	while (map->textures[tex->num_textures][0] != '\0')
 		tex->num_textures++;
 
 	tex->tex_names = new GLuint[tex->num_textures];
 	if (tex->tex_names == NULL) 
+	{
 		FError("mem for texture names");
+		return false;
+	}
 
-	tex->polycaches = new cpoly_t*[tex->num_textures];
+	tex->polycaches = new cpoly_t* [tex->num_textures];
 	if (!tex->polycaches) 
+	{
 		FError("mem for map tex cache");
+		return false;
+	}
 	memset(tex->polycaches, 0, sizeof(cpoly_t**) * tex->num_textures);
 
 	tex->dims = new dimension_t[tex->num_textures];
 	if (!tex->dims) 
+	{
 		FError("mem for map tex dims");
+		return false;
+	}
 
 	m_numWorldTextures = tex->num_textures;
-
-	CImage texture;
-
+	
 	glGenTextures(tex->num_textures, tex->tex_names);
 
 	for (t = 0; t < tex->num_textures; t++)
 	{
-		mipcount = LoadTexture(&texture,map->textures[t]);
-
+		LoadTexture(map->textures[t]);
+		mipcount = m_texReader.GetMipCount();
+			
 		//Set initial dimensions
-		tex->dims[t][0] = texture.width;
-		tex->dims[t][1] = texture.height;
+		tex->dims[t][0] = m_texReader.GetWidth();
+		tex->dims[t][1] = m_texReader.GetHeight();
 
 		glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
 
@@ -180,22 +197,20 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
-				texture.ImageReduce();
+				m_texReader.ImageReduce();
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
 						 GL_RGBA,
-						 texture.width,
-						 texture.height,
+						 m_texReader.GetWidth(),
+						 m_texReader.GetHeight(),
 						 0,
 						 GL_RGBA,
 						 GL_UNSIGNED_BYTE,
-						 texture.data);
+						 m_texReader.GetData());
 		}
-		texture.Reset();
+		m_texReader.Reset();
 	}
-	m_loaded = ALL_TEXTURES;
-
 
 // FIXME - temp hack to get lightmapping working
 
@@ -213,7 +228,8 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	unsigned char *ptr = map->lightdata;
 	for (t = 0; t < tex->num_lightmaps; t++)
 	{
-		mipcount = LoadTexture(&texture, &ptr);
+		m_texReader.ReadLightMap(&ptr);
+		mipcount = m_texReader.GetMipCount();
 
 		//Set initial dimensions
 		glBindTexture(GL_TEXTURE_2D, tex->light_names[t]);
@@ -227,20 +243,22 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
-				texture.ImageReduce();
+				m_texReader.ImageReduce();
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
 						 GL_RGBA,
-						 texture.width,
-						 texture.height,
+						 m_texReader.GetWidth(),
+						 m_texReader.GetHeight(),
 						 0,
 						 GL_RGBA,
 						 GL_UNSIGNED_BYTE,
-						 texture.data);
+						 m_texReader.GetData());
 		}
-		texture.Reset();
+		m_texReader.Reset();
 	}
+
+	m_loaded = ALL_TEXTURES;
 	return true;
 }
 
@@ -294,126 +312,11 @@ bool CTextureManager::UnloadWorldTextures()
 Load a map texture
 ==========================================
 */
-int CTextureManager::LoadTexture(CImage *texture, const char *filename)
+void CTextureManager::LoadTexture(const char *filename)
 {
-	if(!texture)
-		return 0;
-
-	if (filename)
+	if (!filename || !m_texReader.Read(filename))
 	{
-		if (!texture->Read(filename))
-		{
-			texture->Reset();
-			texture->DefaultTexture();
-		}
+		m_texReader.Reset();
+		m_texReader.DefaultTexture();
 	}
-	else
-	{
-		texture->DefaultTexture();
-	}
-
-	int tmps = 1;
-	int miplevels = 0;
-	
-	// make it a power of 2
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (texture->width&tmps)
-			break;
-	}
-	texture->width = tmps;
-	
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (texture->height&tmps)
-			break;
-	}
-	texture->height = tmps;
-
-	int largestdim = texture->width;
-	if (texture->width < texture->height)
-		largestdim = texture->height;
-
-	// figure out how many mip map levels we should have
-	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
-		miplevels++;
-
-	if(miplevels > 10)
-		miplevels = 10;
-	return miplevels;
 }
-
-/*
-==========================================
-Load Lightmap textures
-==========================================
-*/
-int  CTextureManager::LoadTexture(CImage *texture, unsigned char **stream)
-{
-	if(!texture)
-		return 0;
-
-	texture->Read(stream);
-
-	int tmps = 1;
-	int miplevels = 0;
-	
-	// make it a power of 2
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (texture->width&tmps)
-			break;
-	}
-	texture->width = tmps;
-	
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (texture->height&tmps)
-			break;
-	}
-	texture->height = tmps;
-
-	int largestdim = texture->width;
-	if (texture->width < texture->height)
-		largestdim = texture->height;
-
-	// figure out how many mip map levels we should have
-	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
-		miplevels++;
-
-	if(miplevels > 10)
-		miplevels = 10;
-	return miplevels;
-}
-
-/*
-==========================================
-Load Base Textures
-NO mip maps, colorkeyed
-==========================================
-*/
-bool CTextureManager::LoadBaseTexture(CImage *texture,const char *filename)
-{
-	if(!texture)
-		return false;
-
-	if (filename)
-	{
-		if (!texture->Read(filename))
-		{
-			texture->Reset();
-			texture->DefaultTexture();
-		}
-	}
-	else
-	{
-		texture->DefaultTexture();
-	}
-	texture->ColorKey();
-	return true;
-}
-
-
-
-
-

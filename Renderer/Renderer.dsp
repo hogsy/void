@@ -166,6 +166,10 @@ SOURCE=.\Source\Con_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Source\Tex_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Tex_image.cpp
 # End Source File
 # Begin Source File

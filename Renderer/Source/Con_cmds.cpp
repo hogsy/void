@@ -2,6 +2,9 @@
 #include "Tex_image.h"
 
 
+//======================================================================================
+//======================================================================================
+
 CVar *	g_pFullbright;
 CVar *	g_pDrawSils;
 CVar *  g_pFov;
@@ -13,32 +16,21 @@ CVar *	g_pVidSynch;
 take a screen shot
 ======================================
 */
-void ScreenShot(char *name,int type)
+void ScreenShot(char *name,EImageFormat type)
 {
-	int     i; 
-	char	shotname[80]; 
 	char	checkname[260];
-	FILE	*f;
-	CImage  pic;
 
-	if(!pic.SnapShot())
-	{
-		ConPrint("ScreenShot::Error reading screendata\n"); 
-		return;
-	}
-
-	if(type == CImage::FORMAT_NONE)
-		type = pic.format;
-
-	// 
-	// find a file name to save it to 
+	//find a file name to save it to 
 	sprintf(checkname, "%s\\%s\\", CFileSystem::GetCurrentPath(), "Shots");
 	ConfirmDir(checkname);
 
-
 	if (!name)
 	{
-		if(type== CImage::FORMAT_PCX)
+		int i;
+		FILE	*f;
+		char	shotname[80]; 
+
+		if(type== FORMAT_PCX)
 			strcpy(shotname,"void00.pcx");
 		else
 			strcpy(shotname,"void00.tga");
@@ -48,12 +40,11 @@ void ScreenShot(char *name,int type)
 			shotname[4] = i/10 + '0';
 			shotname[5] = i%10 + '0';
 
-			sprintf(checkname, "%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", name);
+			sprintf(checkname,"%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", shotname);
 
-			f = fopen(checkname, "rb");
+			f = fopen(checkname,"rb");
 			if (!f)
 				break;
-
 			fclose(f);
 		}
 
@@ -67,57 +58,74 @@ void ScreenShot(char *name,int type)
 	else
 	{
 		sprintf(checkname, "%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", name);
-		if(type == CImage::FORMAT_PCX)
+		if(type == FORMAT_PCX)
 			DefaultExtension(checkname, ".pcx");
 		else
 			DefaultExtension(checkname, ".tga");
 	}
 
-	//save the pcx file 
-	pic.Write(checkname,(CImage::EImageFormat)type);
+	//Got file name, Now actually take the shot and write it
+
+	int  width  = g_rInfo.width;
+	int  height = g_rInfo.height;
+	byte * data = new byte[width * height * 4];
+
+	if (data == NULL) 
+	{
+		Error("ScreenShot:No mem to capture screendata");
+		return;
+	}
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	CImageWriter imageWriter(width,height,data);
+	imageWriter.Write(checkname,type);
+	delete [] data;
 }
 
+//======================================================================================
+//======================================================================================
 
-/************************************************
-take a screenshot
-************************************************/
-void cfunc_screenshot(int argc, char** args)
+/*
+==========================================
+Take a PCX screenshot
+==========================================
+*/
+void CFunc_PCXShot(int argc, char** args)
 {
 	if (argc > 1)
 	{
 		if (strlen(args[1]) > 20)
 		{
 			ConPrint("filename too long!\n");
-			ScreenShot(NULL,0);
+			ScreenShot(0,FORMAT_PCX);
 		}
 		else
-			ScreenShot(args[1],0);
+			ScreenShot(args[1], FORMAT_PCX);
 	}
 	else
-		ScreenShot(NULL,CImage::FORMAT_PCX);
+		ScreenShot(NULL,FORMAT_PCX);
 }
 
-
-void cfunc_tgashot(int argc, char** args)
+/*
+==========================================
+Take a TGA screenshot
+==========================================
+*/
+void CFunc_TGAShot(int argc, char** args)
 {
 	if (argc > 1)
 	{
 		if (strlen(args[1]) > 20)
 		{
 			ConPrint("filename too long!\n");
-			ScreenShot(NULL,0);
+			ScreenShot(0, FORMAT_TGA);
 		}
-
 		else
-			ScreenShot(args[1],CImage::FORMAT_TGA);
+			ScreenShot(args[1],FORMAT_TGA);
 	}
 	else
-		ScreenShot(0,CImage::FORMAT_TGA);
+		ScreenShot(0,FORMAT_TGA);
 }
-
-
-
-
 
 /*
 =======================================
@@ -132,16 +140,14 @@ bool CVar_FullBright(const CVar * var, int argc, char** argv)
 	else
 	{
 		int temp=0;
-
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
 			if (temp)
-				rInfo->rflags |= RFLAG_FULLBRIGHT;
+				g_rInfo.rflags |= RFLAG_FULLBRIGHT;
 			else
-				rInfo->rflags &= ~RFLAG_FULLBRIGHT;
+				g_rInfo.rflags &= ~RFLAG_FULLBRIGHT;
 		}
 	}
-
 	return true;
 }
 
@@ -155,7 +161,7 @@ bool CVar_MultiTexture(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
 	{
-		if (!(rInfo->rflags & RFLAG_MULTITEXTURE))
+		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ConPrint("Your video card does not support ARB multitexturing.\n");
 		ConPrint("multitexturing is %d\n", (int)var->value);
 		return false;
@@ -174,7 +180,6 @@ bool CVar_Fov(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
 		ConPrint("r_fov = %d\n", var->value);
-
 	else
 	{
 		int temp=0;
@@ -183,22 +188,19 @@ bool CVar_Fov(const CVar * var, int argc, char** argv)
 		{
 			if (temp && temp>=10 && temp<= 170)
 			{
-				rInfo->fov = temp * PI/180;
-				float x = (float) tan(rInfo->fov * 0.5f);
+				g_rInfo.fov = temp * PI/180;
+				float x = (float) tan(g_rInfo.fov * 0.5f);
 				float z = x * 0.75f;						// always render in a 3:4 aspect ratio
 
 				/* set viewing projection */
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				glFrustum(-x, x, -z, z, 1, 10000);
+				return true;
 			}
-			else
-				return false;
 		}
-		else
-			return false;
+		return false;
 	}
-
 	return true;
 }
 
@@ -212,33 +214,31 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
 		ConPrint("r_vidsynch = %d\n", var->value);
-
 	else
 	{
 		int temp=0;
 
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
-			if (rInfo->rflags & RFLAG_SWAP_CONTROL)
+			if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 			{
 				if (temp)
 					wglSwapIntervalEXT(1);
 				else
 					wglSwapIntervalEXT(0);
 			}
-
 		}
 		else
 			return false;
 	}
-
 	return true;
 }
 
-
-/************************************************
-register all commands/functions relevant to the renderer
-************************************************/
+/*
+==========================================
+Register Cvars and Commands
+==========================================
+*/
 void CRConsole::RegisterFuncs()
 {
 	
@@ -249,6 +249,6 @@ void CRConsole::RegisterFuncs()
 	RegCVar(&g_pVidSynch, "r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
 
 
-	RegCFunc("screenshot", &cfunc_screenshot);
-	RegCFunc("tgashot", &cfunc_tgashot);
+	RegCFunc("screenshot", &CFunc_PCXShot);
+	RegCFunc("tgashot", &CFunc_TGAShot);
 }

@@ -1,5 +1,5 @@
 #include "Ren_cache.h"
-#include "Tex_main.h"
+#include "Tex_hdr.h"
 #include "Mdl_cache.h"
 #include "Light_main.h"
 
@@ -220,7 +220,7 @@ void cache_purge_single(void)
 
 		case 1:	// lightmaps
 			glDisable(GL_DEPTH_TEST);
-			if ((world->nlightdefs && world->light_size) && !(rInfo->rflags&RFLAG_FULLBRIGHT))
+			if ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT))
 			{
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -307,8 +307,8 @@ extern CVar *  g_pMultiTexture;
 void cache_purge(void)
 {
 
-	if (g_pMultiTexture->value && (rInfo->rflags&RFLAG_MULTITEXTURE) && 
-		!(rInfo->rflags&RFLAG_FULLBRIGHT) && world->nlightdefs && world->light_size)
+	if (g_pMultiTexture->value && (g_rInfo.rflags&RFLAG_MULTITEXTURE) && 
+		!(g_rInfo.rflags&RFLAG_FULLBRIGHT) && world->nlightdefs && world->light_size)
 		cache_purge_multi();
 	else
 		cache_purge_single();

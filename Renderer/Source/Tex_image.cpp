@@ -1,19 +1,14 @@
 #include "Tex_image.h"
 
+//======================================================================================
+//======================================================================================
+
 #define IMAGE_565	0
 #define IMAGE_1555	1
 #define IMAGE_4444	2
 
 #define MAX_TEXTURESIZE		4195328
 
-char  CImage::m_texturepath[MAX_PATH];
-byte *CImage::m_filebuffer = 0;
-
-/*
-============
-PCX_Texture 
-============
-*/
 typedef struct PCX_header
 {
 	byte manufacturer;
@@ -32,37 +27,21 @@ typedef struct PCX_header
 } PCX_header;
 
 
-/*
-typedef struct TGA_Header
-{
-	byte	id_length;
-	byte	colormap_type;
-	byte	image_type;
-	byte	colormap_spec[5];
-	byte	image_spec[10];
-}TGA_header;
+//======================================================================================
+//======================================================================================
 
-Image ID - Field 6 (variable):......................10
-Color Map Data - Field 7 (variable):................10
-Image Data - Field 8 (variable):....................10
+char  CImageReader::m_texturepath[MAX_PATH];
 
-Image Type           Description
-	0                No Image Data Included
-	1                Uncompressed, Color-mapped Image
-	2                Uncompressed, True-color Image
-	3                Uncompressed, Black-and-white image
-	9                Run-length encoded, Color-mapped Image
-	10               Run-length encoded, True-color Image
-	11               Run-length encoded, Black-and-white image
-*/
-
+void CImageReader::SetTextureDir(const char * dir)
+{	 strcpy(m_texturepath,dir);
+}
 
 /*
 ==========================================
 Base Texture class
 ==========================================
 */
-CImage::CImage()
+CImageReader::CImageReader()
 {
 	data = 0;
 	width = height = 0;
@@ -70,9 +49,8 @@ CImage::CImage()
 	format = FORMAT_NONE;
 }
 
-CImage::~CImage()		
-{	
-	Reset();
+CImageReader::~CImageReader()		
+{	Reset();
 }
 
 /*
@@ -80,7 +58,7 @@ CImage::~CImage()
 Key the transparent color
 ==========================================
 */
-void CImage::ColorKey()
+void CImageReader::ColorKey()
 {
 	if(!data)
 		return;
@@ -95,13 +73,12 @@ void CImage::ColorKey()
 	type = IMAGE_1555;
 }
 
-
 /*
 ==========================================
 Reset the image data
 ==========================================
 */
-void CImage::Reset()
+void CImageReader::Reset()
 {
 	if(data)
 		delete [] data;
@@ -113,14 +90,13 @@ void CImage::Reset()
 	format = FORMAT_NONE;
 }
 
-
 /*
 ==========================================
 Load a default image 
 used as a replacement when we can't find a texture
 ==========================================
 */
-bool CImage::DefaultTexture()
+bool CImageReader::DefaultTexture()
 {
 	width = 16;
 	height = 64;
@@ -129,7 +105,7 @@ bool CImage::DefaultTexture()
 	data = new byte[width * height * 4];
 	if (data == NULL) 
 	{
-		FError("CImage::DefaultTexture: No mem for pic data");
+		FError("CImageReader::DefaultTexture: No mem for pic data");
 		return false;
 	}
 
@@ -147,30 +123,41 @@ bool CImage::DefaultTexture()
 
 /*
 ==========================================
-Read screen data into self
-used to screenshots, 
-
-GL dependent code shouldnt be here
+Set the texture to be 2n in size,
+and return number of possible mipmaps
 ==========================================
 */
-bool CImage::SnapShot()
+int CImageReader::GetMipCount()
 {
-	if(data)
-		Reset();
-
-	width  = rInfo->width;
-	height = rInfo->height;
-	type   = 0;
-	data = new byte[width * height * 4];
-
-	if (data == NULL) 
+	int tmps = 1;
+	int miplevels = 0;
+	
+	// make it a power of 2
+	for (tmps=1<<10; tmps; tmps>>=1)
 	{
-		Error("CImage::SnapShot:No mem for writing pcx");
-		return false;
+		if (width & tmps)
+			break;
 	}
-	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	format = FORMAT_TGA;
-	return true;
+	width = tmps;
+	
+	for (tmps=1<<10; tmps; tmps>>=1)
+	{
+		if (height & tmps)
+			break;
+	}
+	height = tmps;
+
+	int largestdim = width;
+	if (width < height)
+		largestdim = height;
+
+	// figure out how many mip map levels we should have
+	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
+		miplevels++;
+
+	if(miplevels > 10)
+		miplevels = 10;
+	return miplevels;
 }
 
 /*
@@ -179,7 +166,7 @@ Read Image data from a stream
 used for reading Lightmaps from the world file
 ==========================================
 */
-bool CImage::Read(unsigned char **stream)
+bool CImageReader::ReadLightMap(unsigned char **stream)
 {
 	// read the data from the stream
 	width = **stream;
@@ -193,10 +180,9 @@ bool CImage::Read(unsigned char **stream)
 	// all raw pic data is 32 bits
 	data = new byte[width * height * 4];
 
-
 	if (data == NULL) 
 	{
-		FError("CImage::DefaultTexture: No mem for pic data");
+		FError("CImageReader::DefaultTexture: No mem for pic data");
 		return false;
 	}
 
@@ -221,7 +207,7 @@ bool CImage::Read(unsigned char **stream)
 Read a texture from the given path
 ==========================================
 */
-bool CImage::Read(const char *file)
+bool CImageReader::Read(const char *file)
 {
 	if(data)
 		Reset();
@@ -244,7 +230,7 @@ bool CImage::Read(const char *file)
 		m_fileReader.Close();
 		return err;
 	}
-	ConPrint("CImage::Read: Couldnt open %s\n",filename);
+	ConPrint("CImageReader::Read: Couldnt open %s\n",filename);
 	return false;
 }
 
@@ -255,7 +241,7 @@ bool CImage::Read(const char *file)
 Read a PCX file from current filereader
 ==========================================
 */
-bool CImage::Read_PCX()
+bool CImageReader::Read_PCX()
 {
 	PCX_header header;
 
@@ -265,7 +251,7 @@ bool CImage::Read_PCX()
 	   (header.encoding != 1)|| 
 	   (header.bits_per_pixel != 8))
 	{
-		ConPrint("CImage::Read_PCX:Bad texture file");
+		ConPrint("CImageReader::Read_PCX:Bad texture file");
 		return false;
 	}
 
@@ -351,7 +337,7 @@ bool CImage::Read_PCX()
 Read a TGA file from the given stream
 ==========================================
 */
-bool CImage::Read_TGA()
+bool CImageReader::Read_TGA()
 {
 	m_fileReader.Seek(12,SEEK_SET);
 
@@ -369,7 +355,7 @@ bool CImage::Read_TGA()
 	data = new byte[width * height * 4];
 	if (!data)
 	{	
-		Error("CImage::Read_TGA:Not enough memory for texture");
+		Error("CImageReader::Read_TGA:Not enough memory for texture");
 		return false;
 	}
 	memset(data, 0xFF, width * height * 4);
@@ -390,6 +376,90 @@ bool CImage::Read_TGA()
 	return true;
 }
 
+/*
+==========================================
+Reduce the Size of the image by 2x
+Used for mip maps
+==========================================
+*/
+void CImageReader::ImageReduce()
+{
+	DWORD color;
+	int r=0, c=0, s=0;
+	
+	width /=2;
+	height /=2;
+
+	int	sfactor = 1;
+	int	tfactor = 1;
+
+	if (!width)
+	{
+		width = 1;
+		sfactor = 0;
+	}
+
+	if (!height)
+	{
+		height = 1;
+		tfactor = 0;
+	}
+
+	int size = (width)*(height)*4;
+
+	byte * temp = new byte[size];
+	if(!temp)	
+		FError("Mem for texture reduction");
+
+	for (r = 0; r < height; r++)
+	{
+		for (c = 0; c < width; c++)
+		{
+			for (s = 0; s < 4; s++)
+			{
+				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *4)+ s];
+				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*4 + s];
+				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *4)+ s];
+				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
+				color /= 4;
+
+				temp[(r*width*4) + (c*4) + s] = (byte) color;
+			}
+		}
+	}
+
+	delete [] data;
+	data = temp;
+}
+
+
+//======================================================================================
+//======================================================================================
+//Image Writer Implementation
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Constructor Destructores
+==========================================
+*/
+
+CImageWriter::CImageWriter(int iwidth, int iheight, 
+						   const byte * idata) 
+	:m_width(iwidth), m_height(iheight), m_pData(idata)
+{}
+
+CImageWriter::CImageWriter(CImageReader * pImage)
+{
+	m_height = pImage->GetHeight();
+	m_width = pImage->GetWidth();
+	m_pData = pImage->GetData();
+}
+
+CImageWriter::~CImageWriter()
+{	m_pData = 0;
+}
 
 /*
 ==========================================
@@ -397,24 +467,23 @@ Write am Image to Disk
 ==========================================
 */
 
-void CImage::Write(const char *name, EImageFormat iformat)
+void CImageWriter::Write(const char *name, EImageFormat iformat)
 {
-	if(!data)
-		return;
-
-	//no format specifed
-	if(iformat == FORMAT_NONE)
-		iformat = format;
-
-	FILE *fp;
-	fp = fopen(name,"wb");
-	if(!fp)
+	if(!m_pData)
 	{
-		ConPrint("CImage::Write:%s not found\n", name);
+		ConPrint("CImageWriter::Write: No file data to write to %s\n", name);
 		return;
 	}
 
-	switch(format)
+	FILE *fp;
+	fp = fopen(name,"w+b");
+	if(!fp)
+	{
+		ConPrint("CImageWriter::Write: Unable to open %s for writing\n", name);
+		return;
+	}
+
+	switch(iformat)
 	{
 	case FORMAT_PCX:
 		Write_PCX(fp);
@@ -425,7 +494,7 @@ void CImage::Write(const char *name, EImageFormat iformat)
 	}
 	fclose(fp);
 
-	ConPrint("CImage::Write:Wrote %s\n", name);
+	ConPrint("CImageReader::Write:Wrote %s\n", name);
 }
 
 /*
@@ -433,12 +502,12 @@ void CImage::Write(const char *name, EImageFormat iformat)
 Write a pcx file 
 ==========================================
 */
-void CImage::Write_PCX( FILE *fp)
+void CImageWriter::Write_PCX( FILE *fp)
 {
 	int		i, j, p, length;
 	PCX_header	pcx;
 	byte		*pack;
-	byte		*packdata;
+	const byte		*packdata;
 
 
 	pcx.manufacturer = 0x0a;	// PCX id
@@ -447,34 +516,34 @@ void CImage::Write_PCX( FILE *fp)
 	pcx.bits_per_pixel = 8;		// 256 color
 	pcx.x      = 0;
 	pcx.y      = 0;
-	pcx.width  = (short)(width-1);
-	pcx.height = (short)(height-1);
-	pcx.x_res  = (short)width;
-	pcx.y_res  = (short)height;
+	pcx.width  = (short)(m_width-1);
+	pcx.height = (short)(m_height-1);
+	pcx.x_res  = (short)m_width;
+	pcx.y_res  = (short)m_height;
 	memset (pcx.ega_palette,0,sizeof(pcx.ega_palette));
 	pcx.num_planes = 3;
-	pcx.bytes_per_line = (short)width;
+	pcx.bytes_per_line = (short)m_width;
 	pcx.palette_type = 2;
 	memset (pcx.junk, 0, sizeof(pcx.junk));
 
 	//pack the image
-	pack = new byte[width * height * 4];
+	pack = new byte[m_width * m_height * 4];
 
 	if (pack == NULL) 
-		FError("CImage:Write_PCX::mem for writing pcx");
+		FError("CImageReader:Write_PCX::mem for writing pcx");
 	
 	byte *pack2 = pack;
 
 // gl reads from bottom to top, so write it backwards
-	for (i = (height - 1); i >= 0; i--)
+	for (i = (m_height - 1); i >= 0; i--)
 	{
 		for (p = 0; p < pcx.num_planes; p++)
 		{
-			packdata = data + (i*width*4) + p;
+			packdata = m_pData + (i*m_width*4) + p;
 
-			for (j = 0; j<width; j++)
+			for (j = 0; j<m_width; j++)
 			{
-				if ( (*data & 0xc0) != 0xc0)
+				if ( (*m_pData & 0xc0) != 0xc0)
 				{
 					*pack++ = *packdata;
 					packdata += 4;
@@ -508,7 +577,7 @@ void CImage::Write_PCX( FILE *fp)
 Write TGA file
 ==========================================
 */
-void CImage::Write_TGA( FILE *fp)
+void CImageWriter::Write_TGA( FILE *fp)
 {
 	// write output file 
 	fputc(0, fp);
@@ -525,10 +594,10 @@ void CImage::Write_TGA( FILE *fp)
 	fputc(0, fp);
 	fputc(0, fp);
 	fputc(0, fp);
-	fputc((char)(width & 0x00ff), fp);
-	fputc((char)((width & 0xff00) >> 8), fp);
-	fputc((char)(height & 0x00ff), fp);
-	fputc((char)((height & 0xff00) >> 8), fp);
+	fputc((char)(m_width & 0x00ff), fp);
+	fputc((char)((m_width & 0xff00) >> 8), fp);
+	fputc((char)(m_height & 0x00ff), fp);
+	fputc((char)((m_height & 0xff00) >> 8), fp);
 //	if(alpha)
 		fputc(32, fp);
 //	else
@@ -542,75 +611,50 @@ void CImage::Write_TGA( FILE *fp)
 	int w, h, components = 4;
 //	if (pic->alpha) components = 4;
 
-	for (h = 0; h < height; h++)
+	for (h = 0; h < m_height; h++)
 	{
-		for (w = 0; w < width; w++)
+		for (w = 0; w < m_width; w++)
 		{
-			fwrite(&data[h*width*components + w*components + 2], 1, 1, fp);	// blue
-			fwrite(&data[h*width*components + w*components + 1], 1, 1, fp);	// green
-			fwrite(&data[h*width*components + w*components    ], 1, 1, fp);	// red
+			fwrite(&m_pData[h*m_width*components + w*components + 2], 1, 1, fp);	// blue
+			fwrite(&m_pData[h*m_width*components + w*components + 1], 1, 1, fp);	// green
+			fwrite(&m_pData[h*m_width*components + w*components    ], 1, 1, fp);	// red
 //			if (pic->alpha)
-				fwrite(&data[h*width*components + w*components + 3], 1, 1, fp);	// alpha
+				fwrite(&m_pData[h*m_width*components + w*components + 3], 1, 1, fp);	// alpha
 		}
 	}
 }
+
 
 
 /*
-==========================================
-Reduce the Size of the image by 2x
-Used for mip maps
-==========================================
+typedef struct TGA_Header
+{
+	byte	id_length;
+	byte	colormap_type;
+	byte	image_type;
+	byte	colormap_spec[5];
+	byte	image_spec[10];
+}TGA_header;
+
+Image ID - Field 6 (variable):......................10
+Color Map Data - Field 7 (variable):................10
+Image Data - Field 8 (variable):....................10
+Image Type           Description
+	0                No Image Data Included
+	1                Uncompressed, Color-mapped Image
+	2                Uncompressed, True-color Image
+	3                Uncompressed, Black-and-white image
+	9                Run-length encoded, Color-mapped Image
+	10               Run-length encoded, True-color Image
+	11               Run-length encoded, Black-and-white image
 */
 
-void CImage::ImageReduce()
-{
-	DWORD color;
-	int r=0, c=0, s=0;
-	
-	width /=2;
-	height /=2;
 
-	int	sfactor = 1;
-	int	tfactor = 1;
 
-	if (!width)
-	{
-		width = 1;
-		sfactor = 0;
-	}
 
-	if (!height)
-	{
-		height = 1;
-		tfactor = 0;
-	}
 
-	int size = (width)*(height)*4;
 
-	byte * temp = new byte[size];
-	if(!temp)	FError("Mem for texture reduction");
 
-	for (r = 0; r < height; r++)
-	{
-		for (c = 0; c < width; c++)
-		{
-			for (s = 0; s < 4; s++)
-			{
-				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *4)+ s];
-				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*4 + s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *4)+ s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
-				color /= 4;
-
-				temp[(r*width*4) + (c*4) + s] = (byte) color;
-			}
-		}
-	}
-
-	delete [] data;
-	data = temp;
-}
 
 
 //======================================================================================================
@@ -624,7 +668,6 @@ void ImageReduce32(byte *dest, byte *src, int &width, int &height)
 {
 	DWORD color;
 	int r, c, s;
-
 
 	int sfactor = 0;
 	int tfactor = 0;
@@ -731,12 +774,3 @@ byte* ImageConvert(byte *src, int format, int width, int height)
 	}
 	return dest;
 }
-
-
-
-
-
-
-
-
-

@@ -3,7 +3,8 @@
 #include "Ren_main.h"
 #include "Ren_sky.h"
 #include "Ren_beam.h"
-#include "Tex_main.h"
+//#include "Tex_main.h"
+#include "Tex_hdr.h"
 #include "Clip.h"
 #include "Con_main.h"
 #include "Mdl_main.h"
@@ -60,7 +61,7 @@ void r_init(void)
 {
 	glClearColor(.1, .1, .1, 1);
 
-	float x = (float) tan(rInfo->fov * 0.5f);
+	float x = (float) tan(g_rInfo.fov * 0.5f);
 	float z = x * 0.75f;						// always render in a 3:4 aspect ratio
 
 	/* set viewing projection */
@@ -87,7 +88,7 @@ void r_init(void)
 
 	glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
 
-	rInfo->ready = true;
+	g_rInfo.ready = true;
 }
 
 
@@ -209,7 +210,7 @@ void build_frust(void)
 	vector_t a, b, c, d, center;
 	float x, z;
 
-	x = (float) tan(rInfo->fov * 0.5f);
+	x = (float) tan(g_rInfo.fov * 0.5f);
 	z = x * 0.75f;			// always render in a 3:4 aspect ratio
 
 	VectorAdd(eye.origin, forward, center);
@@ -296,7 +297,7 @@ void r_drawframe(vector_t *origin, vector_t *angles)
 	g_prCons->Draw();
 
 	glFlush();
-	_SwapBuffers(rInfo->hDC);
+	_SwapBuffers(g_rInfo.hDC);
 }
 
 
@@ -313,5 +314,5 @@ void r_drawcons()
 	g_prCons->Draw();
 
 	glFlush();
-	_SwapBuffers(rInfo->hDC);
+	_SwapBuffers(g_rInfo.hDC);
 }
