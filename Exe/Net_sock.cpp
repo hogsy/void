@@ -110,7 +110,7 @@ int CNetSocket::GetInterfaceList(INTERFACE_INFO ** addr, int numAddrs)
 Try to receive data
 ==========================================
 */
-bool CNetSocket::Recv()
+bool CNetSocket::RecvFrom()
 {
 	int srcLen=  sizeof(SOCKADDR_IN);
 	
@@ -132,16 +132,16 @@ bool CNetSocket::Recv()
 		}
 		if(err == WSAEMSGSIZE)
 		{
-			ComPrintf("CNetSocket::Recv: Oversize packet from %s\n", inet_ntoa (m_srcSockAddr.sin_addr));
+			ComPrintf("CNetSocket::RecvFrom: Oversize packet from %s\n", inet_ntoa (m_srcSockAddr.sin_addr));
 			return false;
 		}
-		PrintSockError(err,"CNetSocket::Recv:");
+		PrintSockError(err,"CNetSocket::RecvFrom:");
 		return false;
 	}
 
 	if(ret == m_pBuffer->GetMaxSize())
 	{
-		ComPrintf("CNetSocket::Recv: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
+		ComPrintf("CNetSocket::RecvFrom: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
 		return false;
 	}
 
@@ -159,7 +159,7 @@ used by client to only listen to message
 from the server once its connected
 ======================================
 */
-bool CNetSocket::RecvFromServer()
+bool CNetSocket::Recv()
 {
 	int srcLen=  sizeof(SOCKADDR_IN);
 	

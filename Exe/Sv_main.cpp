@@ -44,6 +44,8 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 	m_levelNum = 0;
 	m_numSignOnBuffers=0;
 
+	memset(m_printBuffer,0,sizeof(m_printBuffer));
+
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);

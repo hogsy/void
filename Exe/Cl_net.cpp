@@ -49,7 +49,7 @@ void CClientNetHandler::ReadPackets()
 
 	if(m_netState == CL_SPAWNED)
 	{
-		while(m_sock.RecvFromServer())
+		while(m_sock.Recv())
 		{
 //m_refClient.Print(CClient::DEFAULT,"CL: Reading update\n");
 			m_netChan.BeginRead();
@@ -96,7 +96,7 @@ void CClientNetHandler::ReadPackets()
 	}
 	else 
 	{
-		while(m_sock.Recv())
+		while(m_sock.RecvFrom())
 		{
 			if(m_netState == CL_CONNECTED)
 			{

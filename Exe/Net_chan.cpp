@@ -201,22 +201,3 @@ bool CNetChan::BeginRead()
 	m_lastReceived = System::g_fcurTime;
 	return true;
 }
-
-
-
-/*
-	NET_SendPacket (send.cursize, send.data, chan->remote_address);
-	if (showpackets.value)
-		Con_Printf ("--> s=%i(%i) a=%i(%i) %i\n"
-			, chan->outgoing_sequence
-			, send_reliable
-			, chan->incoming_sequence
-			, chan->incoming_reliable_sequence
-			, send.cursize);
-		//Recv
-  	if (showpackets.value)
-		Con_Printf ("<-- s=%i(%i) a=%i(%i) %i\n"
-			, sequence, reliable_message, sequence_ack	, reliable_ack	, net_message.cursize);
-*/
-
-

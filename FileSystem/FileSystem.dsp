@@ -149,10 +149,6 @@ SOURCE=.\Fs_zipfile.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File

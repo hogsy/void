@@ -58,23 +58,26 @@ private:
 	//private data
 	CNetSocket* m_pSock;
 	
-	CBuffer  m_recvBuf;
-	CBuffer  m_sendBuf;
+	CBuffer		m_recvBuf;
+	CBuffer		m_sendBuf;
 
-	SVClient    m_clients[MAX_CLIENTS];
+	SVClient	m_clients[MAX_CLIENTS];
 
 	//world data currently loaded by the server.
-	world_t	* m_pWorld;
-	char	m_worldName[COM_MAXPATH];
+	world_t	*	m_pWorld;
+	char		m_worldName[COM_MAXPATH];
 
-	bool	m_active;
-	int		m_numClients;
+	bool		m_active;
+	int			m_numClients;
 
-	int		m_levelNum;		//to check for map changes when clients are connecting
+	//to check for map changes while clients are connecting
+	int			m_levelNum;		
 
 	//Stores Entity baselines etc
 	int			m_numSignOnBuffers;
-	CBuffer	m_signOnBuf[MAX_SIGNONBUFFERS];
+	CBuffer		m_signOnBuf[MAX_SIGNONBUFFERS];
+
+	char		m_printBuffer[512];
 
 	//=================================================
 	//These arent called by the Sysmain on startup
@@ -85,28 +88,32 @@ private:
 
 	void LoadWorld(const char * mapname);
 
-	//Send Info to client
-	void SendRejectMsg(const char * reason);
-
 	//Handle Connectionless requests
 	void HandleStatusReq();
 	void HandleConnectReq();
 	void HandleChallengeReq();
 
-	void ParseClientMessage(SVClient &client);
+	//Parse message received
+	void ProcessQueryPacket();					//Query packet
+	void ParseClientMessage(SVClient &client);	//Client is in game
+	void ParseSpawnMessage(SVClient &client);	//Client hasn't spawned yet
 
-	//FRAME proceedures
-	void ProcessQueryPacket();
+	//Called each server frame
 	void ReadPackets();
 	void WritePackets();
 
 	//Broadcast print message to all except
-	void BroadcastPrintf(const SVClient * client, char* message, ...); //const char * message, int msglen);
-	void PrintServerStatus();
+	void ClientPrintf(SVClient &client, const char * message, ...);
+	void BroadcastPrintf(const SVClient * client, const char* message, ...);
 	
+	//Send Info to client
+	void SendRejectMsg(const char * reason);	//Only for unconnected clients
 	void SendSpawnParms(SVClient &client);
 	void SendReconnect(SVClient &client);
 	void SendDisconnect(SVClient &client, const char * reason);
+
+	//Misc
+	void PrintServerStatus();
 
 	//=================================================
 	//CVars

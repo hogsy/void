@@ -66,9 +66,9 @@ const byte CL_MOVE			= 2;	//angles/velocity
 const byte CL_STRING		= 3;	//Command string
 const byte CL_DELTA			= 4;	//update a specific field only ?
 const byte CL_TALK			= 5;	//client said something
-const byte CL_DISCONNECT	= 6;	//client is disconnecting
-const byte CL_UPDATEINFO	= 7;	//client wants to update its info. name/rate/skin/model etc
+const byte CL_UPDATEINFO	= 6;	//client wants to update its info. name/rate/skin/model etc
 									// n=name r=rate
+const byte CL_DISCONNECT	= 15;	//client is disconnecting
 
 //===============================
 //Server to Client
