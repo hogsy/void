@@ -52,15 +52,16 @@ struct ClEntity : public BaseEntity
 struct ClClient : public ClEntity
 {
 	ClClient() 
-	{	name[0] = 0;
+	{	Reset();
 	}
 
 	virtual void Reset()
 	{
 		ClEntity::Reset();
-		name[0] = 0;
+		memset(name,0,32);
 	}
-	char name[32];
+	
+	char name[CL_MAXNAME];
 };
 
 

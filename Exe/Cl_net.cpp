@@ -65,13 +65,13 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				int sindex = buffer.ReadShort();
 				char path[COM_MAXPATH];
 
-				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
+				sprintf(path,"Models/Player/%s/%s", model, buffer.ReadString());
 
 				m_clients[num].mdlCache = CACHE_GAME;
 				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_GAME, sindex);
 				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
-				sprintf(path,"Players/%s/tris.md2", model);
+				sprintf(path,"Models/Player/%s/tris.md2", model);
 				m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_GAME,mindex);
 				m_clients[num].mdlCache = CACHE_GAME;
 
@@ -113,10 +113,10 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 					return;
 				}
 				
-/*				m_pGameClient->origin.x = x;
+				m_pGameClient->origin.x = x;
 				m_pGameClient->origin.y = y;
 				m_pGameClient->origin.z = z;
-*/
+
 				break;
 			}
 		case SV_CLFULLUPDATE:
@@ -373,6 +373,58 @@ bool CGameClient::ValidateRate(const CParms &parms)
 }
 
 
+/*
+================================================
+Validate Model/Skin change. make sure we
+locally have it
+================================================
+*/
+bool CGameClient::ValidateCharacter(const CParms &parms)
+{
+	if(parms.NumTokens() < 2)
+	{
+		ComPrintf("Current Character: %s\n", m_cvCharacter.string);
+		return false;
+	}
+
+	char szPath[64];
+	if(!parms.StringTok(1,szPath,64))
+	{
+		ComPrintf("Unable to read model string\n");
+		return false;
+	}
+
+	char modelPath[CL_MAXMODELNAME];
+	bool bDefaultedSkin = false;
+	
+	CParms charParms(szPath);
+	
+	charParms.StringTok(0,modelPath,CL_MAXMODELNAME,'/');
+	ComPrintf("Model : %s\n", modelPath);
+
+	//Check if there is a model by that name, error out if not
+
+	//If we didnt specify a skin, then default to same name as model
+	if(charParms.NumTokens('/') >= 2)
+	{
+		char skinPath[CL_MAXSKINNAME];
+		charParms.StringTok(1,skinPath,64,'/');
+		ComPrintf("Skin  : %s\n", skinPath);
+	}
+	else
+	{
+		ComPrintf("Defaulting to %s as skin\n", modelPath);
+		sprintf(szPath,"%s/%s", modelPath,modelPath);
+		m_cvCharacter.ForceSet(szPath);
+	}
+
+	if(m_ingame)
+	{
+	}
+	return (!bDefaultedSkin);
+}
+
+
 
 //==========================================================================
 //==========================================================================
@@ -449,7 +501,8 @@ Write UserInfo to buffer
 void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.WriteString(m_cvName.string);
-	buffer.WriteString(m_cvModel.string);
-	buffer.WriteString(m_cvSkin.string);
+//FIXME
+	buffer.WriteString("Amber");
+	buffer.WriteString("Amber");
 	buffer.WriteInt(m_cvRate.ival);
 }

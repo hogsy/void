@@ -6,10 +6,10 @@
 struct I_Console;
 class  CBuffer;
 
-const int ENT_MAXCLASSNAME = 32;
-const int ENT_MAXRESNAME = 64;
-const int ENT_MAXSTRING = 128;
-const int ENT_MAXMESSAGE = 256;
+const int ENT_MAXCLASSNAME= 32;
+const int ENT_MAXRESNAME  = 64;
+const int ENT_MAXSTRING   = 128;
+const int ENT_MAXMESSAGE  = 256;
 
 /*
 =======================================
@@ -35,9 +35,9 @@ struct EntClient : public Entity
 {
 	EntClient() :Entity("client")
 	{	
-		memset(name,0,ENT_MAXCLASSNAME); 
-		memset(modelName, 0, ENT_MAXRESNAME);
-		memset(skinName, 0, ENT_MAXRESNAME);
+		memset(name,0,CL_MAXNAME); 
+		memset(modelName, 0, CL_MAXMODELNAME);
+		memset(skinName, 0, CL_MAXSKINNAME);
 		inUse = spawned = false;
 	}
 
@@ -47,9 +47,9 @@ struct EntClient : public Entity
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
 
-	char name[ENT_MAXCLASSNAME];
-	char modelName[ENT_MAXRESNAME];
-	char skinName[ENT_MAXRESNAME];
+	char name[CL_MAXNAME];
+	char modelName[CL_MAXMODELNAME];
+	char skinName[CL_MAXSKINNAME];
 };
 
 /*

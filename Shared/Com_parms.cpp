@@ -19,6 +19,7 @@ CParms::CParms(const char * buf)
 {
 	length = 0;
 	numTokens = 0;
+	string = 0;
 	Set(buf);
 }
 	
@@ -26,6 +27,7 @@ CParms::CParms(const CParms &parms)
 {
 	length = 0;
 	numTokens = 0;
+	string = 0;
 	Set(parms.string);
 }
 
@@ -38,7 +40,8 @@ void CParms::Set(const char * buf)
 	int len = strlen(buf) + 1;
 	if(len > length)
 	{
-		delete [] string;
+		if(string)
+			delete [] string;
 		length = len;
 		string = new char [length];
 	}
@@ -64,7 +67,7 @@ Return the number of tokens
 */
 int CParms::NumTokens(char delim) const
 {
-	if(!numTokens)
+	if(!numTokens || delim != ' ')
 	{
 		int tokens = 1;
 		bool intoken = true;
@@ -101,7 +104,7 @@ Token 0 is the first one
 char * CParms::StringTok(int num, char * outString, 
 						 int stringlen,  char delim) const
 {
-	if(num < 0 || num > NumTokens())
+	if(num < 0 || (num > NumTokens(delim)))
 		return 0;
 
 	bool found = false,

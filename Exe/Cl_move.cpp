@@ -56,8 +56,8 @@ Update angles. called onces per frame
 ================================================
 */
 
-float maxTilt = PI/60;
-float tiltStep = PI/600;
+float maxTilt = PI/180;
+float tiltStep = PI/500;
 
 void CGameClient::UpdateAngles(const vector_t &angles, float time)
 {

@@ -1,7 +1,38 @@
 EXE
 ==============================================================
-move gravity to server side
+
 add server-side gravity/maxspeed vars
+client side view tilt vars
+
 change model/skins stuff to just character
 change player model/skins to use local cache
+
 fix jumping
+
+
+RENDERER
+==========
+
+can load multiple copies of the same model in the same cache if we let it
+specify the index.
+
+same for images. 
+
+scale for models seems waaaaay off.
+
+
+GAME
+========
+add delay var to sound sources
+add renderering flags to model entities
+add frame range to model entities, speed as well ?
+
+
+fix up console handling in game
+
+give file access to game
+
+FILESYSTEM
+==========
+
+change to I_fileReaders

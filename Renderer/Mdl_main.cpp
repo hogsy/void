@@ -15,12 +15,11 @@ CModelManager::CModelManager()
 	drawmodels = NULL;
 	ready = true;
 
-	// reset
+	//Initialize to 0
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
 		for (int e=0; e<GAME_MAXMODELS; e++)
-		{	caches[c][e] = NULL;
-		}
+			caches[c][e] = NULL;
 	}
 }
 
@@ -31,7 +30,9 @@ Destructor
 */
 CModelManager::~CModelManager()
 {
-	for (int c=0; c<CACHE_NUMCACHES; c++)
+	UnloadModelAll();
+
+/*	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
 		for (int e=0; e<GAME_MAXMODELS; e++)
 		{
@@ -43,10 +44,10 @@ CModelManager::~CModelManager()
 			}
 		}
 	}
-
+*/
 	// free any drawmodel structs we have allocated
-	for (c=0; c<num_drawmodel_allocs; c++)
-		delete drawmodel_allocs[c];
+	for (int c=0; c<num_drawmodel_allocs; c++)
+		delete [] drawmodel_allocs[c];
 }
 
 /*
@@ -56,8 +57,51 @@ LoadModel
 */
 int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex)
 {
+	if(mdlIndex == -1)
+	{
+		for(int i=0; i<GAME_MAXMODELS; i++)
+		{
+			if (!caches[mdlCache][i])
+			{
+				if(mdlIndex == -1)
+					mdlIndex = i;
+			}
+			else if(caches[mdlCache][i]->IsFile(model))
+			{
+				caches[mdlCache][i]->AddRef();
+				return i;
+			}
+		}
+
+		if(mdlIndex == -1)
+		{
+			ComPrintf("CModelManager::LoadModel::No space to load %s\n", model);
+			return -1;
+		}
+	}
+
+
+	// make sure our spot is free
+	if (caches[mdlCache][mdlIndex])
+	{
+		ComPrintf("CModelManager::LoadModel:: Error loading %s. Slot occupied by %s\n", model,
+			caches[mdlCache][mdlIndex]->GetFileName());
+		return -1;
+	}
+
+	// else create a new one
+	if (_stricmp("md2", &model[strlen(model)-3])==0)
+		caches[mdlCache][mdlIndex] =  new CModelMd2();
+	else
+		caches[mdlCache][mdlIndex] =  new CModelSp2();
+
+	caches[mdlCache][mdlIndex]->LoadModel(model);
+	return mdlIndex;
+
+
+
 	// find the first available spot in this mdlCache
-	if (mdlIndex == -1)
+/*	if (mdlIndex == -1)
 	{
 		for (int i=0; i<GAME_MAXMODELS; i++)
 		{
@@ -105,6 +149,7 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 
 	caches[mdlCache][mdlIndex]->LoadModel(model);
 	return mdlIndex;
+*/
 }
 
 
@@ -131,8 +176,7 @@ UnloadModel
 void CModelManager::UnloadModel(CacheType mdlCache, int mdlIndex)
 {
 	if (!caches[mdlCache][mdlIndex])
-		ComPrintf("CModelManager::UnloadModel - model not loaded\n");
-
+		ComPrintf("CModelManager::UnloadModel:[%d][%d]: model not loaded\n", mdlCache, mdlIndex);
 	else
 	{
 		if (caches[mdlCache][mdlIndex]->Release() == 0)
@@ -146,14 +190,20 @@ void CModelManager::UnloadModel(CacheType mdlCache, int mdlIndex)
 /*
 =======================================
 UnloadModelCache 
+Unload models regardless of locks
 =======================================
 */
 void CModelManager::UnloadModelCache(CacheType mdlCache)
 {
 	for (int i=0; i<GAME_MAXMODELS; i++)
 	{
+//		if (caches[mdlCache][i])
+//			UnloadModel(mdlCache, i);
 		if (caches[mdlCache][i])
-			UnloadModel(mdlCache, i);
+		{
+			delete caches[mdlCache][i];
+			caches[mdlCache][i] = 0;
+		}
 	}
 
 }
@@ -243,7 +293,6 @@ void CModelManager::LoadSkins(void)
 				caches[c][e]->LoadSkins();
 		}
 	}
-
 	ready = true;
 }
 
@@ -263,7 +312,6 @@ void CModelManager::UnLoadSkins(void)
 				caches[c][e]->UnLoadSkins();
 		}
 	}
-
 	ready = false;
 }
 
@@ -280,8 +328,8 @@ void CModelManager::drawmodelAlloc(void)
 		FError("too many drawmodel allocs! Tell Ripper\n");
 
 	drawmodel_allocs[num_drawmodel_allocs] = new drawmodel_t[DRAWMODELS_PER_ALLOC];
-	if (!drawmodel_allocs[num_drawmodel_allocs])
-		FError("not enough mem for drawmodels! - %d allocated", DRAWMODELS_PER_ALLOC*num_drawmodel_allocs);
+//	if (!drawmodel_allocs[num_drawmodel_allocs])
+//		FError("not enough mem for drawmodels! - %d allocated", DRAWMODELS_PER_ALLOC*num_drawmodel_allocs);
 
 	free_drawmodels = drawmodel_allocs[num_drawmodel_allocs];
 	num_drawmodel_allocs++;

@@ -44,11 +44,14 @@ public:
 private:
 
 	// struct to hold a list of models to be drawn
-	typedef struct drawmodel_s
+	struct drawmodel_t
 	{
+		drawmodel_t() { state = 0; next = 0; }
+		~drawmodel_t() { state = 0; next = 0; }
+
 		const ClEntity *state;
-		drawmodel_s *next;
-	} drawmodel_t;
+		drawmodel_t *next;
+	};
 
 	int		num_drawmodel_allocs;
 	drawmodel_t	*drawmodel_allocs[MAX_DRAWMODEL_ALLOCS];

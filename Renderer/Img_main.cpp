@@ -11,6 +11,7 @@ Constructor
 CImageManager::CImageManager()
 {
 	ready = true;
+	
 	// reset
 	int c, e;
 	for (c=0; c<CACHE_NUMCACHES; c++)

@@ -37,8 +37,6 @@ private:
 	
 	friend class CClientExports;
 
-	//Hacks 
-//	void SetClientState(int state);
 	void HandleNetEvent(int event);
 	void SetNetworkRate(int rate);
 

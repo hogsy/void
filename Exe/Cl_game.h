@@ -86,12 +86,14 @@ private:
 	void Talk(const char * string);
 	bool ValidateName(const CParms &parms);
 	bool ValidateRate(const CParms &parms);
+	bool ValidateCharacter(const CParms &parms);
 
 	CVar    m_cvKbSpeed;
 	CVar	m_cvName;
 	CVar	m_cvRate;
-	CVar    m_cvModel;
-	CVar    m_cvSkin;
+	CVar	m_cvCharacter;
+//	CVar    m_cvModel;
+//	CVar    m_cvSkin;
 	CVar	m_cvClip;
 
 	//==================================================

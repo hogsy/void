@@ -23,8 +23,9 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
 				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-				m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-				m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE)
+				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE)
+//				m_cvModel("cl_model", "Amber", CVAR_STRING, CVAR_ARCHIVE),
+//				m_cvSkin("cl_skin", "Amber", CVAR_STRING, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -43,8 +44,9 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCVar(&m_cvClip);
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
-	System::GetConsole()->RegisterCVar(&m_cvModel,this);
-	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
+	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
+//	System::GetConsole()->RegisterCVar(&m_cvModel,this);
+//	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
 
 	//Register Commands
 	for(int i=0; g_clGameCmds[i].szCmd; i++)
@@ -399,6 +401,8 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return ValidateRate(parms);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
 		return ValidateName(parms);
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvCharacter))
+		return ValidateCharacter(parms);
 	return false;
 }
 

@@ -14,6 +14,7 @@ public:
 	void UnLoadSkins();
 	int  Release()	{ return --mRefCount; }
 	void AddRef()	{ mRefCount++;	}
+	const char * GetFileName() { return modelfile; }
 
 	bool IsFile(const char *file) const	
 	{	
@@ -24,7 +25,9 @@ public:
 	int	 GetNumFrames() const { return num_frames;	}
 
 protected:
+	
 	// skin info
+	
 	int num_skins;
 	int mShaderBin;
 //	int	skin_bin;		// rasterizer texture names

@@ -109,6 +109,8 @@ void CGame::RunFrame(float curTime)
 			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, right);
 			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.upmove, up);
 
+			desiredMove.z -= 200.0f;
+
 			//Perform the actual move and update angles
 			EntMove::ClientMove(clients[i], desiredMove, clients[i]->clCmd.time);
 
