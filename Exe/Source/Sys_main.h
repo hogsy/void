@@ -1,9 +1,13 @@
 #ifndef VOID_SYS_MAIN
 #define VOID_SYS_MAIN
 
+#define INCLUDE_MUSIC
+#define INCLUDE_SOUND
+
 #include "Sys_hdr.h"
 #include "Sys_time.h"
 #include "In_main.h"
+#include "Snd_main.h"
 #include "Mus_main.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
@@ -65,6 +69,10 @@ private:
 
 #ifdef INCLUDE_MUSIC
 	CMusic		 * m_pMusic;
+#endif
+
+#ifdef INCLUDE_SOUND
+	CSoundManager* m_pSound;		//Sound Subsystem
 #endif
 
 	RenderInfo_t * m_pRParms;		//Current Renderering info

@@ -1,6 +1,7 @@
 #ifndef _V_SOCKET
 #define _V_SOCKET
 
+#include <winsock2.h>
 #include "Net_defs.h"
 
 /*

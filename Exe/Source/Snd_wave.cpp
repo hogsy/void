@@ -1,273 +1,191 @@
-#ifdef INCLUDE_SOUND
+#include  "Snd_wave.h"
 
-#include "Sys_hdr.h"
-#include "Snd_wave.h"
-#include "Snd_main.h"
+//======================================================================================
+//======================================================================================
 
+namespace
+{
+	struct wavChunkHeader
+	{
+		wavChunkHeader() { marker = length = 0; }
+
+		ulong marker;		// four-character chunk type marker
+		ulong length;		// length of chunk after this header
+	};
+
+	struct wavFormatChunk
+	{
+		wavFormatChunk() 
+		{ 
+			formatTag = numChannels = 0;
+			samplesPerSec = averageBytesPerSec = 0;
+			blockAlign = bitsPerSample = 0;
+		}
+		ushort formatTag;			// should be 1
+		ushort numChannels;			// 1=mono, 2=stereo
+		ulong  samplesPerSec;		// playback rate
+		ulong  averageBytesPerSec;	// generally samplesPerSecond*blockAlign
+		ushort blockAlign;			// block alignment, bytesPerSample = blockAlign / numChannels
+		ushort bitsPerSample;
+	};
+
+	struct wavFileHeader
+	{
+		wavFileHeader() { marker = waveChunkLen = waveMarker = 0; }
+
+		ulong marker;		//"RIFF"
+		ulong waveChunkLen; //size of wave data chunk that follows (i.e. usually filesize = waveChunkLen+8)
+		ulong waveMarker;	//"WAVE"
+		// every chunk that follows is up for grabs, but hunt down the "fmt " and "data" chunks
+	};
+}
+
+//======================================================================================
+//======================================================================================
+
+using namespace VoidSound;
+
+CFileBuffer CWaveFile::m_fileReader;
 
 /*
-======================================
-Private Structs
-Wave Format
-======================================
+==========================================
+Constructor
+==========================================
 */
 
-typedef struct
+CWaveFile::CWaveFile()
 {
-	unsigned long marker;		// four-character chunk type marker
-	unsigned long length;		// length of chunk after this header
-} wavChunkHeader_t;
+	m_samplesPerSecond = m_size = 0;
+	m_blockAlign = 0;
+	m_data = 0;
 
-typedef struct
+	m_filename = 0;
+}
+
+CWaveFile::CWaveFile(const char * wavefile)
 {
-	wavChunkHeader_t header;	// marker "data"
-	unsigned char data[1];		// data stream, variable-sized
-} wavDataChunk_t;
-
-typedef struct
-{
-	wavChunkHeader_t header;				// marker "fmt "
-	unsigned short formatTag;				// should be 1
-	unsigned short numChannels;				// 1=mono, 2=stereo
-	unsigned long samplesPerSecond;			// playback rate
-	unsigned long averageBytesPerSecond;	// generally samplesPerSecond*blockAlign
-	unsigned short blockAlign;				// block alignment, bytesPerSample = blockAlign / numChannels
-	unsigned short formatSpecific;			// reserved I think
-} wavFormatChunk_t;
-
-typedef struct
-{
-	unsigned long marker;		// "RIFF"
-	unsigned long waveChunkLen; // size of wave data chunk that follows (i.e. usually filesize = waveChunkLen+8)
-	unsigned long waveMarker;	// "WAVE"
-	// every chunk that follows is up for grabs, but hunt down the "fmt " and "data" chunks
-} wavFileHeader_t;
-
-
+	m_samplesPerSecond = m_size = 0;
+	m_blockAlign = 0;
+	m_data = 0;
+	m_filename = 0;
+	LoadFile(wavefile);
+}
 
 /*
-======================================
-Low level - wave loading func
-Fills the Wavefile struct with as much info as it can
-======================================
+==========================================
+Destructor
+==========================================
 */
 
-bool LoadWaveFile(char *filename, CWavefile *data)
+
+CWaveFile::~CWaveFile()
 {
-	FILE * fp;
-	wavFileHeader_t* fhdr;
-	wavChunkHeader_t* chdr;
-	wavFormatChunk_t* format;
-	wavDataChunk_t  *wavedata;
-	unsigned long chunkPos;
-	unsigned long size;
-
-	char temp[256];
-	strcpy(temp,CSound::soundpath);
-	strcat(temp,filename);
-
-	//open it in binary
-	if(!(fp = fopen(temp,"rb")))
-	{
-		ComPrintf("::LoadWaveFile - Couldnt open file - %s\n",temp);
-		return false;
-	}
-
-	//Get size of file
-	if(fseek(fp, 0, SEEK_END))		//go to end
-	{
-		ComPrintf("::LoadWaveFile - Couldnt read 1 file - %s\n",temp);
-		return false;
-	}
-	size= ftell(fp);				//get position
-	if(fseek(fp,0,SEEK_SET))		//go back to start
-	{
-		ComPrintf("::LoadWaveFile - Couldnt read 2 file - %s\n",temp);
-		return false;
-	}
-
-	data->fpBuf = (unsigned char*)malloc(size);	//alloc buffer
+	Unload();
+}
 	
-	if (fread(data->fpBuf, 1, size, fp) != size)
+/*
+==========================================
+Load a given file
+==========================================
+*/
+
+bool CWaveFile::LoadFile(const char * wavefile)
+{
+	if(!m_fileReader.Open(wavefile))
 	{
-		ComPrintf("::LoadWaveFile - couldnt reed entire file - %s\n",temp);
+		ComPrintf("CWaveFile::LoadFile: Failed to load %s\n", wavefile);
 		return false;
 	}
-	fclose(fp);						//done reading into buffer
+
+	wavFileHeader wFilehdr;
+	m_fileReader.Read(&wFilehdr,sizeof(wavFileHeader),1);
 	
 	//make sure its a RIFF or a WAVE file
-	fhdr = (wavFileHeader_t*)data->fpBuf;
-	if ((fhdr->marker != ('R' + ('I'<<8) + ('F'<<16) + ('F'<<24)))
-	 || (fhdr->waveMarker != ('W' + ('A'<<8) + ('V'<<16) + ('E'<<24))))
+	if ((wFilehdr.marker != ('R' + ('I'<<8) + ('F'<<16) + ('F'<<24))) ||
+	    (wFilehdr.waveMarker != ('W' + ('A'<<8) + ('V'<<16) + ('E'<<24))))
 	{
-		free(data->fpBuf);
-		ComPrintf("::LoadWaveFile - invalid wave format - %s",temp);
+		m_fileReader.Close();
+		ComPrintf("CWaveFile::LoadFile: Invalid wave format, %s",wavefile);
 		return false;
 	}
+
+
+	//First chunk starts after the fileheader
+	ulong chunkSize = sizeof(wavChunkHeader);
+	ulong chunkPos = sizeof(wavFileHeader);
+
+	bool readWave = false;
+
+	//Read info into these strucys
+	wavChunkHeader wChunkHdr;
+	wavFormatChunk wFormatChunk;
 	
-	wavedata = NULL;
-	format = NULL;
+	//Loop through chunk headers until we find info on wavedata and format type
+	for(chunkPos; chunkPos < (wFilehdr.waveChunkLen + chunkSize); chunkPos += (wChunkHdr.length + chunkSize))
+	{
 
-	for (chunkPos=sizeof(wavFileHeader_t);
-	     chunkPos<(fhdr->waveChunkLen+sizeof(wavChunkHeader_t));
-		 chunkPos+=(chdr->length+sizeof(wavChunkHeader_t)) )
-	{
-		if ((wavedata) && (format))
-			break;
-		
-		chdr = (wavChunkHeader_t*)(data->fpBuf+chunkPos);
-		
-		if (chdr->marker == ('f' + ('m'<<8) + ('t'<<16) + (' '<<24)))
-			format = (wavFormatChunk_t*)chdr;
-		
-		else if (chdr->marker == ('d' + ('a'<<8) + ('t'<<16) + ('a'<<24)))
-			wavedata = (wavDataChunk_t*)chdr;
-			
+		m_fileReader.Seek(chunkPos,SEEK_SET);
+		m_fileReader.Read(&wChunkHdr,chunkSize,1);
+
+		//Found the Format Chunk
+		if (wChunkHdr.marker == ('f' + ('m'<<8) + ('t'<<16) + (' '<<24)))
+		{
+			//Go back and read it into the format data
+			m_fileReader.Read(&wFormatChunk,sizeof(wavFormatChunk),1);
+
+			m_samplesPerSecond = wFormatChunk.samplesPerSec;
+			//m_numChannels = wFormatChunk.numChannels;
+			m_blockAlign = wFormatChunk.blockAlign;
+			m_bitsPerSample = wFormatChunk.bitsPerSample;
+		}
+		//Found the Data Chunk
+		else if (wChunkHdr.marker == ('d' + ('a'<<8) + ('t'<<16) + ('a'<<24)))
+		{
+			m_size = wChunkHdr.length;
+			m_data = (byte*)g_pHunkManager->HunkAlloc(m_size);  //new byte[m_length];
+			m_fileReader.Read(m_data,m_size,1);
+
+			//Break if we have read both
+			if(wFormatChunk.formatTag && m_data)
+			{
+				readWave = true;
+				break;
+			}
+		}
 	}
-	if ((!wavedata) || (!format))
+	m_fileReader.Close();
+
+	if(!readWave)
 	{
-		free(data->fpBuf);
-		ComPrintf("::LoadWaveFile - couldnt read wave data - %s",temp);
+		ComPrintf("CWaveFile::LoadFile:Error reading %s\n",wavefile);
 		return false;
 	}
 
-	data->length = wavedata->header.length;
-	data->samplesPerSecond = format->samplesPerSecond;
-	data->numChannels = format->numChannels;
-	data->blockAlign = format->blockAlign;	
-	data->data = wavedata->data;
-	data->filename = new char[(strlen(filename)+1)];
-	strcpy(data->filename,filename);
+	m_filename = new char[(strlen(wavefile)+1)];
+	strcpy(m_filename,wavefile);
+	ComPrintf("Read %s, size %d, block %d, samples per sec %d\n", m_filename,m_size, m_blockAlign, m_samplesPerSecond);
 	return true;
 }
 
 
-/*
-======================================
-Unloading func - not needed
-======================================
-*/
-
-bool UnloadWaveFile(int index)
+void CWaveFile::Unload()
 {
-	return true;
-}
-
-
-//============================================================================
-
-/*
-======================================
-Wavemanager constructor
-======================================
-*/
-
-CWavemanager::CWavemanager()
-{
-	wavepool[0].filename =0;
-	wavepool[0].data = 0;
-	wavepool[0].fpBuf =0;
-	curwaves = 1;
-}
-
-/*
-======================================
-Wavemanager destructor
-======================================
-*/
-
-CWavemanager::~CWavemanager()
-{
-}
-
-/*
-======================================
-Register a Wave file
-======================================
-*/
-
-int	CWavemanager::Register(char *filename,int cache_type)
-{
-	//int index =curwaves;
-	//Check if we already have this file
-
-	//Alloc space for file
-	if(LoadWaveFile(filename, &wavepool[curwaves]))
+	if(m_filename)
 	{
-		ComPrintf("CWavemanger::Registered Wave:%s at %d\n",filename,curwaves);
-		curwaves++;
-		return (curwaves-1);
+		delete [] m_filename;
+		m_filename =0;
 	}
-	return 0;
-
-}
-
-
-/*
-======================================
-Unregister
-======================================
-*/
-bool CWavemanager::Unregister(int index)
-{
-	return true;
-}
-
-
-/*
-======================================
-Get wave file from index
-======================================
-*/
-CWavefile * CWavemanager::WaveIndex(int index)
-{
-	if(!index || index >= curwaves)
-		return 0;
-
-	if(wavepool[index])
-		return &wavepool[index];
-	return 0;
-}
-
-
-/*
-======================================
-Get wave file from Filename
-======================================
-*/
-CWavefile * CWavemanager::WaveIndex(char *filename)
-{
-	for(int i=1;i<curwaves;i++)
+	if(m_data)
 	{
-		if(!strcmp(wavepool[i].filename,filename))
-			return &wavepool[i];
+		g_pHunkManager->HunkFree(m_data);
+		m_data = 0;
+		m_size = 0;
 	}
-	return 0;
 }
-
-/*
-======================================
-Get index from filename
-======================================
-*/
-
-int CWavemanager::GetIndex(char *filename)
-{
-	for(int i=1;i<curwaves;i++)
-	{
-		if(!strcmp(wavepool[i].filename,filename))
-			return i;
-	}
-	return 0;
+	
+bool CWaveFile::IsEmpty() const
+{	
+	if(!m_data)	
+		return true; 
+	return false;
 }
-
-
-#endif
-
-
-
-
-
-
-
-

@@ -50,7 +50,7 @@ namespace VoidMusic
 	class CMusFMod;
 #endif
 
-//	class CMusCDAudio;
+	class CMusCDAudio;
 //	class CMusDirectMusic;
 }
 

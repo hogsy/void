@@ -103,6 +103,14 @@ SOURCE=.\Source\Snd_buf.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Snd_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Snd_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Snd_main.cpp
 # End Source File
 # Begin Source File
@@ -276,6 +284,22 @@ SOURCE=.\Source\resources.rc
 # Begin Source File
 
 SOURCE=..\Shared\Fmod\fmod.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_cd.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_cd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_dm.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_dm.h
 # End Source File
 # Begin Source File
 

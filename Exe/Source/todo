@@ -1,0 +1,24 @@
+EXE
+==============================================================
+
+add 3d sound buffers
+get cdaudio working
+get a basic directMusic interface going
+
+CVar/Command/CmdLine Parms class
+error/logging/handling
+
+Clear			clear
+Home and End,	go to top and bottom	
+paste from windows console Ctrl-v
+
+RENDERER
+==============================================================
+
+setup jpeg reading and writing
+STILL CAN'T DEBUG !!
+gl driver issues with 3dfx cars? 
+
+
+console printing is messy, line breaks dont show up properly
+

@@ -1,3 +1,4 @@
+#include <winsock2.h>
 #include "Net_util.h"
 
 char	g_computerName[256];

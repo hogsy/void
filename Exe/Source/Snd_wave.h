@@ -1,54 +1,44 @@
-#ifdef INCLUDE_SOUND
+#ifndef VOID_SND_WAVEFILE
+#define VOID_SND_WAVEFILE
 
-#ifndef _V_WAVEFILES
-#define _V_WAVEFILES
+#include "Snd_main.h"
+#include "I_file.h"
 
-#define RES_CACHE_EMPTY		0
-#define RES_CACHE_TEMP		1
-#define RES_CACHE_LEVEL		2
-#define RES_CACHE_GAME		3
+namespace VoidSound {
 
-#define MAX_SOUNDS	256
+/*
+==========================================
+Util class which reads in Wave file data
 
+We do NOT support Stereo wave files
+==========================================
+*/
 
-class 	CWavefile
+class CWaveFile
 {
 public:
-	CWavefile(){ filename=0; fpBuf=data=0;};
-//	~CWavefile();
-
-	operator bool(void) const { return fpBuf != 0; }
-	unsigned long  samplesPerSecond;
-	unsigned long  length;
-	unsigned short blockAlign;	
-	unsigned short numChannels;
-	unsigned char* fpBuf;
-	unsigned char* data;		// data stream, variable-sized
+	CWaveFile();
+	CWaveFile(const char * wavefile);
+	~CWaveFile();
 	
-	char *filename;
-	int	  cachetype;
-};
-
-class CWavemanager
-{
-public:
-	CWavemanager();
-	~CWavemanager();
-
-	int		Register(char *filename,int cache_type);
-	bool	Unregister(int index);
+	bool LoadFile(const char * wavefile);
+	void Unload();
 	
-	CWavefile	* WaveIndex(int index);
-	CWavefile	* WaveIndex(char *filename);
-	
-	int			GetIndex(char *filename);
+	bool IsEmpty() const;
+
+	byte * m_data;		// data stream, variable-sized
+	ulong  m_size;
+	char * m_filename;
+
+	ulong  m_samplesPerSecond;
+	ushort m_blockAlign;
+	ushort m_bitsPerSample;
 
 private:
-	CWavefile 	wavepool[MAX_SOUNDS];
-	int			curwaves;
+
+	static CFileBuffer m_fileReader;
 };
 
-
-#endif
+}
 
 #endif

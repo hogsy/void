@@ -2,7 +2,6 @@
 #include "Sys_cons.h"
 #include "Sv_main.h"
 #include "Cl_main.h"
-#include "Snd_main.h"
 #include "Com_hunk.h"
 
 #include <objbase.h>
@@ -21,9 +20,6 @@ CConsole	*	g_pConsole =0;	//Console
 CClient		*	g_pClient  =0;	//Client and UI
 
 
-#ifdef INCLUDE_SOUND
-CSound		*	g_pSound=0;		//Sound Subsystem
-#endif
 #ifndef __VOIDALPHA
 CServer		*	g_pServer=0;	//Network Server
 #endif
@@ -100,7 +96,7 @@ CVoid::CVoid(const char * cmdLine)
 	
 #ifdef INCLUDE_SOUND
 	//Sound
-	g_pSound = new CSound();
+	m_pSound = new CSoundManager();
 #endif
 
 #ifdef INCLUDE_MUSIC
@@ -138,9 +134,9 @@ CVoid::~CVoid()
 	}
 
 #ifdef INCLUDE_SOUND
-	if(g_pSound)
-	{	delete g_pSound;
-		g_pSound = 0;
+	if(m_pSound)
+	{	delete m_pSound;
+		m_pSound = 0;
 	}
 
 #endif
@@ -172,6 +168,8 @@ CVoid::~CVoid()
 		delete m_pExport;
 		m_pExport = 0;
 	}
+
+	m_HunkManager.PrintStats();
 
 	if(g_pConsole)
 	{		delete g_pConsole;
@@ -277,11 +275,11 @@ bool CVoid::Init()
 #ifdef INCLUDE_SOUND
 	//================================
 	//Sound 
-	if(!g_pSound->Init())
+	if(!m_pSound->Init())
 	{
 		ComPrintf("CVoid::Init: couldnt init sound system\n");
-		delete g_pSound;
-		g_pSound = 0;
+		delete m_pSound;
+		m_pSound = 0;
 	}
 #endif
 
@@ -345,8 +343,8 @@ bool CVoid::Shutdown()
 
 #ifdef INCLUDE_SOUND
 	//Sound
-	if(g_pSound)
-		g_pSound->Shutdown();
+	if(m_pSound)
+		m_pSound->Shutdown();
 #endif
 
 #ifdef INCLUDE_MUSIC
@@ -389,6 +387,11 @@ void CVoid::RunFrame()
 	m_pInput->UpdateCursor();
 	m_pInput->UpdateKeys();
 
+
+#ifdef INCLUDE_SOUND
+	m_pSound->RunFrame();
+#endif
+
 	//Run Server
 #ifndef __VOIDALPHA
 	if(g_pServer->m_active)
@@ -406,7 +409,7 @@ void CVoid::RunFrame()
 	}
 	else
 	{
-		//draw the console or whatnot
+		//draw the console or menues etc
 		g_pRender->DrawFrame(0,0);
 	}
 }

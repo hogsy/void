@@ -328,10 +328,10 @@ HRESULT CKeyboard::Acquire()
 
 	if(m_eKbMode == KB_WIN32HOOK)
 	{
-		hWinKbHook = SetWindowsHookEx(WH_KEYBOARD,  // type of hook to install
-					 &Win32_KeyboardProc,			// address of hook procedure
-					 System::GetHInstance(),		// handle to application instance
-					 ::GetCurrentThreadId());		// identity of thread to install hook for
+		hWinKbHook = ::SetWindowsHookEx(WH_KEYBOARD,		// type of hook to install
+									&Win32_KeyboardProc,	// address of hook procedure
+									System::GetHInstance(),	// handle to application instance
+								  ::GetCurrentThreadId());	// identity of thread to install hook for
 	
 		if(hWinKbHook == 0)
 		{

@@ -114,7 +114,7 @@ void CInput::Shutdown()
 		m_pDInput->Release();
 		ComPrintf("CInput::Release :DirectInput Released\n");
 	}
-	ComPrintf("CInput::Shutdown - OK\n");
+	ComPrintf("CInput::Shutdown: OK\n");
 }
 
 
@@ -133,7 +133,7 @@ bool CInput::AcquireMouse()
 	if((m_pMouse->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(m_pMouse->Acquire())))
 		return true;
 
-	ComPrintf("CInput::Acquire::Couldnt acquire mouse\n");
+	ComPrintf("CInput::Acquire::Couldn't acquire Mouse\n");
 	return false;
 }
 
@@ -152,7 +152,7 @@ bool CInput::AcquireKeyboard()
 	if((m_pKb->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(m_pKb->Acquire())))
 		return true;
 
-	ComPrintf("CInput::Acquire::Couldnt acquire keyboard\n");
+	ComPrintf("CInput::Acquire::Couldn't acquire Keyboard\n");
 	return false;
 }
 

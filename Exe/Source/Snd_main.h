@@ -1,75 +1,80 @@
-#ifndef _V_DSOUND_
-#define _V_DSOUND_
+#ifndef VOID_SOUND_INTERFACE
+#define VOID_SOUND_INTERFACE
 
-#ifdef INCLUDE_SOUND
+#include "Snd_defs.h"
+#include "Sys_hdr.h"
 
-#include <dsound.h>
-#include "Snd_wave.h"
+//======================================================================================
+//======================================================================================
 
-#define SND_PATH "sounds\\"
 
-class CSound
+namespace VoidSound
+{
+	class CPrimaryBuffer;	//The primary sound buffer, there can be only one
+	class CSoundBuffer;		//A sound buffer wrapping up a wavefile
+	class CSoundChannel;	//A sound buffer which actually gets played
+}
+
+//======================================================================================
+//======================================================================================
+
+//This is what is exposed to Sys_main
+class CSoundManager : public I_SoundManager,
+					  public I_CVarHandler,
+					  public I_CmdHandler
 {
 public:
 
-	CSound();
-	~CSound();
+	enum
+	{
+		MAX_SOUNDS   = 256,
+		MAX_CHANNELS = 16
+	};
 
-	static char				soundpath[MAX_PATH];
-	static CWavemanager	*	m_pWavelist;
+	CSoundManager();
+	~CSoundManager();
+
+	bool Init();
+	void Shutdown();	//Unload all sounds
 	
-	// Create the IDirectSound object.
-	static bool Init(); //int maxchannels=8); 
-	
-	// Release the IDirectSound object.
-	static bool Shutdown(void);
+	void RunFrame();
 
-	// Whether the IDirectSound object exists.
-	static bool Exists(void) { return (m_pdSound != 0); }
+	hSnd RegisterSound(const char * path);
+	void UnregisterAll();
 
-	//Register Sound func to be visible to everyone else
-	//load unload sound funcs
+	//hook this up with an entity, for speed and origin
+	void Play(hSnd index, int channel= VoidSound::CHAN_AUTO);
 
-	//Game Frame
-	static void RunSounds();
+	//CVar Handler
+	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
-	//Return the Direct Sound Object
-	static IDirectSound * GetDirectSound();
-
-	// Creates a sound buffer.
-	static HRESULT	MakeBuffer(IDirectSoundBuffer** buffer,
-										  unsigned int bufferSize,
-										  unsigned int sampleRate, 
-										  unsigned int bitDepth, 
-										  unsigned int channels);
-	
-	// Duplicates a sound buffer.
-	static IDirectSoundBuffer* CopyBuffers(IDirectSoundBuffer*);
-
-	//temp
-	void Play(char *name,bool loop);
-
-	static void SPlay(int argc,  char** argv);
-	static void SPause(int argc,  char** argv);
-	static void SStop(int argc,  char** argv);
-	static void SResume(int argc,  char** argv);
-	static bool SVolume(const CVar * var, int argc,  char** argv);	//validation func
+	//Cmd Handler
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 private:
-	static IDirectSound * m_pdSound;		// The IDirectSound object.
-	
-	static CVar 	    * m_pvolume;		// Master DirectSound Volume 
-	static CVar			* m_pChannels;		// Sound channels
 
-//	static CVar 	    m_pvolume;		// Master DirectSound Volume 
-//	static CVar			m_pChannels;		// Sound channels
+	VoidSound::CPrimaryBuffer*  m_pPrimary;
+	VoidSound::CSoundBuffer  *	m_Buffers;	//All sounds are buffered when registered
+	VoidSound::CSoundChannel *	m_Channels;	//Channels which are actually played
+
+	int	 m_numBuffers;
+	int	 m_channelsInUse;
+
+	bool m_bHQSupport;
+	bool m_bStereoSupport;
+	
+	CVar m_cVolume;			//Master Volume 
+	CVar m_cHighQuality;	//16bit buffer if on.
+
+	//==========================================
+	//Temp debug funcs
+	
+	void SPlay(int numArgs, char ** szArgs);
+//	void SPause(int numArgs, char ** szArgs);
+//	void SResume(int numArgs, char ** szArgs);
+	void SStop(int numArgs, char ** szArgs);
+	void SListSounds();
+	bool SPrintInfo();
 };
 
-extern CSound * g_pSound;
-
-void DSError(HRESULT hr);
-
-
 #endif
-
-#endif 

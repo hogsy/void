@@ -1,326 +1,413 @@
-#ifdef INCLUDE_SOUND
-
-#include "Sys_hdr.h"
 #include "Snd_buf.h"
-#include "Snd_wave.h"
 
+//======================================================================================
+//======================================================================================
 
+using namespace VoidSound;
 
-/*
-=======================================
-Constructor
-=======================================
-*/
-CDirectSoundBuffer::CDirectSoundBuffer()
-{	
-	m_pBuffer=0;
-	soundindex=0;
-	type=0;
-	attentuation=0;
-	origin.x=0;
-	origin.y=0;
-	origin.z=0;
-	return;
+//======================================================================================
+//The Primary Sound buffer
+//======================================================================================
+
+CPrimaryBuffer::CPrimaryBuffer()
+{
+	m_pDSBuffer = 0;
+	m_volume = 0;
 }
 
-
-/*
-=======================================
-Destructor
-=======================================
-*/
-
-CDirectSoundBuffer::~CDirectSoundBuffer()
+CPrimaryBuffer::~CPrimaryBuffer()
 {
-	Release();
-	return;
-}
-
-
-/*
-=======================================
-Copy the buffer from another buffer
-- relies on CDirectSound Object
-  to copy
-=======================================
-*/
-
-
-bool CDirectSoundBuffer::Copy(const CDirectSoundBuffer& buf)
-{
-	// Release our sound first.
-	if (!Release())
-	{
-		ComPrintf("CDirectSoundBuffer::Copy - Could not release\n");
-		return false;
-	}
-
-	// Copy the sound buffer.
-
-	m_pBuffer = CSound::CopyBuffers(buf.m_pBuffer);
-
-
-	// Return whether the copy worked.
-	return (m_pBuffer != 0);
-}
-
-
-/*
-=======================================
-Release the Direct Sound Buffer
-- relies on CDirectSound Object
-  to check if it exists or not
-=======================================
-*/
-bool CDirectSoundBuffer::Release(void)
-{
-	if (!m_pBuffer) 
-	{ return true; 
-	}
-
-	//Check if DirectSound Exists anymore or not
-	bool result = !CSound::Exists() || m_pBuffer->Release() == 0;
-//	ComPrintf("CDirectSoundBuffer::Release() - Released.\n");
-
-	// Set the pointer to null.
-	m_pBuffer = 0;
-	soundindex=0;
-	type=0;
-	attentuation=0;
-	origin.x=0;
-	origin.y=0;
-	origin.z=0;
-	return result;
+	Destroy();
 }
 
 /*
-=======================================
-Play our buffer
-=======================================
+==========================================
+Initialize, set format and start mixing
+==========================================
 */
-
-
-bool CDirectSoundBuffer::Play(int index, bool looping)
+bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 {
-	if(!Release())
-	{
-		ComPrintf("CDirectSoundBuffer::Load - Release Failed\n");
-		return false;
-	}
+	//Set up DSBUFFERDESC structure. 
+	DSBUFFERDESC dsbdesc; 
+    memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
+	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
+    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_PRIMARYBUFFER;
+	dsbdesc.guid3DAlgorithm = GUID_NULL;
+    dsbdesc.dwBufferBytes = 0;
+    dsbdesc.lpwfxFormat = 0; 
+    
+	//Create buffer. 
+	HRESULT hr = GetDirectSound()->CreateSoundBuffer(&dsbdesc,&m_pDSBuffer,0);
+    if(FAILED(hr))
+    { 
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:");
+        return false;
+    } 
 
-	CWavefile *wave;
-	wave = CSound::m_pWavelist->WaveIndex(index);
-	if(!wave)
-	{
-		ComPrintf("CDirectSoundBuffer::Load - couldnt load soundindex %d\n", index);
-		return false;
-	}
-
-	HRESULT hr;
-	void *lockPtr1, *lockPtr2;
-	unsigned long lockSize1, lockSize2;
-
-	hr= CSound::MakeBuffer(&m_pBuffer,
-						   wave->length, 
-						   wave->samplesPerSecond, 
-						   (wave->blockAlign / wave->numChannels)*8, 
-						   wave->numChannels);
-
+	hr = m_pDSBuffer->SetFormat(&pcmwf);
 	if(FAILED(hr))
 	{
-		DSError(hr);
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Set Format:");
+		return false;
+	}
+
+	hr = m_pDSBuffer->Play(0,0,DSBPLAY_LOOPING);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Can't start mixing:");
 		return false;
 	}
 	
+	ComPrintf("CPrimaryBuffer::Create: OK\n");
+	return true;
+}
+
+/*
+==========================================
+Destroy the primary buffer
+==========================================
+*/
+void CPrimaryBuffer::Destroy()
+{
+	if(m_pDSBuffer)
+	{
+		m_pDSBuffer->Release();
+		m_pDSBuffer = 0;
+	}
+}
+
+/*
+==========================================
+Print current format
+==========================================
+*/
+void CPrimaryBuffer::PrintStats() const
+{
+	if(!m_pDSBuffer)
+		return;
+
+	WAVEFORMATEX wavFormat;
+	memset(&wavFormat,0,sizeof(wavFormat));
+	wavFormat.cbSize = sizeof(wavFormat);
+	
+	HRESULT hr = m_pDSBuffer->GetFormat(&wavFormat,sizeof(wavFormat),0);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::PrintStats: Unable to get format");
+		return;
+	}
+
+	ComPrintf("Primary Buffer:\n");
+	ComPrintf(" Bits per sample:%d\n",wavFormat.wBitsPerSample);
+	ComPrintf(" Samples per sec:%d\n",wavFormat.nSamplesPerSec);
+
+	DSBCAPS dsCaps;
+	memset(&dsCaps,0,sizeof(DSBCAPS));
+	dsCaps.dwSize = sizeof(DSBCAPS);
+	
+	hr = m_pDSBuffer->GetCaps(&dsCaps);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::PrintStats: Unable to get caps");
+		return;
+	}
+	ComPrintf(" %d bytes\n",dsCaps.dwBufferBytes);
+}
+
+
+ulong CPrimaryBuffer::GetVolume()
+{	return m_volume;
+}
+
+void CPrimaryBuffer::SetVolume(ulong vol)
+{
+}
+
+
+//======================================================================================
+//A Generic Sound buffer with wave data
+//======================================================================================
+
+/*
+==========================================
+Constructor/Destructor
+==========================================
+*/
+CSoundBuffer::CSoundBuffer()
+{
+	m_pWaveData = 0;
+	m_pDSBuffer = 0;
+}
+
+CSoundBuffer::~CSoundBuffer()
+{
+	if(InUse())
+		Destroy();
+	if(m_pWaveData)
+		delete m_pWaveData;
+}
+
+/*
+==========================================
+Create the DSound Buffer from a wave file
+==========================================
+*/
+bool CSoundBuffer::Create(const char * path)
+{
+	m_pWaveData = new CWaveFile(path);
+	
+	if(m_pWaveData->IsEmpty())
+	{
+		delete m_pWaveData;
+		m_pWaveData = 0;
+		return false;
+	}
+
+
+/*	PCMWAVEFORMAT pcmwf; 
+	// Set up wave format structure. 
+    memset(&pcmwf, 0, sizeof(PCMWAVEFORMAT)); 
+    pcmwf.wf.wFormatTag = WAVE_FORMAT_PCM; 
+    pcmwf.wf.nChannels = 1; 
+    pcmwf.wf.nSamplesPerSec = m_pWaveData->m_samplesPerSecond; 
+    pcmwf.wf.nBlockAlign    = m_pWaveData->m_blockAlign;  //
+    pcmwf.wf.nAvgBytesPerSec =  pcmwf.wf.nSamplesPerSec * pcmwf.wf.nBlockAlign; 
+    pcmwf.wBitsPerSample = m_pWaveData->m_bitsPerSample; 
+*/
+	WAVEFORMATEX waveFormat;
+	// Set up wave format structure. 
+    memset(&waveFormat, 0, sizeof(WAVEFORMATEX)); 
+	waveFormat.cbSize = sizeof(WAVEFORMATEX);
+	waveFormat.nChannels = 1;
+	waveFormat.nBlockAlign = m_pWaveData->m_blockAlign;		
+	waveFormat.wBitsPerSample = m_pWaveData->m_bitsPerSample;
+	waveFormat.nSamplesPerSec = m_pWaveData->m_samplesPerSecond;
+	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+    
+	//Set up DSBUFFERDESC structure. 
+	DSBUFFERDESC dsbdesc; 
+    memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
+	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
+	//Need default controls (pan, volume, frequency). 
+    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
+					  DSBCAPS_GLOBALFOCUS | DSBCAPS_STATIC;
+	// 5-second buffer. 
+    dsbdesc.dwBufferBytes = m_pWaveData->m_size;
+    dsbdesc.lpwfxFormat = &waveFormat; 
+    
+	// Create buffer. 
+	HRESULT hr = GetDirectSound()->CreateSoundBuffer(&dsbdesc,&m_pDSBuffer,0);
+    if(FAILED(hr))
+    { 
+		PrintDSErrorMessage(hr,"CSoundBuffer::Create:");
+		m_pDSBuffer = 0;
+        return false;
+    } 
+	return true;
+}
+
+/*
+==========================================
+has the buffer been created
+==========================================
+*/
+bool CSoundBuffer::InUse() const
+{
+	if(m_pDSBuffer) return true;
+	return false;
+}
+
+
+/*
+==========================================
+Print info about the Buffer
+==========================================
+*/
+void CSoundBuffer::PrintStats() const
+{
+	if(m_pWaveData)
+		ComPrintf("(%2d): %s : (%5d) %d bytes\n", m_pWaveData->m_bitsPerSample, m_pWaveData->m_filename,
+												m_pWaveData->m_samplesPerSecond, m_pWaveData->m_size);
+}
+
+/*
+==========================================
+Release it
+==========================================
+*/
+void CSoundBuffer::Destroy()
+{
+	if(m_pDSBuffer)
+	{
+		m_pDSBuffer->Release();
+		m_pDSBuffer = 0;
+	}
+}
+
+/*
+==========================================
+Access funcs
+==========================================
+*/
+IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
+CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveData; }
+const char         * CSoundBuffer::GetFilename() const 
+{ if(m_pWaveData) 
+	return m_pWaveData->m_filename; 
+  return 0; 
+}
+
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Constructor/Destructor
+==========================================
+*/
+
+CSoundChannel::CSoundChannel()
+{
+	m_pDSBuffer= 0;
+//	m_pWaveData= 0;
+}
+
+CSoundChannel::~CSoundChannel()
+{
+}
+
+/*
+==========================================
+Release it
+==========================================
+*/
+void CSoundChannel::Destroy()
+{
+	if(m_pDSBuffer)
+	{
+		m_pDSBuffer->Release();
+		m_pDSBuffer = 0;
+	}
+}
+
+/*
+==========================================
+from another buffer
+==========================================
+*/
+bool CSoundChannel::Create(CSoundBuffer &buffer)	//Create a duplicate buffer
+{
+	//Destry current buffer if active
+	Destroy();
+
+	HRESULT hr = GetDirectSound()->DuplicateSoundBuffer(buffer.GetDSBuffer(), &m_pDSBuffer);
+	if(FAILED(hr)) 
+	{
+		PrintDSErrorMessage(hr, "CSoundChannel::Create:Could not duplicate buffers:");
+		return false;
+	}
+
+	//Copy the wave file
+	void *lockPtr1=0; 
+	ulong lockSize1=0;
+
 	// lock the buffer
-	if ((hr = m_pBuffer->Lock(0, wave->length, 
-							&lockPtr1, &lockSize1, &lockPtr2, &lockSize2, 0)) != DS_OK)
+	hr = m_pDSBuffer->Lock(0, 0, &lockPtr1, &lockSize1, 0,0,DSBLOCK_ENTIREBUFFER);
+	//m_pDSBuffer->Lock(0, buffer.GetWaveData()->m_size, &lockPtr1, &lockSize1, &lockPtr2, &lockSize2, 0);
+
+	if(FAILED(hr))
 	{
 		if (hr != DSERR_BUFFERLOST)
 		{
-			ComPrintf("CDirectSoundBuffer::Load - could not lock buffer -%s", wave->filename);
+			ComPrintf("CSoundChannel::Create: Could not lock buffer: %s", buffer.GetWaveData()->m_filename);
 			return false;
 		}
-		m_pBuffer->Restore();
-		if (m_pBuffer->Lock(0, wave->length, &lockPtr1, &lockSize1, &lockPtr2, &lockSize2, 0) != DS_OK)
+		m_pDSBuffer->Restore();
+		if(m_pDSBuffer->Lock(0, 0, &lockPtr1, &lockSize1, 0,0,DSBLOCK_ENTIREBUFFER) != DS_OK)
 		{
-			ComPrintf("CDirectSoundBuffer::Load - could not lock buffer 2-%s", wave->filename);
+			ComPrintf("CSoundChannel::Create: Could not lock buffer 2: %s", buffer.GetWaveData()->m_filename);
 			return false;
 		}
 	}
 
 	// write the data
 	if (lockSize1)
-		memcpy(lockPtr1, wave->data, lockSize1);
-	if (lockSize2)
-		memcpy(lockPtr2, wave->data+lockSize1, lockSize2);
+		memcpy(lockPtr1, buffer.GetWaveData()->m_data, lockSize1);
+//	if (lockSize2)
+//		memcpy(lockPtr2, buffer.GetWaveData()->m_data + lockSize1, lockSize2);
 
 	// unlock it
-	m_pBuffer->Unlock(lockPtr1, lockSize1, lockPtr2, lockSize2);
+//	m_pDSBuffer->Unlock(lockPtr1, lockSize1, lockPtr2, lockSize2);
+	m_pDSBuffer->Unlock(lockPtr1, lockSize1, 0, 0);
+	return true;
+}
 
-
-	// Make sure we have a buffer.
-	if (!m_pBuffer) 
-	{
-		ComPrintf("CDirectSoundBuffer::Play - No buffer\n");
-		return false;
-	}
-
-	// Play the sound.
-	unsigned long flags = looping ? DSBPLAY_LOOPING : 0;
-	hr = m_pBuffer->Play(0, 0, flags);
+/*
+==========================================
+Play the Channel
+==========================================
+*/
+bool CSoundChannel::Play(bool looping)
+{
+	ulong flags;
+	looping ? flags = DSBPLAY_LOOPING: flags = 0;
 	
-	//Worked - update other info about the sound here
-	if (SUCCEEDED(hr)) 
-	{	
-		soundindex=index;
-		type=(int)looping;
-		attentuation=0;
-		origin.x=0;
-		origin.y=0;
-		origin.z=0;
-		return true; 
-	}
+	HRESULT hr = m_pDSBuffer->Play(0, 0, flags);
 	
-	// See if the buffer was lost.
-	if (hr == DSERR_BUFFERLOST) 
+	//Failed
+	if (FAILED(hr)) 
 	{	
-		hr = m_pBuffer->Restore(); 	
-		//try playing again
-		if (SUCCEEDED(hr)) 
+		// See if the buffer was lost.
+		if (hr == DSERR_BUFFERLOST) 
 		{	
-			hr = m_pBuffer->Play(0, 0, flags); 
-			ComPrintf("DirectSoundBuffer::Play tried playing twice\n");
-			if(SUCCEEDED(hr))
-			{
-				soundindex=index;
-				type=(int)looping;
-				attentuation=0;
-				origin.x=0;
-				origin.y=0;
-				origin.z=0;
-				return false;
+			hr = m_pDSBuffer->Restore(); 	
+			//try playing again
+			if (SUCCEEDED(hr)) 
+			{	
+				hr = m_pDSBuffer->Play(0, 0, flags); 
+				if(FAILED(hr))
+				{
+					PrintDSErrorMessage(hr,"CSoundChannel::Play: Failed to play twice");
+					return false;
+				}
+				return true;
 			}
 		}
-	}
-	DSError(hr);
-	return false;
-}
-
-
-/*
-=======================================
-Stop Playback
-=======================================
-*/
-
-bool CDirectSoundBuffer::Stop(void)
-{
-	// Make sure we have a buffer.
-	if (!m_pBuffer) 
-	{
-		ComPrintf("DirectSoundBuffer::Stop() - No buffer\n");
-		return false;
-	}
-
-	// Stop the buffer.
-	HRESULT hr = m_pBuffer->Stop();
-
-	if (FAILED(hr)) 
-	{
-		ComPrintf("DirectSoundBuffer::Stop() - failed\n");
-		return false;
-	}
-
-	// Rewind the buffer.
-	hr = m_pBuffer->SetCurrentPosition(0);
-
-	if (FAILED(hr)) 
-	{
-		ComPrintf("DirectSoundBuffer::Stop() Failed SetCurrentPos()\n");
 		return false;
 	}
 	return true;
 }
 
-
 /*
-=======================================
-Sets the Volume of the Buffer
-=======================================
+==========================================
+Stop playback
+==========================================
 */
-
-bool CDirectSoundBuffer::SetVol(long val)
-{
-	if (!m_pBuffer) 
-	{
-		ComPrintf("DirectSoundBuffer::SetVol() - No buffer\n");
-		return false;
-	}
-
-	HRESULT hr = m_pBuffer->SetVolume(val);
-
-	if (FAILED(hr)) 
-	{
-		ComPrintf("DirectSoundBuffer::SetVol() - SetVolume() failed\n");
-		return false;
-	}
-
-	return true;
+void CSoundChannel::Stop()
+{	m_pDSBuffer->Stop();
 }
 
 /*
-=======================================
-Sets the Panning of the buffer
-=======================================
+==========================================
+Is the buffer playing
+==========================================
 */
-
-bool CDirectSoundBuffer::SetPan(long val)
+bool CSoundChannel::IsPlaying() const
 {
-	if (!m_pBuffer) 
-	{
-		ComPrintf("DirectSoundBuffer::SetPan() - No buffer\n");
+	if (!m_pDSBuffer) 
 		return false;
-	}
-
-	HRESULT hr = m_pBuffer->SetPan(val);
-
-	if (FAILED(hr))
-	{
-		ComPrintf("DirectSoundBuffer::SetPan() - SetPan() failed\n");
-		return false;
-	}
-	return true;
-}
-
-
-
-/*
-======================================
-Is it playing
-return soundindex if yes
-======================================
-*/
-
-int CDirectSoundBuffer::IsPlaying()
-{
-	if (!m_pBuffer) 
-	{
-//		ComPrintf("DirectSoundBuffer::IsPlaying() - No buffer\n");
-		return 0;
-	}
 	
 	DWORD status;
-	HRESULT	hr = m_pBuffer->GetStatus(&status);
+	HRESULT	hr = m_pDSBuffer->GetStatus(&status);
 	if(!FAILED(hr))
 	{
 		if(status & DSBSTATUS_PLAYING)
-			return soundindex;
+			return true;
 		else if(status & DSBSTATUS_LOOPING)
-			return soundindex;
+			return true;
 	}
 	return 0;
 }
 
-
-#endif

@@ -3,10 +3,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <winsock2.h>
-
 #define __VOIDALPHA	1
-#define INCLUDE_MUSIC
 
 #pragma warning(disable : 4786)
 
