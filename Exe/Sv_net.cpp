@@ -125,6 +125,18 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 
 /*
 ======================================
+Handle Client spawning
+======================================
+*/
+void CServer::OnClientBegin(int clNum)
+{
+	//This should set the clients spawn pos, and write an temp effects
+	m_pGame->ClientBegin(clNum);
+}
+
+
+/*
+======================================
 Handle Client disconnection
 ======================================
 */
@@ -152,31 +164,11 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 
 
 	//TODO: Check for Dedicated later
-/*	if(m_svState.numClients == 0)
-	{	Shutdown();
-	}
-*/
+	if(m_svState.numClients == 0)
+		AddServerCmd("killserver");
+
 }
 
-/*
-======================================
-Write Game Status to buffer
-======================================
-*/
-void CServer::WriteGameStatus(CBuffer &buffer)
-{
-}
-
-/*
-======================================
-Handle Client spawning
-======================================
-*/
-void CServer::OnClientBegin(int clNum)
-{
-	//This should set the clients spawn pos, and write an temp effects
-	m_pGame->ClientBegin(clNum);
-}
 
 /*
 ======================================
@@ -190,73 +182,103 @@ void CServer::OnLevelChange(int clNum)
 
 /*
 ======================================
-
+Write Game Status to buffer
 ======================================
 */
-void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
+void CServer::WriteGameStatus(CBuffer &buffer)
 {
-	if((type == MULTICAST_ALL) || (type == MULTICAST_ALL_X))
+}
+
+
+
+/*
+======================================
+Return the number of buffers for the given
+config string
+======================================
+*/
+int CServer::NumConfigStringBufs(int stringId) const
+{
+	switch(stringId)
 	{
-		set.Reset();
-		for(int i=0;i<m_svState.numClients;i++)
+	case SVC_GAMEINFO:
+		return 1;
+	case SVC_MODELLIST:
+		return m_signOnBufs.numModelBufs;
+	case SVC_SOUNDLIST:
+		return m_signOnBufs.numSoundBufs;
+	case SVC_IMAGELIST:
+		return m_signOnBufs.numImageBufs;
+	case SVC_BASELINES:
+		return m_signOnBufs.numEntityBufs;
+	case SVC_CLIENTINFO:
+		return 1;
+	}
+	return 0;
+}
+
+/*
+======================================
+Write the requested config string to 
+the given buffer
+======================================
+*/
+bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
+{
+	switch(stringId)
+	{
+	case SVC_GAMEINFO:
 		{
-			if(m_clients[i] && m_clients[i]->spawned)
-					set.dest[i] = true;
+			buffer.WriteBuffer(m_signOnBufs.gameInfo);
+			return true;
 		}
-		if(type == MULTICAST_ALL_X)
-			set.dest[clId] = false;
+	case SVC_MODELLIST:
+		{
+			if(numBuffer >= m_signOnBufs.numModelBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.modelList[numBuffer]);
+			return true;
+		}
+	case SVC_SOUNDLIST:
+		{
+			if(numBuffer >= m_signOnBufs.numSoundBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.soundList[numBuffer]);
+			return true;
+		}
+	case SVC_IMAGELIST:
+		{
+			if(numBuffer >= m_signOnBufs.numImageBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.imageList[numBuffer]);
+			return true;
+		}
+	case SVC_BASELINES:
+		{
+			if(numBuffer >= m_signOnBufs.numEntityBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.entityList[numBuffer]);
+			return true;
+		}
+	case SVC_CLIENTINFO:
+		{
+			//This shouldn't go above max packet size
+			//Write info about all currently connected clients
+			for(int i=0; i< m_svState.numClients; i++)
+			{
+				if(!m_clients[i] ||!m_clients[i]->spawned)
+					continue;
+
+				buffer.WriteByte(SV_CLFULLINFO);
+				buffer.WriteByte(m_clients[i]->num);
+				buffer.WriteString(m_clients[i]->name);
+				buffer.WriteShort(m_clients[i]->mdlIndex);
+				buffer.WriteString(m_clients[i]->modelName);
+				buffer.WriteShort(m_clients[i]->skinNum);
+				buffer.WriteString(m_clients[i]->skinName);
+			}
+			return true;
+		}
 	}
-	else if((type == MULTICAST_PVS) || (type == MULTICAST_PVS_X))
-	{
-	}
-	else if((type == MULTICAST_PHS) || (type == MULTICAST_PHS_X))
-	{
-	}
-}
-
-void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vector_t &source)
-{
-}
-
-
-
-/*
-======================================
-Print a broadcast message
-======================================
-*/
-void CServer::BroadcastPrintf(const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.BroadcastPrintf(m_printBuffer);
-}
-
-/*
-======================================
-Print a message to a given client
-======================================
-*/
-void CServer::ClientPrintf(int clNum, const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.ClientPrintf(clNum,msg);
-}
-
-
-
-//======================================================================================
-//======================================================================================
-
-bool CServer::InitNetwork()
-{	return CNetServer::InitWinsock();
-}
-
-void CServer::ShutdownNetwork()
-{	CNetServer::ShutdownWinsock();
+	return false;
 }

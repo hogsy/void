@@ -560,6 +560,7 @@ void CWorld::DestroyWorld(CWorld * pWorld)
 		if(m_refCount > 0)
 			return;
 		delete m_pWorld;
+		m_pWorld = 0;
 		pWorld = 0;
 	}
 }

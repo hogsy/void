@@ -100,6 +100,7 @@ Destructor
 CServer::~CServer()
 {	
 	Shutdown();
+
 	m_entities = 0;
 	m_clients = 0;
 }
@@ -214,7 +215,7 @@ void CServer::Shutdown()
 	if(m_pWorld)
 		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
-	
+
 	ComPrintf("CServer::Shutdown OK\n");
 }
 
@@ -290,10 +291,30 @@ void CServer::RunFrame()
 			}
 		}
 	}
-	
+
 	//write to clients
 	m_net.SendPackets();
+
+	//Exec these last thing so changes don't screw up the current frame
+	ExecServerCommands();
 }
+
+
+/*
+================================================
+
+================================================
+*/
+void CServer::ExecServerCommands()
+{
+	if(m_svCmds.size())
+	{
+		for(StringList::iterator it = m_svCmds.begin(); it != m_svCmds.end(); it++)
+			System::GetConsole()->ExecString(it->c_str());
+		m_svCmds.erase(m_svCmds.begin(), m_svCmds.end());
+	}		
+}
+
 
 //======================================================================================
 //======================================================================================
@@ -531,153 +552,8 @@ void CServer::LoadWorld(const char * mapname)
 		System::GetConsole()->ExecString("connect localhost");
 }
 
-/*
-======================================
-Return the number of buffers for the given
-config string
-======================================
-*/
-int CServer::NumConfigStringBufs(int stringId) const
-{
-	switch(stringId)
-	{
-	case SVC_GAMEINFO:
-		return 1;
-	case SVC_MODELLIST:
-		return m_signOnBufs.numModelBufs;
-	case SVC_SOUNDLIST:
-		return m_signOnBufs.numSoundBufs;
-	case SVC_IMAGELIST:
-		return m_signOnBufs.numImageBufs;
-	case SVC_BASELINES:
-		return m_signOnBufs.numEntityBufs;
-	case SVC_CLIENTINFO:
-		return 1;
-	}
-	return 0;
-}
-
-/*
-======================================
-Write the requested config string to 
-the given buffer
-======================================
-*/
-bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
-{
-	switch(stringId)
-	{
-	case SVC_GAMEINFO:
-		{
-			buffer.WriteBuffer(m_signOnBufs.gameInfo);
-			return true;
-		}
-	case SVC_MODELLIST:
-		{
-			if(numBuffer >= m_signOnBufs.numModelBufs)
-				return false;
-			buffer.WriteBuffer(m_signOnBufs.modelList[numBuffer]);
-			return true;
-		}
-	case SVC_SOUNDLIST:
-		{
-			if(numBuffer >= m_signOnBufs.numSoundBufs)
-				return false;
-			buffer.WriteBuffer(m_signOnBufs.soundList[numBuffer]);
-			return true;
-		}
-	case SVC_IMAGELIST:
-		{
-			if(numBuffer >= m_signOnBufs.numImageBufs)
-				return false;
-			buffer.WriteBuffer(m_signOnBufs.imageList[numBuffer]);
-			return true;
-		}
-	case SVC_BASELINES:
-		{
-			if(numBuffer >= m_signOnBufs.numEntityBufs)
-				return false;
-			buffer.WriteBuffer(m_signOnBufs.entityList[numBuffer]);
-			return true;
-		}
-	case SVC_CLIENTINFO:
-		{
-			//This shouldn't go above max packet size
-			//Write info about all currently connected clients
-			for(int i=0; i< m_svState.numClients; i++)
-			{
-				if(!m_clients[i] ||!m_clients[i]->spawned)
-					continue;
-
-				buffer.WriteByte(SV_CLFULLINFO);
-				buffer.WriteByte(m_clients[i]->num);
-				buffer.WriteString(m_clients[i]->name);
-				buffer.WriteShort(m_clients[i]->mdlIndex);
-				buffer.WriteString(m_clients[i]->modelName);
-				buffer.WriteShort(m_clients[i]->skinNum);
-				buffer.WriteString(m_clients[i]->skinName);
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-
 //======================================================================================
 //======================================================================================
-
-
-I_World * CServer::GetWorld()
-{	return m_pWorld;
-}
-
-
-
-/*
-======================================
-Send sound message to clients in range
-======================================
-*/
-void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
-{
-}
-
-void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
-{
-}
-
-/*
-======================================
-Game messed up. kill server
-======================================
-*/
-void CServer::FatalError(const char * msg)
-{
-	for(int i=0; i< m_svState.numClients; i++)
-		m_net.SendDisconnect(i,DR_SVERROR);
-	ComPrintf("Server Error : %s\n", msg);
-	Shutdown();
-}
-
-
-
-/*
-======================================
-Util funcs
-======================================
-*/
-void CServer::ExecCommand(const char * cmd)
-{	System::GetConsole()->ExecString(cmd);
-}
-
-void CServer::DebugPrint(const char * msg)
-{	System::GetConsole()->ComPrint(msg);
-}
-
-NetChanWriter & CServer::GetNetChanWriter()
-{	return (reinterpret_cast<NetChanWriter &>(m_net));
-}
 
 /*
 ======================================
@@ -757,6 +633,12 @@ void CServer::PrintServerStatus()
 	}
 }
 
+
+
+//==========================================================================
+//==========================================================================
+
+
 /*
 ==========================================
 Handle CVars
@@ -820,80 +702,4 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	}
 }
 
-//======================================================================================
-//======================================================================================
 
-/*
-======================================
-Return an id for the given model
-======================================
-*/
-int CServer::RegisterModel(const char * model)
-{
-	if(m_numModels == GAME_MAXMODELS)
-		return -1;
-
-	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXMODELS; i++)
-	{
-		//we reached the end, no more models after this
-		if(!m_modelList[i].name)
-			break;
-		if(strcmp(m_modelList[i].name, model) == 0)
-		    return i;
-	}
-	m_numModels ++;
-	m_modelList[i].name = new char[strlen(model)+1];
-	strcpy(m_modelList[i].name,model);
-	return i;
-}
-
-/*
-======================================
-Return an id for the given sound
-======================================
-*/
-int CServer::RegisterSound(const char * sound)
-{
-	if(m_numSounds == GAME_MAXSOUNDS)
-		return -1;
-
-	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXSOUNDS; i++)
-	{
-		//we reached the end, no more models after this
-		if(!m_soundList[i].name)
-			break;
-		if(strcmp(m_soundList[i].name, sound) == 0)
-		    return i;
-	}
-	m_numSounds ++;
-	m_soundList[i].name = new char[strlen(sound)+1];
-	strcpy(m_soundList[i].name,sound);
-	return i;
-}
-
-/*
-======================================
-Return an id for the given image
-======================================
-*/
-int CServer::RegisterImage(const char * image)
-{
-	if(m_numImages == GAME_MAXIMAGES)
-		return -1;
-
-	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXIMAGES; i++)
-	{
-		//we reached the end, no more models after this
-		if(!m_imageList[i].name)
-			break;
-		if(strcmp(m_imageList[i].name, image) == 0)
-		    return i;
-	}
-	m_numImages ++;
-	m_imageList[i].name = new char[strlen(image)+1];
-	strcpy(m_imageList[i].name,image);
-	return i;
-}

@@ -433,7 +433,8 @@ m_pClient->Print("CL: Telling server we disconnect %s\n", m_pNetChan->GetAddrStr
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
 		}
-		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
+//		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
+		m_pClient->HandleDisconnect();
 	}
 
 	m_pNetChan->Reset();

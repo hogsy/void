@@ -22,18 +22,19 @@
 const int COM_MAXPATH	  = 256;
 const int COM_MAXFILENAME = 128;
 
-typedef std::list<std::string> StringList;
+typedef std::list<std::string>   StringList;
+typedef std::vector<std::string> StringVector;
 
 #ifndef byte
 typedef unsigned char byte;
 #endif
 
-typedef unsigned long ulong; 
-typedef unsigned int  uint;
+typedef unsigned long  ulong; 
+typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned word;
 
-#include <Com_mem.h>
+#include "Com_mem.h"
 
 //Every apps common print function
 void ComPrintf(const char* text, ...);

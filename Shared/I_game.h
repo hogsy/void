@@ -97,7 +97,7 @@ struct I_GameHandler
 	virtual void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten) =0;
 	virtual void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten) =0;
 
-	virtual void ExecCommand(const char * cmd)=0;
+	virtual void AddServerCmd(const char * cmd)=0;
 
 	virtual int  RegisterModel(const char * model)=0;
 	virtual int  RegisterSound(const char * image)=0;

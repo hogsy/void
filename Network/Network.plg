@@ -6,40 +6,6 @@
 --------------------Configuration: Network - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1DB.tmp" with contents
-[
-/nologo /MDd /W3 /WX /Gm /GX /ZI /Od /I "..\Shared" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR"..\Debug\Network/" /Fp"..\Debug\Network/Network.pch" /YX /Fo"..\Debug\Network/" /Fd"..\Debug\Network/" /FD /GZ /c 
-"E:\Void\Network\Net_chan.cpp"
-"E:\Void\Network\Net_clchan.cpp"
-"E:\Void\Network\Net_client.cpp"
-"E:\Void\Network\Net_server.cpp"
-"E:\Void\Network\Net_sock.cpp"
-"E:\Void\Network\Net_util.cpp"
-"E:\Void\Shared\Com_buffer.cpp"
-]
-Creating command line "cl.exe @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1DB.tmp" 
-Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1DC.tmp" with contents
-[
-/nologo /out:"..\Debug\vnet.lib" 
-\Void\Debug\Network\Net_chan.obj
-\Void\Debug\Network\Net_clchan.obj
-\Void\Debug\Network\Net_client.obj
-\Void\Debug\Network\Net_server.obj
-\Void\Debug\Network\Net_sock.obj
-\Void\Debug\Network\Net_util.obj
-\Void\Debug\Network\Com_buffer.obj
-]
-Creating command line "link.exe -lib @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1DC.tmp"
-<h3>Output Window</h3>
-Compiling...
-Net_chan.cpp
-Net_clchan.cpp
-Net_client.cpp
-Net_server.cpp
-Net_sock.cpp
-Net_util.cpp
-Com_buffer.cpp
-Creating library...
 
 
 

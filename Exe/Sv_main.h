@@ -77,9 +77,6 @@ class CServer : public I_Server,
 {
 public:
 
-	static bool InitNetwork();
-	static void ShutdownNetwork();
-
 	CServer();
 	~CServer();
 
@@ -97,7 +94,7 @@ public:
 
 	//Game Handler
 	I_World * GetWorld();
-	void ExecCommand(const char * cmd);
+	void AddServerCmd(const char * cmd);
 	void DebugPrint(const char * msg);
 	void FatalError(const char * msg);
 
@@ -126,6 +123,8 @@ private:
 	void Restart();
 	void PrintServerStatus();
 
+	void ExecServerCommands();
+
 	void LoadEntities();
 	void LoadWorld(const char * mapname);
 	
@@ -147,6 +146,8 @@ private:
 	int     m_numImages;
 	ResInfo m_soundList[GAME_MAXSOUNDS];
 	int		m_numSounds;
+
+	StringList m_svCmds;
 	
 	//=================================================
 	//World and Entities
