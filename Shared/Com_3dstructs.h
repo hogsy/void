@@ -5,15 +5,6 @@
 
 typedef float matrix_t[4][4];
 
-// rvertex_t - what the renderer thinks in
-typedef struct
-{
-	float x, y, z;		// location
-	float s, t;			// tex coords
-	float ls, lt;		// lightmap coords
-
-} rvertex_t;
-
 
 typedef struct poly_t
 {
