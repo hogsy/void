@@ -10,6 +10,9 @@ need better way to hook up models with skins
 
 add crouch mode (bbox.z/2 and viewheight=0)
 
+add null music interface
+add fixed string class with its own allocator
+
 game entities
 =====================================
 

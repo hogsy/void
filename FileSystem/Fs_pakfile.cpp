@@ -185,8 +185,8 @@ int  CPakFile::GetFileList (StrList &strlst,
 {
 	if(!m_files)
 		return 0;
-	int matched = 0;
 
+	int matched = 0;
 	if(path)
 	{
 		int plen = strlen(path);
@@ -329,8 +329,7 @@ uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 {
 	if(!buf || !size || !count)
 	{
-		ComPrintf("CPakFile::Read: Invalid parameters :%s\n",
-							m_openFiles[handle].file->filename);
+		ComPrintf("CPakFile::Read: Invalid parameters :%s\n",m_openFiles[handle].file->filename);
 		return 0;
 	}
 	
@@ -343,7 +342,7 @@ uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 		return 0;
 	}
 
-	fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
+	::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 	
 	int items_read = ::fread(buf,size,count,m_fp);
 	if(items_read != count) 
@@ -364,6 +363,7 @@ int CPakFile::GetChar(HFS handle)
 	if(m_openFiles[handle].curpos +1 <= m_openFiles[handle].file->filelen)
 	{
 		::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
+		m_openFiles[handle].curpos++;
 		return ::fgetc(m_fp);
 	}
 	return EOF;
@@ -378,7 +378,7 @@ requested offset
 */
 bool CPakFile::Seek(int offset, int origin, HFS handle)
 {
-	int newpos = 0; //m_openFiles[handle].file->filepos;
+	int newpos = 0;
 	switch(origin)
 	{
 	case SEEK_SET:
@@ -387,8 +387,11 @@ bool CPakFile::Seek(int offset, int origin, HFS handle)
 			newpos += offset;
 			break;
 	case SEEK_END:
-			if(offset)	//should be negative
-				offset = 0;
+			if(offset > 0)
+			{
+				ComPrintf("CZipFile::Seek: Bad offset specified %s\n", m_openFiles[handle].file->filename);
+				return false;
+			}
 			newpos += (m_openFiles[handle].file->filelen + offset);
 			break;
 	case SEEK_CUR:
@@ -400,8 +403,6 @@ bool CPakFile::Seek(int offset, int origin, HFS handle)
 			ComPrintf("CPakFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
 			return false;
 	}
-
-//	return(!::fseek(m_fp,newpos,SEEK_SET));
 
 	int filepos = newpos + m_openFiles[handle].file->filepos;
 	if(!::fseek(m_fp,filepos,SEEK_SET))

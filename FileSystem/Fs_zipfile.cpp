@@ -80,28 +80,6 @@ namespace
 	const char zip_hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
 	const char zip_hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
 
-	//Utility funcs to read ZipHeader data in correcy byte order
-	inline void getShort (FILE* fin, ushort &is)
-	{
-		int	ix = fgetc(fin);
-		ix += (((ulong)fgetc(fin)) << 8);
-		is = ix;
-	}
-
-	inline void getLong (FILE* fin, ulong &ix)
-	{
-		int i = fgetc(fin);
-		ix = (ulong)i;
-    
-		i = fgetc(fin);
-		ix += ((ulong)i)<<8;
-
-		i = fgetc(fin);
-		ix += ((ulong)i)<<16;
-
-		i = fgetc(fin);
-		ix += ((ulong)i)<<24;
-	}
 }
 
 //======================================================================================
@@ -165,7 +143,7 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	}
 
 	//Get Last Directory Offset and validate it
-	ulong last_dir_offset = GetLastRecordOffset(m_fp);
+	ulong last_dir_offset = GetLastRecordOffset();
 	if(last_dir_offset == 0)
 	{
 		ComPrintf("CZipFile::Init: Error finding central dir: %s\n", filepath);
@@ -185,11 +163,11 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	ulong sig=0;
 	ushort numdisk=0, numentry=0, numfiles =0, numTotFiles = 0;
 
-	getLong(m_fp,sig);
-	getShort(m_fp, numdisk);
-	getShort(m_fp, numentry);
-	getShort(m_fp, numfiles);
-	getShort(m_fp, numTotFiles);
+	ZipReadLong(sig);
+	ZipReadShort(numdisk);
+	ZipReadShort(numentry);
+	ZipReadShort(numfiles);
+	ZipReadShort(numTotFiles);
 
 	//Make sure archive doesnt span disks
 	if(numfiles != numTotFiles ||
@@ -205,9 +183,9 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	ulong cdirSize = 0 , cdirOffset = 0;
 	ushort cdirCommentSize = 0;
 
-	getLong(m_fp,cdirSize);
-	getLong(m_fp,cdirOffset);
-	getShort(m_fp,cdirCommentSize);
+	ZipReadLong(cdirSize);
+	ZipReadLong(cdirOffset);
+	ZipReadShort(cdirCommentSize);
 
 	if(last_dir_offset < cdirOffset + cdirSize)
 	{
@@ -222,7 +200,7 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	strcpy(m_archiveName,archivepath);
 
 	//Build list of Files in the Zip by reading all the file records
-	return BuildZipEntriesList(m_fp, numfiles);
+	return BuildZipEntriesList(numfiles);
 }
 
 
@@ -233,9 +211,9 @@ of the zip. Starts from the end of the file,
 and seeks backwords until it find the signature
 ==========================================
 */
-ulong CZipFile::GetLastRecordOffset(FILE * fin)
+ulong CZipFile::GetLastRecordOffset()
 {
-	if (fseek(fin,0,SEEK_END) != 0)
+	if (fseek(m_fp,0,SEEK_END) != 0)
 		return 0;
 
 	
@@ -243,7 +221,7 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 	ulong uBackRead=4;
 	ulong uMaxBack =0xffff; // maximum size of global comment
 	ulong uPosFound=0;
-	ulong uSizeFile = ftell( fin );
+	ulong uSizeFile = ftell( m_fp );
 
 	if (uMaxBack > uSizeFile)
 		uMaxBack = uSizeFile;
@@ -262,10 +240,10 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 		uReadSize = ((MAXCOMMENTBUFFERSIZE+4) < (uSizeFile-uReadPos)) ? 
 					 (MAXCOMMENTBUFFERSIZE+4) : (uSizeFile-uReadPos);
 		
-		if (fseek(fin,uReadPos,SEEK_SET)!=0)
+		if (fseek(m_fp,uReadPos,SEEK_SET)!=0)
 			break;
 
-		if (fread(buf,(uint)uReadSize,1,fin)!=1)
+		if (fread(buf,(uint)uReadSize,1,m_fp)!=1)
 			break;
 
         for (int i=(int)uReadSize-3; (i--)>0; )
@@ -290,7 +268,7 @@ and their offsets from them, then
 build an ordered list with that info for quick access
 ==========================================
 */
-bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
+bool CZipFile::BuildZipEntriesList(int numfiles)
 {
 	char	bufname[COM_MAXFILENAME];	
 	char	bufhdr[5];
@@ -305,32 +283,32 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 
 	for (i=0;i<numfiles;i++) 
 	{
-		if(!fread(bufhdr,sizeof(zip_hdr_central),1,fp) ||
+		if(!fread(bufhdr,sizeof(zip_hdr_central),1,m_fp) ||
 			memcmp(bufhdr,zip_hdr_central,sizeof(zip_hdr_central)))
 		{
 			ComPrintf("CZipFile::BuildZipEntriesList: Bad CentralDir Sig %s\n", m_archiveName);
 			return false;
 		}
 
-		cdfh.version_made_by[0] = fgetc(fp);
-		cdfh.version_made_by[1]	= fgetc(fp);
-		cdfh.version_needed_to_extract[0]	= fgetc(fp);
-		cdfh.version_needed_to_extract[1]	= fgetc(fp);
+		cdfh.version_made_by[0] = fgetc(m_fp);
+		cdfh.version_made_by[1]	= fgetc(m_fp);
+		cdfh.version_needed_to_extract[0]	= fgetc(m_fp);
+		cdfh.version_needed_to_extract[1]	= fgetc(m_fp);
 		
-		getShort(fp,cdfh.general_purpose_bit_flag);
-		getShort(fp,cdfh.compression_method);
-		getShort(fp,cdfh.last_mod_file_time	);
-		getShort(fp,cdfh.last_mod_file_date);
-		getLong(fp,cdfh.crc32);	
-		getLong(fp,cdfh.csize);	
-		getLong(fp,cdfh.ucsize);
-		getShort(fp,cdfh.filename_length);
-		getShort(fp,cdfh.extra_field_length	);
-		getShort(fp,cdfh.file_comment_length);
-		getShort(fp,cdfh.disk_number_start);
-		getShort(fp,cdfh.internal_file_attributes);
-		getLong(fp,cdfh.external_file_attributes);
-		getLong(fp,cdfh.relative_offset_local_header);
+		ZipReadShort(cdfh.general_purpose_bit_flag);
+		ZipReadShort(cdfh.compression_method);
+		ZipReadShort(cdfh.last_mod_file_time	);
+		ZipReadShort(cdfh.last_mod_file_date);
+		ZipReadLong(cdfh.crc32);	
+		ZipReadLong(cdfh.csize);	
+		ZipReadLong(cdfh.ucsize);
+		ZipReadShort(cdfh.filename_length);
+		ZipReadShort(cdfh.extra_field_length	);
+		ZipReadShort(cdfh.file_comment_length);
+		ZipReadShort(cdfh.disk_number_start);
+		ZipReadShort(cdfh.internal_file_attributes);
+		ZipReadLong(cdfh.external_file_attributes);
+		ZipReadLong(cdfh.relative_offset_local_header);
 
 
 		//Validate entry. don't add if name is too long, or can't read name
@@ -338,7 +316,7 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 		if((cdfh.csize == cdfh.ucsize) &&
 		   (cdfh.filename_length < COM_MAXFILENAME))
 		{
-			if(fread(bufname, cdfh.filename_length, 1, fp) &&
+			if(fread(bufname, cdfh.filename_length, 1, m_fp) &&
 			  (bufname[cdfh.filename_length - 1] != '/'))
 			{
 				bufname[cdfh.filename_length] = '\0';
@@ -385,7 +363,7 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 			}
 		}
 
-		if(fseek(fp,cdfh.extra_field_length + cdfh.file_comment_length, SEEK_CUR)) 
+		if(fseek(m_fp,cdfh.extra_field_length + cdfh.file_comment_length, SEEK_CUR)) 
 		{
 			ComPrintf("CZipFile::BuildZipEntriesList: Unable to read entry: %s\n", m_archiveName);
 			break;
@@ -623,7 +601,9 @@ int  CZipFile::GetChar(HFS handle)
 	if(m_openFiles[handle].curpos +1 <= m_openFiles[handle].file->filelen)
 	{
 		::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
+		m_openFiles[handle].curpos++;
 		return ::fgetc(m_fp);
+
 	}
 	return EOF;
 }
@@ -645,8 +625,11 @@ bool CZipFile::Seek(int offset, int origin, HFS handle)
 			newpos += offset;
 			break;
 	case SEEK_END:
-			if(offset)	//should be negative
-				offset = 0;
+			if(offset > 0)	//should be negative
+			{
+				ComPrintf("CZipFile::Seek: Bad offset specified %s\n", m_openFiles[handle].file->filename);
+				return false;
+			}
 			newpos += (m_openFiles[handle].file->filelen + offset);
 			break;
 	case SEEK_CUR:
@@ -686,6 +669,36 @@ uint CZipFile::GetSize(HFS handle)
 {	return m_openFiles[handle].file->filelen;
 }
 
+/*
+================================================
+Utility funcs to read ZipHeader data in correcy byte order
+================================================
+*/
+
+void CZipFile::ZipReadShort(ushort &is)
+{
+	int	ix = fgetc(m_fp);
+	ix += (((ulong)fgetc(m_fp)) << 8);
+	is = ix;
+}
+
+void CZipFile::ZipReadLong(ulong &ix)
+{
+	int i = fgetc(m_fp);
+	ix = (ulong)i;
+
+	i = fgetc(m_fp);
+	ix += ((ulong)i)<<8;
+
+	i = fgetc(m_fp);
+	ix += ((ulong)i)<<16;
+
+	i = fgetc(m_fp);
+	ix += ((ulong)i)<<24;
+}
+
+
+
 
 
 
@@ -696,29 +709,6 @@ uint CZipFile::GetSize(HFS handle)
 
 
 #if 0
-
-/*			curpos = ftell(m_fp);
-			if(fseek(fp,cdfh.relative_offset_local_header + 
-					sizeof(zip_hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE,
-					SEEK_SET)==0)
-			{
-				fseek(fp,cdfh.filename_length + cdfh.extra_field_length, SEEK_CUR);
-
-				char fname[128];
-				sprintf(fname,"file%d.pcx",i);
-				
-				FILE * fout = fopen(fname,"w+b");
-				if(fout)
-				{
-					byte  * outbuf = (byte*)malloc(cdfh.ucsize);
-					fread(outbuf,cdfh.ucsize,1,fp);
-					fwrite(outbuf,cdfh.ucsize,1,fout);
-					fclose(fout);
-					free(outbuf);
-				}
-			}
-			fseek(fp,curpos,SEEK_SET);
-*/
 
 /*--- ZIP_local_file_header layout ---------------------------------------------*/
 #define ZIP_LOCAL_FILE_HEADER_SIZE              26

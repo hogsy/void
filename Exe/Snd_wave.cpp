@@ -90,7 +90,7 @@ bool CWaveFile::Load(const char * szFileName, I_FileReader * pFile)
 	    (wFilehdr.waveMarker != ('W' + ('A'<<8) + ('V'<<16) + ('E'<<24))))
 	{
 		pFile->Close();
-		ComPrintf("CWaveFile::LoadFile: Invalid wave format, %s",szFileName);
+		ComPrintf("CWaveFile::LoadFile: Invalid wave format, %s\n",szFileName);
 		return false;
 	}
 

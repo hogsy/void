@@ -58,8 +58,12 @@ private:
 
 	FILE * m_fp;
 
-	ulong GetLastRecordOffset(FILE *fin);
-	bool  BuildZipEntriesList(FILE * fp, int numfiles);
+	void ZipReadShort(ushort &is);
+	void ZipReadLong(ulong &il);
+
+
+	ulong GetLastRecordOffset();
+	bool  BuildZipEntriesList(int numfiles);
 	bool  BinarySearchForEntry(const char *name,	
 							  ZipEntry_t ** item,
 							  int low, int high,
