@@ -13,6 +13,7 @@ const char * BaseTextureList[] =
 
 tex_t			* tex=0;
 CTextureManager * g_pTex=0;
+extern	CVar *	g_p32BitTextures;
 
 /*
 ==========================================
@@ -82,8 +83,8 @@ bool CTextureManager::Init()
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		int ext_format, int_format;
 		if (m_texReader->GetFormat() == IMG_RGB)
@@ -219,12 +220,19 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		if (m_texReader->GetFormat() == IMG_RGB)
 		{
 			ext_format = GL_RGB;
-			int_format = GL_RGB8;
+
+			if (g_p32BitTextures->value)
+				int_format = GL_RGB8;
+			else
+				int_format = GL_RGB5;
 		}
 		else
 		{
 			ext_format = GL_RGBA;
-			int_format = GL_RGBA8;
+			if (g_p32BitTextures->value)
+				int_format = GL_RGBA8;
+			else
+				int_format = GL_RGBA4;
 		}
 
 		for (m = 0; m < mipcount; m++)
@@ -282,12 +290,19 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		if (m_texReader->GetFormat() == IMG_RGB)
 		{
 			ext_format = GL_RGB;
-			int_format = GL_RGB8;
+
+			if (g_p32BitTextures->value)
+				int_format = GL_RGB8;
+			else
+				int_format = GL_RGB5;
 		}
 		else
 		{
 			ext_format = GL_RGBA;
-			int_format = GL_RGBA8;
+			if (g_p32BitTextures->value)
+				int_format = GL_RGBA8;
+			else
+				int_format = GL_RGBA4;
 		}
 
 		for (m = 0; m < mipcount; m++)

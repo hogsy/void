@@ -14,12 +14,8 @@ CVar *	g_pFullbright=0;
 CVar *	g_pFov=0;
 CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
+CVar *	g_p32BitTextures=0;
 
-/*
-CVar	g_pFov("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-CVar	g_pMultiTexture("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-CVar 	g_pVidSynch("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
-*/
 
 //======================================================================================
 //Command Handling routines
@@ -242,6 +238,29 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 	return true;
 }
 
+
+/*
+=======================================
+16 / 32 bit textures
+=======================================
+*/
+bool CVar_32BitTextures(const CVar * var, int argc, char** argv)
+{
+	if(argc<=1)
+		return true;
+
+	else
+	{
+		int temp=0;
+		if(!argv[1] || !sscanf(argv[1],"%d",&temp))
+			return false;
+	}
+
+	ConPrint("Change will take effect on next level load.\n");
+	return true;
+}
+
+
 //======================================================================================
 //======================================================================================
 
@@ -281,6 +300,8 @@ bool CRConsole::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
 		return CVar_MultiTexture((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == g_pVidSynch)
 		return CVar_VidSynch((CVar*)cvar,numArgs,szArgs);
+	else if(cvar == g_p32BitTextures)
+		return CVar_32BitTextures((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 
@@ -299,11 +320,14 @@ void CRConsole::RegisterConObjects()
 	g_pFov		 = new CVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_pVidSynch  = new CVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 	g_pMultiTexture = new CVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	
+	g_p32BitTextures = new CVar("r_32bittextures","1", CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
+
+
 	g_pConsole->RegisterCVar(g_pFullbright,this);
 	g_pConsole->RegisterCVar(g_pFov,this);
 	g_pConsole->RegisterCVar(g_pMultiTexture,this);
 	g_pConsole->RegisterCVar(g_pVidSynch,this);
+	g_pConsole->RegisterCVar(g_p32BitTextures,this);
 }
 
 /*
@@ -317,11 +341,13 @@ void CRConsole::DestroyConObjects()
 	delete g_pFov;
 	delete g_pVidSynch;
 	delete g_pMultiTexture;
+	delete g_p32BitTextures;
 
 	g_pFullbright = 0;
 	g_pFov = 0;
 	g_pVidSynch =0;
 	g_pMultiTexture = 0;
+	g_p32BitTextures = 0;
 }
 
 
