@@ -1,7 +1,6 @@
 #include "Sys_hdr.h"
 #include "In_main.h"
 #include "Mus_main.h"
-//#include "Sv_main.h"
 #include "Sv_defs.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
@@ -34,7 +33,10 @@ namespace
 	enum
 	{
 		CMD_QUIT = 0,
-		CMD_TOGGLECONS = 1
+		CMD_TOGGLECONS = 1,
+		CMD_LISTFILES = 2,
+		CMD_LISTPATHS = 3,
+		CMD_DIRPATH = 4
 	};
 }
 
@@ -90,7 +92,8 @@ CVoid::CVoid(const char * cmdLine)
 	
 	//================================
 	//Create and initialize the file system
-	m_pFileSystem = FILESYSTEM_Create(m_pExport, 
+	m_pFileSystem = FILESYSTEM_Create(ComPrintf,
+									  System::FatalError,
 									  m_exePath,
 									  VOID_DEFAULTGAMEDIR);
 	//Create the input system
@@ -104,6 +107,10 @@ CVoid::CVoid(const char * cmdLine)
 	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
+	
+	System::GetConsole()->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
+	System::GetConsole()->RegisterCommand("fs_path",CMD_LISTPATHS,this);
+	System::GetConsole()->RegisterCommand("fs_dir",CMD_DIRPATH,this);
 
 	//Sound
 	m_pSound = new CSoundManager();
@@ -112,12 +119,8 @@ CVoid::CVoid(const char * cmdLine)
 	m_pMusic = new CMusic();
 
 	//Network Sys
-//	m_pServer = new CServer();
 	VoidServer::Create();
 	
-	//Create the client
-//	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
-
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
 }
@@ -130,11 +133,13 @@ Initialize all the subsystems
 bool CVoid::Init()
 {
 	//================================
-	//We parse the command line and exec configs now
-	//once all the subsystems have registers their vars
-
-	//parse Command line
-//	ParseCmdLine(lpCmdLine);
+	//Init COM librarry
+	HRESULT hr = CoInitialize(NULL);
+	if(FAILED(hr))
+	{
+		System::FatalError("CVoid::Init:Error Initializing COM library");
+		return false;
+	}
 
 	//================================
 	//Create the window
@@ -146,14 +151,7 @@ bool CVoid::Init()
 	m_pRParms->hWnd = System::GetHwnd();
 
 	//================================
-	//Init COM librarry
-	HRESULT hr = CoInitialize(NULL);
-	if(FAILED(hr))
-	{
-		System::FatalError("CVoid::Init:Error Initializing COM library");
-		return false;
-	}
-
+	//Check whether filesystem is okay
 	if(!m_pFileSystem->IsActive())
 	{
 		System::FatalError("CVoid::Init:Error Initializing File System");
@@ -216,15 +214,8 @@ bool CVoid::Init()
 		m_pMusic = 0;
 	}
 
-/*	//================================
+	//================================
 	//Client, create the client last
-	if(!m_pClient->InitNet())
-	{
-		System::FatalError("CVoid::Init: Couldnt not init client socket");
-		return false;
-	}
-*/
-		//Create the client
 	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
 
 	//Start timer
@@ -252,14 +243,9 @@ CVoid::~CVoid()
 	if(m_pClient)
 		delete m_pClient;
 	
-//	if(m_pServer)	
-//		delete m_pServer;	
-	
 	VoidServer::Destroy();
 	VoidServer::ShutdownNetwork();
 
-//	CServer::ShutdownNetwork();
-	
 	if(m_pSound)	
 		delete m_pSound;
 
@@ -307,7 +293,6 @@ void CVoid::RunFrame()
 
 	m_pSound->RunFrame();
 
-//	m_pServer->RunFrame();
 	VoidServer::RunFrame();
 
 	//Client will handle drawing as well.
@@ -516,6 +501,37 @@ void CVoid::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_TOGGLECONS:
 		{
 			ToggleConsole();
+			break;
+		}
+	case CMD_LISTFILES:
+		{
+			m_pFileSystem->ListArchiveFiles();
+			break;
+		}
+	case CMD_LISTPATHS:
+		{
+			m_pFileSystem->ListSearchPaths();
+			break;
+		}
+	case CMD_DIRPATH:
+		{
+			int numArgs = parms.NumTokens();
+			char arg1[80];
+
+			if(numArgs == 2)
+			{
+				parms.StringTok(1,arg1,80);
+				m_pFileSystem->ListFiles(arg1,0);
+			}
+			else if(numArgs == 3)
+			{
+				char arg2[80];
+				parms.StringTok(1,arg1,80);
+				parms.StringTok(2,arg2,80);
+				m_pFileSystem->ListFiles(arg1,arg2);
+			}
+			else
+				m_pFileSystem->ListFiles(0,0);
 			break;
 		}
 	}

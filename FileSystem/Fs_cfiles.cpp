@@ -15,7 +15,7 @@ static int			m_numOpenFiles   = 0;
 //======================================================================================
 
 //Returns 0 if failed.
-FILESYSTEM_API uint FS_Open(char *name)
+FILESYSTEM_API uint FS_Open(const char *name)
 {
 ComPrintf("opening %s, %d files open\n", name, m_numOpenFiles);
 

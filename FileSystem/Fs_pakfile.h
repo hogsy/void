@@ -3,6 +3,7 @@
 
 #include "Fs_hdr.h"
 
+
 class CPakFile:public CArchive
 {
 public:
@@ -29,7 +30,6 @@ public:
 	int  GetFileList (StringList &strlst, 
 					  const char * path,
 					  const char *ext);
-
 private:
 
 	enum 

@@ -14,8 +14,6 @@
 namespace FileUtil
 {
 	FILESYSTEM_API bool FindFileExtension(char * ext, int extlen, const char * path);
-	FILESYSTEM_API void ConfirmDir(char* dir);
-	FILESYSTEM_API bool PathExists(const char * path);
 }
 
 //====================================================================================
@@ -119,13 +117,11 @@ private:
 
 extern "C"
 {
-	FILESYSTEM_API uint FS_Open(char *name);
+	FILESYSTEM_API uint FS_Open(const char *name);
 	FILESYSTEM_API void FS_Close(uint handle);
 	FILESYSTEM_API int  FS_Read(void *buffer,int size,uint handle);
 	FILESYSTEM_API void FS_Seek(uint handle,int offset, signed char mode);
 	FILESYSTEM_API int  FS_Tell(uint handle);
 }
-
-
 
 #endif

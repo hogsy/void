@@ -13,6 +13,9 @@ void ParseFileName(char *name, int namelen, const char *path);
 void SetDefaultExtension (char *filename, const char *extension);
 bool CompareExts(const char *file, const char *ext);		
 
+void ConfirmDir(char* dir);
+bool PathExists(const char * path);
+
 void ShowMessageBox(const char * str, const char *title=0);
 
 //Move these to error handler

@@ -132,6 +132,44 @@ bool CompareExts(const char *file, const char *ext)
 }
 
 
+/*
+======================================
+make sure the dir is there. create it if not
+======================================
+*/
+void ConfirmDir(char* dir)
+{
+	//try creating each dir - nothing will change if it already exists
+	char *c = dir;
+	while (*c)
+	{
+		if ((*c)== '\\')
+		{
+			*c = NULL;
+			::CreateDirectory(dir, NULL);
+			*c = '\\';
+		}
+		c++;
+	}
+}
+
+/*
+===========================================
+Check if given directoy exists
+===========================================
+*/
+bool PathExists(const char *path)
+{
+	WIN32_FIND_DATA	finddata;
+	HANDLE hsearch = FindFirstFile(path,&finddata);
+	if(hsearch == INVALID_HANDLE_VALUE)
+		return false;
+
+	if(FindClose(hsearch) == FALSE)
+		ComPrintf("CFileSystem::PathExists:Unable to close search handle\n");
+	return true;
+}
+
 
 
 //======================================================================================

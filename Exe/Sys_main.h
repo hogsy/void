@@ -15,6 +15,7 @@ const char VOID_DEFAULTBINARYNAME[]	= "Void.exe";
 
 struct	VoidExport;
 struct  I_Renderer;
+struct  I_FileSystem;
 struct 	RenderInfo_t;
 
 class	CInput;
@@ -74,16 +75,16 @@ private:
 
 	VoidExport   * m_pExport;		//Exported Stuff
 	
-	I_Renderer   * m_pRender;
+	I_FileSystem * m_pFileSystem;	//FileSystem
+	
+	I_Renderer   * m_pRender;		//Renderer
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 
 	CInput		 * m_pInput;		//Input 
-	CFileSystem  * m_pFileSystem;	//FileSystem
-
-	CClient		 * m_pClient;		//Client and UI
-
 	CSoundManager* m_pSound;		//Sound subsystem
 	CMusic		 * m_pMusic;		//Music subsystem
+
+	CClient		 * m_pClient;		//Client and UI
 
 	//=========================================================
 

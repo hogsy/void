@@ -1,6 +1,7 @@
 #include "Fs_hdr.h"
 #include "I_file.h"
-#include "I_filesystem.h"
+//#include "I_filesystem.h"
+#include "Fs_filesys.h"
 
 extern CFileSystem * g_pFileSystem;
 

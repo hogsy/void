@@ -25,13 +25,10 @@ public:
 				  const char *ifilename);
 	
 	bool FindFile(char * buf, int buflen,const char * filename);
-	
 	void ListFiles();
-	
 	int  GetFileList (StringList &strlst, 
 					  const char * path,
 					  const char *ext);
-
 private:
 
 	struct ZipEntry_t

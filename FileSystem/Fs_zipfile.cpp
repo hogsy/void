@@ -1,7 +1,8 @@
 #include "Fs_zipfile.h"
 #include "I_file.h"
 
-/*======================================================================================
+/*
+======================================================================================
 Private Declarations and definitions
 
 Zip extraction code was intiallly based on the zlib sources
@@ -11,14 +12,14 @@ Gilles Vollant <info@winimage.com> for the Windows DLL version.
 The zlib home page is http://www.cdrom.com/pub/infozip/zlib/
 The official zlib ftp site is ftp://ftp.cdrom.com/pub/infozip/zlib/
 
-======================================================================================*/
+======================================================================================
+*/
 
-#define CENTRAL_HDR_SIG	'\001','\002'	/* the infamous "PK" signature bytes, */
-#define LOCAL_HDR_SIG	'\003','\004'	/*  sans "PK" (so unzip executable not */
-#define END_CENTRAL_SIG	'\005','\006'	/*  mistaken for zipfile itself) */
-#define EXTD_LOCAL_SIG	'\007','\010'	/* [ASCII "\113" == EBCDIC "\080" ??] */
+#define CENTRAL_HDR_SIG	'\001','\002'
+#define LOCAL_HDR_SIG	'\003','\004'
+#define END_CENTRAL_SIG	'\005','\006'
+#define EXTD_LOCAL_SIG	'\007','\010'
 
-//Use an unnnamed namespace to keep this private
 namespace
 {
 	enum
@@ -27,7 +28,7 @@ namespace
 		ZIP_LOCAL_FILE_HEADER_SIZE  = 26
 	};
 
-	typedef struct ZIP_local_file_header_s 
+	struct ZIP_local_file_header 
 	{
 		byte	version_needed_to_extract[2];
 		ushort	general_purpose_bit_flag;
@@ -39,9 +40,9 @@ namespace
 		ulong	ucsize;
 		ushort	filename_length;
 		ushort	extra_field_length;
-	} ZIP_local_file_header;
+	};
 
-	typedef struct ZIP_central_directory_file_header_s 
+	struct ZIP_central_directory_file_header 
 	{
 		byte	version_made_by[2];
 		byte	version_needed_to_extract[2];
@@ -59,9 +60,9 @@ namespace
 		ushort  internal_file_attributes;
 		ulong	external_file_attributes;
 		ulong	relative_offset_local_header;
-	} ZIP_central_directory_file_header;
+	};
 
-	typedef struct ZIP_end_central_dir_record_s 
+	struct ZIP_end_central_dir_record 
 	{
 		ushort	number_this_disk;
 		ushort	num_disk_start_cdir;
@@ -71,7 +72,7 @@ namespace
 		ulong	offset_start_central_directory;
 		ushort	zipfile_comment_length;
 
-	} ZIP_end_central_dir_record;
+	};
 
 	//Zip header signitures
 	const char zip_hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
@@ -108,6 +109,7 @@ namespace
 
 //======================================================================================
 //======================================================================================
+
 /*
 ==========================================
 Constructor/Destructor
@@ -131,15 +133,19 @@ CZipFile::~CZipFile()
 	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
-	for(int i=0;i<m_numFiles;i++)
+	if(m_files)
 	{
-		if(m_files[i])
+		for(int i=0;i<m_numFiles;i++)
 		{
-			delete m_files[i];
-			m_files[i] = 0;
+			if(m_files[i])
+			{
+				delete m_files[i];
+				m_files[i] = 0;
+			}
 		}
+		delete [] m_files;
+		m_files = 0;
 	}
-	delete [] m_files;
 }
 
 
@@ -235,7 +241,7 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 	unsigned char* buf=0;
 	ulong uSizeFile=0;
 	ulong uBackRead=0;
-	ulong uMaxBack =0xffff; /* maximum size of global comment */
+	ulong uMaxBack =0xffff; // maximum size of global comment
 	ulong uPosFound=0;
 
 	if (fseek(fin,0,SEEK_END) != 0)
@@ -246,9 +252,8 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 	if (uMaxBack > uSizeFile)
 		uMaxBack = uSizeFile;
 
-	buf = (unsigned char*)malloc(MAXCOMMENTBUFFERSIZE+4);
-	if (buf==NULL)
-		return 0;
+	buf = new byte[MAXCOMMENTBUFFERSIZE+4];
+
 
 	uBackRead = 4;
 
@@ -284,7 +289,7 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 		if(uPosFound!=0)
 			break;
 	}
-	free(buf);
+	delete [] buf;
 	return uPosFound;
 }
 
@@ -388,7 +393,6 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 				}
 			}
 			m_files[destIndex] = newfile;
-
 			m_numFiles++;
 
 /*			curpos = ftell(m_fp);
@@ -571,8 +575,6 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	}
 	return 0;
 }
-
-
 
 
 /*

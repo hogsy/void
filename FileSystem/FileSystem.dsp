@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FILESYSTEM_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\Shared" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FILESYSTEM_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /Ze /W3 /Gm /GX /ZI /Od /I "..\Shared" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FILESYSTEM_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -127,6 +127,10 @@ SOURCE=.\Fs_zipfile.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=.\Fs_filesys.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_hdr.h
 # End Source File
 # Begin Source File
@@ -143,11 +147,15 @@ SOURCE=.\Fs_zipfile.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\Com_cvar.h
+SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_defs.h
+SOURCE=..\Shared\Com_hunk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_hunk.h
 # End Source File
 # Begin Source File
 
@@ -159,23 +167,11 @@ SOURCE=..\Shared\Com_mem.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_parms.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_parms.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_util.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\Shared\Com_util.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
 

@@ -1,31 +1,8 @@
 #include "Fs_hdr.h"
+#include "Fs_filesys.h"
 #include "I_file.h"
-#include "I_filesystem.h"
-#include "Com_parms.h"
-#include "Com_cvar.h"
 #include "Fs_pakfile.h"
 #include "Fs_zipfile.h"
-
-//======================================================================================
-#define CMD_LISTFILES	0
-#define CMD_LISTPATHS	1
-#define CMD_DIRPATH		2
-
-extern I_Console * g_pConsole;		//pointer to console
-
-//======================================================================================
-
-/*
-===========================================
-Supported File Types
-===========================================
-*/
-const char  * archive_exts[] =	
-{	
-	"zip",
-	"pak",  
-	0 
-};
 
 /*
 =========================================
@@ -45,6 +22,15 @@ struct CFileSystem::SearchPath_t
 	char		   path[COM_MAXPATH];		
 	CArchive     * archive;
 	SearchPath_t * prev;
+};
+
+
+//Supported File Types
+const char  * archive_exts[] =	
+{	
+	"zip",
+	"pak",  
+	0 
 };
 
 
@@ -87,7 +73,7 @@ CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 		m_exepath[exepathlen] = '\0';
 
 	//Make sure the given path exists.
-	if(!FileUtil::PathExists(m_exepath))
+	if(!Util::PathExists(m_exepath))
 	{	ComPrintf("CFileSystem:: Exe directory does not exist : %s\n",m_exepath);
 		return;
 	}
@@ -105,10 +91,6 @@ CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 	}
 	strcpy(m_basedir,basedir);
 	
-	g_pConsole->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
-	g_pConsole->RegisterCommand("fs_path",CMD_LISTPATHS,this);
-	g_pConsole->RegisterCommand("fs_dir",CMD_DIRPATH,this);
-
 	m_bActive = true;
 }
 
@@ -164,7 +146,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 
 	//Check to see Dir exists.
 	sprintf(m_curpath,"%s/%s",m_exepath,gamedir);
-	if(!FileUtil::PathExists(m_curpath))
+	if(!Util::PathExists(m_curpath))
 	{
 		ComPrintf("CFileSystem::AddGameDir: Game dir does not exist : %s\n",m_curpath);
 		memset(m_curpath,0, COM_MAXPATH);
@@ -549,50 +531,6 @@ bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
 	return false;
 }
 
-
-/*
-==========================================
-Console Command Hanlder
-==========================================
-*/
-void CFileSystem::HandleCommand(HCMD cmdId, const CParms &parms)
-{
-	switch(cmdId)
-	{
-	case CMD_LISTFILES:
-		{
-			ListArchiveFiles();
-			break;
-		}
-	case CMD_LISTPATHS:
-		{
-			ListSearchPaths();
-			break;
-		}
-	case CMD_DIRPATH:
-		{
-			int numArgs = parms.NumTokens();
-			char arg1[80];
-
-			if(numArgs == 2)
-			{
-				parms.StringTok(1,arg1,80);
-				ListFiles(arg1,0);
-			}
-			else if(numArgs == 3)
-			{
-				char arg2[80];
-				parms.StringTok(1,arg1,80);
-				parms.StringTok(2,arg2,80);
-				ListFiles(arg1,arg2);
-			}
-			else
-				ListFiles(0,0);
-			break;
-		}
-	}
-}
-
 /*
 ===========================================
 Scan a directory for supported archive types
@@ -676,7 +614,3 @@ void CFileSystem::RemoveSearchPath(const char *path)
 	}
 }
 
-
-//======================================================================================
-//======================================================================================
-//Not sure

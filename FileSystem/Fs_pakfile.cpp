@@ -1,10 +1,6 @@
 #include "Fs_pakfile.h"
 #include "I_file.h"
 
-//======================================================================================
-//Private definations
-//======================================================================================
-
 //Pak file header
 typedef struct
 {
@@ -13,8 +9,6 @@ typedef struct
 	int		dirlen;
 }PakHeader_t;
 
-//======================================================================================
-//======================================================================================
 
 /*
 ===========================================
@@ -39,12 +33,16 @@ CPakFile::~CPakFile()
 	memset(m_openFiles,0, sizeof(PakOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
-	for(int i=0;i<m_numFiles;i++)
+	if(m_files)
 	{
-		delete m_files[i];
-		m_files[i] = 0;
+		for(int i=0;i<m_numFiles;i++)
+		{
+			delete m_files[i];
+			m_files[i] = 0;
+		}
+		delete [] m_files;
+		m_files = 0;
 	}
-	delete [] m_files;
 }
 
 /*
@@ -447,4 +445,3 @@ get size of file belonging to handle
 uint CPakFile::GetSize(HFS handle)
 {	return m_openFiles[handle].file->filelen;
 }
-

@@ -1,38 +1,31 @@
 #include "Fs_hdr.h"
-#include "I_void.h"
-#include "I_filesystem.h"
+#include "Fs_filesys.h"
+#include "Com_hunk.h"
 
-/*
-==========================================
-Local vars
-==========================================
-*/
 const char MEM_SZLOGFILE [] = "mem_fs.log";
-//CMemManager		g_memManager("mem_fs.log");
-
-I_HunkManager * g_pHunkManager = 0;
-I_Console     * g_pConsole = 0;
-
-static I_Void * g_pVoid = 0;
 
 CFileSystem	  *	g_pFileSystem = 0;
 
+static PrintFunc	m_pPrintFunc = 0;
+static ErrorFunc	m_pErrorFunc = 0;
+
 /*
-==========================================
+================================================
 Create the fileSystem and return it
 copy pointer to console for cvar/printing functions
-==========================================
+-===============================================
 */
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp, 
-											   const char * exeDir, 
-											   const char * baseDir)
+FILESYSTEM_API I_FileSystem * FILESYSTEM_Create(PrintFunc pPrint, ErrorFunc pError,
+						const char * exeDir,const char * baseGameDir)
 {
-	g_pVoid = vexp;
-	g_pHunkManager = vexp->hunkManager;
-	g_pConsole    = vexp->console;
+	static CHunkMem m_hunkMem;
+	g_pHunkManager = &m_hunkMem;
+
+	m_pPrintFunc = pPrint;
+	m_pErrorFunc = pError;
 
 	if(!g_pFileSystem)
-		g_pFileSystem = new CFileSystem(exeDir,baseDir);
+		g_pFileSystem = new CFileSystem(exeDir,baseGameDir);
 	return g_pFileSystem;
 }
 
@@ -48,9 +41,7 @@ FILESYSTEM_API void FILESYSTEM_Free()
 		delete g_pFileSystem;
 		g_pFileSystem = 0;
 	}
-	g_pVoid = 0;
-	g_pConsole = 0;
-	g_pHunkManager = 0;
+	m_pPrintFunc = 0;
 }
 
 /*
@@ -67,7 +58,7 @@ void ComPrintf(const char* text, ...)
 	vsprintf(buff, text, args);
 	va_end(args);
 
-	g_pConsole->ComPrint(buff);
+	m_pPrintFunc(buff);
 }
 
 /*
@@ -77,10 +68,6 @@ Com mem hancler
 */
 int HandleOutOfMemory(size_t size)
 {	
-	g_pVoid->SystemError("FileSystem: Out of Memory");
+	m_pErrorFunc("FileSystem: Out of Memory");
 	return 0;
 }
-
-
-//======================================================================================
-//======================================================================================
