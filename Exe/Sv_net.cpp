@@ -114,7 +114,17 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					ComPrintf("SV: Bad command from client %s:%d\n", m_clients[clNum]->name,clNum);
 					return;
 				}
-				m_clients[clNum]->clCmd = m_incomingCmd;
+
+				// dont use copy operator cause we need to or the moveflags
+//				m_clients[clNum]->clCmd = m_incomingCmd;
+				m_clients[clNum]->clCmd.angles[0] = m_incomingCmd.angles[0];
+				m_clients[clNum]->clCmd.angles[1] = m_incomingCmd.angles[1];
+				m_clients[clNum]->clCmd.angles[2] = m_incomingCmd.angles[2];
+				m_clients[clNum]->clCmd.forwardmove |= m_incomingCmd.forwardmove;
+				m_clients[clNum]->clCmd.rightmove |= m_incomingCmd.rightmove;
+				m_clients[clNum]->clCmd.upmove |= m_incomingCmd.upmove;
+				m_clients[clNum]->clCmd.time = m_incomingCmd.time;
+
 				m_clients[clNum]->clCmd.flags = 1;
 
 /*
