@@ -321,7 +321,9 @@ void CClient::RunFrame()
 			}
 		}
 
-		for(i=0; i< GAME_MAXCLIENTS; i++)
+
+		m_pModel->DrawModel(m_clients[0]);
+/*		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].index >=0)
 			{
@@ -329,7 +331,7 @@ void CClient::RunFrame()
 			}
 		}
 
-
+*/
 		m_pRender->Draw(m_pCamera);
 
 		//Write all updates

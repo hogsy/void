@@ -16,6 +16,7 @@ class  CMusic;
 struct I_Renderer;
 struct I_RHud;
 struct I_Model;
+struct I_Image;
 
 /*
 =====================================
@@ -95,7 +96,10 @@ private:
 	CVar	m_clport;
 	CVar	m_clname;
 	CVar	m_clrate;
+	CVar    m_clmodel;
+	
 	CVar	m_noclip;
+	
 
 	//==================================================
 	//Subsystems
@@ -105,6 +109,7 @@ private:
 	I_Renderer		  * m_pRender;
 	I_RHud		 	  *	m_pHud;
 	I_Model			  * m_pModel;
+	I_Image			  * m_pImage;
 
 
 	CSoundManager	  * m_pSound;
@@ -124,10 +129,21 @@ private:
 	//the following should be accessible by the game dll
 
 	//This is the client we should do local prediction on
-	ClClient	m_gameClient;
-	ClEntity 	m_gameEnts[GAME_MAXENTITIES];
+//	ClClient	m_gameClient;
 
+//	int			m_numClients;
+//	ClClient    m_clients[GAME_MAXCLIENTS];
+	
 	int			m_numEnts;
+//	ClEntity 	m_gameEnts[GAME_MAXENTITIES];
+
+	ClClient	m_gameClient;	//We
+	
+	ClClient 	m_clients[GAME_MAXCLIENTS];
+	ClEntity 	m_entities[GAME_MAXENTITIES];
+
+
+	
 
 	//This should hook up to the game client whne the client
 	//enters a game

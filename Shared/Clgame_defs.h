@@ -11,7 +11,7 @@ struct ClEntity : public R_EntState
 	{	Reset();
 	}
 
-	void Reset()
+	virtual void Reset()
 	{
 		num_skins = num_frames = 0;
 		index = -1;
@@ -39,7 +39,15 @@ struct ClEntity : public R_EntState
 struct ClClient : public ClEntity
 {
 	ClClient() 
-	{ 
+	{	
+		memset(name,0,32);
+		Void3d::VectorSet(mins,0,0,0);
+		Void3d::VectorSet(maxs,0,0,0);
+	}
+
+	virtual void Reset()
+	{
+		ClEntity::Reset();
 		memset(name,0,32);
 		Void3d::VectorSet(mins,0,0,0);
 		Void3d::VectorSet(maxs,0,0,0);

@@ -48,6 +48,12 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				m_pNetCl->Reconnect();
 				break;
 			}
+		case SV_CLIENTINFO:
+			{
+//				SV_CLIENTINFO
+				break;
+			}
+
 		}
 	}
 }
@@ -88,7 +94,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 				{
 					continue;
 				}
-				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
+//				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
 			}
 			break;
 		}
@@ -127,40 +133,40 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 
 			while(id != -1)
 			{
-				m_gameEnts[id].origin.x = buffer.ReadCoord();
-				m_gameEnts[id].origin.y = buffer.ReadCoord();
-				m_gameEnts[id].origin.z = buffer.ReadCoord();
+				m_entities[id].origin.x = buffer.ReadCoord();
+				m_entities[id].origin.y = buffer.ReadCoord();
+				m_entities[id].origin.z = buffer.ReadCoord();
 
-				m_gameEnts[id].angle.x = buffer.ReadAngle();
-				m_gameEnts[id].angle.y = buffer.ReadAngle();
-				m_gameEnts[id].angle.z = buffer.ReadAngle();
+				m_entities[id].angle.x = buffer.ReadAngle();
+				m_entities[id].angle.y = buffer.ReadAngle();
+				m_entities[id].angle.z = buffer.ReadAngle();
 
 				type = buffer.ReadChar();
 							
 				if(type == 'm')
 				{
-					m_gameEnts[id].index = buffer.ReadShort();
-					m_gameEnts[id].skinnum = buffer.ReadShort();
-					m_gameEnts[id].frame = buffer.ReadShort();
-					m_gameEnts[id].nextframe = m_gameEnts[id].frame;
-					m_gameEnts[id].frac = 0;
-					m_gameEnts[id].cache = CACHE_GAME;
+//					m_entities[id].index = buffer.ReadShort();
+					m_entities[id].skinnum = buffer.ReadShort();
+					m_entities[id].frame = buffer.ReadShort();
+					m_entities[id].nextframe = m_entities[id].frame;
+					m_entities[id].frac = 0;
+					m_entities[id].cache = CACHE_GAME;
 				}
 				else
 				{
-					m_gameEnts[id].soundIndex = buffer.ReadShort();
-					m_gameEnts[id].volume = buffer.ReadShort();
-					m_gameEnts[id].attenuation = buffer.ReadShort();
+					m_entities[id].soundIndex = buffer.ReadShort();
+					m_entities[id].volume = buffer.ReadShort();
+					m_entities[id].attenuation = buffer.ReadShort();
 				}
 
 				if(buffer.BadRead())
 				{
 					ComPrintf("Error reading Ent %d\n", id);
-					m_gameEnts[id].Reset();
+					m_entities[id].Reset();
 					break;
 				}
 
-				m_gameEnts[id].inUse = true;
+//				m_entities[id].inUse = true;
 				m_numEnts ++;
 				id = buffer.ReadShort();
 			}

@@ -189,7 +189,7 @@ bool CNetChan::BeginRead()
 	seq &= ~(1<<31);	
 	seqacked &= ~(1<<31);	
 
-	if(seqacked == m_state.outMsgId)
+	if(seqacked == m_state.outMsgId -1)
 		m_state.latency = System::g_fcurTime - m_sendTime;
 
 	//Message is a duplicate or old, ignore it
@@ -211,6 +211,7 @@ bool CNetChan::BeginRead()
 		m_reliableBuffer.Reset();
 		m_bOutReliableMsg = 0;
 	}
+
 	
 	//Update sequence numbers. set reliable flags if this was sent reliably
 	m_state.inMsgId = seq;
@@ -232,11 +233,6 @@ bool CNetChan::BeginRead()
 Misc Util
 ======================================
 */
-/*void CNetChan::ResetReliable()
-{	m_reliableBuffer.Reset();
-}
-*/
-
 //also check Port here ?
 bool CNetChan::MatchAddr(const CNetAddr &addr) const
 {	return (addr == m_addr);

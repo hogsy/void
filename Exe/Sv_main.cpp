@@ -29,8 +29,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 {
 	g_pServer = this;
 
-	m_entity = 0;
-	m_client = 0;
+	m_entities = 0;
+	m_clients = 0;
 
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
@@ -68,23 +68,23 @@ CServer::~CServer()
 
 	Shutdown();
 
-	if(m_entity)
+	if(m_entities)
 	{
 		for(int i=0;i<GAME_MAXENTITES; i++)
 		{
-			if(m_entity[i]) 
-				delete m_entity[i];
+			if(m_entities[i]) 
+				delete m_entities[i];
 		}
-		delete [] m_entity;
+		delete [] m_entities;
 	}
-	if(m_client)
+	if(m_clients)
 	{
 		for(int i=0;i<GAME_MAXCLIENTS; i++)
 		{
-			if(m_client[i]) 
-				delete m_client[i];
+			if(m_clients[i]) 
+				delete m_clients[i];
 		}
-		delete [] m_client;
+		delete [] m_clients;
 	}
 }
 
@@ -108,11 +108,11 @@ bool CServer::Init()
 	m_numEntities= 0;
 //	m_numClients = 0;
 
-	m_entity = new Entity * [GAME_MAXENTITES];
-	memset(m_entity,0,(sizeof(Entity *) * GAME_MAXENTITES));
+	m_entities = new Entity * [GAME_MAXENTITES];
+	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
 
-	m_client = new EntClient * [GAME_MAXCLIENTS];
-	memset(m_client,0,(sizeof(EntClient*) * GAME_MAXCLIENTS));
+	m_clients = new EntClient * [GAME_MAXCLIENTS];
+	memset(m_clients,0,(sizeof(EntClient*) * GAME_MAXCLIENTS));
 
 	InitGame();
 	
@@ -347,7 +347,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	for(i=0; i<m_numEntities; i++)
 	{
 		buffer.Reset();
-		if(!m_entity[i] || !m_entity[i]->WriteBaseline(buffer))
+		if(!m_entities[i] || !m_entities[i]->WriteBaseline(buffer))
 //		if(!m_entities[i]->WriteBaseline(buffer))
 			continue;
 
@@ -474,10 +474,10 @@ void CServer::PrintServerStatus()
 //	EntClient * client = 0;
 	for(int i=0; i<m_svState.maxClients; i++)
 	{
-		if(m_client[i])
+		if(m_clients[i])
 		{
 //			client = reinterpret_cast<EntClient *>(m_entities[i]);
-			ComPrintf("%s:\n", m_client[i]->name);
+			ComPrintf("%s:\n", m_clients[i]->name);
 
 			const NetChanState & state = m_net.ChanGetState(i);
 			ComPrintf("  Rate:%d\n  In:%d\n  Acked:%d\n  Out:%d\n", 
@@ -635,8 +635,8 @@ bool CServer::SpawnEntity(CBuffer &buf)
 	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
 	if(ent)
 	{
-		m_entity[m_numEntities] = ent;
-		m_entity[m_numEntities]->num = m_numEntities;
+		m_entities[m_numEntities] = ent;
+		m_entities[m_numEntities]->num = m_numEntities;
 		m_numEntities++;
 		return true;
 	}

@@ -13,7 +13,9 @@ struct world_t;
 Entity "id" layout
 id 0 is worldspawn
 ids after that, upto MAX_ENTITIES can be used for game/map entities
-ids after that are used for clients
+
+client ids begin at 0, end at MAX_CLIENTS
+they have the high bit set
 */
 
 /*
@@ -111,11 +113,11 @@ private:
 	//Should be handled by the game Dll
 
 	//the first num MAXClient entities are reserved for clients
-	Entity    ** m_entity;
+	Entity    ** m_entities;
 	int			 m_maxEntities;
 	int			 m_numEntities;
 	
-	EntClient ** m_client;
+	EntClient ** m_clients;
 };
 
 

@@ -54,7 +54,12 @@ public:
 				 const vector_t * origin=0,
 				 const vector_t * velocity=0,
 				 bool looping = false);
-
+/*
+	void PlaySnd(const ClEntity &ent,
+				 int channel = CHAN_AUTO,
+				 int volume = 0,
+				 int attenuation = 0);
+*/
 	//Update Sound position
 	//The SoundManager needs to automatically stop sounds out of range
 	void UpdateGameSound(int index, vector_t * pos, vector_t * velocity);

@@ -496,3 +496,11 @@ const NetChanState & CNetClient::GetChanState() const
 {	return m_pNetChan->m_state;
 }
 
+
+bool CNetClient::CanSend()
+{	return m_pNetChan->CanSend();
+}
+
+bool CNetClient::CanSendReliable()
+{	return m_reliableBuf.HasSpace(1);
+}
