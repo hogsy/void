@@ -33,7 +33,7 @@ Floating point util funcs
 ================================================
 */
 namespace FM {
-
+/*
 inline float INV(float p)
 {
     int _i = 2 * FP_ONE_BITS - *(int *)&(p);
@@ -41,10 +41,12 @@ inline float INV(float p)
     r = r * (2.0f - (p) * r);                   
 	return r;
 }
+*/
 
-inline void INV(float r, float p)
+inline float INV(float p)
 {
 	static float two = 2.0f;
+	float r;
 
 	__asm { mov		eax,0x7F000000	  }; 
 	__asm { sub		eax,dword ptr [p] }; 
@@ -54,7 +56,9 @@ inline void INV(float r, float p)
 	__asm { fsubr	[two]             }; 
 	__asm { fmul	dword ptr [r]     }; 
 	__asm { fstp	dword ptr [r]     }; 
+	return r;
 }
+
 
 //Not sure if this one is correct
 inline ulong NORM_TO_BYTE(float p)

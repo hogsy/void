@@ -5,9 +5,7 @@
 float vector_t::Normalize()
 {
 	float mag = Length();
-	float imag=0;
-
-	FM::INV(imag, mag);
+	float imag= FM::INV(mag);
 
 	x *= imag;
 	y *= imag;
@@ -18,9 +16,7 @@ float vector_t::Normalize()
 float vector_t::Normalize(vector_t &out)
 {
 	float mag = Length();
-	float imag=0;
-
-	FM::INV(imag, mag);
+	float imag= FM::INV(mag);
 
 	out.x = x * imag;
 	out.y = y * imag;
