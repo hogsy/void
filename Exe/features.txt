@@ -3,7 +3,25 @@
 Current Features
 ===================
 
-//Add Renderer stuff
+Abstract rasterizer interface.
+Currently implemented with OpenGL and Direct3DX.
+
+Easily extended Quake3 style shader system.
+Implements common quake3 shader commands.
+
+BSP based level format with custom compilation tool.
+Beam tree yielding a perfect visibilty set.
+Polygon caching system for sorting by shader.
+Heirarchal frustum culling.
+
+Support for tga, pcx, and jpg texture formats.
+
+Support for md2 and sp2 object files.
+Plugin player model system similar to quake2.
+
+
+
+
 
 Virtualized file system with overrideable paths.
 Support for uncompressed zip and pak files.
