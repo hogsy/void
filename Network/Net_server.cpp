@@ -166,7 +166,7 @@ void CNetServer::Shutdown()
 	{
 		if(m_clChan[i].m_state != CL_INGAME) 
 			continue;
-		SendDisconnect(i,SERVER_QUIT);
+		SendDisconnect(i,DR_SVQUIT);
 	}
 	m_pSock->Close();
 }
@@ -530,7 +530,7 @@ void CNetServer::SendSpawnParms(int chanId)
 	{
 		ComPrintf("SV:Client(%d) Requested bad spawnlevel %d(%d)\n", 
 			chanId, m_clChan[chanId].m_spawnLevel, reqNum);
-		SendDisconnect(chanId,CLIENT_BADMSG);
+		SendDisconnect(chanId,DR_CLBADMSG);
 		return;
 	}
 //ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnLevel);
@@ -549,7 +549,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	if(m_recvBuf.BadRead())
 	{	
 		m_recvBuf.Reset();
-		SendDisconnect(chanId,CLIENT_BADMSG);
+		SendDisconnect(chanId,DR_CLBADMSG);
 		return;
 	}
 
@@ -566,7 +566,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	if(m_recvBuf.BadRead())
 	{
 		m_recvBuf.Reset();
-		SendDisconnect(chanId,CLIENT_BADMSG);
+		SendDisconnect(chanId,DR_CLBADMSG);
 		return;
 	}
 
@@ -574,7 +574,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	if(m_recvBuf.BadRead())
 	{
 		m_recvBuf.Reset();
-		SendDisconnect(chanId,CLIENT_BADMSG);
+		SendDisconnect(chanId,DR_CLBADMSG);
 		return;
 	}
 
@@ -583,7 +583,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
-		m_pServer->OnClientDrop(chanId, CLIENT_QUIT);
+		m_pServer->OnClientDrop(chanId, DR_CLQUIT);
 		m_clChan[chanId].Reset();
 		return;	
 	}
@@ -648,30 +648,21 @@ void CNetServer::SendReconnect(int chanId)
 Tell the client to disconnect
 ======================================
 */
-void CNetServer::SendDisconnect(int chanId, EDisconnectReason reason) 
+void CNetServer::SendDisconnect(int chanId, const DisconnectReason &reason) 
 {
+	if(m_clChan[chanId].m_state == CL_FREE)
+		return;
+
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
 	m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_DISCONNECT);
 
-	switch(reason)
-	{
-	case SERVER_QUIT:
-		m_clChan[chanId].m_netChan.m_buffer.WriteString("Server quit");
-		break;
-	case CLIENT_TIMEOUT:
-		m_clChan[chanId].m_netChan.m_buffer.WriteString("Timed out");
-		break;
-	case CLIENT_OVERFLOW:
-		m_clChan[chanId].m_netChan.m_buffer.WriteString("Overflowed");
-		break;
-	case CLIENT_BADMSG:
-		m_clChan[chanId].m_netChan.m_buffer.WriteString("Bad Message");
-		break;
-	}
+	if(reason.disconnectMsg)
+		m_clChan[chanId].m_netChan.m_buffer.WriteString(reason.disconnectMsg);
 	
 	m_clChan[chanId].m_netChan.PrepareTransmit();
 	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
 
+	//Let the main server know that this client is disconnecting
 	m_pServer->OnClientDrop(chanId,reason);
 
 	m_clChan[chanId].Reset();
@@ -742,14 +733,14 @@ void CNetServer::SendPackets()
 			//Check timeout
 			if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::GetCurTime())
 			{
-				SendDisconnect(i,CLIENT_TIMEOUT);
+				SendDisconnect(i,DR_CLTIMEOUT);
 				continue;
 			}
 
 			//Check overflow
 			if(m_clChan[i].m_bDropClient)
 			{
-				SendDisconnect(i,CLIENT_OVERFLOW);
+				SendDisconnect(i,DR_CLOVERFLOW);
 				continue;
 			}
 			
