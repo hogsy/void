@@ -58,7 +58,7 @@ struct vector_t //Vec3d
 	}
 
 	inline float Length() const
-	{	return fastsqrt((x*x)+(y*y)+(z*z));	
+	{	return FM::SquareRoot((x*x)+(y*y)+(z*z));	
 	}
 
 	inline void Set(float ix, float iy, float iz)
@@ -101,19 +101,15 @@ struct vector_t //Vec3d
 	void  VectorMA (const vector_t &veca, float scale, const vector_t &vecb);
 	void  AngleToVector(vector_t * forward, vector_t * right, vector_t *up);
 
-	//======================================================================================
-	//Friend funcs. These are the ones that always operate on more than one vector.
-	//======================================================================================
-
 	//Addition
-	inline friend vector_t operator + (const vector_t &a, const vector_t &b)
+	friend inline vector_t operator + (const vector_t &a, const vector_t &b)
 	{	
 		vector_t sum(a);
 		return sum += b;
 	}
 
 	//Substractor
-	inline friend vector_t operator - (const vector_t &a, const vector_t &b)
+	friend inline vector_t operator - (const vector_t &a, const vector_t &b)
 	{	
 		vector_t diff(a);
 		return diff -= b;
@@ -130,14 +126,20 @@ struct vector_t //Vec3d
 	}
 
 	//Comparision
-	friend int   operator == (const vector_t &v1, const vector_t &v2);
-	friend int   VectorCompare (const vector_t &v1, const vector_t &v2, float thresh);
-	
-	friend void  CrossProduct(const vector_t &a, const vector_t &b, vector_t &normal);
-/*	friend void  MakeVectorPlanar(const vector_t &in, vector_t &out, const vector_t &norm);
-	friend void  RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
-*/
+	friend int  operator == (const vector_t &v1, const vector_t &v2);
+	friend int  VectorCompare (const vector_t &v1, const vector_t &v2, float thresh);
+	friend void CrossProduct(const vector_t &a, const vector_t &b, vector_t &normal);
 };
+
+
+/*
+================================================
+Non member Vector operations
+================================================
+*/
+void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm);
+void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
+
 
 /*
 ======================================
@@ -154,8 +156,7 @@ struct plane_t
 };
 
 
-void	MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm);
-void	RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
+
 
 /*
 Blah, macros suck ass. can't even define my own funcs in a diff namespace cause 

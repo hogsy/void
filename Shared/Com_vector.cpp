@@ -5,9 +5,9 @@
 float vector_t::Normalize()
 {
 	float mag = Length();
-	float imag;
+	float imag=0;
 
-	FP_INV(imag, mag);
+	FM::INV(imag, mag);
 
 	x *= imag;
 	y *= imag;
@@ -18,9 +18,9 @@ float vector_t::Normalize()
 float vector_t::Normalize(vector_t &out)
 {
 	float mag = Length();
-	float imag;
+	float imag=0;
 
-	FP_INV(imag, mag);
+	FM::INV(imag, mag);
 
 	out.x = x * imag;
 	out.y = y * imag;
@@ -74,7 +74,7 @@ void vector_t::VectorMA (const vector_t &veca, float scale, const vector_t &vecb
 }
 
 //======================================================================================
-//Freind funcs
+//Freind/Non member funcs funcs
 //======================================================================================
 
 int operator == (const vector_t &v1, const vector_t &v2)
@@ -100,8 +100,6 @@ void CrossProduct(const vector_t &a, const vector_t &b, vector_t &normal)
 	normal.y = (a.z * b.x - a.x * b.z);
 	normal.z = (a.x * b.y - a.y * b.x);
 }
-
-
 
 
 

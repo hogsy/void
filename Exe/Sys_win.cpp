@@ -6,9 +6,6 @@
 #include <direct.h>
 #include <mmsystem.h>
 
-// FIXME - where should this really be??
-#include "Com_fastmath.h"	// needed for build_sqrt_table()
-
 //Private Info
 static HWND			m_hWnd;
 static HINSTANCE	m_hInst;
@@ -43,9 +40,6 @@ int WINAPI WinMain(HINSTANCE hInst,
 				   LPSTR lpCmdLine,
 				   int nCmdShow)
 {
-	// must be very first thing
-	build_sqrt_table();
-
 
 	m_hInst = hInst;
 	if(!RegisterWindow(hInst))
