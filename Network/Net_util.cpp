@@ -26,7 +26,9 @@ CNetAddr::CNetAddr()
 }
 
 CNetAddr::CNetAddr(const char * szaddr)
-{	Set(szaddr);
+{	
+	valid = true;
+	Set(szaddr);
 }
 
 void CNetAddr::Reset()

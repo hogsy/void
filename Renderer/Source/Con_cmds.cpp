@@ -245,11 +245,19 @@ void CRConsole::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case CMD_TGASHOT:
-		ScreenShot(parms.StringTok(1),FORMAT_TGA);
-		break;
+		{
+			char fileName[80];
+			parms.StringTok(1,fileName,80);
+			ScreenShot(fileName,FORMAT_TGA);
+			break;
+		}
 	case CMD_PCXSHOT:
-		ScreenShot(parms.StringTok(1),FORMAT_PCX);
-		break;
+		{
+			char fileName[80];
+			parms.StringTok(1,fileName,80);
+			ScreenShot(fileName,FORMAT_PCX);
+			break;
+		}
 	}
 }
 

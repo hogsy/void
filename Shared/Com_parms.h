@@ -28,7 +28,12 @@ public:
 	int NumTokens(char delim =' ') const;
 
 	//Return token number x as a string Token 0 is the first one
-	const char * StringTok(int num, char delim=' ') const;
+	char * StringTok(int num, char * outString, int stringlen,  char delim=' ') const;
+
+	//Get pointer to string. 
+	//This is unsafe because string contents might change is another command
+	//is executed
+	const char * UnsafeStringTok(int num, char delim=' ') const;
 
 	//Return token number x as an integer Token 0 is the first one
 	int IntTok(int num, char delim =' ') const;
@@ -42,6 +47,7 @@ public:
 private:
 	char * string;
 	int	 length;
+	
 	static char szParmBuffer[1024];
 };
 

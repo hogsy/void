@@ -143,6 +143,8 @@ bool CNetServer::Init()
 
 	//Save Local Address
 	CNetAddr::SetLocalServerAddr(m_szLocalAddr);
+
+	//Bind Socket
 	if(!m_pSock->Bind(netaddr))
 	{
 		ComPrintf("CNetServer::Init:Unable to bind socket\n");

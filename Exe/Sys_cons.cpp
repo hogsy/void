@@ -246,7 +246,8 @@ Try to execute a string in the console
 void CConsole::ExecString(const char *string)
 {
 	m_parms = string;
-	const char * szfirstArg = m_parms.StringTok(0);
+	//const char * szfirstArg = m_parms.StringTok(0);
+	const char * szfirstArg = m_parms.UnsafeStringTok(0);
 
 	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
 	{
@@ -266,7 +267,8 @@ void CConsole::ExecString(const char *string)
 				int numtokens = 0;
 				if(numtokens = m_parms.NumTokens() > 1)
 				{
-					const char * argVal = m_parms.StringTok(1);
+					//char argVal[128];
+					const char * argVal = m_parms.UnsafeStringTok(1);
 					
 					if((*it)->type != CVarBase::CVAR_STRING)
 						(*it)->Set(argVal);
@@ -278,7 +280,7 @@ void CConsole::ExecString(const char *string)
 				
 						for(int i=2,len=0;i<numtokens;i++)
 						{
-							arg = m_parms.StringTok(i);
+							arg = m_parms.UnsafeStringTok(i);
 							len += strlen(arg+1);
 							if(len >= 80)
 								break;
@@ -420,7 +422,7 @@ void CConsole::CVarlist(const CParms &parms)
 	
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.StringTok(1);
+		const char * arg = parms.UnsafeStringTok(1);
 		int len= strlen(arg);
 		for(it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 		{
@@ -450,7 +452,7 @@ void CConsole::CCmdList(const CParms &parms)
 
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.StringTok(1);
+		const char * arg = parms.UnsafeStringTok(1);
 		int len= strlen(arg);
 		for(it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
 		{

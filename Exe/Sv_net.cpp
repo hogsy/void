@@ -52,8 +52,8 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
 				//dont send to source
-//				if(&m_clChan[i] == &client)
-//					continue;
+				if(i == clNum)
+					continue;
 				if(m_client[i].inUse)
 				{
 					m_net.BeginWrite(i,SV_TALK, len);

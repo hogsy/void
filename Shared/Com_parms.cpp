@@ -76,7 +76,54 @@ Return token number x as a string
 Token 0 is the first one
 ======================================
 */
-const char * CParms::StringTok(int num, char delim) const
+char * CParms::StringTok(int num, char * outString, int stringlen,  char delim) const
+{
+	const char * s = string;
+	char * p = outString;
+
+	bool found = false;
+	bool intoken = false;
+	int tok = 0;
+
+	//Find the appropriate token
+	while(*s && *s != '\0')
+	{
+		if(*s != delim)
+		{
+			if(!intoken)
+			{
+				if(tok == num)
+				{
+					found = true;
+					break;
+				}
+				tok++;
+				intoken = true;
+			}
+		}
+		else
+			intoken = false;
+		s++;
+	}
+
+	if(found)
+	{
+		//copy it to the buffer
+		int toklen = 0;
+		while(*s && *s!='\0' && *s != delim && toklen+1 < stringlen)
+		{
+			*p++ = *s;
+			toklen ++;
+			s++;
+		}
+	}
+
+	*p = 0;
+	return outString;
+}
+
+
+const char * CParms::UnsafeStringTok(int num, char delim) const
 {
 	const char * s = string;
 	bool found = false;
@@ -127,7 +174,7 @@ Token 0 is the first one
 */
 int CParms::IntTok(int num, char delim) const
 {
-	const char * s = StringTok(num,delim);
+	const char * s = UnsafeStringTok(num,delim);
 	if(!s)
 		return INVALID_VALUE;
 	return ::atoi(s);
@@ -141,7 +188,7 @@ Token 0 is the first one
 */
 float CParms::FloatTok(int num, char delim) const
 {
-	const char * s = StringTok(num,delim);
+	const char * s = UnsafeStringTok(num,delim);
 	if(!s)
 		return INVALID_VALUE;
 	return ::atof(s);

@@ -368,17 +368,7 @@ void CNetClient::ConnectTo(const char * ipaddr)
 			PrintSockError(WSAGetLastError(),"CLNet::Init: Couldnt create socket");
 			return;
 		}
-		//Bind to local addr
-/*		char localAddr[32];
-		sprintf(localAddr,"127.0.0.1:%d",CL_DEFAULT_PORT);
-
-		CNetAddr naddr(localAddr);
-		if(!m_pSock->Bind(naddr))
-		{
-			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt bind socked\n");
-			return;
-		}
-*/
+		//Bind to local addr ?
 	}
 
 	//Send a connection request
@@ -390,10 +380,9 @@ void CNetClient::ConnectTo(const char * ipaddr)
 	}
 	strcpy(m_szServerAddr, netAddr.ToString());
 
-	CNetAddr localAddr("localhost");
-	if(localAddr == netAddr)
+	if(strcmp(m_szServerAddr, CNetAddr::GetLocalServerAddr()) == 0)
 	{
-m_pClient->Print("CL: Connecting to local Server\n");
+		m_pClient->Print("CL: Connecting to local Server\n");
 		m_bLocalServer = true;
 	}
 

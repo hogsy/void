@@ -21,9 +21,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
-					m_chanWriter(m_net)
+					 m_chanWriter(m_net)
 {
-
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
@@ -315,8 +314,13 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case CMD_MAP:
-		LoadWorld(parms.StringTok(1));
-		break;
+		{
+			char mapname[64];
+			parms.StringTok(1,(char*)mapname,64);
+			LoadWorld(mapname);
+			//LoadWorld(parms.StringTok(1));
+			break;
+		}
 	case CMD_KILLSERVER:
 		Shutdown();
 		break;

@@ -238,7 +238,7 @@ void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case CMD_PLAY:
-		SPlay(parms.StringTok(1));
+//		SPlay(parms.StringTok(1));
 		break;
 	case CMD_STOP:
 		SStop(parms.IntTok(1));

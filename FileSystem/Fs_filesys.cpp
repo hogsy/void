@@ -573,16 +573,18 @@ void CFileSystem::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_DIRPATH:
 		{
 			int numArgs = parms.NumTokens();
-			char arg1[80], arg2[80];
+			char arg1[80];
+
 			if(numArgs == 2)
 			{
-				strcpy(arg1,parms.StringTok(1));
+				parms.StringTok(1,arg1,80);
 				ListFiles(arg1,0);
 			}
 			else if(numArgs == 3)
 			{
-				strcpy(arg1,parms.StringTok(1));
-				strcpy(arg2,parms.StringTok(2));
+				char arg2[80];
+				parms.StringTok(1,arg1,80);
+				parms.StringTok(2,arg2,80);
 				ListFiles(arg1,arg2);
 			}
 			else

@@ -531,7 +531,7 @@ void CMusCDAudio::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case CD_PLAY:
-		Play(parms.StringTok(1));
+//		Play(parms.StringTok(1));
 		break;
 	case CD_PAUSE:
 		SetPause(true);

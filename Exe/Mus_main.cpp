@@ -90,7 +90,7 @@ void CMusic::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case MUS_PLAY:
-		Play(parms.StringTok(1));
+//		Play(parms.StringTok(1));
 		break;
 	case MUS_STOP:
 		Stop();

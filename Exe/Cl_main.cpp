@@ -260,7 +260,6 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				strcpy(name,buffer.ReadString());
 				System::GetSoundManager()->Play(m_hsTalk);
 				ComPrintf("%s: %s\n",name,buffer.ReadString());
-//				m_bCanSend = true;
 				break;
 			}
 		case SV_DISCONNECT:
@@ -344,8 +343,6 @@ void CClient::WriteUserInfo(CBuffer &buffer)
 	buffer.Write(m_clrate.ival);
 }
 
-//======================================================================================
-//======================================================================================
 
 /*
 ======================================
@@ -359,17 +356,6 @@ void CClient::Print(const char * msg, ...)
 	va_start(args, msg);
 	vsprintf(textBuffer, msg, args);
 	va_end(args);
-
-/*	switch(type)
-	{
-	case CLMSG_SERVER:
-		System::GetSoundManager()->Play(m_hsMessage);
-		break;
-	case CLMSG_TALK:
-		System::GetSoundManager()->Play(m_hsTalk);
-		break;
-	}
-*/
 	System::GetConsole()->ComPrint(textBuffer);
 }
 
@@ -395,8 +381,6 @@ void CClient::Talk(const char * string)
 	System::GetSoundManager()->Play(m_hsTalk);
 
 	//Send this reliably ?
-//	m_pNetCl->GetSendBuffer().Write(CL_TALK);
-//	m_pNetCl->GetSendBuffer().Write(msg);
 	m_pNetCl->GetReliableBuffer().Write(CL_TALK);
 	m_pNetCl->GetReliableBuffer().Write(msg);
 }
@@ -409,8 +393,11 @@ the server to update it
 */
 bool CClient::ValidateName(const CParms &parms)
 {
-	const char * name = parms.StringTok(1);
-	if(!name)
+//	const char * name = parms.StringTok(1);
+	char name[24];
+	parms.StringTok(1,name,24);
+
+	if(!name[0])
 	{
 		ComPrintf("Name = \"%s\"\n", m_clname.string);
 		return false;
@@ -418,11 +405,6 @@ bool CClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-/*
-	m_pNetCl->GetSendBuffer().Write(CL_UPDATEINFO);
-	m_pNetCl->GetSendBuffer().Write('n');
-	m_pNetCl->GetSendBuffer().Write(name);
-*/
 	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
 	m_pNetCl->GetReliableBuffer().Write('n');
 	m_pNetCl->GetReliableBuffer().Write(name);
@@ -454,7 +436,6 @@ bool CClient::ValidateRate(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-//	CBuffer &buffer = m_pNetCl->GetSendBuffer();
 	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
 	buffer.Write(CL_UPDATEINFO);
 	buffer.Write('r');
@@ -517,8 +498,12 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		CamPath();
 		break;
 	case CMD_CONNECT:
-		m_pNetCl->ConnectTo(parms.StringTok(1));
-		break;
+		{
+			char addr[24];
+			parms.StringTok(1,addr,24);
+			m_pNetCl->ConnectTo(addr); //parms.StringTok(1));
+			break;
+		}
 	case CMD_DISCONNECT:
 		m_pNetCl->Disconnect();
 		break;

@@ -118,15 +118,18 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 	}
 
 	byte keynum= 0;
-	const char * arg = parms.StringTok(1);
+
+//	const char * arg = parms.StringTok(1);
+	char keyName[32];
+	parms.StringTok(1,keyName,32);
 
 	//Check the name of the key being bound to
-	if(strlen(arg) > 1)
+	if(strlen(keyName) > 1)
 	{
 		//Find Keyname in table if its bigger than a char
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,arg))
+			if(!stricmp(keytable[x].key,keyName))
 			{
 				keynum = keytable[x].val;
 				break;
@@ -136,38 +139,42 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 	else
 	{
 		//make sure that the keynum is valid
-		if((arg[0] <= 0) || (arg[0] > 255))
+		if((keyName[0] <= 0) || (keyName[0] > 255))
 		{
-			ComPrintf("Bind : Error %s(%d) is not a valid key.\n",arg,keynum);
+			ComPrintf("Bind : Error %s(%d) is not a valid key.\n",keyName,keynum);
 			return;
 		}
-		keynum = arg[0];
+		keynum = keyName[0];
 	}
 		
 	//Only two args, just show binding for the key and return
 	if(argc == 2)
 	{
-		ComPrintf("\"%s\" = \"%s\"\n", arg, m_cmdKeys[keynum].szCommand);
+		ComPrintf("\"%s\" = \"%s\"\n", keyName, m_cmdKeys[keynum].szCommand);
 		return;
 	}
 
-	arg = parms.StringTok(2);
-	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(arg);
+	char cmdName[32];
+	parms.StringTok(2, cmdName, 32);
+	//arg = parms.StringTok(2);
+
+	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(cmdName);
 	if(m_cmdKeys[keynum].pCmd == 0)
 	{
-		ComPrintf("Bind : %s is not a valid command\n",arg);
+		ComPrintf("Bind : %s is not a valid command\n",cmdName);
 		return;
 	}
 
-	strcpy(m_cmdKeys[keynum].szCommand, arg);
+	strcpy(m_cmdKeys[keynum].szCommand, cmdName);
 
 	//copy token 3 and up to the command
-	for(int i=3; i< argc; i++)
+/*	for(int i=3; i< argc; i++)
 	{
 		strcat(m_cmdKeys[keynum].szCommand," ");
 		strcat(m_cmdKeys[keynum].szCommand, parms.StringTok(i));
 	}
-	ComPrintf("\"%s\"(%d) = \"%s\"\n",parms.StringTok(1),keynum, m_cmdKeys[keynum].szCommand);
+*/
+	ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum].szCommand);
 }
 
 
@@ -220,14 +227,16 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 	}
 
 	byte keynum= 0;
-	const char * arg = parms.StringTok(1);
+//	const char * arg = parms.StringTok(1);
+	char keyName[32];
+	parms.StringTok(1,keyName,32);
 
 	//not a special KEY
-	if(strlen(arg) > 1)
+	if(strlen(keyName) > 1)
 	{
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,arg))
+			if(!stricmp(keytable[x].key,keyName))
 			{
 				keynum = keytable[x].val;
 				break;
@@ -236,11 +245,11 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 	}
 	else
 	{
-		keynum = arg[0];
+		keynum = keyName[0];
 		//make sure that the key is valid
 		if((keynum == 0) || (keynum > 255))
 		{
-			ComPrintf("Unbind : Error %s(%d) is not a valid key\n",arg,keynum);
+			ComPrintf("Unbind : Error %s(%d) is not a valid key\n",keyName,keynum);
 			return;
 		}
 	}
@@ -250,7 +259,7 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 		m_cmdKeys[keynum].pCmd = 0;
 		m_cmdKeys[keynum].szCommand[0] = 0;
 	}
-	ComPrintf("\"%s\" = \"\"\n",arg);
+	ComPrintf("\"%s\" = \"\"\n",keyName);
 }
 
 /*

@@ -527,7 +527,7 @@ void CVoid::HandleCommand(HCMD cmdId, const CParms &parms)
 		}
 	case CMD_WRITECONFIG:
 		{
-			WriteConfig(parms.StringTok(1));
+			WriteConfig(parms.UnsafeStringTok(1));
 			break;
 		}
 	}
