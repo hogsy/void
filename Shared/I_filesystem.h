@@ -46,7 +46,7 @@ public:
 	void ListFiles(const char *path, const char *ext);
 
 	//Handle Console Commands
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 	//Finds the full file name and returns it
 	bool FindFileName(char * buf, int buflen, const char * path);

@@ -1,13 +1,14 @@
 #ifndef INC_CONSOLE_INTERFACE
 #define INC_CONSOLE_INTERFACE
 
+#include "Com_parms.h"
 
 //======================================================================================
 //======================================================================================
 
 class CVarBase;
 struct I_CVarHandler
-{	virtual bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)=0;
+{	virtual bool HandleCVar(const CVarBase * cvar, const CParms &parms)=0;
 };
 
 //======================================================================================
@@ -19,8 +20,7 @@ public:
 
 	enum
 	{
-		CVAR_MAXSTRINGLEN =	512,
-		CVAR_MAXARGS	  =	5
+		CVAR_MAXSTRINGLEN =	512
 	};
 
 	enum CVarFlags
@@ -77,7 +77,7 @@ protected:
 typedef int HCMD;
 
 struct I_CmdHandler
-{	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
+{	virtual void HandleCommand(HCMD cmdId, const CParms &parms)=0;
 };
 
 

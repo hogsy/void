@@ -21,8 +21,6 @@ void ShowMessageBox(const char * str, const char *title=0);
 void HRPrint(HRESULT hr, const char* str);
 void HRShowMessageBox(HRESULT hr, const char* str);
 
-//FIXME ! need to write a proper CParms class to handle all this
-int	 BufParse(const char *string, char ** szargv);
 }
 
 #endif
