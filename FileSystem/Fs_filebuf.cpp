@@ -169,12 +169,13 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 	char *ptr = buff;
 	while (1)
 	{
-		tmp = GetChar();
 		if ((tmp <= ' ') || (tmp == EOF) || (tmp == -1))
 			break;
 
 		(*ptr) = tmp;
 		ptr++;
+
+		tmp = GetChar();
 	}
 
 	// null terminate
