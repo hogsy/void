@@ -10,6 +10,10 @@
 #include "Com_registry.h"
 #include "I_fileSystem.h"
 
+
+// FIXME - where should this really be??
+#include "Com_fastmath.h"	// needed for build_sqrt_table()
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -71,6 +75,11 @@ BOOL CDevvoidApp::InitInstance()
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
+
+
+	// must be very first thing
+	build_sqrt_table();
+
 
 
 	//=========================================

@@ -162,6 +162,10 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_fastmath.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_registry.cpp
 # End Source File
 # Begin Source File
