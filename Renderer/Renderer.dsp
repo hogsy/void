@@ -294,7 +294,7 @@ SOURCE=..\Shared\Com_vector.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\world.h
+SOURCE=..\Shared\Com_world.h
 # End Source File
 # End Group
 # Begin Group "Interface"

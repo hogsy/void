@@ -6,12 +6,10 @@
 #include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
-#include "World.h"
+#include "Com_World.h"
 
 //======================================================================================
 //======================================================================================
-world_t	*g_pWorld;
-int PointContents(vector_t &v);
 
 /*
 ======================================
@@ -49,7 +47,7 @@ CClient::CClient(I_Renderer * prenderer,
 	
 	m_pCamera = 0;
 	
-	g_pWorld = 0;
+	m_pWorld = 0;
 
 	m_hsTalk = 0;
 	m_hsMessage = 0;
@@ -111,7 +109,7 @@ CClient::~CClient()
 	m_pSound = 0;
 	m_pMusic = 0;
 
-	g_pWorld = 0;
+	m_pWorld = 0;
 
 	delete m_pNetCl;
 	delete m_pCmdHandler;
@@ -130,15 +128,15 @@ bool CClient::LoadWorld(const char *worldname)
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
-	g_pWorld = world_create(mappath);
-	if(!g_pWorld)
+	m_pWorld = CWorld::CreateWorld(mappath);
+	if(!m_pWorld)
 	{
 		ComPrintf("CClient::LoadWorld: World not found\n");
 		return false;
 	}
 
 	// load the textures
-	if(!m_pRender->LoadWorld(g_pWorld,1))
+	if(!m_pRender->LoadWorld(m_pWorld,1))
 	{
 		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
 		return false;
@@ -232,9 +230,8 @@ ComPrintf("CL :UNLOADED MODELS\n");
 		}
 
 
-	
-	world_destroy(g_pWorld);
-	g_pWorld = 0;
+	CWorld::DestroyWorld(m_pWorld);
+	m_pWorld = 0;
 
 	m_pSound->UnregisterAll();
 	System::SetGameState(INCONSOLE);
@@ -287,7 +284,7 @@ void CClient::RunFrame()
 			ShowNetStats();
 
 		// FIXME - put this in game dll
-		int contents = PointContents(m_pClient->origin);
+		int contents = m_pWorld->PointContents(m_pClient->origin);
 		if(contents & CONTENTS_SOLID)
 			VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
 		else if(contents & CONTENTS_WATER)

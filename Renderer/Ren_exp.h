@@ -30,7 +30,7 @@ public:
 	void ChangeDispSettings(unsigned int width, unsigned int height, 
 							unsigned int bpp, bool fullscreen);
 
-	bool LoadWorld(world_t *level, int reload);
+	bool LoadWorld(CWorld *level, int reload);
 	bool UnloadWorld();
 
 	bool Restart(void);

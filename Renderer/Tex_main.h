@@ -20,7 +20,7 @@ public:
 	bool Init();		//Loads base game textures
 	bool Shutdown();	//Unload everything
 	
-	bool LoadWorldTextures(world_t *map);
+	bool LoadWorldTextures(CWorld *map);
 	bool UnloadWorldTextures();
 
 private:

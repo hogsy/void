@@ -1,5 +1,5 @@
 #include "Sv_main.h"
-#include "World.h"
+#include "Com_world.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
 

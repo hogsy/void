@@ -1,7 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "World.h"
+//#include "World.h"
+#include "Com_world.h"
 
 #define MAX_PORTAL_DEPTH 100
 

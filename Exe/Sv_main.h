@@ -64,7 +64,7 @@ struct NetSignOnBufs
 
 
 //Predeclarations
-struct world_t;
+class CWorld;
 
 /*
 ======================================
@@ -149,7 +149,7 @@ private:
 	
 	//=================================================
 	//World and Entities
-	world_t	*	m_pWorld;
+	CWorld	*	m_pWorld;
 	bool		m_active;
 	
 	//=================================================

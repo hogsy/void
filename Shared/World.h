@@ -1,16 +1,90 @@
 #ifndef VOID_WORLD_H
 #define VOID_WORLD_H
 
-//#include "3dmath.h"
+#include "Com_defs.h"
 #include "Com_vector.h"
 #include "Bsp_file.h"
 
-typedef struct
+class CFileStream;
+
+class CWorld
 {
-	float s, t;
-} tvert_t;
+public:
+
+	CWorld();
+	~CWorld();
+
+	void PrintInfo() const;
+	void WriteToFile(char * szFilename);
+
+	//Util Key Access funcs
+	int	  GetKeyInt(int ent, const char * keyName) const;
+	void  GetKeyVector(int ent, const char * keyName, vector_t &vec) const;
+	float GetKeyFloat(int ent, const char * keyName) const;
+	const char* GetKeyString(int ent, const char * keyName) const;
+
+	//the world should be loaded and destroyed using these
+	static CWorld * CreateWorld(const char * szFileName);
+	static void DestroyWorld(CWorld * pworld);
+
+	vector_t		*verts;
+	int				*iverts;
+	plane_t			*planes;
+	bspf_entity_t	*entities;
+	bspf_node_t		*nodes;
+	bspf_leaf_t		*leafs;
+	bspf_brush_t	*brushes;
+	bspf_side_t		*sides;
+	bspf_edge_t		*edges;
+	bspf_texdef_t	*texdefs;
+	bspf_texdef_t	*lightdefs;
+	texname_t		*textures;
+	key_t			*keys;
+	unsigned char	*leafvis;
+	unsigned char	*lightdata;
+
+	int	nverts;
+	int niverts;
+	int nplanes;
+	int nentities;
+	int nnodes;
+	int	nleafs;
+	int nbrushes;
+	int nsides;
+	int nedges;
+	int nlightdefs;
+	int ntexdefs;
+	int ntextures;
+	int nkeys;
+	int leafvis_size;	// size of vis info for one leaf
+	int light_size;		// size of all light data
+
+private:
+
+	static int LoadLump(FILE * fp, int l, void **data);
+	static int LoadLump(CFileStream &file, int l, void **data);
+	
+	//Cached world data to prevent 
+	//the world from being loaded twice.
+	static bspf_header_t m_worldHeader;
+	static CWorld * m_pWorld;
+	static char     m_szFileName[COM_MAXPATH];
+	static int  	m_refCount;
+};
+
+#endif
 
 
+
+
+
+
+
+
+
+
+
+/*
 struct world_t
 {
 	vector_t		*verts;
@@ -46,19 +120,18 @@ struct world_t
 	int light_size;		// size of all light data
 };
 
-
 void world_destroy(world_t *world);
 world_t* world_create(char *filename);
 void world_write(world_t *world, char *filename);
 void world_print(world_t *world);
+
 
 char* key_get_value(world_t *w, int ent, char *name);
 int key_get_int(world_t *w, int ent, char *name);
 float key_get_float(world_t *w, int ent, char *name);
 void key_get_vector(world_t *w, int ent, char *name, vector_t &v);
 
-#endif
-
+*/
 
 
 
@@ -70,6 +143,11 @@ void key_get_vector(world_t *w, int ent, char *name, vector_t &v);
 
 #define MAX_ENTITY_NAME_LENGTH	32
 #define MAX_TEXTURE_NAME_LENGTH	32
+
+typedef struct
+{
+	float s, t;
+} tvert_t;
 
 
 // world vertices - includes an index

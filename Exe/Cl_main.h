@@ -10,6 +10,7 @@
 class  CSoundManager;
 class  CMusic;
 class  CCamera;
+class  CWorld;
 struct I_Renderer;
 
 /*
@@ -112,6 +113,9 @@ private:
 
 	//==================================================
 	//Client side stuff
+
+	CWorld	 *  m_pWorld;
+
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
 

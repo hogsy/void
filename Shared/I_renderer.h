@@ -137,7 +137,7 @@ Renderer Interface
 ==========================================
 */
 struct I_ClientRenderer;
-struct world_t;
+class  CWorld;
 
 struct I_Renderer
 {
@@ -159,7 +159,7 @@ struct I_Renderer
 									unsigned int bpp, bool fullscreen)=0;
 	
 	//World
-	virtual bool LoadWorld(world_t *level, int reload) =0;
+	virtual bool LoadWorld(CWorld *level, int reload) =0;
 	virtual bool UnloadWorld() = 0;
 };
 

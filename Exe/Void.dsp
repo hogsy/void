@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /WX /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_VOID_EXE_" /YX /FD /c
+# ADD CPP /nologo /W3 /WX /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_VOID_EXE" /YX /FD /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -236,11 +236,11 @@ SOURCE=..\Shared\Com_vector.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\World.cpp
+SOURCE=..\Shared\Com_world.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\world.h
+SOURCE=..\Shared\Com_world.h
 # End Source File
 # End Group
 # Begin Group "Client"
@@ -253,14 +253,6 @@ SOURCE=.\Cl_cmds.cpp
 # Begin Source File
 
 SOURCE=.\Cl_cmds.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Cl_collision.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Cl_collision.h
 # End Source File
 # Begin Source File
 

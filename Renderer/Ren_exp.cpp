@@ -17,7 +17,7 @@
 //======================================================================================
 //Global Vars
 RenderInfo_t  g_rInfo;			//Shared Rendering Info
-world_t		* world=0;			//The World
+CWorld		* world=0;			//The World
 CRConsole   * g_prCons=0;
 CClientRenderer *g_pClient=0;
 //======================================================================================
@@ -264,7 +264,7 @@ void CRenExp::Resize()
 Load a World
 ==========================================
 */
-bool CRenExp::LoadWorld(world_t *level, int reload)
+bool CRenExp::LoadWorld(CWorld *level, int reload)
 {
 	g_pRast->SetFocus();
 

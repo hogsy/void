@@ -1,8 +1,8 @@
 #include "Sv_main.h"
-#include "World.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
 #include "Com_util.h"
+#include "Com_world.h"
 
 enum 
 {
@@ -160,7 +160,7 @@ void CServer::Shutdown()
 
 	//destroy world data
 	if(m_pWorld)
-		world_destroy(m_pWorld);
+		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
 	
 	ComPrintf("CServer::Shutdown OK\n");
@@ -181,7 +181,7 @@ void CServer::Restart()
 
 	if(m_pWorld)
 	{
-		world_destroy(m_pWorld);
+		CWorld::DestroyWorld(m_pWorld);
 		m_pWorld = 0;
 		m_svState.worldname[0] = 0;
 	}
@@ -545,7 +545,7 @@ void CServer::LoadWorld(const char * mapname)
 	}
 
 	//Load World
-	m_pWorld = world_create(mappath);
+	m_pWorld = CWorld::CreateWorld(mappath);
 	if(!m_pWorld)
 	{
 		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);

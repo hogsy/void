@@ -12,9 +12,7 @@
 
 #include "Com_cvar.h"
 #include "Com_vector.h"
-
-#include "World.h"
-
+#include "Com_world.h"
 
 //Renderer Info
 extern RenderInfo_t g_rInfo;	
@@ -30,7 +28,7 @@ extern I_Rasterizer  * g_pRast;
 
 
 //The World
-extern world_t	*world;
+extern CWorld	*world;
 
 float & GetCurTime();
 float & GetFrameTime();

@@ -16,7 +16,7 @@ public:
 	~CShaderManager();
 
 
-	void LoadShaders(world_t *map);	// loads textures needed for world shaders
+	void LoadShaders(CWorld *map);	// loads textures needed for world shaders
 	hShader LoadShader(char *name);	// loads a specific shader, creates the default if it isn't found
 
 

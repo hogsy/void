@@ -1,21 +1,19 @@
 #include "Cl_main.h"
-#include "Cl_collision.h"
-
+#include "Com_world.h"
 
 #define MAX_CLIP_PLANES 5
 #define STOP_EPSILON 0.3f
 
 const float CL_ROTATION_SENS = 0.05f;
 
-extern world_t *g_pWorld;
-
 
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
 {
+/*
 	t /= 2.0f;
 
 	int eq = (int)t;
-	if (eq >= key_get_int(g_pWorld, ent, "num_eqs"))
+	if (eq >=  m_pWorld->GetKeyInt(ent,"num_eqs"))
 	{
 		ent = -1;	// done with the path
 		VectorSet(dir, 0, 0, 0);
@@ -37,7 +35,7 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 	for (int i=0; i<4; i++)
 	{
 		name[4] = i + '0';
-		key_get_vector(g_pWorld, ent, name, comp);
+		m_pWorld->GetKeyVector(ent, name, comp);
 
 
 		p.x += powers[i] * comp.x;
@@ -47,31 +45,9 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 
 	VectorSub(p, (*origin), (*dir));
 	time = VectorNormalize(dir);
+*/
 }
 
-int PointContents(vector_t &v)
-{
-	int n=0;
-	float d;
-
-	do
-	{
-		// test to this nodes plane
-		d = dot(g_pWorld->planes[g_pWorld->nodes[n].plane].norm, v) - g_pWorld->planes[g_pWorld->nodes[n].plane].d;
-
-		if (d>=0)
-			n = g_pWorld->nodes[n].children[0];
-		else
-			n = g_pWorld->nodes[n].children[1];
-
-		// if we found a leaf, it's what we want
-		if (n<=0)
-			return g_pWorld->leafs[-n].contents;
-
-	} while (1);
-
-	return 0;
-}
 
 // FIXME - this should be an entitiy move, not a client move
 void CClient::Move(vector_t *dir, float time)
@@ -102,7 +78,9 @@ void CClient::Move(vector_t *dir, float time)
 	// regular collision
 	vector_t	hitplanes[MAX_CLIP_PLANES];	// all the normals of the planes we've hit
 	int			bumps, hits=0;				// number of planes we've hit, and number we're touching
-	trace_t		tr;							// the current trace
+//	trace_t		tr;							// the current trace
+	TraceInfo	tr;
+
 	vector_t	end;						// where we want to end up
 	vector_t	primal_dir;			// dir we originally wanted
 	float d;
@@ -113,8 +91,9 @@ void CClient::Move(vector_t *dir, float time)
 	for (bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
 		VectorAdd(m_pClient->origin, (*dir), end);
-		tr = trace(m_pClient->origin, end, &m_pClient->mins, &m_pClient->maxs);
+		//tr = trace(m_pClient->origin, end, &m_pClient->mins, &m_pClient->maxs);
 
+		m_pWorld->Trace(tr,m_pClient->origin, end, m_pClient->mins, m_pClient->maxs);
 
 		if (tr.fraction > 0)
 		{
@@ -330,18 +309,47 @@ follow a camera path
 void CClient::CamPath()
 {
 	// find the head path node
-	for (int ent=0; ent<g_pWorld->nentities; ent++)
+	for (int ent=0; ent<m_pWorld->nentities; ent++)
 	{
-		if (strcmp(key_get_value(g_pWorld, ent, "classname"), "misc_camera_path_head") == 0)
+		if (strcmp(m_pWorld->GetKeyString(ent, "classname"), "misc_camera_path_head") == 0)
 		{
 			m_campath = ent;
 			m_camtime = System::g_fcurTime;
 
 			vector_t origin;
-			key_get_vector(g_pWorld, ent, "origin", origin);
+			m_pWorld->GetKeyVector(ent, "origin", origin);
 			VectorCopy(origin, m_pClient->origin); // move to first point of path
 			return;
 		}
 	}
 }
 
+
+
+
+
+/*
+int PointContents(vector_t &v)
+{
+	int n=0;
+	float d;
+
+	do
+	{
+		// test to this nodes plane
+		d = dot(m_pWorld->planes[m_pWorld->nodes[n].plane].norm, v) - m_pWorld->planes[m_pWorld->nodes[n].plane].d;
+
+		if (d>=0)
+			n = m_pWorld->nodes[n].children[0];
+		else
+			n = m_pWorld->nodes[n].children[1];
+
+		// if we found a leaf, it's what we want
+		if (n<=0)
+			return m_pWorld->leafs[-n].contents;
+
+	} while (1);
+
+	return 0;
+}
+*/
