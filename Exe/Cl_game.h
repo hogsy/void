@@ -9,6 +9,11 @@ class  CSoundManager;
 class  CMusic;
 class CClient;
 struct I_HudRenderer;
+struct I_ClientRenderer;
+
+
+//This will need Resource loading interfaces
+//And simple sound/music interfaces from the main client
 
 
 /*
@@ -17,15 +22,39 @@ Maintains clients game state
 Nearly all cleint side systems act on this data
 ================================================
 */
-class CGameClient : public I_ConHandler
+class CGameClient : public I_ConHandler,
+				    public I_NetClientHandler
 {
 public:
 	CGameClient(CClient	   & rClient,
+				 I_ClientRenderer	   * pRenderer,
 				 I_HudRenderer * pHud,
 				 CSoundManager * pSound,
 				 CMusic		   * pMusic);
 
 	~CGameClient();
+
+
+	//Client Interface
+	//Parse and handle a game message
+	void HandleGameMsg(CBuffer &buffer); 
+	
+	//Parse and handle spawm parms
+	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
+
+	//Handle disconnect from server
+	void HandleDisconnect(bool listenserver);
+
+	//Put Client in game. The clNum is the clients num on the server
+	void BeginGame(int clNum, CBuffer &buffer);
+
+	//Write userInfo to the given buffer
+	void WriteUserInfo(CBuffer &buffer);
+
+	//Util Print
+	void Print(const char * msg, ...);
+
+
 
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
@@ -43,6 +72,9 @@ public:
 	void WriteCmdUpdate(CBuffer &buf);
 	void UpdateView();
 
+	int			m_hsTalk;		//handle to talk sound
+	int			m_hsMessage;	//handle to server message sound
+
 
 	//==================================================
 	//Movement
@@ -59,6 +91,7 @@ public:
 
 	//==================================================
 	//Client side stuff
+	I_ClientRenderer	  * m_pRenderer;
 	I_HudRenderer * m_pHud;
 	CSoundManager * m_pSound;
 	CMusic		  * m_pMusic;
@@ -68,7 +101,7 @@ public:
 
 
 	CWorld	 *  m_pWorld;
-	CClient	 &	m_rClient;
+	CClient	 &	m_refClient;
 
 //	float		m_fFrameTime;
 	bool		m_ingame;

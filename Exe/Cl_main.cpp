@@ -38,19 +38,21 @@ CClient::CClient(I_Renderer * prenderer,
 //	m_pCmdHandler = new CClientInput();
 
 	//Setup network listener
-	m_pNetCl= new CNetClient(this);
-	m_pClState = new CGameClient(*this, m_pHud, m_pSound, m_pMusic);
+	m_pClState = new CGameClient(*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
+	m_pNetCl= new CNetClient(m_pClState);
+	
 
 	
 	m_pWorld = 0;
 
-	m_hsTalk = 0;
-	m_hsMessage = 0;
+//	m_hsTalk = 0;
+//	m_hsMessage = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvClip);
 	System::GetConsole()->RegisterCVar(&m_cvNetStats);
 //	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
+	
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvModel,this);
@@ -129,6 +131,7 @@ bool CClient::LoadWorld(const char *worldname)
 	if(!m_pWorld)
 	{
 		ComPrintf("CClient::LoadWorld: World not found\n");
+		m_pNetCl->Disconnect(false);
 		return false;
 	}
 
@@ -136,14 +139,12 @@ bool CClient::LoadWorld(const char *worldname)
 	if(!m_pRender->LoadWorld(m_pWorld,1))
 	{
 		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
+		m_pNetCl->Disconnect(false);
 		return false;
 	}
 
 	m_pClState->LoadWorld(m_pWorld);
 
-	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
-	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
-	
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
 }
@@ -391,5 +392,23 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	}
 */
 	return false;
+}
+
+
+void CClient::SetState(int state)
+{
+	switch(state)
+	{
+	case CL_DISCONNECTED:
+		m_pNetCl->Disconnect(true);
+		break;
+	case CL_RECONNECTING:
+		m_pNetCl->Reconnect(true);
+		break;
+	case CL_INGAME:
+		System::SetGameState(::INGAME);
+		SetInputState(true);
+		break;
+	};
 }
 

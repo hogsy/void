@@ -10,12 +10,15 @@
 #include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
+#include "Net_defs.h"
+#include "Net_protocol.h"
+#include "I_clientRenderer.h"
 
 
-CGameClient::	CGameClient(CClient & rClient, I_HudRenderer * pHud,
+CGameClient::	CGameClient(CClient & rClient, I_ClientRenderer	   * pRenderer, I_HudRenderer * pHud,
 				 CSoundManager * pSound,
 				CMusic		   * pMusic) : 
-			m_rClient(rClient), m_pHud(pHud), m_pSound(pSound), m_pMusic(pMusic),
+			m_refClient(rClient), m_pRenderer(pRenderer), m_pHud(pHud), m_pSound(pSound), m_pMusic(pMusic),
 			m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 
@@ -27,6 +30,10 @@ CGameClient::	CGameClient(CClient & rClient, I_HudRenderer * pHud,
 
 	m_numEnts = 0;
 	
+
+	m_hsTalk = 0;
+	m_hsMessage = 0;
+
 	m_pCamera = 0;
 	
 	m_pWorld = 0;
@@ -63,6 +70,7 @@ CGameClient::~CGameClient()
 	m_pHud=0;
 	m_pSound=0;
 	m_pMusic=0;
+	m_pRenderer = 0;
 
 	delete m_pCmdHandler;
 
@@ -171,6 +179,9 @@ bool CGameClient::LoadWorld(CWorld * pWorld)
 	m_pWorld = pWorld;
 	EntMove::SetWorld(m_pWorld);
 
+	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
+	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
+
 	ComPrintf("CGameClient::Load World: OK\n");
 	return true;
 
@@ -194,12 +205,14 @@ void CGameClient::UnloadWorld()
 			m_clients[i].Reset();
 
 	for(i=0; i< GAME_MAXENTITIES; i++)
+	{
 		if(m_entities[i].inUse)
 		{
 			if(m_entities[i].sndIndex > -1)
 				m_pSound->RemoveStaticSource(&m_entities[i]);
 			m_entities[i].Reset();
 		}
+	}
 
 	m_pWorld = 0;
 
@@ -277,4 +290,370 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	}
 	return false;
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
+======================================
+Process game message
+======================================
+*/
+void CGameClient::HandleGameMsg(CBuffer &buffer)
+{
+	byte msgId = 0;
+	while(msgId != 255)
+	{
+		msgId= buffer.ReadByte();
+		//bad message
+		if(msgId == 255)
+		{	break;
+		}
+
+		switch(msgId)
+		{
+		case SV_TALK:
+			{
+				int clNum = buffer.ReadByte();
+				m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+				ComPrintf("%s: %s\n", m_clients[clNum].name ,buffer.ReadString());
+				break;
+			}
+		case SV_DISCONNECT:
+			{
+				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				ComPrintf("Server quit\n");
+				//m_pNetCl->Disconnect(true);
+				m_refClient.SetState(CClient::CL_DISCONNECTED);
+				break;
+			}
+		case SV_PRINT:	//just a print message
+			{
+				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				ComPrintf("%s\n",buffer.ReadString());
+				break;
+			}
+		case SV_RECONNECT:
+			{
+				//m_pNetCl->Reconnect(true);
+				m_refClient.SetState(CClient::CL_RECONNECTING);
+				break;
+			}
+		case SV_CLFULLINFO:
+			{
+				int num = buffer.ReadByte();
+				m_clients[num].Reset();
+				strcpy(m_clients[num].name, buffer.ReadString());
+
+				int mindex = buffer.ReadShort();
+				char model[64];
+				strcpy(model,buffer.ReadString());
+
+				int sindex = buffer.ReadShort();
+				char path[COM_MAXPATH];
+
+				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
+
+				m_clients[num].mdlCache = CACHE_GAME;
+				m_clients[num].skinNum = m_pRenderer->LoadImage(path, CACHE_GAME, sindex);
+				m_pRenderer->LoadImage(path, CACHE_GAME, sindex);
+				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
+
+				sprintf(path,"Players/%s/tris.md2", model);
+				m_clients[num].mdlIndex = m_pRenderer->LoadModel(path, CACHE_GAME,mindex);
+				m_clients[num].mdlCache = CACHE_GAME;
+
+				m_clients[num].inUse = true;
+
+				break;
+			}
+		case SV_CLINFOCHANGE:
+			{
+				int num = buffer.ReadByte();
+				char field = buffer.ReadChar();
+				if(field == 'n')
+				{
+					char * newName = buffer.ReadString();
+					m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+					ComPrintf("%s renamed to %s\n", m_clients[num].name, newName);
+					strcpy(m_clients[num].name, newName);
+				}
+				break;
+			}
+		case SV_CLDISCONNECT:
+			{
+				int  num = buffer.ReadByte();
+				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
+				m_clients[num].Reset();
+				break;
+			}
+		case SV_CLUPDATE:
+			{
+				int num = buffer.ReadShort();
+				if(m_clients[num].inUse)
+				{
+					m_clients[num].origin.x = buffer.ReadCoord();
+					m_clients[num].origin.y = buffer.ReadCoord();
+					m_clients[num].origin.z = buffer.ReadCoord();
+					m_clients[num].angles.x = buffer.ReadAngle();
+					m_clients[num].angles.y = buffer.ReadAngle();
+					m_clients[num].angles.z = buffer.ReadAngle();
+				}
+				break;
+			}
+		default:
+			{
+				buffer.Reset();
+				break;
+			}
+		}
+	}
+}
+
+/*
+======================================
+Process Spawn message
+======================================
+*/
+void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
+{
+	switch(msgId)
+	{
+	case SVC_GAMEINFO:
+		{
+
+			char * game = buffer.ReadString();
+ComPrintf("CL: Game: %s\n", game);
+			char * map = buffer.ReadString();
+ComPrintf("CL: Map: %s\n", map);
+
+			m_refClient.LoadWorld(map);
+
+//			if(!LoadWorld(map))
+//				m_pNetCl->Disconnect(false);
+
+			break;
+		}
+	case SVC_MODELLIST:
+		{
+			char modelName[32];
+			int  modelId=0;
+
+			int numModels = buffer.ReadShort();
+			ComPrintf("CL: ModelList :%d models\n", numModels);
+
+			for(int i=0; i<numModels;i++)
+			{
+				modelId = buffer.ReadShort();
+				buffer.ReadString(modelName,32);
+
+				if(modelId == -1 || !modelName[0])
+				{	continue;
+				}
+				m_pRenderer->LoadModel(modelName,CACHE_GAME,modelId);
+			}
+			break;
+		}
+	case SVC_SOUNDLIST:
+		{
+			char soundName[32];
+			int  soundId=0;
+
+			int numSounds = buffer.ReadShort();
+			ComPrintf("CL: SoundList :%d models\n", numSounds);
+
+			for(int i=0; i<numSounds;i++)
+			{
+				soundId = buffer.ReadShort();
+				buffer.ReadString(soundName,32);
+
+				if(soundId == -1 || !soundName[0])
+				{		continue;
+				}
+				m_pSound->RegisterSound(soundName,CACHE_GAME, soundId);
+			}
+//			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
+			break;
+		}
+	case SVC_IMAGELIST:
+		{
+			ComPrintf("CL: ImageList :%d\n", buffer.GetSize());
+			break;
+		}
+	case SVC_BASELINES:
+		{
+			char  type = 0;
+			m_numEnts = 0;
+			int id = buffer.ReadShort();
+
+			while(id != -1)
+			{
+				m_entities[id].Reset();
+
+				m_entities[id].moveType = (EMoveType)buffer.ReadByte();
+
+				m_entities[id].origin.x = buffer.ReadCoord();
+				m_entities[id].origin.y = buffer.ReadCoord();
+				m_entities[id].origin.z = buffer.ReadCoord();
+
+				m_entities[id].angles.x = buffer.ReadAngle();
+				m_entities[id].angles.y = buffer.ReadAngle();
+				m_entities[id].angles.z = buffer.ReadAngle();
+
+				type = buffer.ReadChar();
+				while(type != 0)
+				{
+					switch(type)
+					{
+					case 'm':
+						{
+							m_entities[id].mdlIndex = buffer.ReadShort();
+							m_entities[id].skinNum = buffer.ReadShort();
+							m_entities[id].frameNum = buffer.ReadShort();
+							m_entities[id].nextFrame = m_entities[id].frameNum;
+							m_entities[id].frac = 0;
+							m_entities[id].mdlCache = CACHE_GAME;
+							break;
+						}
+					case 's':
+						{
+							m_entities[id].sndCache = CACHE_GAME;
+							m_entities[id].sndIndex = buffer.ReadShort();
+							m_entities[id].volume = buffer.ReadShort();
+							m_entities[id].attenuation = buffer.ReadShort();
+							break;
+						}
+					}
+					type = buffer.ReadChar();
+				}
+					
+				if(buffer.BadRead())
+				{
+					ComPrintf("Error reading Ent %d\n", id);
+					m_entities[id].Reset();
+					break;
+				}
+				m_entities[id].inUse = true;
+				m_numEnts ++;
+				id = buffer.ReadShort();
+			}
+			ComPrintf("CL: Parsed %d entities\n", m_numEnts);
+			break;
+		}
+	case SVC_CLIENTINFO:
+		{
+			HandleGameMsg(buffer);
+			break;
+		}
+	}
+}
+
+
+
+
+
+
+
+void CGameClient::BeginGame(int clNum, CBuffer &buffer)
+{
+	//Initialize local Client
+	m_pGameClient = &m_clients[clNum];
+	m_pGameClient->Reset();
+//	strcpy(m_pGameClient->name, m_cvName.string);
+	m_pGameClient->inUse = true;
+
+	HandleGameMsg(buffer);
+	BeginGame();
+
+	m_refClient.SetState(CClient::CL_INGAME);
+
+//	m_refClient.BeginGame();
+
+//	System::SetGameState(INGAME);
+//	SetInputState(true);
+}
+
+
+
+
+
+/*
+======================================
+Write UserInfo to buffer
+======================================
+*/
+void CGameClient::WriteUserInfo(CBuffer &buffer)
+{
+	m_refClient.WriteUserInfo(buffer);
+/*
+	buffer.WriteString(m_cvName.string);
+	buffer.WriteString(m_cvModel.string);
+	buffer.WriteString(m_cvSkin.string);
+	buffer.WriteInt(m_cvRate.ival);
+*/
+}
+
+
+
+
+
+
+/*
+======================================
+Handle disconnect from server
+======================================
+*/
+void CGameClient::HandleDisconnect(bool listenserver)
+{
+	m_refClient.HandleDisconnect(listenserver);
+/*	
+
+//	ComPrintf("CL: KILLING LOCAL SERVER\n");
+
+	//Kill server if local
+	if(listenserver)
+	{
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
+		System::GetConsole()->ExecString("killserver");
+	}
+	UnloadWorld();
+*/
+}
+
+/*
+======================================
+Print a message 
+======================================
+*/
+void CGameClient::Print(const char * msg, ...)
+{
+	static char textBuffer[1024];
+	va_list args;
+	va_start(args, msg);
+	vsprintf(textBuffer, msg, args);
+	va_end(args);
+
+	System::GetConsole()->ComPrint(textBuffer);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -39,6 +39,7 @@ CWaveManager::~CWaveManager()
 		}
 	}
 	delete [] m_waveCache;
+	delete m_pFileReader;
 }
 
 /*

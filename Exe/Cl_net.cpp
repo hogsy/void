@@ -6,6 +6,8 @@
 #include "Net_protocol.h"
 #include "Cl_game.h"
 
+#if 0
+
 /*
 ======================================
 Process game message
@@ -269,23 +271,11 @@ void CClient::BeginGame(int clNum, CBuffer &buffer)
 	SetInputState(true);
 }
 
-/*
-======================================
-Handle disconnect from server
-======================================
-*/
-void CClient::HandleDisconnect(bool listenserver)
-{
-//	ComPrintf("CL: KILLING LOCAL SERVER\n");
+#endif
 
-	//Kill server if local
-	if(listenserver)
-	{
-//		ComPrintf("CL: KILLING LOCAL SERVER\n");
-		System::GetConsole()->ExecString("killserver");
-	}
-	UnloadWorld();
-}
+
+
+
 
 /*
 ======================================
@@ -301,20 +291,32 @@ void CClient::WriteUserInfo(CBuffer &buffer)
 }
 
 
+
+
+
+
 /*
 ======================================
-Print a message 
+Handle disconnect from server
 ======================================
 */
-void CClient::Print(const char * msg, ...)
+void CClient::HandleDisconnect(bool listenserver)
 {
-	static char textBuffer[1024];
-	va_list args;
-	va_start(args, msg);
-	vsprintf(textBuffer, msg, args);
-	va_end(args);
-	System::GetConsole()->ComPrint(textBuffer);
+
+	//	ComPrintf("CL: KILLING LOCAL SERVER\n");
+
+	//Kill server if local
+	if(listenserver)
+	{
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
+		System::GetConsole()->ExecString("killserver");
+	}
+	UnloadWorld();
 }
+
+
+
+
 
 /*
 ======================================
@@ -335,7 +337,7 @@ void CClient::Talk(const char * string)
 		return;
 
 	ComPrintf("%s: %s\n", m_cvName.string, msg);
-	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+//	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
 	m_pNetCl->GetReliableBuffer().WriteByte(CL_TALK);

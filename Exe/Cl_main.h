@@ -29,8 +29,8 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
-class CClient :	public I_ConHandler,
-				public I_NetClientHandler
+class CClient :	public I_ConHandler
+//				public I_NetClientHandler
 {
 public:
 	CClient(I_Renderer * prenderer,
@@ -39,9 +39,21 @@ public:
 
 	~CClient();
 
+	enum 
+	{
+		CL_DISCONNECTED,
+		CL_RECONNECTING,
+		CL_INGAME
+
+	};
+
 	void RunFrame();
 
 	void SetInputState(bool on);
+
+	void SetState(int state);
+
+/*
 
 	//Client Interface
 	//Parse and handle a game message
@@ -50,17 +62,22 @@ public:
 	//Parse and handle spawm parms
 	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
 
-	//Handle disconnect from server
-	void HandleDisconnect(bool listenserver);
-
 	//Put Client in game. The clNum is the clients num on the server
 	void BeginGame(int clNum, CBuffer &buffer);
+*/
+
+
+//	void BeginGame();
+
+	//Handle disconnect from server
+	void HandleDisconnect(bool listenserver);
 
 	//Write userInfo to the given buffer
 	void WriteUserInfo(CBuffer &buffer);
 
 	//Util Print
 	void Print(const char * msg, ...);
+
 	
 	//Console Interface
 	void HandleCommand(HCMD cmdId, const CParms &parms);
@@ -85,6 +102,7 @@ private:
 	CVar	m_cvRate;
 	CVar    m_cvModel;
 	CVar    m_cvSkin;
+
 //	CVar    m_cvKbSpeed;
 	CVar	m_cvClip;
 	CVar	m_cvNetStats;
@@ -111,8 +129,8 @@ private:
 
 	CWorld	 *  m_pWorld;
 
-	int			m_hsTalk;		//handle to talk sound
-	int			m_hsMessage;	//handle to server message sound
+//	int			m_hsTalk;		//handle to talk sound
+//	int			m_hsMessage;	//handle to server message sound
 
 	float		m_fFrameTime;
 
