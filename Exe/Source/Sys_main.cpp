@@ -1,5 +1,5 @@
 #define __VOIDALPHA	1
-#define __MUSIC	1
+#define INCLUDE_MUSIC	1
 
 #include "Sys_main.h"
 #include "Sys_time.h"
@@ -13,7 +13,6 @@
 #include "I_renderer.h"
 
 //========================================================================================
-
 #define MAINWINDOWCLASS "Void"
 #define MAINWINDOWTITLE	"Void"
 
@@ -30,16 +29,16 @@ RECT		g_hRect;
 
 //pointers to subsystems
 //========================================================================================
-//CMemManager * g_pMem=0;
+CFileSystem * g_pFileSystem = 0;
 CTime		* g_pTime =0;
-CInput		* g_pInput=0;		//Input 
 CConsole	* g_pCons =0;		//Console
+CInput		* g_pInput=0;		//Input 
 
-#ifdef __SOUND
+#ifdef INCLUDE_SOUND
 CSound		* g_pSound=0;		//Sound Subsystem
 #endif
 
-#ifdef __MUSIC
+#ifdef INCLUDE_MUSIC
 CMusic		* g_pMusic=0;		//Music Subsystem
 #endif
 
@@ -66,7 +65,6 @@ static void CFuncMap(int argc, char** argv);		//start local server with map + co
 static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
-
 
 /*
 ==========================================
@@ -117,7 +115,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 //				if(g_pInput)
 //					g_pInput->UnAcquire();
 			}
-			else //if (wParam == WA_ACTIVE)
+			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)  ////if (wParam == WA_ACTIVE)
 			{
 				g_pRinfo->active = true;
 
@@ -146,14 +144,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 	case WM_ENTERMENULOOP:
 		{
 			if(g_pInput)
-					g_pInput->UnAcquire();
+				g_pInput->UnAcquire();
 			break;
 		}
 	case WM_KILLFOCUS:
 		{
 			//Input loses Focus
 			if(g_pInput)
-					g_pInput->UnAcquire();
+				g_pInput->UnAcquire();
 			
 			//stop rendering
 			if (g_pRinfo)
@@ -168,9 +166,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			//Cleanup
 			g_pVoid->Shutdown();
 			delete g_pVoid;
-			
 			EndMemReporting();
-
 			exit(0);
 			break; 
 		}
@@ -302,14 +298,11 @@ CVoid::CVoid(HINSTANCE hInstance,
 	//Init Memory first of all
 //	g_pMem = new CMemManager(COM_DEFAULTHUNKSIZE);
 
-	//Init Game Timer
-	g_pTime = new CTime;
+	g_pTime = new CTime();				//Init Game Timer
+	g_pCons = new CConsole();			//Console
+	g_pFileSystem = new CFileSystem();	//The File System
 
-	//Console
-	g_pCons = new CConsole;
-
-	//Input sys
-	g_pInput = new CInput;
+	g_pInput= new CInput();				//Input sys
 
 #ifndef __VOIDALPHA
 	//Network Sys
@@ -317,18 +310,16 @@ CVoid::CVoid(HINSTANCE hInstance,
 #endif
 	strcpy(g_gamedir,"game");
 
-
 	//Rendering Info
 	g_pRinfo = new RenderInfo_t;
-	
-	g_pExport = new VoidExport_t;
+	g_pExport= new VoidExport_t;
 
-#ifdef __SOUND
+#ifdef INCLUDE_SOUND
 	//Sound
 	g_pSound = new CSound;
 #endif
 
-#ifdef __MUSIC
+#ifdef INCLUDE_MUSIC
 	//Music
 	g_pMusic = new CMusic;
 #endif
@@ -369,7 +360,7 @@ CVoid::~CVoid()
 		g_pClient = 0;
 	}
 
-#ifdef __SOUND
+#ifdef INCLUDE_SOUND
 	if(g_pSound)
 	{
 		delete g_pSound;
@@ -377,7 +368,7 @@ CVoid::~CVoid()
 	}
 
 #endif
-#ifdef __MUSIC
+#ifdef INCLUDE_MUSIC
 	if(g_pMusic)
 	{
 		delete g_pMusic;
@@ -420,6 +411,12 @@ CVoid::~CVoid()
 		delete g_pExport;
 		g_pExport = 0;
 	}
+
+	if(g_pFileSystem)
+	{
+		delete g_pFileSystem;
+		g_pFileSystem = 0;
+	}
 	
 	if(g_pCons)
 	{
@@ -447,14 +444,26 @@ Intializes all the subsystems
 
 bool CVoid::Init()
 {
-	HRESULT			hr;
-	GETRENDERERAPI	rapi;
-
 	//subsystem startup proceedures
-	//=============================
+	//================================
+
+	//Init COM librarry
+	HRESULT hr = CoInitialize(NULL);
+	if(FAILED(hr))
+	{
+		Error("CVoid::Init:Error Initializing COM library\n");
+		return false;
+	}
+
+	//Initialize the File System
+	if(!g_pFileSystem->Init(g_exedir,g_gamedir))
+	{
+		Error("CVoid::Init: Could not initialize file system");
+		return false;
+	}
 
 	//Renderer
-	//========
+	//================================
 	hRenderer = ::LoadLibrary("vrender.dll");
 	if(hRenderer == NULL)
 	{
@@ -462,7 +471,7 @@ bool CVoid::Init()
 		return false;
 	}
 
-	rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
+	GETRENDERERAPI rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
 	hr = rapi(&g_pRender);
 
 	if(FAILED(hr))
@@ -495,6 +504,7 @@ bool CVoid::Init()
 		return false;
 	}
 
+	//================================
 	//We parse the command line exec configs NOW
 	//once the renderer has been activated and its cvars have been registered
 
@@ -504,12 +514,9 @@ bool CVoid::Init()
 	g_pCons->ExecConfig("default.cfg");
 	g_pCons->ExecConfig("void.cfg");
 
-	//Init COM librarry
-	hr = CoInitialize(NULL);
-
-	if(FAILED(hr))
+	if(!g_pCons->Init(g_pRender->GetConsole()))
 	{
-		Error("CVoid::Init:Error Initializing COM library\n");
+		Error("CVoid::Init: Could not Intialize the console");
 		return false;
 	}
 
@@ -535,11 +542,6 @@ bool CVoid::Init()
 	}
 	g_pRinfo->hInst = g_hInst;
 
-	if(!g_pCons->Init(g_pRender->GetConsole()))
-	{
-		Error("CVoid::Init: Could not Intialize the console");
-		return false;
-	}
 
 	if(!g_pRender->InitRenderer())
 	{
@@ -559,7 +561,7 @@ bool CVoid::Init()
 		return false;
 	}
 	//Input Focus
-	g_pInput->Acquire();
+//	g_pInput->Acquire();
 
 
 /*	if(!InitZip())
@@ -582,7 +584,7 @@ bool CVoid::Init()
 	}
 #endif
 
-#ifdef __SOUND
+#ifdef INCLUDE_SOUND
 	//Sound 
 	if(!g_pSound->Init())
 	{
@@ -592,7 +594,7 @@ bool CVoid::Init()
 	}
 #endif
 
-#ifdef __MUSIC
+#ifdef INCLUDE_MUSIC
 	//Music
 	if(!g_pMusic->Init())
 	{
@@ -611,11 +613,12 @@ bool CVoid::Init()
 		return false;
 	}
 #endif
-	
-	g_pInput->SetKeyHandler(&ConsoleHandleKey);
-	g_pCons->ExecConfig("autoexec.cfg");
-	g_pTime->Reset();
 
+	GetInputFocusManager()->SetKeyListener(g_pCons,true);
+
+	g_pTime->Reset();
+	
+	g_pCons->ExecConfig("autoexec.cfg");
 	return true;
 }
 
@@ -644,14 +647,14 @@ bool CVoid :: Shutdown()
 	}
 #endif
 
-#ifdef __SOUND
+#ifdef INCLUDE_SOUND
 	//Sound
 	if(g_pSound)
 		g_pSound->Shutdown();
 #endif
 
 
-#ifdef __MUSIC
+#ifdef INCLUDE_MUSIC
 	//music
 	if(g_pMusic)
 		g_pMusic->Shutdown();
@@ -659,7 +662,7 @@ bool CVoid :: Shutdown()
 
 	//input
 	if(g_pInput)
-		g_pInput->Release();
+		g_pInput->Shutdown();
 
 //	ShutdownZip();
 
@@ -688,23 +691,37 @@ bool CVoid :: Shutdown()
 The Game Loop
 ==========================================
 */
+
+float lastinput = 0.0f;
+
 void CVoid::RunFrame()
 {
 	g_pTime->Update();
 	
 	//Run Input frame
-	g_pInput->InputFrame();
 
+
+	g_pInput->UpdateCursor();
+	g_pInput->UpdateKeys();
+/*	if(g_fcurTime > (lastinput + 0.05f))
+	{
+		g_pInput->UpdateKeys();
+		lastinput = g_fcurTime;
+	}
+*/
 	//Run Server
 #ifndef __VOIDALPHA
 	if(g_pServer->m_active)
 		g_pServer->RunFrame();
 #endif
 
+
 	//Run Client frame
 	if(g_pClient->m_ingame)
 	//if(g_pClient->m_active)
 	{
+//		g_pTime->Update();
+		
 		g_pClient->RunFrame();
 
 		//draw the scene
@@ -749,10 +766,8 @@ bool CVoid::InitServer(char *map)
 	g_pClient->LoadWorld(g_pWorld);
 	g_pClient->m_connected = true;
 	g_pClient->m_ingame = true;
+	g_pClient->SetInputState(true);
 	
-	g_pInput->SetCursorHandler(&ClientHandleCursor);
-	g_pInput->SetKeyHandler(&ClientHandleKey);
-
 
 #ifndef __VOIDALPHA
 	if(g_pServer->m_active)
@@ -924,9 +939,9 @@ void CVoid::WriteConfig(char *config)
 		FILE * fp = fopen(config,"w");
 		if(fp != NULL)
 		{
-			if(g_pClient)
-				g_pClient->Cl_WriteBindTable(fp);
 			g_pCons->WriteCVars(fp);
+			if(g_pClient)
+				g_pClient->WriteBindTable(fp);
 			fclose(fp);
 		}
 	}
@@ -1025,13 +1040,18 @@ void CToggleConsole(int argc, char** argv)
 	{
 		g_gameState = INGAME;
 		g_pCons->Toggle(false);
-		g_pInput->SetCursorHandler(&ClientHandleCursor);
-		g_pInput->SetKeyHandler(&ClientHandleKey);
+		g_pClient->SetInputState(true);
 	}
 	else if(g_gameState == INGAME)
 	{
-		g_pInput->SetCursorHandler(0);
-		g_pInput->SetKeyHandler(&ConsoleHandleKey);
+		//g_pInput->SetCursorHandler(0);
+		//g_pInput->SetKeyHandler(&ConsoleHandleKey);
+		//In_SetCursorHandler(0);
+		
+		GetInputFocusManager()->SetCursorListener(0);
+
+		//In_SetKeyHandler(&ConsoleHandleKey,true);
+		GetInputFocusManager()->SetKeyListener(g_pCons,true);
 
 		g_gameState = INGAMECONSOLE;
 		g_pCons->Toggle(true);

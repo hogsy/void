@@ -1,65 +1,64 @@
 #include "In_mouse.h"
 
 //========================================================================================
-//Private Local Variables
-//========================================================================================
+//Private Definations
 
 #define M_DIBUFFER_SIZE		16
 #define M_MOUSEBUTTONS		4
 #define M_W32MOUSEBUTTONS	3
 
+//========================================================================================
+//Private Local Vars
+
+extern CMouse * g_pMouse;	//pointer to Mouse class
+
 //Current mouse co-ords
-static float	m_curX;
-static float	m_curY;
-static float	m_curZ;
-
-//Last mouse co-ords
-static float	m_lastx;
-static float	m_lasty;
-static float	m_lastz;
-
+static float	m_fXPos, 
+				m_fYPos, 
+				m_fZPos;		
+//Last mouse co-ords		
+static float	m_fLastXPos, 
+				m_fLastYPos, 
+				m_fLastZPos;	
 //Center of the screen, Win32 mouse routines need these
-static int		m_xcenter;
-static int		m_ycenter;
-
-//Console Vars
-static CVar	*	m_cxsens=0;
-static CVar	*	m_cysens=0;
-static CVar	*	m_csens=0;
-static CVar	*	m_cinvert=0;
-static CVar	*	m_cmode=0;
-static CVar *	m_cfilter=0;
-
+static int		m_dCenterX, 
+				m_dCenterY;
 //Sensitivities
-static float	m_xsens;
-static float	m_ysens;
-static float	m_sens;
+static float	m_fXSens,
+				m_fYSens, 
+				m_fSens;
+//Console Vars
+static CVar	*	m_pVarXSens=0;
+static CVar	*	m_pVarYSens=0;
+static CVar	*	m_pVarSens=0;
+static CVar	*	m_pVarInvert=0;
+static CVar	*	m_pVarMode=0;
+static CVar *	m_pVarFilter=0;
 
 //Other flags
-static bool		m_exclusive;
-static bool		m_invert;
-static bool		m_filter;
+static bool		m_bExclusive;
+static bool		m_bInvert;
+static bool		m_bFilter;
 
-//Class Info
-static EDeviceState			m_mousestate;
-static CMouse::EMouseMode	m_mousemode;
+//Mouse State and Mode
+static EDeviceState			m_eMouseState;
+static CMouse::EMouseMode	m_eMouseMode;
 
-//Direct Input Device
-static LPDIRECTINPUTDEVICE7 m_pdimouse=0;	
+//DirectInput Device
+static LPDIRECTINPUTDEVICE7 m_pDIMouse=0;	
 
 //Input buffers
-static DIMOUSESTATE2	  * m_pdistate=0;	
-static DIDEVICEOBJECTDATA	m_dibufdata[M_DIBUFFER_SIZE];
-static POINT				m_w32pos;
-static short				m_w32buttons[M_W32MOUSEBUTTONS];
+static DIMOUSESTATE2	  * m_pDIState=0;	
+static DIDEVICEOBJECTDATA	m_aDIMouseBuf[M_DIBUFFER_SIZE];
+static POINT				m_w32Pos;
+static short				m_w32Buttons[M_W32MOUSEBUTTONS];
 
-//Button States
-static KeyEvent_t			m_buttons[M_MOUSEBUTTONS];	//Used to store oldstats of the keys
+//Event Handle and Name
+static HANDLE	m_hDIMouseEvent=0;
+static char		m_szMouseEventName[] = "DI MouseEvent";
 
-//Handler Funcs
-extern float				g_fRepeatRate;		//Current repeat rate
-extern IN_KEYHANDLER		g_pfnKeyHandler;	//Key handler func
-extern IN_CURSORHANDLER		g_pfnCursorHandler;	//Cursor Handler
+//Cursor Listener
+static I_InCursorListener  * m_pCursorHandler=0;
 
 
 //========================================================================================
@@ -79,7 +78,6 @@ static bool CInvert(const CVar *var, int argc, char** argv);
 static bool CMouseMode(const CVar *var, int argc, char** argv);
 static bool CMouseFilter(const CVar *var, int argc, char** argv);
 
-
 //========================================================================================
 //Implementation
 //========================================================================================
@@ -89,38 +87,33 @@ static bool CMouseFilter(const CVar *var, int argc, char** argv);
 Constructor
 =====================================
 */
-CMouse :: CMouse()
+CMouse::CMouse()
 {
-	m_pdimouse = 0;
-	m_mousestate = DEVNONE;
-	m_mousemode = M_NONE;
+	m_pDIMouse = 0;
+	m_eMouseState = DEVNONE;
+	m_eMouseMode = M_NONE;
 
-	UpdateMouse = 0;
-	m_exclusive = false;
-	m_invert = false;
+	PollMouse = 0;
+
+	m_bExclusive = false;
+	m_bInvert = false;
 	
-	m_pdistate = 0;
+	m_pDIState = 0;
 
-	m_curX=0.0f;
-	m_curY=0.0f;
-	m_curZ=0.0f;
-
-	m_xsens= 0.0f;
-	m_ysens= 0.0f;
-	m_sens= 0.0f;
-	m_lastx = 0.0f;
-	m_lasty = 0.0f;
-	m_lastz = 0.0f;
+	m_fXPos= m_fYPos= m_fZPos=0.0f;
+	m_fXSens= m_fYSens= m_fSens= 0.0f;
+	m_fLastXPos = m_fLastYPos = m_fLastZPos = 0.0f;
 	
-	m_xcenter = 0;
-	m_ycenter = 0;
+	m_dCenterX = m_dCenterY = 0;
 
-	g_pCons->RegisterCVar(&m_cxsens,"m_xsens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CXSens);
-	g_pCons->RegisterCVar(&m_cysens,"m_ysens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CYSens);
-	g_pCons->RegisterCVar(&m_csens,"m_sens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CSens);
-	g_pCons->RegisterCVar(&m_cinvert,"m_invert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, &CInvert);
-	g_pCons->RegisterCVar(&m_cmode,"m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CMouseMode);
-	g_pCons->RegisterCVar(&m_cfilter,"m_filter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, &CMouseFilter);
+	SetCursorListener(this);
+
+	g_pCons->RegisterCVar(&m_pVarXSens,"m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CXSens);
+	g_pCons->RegisterCVar(&m_pVarYSens,"m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CYSens);
+	g_pCons->RegisterCVar(&m_pVarSens,"m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CSens);
+	g_pCons->RegisterCVar(&m_pVarInvert,"m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, &CInvert);
+	g_pCons->RegisterCVar(&m_pVarMode,"m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CMouseMode);
+	g_pCons->RegisterCVar(&m_pVarFilter,"m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, &CMouseFilter);
 }
 
 /*
@@ -130,12 +123,14 @@ Destructor
 */
 CMouse::~CMouse()
 {
-	m_mousestate = DEVNONE;
-	UpdateMouse = 0;
+	m_eMouseState = DEVNONE;
+	PollMouse = 0;
 
-	if(m_pdistate)
-		delete m_pdistate;
-	m_pdimouse = 0;
+	if(m_pDIState)
+		delete m_pDIState;
+
+	m_pDIMouse = 0;
+	m_pCursorHandler = 0;
 }
 
 /*
@@ -146,109 +141,74 @@ by a config file by now, or else it
 will default to DI_BUFFERED
 =====================================
 */
-
 HRESULT CMouse::Init(int exclusive, EMouseMode mode)
 {
 	HRESULT hr;
 
 	if(exclusive)
-		m_exclusive = true;
+		m_bExclusive = true;
 
+	//mode specified as NONE when the device is first initialized
 	if(mode == M_NONE)
-		mode = m_mousemode;
+	{
+		//then default to what we read from the config files
+		if(m_eMouseMode != M_NONE)
+			mode = m_eMouseMode;
+		//If read nothing from config, then default to IMMEDIATE
+		else
+			mode = M_DIIMMEDIATE;
+	}
+
+	//If the device is active and is in the same mode 
+	//then we don't need to do anything
+	if((m_eMouseMode == mode) && (m_eMouseState != DEVNONE))
+	{
+		ComPrintf("CMouse::InitMode: Already in given mode\n");
+		return DI_OK;
+	}
 
 	//Activate specified mode
 	switch(mode)
 	{
 	case M_WIN32:
 		{
-			//Don't if already in that mode
-			if((m_mousestate != DEVNONE) &&
-			   (m_mousemode == M_WIN32))
-			{
-				ComPrintf("CMouse::InitMode: Already in M_WIN32 mode\n");
-				return DI_OK;
-			}
-			
-			//Initialize to the mode
 			hr = Win32_Init();
 			if(FAILED(hr))
 				return hr;
-
-			//Set Update pointer
-			UpdateMouse = Update_Win32;
-			ComPrintf("CMouse::InitMode:Initialized Win32 mode\n");
-			m_mousemode = M_WIN32;
 			break;
 		}
 	case M_DIIMMEDIATE:
-		{
-			if((m_mousestate != DEVNONE) &&
-			   (m_mousemode == M_DIIMMEDIATE))
-			{
-				ComPrintf("CMouse::InitMode: Already in M_DIIMMEDIATE mode\n");
-				return DI_OK;
-			}
-
-			hr = DI_Init(M_DIIMMEDIATE);
-			if(FAILED(hr))
-				return hr;
-			UpdateMouse = Update_DIImmediate;
-			ComPrintf("CMouse::InitMode:Initialized DI Immediate mode\n");
-			m_mousemode = M_DIIMMEDIATE;
-			break;
-		}
-	case M_NONE:
 	case M_DIBUFFERED:
 		{
-			if((m_mousestate != DEVNONE) &&
-			   (m_mousemode == M_DIBUFFERED))
-			{
-				ComPrintf("CMouse::InitMode: Already in M_DIBUFFERED mode\n");
-				return DI_OK;
-			}
-			
-			hr = DI_Init(M_DIBUFFERED);
+			hr = DI_Init(mode);
 			if(FAILED(hr))
 				return hr;
-			UpdateMouse = Update_DIBuffered;
-			ComPrintf("CMouse::InitMode:Initialized DI Buffered mode\n");
-			m_mousemode = M_DIBUFFERED;
 			break;
 		}
 	}
 
-	m_xsens= m_cxsens->value;
-	m_ysens= m_cysens->value;
-	m_sens= m_csens->value;
-
-	if(m_cfilter->value)
-		m_filter = true;
-	else
-		m_filter = false;
-	if(m_cinvert->value)
-		m_invert = true;
-	else
-		m_invert = false;
-
+	//Update Sensitivities and other variables that are used at runtime
+	m_fXSens= m_pVarXSens->value;
+	m_fYSens= m_pVarYSens->value;
+	m_fSens= m_pVarSens->value;
+	m_pVarFilter->value ? m_bFilter = true: m_bFilter = false;
+	m_pVarInvert->value ? m_bInvert = true: m_bInvert = false;
 
 	//Update state vars
-	m_mousestate = DEVINITIALIZED;
+	m_eMouseState = DEVINITIALIZED;
 
 	Acquire();
-
 	return DI_OK;
 }
-
 
 /*
 =====================================
 Shutdown/Release the mouse
 =====================================
 */
-void CMouse :: Shutdown()
+void CMouse::Shutdown()
 {
-	switch(m_mousemode)
+	switch(m_eMouseMode)
 	{
 	case M_DIIMMEDIATE:
 	case M_DIBUFFERED:
@@ -262,10 +222,9 @@ void CMouse :: Shutdown()
 			break;
 		}
 	}
-	m_mousestate = DEVNONE;
-	m_mousemode = M_NONE;
+	m_eMouseState = DEVNONE;
+	m_eMouseMode = M_NONE;
 }
-
 
 /*
 =====================================
@@ -274,16 +233,14 @@ Initialize DI specific stuff
 */
 HRESULT CMouse::DI_Init(EMouseMode mode)
 {
-	HRESULT hr;
-
 	//Shutdown the mouse if its active in another mode
-	if(m_mousestate != DEVNONE)
+	if(m_eMouseState != DEVNONE)
 		Shutdown();
 	
 	//Create the Device
-	hr = (g_pInput->GetDirectInput())->CreateDeviceEx(GUID_SysMouse, 
+	HRESULT hr = (In_GetDirectInput())->CreateDeviceEx(GUID_SysMouse, 
 									   IID_IDirectInputDevice7,
-									   (void**)&m_pdimouse, 
+									   (void**)&m_pDIMouse, 
 									   NULL); 
 	if (FAILED(hr)) 
 	{
@@ -292,7 +249,7 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 	}
 	
 	//Set Data format for mouse
-	hr = m_pdimouse->SetDataFormat(&c_dfDIMouse2);
+	hr = m_pDIMouse->SetDataFormat(&c_dfDIMouse2);
 	if (FAILED(hr)) 
 	{
 		ComPrintf("CMouse::Create:Set Data Format failed\n");
@@ -300,22 +257,46 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 	}
 
 	//Set Co-operative mode
-	if(m_exclusive)
-		hr = m_pdimouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_EXCLUSIVE);
+	if(m_bExclusive)
+		hr = m_pDIMouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 	else
-		hr = m_pdimouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
+		hr = m_pDIMouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 	if (FAILED(hr)) 
 	{
 		ComPrintf("CMouse::DI_Init:Set Coop Level failed\n");
+		return hr;
+	}
+
+	//Set Event Notification
+	m_hDIMouseEvent =  ::CreateEvent(0,     // pointer to security attributes
+							FALSE,  // flag for manual-reset event
+						    FALSE,  // flag for initial state
+							m_szMouseEventName);   // pointer to event-object name
+
+	if(m_hDIMouseEvent == NULL)
+	{
+		ComPrintf("CKeyboard::DI_Init : Unable to set event\n");
+		return ::GetLastError();
+	}
+
+	hr = m_pDIMouse->SetEventNotification(m_hDIMouseEvent);
+	if(FAILED(hr))
+	{
+		ComPrintf("CMouse::DI_Init : Unable to set event\n");
 		return hr;
 	}
 	
 	//Which DI mode to use ?
 	if(mode == M_DIIMMEDIATE)
 	{
-		if(m_pdistate)
-			delete m_pdistate;
-		m_pdistate= new DIMOUSESTATE2;
+		if(m_pDIState)
+			delete m_pDIState;
+		m_pDIState= new DIMOUSESTATE2;
+
+		//Set update info
+		PollMouse = Update_DIImmediate;
+		ComPrintf("CMouse::InitMode:Initialized DI Immediate mode\n");
+		m_eMouseMode = M_DIIMMEDIATE;
 	}
 	else if(mode == M_DIBUFFERED)
 	{
@@ -327,7 +308,7 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 		dipdw.diph.dwHow = DIPH_DEVICE;
 		dipdw.dwData = M_DIBUFFER_SIZE;
 
-		hr = m_pdimouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
+		hr = m_pDIMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
 
 		if(FAILED(hr))
 		{
@@ -335,9 +316,14 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 			return hr;
 		}
 
-		if(m_pdistate)
-			delete m_pdistate;
-		m_pdistate = 0;
+		if(m_pDIState)
+			delete m_pDIState;
+		m_pDIState = 0;
+
+		//Set update info
+		PollMouse = Update_DIBuffered;
+		ComPrintf("CMouse::InitMode:Initialized DI Buffered mode\n");
+		m_eMouseMode = M_DIBUFFERED;
 	}
 	return S_OK;
 }
@@ -349,12 +335,14 @@ Release DI stuff
 */
 bool CMouse::DI_Shutdown()
 {
-	if(m_pdimouse)
+	if(m_pDIMouse)
 	{
-		if(m_mousestate == DEVACQUIRED)
-			m_pdimouse->Unacquire(); 
-		m_pdimouse->Release();
-		m_pdimouse = NULL;
+		if(m_eMouseState == DEVACQUIRED)
+			m_pDIMouse->Unacquire();
+		SetExclusive(false);
+		m_pDIMouse->SetEventNotification(0);
+		m_pDIMouse->Release();
+		m_pDIMouse = NULL;
 	}
 	ComPrintf("CMouse::DI_Shutdown OK\n");
 	return true;
@@ -368,11 +356,11 @@ Intialize the mouse to use Win32 routines
 HRESULT CMouse::Win32_Init()
 {
 	//Shutdown older mouse mode
-	if(m_mousestate != DEVNONE)
+	if(m_eMouseState != DEVNONE)
 		Shutdown();
 
 	//Lock Cursor to center
-	::SetCursorPos(m_xcenter,m_ycenter);
+	::SetCursorPos(m_dCenterX,m_dCenterY);
 
 	//Cap the mouse
 	::SetCapture(g_hWnd);
@@ -382,10 +370,16 @@ HRESULT CMouse::Win32_Init()
 	//returns TRUE if the mouse buttons have been swapped
 
 	//Set to exclusive
-	if(m_exclusive)
-		SetExclusive();
+	if(m_bExclusive)
+		SetExclusive(true);
+
+	PollMouse = Update_Win32;
+
+	ComPrintf("CMouse::InitMode:Initialized Win32 mode\n");
+	m_eMouseMode = M_WIN32;
 	return S_OK;
 }
+
 
 /*
 ===========================================
@@ -395,11 +389,11 @@ Shutdown Win32 mouse
 bool CMouse::Win32_Shutdown()
 {
 	//Lose exclusive
-	if(m_exclusive)
-		LoseExclusive();
+	if(m_bExclusive)
+		SetExclusive(false);
 
 	//Unacquire it
-	if(m_mousestate == DEVACQUIRED)
+	if(m_eMouseState == DEVACQUIRED)
 		UnAcquire();
 	
 	::ClipCursor(0);
@@ -415,25 +409,59 @@ Utility needed by CInput()
 ==========================================
 */
 EDeviceState CMouse::GetDeviceState() 
-{ return m_mousestate;
+{ return m_eMouseState;
 }
 
 
+/*
+==========================================
+Set Listener object
+==========================================
+*/
+void CMouse::SetCursorListener( I_InCursorListener *  plistener)
+{
+	if(plistener)
+		m_pCursorHandler = plistener;
+	else
+		m_pCursorHandler = this;
+}
+
 //========================================================================================
 //Mouse Update functions
+//========================================================================================
 
+/*
+=====================================
+Update Mouse
+=====================================
+*/
+void CMouse::Update()
+{
+	if(m_eMouseState != DEVACQUIRED)
+		return;
+	
+	//Win32 mode doesnt use any notification
+	if(m_eMouseMode == M_WIN32)
+		Update_Win32();
+	else if (WaitForSingleObject(m_hDIMouseEvent, 0) == WAIT_OBJECT_0) 
+	{ 
+		// Event is set. If the event was created as 
+		// autoreset, it has also been reset. 
+		PollMouse();
+	}
+}
 
 /*
 =====================================
 Flush Mouse Data
 =====================================
 */
-void Flush()
+void DI_FlushMouseData()
 {
-	if(m_mousemode == CMouse::M_DIBUFFERED)
+	if(m_eMouseMode == CMouse::M_DIBUFFERED)
 	{
 		DWORD dwItems = INFINITE; 
-		m_pdimouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), 
+		m_pDIMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), 
 								  NULL, 
 								  &dwItems, 
 								   0);
@@ -448,20 +476,11 @@ DirectInput Buffered Data
 */
 void Update_DIBuffered()
 {
-/*	if(!m_pdimouse)
-	{
-		g_pInput->InputError(DIERR_NOTINITIALIZED,"CMouse::Update_DIBuffered:");
-		return;
-	}
-*/
-	if(m_mousestate != DEVACQUIRED)
-		return;
-
 	DWORD dwElements = M_DIBUFFER_SIZE;
 
 	//Get buffered mouse data
-	HRESULT hr = m_pdimouse->GetDeviceData(sizeof(DIMOUSESTATE),
-											m_dibufdata,
+	HRESULT hr = m_pDIMouse->GetDeviceData(sizeof(DIMOUSESTATE),
+											m_aDIMouseBuf,
 											&dwElements,
 											0);
 	if(hr != DI_OK)
@@ -469,120 +488,81 @@ void Update_DIBuffered()
 		//If it failed because of losing input or focus, try once more
 		if((hr == DIERR_INPUTLOST)|| (hr ==DIERR_NOTACQUIRED))
 		{
-			m_mousestate = DEVINITIALIZED;
+			ComPrintf("CMouse::Update_DIBuffered, failed to update. Lost device");
+			m_eMouseState = DEVINITIALIZED;
 			hr = g_pMouse->Acquire();
-			if(!FAILED(hr))
-			{
-				hr = m_pdimouse->GetDeviceData(sizeof(DIMOUSESTATE),
-												m_dibufdata,
-												&dwElements,
-												0);
-				//Failed yet again, throw error
-				if(FAILED(hr))
-				{
-					ComPrintf("CMouse::GetState:Error getting state2\n");
-					g_pInput->InputError(hr,"CMouse::Update_DIBuffered:");
-					return;
-				}
-			}
 		}
-		//Buffered Overflowed, just flush and return
-		else if(hr == DI_BUFFEROVERFLOW)
-		{
-			Flush();
-			return;
-		}
+		else
+			ComPrintf("CMouse::Update_DIBuffered, failed to update. Unknown error");
+		DI_FlushMouseData();
+		return;
 	}
 
 	//Reset events
-	m_curX = m_curY = m_curZ = 0;
+	m_fXPos = m_fYPos = m_fZPos = 0;
 
 	//Got data, loop through buffers to get events
 	for(unsigned int i=0;i<dwElements;i++)
 	{
-		switch((int)m_dibufdata[i].dwOfs)
+		switch((int)m_aDIMouseBuf[i].dwOfs)
 		{
 		case DIMOFS_BUTTON0:
 			{
-				m_buttons[0].id = INKEY_MOUSE1;
-				if(m_dibufdata[i].dwData & 0x80)
-					m_buttons[0].state = BUTTONDOWN;
+				if(m_aDIMouseBuf[i].dwData & 0x80)
+					In_UpdateKey(INKEY_MOUSE1, BUTTONDOWN);
 				else
-					m_buttons[0].state = BUTTONUP;
+					In_UpdateKey(INKEY_MOUSE1, BUTTONUP);
 				break;
 			}
 		case DIMOFS_BUTTON1:
 			{
-				m_buttons[1].id = INKEY_MOUSE2;
-				if(m_dibufdata[i].dwData & 0x80)
-					m_buttons[1].state = BUTTONDOWN;
+				if(m_aDIMouseBuf[i].dwData & 0x80)
+					In_UpdateKey(INKEY_MOUSE2, BUTTONDOWN);
 				else
-					m_buttons[1].state = BUTTONDOWN;
+					In_UpdateKey(INKEY_MOUSE2, BUTTONUP);
 				break;
 			}
 		case DIMOFS_BUTTON2:
 			{
-				m_buttons[0].id = INKEY_MOUSE3;
-				if(m_dibufdata[i].dwData & 0x80)
-					m_buttons[0].state = BUTTONDOWN;
+				if(m_aDIMouseBuf[i].dwData & 0x80)
+					In_UpdateKey(INKEY_MOUSE3, BUTTONDOWN);
 				else
-					m_buttons[0].state = BUTTONUP;
+					In_UpdateKey(INKEY_MOUSE3, BUTTONUP);
 				break;
 			}
 		case DIMOFS_BUTTON3:
 			{
-				m_buttons[1].id = INKEY_MOUSE4;
-				if(m_dibufdata[i].dwData & 0x80)
-					m_buttons[1].state = BUTTONDOWN;
+				if(m_aDIMouseBuf[i].dwData & 0x80)
+					In_UpdateKey(INKEY_MOUSE4, BUTTONDOWN);
 				else
-					m_buttons[1].state = BUTTONDOWN;
+					In_UpdateKey(INKEY_MOUSE4, BUTTONUP);
 				break;
 			}
 		case DIMOFS_X:
-			m_curX = ((int)m_dibufdata[i].dwData) * m_xsens * m_sens;
+			m_fXPos = ((int)m_aDIMouseBuf[i].dwData) * m_fXSens * m_fSens;
 			break;
 		case DIMOFS_Y:
-			m_curY = ((int)m_dibufdata[i].dwData) * m_ysens * m_sens;
+			m_fYPos = ((int)m_aDIMouseBuf[i].dwData) * m_fYSens * m_fSens;
 			break;
 		case DIMOFS_Z:
-			m_curZ = ((int)m_dibufdata[i].dwData) * m_sens;
+			m_fZPos = ((int)m_aDIMouseBuf[i].dwData) * m_fSens;
 			break;
 		}
 	}
 
-
-	//Dispatch all the mouse button events,
-	//Button UPs are reset to 0
-	for(i=0;i<M_MOUSEBUTTONS;i++)
-	{
-		if(m_buttons[i].id)
-		{
-			if(m_buttons[i].state != BUTTONHELD)
-				m_buttons[i].time = g_fcurTime;
-
-			g_pfnKeyHandler(&m_buttons[i]);
-
-			if(m_buttons[i].state == BUTTONUP)
-				m_buttons[i].id = 0;
-			else
-				m_buttons[i].state = BUTTONHELD;
-		}
-	}
-
-	
 	//Apply filter if needed
-	if(m_filter)
+	if(m_bFilter)
 	{
-		m_lastx = m_curX = (m_curX + m_lastx)/2;
-		m_lasty = m_curY = (m_curY + m_lasty)/2;
-		m_lastz = m_curZ = (m_curZ + m_lastz)/2;
+		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
+		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
+		m_fLastZPos = m_fZPos = (m_fZPos + m_fLastZPos)/2;
 	}
 	
 	//Invery y-axis if needed
-	if(m_invert)
-		m_curY = -(m_curY);
+	if(m_bInvert)
+		m_fYPos = -(m_fYPos);
 
-	g_pfnCursorHandler(m_curX,m_curY,m_curZ);
+	m_pCursorHandler->HandleCursorEvent(m_fXPos,m_fYPos,m_fZPos);
 }
 
 
@@ -593,100 +573,50 @@ DirectInput Immediate data
 */
 void Update_DIImmediate()
 {
-/*	if(!m_pdimouse)
-	{
-		g_pInput->InputError(DIERR_NOTINITIALIZED,"CMouse::Update_DIBuffered:");
-		return;
-	}
-*/
-	if(m_mousestate != DEVACQUIRED)
-		return;
-
 	//Get Mouse State
-	HRESULT hr = m_pdimouse->GetDeviceState(sizeof(DIMOUSESTATE2), 
-										  m_pdistate);
+	HRESULT hr = m_pDIMouse->GetDeviceState(sizeof(DIMOUSESTATE2), 
+										    m_pDIState);
 	if(hr != DI_OK)
 	{
-		//Unknown error
-		if((hr != DIERR_INPUTLOST)&& (hr !=DIERR_NOTACQUIRED))
+		
+		if((hr == DIERR_INPUTLOST)|| (hr ==DIERR_NOTACQUIRED))
 		{
-			g_pInput->InputError(hr,"CMouse::Update_DII:");
-			return;
+			ComPrintf("CMouse::Update_DIImmediate, failed to update. Lost device");
+			m_eMouseState = DEVINITIALIZED;
+			hr = g_pMouse->Acquire();
 		}
-
-		//Try to regain focus
-		m_mousestate = DEVINITIALIZED;
-		hr = g_pMouse->Acquire();
-		if(!FAILED(hr))
-		{
-			hr = m_pdimouse->GetDeviceState(sizeof(DIMOUSESTATE), m_pdistate);
-			
-			//Failed again, error
-			if(hr != DI_OK)
-			{	
-				ComPrintf("CMouse::GetState:Error getting state2\n");
-				return;
-			}
-		}
+		else
+			ComPrintf("CMouse::Update_DIImmediate, failed to update. Unknown Error");
+		return;
 	}
 
 	//Update Buttons
 	for(int i=0;i<M_MOUSEBUTTONS;i++)
 	{
-		//Button is down
-		if(m_pdistate->rgbButtons[i] & 0x80)
-		{
-			m_buttons[i].id = INKEY_MOUSE1 + i;
-
-			//Was it down before ?
-			if(m_buttons[i].state != BUTTONUP)
-			{
-				//Button has been held
-				m_buttons[i].state = BUTTONHELD;
-				//no change in time
-			}
-			else
-			{
-				//Button just went down
-				m_buttons[i].state = BUTTONDOWN;
-				m_buttons[i].time = g_fcurTime;
-			}
-			g_pfnKeyHandler(&m_buttons[i]);
-		}
-		else //Button is up
-		{
-			 //Was it down before ?
-			if(m_buttons[i].state != BUTTONUP)
-			{
-				m_buttons[i].state = BUTTONUP;
-				m_buttons[i].time = g_fcurTime;
-
-				g_pfnKeyHandler(&m_buttons[i]);
-			}
-		}
+		In_UpdateKey(INKEY_MOUSE1+i, 
+			m_pDIState->rgbButtons[i] & 0x80 ? BUTTONDOWN : BUTTONUP);
 	}
 
-
 	//Average out values if filtering is on
-	if(m_filter)
+	if(m_bFilter)
 	{
-		m_curX = m_lastx = ((m_pdistate->lX * m_xsens * m_sens)+ m_lastx)/2;
-		m_curY = m_lasty = ((m_pdistate->lY * m_ysens * m_sens) + m_lasty)/2;
-		m_curZ = m_lastz = ((m_pdistate->lZ * m_sens) + m_lastz)/2;
+		m_fXPos = m_fLastXPos = ((m_pDIState->lX * m_fXSens * m_fSens)+ m_fLastXPos)/2;
+		m_fYPos = m_fLastYPos = ((m_pDIState->lY * m_fYSens * m_fSens) + m_fLastYPos)/2;
+		m_fZPos = m_fLastZPos = ((m_pDIState->lZ * m_fSens) + m_fLastZPos)/2;
 
 	}
 	else
 	{
-		m_curX = m_pdistate->lX * m_xsens * m_sens;
-		m_curY = m_pdistate->lY * m_ysens * m_sens;
-		m_curZ = m_pdistate->lZ * m_sens;
+		m_fXPos = m_pDIState->lX * m_fXSens * m_fSens;
+		m_fYPos = m_pDIState->lY * m_fYSens * m_fSens;
+		m_fZPos = m_pDIState->lZ * m_fSens;
 	}
 	
 	//Inverse Y-Axis if mouse is inverted
-	if(m_invert)
-		m_curY = -(m_curY);
+	if(m_bInvert)
+		m_fYPos = -(m_fYPos);
 
-	g_pfnCursorHandler(m_curX,m_curY,m_curZ);
+	m_pCursorHandler->HandleCursorEvent(m_fXPos,m_fYPos,m_fZPos);
 }
 
 
@@ -699,70 +629,40 @@ Win32 Mouse update
 void Update_Win32()
 {
 	//Get current cursor pos
-	::GetCursorPos(&m_w32pos);
+	::GetCursorPos(&m_w32Pos);
 
 	//Calc offsets
-	m_curX = (m_w32pos.x - m_xcenter) * m_xsens * m_sens;;
-	m_curY = (m_ycenter - m_w32pos.y) * m_ysens * m_sens;
+	m_fXPos = (m_w32Pos.x - m_dCenterX) * m_fXSens * m_fSens;;
+	m_fYPos = (m_dCenterY - m_w32Pos.y) * m_fYSens * m_fSens;
 
-	if(m_filter)
+	if(m_bFilter)
 	{
-		m_lastx = m_curX = (m_curX + m_lastx)/2;
-		m_lasty = m_curY = (m_curY + m_lasty)/2;
+		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
+		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
 	}
-	if(m_invert)
-		m_curY = -(m_curY);
+	if(m_bInvert)
+		m_fYPos = -(m_fYPos);
 
 	/*	
 	If the most significant bit is set, the key is down, and if the least significant bit is set, 
 	the key was pressed after the previous call to GetAsyncKeyState
 	*/
 
-	m_w32buttons[0] = ::GetKeyState(VK_LBUTTON);
-	m_w32buttons[1] = ::GetKeyState(VK_RBUTTON);
-	m_w32buttons[2] = ::GetKeyState(VK_MBUTTON);
+	m_w32Buttons[0] = ::GetAsyncKeyState(VK_LBUTTON);
+	m_w32Buttons[1] = ::GetAsyncKeyState(VK_RBUTTON);
+	m_w32Buttons[2] = ::GetAsyncKeyState(VK_MBUTTON);
 
 	for(int i=0;i<M_W32MOUSEBUTTONS;i++)
 	{
-		//Button is down
-		if(m_w32buttons[i] & 0x80)
-		{
-			m_buttons[i].id = INKEY_MOUSE1 + i;
-
-			//Was it down before ?
-			if(m_buttons[i].state != BUTTONUP)
-			{
-				//Button has been held
-				m_buttons[i].state = BUTTONHELD;
-				//no change in time
-			}
-			else
-			{
-				//Button just went down
-				m_buttons[i].state = BUTTONDOWN;
-				m_buttons[i].time = g_fcurTime;
-			}
-			g_pfnKeyHandler(&m_buttons[i]);
-		}
-		else //Button is up
-		{
-			 //Was it down before ?
-			if(m_buttons[i].state != BUTTONUP)
-			{
-				m_buttons[i].state = BUTTONUP;
-				m_buttons[i].time = g_fcurTime;
-
-				g_pfnKeyHandler(&m_buttons[i]);
-			}
-		}
+		In_UpdateKey(INKEY_MOUSE1+i, 
+			m_w32Buttons[i] & 0x80000000 ? BUTTONDOWN : BUTTONUP);
 	}
 	
 	//Lock cursor to center of screen
-	::SetCursorPos(m_xcenter,m_ycenter);
+	::SetCursorPos(m_dCenterX,m_dCenterY);
 
-	g_pfnCursorHandler(m_curX,m_curY,m_curZ);
+	m_pCursorHandler->HandleCursorEvent(m_fXPos,m_fYPos,m_fZPos);
 }
-
 
 //========================================================================================
 //Misc Mouse Funcsions
@@ -773,45 +673,39 @@ void Update_Win32()
 Swtich to Exclusive mode
 =====================================
 */
-HRESULT CMouse::SetExclusive()
+HRESULT	CMouse::SetExclusive(bool exclusive)
 {
-	if(!m_exclusive)
+	if(m_pDIMouse && 
+	   ((m_eMouseMode == M_DIIMMEDIATE) ||
+ 	    (m_eMouseMode == M_DIBUFFERED)))
 	{
-		//Try changing to DI Exclusive mode is using DirectInput
-		if(m_pdimouse && 
-		  ((m_mousemode == M_DIIMMEDIATE) ||
-		   (m_mousemode == M_DIBUFFERED)))
+		if(exclusive && !m_bExclusive)
 		{
-			HRESULT hr = m_pdimouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_EXCLUSIVE);
+			//Try changing to DI Exclusive mode is using DirectInput
+			UnAcquire();
+			HRESULT hr = m_pDIMouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
+			ComPrintf("CMouse::SetExclusive, Now in Exclusive Mode");
+			hr = Acquire();
+			m_bExclusive = true;
+			return hr;
 		}
-		m_exclusive = true;
-	}
-	return DI_OK;
-}
-
-
-/*
-=====================================
-Switch to non-exclusive mode
-=====================================
-*/
-HRESULT CMouse::LoseExclusive()
-{
-	if(m_exclusive)
-	{
-		//Try changing to DI NONExclusive mode is using DirectInput
-		if(m_pdimouse && 
-		  ((m_mousemode == M_DIIMMEDIATE) ||
-		   (m_mousemode == M_DIBUFFERED)))
+		else if(!exclusive && m_bExclusive)
 		{
-			HRESULT hr = m_pdimouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
+			UnAcquire();
+			HRESULT hr = m_pDIMouse->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
+			ComPrintf("CMouse::SetExclusive, Now in Non-Exclusive Mode");
+			hr =  Acquire();
+			m_bExclusive = false;
+			return hr;
 		}
-		m_exclusive = false;
+		return DI_OK;
 	}
+	//In another Input mode. just set and return
+	m_bExclusive = exclusive;
 	return DI_OK;
 }
 
@@ -823,8 +717,8 @@ updated center coords
 */
 void CMouse::Resize()
 {
-	m_xcenter = (g_hRect.left + g_hRect.right)/2;
-	m_ycenter = (g_hRect.top + g_hRect.bottom)/2;
+	m_dCenterX = (g_hRect.left + g_hRect.right)/2;
+	m_dCenterY = (g_hRect.top + g_hRect.bottom)/2;
 }
 
 
@@ -836,41 +730,28 @@ Acquire the mouse
 HRESULT CMouse :: Acquire()
 {
 	//Already acquired
-	if(m_mousestate == DEVACQUIRED)
-		return S_OK;
-		
-	if((m_mousemode == M_WIN32) &&  
-	   (m_mousestate==DEVINITIALIZED))
+	if(m_eMouseState == DEVACQUIRED)
+		return DI_OK;
+	
+	if((m_eMouseMode == M_WIN32) && (m_eMouseState==DEVINITIALIZED))
 	{	
 		::ShowCursor(false);				//Make cursor disappear for Win32 mode	
-		m_mousestate = DEVACQUIRED;
-		return S_OK;
+		m_eMouseState = DEVACQUIRED;
+		return DI_OK;
 	}
-	else if(m_pdimouse)
+	else if(m_pDIMouse)
 	{
 		HRESULT hr;
-		hr = m_pdimouse->Acquire();
+		hr = m_pDIMouse->Acquire();
 		if(hr == DI_OK)
 		{	
 			ComPrintf("CMouse::Acquire OK\n");
-			m_mousestate = DEVACQUIRED;
+			m_eMouseState = DEVACQUIRED;
 			return DI_OK;
 		}
 
-		//try again for a while
-/*		for(int i=0;i<50;i++)
-		{
-			hr = m_pdimouse->Acquire();
-			if(hr == DI_OK)
-			{
-				ComPrintf("CMouse::Acquire OK\n");
-				m_mousestate = DEVACQUIRED;
-				return DI_OK;
-			}
-		}
-*/
-		g_pInput->InputError(hr,"CMouse::Acquire:Unable to acquire\n");
-		m_mousestate = DEVINITIALIZED;
+		In_DIErrorMessageBox(hr,"CMouse::Acquire:Unable to acquire\n");
+		m_eMouseState = DEVINITIALIZED;
 		return hr;
 	}
 	return DIERR_NOTINITIALIZED;
@@ -883,29 +764,25 @@ Unaquire the mouse
 */
 bool CMouse :: UnAcquire()
 {
-	if(m_mousestate != DEVACQUIRED)
+	if(m_eMouseState != DEVACQUIRED)
 		return true;
 
-	if(m_mousemode == M_WIN32)
+	if(m_eMouseMode == M_WIN32)
 	{
 		::ShowCursor(true);					//Show cursor now	
 		::ClipCursor(0);					//Get rid of any clipping
-		m_mousestate = DEVINITIALIZED;
+		m_eMouseState = DEVINITIALIZED;
 		return true;
 	}
-	else if(m_pdimouse)
+	else if(m_pDIMouse)
 	{
-		m_pdimouse->Unacquire();
-		m_mousestate = DEVINITIALIZED;
+		m_pDIMouse->Unacquire();
+		m_eMouseState = DEVINITIALIZED;
 		ComPrintf("CMouse::UnAcquire OK\n");
 		return true;
 	}
 	return false;
 }
-
-
-
-
 
 
 /*========================================================================================
@@ -918,7 +795,7 @@ The CVars are updated with the proposed value if the function allows it
 Change mouse mode
 DI_Buffered
 DI_Immediate
-Win32 Hooks
+Win32 update
 =====================================
 */
 bool CMouseMode(const CVar * var, int argc,char** argv)
@@ -928,47 +805,34 @@ bool CMouseMode(const CVar * var, int argc,char** argv)
 		int temp=0;
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
-			//Allow configs to change the mousemode if its valid
-			//even before the mouse actually inits
-			if( m_mousestate == DEVNONE  &&
-				(temp == CMouse::M_DIBUFFERED ||
-			    temp == CMouse::M_DIIMMEDIATE ||
-			    temp == CMouse::M_WIN32))
+			if(temp < CMouse::M_DIIMMEDIATE || temp > CMouse::M_WIN32)
 			{
-				m_mousemode = (CMouse::EMouseMode)temp;
-			   return true;
-			}
-
-			HRESULT hr = E_FAIL;
-
-			switch((CMouse::EMouseMode)temp)
-			{
-			case CMouse::M_DIIMMEDIATE:
-				hr = g_pMouse->Init(m_exclusive,CMouse::M_DIIMMEDIATE);
-				break;
-			case CMouse::M_DIBUFFERED:
-				hr = g_pMouse->Init(m_exclusive,CMouse::M_DIBUFFERED);
-				break;
-			case CMouse::M_WIN32:
-				hr =g_pMouse->Init(m_exclusive,CMouse::M_WIN32);
-				break;
-			}
-			
-			if(FAILED(hr))
-			{
-				ComPrintf("CMouse:CMouseMode: Couldnt change to mode %d\n",temp);
+				ComPrintf("Invalid Mouse Mode specified\n");
 				return false;
 			}
+			
+			//Allow configs to change the mousemode if its valid
+			//even before the mouse actually inits
+			if(m_eMouseState == DEVNONE)
+			{
+				m_eMouseMode = (CMouse::EMouseMode)temp;
+				return true;
+			}
 
+			if(FAILED(g_pMouse->Init(m_bExclusive,(CMouse::EMouseMode)temp)))
+			{
+				ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",temp);
+				return false;
+			}
 			return true;
 		}
 		ComPrintf("CMouse::CMouseMoude:couldnt read required mode (valid 1-3)\n");
 	}
 
 	//Show current info
-	ComPrintf("MouseMode is %d\n",m_mousemode);
+	ComPrintf("MouseMode is %d\n",m_eMouseMode);
 
-	switch(m_mousemode)
+	switch(m_eMouseMode)
 	{
 	case CMouse::M_NONE:
 		ComPrintf("CMouse mode::Not intialized\n");
@@ -1000,13 +864,13 @@ bool CXSens(const CVar * var, int argc,char** argv)
 		{
 			if(temp > 0.0 && temp < 30.0)
 			{
-				m_xsens = temp;
+				m_fXSens = temp;
 				return true;
 			}
 			ComPrintf("CMouse::CXSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("X-axis Sensitivity: %.2f\n", m_xsens);
+	ComPrintf("X-axis Sensitivity: %.2f\n", m_fXSens);
 	return false;
 }
 
@@ -1024,13 +888,13 @@ bool CYSens(const CVar * var, int argc,char** argv)
 		{
 			if(temp > 0.0 && temp < 30.0)
 			{
-				m_ysens = temp;
+				m_fYSens = temp;
 				return true;
 			}
 			ComPrintf("CMouse::CYSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("Y-axis Sensitivity: %.2f\n", m_ysens);
+	ComPrintf("Y-axis Sensitivity: %.2f\n", m_fYSens);
 	return false;
 }
 
@@ -1049,17 +913,16 @@ bool CSens(const CVar * var, int argc, char** argv)
 		{
 			if(temp > 0.0 && temp < 30.0)
 			{
-				m_sens = temp;
+				m_fSens = temp;
 				return true;
 			}
 			ComPrintf("CMouse::CSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("Mouse Sensitivity: %.2f\n", m_sens);
+	ComPrintf("Mouse Sensitivity: %.2f\n", m_fSens);
 	return false;
 
 }
-
 
 /*
 ======================================
@@ -1074,13 +937,13 @@ bool CInvert(const CVar * var, int argc, char** argv)
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
 			if(temp)
-				m_invert = true;
+				m_bInvert = true;
 			else 
-				m_invert = false;
+				m_bInvert = false;
 			return true;
 		}
 	}
-	if(m_invert)
+	if(m_bInvert)
 		ComPrintf("CInput::Mouse is inverted\n");
 	else
 		ComPrintf("CInput::Mouse is not inverted\n");
@@ -1100,13 +963,13 @@ bool CMouseFilter(const CVar * var, int argc, char** argv)
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
 			if(temp)
-				m_filter = true;
+				m_bFilter = true;
 			else 
-				m_filter = false;
+				m_bFilter = false;
 			return true;
 		}
 	}
-	if(m_filter)
+	if(m_bFilter)
 		ComPrintf("CInput::Mouse filter on\n");
 	else
 		ComPrintf("CInput::Mouse filter off\n");

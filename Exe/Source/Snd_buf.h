@@ -1,3 +1,5 @@
+#ifdef INCLUDE_SOUND
+
 #ifndef _V_DSOUND_BUF
 #define _V_DSOUND_BUF
 
@@ -46,3 +48,7 @@ private:
 
 
 #endif
+
+
+#endif
+

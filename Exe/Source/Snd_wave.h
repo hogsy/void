@@ -1,3 +1,5 @@
+#ifdef INCLUDE_SOUND
+
 #ifndef _V_WAVEFILES
 #define _V_WAVEFILES
 
@@ -46,5 +48,7 @@ private:
 	int			curwaves;
 };
 
+
+#endif
 
 #endif

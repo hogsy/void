@@ -69,7 +69,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /G5 /MTd /W3 /WX /GX /ZI /Od /D "_DEBUG" /D "RENDERER" /D "_WIN32" /D "WIN32" /D "_WINDOWS_RENDERER" /Fr /YX /FD /c
+# ADD CPP /nologo /G5 /MTd /W3 /WX /GX /ZI /Od /D "_DEBUG" /D "RENDERER" /D "_WIN32" /D "WIN32" /D "_WINDOWS_RENDERER" /YX /FD /c
+# SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -246,10 +247,6 @@ SOURCE=..\Shared\Clip.cpp
 # Begin Source File
 
 SOURCE=..\Shared\clip.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_cvar.cpp
 # End Source File
 # Begin Source File
 

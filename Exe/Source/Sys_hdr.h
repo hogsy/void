@@ -20,6 +20,7 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
+#include "Com_fs.h"
 
 #include "Sys_cons.h"
 #include "Util_sys.h"
@@ -42,8 +43,10 @@ extern HINSTANCE	g_hInst;
 extern RECT			g_hRect;
 extern char			g_exedir[COM_MAXPATH];
 extern char			g_gamedir[COM_MAXPATH];
+
 extern float		g_fframeTime;
 extern float		g_fcurTime;
+
 extern eGameState	g_gameState;
 
 #endif

@@ -1,6 +1,7 @@
 #include "Cl_main.h"
 #include "Sys_main.h"
 #include "I_renderer.h"
+#include "Cl_cmds.h"
 
 extern CVoid		*g_pVoid;
 extern world_t		*g_pWorld;
@@ -13,6 +14,10 @@ CVar *		CClient::m_clrate;
 CVar *		CClient::m_noclip;
 
 I_RHud *	CClient::m_rHud;
+
+
+ClientKey  * m_clientkeys=0;
+ClientKey ** m_commandbuffer=0;
 
 /*
 ======================================
@@ -35,7 +40,10 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 	eye.origin.y = 0;
 	eye.origin.z = 48;
 
-	m_clientkeys = new cl_keys[256];
+	m_clientkeys = new ClientKey[256];
+	m_commandbuffer = new ClientKey * [CL_CMDBUFFERSIZE];
+	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
+		m_commandbuffer[i] =0;
 
 	m_connected=false;
 	m_ingame = false;
@@ -50,13 +58,11 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 
 	m_rHud = 0;
 
-
 	g_pCons->RegisterCVar(&m_clport,"cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	g_pCons->RegisterCVar(&m_clrate,"cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	g_pCons->RegisterCVar(&m_clname,"cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
 	g_pCons->RegisterCVar(&m_noclip,"cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
 /*
-
 	g_pCons->RegisterCVar(&m_clport);
 	g_pCons->RegisterCVar(&m_clrate);
 	g_pCons->RegisterCVar(&m_clname);
@@ -82,6 +88,9 @@ CClient::~CClient()
 #endif
 
 	delete [] m_clientkeys;
+	for(int i=0; i<CL_CMDBUFFERSIZE;i++)
+		m_commandbuffer[i] = 0;
+	delete [] m_commandbuffer;
 }
 
 
@@ -244,10 +253,12 @@ bool CClient::LoadWorld(world_t *world)
 		return false;
 	}
 	
-//	g_pRender->Con_ToggleFullscreen(false);
+//	g_pRender->Con_ToggleFullscreen(falselk;);
 //	g_pRender->Con_Toggle(false);
+
 	g_pCons->ToggleFullscreen(false);
 	g_pCons->Toggle(false);
+	
 	ComPrintf("CClient::Load World: OK\n");
 
 	g_gameState = INGAME;
@@ -287,6 +298,8 @@ void CClient::RunFrame()
 {
 	if(m_ingame)
 	{
+		RunCommands();
+
 		if (!((desired_movement.x==0) && (desired_movement.y==0) && (desired_movement.z==0)) || (m_campath != -1))
 		{
 			VectorNormalize(&desired_movement);

@@ -1,3 +1,5 @@
+#ifdef INCLUDE_SOUND
+
 #include "Sys_hdr.h"
 #include "Snd_wave.h"
 #include "Snd_main.h"
@@ -260,7 +262,7 @@ int CWavemanager::GetIndex(char *filename)
 }
 
 
-
+#endif
 
 
 

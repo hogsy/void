@@ -1,18 +1,17 @@
-#ifndef _IN_DEFS
-#define _IN_DEFS
+#ifndef VOID_INPUT_DEFINITIONS
+#define VOID_INPUT_DEFINITIONS
 
-//state flags - can be changed to right/left
-//================================
-enum
-{
-	NONE = 0,
-	SHIFTDOWN = 1,
-	ALTDOWN = 2,
-	CTRLDOWN = 3
-};
+#include "Com_defs.h"
 
-//Generic button state flags,
-//================================
+/*
+Listeners need these definations to handle input events
+*/
+
+/*
+===========================================
+Generic button state flags,
+===========================================
+*/
 enum EButtonState
 {
 	BUTTONUP		= 0,	
@@ -22,42 +21,38 @@ enum EButtonState
 };
 
 
-//Device states used by the Input 
-//object classes as a crude error check
-//================================
-enum EDeviceState
+/*
+===========================================
+Key Event flags
+===========================================
+*/
+enum EKeyEventFlags
 {
-	DEVNONE			=0,		//Device has not been created
-	DEVINITIALIZED	=1,		//Device exists, but has not been acquired
-	DEVACQUIRED		=2		//Device exits and is acquired
+	NONE = 0,
+	SHIFTDOWN = 1,
+	ALTDOWN = 2,
+	CTRLDOWN = 3
 };
-//================================================================
-
 
 /*
 ===========================================
-custom key constants
+Input Key Constants
 ===========================================
 */
-enum
+enum EInKey
 {
-	// --------------------
-	// characters 0-127 map to their ascii characters
-	// --------------------
+	// characters 0-127 map to ascii characters
 
 	INKEY_NULL			= 0x00000000,
     INKEY_BACKSPACE		= 0x00000008,
     INKEY_TAB			= 0x00000009,
     INKEY_ENTER			= 0x0000000D,
     INKEY_ESCAPE		= 0x0000001B,
-    INKEY_SPACE			= 0x00000020, // same as ' ', here for convenience
+    INKEY_SPACE			= 0x00000020,	// same as ' ', here for convenience
 	
-	// regular characters don't need constants here; use 'a' 'b' etc.
 
-	// --------------------
-	// characters 128-255 are used for extended keys
-	// --------------------
-    
+	// 128-255 used for extended keys
+   
 	// arrow keys
 	
 	INKEY_UPARROW = 128,
@@ -110,35 +105,73 @@ enum
     INKEY_NUM7,
     INKEY_NUM8,
     INKEY_NUM9,
-    // locks and misc keys
+    
+	// locks and misc keys
 	INKEY_NUMLOCK,
     INKEY_CAPSLOCK,
     INKEY_SCROLLLOCK,
     INKEY_PRINTSCRN,
     INKEY_PAUSE,
 
-	INKEY_MOUSE1,
-	INKEY_MOUSE2,
-	INKEY_MOUSE3,
-	INKEY_MOUSE4
+	//Mouse buttons
+	INKEY_MOUSE1	= 252,
+	INKEY_MOUSE2	= 253,
+	INKEY_MOUSE3	= 254,
+	INKEY_MOUSE4	= 255
 };
 
 
 //================================================================
 //================================================================
 
+/*
+===========================================
+Key Event Object
+===========================================
+*/
 typedef struct
 {
-	EButtonState state;
-	int			 id;
-	float		 time;
-	byte		 flags;
+	EButtonState state;		//Button State
+	byte		 flags;		//Button Flags
+	int			 id;		//Button Id var
+	float		 time;		//Time the event occured
 }KeyEvent_t;
 
 
-//Generic function which receives input
-typedef void (*IN_KEYHANDLER)(const KeyEvent_t *kevent);
-typedef void (*IN_CURSORHANDLER)(const float &x, const float &y, const float &z);
+/*
+===========================================
+InputListener Interfaces
+===========================================
+*/
+struct I_InCursorListener
+{	
+	virtual void HandleCursorEvent(const float &ix, 
+								   const float &iy,
+								   const float &iz)=0;
+};
+
+struct I_InKeyListener
+{	
+	virtual void HandleKeyEvent(const KeyEvent_t &kevent)=0;
+};
+
+
+/*
+===========================================
+Input Focus Manager
+This is what the listeners register to
+===========================================
+*/
+struct I_InputFocusManager
+{
+	#define IN_DEFAULTREPEATRATE	0.04f
+
+	virtual void SetKeyListener(I_InKeyListener * plistener,
+								bool bRepeatEvents = false,
+								float fRepeatRate = IN_DEFAULTREPEATRATE)=0;
+	virtual void SetCursorListener(I_InCursorListener * plistener)=0;
+};
+extern I_InputFocusManager * GetInputFocusManager();
 
 
 #endif

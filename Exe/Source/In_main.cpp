@@ -1,137 +1,143 @@
 #include "In_main.h"
+#include "In_hdr.h"
 #include "In_kb.h"
 #include "In_mouse.h"
 
 //========================================================================================
 //========================================================================================
 
-CMouse		* g_pMouse=0;	//pointer to Mouse class
-CKeyboard	* g_pKb=0;		//Keyboard object
+CMouse		  *			g_pMouse=0;	//Pointer to Mouse class
+CKeyboard	  *			g_pKb=0;	//Keyboard object
 
-static CVar	* m_pexclusive=0;
+extern CInput *			g_pInput;	//The Input object, Need this here for Cvar funcs, and getfocusmanager
 
-static LPDIRECTINPUT7	m_pdi=0;
+static LPDIRECTINPUT7	m_pDInput=0;	//The direct input object
 
-static bool	CSetExclusive(const CVar * var, int argc, char** argv);
+static CVar	 *			m_pVarExclusive=0;
+static bool	CSetExclusive(const CVar * var, int argc, char** argv);	
 
-static void DefaultCursorHandler(const float &x, const float &y, const float &z);
-static void DefaultKeyHandler(const KeyEvent_t *kevent);
 
-float				g_fRepeatRate=0.0f;		//Current repeat rate
-IN_KEYHANDLER		g_pfnKeyHandler=0;		//Key handler func
-IN_CURSORHANDLER	g_pfnCursorHandler=0;	//Cursor Handler
-
+bool g_bDIAvailable = false;
 
 //========================================================================================
 //========================================================================================
 
-
-//================================
-//Constructor
-//================================
-CInput :: CInput()
+/*
+=====================================
+Constructor
+=====================================
+*/
+CInput::CInput()
 {
-	g_pMouse = new CMouse;
-	g_pKb = new CKeyboard;
+	g_pMouse = new CMouse();
+	g_pKb = new CKeyboard();
 
-	m_pdi = NULL;
-
-	g_pfnKeyHandler = &DefaultKeyHandler;
-	g_pfnCursorHandler = &DefaultCursorHandler;
+	m_pDInput = 0;
 
 	//Register CVars
-	g_pCons->RegisterCVar(&m_pexclusive,"in_ex","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
+	g_pCons->RegisterCVar(&m_pVarExclusive,"in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
 }
 
-//================================
-//Destructor
-//================================
-CInput :: ~CInput()
+/*
+=====================================
+Destructor
+=====================================
+*/
+CInput::~CInput()
 {
 	if(g_pMouse)
-		delete g_pMouse;
-	if(g_pKb)
-		delete g_pKb;
-
-	g_pMouse = 0;
-	g_pKb = 0;
-
-	g_pfnKeyHandler = 0;
-	g_pfnCursorHandler = 0;
-
-	m_pdi = 0;
-}
-
-
-
-LPDIRECTINPUT7  CInput::GetDirectInput()
-{	return m_pdi;
-}
-
-//================================
-//Create DI object and all devices
-//================================
-bool CInput :: Init()  
-{
-	if(m_pdi != NULL)
 	{
-		ComPrintf("CInput::Create :Already Intialized Direct Input\n");	
+		delete g_pMouse;
+		g_pMouse = 0;
+	}
+	if(g_pKb)
+	{
+		delete g_pKb;
+		g_pKb = 0;
+	}
+	m_pDInput = 0;
+}
+
+/*
+=====================================
+Initialize the input subsystem
+=====================================
+*/
+bool CInput::Init()  
+{
+	if(m_pDInput != NULL)
+	{
+		ComPrintf("CInput::Init:Already Intialized DirectInput\n");	
 		return true;
 	}
 
 	HRESULT hr = DirectInputCreateEx(g_hInst,
 									 DIRECTINPUT_VERSION, 
 									 IID_IDirectInput7, 
-									 (void**)&m_pdi, NULL); 
+									 (void**)&m_pDInput, NULL); 
 	if(FAILED(hr))
 	{
-		InputError(hr,"CInput::Create :Direct Input Intialization failed");
-		return false;
+		ComPrintf("CInput::Init:DirectInput Intialization Failed\n");
+		g_bDIAvailable = false;
 	}
-	ComPrintf("CInput::Create :Direct Input Intialized\n");
+	else
+	{
+		g_bDIAvailable = true;
+		ComPrintf("CInput::Init:DirectInput Intialized\n");
+	}
 
-	//Create Devices
-	hr = g_pMouse->Init((int)m_pexclusive->value); 
+	//Initialize Devices
+
+	//Are Initialized without specifying any modes, so that they
+	//can default to what they read from config files
+
+	hr = g_pMouse->Init((int)m_pVarExclusive->value, CMouse::M_NONE); 
 	if(FAILED(hr))
 	{
-		Release();
-		InputError(hr,"CInput::Create :Mouse Intialization failed\n");
+		Shutdown();
+		In_DIErrorMessageBox(hr,"CInput::Init:Mouse Intialization failed\n");
 		return false;
 	}
 	
-	hr =g_pKb->Init((int)m_pexclusive->value); 
+	hr =g_pKb->Init((int)m_pVarExclusive->value, CKeyboard::KB_NONE); 
 	if(FAILED(hr))
 	{
-		Release();
-		InputError(hr,"CInput::Create :Keyboard Intialization failed");
+		Shutdown();
+		In_DIErrorMessageBox(hr,"CInput::Init:Keyboard Intialization failed");
 		return false;
 	}
-
 	return true;
 }
 
-//================================
-//Release all devices and DI object
-//================================
-void CInput :: Release()
+/*
+=====================================
+Shuts down the Input System
+=====================================
+*/
+void CInput::Shutdown()
 {
 	//Release all Devices here
 	g_pMouse->Shutdown();
 	g_pKb->Shutdown();
 	
-	if(m_pdi) 
-		m_pdi->Release();
-
-	ComPrintf("CInput::Release :Direct Input Released\n");
+	if(m_pDInput) 
+	{
+		m_pDInput->Release();
+		ComPrintf("CInput::Release :DirectInput Released\n");
+	}
+	ComPrintf("CInput::Shutdown - OK\n");
 }
 
 
-//================================
-//Acquire mouse
-//================================
-bool CInput :: AcquireMouse()
+/*
+=====================================
+Acquire the mouse
+=====================================
+*/
+bool CInput::AcquireMouse()
 {
-	if(!g_pMouse)
+	//If device has not been initialized then just return
+	if((!g_pMouse) || g_pMouse->GetDeviceState() == DEVNONE)
 		return false;
 	
 	//Already acquired, or acquring was successful
@@ -142,41 +148,48 @@ bool CInput :: AcquireMouse()
 	return false;
 }
 
-//================================
-//Acquire Keyboard
-//================================
-bool CInput :: AcquireKeyboard()
+/*
+=====================================
+Acquire the Keyboard
+=====================================
+*/
+bool CInput::AcquireKeyboard()
 {
-	if(!g_pKb)
+	//If device has not been initialized then just return
+	if((!g_pKb) || g_pKb->GetDeviceState() == DEVNONE)
 		return false;
 	
 	//Already acquired, or acquring was successful
 	if((g_pKb->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(g_pKb->Acquire())))
 		return true;
 
-	ComPrintf("CInput::Acquire::COULD NOT ACQUIRE KB\n");
+	ComPrintf("CInput::Acquire::Couldnt acquire keyboard\n");
 	return false;
 }
 
 
-//================================
-//Acquire input devices
-//================================
+/*
+=====================================
+Acquire Input Devices
+=====================================
+*/
 void CInput :: Acquire()
 {
-	if(!m_pdi)
-		return;
-
 	AcquireMouse();
 	AcquireKeyboard();
 }	
 
 
-//================================
-//Unacquire mouse
-//================================
-bool CInput :: UnAcquireMouse()
+/*
+=====================================
+Unacquire the Mouse
+=====================================
+*/
+bool CInput::UnAcquireMouse()
 {
+	if(!g_pMouse)
+		return true;
+
 	if(g_pMouse->GetDeviceState() == DEVINITIALIZED) 
 		return true;
 
@@ -185,11 +198,16 @@ bool CInput :: UnAcquireMouse()
 	return false;
 }
 
-//================================
-//Unacquire KB
-//================================
-bool CInput :: UnAcquireKeyboard()
+/*
+=====================================
+Unacquire the keyboard
+=====================================
+*/
+bool CInput::UnAcquireKeyboard()
 {
+	if(!g_pKb)
+		return true;
+
 	if(g_pKb->GetDeviceState() == DEVINITIALIZED)
 		return true;
 
@@ -198,10 +216,11 @@ bool CInput :: UnAcquireKeyboard()
 	return false;
 }
 
-
-//================================
-//Unacquire input devices
-//================================
+/*
+=====================================
+Unacquire Input devices
+=====================================
+*/
 void CInput :: UnAcquire()
 {
 	UnAcquireKeyboard();
@@ -209,9 +228,10 @@ void CInput :: UnAcquire()
 }
 
 /*
-===========================================
-
-===========================================
+=====================================
+call resize event for devices which
+need it
+=====================================
 */
 void CInput::Resize()
 {
@@ -219,19 +239,115 @@ void CInput::Resize()
 }
 
 
-//================================
-//Find and tell the error 
-//================================
-void CInput ::InputError(HRESULT err, char * msg)
+/*
+=====================================
+Update functions
+=====================================
+*/
+void CInput::UpdateKeys() 
+{ 	g_pKb->Update(); 
+}			
+
+void CInput::UpdateCursor() 
+{ 	g_pMouse->Update();
+}
+
+void CInput::UpdateDevices()  
+{
+	g_pMouse->Update();
+	g_pKb->Update();
+}
+
+/*
+=====================================
+Handle Listener requests
+=====================================
+*/
+void CInput::SetKeyListener( I_InKeyListener * plistener,
+							bool bRepeatEvents,
+							float fRepeatRate)
+{
+	g_pKb->SetKeyListener(plistener,bRepeatEvents,fRepeatRate);
+}
+
+void CInput::SetCursorListener( I_InCursorListener * plistener)
+{
+	g_pMouse->SetCursorListener(plistener);
+}
+
+
+//========================================================================================
+//========================================================================================
+
+/*
+================================
+Console Loopback Func
+Set exclusive access
+================================
+*/
+bool CSetExclusive(const CVar * var, int argc, char** argv)
+{
+	if(argc == 2 && argv[1])
+	{
+		float temp=0;
+		if(argv[1] && sscanf(argv[1],"%f",&temp))
+		{
+			if(temp)
+			{
+				if(FAILED(g_pMouse->SetExclusive(true)) ||
+				   FAILED(g_pKb->SetExclusive(true)))
+				{
+					ComPrintf("Failed to change Input mode to Exclusive\n");
+					return false;
+				}
+			}
+			else 
+			{
+				if(FAILED(g_pMouse->SetExclusive(false)) ||
+				   FAILED(g_pKb->SetExclusive(false)))
+				{
+					ComPrintf("Failed to change Input mode to NonExclusive\n");
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	if(m_pVarExclusive->value)
+		ComPrintf("Input in Exclusive mode\n");
+	else
+		ComPrintf("Input in NonExclusive mode\n");
+	return false;
+}
+
+
+//========================================================================================
+
+/*
+=====================================
+Returns the DI object for Mouse/Keyboard
+=====================================
+*/
+LPDIRECTINPUT7  In_GetDirectInput()
+{	return m_pDInput;
+}
+
+
+/*
+=====================================
+Throws an error message box
+=====================================
+*/
+void In_DIErrorMessageBox(HRESULT err, char * msg)
 {
 	char error[128];
 	if(msg)
 	{
 		strcpy(error,msg);
-		strcat(error,"Direct Input Error:\n");
+		strcat(error,"DirectInput Error:\n");
 	}
 	else
-		strcpy(error,"Direct Input Error:\n");
+		strcpy(error,"DirectInput Error:\n");
 	switch(err)
 	{
 		case DI_BUFFEROVERFLOW: strcat(error,"NOTATTACHED/PROPNOEFFECT/BUFFEROVERFLOW"); break;
@@ -258,137 +374,16 @@ void CInput ::InputError(HRESULT err, char * msg)
 }
 
 
-//================================
-//The input frame
-//================================
-bool CInput::InputFrame()  
-{
-	g_pMouse->UpdateMouse();
-	g_pKb->UpdateKeys();
-
-#if 0
-
-	if(m_bmouse)
-	{
-
-		g_pMouse->UpdateMouse();
-/*		try
-		{
-			g_pMouse->UpdateMouse();
-		}
-		catch(HRESULT hr)
-		{
-			if(hr == DIERR_NOTINITIALIZED)
-			{
-				m_bmouse = false;
-			}
-			InputError(hr);
-			return false;
-		}
-*/
-	}
-	if(m_bkb)
-	{
-		g_pKb->UpdateKeys();
-/*		try
-		{
-			g_pKb->UpdateKeys();
-		}
-		catch(HRESULT hr)
-		{
-			if(hr == DIERR_NOTINITIALIZED)
-			{
-				m_bkb = false;
-			}
-			InputError(hr);
-			return false;
-		}
-*/
-	}
-#endif
-	return true;
-}
-
-
-
-
-
-void DefaultCursorHandler(const float &x, const float &y, const float &z)
-{
-}
-
-void DefaultKeyHandler(const KeyEvent_t *kevent)
-{
-}
-
-
-
-void CInput::SetKeyHandler(IN_KEYHANDLER pfnkeys, float repeatrate)
-{
-	if(pfnkeys)
-		g_pfnKeyHandler =pfnkeys;
-	else
-		g_pfnKeyHandler =DefaultKeyHandler;
-	g_fRepeatRate = repeatrate;
-
-}
-
-
-void CInput::SetCursorHandler(IN_CURSORHANDLER pfncursor)
-{
-	if(pfncursor)
-		g_pfnCursorHandler = pfncursor;
-	else
-		g_pfnCursorHandler = DefaultCursorHandler;
-		
-}
-
-
-
 /*
-================================
-Console Loopback Funcs
-================================
+=====================================
+Returns Input focus manager
+i.e The Input object
+=====================================
 */
-
-bool CSetExclusive(const CVar * var, int argc, char** argv)
-{
-	if(!g_pInput || !g_pMouse)
-		return false;
-
-	if(argc == 2 && argv[1])
-	{
-		float temp=0;
-		if(argv[1] && sscanf(argv[1],"%f",&temp))
-		{
-			g_pMouse->UnAcquire();
-			if(temp)
-			{
-				if(FAILED(g_pMouse->SetExclusive()))
-				{
-					ComPrintf("Failed to change Input mode to Exclusive\n");
-					g_pMouse->Acquire();
-					return false;
-				}
-			}
-			else 
-			{
-				if(FAILED(g_pMouse->LoseExclusive()))
-				{
-					ComPrintf("Failed to change Input mode to NonExclusive\n");
-					g_pMouse->Acquire();
-					return false;
-				}
-			}
-			g_pMouse->Acquire();
-			return true;
-		}
-	}
-	if(m_pexclusive->value)
-		ComPrintf("Input in Exclusive mode\n");
-	else
-		ComPrintf("Input in NonExclusive mode\n");
-	return false;
+I_InputFocusManager * GetInputFocusManager()
+{ return g_pInput; 
 }
+
+
 
 

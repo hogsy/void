@@ -8,114 +8,140 @@ Client Command Handling
 -provide means to bind keys to commands
 ======================================
 */
-
 #include "Cl_main.h"
-#include "In_defs.h"
-
-/*
-============================================================================
-A Constant list of Special keys "names"
-and their corresponding values
-only 
-============================================================================
-*/
-
-typedef struct	conskeys
-{
-	const char		*key;
-	unsigned int	val;
-}keyvals_t;
+#include "Cl_cmds.h"
 
 
-const keyvals_t keytable[] =
-{
-	{	"MOUSE1",		INKEY_MOUSE1	},
-	{	"MOUSE2",		INKEY_MOUSE2	},
-	{	"MOUSE3",		INKEY_MOUSE3	},
-	{	"MOUSE4",		INKEY_MOUSE4	},
-	{	"UPARROW",		INKEY_UPARROW	},
-	{	"DOWNARROW",	INKEY_DOWNARROW	},
-	{	"LEFTARROW",	INKEY_LEFTARROW	},
-	{	"RIGHTARROW",	INKEY_RIGHTARROW},
-	{	"TAB",			INKEY_TAB		},
-	{	"ESC",			INKEY_ESCAPE	},
-	{	"F1",			INKEY_F1	},
-	{	"F2",			INKEY_F2	},
-	{	"F3",			INKEY_F3	},
-	{	"F4",			INKEY_F4	},
-	{	"F5",			INKEY_F5	},
-	{	"F6",			INKEY_F6	},
-	{	"F7",			INKEY_F7	},
-	{	"F8",			INKEY_F8	},
-	{	"F9",			INKEY_F9	},
-	{	"F10",			INKEY_F10	},
-	{	"F11",			INKEY_F11	},
-	{	"F12",			INKEY_F12	},
-	{	"INS",			INKEY_INS	},
-	{	"DEL",			INKEY_DEL	},
-	{	"HOME",			INKEY_HOME	},
-	{	"END",			INKEY_END	},
-	{	"PGUP",			INKEY_PGUP	},
-	{	"PGDN",			INKEY_PGDN	},
-	{	0,	0}
-};
-
-
-//cl_keys_t  CClient::m_clientkeys[256];
-cl_keys  * CClient::m_clientkeys;
-
-
-/*
-commands starting with a + will not be removed from the command buffer
-other commands are just entered once on keydown events
-until the same command is entered with another + or -
-*/
-
+//============================================================================
 //============================================================================
 
 /*
 ======================================
-Handle keys pressed this frame
+Add a command to the buffer
 ======================================
 */
-
-void ClientHandleKey(const KeyEvent_t *kevent)
+static void AddToCommandBuffer(ClientKey * const keycommand)
 {
-	if(g_pClient->m_clientkeys[(kevent->id)].command)
+	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
-//FIX ME
-		//if its every frame, then add to buffer 
-		if((((g_pClient->m_clientkeys[(kevent->id)]).everyframe==true) && (kevent->state != BUTTONUP)) ||
-		    (kevent->state == BUTTONDOWN))
+		if(m_commandbuffer[i] == keycommand)
+			return;
+
+		if(m_commandbuffer[i] == 0)
 		{
-			g_pCons->ExecString((g_pClient->m_clientkeys[(kevent->id)]).command);
+			m_commandbuffer[i] = keycommand;
+			return;
 		}
 	}
 }
 
 /*
 ======================================
-Filter and handle mouse input
+Remove command from the buffer
 ======================================
 */
-
-void ClientHandleCursor(const float &x, const float &y, const float &z)
+static void RemoveFromCommandBuffer(const ClientKey * keycommand)
 {
-	g_pClient->RotateRight(x);
-	g_pClient->RotateUp(y);
+	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
+	{
+		if(m_commandbuffer[i] == keycommand)
+			m_commandbuffer[i] = 0;
+	}
 }
 
 
+
+void CClient::HandleKeyEvent	(const KeyEvent_t &kevent)
+{
+	//check if there is a command bound to that key
+	if(m_clientkeys[(kevent.id)].szCommand)
+	{
+		//if the command is supposed to be executed everyframe
+		//until its is released
+		if(m_clientkeys[(kevent.id)].bBuffered)
+		{
+			//if its a keydown event
+			if(kevent.state == BUTTONDOWN)
+			{
+				//add to command buffer
+				AddToCommandBuffer(&m_clientkeys[(kevent.id)]);
+			}
+			else if(kevent.state == BUTTONUP)
+			{
+				//otherwise remove from buffer
+				RemoveFromCommandBuffer(&m_clientkeys[(kevent.id)]);
+			}
+		}
+		//if its regular function and if its a keydown event,
+		else if(kevent.state == BUTTONDOWN)
+		{
+			//execute and return
+			//commandstring
+			g_pCons->ExecString(m_clientkeys[(kevent.id)].szCommand);
+			//m_clientkeys[(kevent.id)].pFunc(1,0);
+		}
+	}
+}
+
+
+void CClient::HandleCursorEvent(const float &ix,
+				   const float &iy,
+				   const float &iz)
+{
+	RotateRight(ix);
+	RotateUp(iy);
+}
+
+
+//============================================================================
+
+/*
+======================================
+Handle mouse input
+called whenever the mouse moves if event based
+or every frame if otherwise
+======================================
+*/
+void CClient::SetInputState(bool on)
+{
+	if(on = true)
+	{
+		GetInputFocusManager()->SetCursorListener(this);
+		GetInputFocusManager()->SetKeyListener(this,false);
+	}
+	else
+	{
+		GetInputFocusManager()->SetCursorListener(0);
+		GetInputFocusManager()->SetKeyListener(0);
+	}
+}
+
+/*
+======================================
+Runs all the commands in the 
+command buffer for the frame
+
+Buffered commands cannot take arguments
+======================================
+*/
+void CClient::RunCommands()
+{
+	for(int i=0; i<CL_CMDBUFFERSIZE;i++)
+		if(m_commandbuffer[i]) m_commandbuffer[i]->pFunc(1,0);
+}
 
 
 
 /*
 ======================================
-Console command, bind something
+Console command 
+Bind another command to a key
+First validate the key,
+Then validate the command being bound
+Then bind the func to the key with flags
 ======================================
 */
-
-void CClient::Bind(int argc, char** argv)
+void CClient::BindFuncToKey(int argc, char** argv)
 {
 	//no arguments
 	if(argc==1)
@@ -126,9 +152,10 @@ void CClient::Bind(int argc, char** argv)
 
 	unsigned char keynum= 0;
 
-	//find keyname i.e LEFT_ARROW etc
+	//Check the name of the key being bound to
 	if(strlen(argv[1]) > 1)
 	{
+		//Find Keyname in table if its bigger than a char
 		for(int x=0;keytable[x].key;x++)
 		{
 			if(!stricmp(keytable[x].key,argv[1]))
@@ -139,37 +166,50 @@ void CClient::Bind(int argc, char** argv)
 		}
 	}
 	else
-		keynum = argv[1][0];
-		
-	//make sure that the keynum is valid
-	if((keynum <= 0) || (keynum > 255))
 	{
-		ComPrintf("bind - error %s is not a valid key -%d\n",argv[1],keynum);
-		return;
+		//make sure that the keynum is valid
+		if((argv[1][0] <= 0) || (argv[1][0] > 255))
+		{
+			ComPrintf("bind - error %s is not a valid key -%d\n",argv[1],keynum);
+			return;
+		}
+		keynum = argv[1][0];
 	}
-
-	//only two args, just show binding and return
+		
+	//Only two args, just show binding for the key and return
 	if(argc == 2)
 	{
-		if(m_clientkeys[keynum].command)
-			ComPrintf("\"%s\" = \"%s\"\n",argv[1],m_clientkeys[keynum].command);
+		if(m_clientkeys[keynum].szCommand && m_clientkeys[keynum].pFunc)
+			ComPrintf("\"%s\" = \"%s\"\n",argv[1],m_clientkeys[keynum].szCommand);
 		else
 			ComPrintf("\"%s\" = \"\"\n",argv[1]);
 		return;
 	}
 
-	int size=1;
-	for(int i=2;i<argc;i++)
-	{	size += (strlen(argv[i])+1);
+	
+	//Get the requested function, and bind it to the key
+	m_clientkeys[keynum].pFunc = g_pCons->GetFuncByName(argv[2]);
+	if(!m_clientkeys[keynum].pFunc)
+	{
+		ComPrintf("%s is not a valid command\n",argv[2]);
+		return;
 	}
+	
+	//If there are more arguments then just the functions name
+	//then they will be used as function paramters
+	
+	//Get their length and allocate space
+	int parmlen = 1;
 
-	if(m_clientkeys[keynum].command)
-		delete [] m_clientkeys[keynum].command;
+	for(int i=2;i<argc;i++)
+		parmlen += strlen(argv[i]);
 
-	m_clientkeys[keynum].command = new char[size];
-	memset(m_clientkeys[keynum].command,0,size);
+	if(m_clientkeys[keynum].szCommand)
+		delete [] m_clientkeys[keynum].szCommand;
+	m_clientkeys[keynum].szCommand = new char[parmlen];
 
-	char *p=m_clientkeys[keynum].command;
+	//Copy the parms into ONE string
+	char *p= m_clientkeys[keynum].szCommand;
 	for(int x=2;x<=argc;x++)
 	{
 		char *c = argv[x];
@@ -179,69 +219,59 @@ void CClient::Bind(int argc, char** argv)
 			c++;
 			p++;
 		}
+	
 		//no more strings, break
 		if((x+1)>=argc)
 		{
 			*p = '\0';
 			break;
 		}
+		
 		//add a space
 		*p = ' ';
 		p++;
 	}
 
-	if(argv[2][0] == '+' || argv[2][0] == '-')
-		m_clientkeys[keynum].everyframe = true;
-	else
-		m_clientkeys[keynum].everyframe = false;
+	//Set buffered flag if the command starts with a +/-
+	if((m_clientkeys[keynum].szCommand[0] == '+') || 
+	   (m_clientkeys[keynum].szCommand[0] == '-'))
+		m_clientkeys[keynum].bBuffered = true;
 
-	ComPrintf("\"%s\"(%d) = \"%s\"\n",argv[1],keynum,m_clientkeys[keynum].command);
+	ComPrintf("\"%s\"(%d) = \"%s\"\n",argv[1],keynum, m_clientkeys[keynum].szCommand);
 }	
-
-
-/*
-======================================
-Runs all the commands in the 
-command buffer for the frame
-======================================
-*/
-void CClient::RunCommands()
-{
-}
 
 /*
 ======================================
 lists all our current bindings
 ======================================
 */
-
 void CClient::BindList(int argc, char** argv)
 {
-	ComPrintf("Client Binding List\n");
-	ComPrintf("===================\n");
+	ComPrintf(" Client Bindings \n");
+	ComPrintf("=================\n");
 	
 	for(unsigned int i=0;i<256;i++)
 	{
-		if(m_clientkeys[i].command)
+		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		{
-			char key[16];
+			char keyname[16];
 			bool hit=false;
 			
 			for(int x=0;keytable[x].key;x++)
 			{
 				if(keytable[x].val == i)
 				{
-					strcpy(key,keytable[x].key);
+					strcpy(keyname,keytable[x].key);
 					hit = true;
 					break;
 				}
 			}
 			if(!hit)
 			{
-				memset(key,'\0',sizeof(key));
-				key[0] = i;
+				keyname[0] = i;
+				keyname[1] = '\0';
 			}
-			ComPrintf("\"%s\" = \"%s\"\n",key,m_clientkeys[i].command);
+			ComPrintf("\"%s\" = \"%s\"\n",keyname, m_clientkeys[i].szCommand);
 		}
 	}
 }
@@ -255,13 +285,14 @@ void CClient::Unbindall(int argc, char** argv)
 {
 	for(int i=0;i<256;i++)
 	{
-		if(m_clientkeys[i].command)
+		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		{
-			delete [] m_clientkeys[i].command;
-			m_clientkeys[i].command=0;
+			delete [] m_clientkeys[i].szCommand;
+			m_clientkeys[i].szCommand=0;
+			m_clientkeys[i].pFunc = 0;
 		}
 	}
-	ComPrintf("CClient::Unbindall - OK\n");
+	ComPrintf("CClient::Unbindall OK\n");
 
 }
 
@@ -270,6 +301,7 @@ void CClient::Unbindall(int argc, char** argv)
 unbind all our bindings
 ======================================
 */
+
 void CClient::Unbind(int argc, char** argv)
 {
 	if(argc <2)
@@ -293,19 +325,21 @@ void CClient::Unbind(int argc, char** argv)
 		}
 	}
 	else
+	{
 		keynum = argv[1][0];
-		
-	//make sure that the key is valid
-	if((keynum == 0) || (keynum > 255))
-	{
-		ComPrintf("bind - error %s is not a valid key -%d\n",argv[1],keynum);
-		return;
+		//make sure that the key is valid
+		if((keynum == 0) || (keynum > 255))
+		{
+			ComPrintf("bind - error %s is not a valid key -%d\n",argv[1],keynum);
+			return;
+		}
 	}
-
-	if(m_clientkeys[keynum].command)
+		
+	if(m_clientkeys[keynum].pFunc && m_clientkeys[keynum].szCommand)
 	{
-		delete [] m_clientkeys[keynum].command;
-		m_clientkeys[keynum].command=0;
+		m_clientkeys[keynum].pFunc = 0;
+		delete [] m_clientkeys[keynum].szCommand;
+		m_clientkeys[keynum].szCommand=0;
 	}
 	ComPrintf("\"%s\" = \"\"\n",argv[1]);
 }
@@ -320,10 +354,6 @@ Register the EXE Client Commands
 
 void CClient::RegCommands()
 {
-	g_pCons->RegisterCFunc("bind", &Bind);
-	g_pCons->RegisterCFunc("unbind", &Unbind);
-	g_pCons->RegisterCFunc("bindlist", &BindList);
-	g_pCons->RegisterCFunc("unbindall", &Unbindall);
 	g_pCons->RegisterCFunc("+forward",&MoveForward);
 	g_pCons->RegisterCFunc("+back",&MoveBackward);
 	g_pCons->RegisterCFunc("+moveleft",&MoveLeft);
@@ -332,7 +362,11 @@ void CClient::RegCommands()
 	g_pCons->RegisterCFunc("+left",&KRotateLeft);
 	g_pCons->RegisterCFunc("+lookup",&KRotateUp);
 	g_pCons->RegisterCFunc("+lookdown",&KRotateDown);
+	g_pCons->RegisterCFunc("bind", &BindFuncToKey);
+	g_pCons->RegisterCFunc("bindlist", &BindList);
 	g_pCons->RegisterCFunc("cam", &CamPath);
+	g_pCons->RegisterCFunc("unbind", &Unbind);
+	g_pCons->RegisterCFunc("unbindall", &Unbindall);
 }
 
 
@@ -343,12 +377,12 @@ called from the Console Shutdown func
 ======================================
 */
 
-void CClient::Cl_WriteBindTable(FILE *fp)
+void CClient::WriteBindTable(FILE *fp)
 {
 	for(unsigned int i=0;i<256;i++)
 	{
 		//there is a binding for this key
-		if(m_clientkeys[i].command != 0)
+		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		{
 			char line[80];
 			bool hit=false;
@@ -363,7 +397,6 @@ void CClient::Cl_WriteBindTable(FILE *fp)
 					break;
 				}
 			}
-
 			if(!hit)
 			{
 				char p[2];
@@ -373,7 +406,7 @@ void CClient::Cl_WriteBindTable(FILE *fp)
 			}
 			
 			strcat(line," ");
-			strcat(line, m_clientkeys[i].command);
+			strcat(line, m_clientkeys[i].szCommand);
 			strcat(line,"\n");
 			fputs(line,fp);
 		}

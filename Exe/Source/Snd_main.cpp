@@ -1,4 +1,4 @@
-
+#ifdef INCLUDE_SOUND
 
 #include "Sys_hdr.h"
 #include "Snd_main.h"
@@ -906,6 +906,8 @@ BOOL CALLBACK DSEnumProc( LPGUID lpGUID, LPSTR lpszDesc,
 #endif
 
 
+
+#endif
 
 
 

@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib Ws2_32.lib winmm.lib dxguid.lib dinput.lib dsound.lib version.lib fmodvc.lib /nologo /subsystem:windows /profile /map:"..\Void.map" /machine:I386 /out:"D:\Void\Void.exe"
+# ADD LINK32 version.lib kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib zlib.lib /nologo /subsystem:windows /profile /map:"..\Void.map" /machine:I386 /out:"D:\Void\Void.exe"
 # SUBTRACT LINK32 /debug
 
 !ELSEIF  "$(CFG)" == "Void - Win32 Debug"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /W3 /WX /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FR /YX /FD /c
+# ADD CPP /nologo /Gz /W3 /WX /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -80,8 +80,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib /nologo /subsystem:windows /incremental:no /map:"D:\Void\Void.map" /debug /debugtype:both /machine:I386 /out:"..\Void.exe"
-# SUBTRACT LINK32 /profile
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib zlib.lib /nologo /subsystem:windows /map:"..\Void.map" /debug /machine:I386 /out:"..\Void.exe"
+# SUBTRACT LINK32 /profile /incremental:no
 
 !ENDIF 
 
@@ -130,6 +130,10 @@ SOURCE=.\Source\Sys_cons.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Sys_cvar.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Sys_main.cpp
 # End Source File
 # Begin Source File
@@ -170,10 +174,6 @@ SOURCE=..\Shared\clip.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Fmod\fmod.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
@@ -199,6 +199,10 @@ SOURCE=..\Shared\world.h
 # Begin Source File
 
 SOURCE=.\Source\Cl_cmds.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Cl_cmds.h
 # End Source File
 # Begin Source File
 
@@ -240,6 +244,10 @@ SOURCE=.\Source\resources.rc
 # Begin Group "Music"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Fmod\fmod.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Mus_main.cpp
@@ -306,6 +314,10 @@ SOURCE=.\Source\In_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\In_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\In_kb.cpp
 # End Source File
 # Begin Source File
@@ -334,27 +346,7 @@ SOURCE=.\Source\In_mouse.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\Com_cvar.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_cvar.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_file.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_file.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_filesys.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_filesys.h
 # End Source File
 # Begin Source File
 
@@ -364,22 +356,6 @@ SOURCE=..\Shared\Com_mem.cpp
 
 SOURCE=..\Shared\Com_mem.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_pakfile.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_pakfile.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_zipfile.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_zipfile.h
-# End Source File
 # End Group
 # Begin Group "Docs"
 
@@ -387,14 +363,6 @@ SOURCE=..\Shared\Com_zipfile.h
 # Begin Source File
 
 SOURCE=.\Source\q3netinfo
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\todo
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\worklog
 # End Source File
 # End Group
 # Begin Group "Util"
@@ -414,6 +382,10 @@ SOURCE=..\Shared\Com_list.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_parms.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_queue.h
 # End Source File
 # Begin Source File
@@ -425,6 +397,50 @@ SOURCE=.\Source\Util_sys.cpp
 SOURCE=.\Source\Util_sys.h
 # End Source File
 # End Group
+# Begin Group "File System"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Com_file.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_filesys.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_fs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_pakfile.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_pakfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_zipfile.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_zipfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\InfoZip\Iz_unzip.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\InfoZip\Iz_zconf.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\InfoZip\Iz_zlib.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\Com_defs.h
@@ -432,6 +448,14 @@ SOURCE=..\Shared\Com_defs.h
 # Begin Source File
 
 SOURCE=.\Source\Sys_hdr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\todo
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\worklog
 # End Source File
 # End Target
 # End Project

@@ -1,36 +1,38 @@
-#ifndef __VOID_CONSOLE__
-#define __VOID_CONSOLE__
+#ifndef VOID_CONSOLE_CLASS
+#define VOID_CONSOLE_CLASS
 
 #include "I_console.h"
-#include "Com_defs.h"
+#include "In_defs.h"
+
 #include "Com_buffer.h"
 #include "Com_queue.h"
 #include "Com_list.h"
-#include "In_defs.h"
 
 //#define VOID_DOS_CONSOLE	1
-
 #define CON_MAXARGSIZE 80
 
 /*
 ==========================================
-The Console class
+The Console interface class
 Handles 
-Cvars/Commands, 
-console input, 
+Cvars/Commands
+console input
 config files
 ==========================================
 */
 
-class CConsole : public I_ExeConsole
+void ComPrintf(char* text, ...);
+
+class CConsole: public I_ExeConsole,	//Console interface exported to other modules
+				public I_InKeyListener	//Key Event listener interface	
 {
 public:
 
-	CConsole();
-	~CConsole();
+	//==============================================================
+	//I_ExeConsole Interface
 
-	bool Init(I_RConsole * prcons);
-	bool Shutdown();
+	//Print Function
+	void dprint(char* text);
 
 	//CVar Registration
 	void RegisterCVar(CVar **cvar, 
@@ -43,8 +45,23 @@ public:
 	void RegisterCFunc(const char *funcname,
 					  CFUNC pfunc);
 
-	//Print Function
-	void dprint(char* text);
+	void CVarSet(CVar **cvar, const char *varval);
+	void CVarForceSet(CVar **cvar, const char *varval);
+	void CVarSet(CVar **cvar, float val);
+	void CVarForceSet(CVar **cvar, float val);
+
+	//==============================================================
+	//Key Listener interface
+	void HandleKeyEvent(const KeyEvent_t &kevent);
+
+
+	//==============================================================
+
+	CConsole();
+	~CConsole();
+
+	bool Init(I_RConsole * prcons);
+	bool Shutdown();
 
 	//Message Boxes
 	void MsgBox(char *caption, unsigned long boxType, char *msg, ...);
@@ -55,47 +72,43 @@ public:
 
 	//just pass a string to be parsed and exec'ed
 	void ExecString(const char *string);
-	
+
+	CFUNC GetFuncByName(const char * fname);
+
+		
 	//Console funcs
     void ToggleFullscreen(bool full);
     void Toggle(bool down);
 
-	friend void  ConsoleHandleKey(const KeyEvent_t *kevent);
-
 private:
 
-	void UpdateBuffer();
 	void HandleInput(const int &c);
-
-	CPtrList<CVar>  *m_pcList;	//List of Cvars
-	CPtrList<CFunc> *m_pfList;	//List of Cfuncs
-
-	friend void CVarlist(int argc,  char** argv);
-	friend void CFunclist(int argc,  char** argv);
 
 	//see if name matches, if it does, exec func
 	bool Exec(int argc, char ** argv);
-	
+
+	friend void CVarlist(int argc, char** argv);
+	friend void CFunclist(int argc, char** argv);
+
+	CPtrList<CVar>  *m_pcList;		//List of Cvars
+	CPtrList<CFunc> *m_pfList;		//List of Cfuncs
+
 	//Args
-	char	m_cwd[COM_MAXPATH];	//current working dir
-	char **	m_szargv;			//console arguments
-
-#ifdef VOID_DOS_CONSOLE
-	HANDLE	m_hOut;				//handle to console output		
-	HANDLE	m_hIn;				//handle to console in
-#endif
-
-	CPtrList<CVar>  *m_pcItor;	//Cvar iterator
-	CPtrList<CFunc> *m_pfItor;	//Cfunc iterator
+	char **			m_szargv;		//console arguments
 
 	I_RConsole	    *m_prCons;
-
-	FILE			*m_pflog;	//log file
+	FILE			*m_pflog;		//log file
 
 	CSBuffer		 m_szCBuffer;	//Static buffer used to console line
-	CQueue<char>* 	 m_CmdBuffer;	//Command Buffer for doskey type functionality
-};
+	CQueue<char>	*m_CmdBuffer;	//Command Buffer for doskey type functionality
 
+#ifdef VOID_DOS_CONSOLE
+	
+	HANDLE	m_hOut;					//handle to console output		
+	HANDLE	m_hIn;					//handle to console in
+
+#endif
+};
 
 extern CConsole *g_pCons;
 

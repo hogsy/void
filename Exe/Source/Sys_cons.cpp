@@ -1,5 +1,4 @@
 #include "Sys_hdr.h"
-#include "In_defs.h"
 
 static void HandleBool   (CVar *var, int argc,  char** argv);
 static void HandleInt    (CVar *var, int argc,  char** argv);
@@ -17,17 +16,13 @@ Constructor
 CConsole::CConsole()
 {
 	m_pflog = NULL;
-	
 	m_prCons = NULL;
 
 	m_pcList = new CPtrList<CVar>;
-	m_pcItor = m_pcList;
-
 	m_pfList = new CPtrList<CFunc>;
-	m_pfItor = m_pfList;
 
 	m_CmdBuffer = new CQueue<char>;
-	
+
 	m_szargv = new char * [BMAX_ARGS];
 	for(int i=0;i<BMAX_ARGS;i++)
 	{
@@ -38,6 +33,12 @@ CConsole::CConsole()
 	RegisterCFunc("cfunclist",&CFunclist);
 	RegisterCFunc("ctest",&CFunctest);
 	RegisterCFunc("contoggle", &CToggleConsole);
+
+	//open logfile
+	char debugfilename[128];
+	strcpy(debugfilename,g_exedir);
+	strcat(debugfilename,"//vdebug.log");
+	m_pflog = fopen(debugfilename, "w");
 }
 
 /*
@@ -59,10 +60,9 @@ CConsole::~CConsole()
 	m_prCons = 0;
 
 	//Delete the CVar Lists
-	m_pcItor = 0;
-	m_pfItor = 0;
 	delete m_pcList;
 	delete m_pfList;
+
 }
 
 /*
@@ -72,21 +72,14 @@ Initialize the Console
 */
 bool CConsole::Init(I_RConsole * prcons)
 {
-	char debug[128];
-
 	// Create a debugging window
 #ifdef DOSCONS
 	AllocConsole();
 	SetConsoleTitle("Void Debug");
-	m_hIn= GetStdHandle(STD_INPUT_HANDLE);
-	m_hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	m_hIn  = ::GetStdHandle(STD_INPUT_HANDLE);
+	m_hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 	
-	//open logfile
-	strcpy(debug,g_exedir);
-	strcat(debug,"//vdebug.log");
-	m_pflog = fopen(debug, "w");
-
 	m_prCons = prcons;
 	if(!m_prCons)
 		return false;
@@ -139,38 +132,6 @@ void CConsole::dprint(char* text)
 }
 
 /*
-==========================================
-Register CVar
-==========================================
-*/
-void CConsole::RegisterCVar(CVar **var, const char *varname, 
-							const char *varval,
-							CVar::CVarType vartype, 
-							int varflags,
-							CVAR_FUNC varfunc)
-{
-	*var = new CVar(varname,varval,vartype,varflags,varfunc);
-	m_pcItor->item = *var;
-	m_pcItor->next = new CPtrList<CVar>;
-	m_pcItor = m_pcItor->next;
-
-}
-
-
-/*
-==========================================
-Register CFunc
-==========================================
-*/
-void CConsole::RegisterCFunc(const char *funcname, CFUNC pfunc)
-{
-	CFunc *temp = new CFunc(funcname,pfunc);
-	m_pfItor->item = temp;
-	m_pfItor->next = new CPtrList<CFunc>;
-	m_pfItor = m_pfItor->next;
-}
-
-/*
 ===============================================
 print a string to debugging window 
 and handle any arguments
@@ -190,44 +151,18 @@ void ComPrintf(char* text, ...)
 	}
 }
 
-
-/*
-===============================================
-Throw a message box
-===============================================
-*/
-void CConsole::MsgBox(char *msg, ...)
-{
-	static char textBuffer[2048];
-	va_list args;
-	va_start(args, msg);
-	vsprintf(textBuffer, msg, args);
-	va_end(args);
-	MessageBox(NULL, textBuffer, "Error", MB_OK);
-}
-
-void CConsole::MsgBox(char *caption, unsigned long boxType, char *msg, ...)
-{
-	static char textBuffer[2048];
-	va_list args;
-	va_start(args, msg);
-	vsprintf(textBuffer, msg, args);
-	va_end(args);
-	MessageBox(NULL, textBuffer, caption, boxType);
-}
-
 /*
 ======================================
 Handle input, 1 character at a time
 ======================================
 */
-void  ConsoleHandleKey(const KeyEvent_t *kevent)
+void CConsole::HandleKeyEvent(const KeyEvent_t &kevent)
 {
-	if((kevent->state == BUTTONDOWN) ||
-	   ((kevent->state == BUTTONHELD) && ((g_fcurTime - kevent->time) > 0.6)))
+	if((kevent.state == BUTTONDOWN) ||
+		(kevent.state == BUTTONHELD))
 	{
-			g_pCons->HandleInput(kevent->id);
-			g_pCons->UpdateBuffer();
+			HandleInput(kevent.id);
+			m_prCons->Statusline(m_szCBuffer.GetString(), m_szCBuffer.GetSize());
 	}
 }
 
@@ -249,7 +184,8 @@ void CConsole::HandleInput(const int &i)
 			//if it wasnt a blank line, enter it into the command buffer
 			if(m_szCBuffer.GetSize())
 			{
-				m_CmdBuffer->Add(m_szCBuffer.GetString(), m_szCBuffer.GetSize()+1);
+				m_CmdBuffer->Add(m_szCBuffer.GetString(), 
+								 m_szCBuffer.GetSize()+1);
 			}
 
 			//print out the line
@@ -260,7 +196,6 @@ void CConsole::HandleInput(const int &i)
 
 			//parse the string and try to exec it
 			if(Exec(nargc,m_szargv))
-			//if(Exec(m_szCBuffer.Parse(m_szargv)))
 			{
 			}
 		
@@ -285,6 +220,46 @@ void CConsole::HandleInput(const int &i)
 			m_szCBuffer.Set(m_CmdBuffer->GetNext());
 			break;
 		}
+		case INKEY_TAB:
+		{
+			int len = m_szCBuffer.GetSize();
+			if(!len)
+				return;
+			//Print all the CVars and cmds that match the given string
+			const char * p = m_szCBuffer.GetString();
+			char * lastmatch=0;
+			CPtrList<CVar> * pcvar = g_pCons->m_pcList;
+			CPtrList<CFunc> * pcfunc = g_pCons->m_pfList;
+
+			ComPrintf("\n");
+			while(pcvar->item || pcfunc->item)
+			{
+				if(pcvar->item)
+				{
+					if(!strncmp(pcvar->item->name,p, len))
+					{
+						ComPrintf("%s\n",pcvar->item->name);
+						lastmatch = pcvar->item->name;
+					}
+					pcvar = pcvar->next;
+				}
+				if(pcfunc->item)
+				{
+					if(!strncmp(pcfunc->item->name,p, len))
+					{
+						ComPrintf("%s\n",pcfunc->item->name);
+						lastmatch = pcfunc->item->name;
+					}
+					pcfunc = pcfunc->next;
+				}
+				
+			}
+			//change current buffer to the one that closest matches.
+			if(lastmatch)
+				m_szCBuffer.Set(lastmatch);
+
+			break;
+		}
 		case INKEY_PGUP:
 		{
 			m_prCons->Lineup();
@@ -299,8 +274,7 @@ void CConsole::HandleInput(const int &i)
 		{
 			//ascii char entered, add to line
 			if(i >= 0 && i <= 127)					
-			{	m_szCBuffer.Append(i);
-			}
+				m_szCBuffer.Append(i);
 			break;
 		}
 	}
@@ -312,10 +286,10 @@ Prints the current line every frame
 used to render the status line
 ======================================
 */
-void CConsole::UpdateBuffer()
+/*void CConsole::UpdateBuffer()
 {	m_prCons->Statusline(m_szCBuffer.GetString(), m_szCBuffer.GetSize());
 }
-
+*/
 
 /*
 ======================================
@@ -327,7 +301,6 @@ bool CConsole::Exec(int argc, char ** argv)
 	CFunc * pfunc = 0;
 	for(CPtrList<CFunc> *temp2=m_pfList; temp2->item; temp2=temp2->next)
 	{
-		//if(!strcmp(argv[0],temp2->item->name.c_str()))
 		if(!strcmp(argv[0],temp2->item->name))
 		{
 			temp2->item->func(argc,argv);
@@ -340,7 +313,6 @@ bool CConsole::Exec(int argc, char ** argv)
 	for (CPtrList<CVar> *temp= m_pcList;temp->item; temp=temp->next)
 	{
 		pcvar = temp->item;
-//		if(!strcmp(argv[0],pcvar->name.c_str()))
 		if(!strcmp(argv[0],pcvar->name))
 		{
 			//only exec'ed IF function returns true
@@ -447,16 +419,14 @@ void CConsole::WriteCVars(FILE * fp)
 {
 	//write all the archive flaged vars in the config file
 	CVar * var = 0;
-	for (CPtrList<CVar> *temp=m_pcList ; temp->item ; temp=temp->next)
+	for (CPtrList<CVar> *temp=m_pcList; temp->item; temp=temp->next)
 	{
 		var = temp->item;
 		if(var->flags & CVar::CVAR_ARCHIVE)
 		{
 			char line[80];
-//			strcpy(line,var->name.c_str());
 			strcpy(line,var->name);
 			strcat(line," ");
-//			strcat(line,var->str.c_str());
 			strcat(line,var->string);
 			strcat(line,"\n");
 			fputs(line,fp);
@@ -472,11 +442,39 @@ Proxy functions
 */
 
 void CConsole::ToggleFullscreen(bool full)
-{	m_prCons->ToggleFullscreen(full);
+{	
+	m_prCons->ToggleFullscreen(full);
 }
 
 void CConsole::Toggle(bool down)
-{	m_prCons->Toggle(down);
+{	
+	m_prCons->Toggle(down);
+}
+
+
+/*
+===============================================
+Throw a message box
+===============================================
+*/
+void CConsole::MsgBox(char *msg, ...)
+{
+	static char textBuffer[2048];
+	va_list args;
+	va_start(args, msg);
+	vsprintf(textBuffer, msg, args);
+	va_end(args);
+	MessageBox(NULL, textBuffer, "Error", MB_OK);
+}
+
+void CConsole::MsgBox(char *caption, unsigned long boxType, char *msg, ...)
+{
+	static char textBuffer[2048];
+	va_list args;
+	va_start(args, msg);
+	vsprintf(textBuffer, msg, args);
+	va_end(args);
+	MessageBox(NULL, textBuffer, caption, boxType);
 }
 
 
@@ -486,7 +484,6 @@ void CConsole::Toggle(bool down)
 Prints out all the CVars and their values
 ======================================
 */
-//void CConsole::CVarlist(int argc,  char** argv)
 void CVarlist(int argc,  char** argv)
 {
 	ComPrintf("Console Variable Listing\n");
@@ -497,9 +494,7 @@ void CVarlist(int argc,  char** argv)
 		int len= strlen(argv[1]);
 		for (CPtrList<CVar> *temp= g_pCons->m_pcList ; temp->item ; temp=temp->next)
 		{
-//			if(strncmp(temp->item->name.c_str(),argv[1], len)==0)
 			if(strncmp(temp->item->name,argv[1], len)==0)
-//				ComPrintf("\"%s\" is \"%s\"\n",temp->item->name.c_str(),temp->item->str.c_str());
 				ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
 		}
 	}
@@ -507,7 +502,6 @@ void CVarlist(int argc,  char** argv)
 	{	
 		for (CPtrList<CVar> *temp= g_pCons->m_pcList ; temp->item ; temp=temp->next)
 		{
-//			ComPrintf("\"%s\" is \"%s\"\n",temp->item->name.c_str(),temp->item->str.c_str());
 			ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
 		}
 	}
@@ -521,7 +515,6 @@ void CVarlist(int argc,  char** argv)
 Prints out all the CVars and their values
 ======================================
 */
-//void CConsole::CFunclist(int argc,  char** argv)
 void CFunclist(int argc,  char** argv)
 {
 	ComPrintf("Console Functions Listing\n");
@@ -532,7 +525,6 @@ void CFunclist(int argc,  char** argv)
 		int len= strlen(argv[1]);
 		for (CPtrList<CFunc> *temp= g_pCons->m_pfList ; temp->item ; temp=temp->next)
 		{
-//			if(strncmp(temp->item->name.c_str(),argv[1], len)==0)
 			if(strncmp(temp->item->name,argv[1], len)==0)
 				ComPrintf("%s\n",temp->item->name);
 		}
@@ -545,7 +537,6 @@ void CFunclist(int argc,  char** argv)
 	}
 
 }
-
 
 
 /*
@@ -570,11 +561,10 @@ void HandleString (CVar *var, int argc,  char** argv)
 			strcat(newstr," ");
 			strcat(newstr,argv[i]);
 		}
-		var->Set(newstr);
+		g_pCons->CVarSet(&var,newstr);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
-
 
 /*
 =======================================
@@ -589,7 +579,7 @@ void  HandleInt (CVar *var, int argc,  char** argv)
 	{
 		int temp=0;
 		if(sscanf(argv[1],"%d",&temp))
-			var->Set((float)temp);
+			g_pCons->CVarSet(&var,(float)temp);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -607,7 +597,7 @@ void HandleFloat (CVar *var, int argc,  char** argv)
 	{
 		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			var->Set(temp);
+			g_pCons->CVarSet(&var,temp);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -625,11 +615,11 @@ void HandleBool (CVar *var , int argc,  char** argv)
 	{
 		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			var->Set(temp);
+			g_pCons->CVarSet(&var,temp);
 		else if(!strcmp(argv[1],"true"))
-			var->Set(1.0f);
+			g_pCons->CVarSet(&var,1.0f);
 		else
-			var->Set(0.0f);
+			g_pCons->CVarSet(&var,0.0f);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -639,7 +629,7 @@ void HandleBool (CVar *var , int argc,  char** argv)
 
 /*
 =====================================
-
+Util test func
 =====================================
 */
 //void CConsole::CFunctest(int argc,  char** argv)

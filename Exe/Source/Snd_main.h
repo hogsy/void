@@ -1,6 +1,8 @@
 #ifndef _V_DSOUND_
 #define _V_DSOUND_
 
+#ifdef INCLUDE_SOUND
+
 #include <dsound.h>
 #include "Snd_wave.h"
 
@@ -66,5 +68,8 @@ private:
 extern CSound * g_pSound;
 
 void DSError(HRESULT hr);
+
+
+#endif
 
 #endif 

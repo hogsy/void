@@ -3,26 +3,26 @@
 
 #include "Sys_hdr.h"
 #include "In_defs.h"
-#include <dinput.h>
 
 /*
 ===========================================
 The Input Interface Class
+is only exposed to Sys_main so it can
+initialize, destroy and run updates
 ===========================================
 */
 
-class CInput
+class CInput : public I_InputFocusManager
 {
 public:
+
+	//Public Interface
 		
 	CInput();
 	~CInput();
 
-	bool Init(); 
-	void Release();				
-
-	void SetKeyHandler(IN_KEYHANDLER pfnkeys, float repeatrate=0.0f);
-	void SetCursorHandler(IN_CURSORHANDLER pfncursor);
+	bool Init();				//Initialize the Input System
+	void Shutdown();			//Shutdown the Input System
 
 	void Resize();				//Handle resizes, needed for Win32 mouse clipping
 	
@@ -34,15 +34,18 @@ public:
 	bool UnAcquireMouse();		//Unacquire Mouse
 	bool UnAcquireKeyboard();	//Unacquire Mouse
 
-	bool InputFrame();			//Update Input states for the frame
+	void UpdateDevices();		//Update Input states for all devices
+	void UpdateKeys();			//Just update keys
+	void UpdateCursor();		//Update the cursor position
 
-	LPDIRECTINPUT7  GetDirectInput();
+	//Input Focus Manager Implementation
 
-	//Throws messagebox with error message
-	void InputError(HRESULT err, char * msg=0);	
+	void SetKeyListener(I_InKeyListener * plistener,
+						bool bRepeatEvents,
+						float fRepeatRate);
+
+	void SetCursorListener(I_InCursorListener * plistener);
 };
-
-extern CInput	* g_pInput;	
 
 #endif
 

@@ -1,9 +1,11 @@
-#include "Sys_hdr.h"
 #include "Sys_time.h"
 
 
-float	g_fframeTime=0;
-float	g_fcurTime=0;
+float	g_fframeTime=0;		//The Global Frame Time
+float	g_fcurTime=0;		//The Global Current Time 
+
+float  CTime::m_fSecsPerTick;
+_int64 CTime::m_dTimerStart;
 
 
 /*
@@ -13,15 +15,13 @@ Constructor
 */
 CTime::CTime()
 {
-	m_fbaseTime = 0.0f;
-	m_flastTime = 0.0f;
-	m_fsecs_per_tick = 0.0f;
+	m_fBaseTime = 0.0f;
+	m_fLastTime = 0.0f;
+	m_fSecsPerTick = 0.0f;
 
-	m_dticks_per_sec = 	0;
-	m_dPerformanceTimerStart= 0;
+	m_dTimerStart= 0;
 	
-	m_bPerformanceTimerEnabled =false;
-	m_ulMMTimerStart = 0;
+	GetTime = 0;
 }
 
 
@@ -32,6 +32,7 @@ Destructor
 */
 CTime::~CTime()
 {
+	GetTime = 0;
 }
 
 
@@ -42,36 +43,26 @@ Initialize the timer
 */
 bool CTime::Init()
 {
-	if (!QueryPerformanceFrequency((LARGE_INTEGER *)&m_dticks_per_sec))
+	_int64	dTicksPerSec=0;
+
+	//Use MM time if NOT able to use the High Frequency timer
+	if (!QueryPerformanceFrequency((LARGE_INTEGER *)&dTicksPerSec))
 	{ 
 		// no performance counter available
-		m_ulMMTimerStart = timeGetTime();
-		m_fsecs_per_tick = 1.0f/1000.0f;
-		m_bPerformanceTimerEnabled = false;
+		m_dTimerStart = timeGetTime();
+		m_fSecsPerTick = 1.0f/1000.0f;
+		GetTime = &GetMMTime;
 	}
 	else
 	{ 
 		// performance counter is available, use it instead of multimedia timer
-		QueryPerformanceCounter((LARGE_INTEGER *)&m_dPerformanceTimerStart);
-		m_fsecs_per_tick = (float)(1.0)/((float)m_dticks_per_sec);
-		m_bPerformanceTimerEnabled = true;
+		QueryPerformanceCounter((LARGE_INTEGER *)&m_dTimerStart);
+		m_fSecsPerTick = (float)(1.0)/((float)dTicksPerSec);
+		GetTime = &GetPerformanceCounterTime;
 	}
 	return true;
 }
 
-
-
-/*
-=====================================
-Update
-=====================================
-*/
-void CTime::Update()
-{
-	g_fcurTime = GetElapsedTime() - m_fbaseTime;
-	g_fframeTime = g_fcurTime - m_flastTime;
-	m_flastTime = g_fcurTime;
-}
 
 /*
 =====================================
@@ -80,8 +71,8 @@ void CTime::Update()
 */
 void CTime::Reset()
 {
-	m_fbaseTime = GetElapsedTime();
-	m_flastTime = g_fcurTime = g_fframeTime = 0.0;
+	m_fBaseTime = GetTime();
+	m_fLastTime = g_fcurTime = g_fframeTime = 0.0;
 }
 
 /*
@@ -89,18 +80,15 @@ void CTime::Reset()
 
 =====================================
 */
-float CTime::GetElapsedTime()
+
+float CTime::GetPerformanceCounterTime()
 {
-	if (m_bPerformanceTimerEnabled)
-	{
-		static _int64 curtime;
-		QueryPerformanceCounter((LARGE_INTEGER *)&curtime);
-		return(((float)(curtime-m_dPerformanceTimerStart)) * m_fsecs_per_tick);
-	}
-	else
-	{
-		return(((float)(timeGetTime()- m_ulMMTimerStart)) * m_fsecs_per_tick);
-	}
+	static _int64 curTime=0;
+	QueryPerformanceCounter((LARGE_INTEGER *)&curTime);
+	return(((float)(curTime-m_dTimerStart)) * m_fSecsPerTick);
 }
 
-
+float CTime::GetMMTime()
+{
+	return(((float)(timeGetTime()- m_dTimerStart)) * m_fSecsPerTick);
+}

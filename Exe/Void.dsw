@@ -27,18 +27,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "VLight"=..\Vlight\vLight.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "Void"=.\Void.dsp - Package Owner=<4>
 
 Package=<5>
@@ -63,7 +51,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "vvis"=..\vvis\vvis.dsp - Package Owner=<4>
+Project: "vlight"=..\Vlight\vLight.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

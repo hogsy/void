@@ -1,3 +1,5 @@
+#ifdef INCLUDE_SOUND
+
 #include "Sys_hdr.h"
 #include "Snd_buf.h"
 #include "Snd_wave.h"
@@ -321,3 +323,4 @@ int CDirectSoundBuffer::IsPlaying()
 }
 
 
+#endif
