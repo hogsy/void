@@ -187,6 +187,14 @@ SOURCE=..\Shared\clip.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_buffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_buffer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File
@@ -311,6 +319,14 @@ SOURCE=.\Mus_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Net_chan.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Net_chan.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Net_defs.h
 # End Source File
 # Begin Source File
@@ -329,14 +345,18 @@ SOURCE=.\Net_sock.h
 
 SOURCE=.\Net_util.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\Net_util.h
-# End Source File
 # End Group
 # Begin Group "Server"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Sv_client.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv_client.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Sv_main.cpp
@@ -416,6 +436,30 @@ SOURCE=..\Shared\I_renderer.h
 # Begin Source File
 
 SOURCE=..\Shared\I_void.h
+# End Source File
+# End Group
+# Begin Group "Ext"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\BaseTsd.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\Guiddef.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\PropIdl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\Tvout.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
 # Begin Source File

@@ -60,12 +60,14 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 		return false;
 	}
 
+#if 0
 	if(!SetVolume(m_volume))
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
 		Destroy();
 		return false;
 	}
+#endif
 
 	ComPrintf("CPrimaryBuffer::Create: OK\n");
 	return true;

@@ -29,12 +29,22 @@ CNetSocket::~CNetSocket()
 Create the socket
 ==========================================
 */
-bool CNetSocket::Create(int addrFamily, int type, int protocol)
+bool CNetSocket::Create(int addrFamily, int type, int protocol, bool blocking)
 {
 	Close();
 	m_socket = socket(addrFamily, type, protocol);
 	if(m_socket == INVALID_SOCKET)
 		return false;
+
+	if(blocking == false)
+	{
+		ulong val = 1;
+		if(ioctlsocket(m_socket, FIONBIO, &val) == SOCKET_ERROR)
+		{
+			PrintSockError(WSAGetLastError(),"CNetSocket::Create:IoctlSocket:");
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -57,19 +67,8 @@ void CNetSocket::Close()
 Bind the socket
 ==========================================
 */
-bool CNetSocket::Bind(const CNetAddr &addr, bool blocking)
+bool CNetSocket::Bind(const CNetAddr &addr)
 {
-	ulong val = 1;
-
-	if(blocking == false)
-	{
-		if(ioctlsocket(m_socket, FIONBIO, &val) == SOCKET_ERROR)
-		{
-			PrintSockError(WSAGetLastError(),"CNetSocket::Bind:IoctlSocket:");
-			return false;
-		}
-	}
-
 	SOCKADDR_IN sockAddr;
 	addr.ToSockAddr(sockAddr);
 	

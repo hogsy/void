@@ -2,8 +2,7 @@
 #define VOID_NET_SOCKET
 
 #include "Net_hdr.h"
-#include "Net_util.h"
-
+#include "Com_buffer.h"
 
 namespace VoidNet {
 
@@ -14,11 +13,10 @@ public:
 	CNetSocket(CNetBuffer * buffer);
 	~CNetSocket();
 
-	bool Create(int addrFamily, int type, int protocol);
+	bool Create(int addrFamily, int type, int protocol, bool blocking = false);
 	void Close();
 	
-	//bool Bind(const char * addr, short port, bool blocking = false);
-	bool Bind(const CNetAddr &addr,bool blocking = false);
+	bool Bind(const CNetAddr &addr);
 
 	//Send data to given dest
 	void Send(const CNetAddr &addr, const byte * data, int length);

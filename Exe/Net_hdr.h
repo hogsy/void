@@ -3,6 +3,7 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include "Com_defs.h"
 
 namespace VoidNet {
 
@@ -53,7 +54,7 @@ private:
 	void Set(const char * szaddr);
 
 	byte	ip[4];
-	short	port;
+	ushort	port;
 	bool	valid;
 
 	static char  m_szLocalAddress[24];

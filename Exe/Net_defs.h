@@ -8,14 +8,28 @@ namespace VoidNet
 class CNetSocket;
 class CNetAddr;
 
+const char szWORLDDIR[]     = "Worlds/";
+
+const int  SV_DEFAULT_PORT = 20010;
+
+const int  PACKET_HEADER =	8;
+const int  MAX_DATAGRAM  =	1450;
+
+const int  VOID_PROTOCOL_VERSION = 1;
+
 //Connnectionless client to Server messages
-const char C2S_PING[]			= "ping";
-const char C2S_STATUS[]			= "status";
+const char C2S_GETSTATUS[]		= "getstatus";
 const char C2S_CONNECT[]		= "connect";
 const char C2S_GETCHALLENGE[]	= "getchallenge";
 
 //Connectionless server to client messages
+const char S2C_REJECT[]			= "reject";
+const char S2C_CHALLENGE[]		= "challenge";
+const char S2C_STATUS[]			= "status";
+const char S2C_ACCEPT[]			= "accept";
 
+//Commpn connectionless messages
+const char VNET_PING[]			= "ping";
 
 }
 
@@ -24,55 +38,18 @@ const char C2S_GETCHALLENGE[]	= "getchallenge";
 
 
 
-
 #if 0
-
-#ifndef _NET_DEFS
-#define _NET_DEFS
-
-
-//#include <winsock2.h>
-
-/*
-================================
-Void Network protocol definition
-================================
-*/
-
-#define PROTOCOL_VERSION	1		//network protocol version
-#define GAME_VERSION		1		//game version
-
-#define SERVER_PORT	36666
-#define CLIENT_PORT	36667
-
-//timeout values
-#define CON_TIMEOUT		5.0
-#define GAME_TIMEOUT	8.0
-
-//max string/buffer sizes
-#define MAX_ADDRLEN		16
-#define MAX_MESSAGELEN	4096
-#define MAX_DATAGRAM	512	
-
-//maximum connections the servers listener socket will handle
-#define MAX_CONNECTQ	8			
-
-#define INFOSTRING_DELIM '\\'		//delimiter character used for infostrings
-
 /*
 =====================================
 Client to server messages types
 =====================================
 */
-
 #define	CL_BAD			0			//bad message, notify the server
 #define CL_DISCONNECT	1			//client is disconnecting
 #define CL_NOP			2			//nothing happened, im alive
 #define CL_CMD			3			//move dir, view, buttons
 #define CL_STRING		4			//string command (talk etc)
 #define CL_SVCMDS		5			//special commands
-
-
 
 /*
 =====================================
@@ -109,35 +86,6 @@ and movement velocities from the client
 
 
 */
-
-
-
-
-
-
-
-
-
-//Server listener ports will follow
-
-
-/*
-CONNECTION PROTOCOL
-
-The FIRST socket is a dedicated listener
-and only handles connection requests and 
-server/player info requests
-
--"getstatus"
--"getinfo"
--"getchallenge"
-*/
-
-
-
-
-
-
 
 
 
@@ -368,8 +316,6 @@ Client Request Packet formats
 
 #define	svc_spawnstaticsound	29	// [coord3] [byte] samp [byte] vol [byte] aten
 
-
-#endif
 
 
 #endif

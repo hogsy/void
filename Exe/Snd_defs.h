@@ -46,5 +46,10 @@ struct  I_SoundManager
 	virtual void Play(hSnd index, int channel=VoidSound::CHAN_AUTO)=0;
 };
 
+namespace System
+{
+	I_SoundManager * GetSoundManager();
+}
+
 
 #endif

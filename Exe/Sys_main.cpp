@@ -51,9 +51,6 @@ CVoid::CVoid(const char * cmdLine)
 	//Create timer
 	m_pTime = new CTime();						
 
-	//Create the game console
-//	m_Console = new CConsole();
-
 	//Export structure
 	m_pExport = new VoidExport();
 	m_pExport->console    = (I_Console*)&m_Console;
@@ -73,7 +70,7 @@ CVoid::CVoid(const char * cmdLine)
 	m_pClient = new CClient(m_pRender);		
 
 	//Network Sys
-	m_pServer = new CServer(m_pClient);
+	m_pServer = new CServer();
 
 #ifdef INCLUDE_SOUND
 	//Sound
@@ -220,8 +217,6 @@ bool CVoid::Init()
 	return true;
 }
 
-
-
 /*
 ==========================================
 Destructor
@@ -276,9 +271,6 @@ CVoid::~CVoid()
 
 	m_HunkManager.PrintStats();
 
-//if(m_Console)
-//	m_Console->Shutdown();
-
 	//Free the file system
 	FILESYSTEM_Free();	
 	RENDERER_Free();
@@ -286,57 +278,8 @@ CVoid::~CVoid()
 	if(m_pExport)
 		delete m_pExport;
 	
-//	delete m_Console;
 	CoUninitialize();
 }
-
-/*
-==========================================
-Shutdown all the subsystems
-==========================================
-
-bool CVoid::Shutdown()
-{
-	//Subsystem shutdown proceedures
-	//=============================
-	if(m_pClient)
-		m_pClient->UnloadWorld();
-	
-	VoidNet::ShutdownNetwork();
-
-#ifdef INCLUDE_SOUND
-	//Sound
-	if(m_pSound)
-		m_pSound->Shutdown();
-#endif
-
-#ifdef INCLUDE_MUSIC
-	//music
-	if(m_pMusic)
-		m_pMusic->Shutdown();
-#endif
-
-	//input
-	if(m_pInput)
-		m_pInput->Shutdown();
-
-	//console
-	char configname[128];
-	sprintf(configname,"%s\\void.cfg",m_exePath);
-	WriteConfig(configname);
-
-	//Renderer
-	if(m_pRender)
-		m_pRender->Shutdown();
-
-	if(m_Console)
-		m_Console->Shutdown(); 
-
-	//Release COM library
-	CoUninitialize();
-	return true;
-}
-*/
 
 /*
 ==========================================
@@ -607,6 +550,7 @@ namespace System
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
+	I_SoundManager * GetSoundManager() { return g_pVoid->m_pSound; }
 
 	void SetGameState(eGameState state) 
 	{ 

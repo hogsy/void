@@ -108,6 +108,7 @@ bool CSoundManager::Init()
 		return false;
 	}
 
+	//Create the primary buffer
 
 	WAVEFORMATEX pcmwf; 
 	// Set up wave format structure. 

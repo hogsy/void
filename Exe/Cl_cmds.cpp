@@ -97,8 +97,8 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 										  const float &iy,
 										  const float &iz)
 {
-	if(ix || iy)
-		ComPrintf("%.2f %.2f\n",ix,iy);
+//	if(ix || iy)
+//		ComPrintf("%.2f %.2f\n",ix,iy);
 
 	m_pClient->RotateRight(ix);
 	m_pClient->RotateUp(iy);

@@ -3,8 +3,9 @@
 
 #include "Sys_hdr.h"
 #include "I_renderer.h"
+#include "Com_buffer.h"
 #include "Net_defs.h"
-#include "Net_util.h"
+#include "Snd_defs.h"
 
 //======================================================================================
 //======================================================================================
@@ -49,7 +50,7 @@ public:
 private:
 
 	//==================================================
-
+	//Console commands
 	void ConnectTo(const char * ipaddr);
 	void Disconnect();
 
@@ -64,16 +65,34 @@ private:
 	void RotateUp(float val=5.0);
 	void RotateDown(float val=5.0);
 
-	//Console funcs
 	void CamPath(int argc,char **argv);
+	void Talk(int argc,char **argv);
 
 	//==================================================
+	//Private Member funcs
 
+	//Read any waiting packets
+	void ReadPackets();	
+//	void CheckResends();	
+
+	//Send a connection request wtih a challenge number
+	void SendConnectReq();
+	void SendConnectParms();
+
+	//==================================================
 	//Client CVars
 	CVar		m_clport;
 	CVar 		m_clname;
 	CVar 		m_clrate;
 	CVar 		m_noclip;
+
+	enum EClState
+	{
+		CL_INACTIVE   = 0,  //Nothing doing, sitting in the Console/Menus
+		CL_CONNECTING = 1,	//Sent out a connection request
+		CL_SPAWNING   = 2,	//Established, getting baselines
+		CL_INGAME	  = 3	//In the game
+	};
 
 	//Command Handler
 	friend class VoidClient::CClientCmdHandler;
@@ -84,26 +103,35 @@ private:
 	I_RHud    *	m_pHud;
 
 	//Network Specific Stuff
-	VoidNet::CNetBuffer   m_buffer;
+	CNetBuffer   m_buffer;
 	VoidNet::CNetSocket * m_pSock;
 	
-	char m_svServerAddr[24];
+	char		m_svServerAddr[24];
+	bool		m_bLocalServer;
+	float		m_fNextConReq;	
+	int			m_challenge;
+	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
 
-//	world_t    *m_pWorld;
+	EClState	m_clState;
 
-	bool m_connected;
 	bool m_ingame;
 
-	eyepoint_t  eye;
-	vector_t desired_movement;
-	
+	//==================================================
 	//the following should be accessible by the game dll
+	
+	eyepoint_t  eye;
+	vector_t	desired_movement;
+	
 	int		m_campath;
 	float	m_camtime;
 	float	m_acceleration;
 	float	m_maxvelocity;
 
 	void Spawn(vector_t	*origin, vector_t *angles);
+
+	//==================================================
+	//Client side stuff
+	int		m_hsTalk;		//handle to talk sound
 };
 
 #endif
