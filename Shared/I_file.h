@@ -57,7 +57,7 @@ public:
 
 	uint GetPos() const;
 	uint GetSize()const;
-	const byte * GetData() const;
+	byte * GetData() const;
 
 private:
 

@@ -190,6 +190,6 @@ uint CFileBuffer::GetSize() const
 
 ==========================================
 */
-const byte * CFileBuffer::GetData() const
+byte * CFileBuffer::GetData() const
 {	return m_buffer;
 }
