@@ -44,6 +44,8 @@ CServer::CServer() : m_recvBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
 	
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 
+	m_worldName[0] = 0;
+
 	m_pWorld = 0;
 	
 	m_active = false;
@@ -187,6 +189,10 @@ void CServer::LoadWorld(const char * mapname)
 		return;
 	}
 
+	//Now load the map
+	char worldname[64];
+	strcpy(worldname, mapname);
+
 	//Shutdown if currently active
 	if(m_active)
 		Shutdown();
@@ -194,13 +200,12 @@ void CServer::LoadWorld(const char * mapname)
 	if(!Init())
 		return;
 
-	//Now load the map
 	char mappath[COM_MAXPATH];
-	
+
 	strcpy(mappath, szWORLDDIR);
-	strcat(mappath, mapname);
+	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,".bsp");
-	
+
 	m_pWorld = world_create(mappath);
 	if(!m_pWorld)
 	{
@@ -213,11 +218,11 @@ void CServer::LoadWorld(const char * mapname)
 	//=======================
 
 	//Set worldname
-	Util::RemoveExtension(m_worldName,COM_MAXPATH, mapname);
+	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
 
 	//all we need is the map name right now
 	m_numSignOnBuffers = 1;
-	strcpy(m_szSignOnBuf[0], mapname);
+	strcpy(m_szSignOnBuf[0], m_worldName);
 	m_signOnBufSize[0]= strlen(m_szSignOnBuf[0]);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
@@ -262,7 +267,6 @@ void CServer::HandleStatusReq()
 	m_sendBuf += m_numClients;			//cur clients
 	m_sendBuf += m_cMaxClients.ival;		//max clients
 	
-//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(), m_pSock->GetSource());
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -359,7 +363,6 @@ void CServer::HandleChallengeReq()
 	m_sendBuf += m_challenges[i].challenge;
 
 	//Send response packet
-//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(),m_challenges[i].addr);
 	m_pSock->SendTo(m_sendBuf, m_challenges[i].addr); 
 
 	ComPrintf("Sent CHAL %d to %s\n", m_challenges[i].challenge, m_challenges[i].addr.ToString());
@@ -377,7 +380,6 @@ void CServer::ProcessQueryPacket()
 	//Ping Request
 	if(strcmp(msg, VNET_PING) == 0)
 		m_pSock->Send((byte*)VNET_PING, strlen(VNET_PING));
-//		m_pSock->SendTo((byte*)VNET_PING, strlen(VNET_PING), m_pSock->GetSource());
 	else if(strcmp(msg, C2S_GETSTATUS) == 0)
 		HandleStatusReq();
 	else if(strcmp(msg, C2S_CONNECT) == 0)
