@@ -330,27 +330,6 @@ CBuffer & CClient::GetReliableSendBuffer()
 }
 
 
-
-/*
-======================================
-Handle disconnect from server
-======================================
-*/
-void CClient::HandleDisconnect(bool listenserver)
-{
-
-	//	ComPrintf("CL: KILLING LOCAL SERVER\n");
-
-	//Kill server if local
-	if(listenserver)
-	{
-//		ComPrintf("CL: KILLING LOCAL SERVER\n");
-		System::GetConsole()->ExecString("killserver");
-	}
-	UnloadWorld();
-}
-
-
 /*
 ======================================
 

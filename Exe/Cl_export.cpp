@@ -1,25 +1,7 @@
-#ifndef VOID_CLIENT_PRIVATE_HEADER
-#define VOID_CLIENT_PRIVATE_HEADER
+#include "Sys_hdr.h"
+#include "Cl_main.h"
+#include "Cl_export.h"
 
-#include "Com_defs.h"
-#include "Com_vector.h"
-#include "Cl_game.h"
-#include "Net_defs.h"
-#include "Net_protocol.h"
-
-/*
-================================================
-This interface is exported to the Client side 
-game code. It contains everything the client game
-should ever need from the exe
-
-This will have to be updated as new funcs are exported
-================================================
-*/
-
-struct NetChanState;
-struct ClEntity;
-class  CBuffer;
 
 
 struct I_ClientGameInterface
@@ -67,5 +49,3 @@ struct I_ClientGameInterface
 	virtual CBuffer & GetReliableSendBuffer()=0;
 
 };
-
-#endif

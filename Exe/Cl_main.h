@@ -58,17 +58,12 @@ private:
 	//Hacks 
 	void SetState(int state);
 	void SetNetworkRate(int rate);
+	bool LoadWorld(const char *worldname);
+	void UnloadWorld();
 
 	CBuffer & GetSendBuffer();
 	CBuffer & GetReliableSendBuffer();
 
-
-	//Handle disconnect from server
-	void HandleDisconnect(bool listenserver);
-
-
-	bool LoadWorld(const char *worldname);
-	void UnloadWorld();
 
 	//==================================================
 	//Console commands

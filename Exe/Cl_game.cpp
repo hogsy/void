@@ -723,9 +723,17 @@ Handle disconnect from server
 */
 void CGameClient::HandleDisconnect(bool listenserver)
 {
-	m_refClient.HandleDisconnect(listenserver);
-/*	
+//	m_refClient.HandleDisconnect(listenserver);
+	
+//HACK	
+	if(listenserver)
+	{
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
+		System::GetConsole()->ExecString("killserver");
+	}
+	m_refClient.UnloadWorld();
 
+	/*
 //	ComPrintf("CL: KILLING LOCAL SERVER\n");
 
 	//Kill server if local

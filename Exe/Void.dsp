@@ -268,6 +268,10 @@ SOURCE=..\Shared\Cl_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Cl_export.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Cl_game.cpp
 # End Source File
 # Begin Source File
