@@ -68,7 +68,7 @@ public:
 	================================================
 	Get a pointer to a resource. 
 	Will only load if doesn't already exist
-	Will return pointed to existing data otherwise
+	Will return pointer to existing data otherwise
 	Will return 0 if failed.
 	================================================
 	*/
