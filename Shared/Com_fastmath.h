@@ -45,6 +45,10 @@ inline float INV(float p)
 
 inline float INV(float p)
 {
+// devvoid needs more accuracy
+#ifdef DEVVOID
+	return (1.0f/p);
+#else
 	static float two = 2.0f;
 	float r;
 
@@ -57,6 +61,7 @@ inline float INV(float p)
 	__asm { fmul	dword ptr [r]     }; 
 	__asm { fstp	dword ptr [r]     }; 
 	return r;
+#endif
 }
 
 
