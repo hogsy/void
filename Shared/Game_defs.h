@@ -22,11 +22,21 @@ const int RES_NUMCACHES = 3;
 enum SndChannelType
 {
 	CHAN_AUTO   = 0,		//first free
-	CHAN_WORLD  = 1,		//ambient, world sounds etc
-	CHAN_ITEM   = 2,		//item noises, pickups etc
-	CHAN_WEAPON	= 3,		//weapon noises
-	CHAN_PLAYER = 4			//player sounds
+	CHAN_UI		= 1,		//UI sound, no coordinates
+	CHAN_WORLD  = 2,		//ambient, world sounds etc
+	CHAN_CLIENT = 3,		//sounds from the player
+	CHAN_MONSTER= 4,		//Monster and player share channels
+	CHAN_PLAYER = 4,
+	CHAN_ITEM   = 5,		//item noises, pickups etc
+	CHAN_WEAPON	= 6,		//weapon noises
+	
+	CHAN_LOOPING = 128		//flagged
 };
+
+
+//Sound attenuation
+
+
 
 //Cache type,
 enum CacheType

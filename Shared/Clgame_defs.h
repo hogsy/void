@@ -27,14 +27,13 @@ struct ClEntity : public R_EntState
 
 	virtual ~ClEntity() {}
 	
-	int	num;
+	int	 num;
 	bool inUse;
 
 	int			soundIndex;
 	CacheType	sndCache;
-
-	int	volume;
-	int	attenuation;
+	int			volume;
+	int			attenuation;
 };
 
 //A client side Client

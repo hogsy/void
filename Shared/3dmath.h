@@ -112,6 +112,18 @@ inline void VectorInv2(vector_t &src, vector_t &dest)
 	dest.z = -src.z;
 }
 
+inline float VectorLength(const vector_t &v)
+{
+	return (float)sqrt((v.x*v.x)+(v.y * v.y)+(v.z * v.z));
+}
+
+inline float VectorDistance(const vector_t &a, const vector_t &b)
+{
+	vector_t dist;
+	VectorSub(dist,a,b);
+	return VectorLength(dist);
+}
+
 }
 
 
