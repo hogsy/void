@@ -1,31 +1,16 @@
-#ifndef	RAST_GL_H
-#define RAST_GL_H
+#ifndef	RAST_NONE_H
+#define RAST_NONE_H
 
 #include <windows.h>
-#include "gl.h"
 #include "Rasterizer.h"
 
-#define MAX_TEXTURE_BINS 1024
 
-struct tex_bin_t
-{
-	tex_bin_t()
-	{
-		glnames = NULL;
-		num = -1;
-	}
-
-	GLuint *glnames;
-	int		num;
-};
-
-
-class COpenGLRast : public I_Rasterizer
+class CRastNone : public I_Rasterizer
 {
 public:
 
-	COpenGLRast();
-	~COpenGLRast();
+	CRastNone();
+	~CRastNone();
 
 	//Startup/Shutdown
 	bool Init();
@@ -44,7 +29,7 @@ public:
 	void BlendFunc(ESourceBlend src, EDestBlend dest);
 
 	int  TextureBinInit(int num);
-	int  TextureCount(int bin) { return mTexBins[bin].num; }
+	int  TextureCount(int bin) { return 0; }
 	void TextureBinDestroy(int bin);
 	void TextureSet(int bin, int texnum);
 	void TextureLoad(int bin, int num, const tex_load_t *texdata);
@@ -77,31 +62,7 @@ public:
 
 private:
 
-	HDC			hDC;		//device context
-	HGLRC		hRC;		//the gl rendering context
-
-
-	bool GoFull(void);
-	bool GoWindowed(void);
-
-	void EnumDisplayModes();
-	bool SetupPixelFormat();
-
-	DEVMODE*m_devmodes;		//all available display modes
-	int		m_nummodes;		//Number of display modes
-
-	bool	m_loadeddriver;
-	bool	m_initialized;
-	char	m_gldriver[256];
-
-	bool	m_bInitialized;
-
-
-	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
 };
-
-void FError(char *error, ...);
-void Error(char *error, ...);
 
 
 #endif

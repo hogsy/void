@@ -48,9 +48,9 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
-//	if (stricmp(m_cRast.string, "gl")==0)
-//		g_pRast = new COpenGLRast();
-//	else
+	if (stricmp(m_cRast.string, "gl")==0)
+		g_pRast = new COpenGLRast();
+	else
 		g_pRast = new CRastNone();
 
 	g_pConsole->RegisterCVar(&m_cFull,this);

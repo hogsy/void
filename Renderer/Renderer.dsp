@@ -337,26 +337,6 @@ SOURCE=..\Shared\I_void.h
 SOURCE=.\Source\Dll_main.cpp
 # End Source File
 # End Group
-# Begin Group "OpenGL"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\gl.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\gl_driver.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\gl_rast.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\gl_rast.h
-# End Source File
-# End Group
 # Begin Group "Image"
 
 # PROP Default_Filter ""
@@ -377,6 +357,46 @@ SOURCE=.\Source\Img_main.cpp
 SOURCE=.\Source\Img_main.h
 # End Source File
 # End Group
+# Begin Group "Rast"
+
+# PROP Default_Filter ""
+# Begin Group "OpenGL"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\gl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_driver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_rast.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\gl_rast.h
+# End Source File
+# End Group
+# Begin Group "None"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Rast_none.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Rast_none.h
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\Source\Rasterizer.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\Com_defs.h
@@ -384,10 +404,6 @@ SOURCE=..\Shared\Com_defs.h
 # Begin Source File
 
 SOURCE=..\plan\js.plan
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Rasterizer.h
 # End Source File
 # Begin Source File
 

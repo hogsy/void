@@ -44,11 +44,13 @@ private:
 	CVar   m_cFull;		//fullscreen
 	CVar   m_cRes;		//resolution
 	CVar   m_cBpp;		//bpp
+	CVar   m_cRast;		// rasterizer
 
 	//CVar Handlers
 	bool CVar_FullScreen(const CVar * var, const CParms &parms);
 	bool CVar_Res(const CVar * var, const CParms &parms);
 	bool CVar_Bpp(const CVar * var, const CParms &parms);
+	bool CVar_Rast(const CVar * var, const CParms &parms);
 };
 
 #endif
