@@ -625,7 +625,7 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 			buf.WriteChar('m');
 			buf.WriteShort(ent->mdlIndex);
 			buf.WriteShort(ent->skinNum);
-			buf.WriteShort(ent->frameNum);
+			buf.WriteShort(ent->animFrame);
 		}
 		if(ent->sndIndex >=0)
 		{

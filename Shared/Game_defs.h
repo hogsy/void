@@ -98,10 +98,47 @@ void SetWorld(I_World * pWorld);
 }
 
 /*
+================================================
+Maintain frame animation state
+================================================
+*/
+struct AnimState
+{
+	AnimState() 
+		: frameBegin(0), frameEnd(0), totalFrames(0),  currentFrame (0)	{}
+
+	AnimState(const AnimState &anim)
+		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
+		  currentFrame (0)	{}
+	
+	AnimState & operator = (const AnimState &anim)
+	{
+		frameBegin = anim.frameBegin;
+		frameEnd = anim.frameEnd;
+		totalFrames = anim.totalFrames;
+		currentFrame = 0;
+		return *this;
+	}
+
+	void Set(int begin, int end, int totFrames=0) 
+	{
+		frameBegin = begin;
+		frameEnd = end;
+		totalFrames = totFrames;
+		currentFrame=0;
+	}
+
+	int frameBegin;
+	int frameEnd;
+	
+	int	currentFrame;
+	int totalFrames;
+};
+
+/*
 ============================================================================
 Only contains data needed by routines shared between client and server code
 Both client and server subclass this adding stuff they need
-
 This data will be propagated to all connected clients
 ============================================================================
 */
@@ -111,7 +148,7 @@ struct BaseEntity
 	{
 		num = -1;
 		mdlIndex = sndIndex = -1;
-		frameNum = nextFrame = skinNum = 0;
+		skinNum = 0;
 		volume = attenuation = 0;
 		moveType = MOVETYPE_NOCLIP;
 	}
@@ -119,13 +156,15 @@ struct BaseEntity
 	virtual ~BaseEntity() =0 {}
 
 	int		num;
+
 	int		mdlIndex, 
-			frameNum,	
-			nextFrame, 
 			skinNum;
+	
 	int		sndIndex, 
 			volume,	
 			attenuation;
+
+	AnimState	animInfo;
 	
 	EMoveType	moveType;
 	
@@ -185,49 +224,6 @@ struct ClCmd
 	byte	 svFlags;	//Server flags
 	
 	//add buttons and what not
-};
-
-/*
-================================================
-Maintain frame animation state
-================================================
-*/
-struct AnimState
-{
-	AnimState() 
-		: frameBegin(0), frameEnd(0), totalFrames(0),
-		  animFrac(0.0f), currentFrame (0)	{}
-
-	AnimState(const AnimState &anim)
-		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
-		  animFrac(0.0f), currentFrame (0)	{}
-	
-	AnimState & operator = (const AnimState &anim)
-	{
-		frameBegin = anim.frameBegin;
-		frameEnd = anim.frameEnd;
-		totalFrames = anim.totalFrames;
-		currentFrame = 0;
-		animFrac = 0;
-		return *this;
-	}
-
-	void Set(int begin, int end, int totFrames=0) 
-	{
-		frameBegin = begin;
-		frameEnd = end;
-		totalFrames = totFrames;
-		animFrac =0.0f;
-		currentFrame=0;
-	}
-
-	int frameBegin;
-	int frameEnd;
-	
-	int	currentFrame;
-	int totalFrames;
-
-	float animFrac;
 };
 
 /*

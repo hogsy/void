@@ -167,8 +167,8 @@ GetInfo
 */
 void CModelManager::GetInfo(ClEntity &state)
 {
-	state.numFrames = caches[state.mdlCache][state.mdlIndex]->GetNumFrames();
-	state.numSkins  = caches[state.mdlCache][state.mdlIndex]->GetNumSkins();
+//	state.numFrames = caches[state.mdlCache][state.mdlIndex]->GetNumFrames();
+//	state.numSkins  = caches[state.mdlCache][state.mdlIndex]->GetNumSkins();
 }
 
 
@@ -207,9 +207,11 @@ void CModelManager::Purge(void)
 
 
 		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
-																   walk->state->frameNum,
-																   walk->state->nextFrame, 
-																   walk->state->frac);
+																   walk->state->animInfo.currentFrame,
+																   0,
+																   0);
+																   //walk->state->anim.currentFrame++, 
+																   //walk->state->frac);
 
 		g_pRast->MatrixPop();
 

@@ -58,13 +58,16 @@ const byte SV_CLFULLINFO	= 7;    // complete info about a given client
 const byte SV_CLINFOCHANGE  = 8;    // clients info changed
 									// n for name, r for rate, c for character
 
-const byte SV_CLUPDATE		= 9;	// fully update a clients data
-const byte SV_CLDELTAUPDATE	= 10;	// delta update a clients data
+const byte SV_CLMOVEINFO	= 9;	// Clients movement parameters changed
+const byte SV_CLANIM		= 10;	// Client animation state changed.
 
-const byte SV_CLDISCONNECT  = 11;	// A client disconnected, let everyone know
+const byte SV_CLUPDATE		= 11;	// fully update a clients data
+const byte SV_CLDELTAUPDATE	= 12;	// delta update a clients data
 
-const byte SV_DISCONNECT	= 12;	// Server going down
-const byte SV_RECONNECT		= 13;	// Server is changing maps, tell all clients to reconnect
+const byte SV_CLDISCONNECT  = 13;	// A client disconnected, let everyone know
+
+const byte SV_DISCONNECT	= 14;	// Server going down
+const byte SV_RECONNECT		= 15;	// Server is changing maps, tell all clients to reconnect
 
 
 /*

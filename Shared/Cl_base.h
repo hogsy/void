@@ -20,8 +20,6 @@ struct ClEntity : public BaseEntity
 	{
 		mdlCache = CACHE_LOCAL;
 		sndCache = CACHE_LOCAL;
-		frac = 0.0f;
-		numSkins = numFrames = 0;
 		inUse = false;
 
 		origin.Set(0,0,0);
@@ -29,11 +27,13 @@ struct ClEntity : public BaseEntity
 		velocity.Set(0,0,0);
 		mins.Set(0,0,0);
 		maxs.Set(0,0,0);
+
+		animInfo.Set(0,0);
 	
 		mdlIndex = -1;
 		sndIndex = -1;
+		skinNum = 0;
 		num = -1;
-		frameNum = nextFrame = skinNum = 0;
 		volume = attenuation = 0;
 	}
 
@@ -43,10 +43,6 @@ struct ClEntity : public BaseEntity
 
 	CacheType	sndCache;
 	CacheType	mdlCache;
-
-	int			numSkins;
-	int			numFrames;
-	float		frac;
 };
 
 /*
@@ -70,7 +66,6 @@ struct ClClient : public ClEntity
 	}
 	
 	char name[CL_MAXNAME];
-	
 	//fix me, changed to pointer to list of loaded char resources
 	char model[CL_MAXMODELNAME];		
 

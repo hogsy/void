@@ -19,6 +19,8 @@ struct Entity : public BaseEntity
 	Entity(const char * cname)
 	{	strcpy(classname,cname);
 	}
+
+	int	  animFrame;
 	
 	virtual ~Entity() {}
 	char	classname[ENT_MAXCLASSNAME];
@@ -41,7 +43,7 @@ struct EntClient : public Entity
 		skinNum = 255;
 
 		animSeq = 0;
-		animFrame = 0;
+//		animFrame = 0;
 	}
 
 	bool  bSpawned;
@@ -59,7 +61,6 @@ struct EntClient : public Entity
 	float maxSpeed;
 
 	byte  animSeq;
-	int	  animFrame;
 
 	//Strings
 	char  name[CL_MAXNAME];

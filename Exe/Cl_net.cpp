@@ -261,9 +261,10 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 							m_entities[id].skinNum = buffer.ReadShort();
 							//m_entities[id].skinNum|=  MODEL_SKIN_UNBOUND_GAME;
 
-							m_entities[id].frameNum = buffer.ReadShort();
-							m_entities[id].nextFrame = m_entities[id].frameNum;
-							m_entities[id].frac = 0;
+							buffer.ReadShort();
+//							m_entities[id].frameNum = 
+//							m_entities[id].nextFrame = m_entities[id].frameNum;
+//							m_entities[id].frac = 0;
 							m_entities[id].mdlCache = CACHE_GAME;
 							break;
 						}
@@ -351,10 +352,10 @@ ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_clients[num].mdlCache = CACHE_LOCAL;
 
-	m_clients[num].frac = 0.0f;
+/*	m_clients[num].frac = 0.0f;
 	m_clients[num].frameNum = 0;
 	m_clients[num].nextFrame = 0;
-
+*/
 	//Setup bounding box. gravity,. friction etc here as well
 	m_clients[num].mins = VEC_CLIENT_MINS;
 	m_clients[num].maxs = VEC_CLIENT_MAXS;

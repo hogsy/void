@@ -273,6 +273,7 @@ Draw
 =======================================
 */
 void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
+//void CModelMd2::Draw(int skin, int fframe)
 {
 	if (!(skin & (MODEL_SKIN_UNBOUND_GAME|MODEL_SKIN_UNBOUND_LOCAL)))
 		if (skin >= num_skins)
@@ -290,8 +291,8 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	if (frac<=0) cframe = fframe;
 
 	float frame = fmodf(GetCurTime()*10, num_frames-1);
-	fframe = (int)floorf(frame);
 	cframe = (int)ceilf(frame);
+	fframe = (int)floorf(frame);
 	frac = frame-fframe;
 
 	vector_t v;
