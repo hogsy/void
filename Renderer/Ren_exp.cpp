@@ -5,6 +5,7 @@
 #include "Ren_cache.h"
 #include "Ren_beam.h"
 #include "Tex_main.h"
+#include "Tex_image.h"
 #include "Con_main.h"
 #include "Hud_main.h"
 #include "Client.h"
@@ -20,7 +21,9 @@
 //Global Vars
 RenderInfo_t		g_rInfo;			//Shared Rendering Info
 CWorld			*	world=0;			//The World
+
 CClientRenderer *	g_pClient=0;
+CRasterizer		*	g_pRast=0;
 
 /*
 =======================================
@@ -66,6 +69,8 @@ Destructor
 */
 CRenExp::~CRenExp()
 {
+	CImageReader::GetReader().Shutdown();
+
 	if (g_pShaders)
 		delete g_pShaders;
 	g_pShaders = 0;

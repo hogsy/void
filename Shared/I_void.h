@@ -3,6 +3,7 @@
 
 #include "I_console.h"
 #include "I_hunkmem.h"
+#include "I_file.h"
 
 /*
 ==========================================
@@ -18,6 +19,7 @@ struct I_Void
 	virtual float GetCurTime()=0;
 	virtual float GetFrameTime()=0;
 	virtual const char * GetCurPath()=0;
+	virtual I_FileReader * CreateFileReader(EFileMode mode)=0;
 
 	//Tell the Main application that the given module died so that
 	//it can cleanly shutdown everything.

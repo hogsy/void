@@ -1,27 +1,37 @@
 #ifndef MDL_ENTRY_H
 #define MDL_ENTRY_H
 
+
+const char MODEL_DEFAULT_NAME [] = "Default";
+
+
 class CModelCacheEntry
 {
 public:
 	CModelCacheEntry();
 	virtual ~CModelCacheEntry();
 
-	virtual void LoadModel(const char *file)=0;
+	virtual void LoadModel(I_FileReader * pFile, const char * szFileName)=0;
 	virtual void Draw(int skin, int fframe, int cframe, float frac)=0;
+	virtual void LoadFail(void)=0;	// default model
 	
 	void LoadSkins();
 	void UnLoadSkins();
-	int  Release()	{ return --mRefCount; }
-	void AddRef()	{ mRefCount++;	}
-	const char * GetFileName() { return modelfile; }
+	
+	void AddRef()  { mRefCount++;	}
+	int  Release() { return --mRefCount; }
+	
+	const char * GetFileName() const 
+	{ return modelfile; 
+	}
 
 	bool IsFile(const char *file) const	
 	{	
-		if(!modelfile) return 0;
+		if(!modelfile) 
+			return 0;
 		return (_stricmp(file, modelfile)==0); 	
 	}
-	int  GetNumSkins() const	 { return num_skins;	}
+	int  GetNumSkins()  const { return num_skins;	}
 	int	 GetNumFrames() const { return num_frames;	}
 
 protected:

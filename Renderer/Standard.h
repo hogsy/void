@@ -11,27 +11,38 @@
 #include "Com_world.h"
 #include "Com_camera.h"
 
+#include "I_file.h"
 #include "I_renderer.h"
 
+#include "Rast_main.h"
+
+/*
+================================================
+Global vars
+================================================
+*/
 //Renderer Info
 extern RenderInfo_t g_rInfo;
 //Console Interface for registering CVars	
 extern I_Console *  g_pConsole;
-
-// MUST be after declaration of g_pConsole
-#include "Rast_main.h"
 // Rasterizer Interface
 extern CRasterizer  * g_pRast;
-
-
 //The World
 extern CWorld	*world;
 
+/*
+================================================
+Global funcs
+================================================
+*/
 float GetCurTime();
 float GetFrameTime();
+
+void  FError(char *error, ...);		//Fatal Error, shutdown and exit
+void  Error(char *error, ...);		//Throw a message box
+
 const char * GetCurPath();
 
-void FError(char *error, ...);		//Fatal Error, shutdown and exit
-void Error(char *error, ...);		//Throw a message box
+I_FileReader * CreateFileReader(EFileMode mode);
 
 #endif

@@ -140,6 +140,10 @@ SOURCE=.\Fs_pakfile.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Fs_readers.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_zipfile.h
 # End Source File
 # End Group

@@ -454,18 +454,19 @@ bool CGameClient::ValidateCharacter(const CParms &parms)
 	//Try to load the given model
 	
 	char path[COM_MAXPATH];
-	CFileStream fileStream;
+	I_FileReader * pFile = System::CreateFileReader(FILE_BUFFERED);
 
 	//Validate model
 	sprintf(path,"Models/Player/%s/tris.md2",modelName);
 
-	if(!fileStream.Open(path))
+	if(!pFile->Open(path))
 	{
 		ComPrintf("CL: Unable to load model : %s\n", path);
+		pFile->Destroy();
 		return false;
 	}
 
-	fileStream.Close();
+	pFile->Close();
 	
 	if(pSkin)
 		sprintf(path,"Models/Player/%s/%s.tga",modelName, pSkin);
@@ -473,12 +474,14 @@ bool CGameClient::ValidateCharacter(const CParms &parms)
 		sprintf(path,"Models/Player/%s/%s.tga",modelName, modelName);
 
 	//We dont have the given skin
-	if(!fileStream.Open(path))
+	if(!pFile->Open(path))
 	{
 		ComPrintf("CL: Unable to load skin : %s\n", path);
+		pFile->Destroy();
 		return false;
 	}
-
+	pFile->Destroy();
+	
 	//Everything okay. override the CVar IF the skinName was not supplied
 	if(!pSkin)
 		sprintf(path,"%s/%s", modelName,modelName);

@@ -1,6 +1,5 @@
 #include "Fs_hdr.h"
-#include "I_file.h"
-//#include "I_filesystem.h"
+#include "Fs_readers.h"
 #include "Fs_filesys.h"
 
 extern CFileSystem * g_pFileSystem;
@@ -10,18 +9,13 @@ extern CFileSystem * g_pFileSystem;
 Constructor and Destructor
 ==========================================
 */
-CFileBuffer::CFileBuffer(int bufsize)
+CFileBuffer::CFileBuffer()
 {
 	m_filename = 0;
 	m_curpos = 0;
 	m_size = 0;
 	m_buffer = 0;
-
-	m_buffersize = bufsize;
-	if(m_buffersize)
-	{	
-		m_buffer = (byte*)g_pHunkManager->HunkAlloc(m_buffersize);
-	}
+	m_buffersize = 0;
 }
 
 CFileBuffer::~CFileBuffer()
@@ -29,10 +23,7 @@ CFileBuffer::~CFileBuffer()
 	if(m_filename)
 		delete [] m_filename;
 	if(m_buffer)
-	{
 		g_pHunkManager->HunkFree(m_buffer);
-	}
-
 }
 
 /*
@@ -244,5 +235,5 @@ bool CFileBuffer::Seek(int offset, int origin)
 
 uint	CFileBuffer::GetPos()  const  { return m_curpos; }
 uint	CFileBuffer::GetSize() const  { return m_size;   }
-byte *	CFileBuffer::GetData() const  {	return m_buffer; }
+byte * CFileBuffer::GetBuffer() const  {	return m_buffer; }
 const char * CFileBuffer::GetFileName() const {	return m_filename; }

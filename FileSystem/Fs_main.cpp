@@ -1,4 +1,5 @@
 #include "Fs_hdr.h"
+//#include "Fs_readers.h"
 #include "Fs_filesys.h"
 #include "Com_hunk.h"
 
@@ -47,6 +48,24 @@ FILESYSTEM_API void FILESYSTEM_Free()
 	}
 	m_pPrintFunc = 0;
 }
+/*
+================================================
+FileReader creation func
+================================================
+*/
+/*
+FILESYSTEM_API I_FileReader * FILESYSTEM_CreateReader(int mode)
+{
+	I_FileReader * pReader = 0;
+	if(mode == FILE_BUFFERED)
+		pReader = new CFileBuffer();
+	else if(mode == FILE_STREAM)
+		pReader = new CFileStream();
+	else 
+		return 0;
+	return pReader;
+}
+*/
 
 /*
 ==========================================

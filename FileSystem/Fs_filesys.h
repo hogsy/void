@@ -3,7 +3,6 @@
 
 #include "I_filesystem.h"
 
-
 class  CArchive;
 
 class CFileSystem : public I_FileSystem
@@ -11,6 +10,8 @@ class CFileSystem : public I_FileSystem
 public:
 	CFileSystem(const char * exedir, const char *basedir);
 	~CFileSystem();
+
+	I_FileReader * CreateReader(EFileMode mode);
 
 	//Check after creating it the first time
 	bool IsActive() const;
@@ -34,6 +35,16 @@ public:
 	//Returns current path EXE+Game
 	const char * GetCurrentPath() const;
 
+	//Opem a fileStream. Will either set the FILE pointer, or update the handle+archive pointers
+	uint OpenFileStream(FILE ** ifp, int &ifileHandle, 
+						CArchive ** iarchive, const char *ifilename);
+
+	//Loads data from file into given buffer. return size of buffer
+	//after allocation and copying.
+	uint LoadFileData(byte ** ibuffer,   uint buffersize, 
+					  const char *ifilename);
+
+
 private:
 
 	//Private Member variables
@@ -53,26 +64,11 @@ private:
 	//Private Member Functions
 	//================================================================
 
-	friend class CFileStream;
-	friend class CFileBuffer;
-
-
 	void AddSearchPath(const char * path, CArchive * file=0);
 	void RemoveSearchPath(const char *path);
 
 	//Scans directory for supported archives, returns list
 	bool GetFilesInPath(StringList &strlist, const char *path, const char *ext);
-
-	uint OpenFileStream(FILE ** ifp, 
-						int &ifileHandle, 
-						CArchive ** iarchive, 
-						const char *ifilename);
-
-	//Loads data from file into given buffer. return size of buffer
-	//after allocation and copying.
-	uint LoadFileData(byte ** ibuffer, 
-					  uint buffersize, 
-					  const char *ifilename);
 };
 
 #endif

@@ -51,14 +51,28 @@ CImageReader::CImageReader()
 	m_width = m_height = 0;
 	m_format = IMG_NONE;
 
+	m_pFile = CreateFileReader(FILE_STREAM);
+
 	for (int i=0; i<MAX_MIPMAPS; i++)
 		m_mipmapdata[i] = NULL;
 }
 
 CImageReader::~CImageReader()		
-{	FreeMipData();
+{	
+	FreeMipData();
+	m_pFile = 0;
 }
 
+/*
+Major suckage. Seems can't afford to wait until the destructor
+for the static CImageReader object is called because the filesystem
+might have been unloaded by then. So we call this during exit
+*/
+void CImageReader::Shutdown()
+{	
+	m_pFile->Destroy();
+	m_pFile = 0;
+}
 
 /*
 ================================================
@@ -152,11 +166,11 @@ bool CImageReader::Read(const char * file, TextureData &imgData)
 	sprintf(pcxfilename,"%s.pcx",file);
 	sprintf(jpgfilename,"%s.jpg",file);
 
-	if(m_fileReader.Open(tgafilename) == true)
+	if(m_pFile->Open(tgafilename) == true)
 		err = Read_TGA(imgData);
-	else if (m_fileReader.Open(pcxfilename) == true)
+	else if (m_pFile->Open(pcxfilename) == true)
 		err = Read_PCX(imgData);
-	else if (m_fileReader.Open(jpgfilename) == true)
+	else if (m_pFile->Open(jpgfilename) == true)
 		err = Read_JPG(imgData);
 	else
 	{
@@ -175,7 +189,7 @@ bool CImageReader::Read(const char * file, TextureData &imgData)
 		}
 	}
 
-	m_fileReader.Close();
+	m_pFile->Close();
 	return err;
 }
 
@@ -193,7 +207,7 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 	PCX_header header;
 	int bpp;
 
-	m_fileReader.Read(&header,sizeof(header),1);
+	m_pFile->Read(&header,sizeof(header),1);
 	if((header.manufacturer != 10) || 
 	   (header.version != 5) || 
 	   (header.encoding != 1)|| 
@@ -208,7 +222,7 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 
 	bool colorkey = false;
 
-	const char *tname = m_fileReader.GetFileName();
+	const char *tname = m_pFile->GetFileName();
 	for (int offset=strlen(tname)-1; offset>0; offset--)
 	{
 		if ((tname[offset] == '\\') || (tname[offset] == '/'))
@@ -254,13 +268,13 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 		{
 			for (countx = 0; countx < m_width; )
 			{
-				ch = m_fileReader.GetChar();
+				ch = m_pFile->GetChar();
 
 				// Verify if the uppers two bits are sets
 				if ((ch >= 192) && (ch <= 255))
 				{
 					number = ch - 192;
-					ch = m_fileReader.GetChar();
+					ch = m_pFile->GetChar();
 				}
 				else
 					number = 1;
@@ -292,18 +306,18 @@ Read a TGA file from the given file
 */
 bool CImageReader::Read_TGA(TextureData &imgData)
 {
-	m_fileReader.Seek(12,SEEK_SET);
+	m_pFile->Seek(12,SEEK_SET);
 
-	m_width   = m_fileReader.GetChar();
-	m_width  |= m_fileReader.GetChar() << 8;
-	m_height  = m_fileReader.GetChar();
-	m_height |= m_fileReader.GetChar() << 8;
-	int bpp = m_fileReader.GetChar() / 8;
+	m_width   = m_pFile->GetChar();
+	m_width  |= m_pFile->GetChar() << 8;
+	m_height  = m_pFile->GetChar();
+	m_height |= m_pFile->GetChar() << 8;
+	int bpp = m_pFile->GetChar() / 8;
 
 	m_format = (EImageFormat)bpp;
 
 	bool colorkey = false;
-	const char *tname = m_fileReader.GetFileName();
+	const char *tname = m_pFile->GetFileName();
 	for (int offset=strlen(tname)-1; offset>0; offset--)
 	{
 		if ((tname[offset] == '\\') || (tname[offset] == '/'))
@@ -322,7 +336,7 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 		m_format = IMG_RGBA;
 
 	// alpha/no alpha?  we already know that
-	m_fileReader.GetChar();
+	m_pFile->GetChar();
 
 	ConfirmMipData();
 	memset(m_mipmapdata[m_miplevels-1], 0xFF, m_width * m_height * (int)m_format);
@@ -331,12 +345,12 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 	{
 		for (int w=0; w<m_width; w++)
 		{
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 2] = m_fileReader.GetChar();
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 1] = m_fileReader.GetChar();
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format    ] = m_fileReader.GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 2] = m_pFile->GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 1] = m_pFile->GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format    ] = m_pFile->GetChar();
 
 			if (bpp == 4)
-				m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 3] = m_fileReader.GetChar();
+				m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 3] = m_pFile->GetChar();
 		}
 	}
 
@@ -368,12 +382,12 @@ bool CImageReader::Read_JPG(TextureData &imgData)
 	}
 
 	// read entire file into a buffer
-	image.JPGSizeBytes = m_fileReader.GetSize();
+	image.JPGSizeBytes = m_pFile->GetSize();
 	byte *jbuff = new byte[image.JPGSizeBytes];
 	if (!jbuff)
 		return false;
 
-	m_fileReader.Read(jbuff, image.JPGSizeBytes, 1);
+	m_pFile->Read(jbuff, image.JPGSizeBytes, 1);
 	image.JPGBytes = jbuff;
 
 	IJLERR jerr = ijlRead(&image, IJL_JBUFF_READPARAMS);

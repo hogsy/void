@@ -43,7 +43,9 @@ class CImageReader
 public:
 
 	static CImageReader & GetReader();
+
 	~CImageReader();
+	void Shutdown();
 
 	bool Read(const char * file, TextureData &imgData);
 	bool ReadLightMap(byte **stream, TextureData &imgData);	
@@ -75,7 +77,7 @@ private:
 	int		m_miplevels;
 
 	EImageFormat  m_format;
-	CFileBuffer	  m_fileReader;
+	I_FileReader *  m_pFile; //Reader;
 };
 
 /*

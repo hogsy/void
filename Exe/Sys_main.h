@@ -62,6 +62,7 @@ private:
 	friend eGameState   System::GetGameState();
 	
 	friend I_InputFocusManager * System::GetInputFocusManager();
+	friend I_FileReader *  System::CreateFileReader(EFileMode mode);
 	
 	friend void System::FatalError(const char *error);
 	friend void	System::SetGameState(eGameState state);

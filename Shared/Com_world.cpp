@@ -1,6 +1,12 @@
+#ifdef _VOID_EXE
+	//Exe
+	#include "..\Exe\Sys_hdr.h"
+#else
+	//Tools
+#endif
+
 #include "Com_world.h"
 #include "I_file.h"
-
 
 //Static data
 CWorld * CWorld::m_pWorld=0;
@@ -386,13 +392,14 @@ void CWorld::Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &
 //======================================================================================
 //======================================================================================
 
-int CWorld::LoadLump(CFileStream &file, int l, void **data)
+//int CWorld::LoadLump(CFileStream &file, int l, void **data)
+int   CWorld::LoadLump(I_FileReader  * pFile, int l, void **data)
 {
 	*data = (void*) new byte[m_worldHeader.lumps[l].length+1];
 	memset(*data, 0, m_worldHeader.lumps[l].length+1);
 
-	file.Seek(m_worldHeader.lumps[l].offset, SEEK_SET);
-	file.Read(*data, m_worldHeader.lumps[l].length, 1);
+	pFile->Seek(m_worldHeader.lumps[l].offset, SEEK_SET);
+	pFile->Read(*data, m_worldHeader.lumps[l].length, 1);
 
 	return m_worldHeader.lumps[l].length;
 }
@@ -405,7 +412,6 @@ World Creation func
 CWorld * CWorld::CreateWorld(const char * szFileName)
 {
 	// or return cached pointer to client if the local server has alreadly loaded it
-//#ifndef _VLIGHT_
 
 	if(!strcmp(m_szFileName,szFileName) && m_pWorld)
 	{
@@ -419,20 +425,24 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 		return 0;
 	}
 	
-	CFileStream fileReader;
+#ifdef _VOID_EXE
+	I_FileReader * pFile = System::CreateFileReader(FILE_BUFFERED);
+#else
 
-	if(!fileReader.Open(szFileName))
+#endif
+
+	if(!pFile->Open(szFileName))
 	{
 		ComPrintf("CWorld::CreateWorld: Could not open %s\n",szFileName);
-		fileReader.Close();
+		pFile->Destroy();
 		return 0;
 	}
 
-	fileReader.Read(&m_worldHeader,sizeof(bspf_header_t),1);
+	pFile->Read(&m_worldHeader,sizeof(bspf_header_t),1);
 	if (m_worldHeader.id != BSP_FILE_ID)
 	{
 		ComPrintf("CWorld::CreateWorld: %s not a Void World file!", szFileName);
-		fileReader.Close();
+		pFile->Destroy();
 		return 0;
 	}
 
@@ -440,35 +450,34 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 	{
 		ComPrintf("CWorld::CreateWorld: World Version %d, need %d for %s\n", 
 							m_worldHeader.version, BSP_VERSION, szFileName);
-		fileReader.Close();
+		pFile->Destroy();
 		return 0;
 	}
 
 	m_pWorld = new CWorld;
 
 	// read in all the lumps
-	m_pWorld->nnodes		= LoadLump(fileReader,LUMP_NODES, (void**)&m_pWorld->nodes)	/ sizeof(bspf_node_t);
-	m_pWorld->nleafs		= LoadLump(fileReader,LUMP_LEAFS, (void**)&m_pWorld->leafs)	/ sizeof(bspf_leaf_t);
-	m_pWorld->nplanes		= LoadLump(fileReader,LUMP_PLANES,(void**)&m_pWorld->planes) / sizeof(plane_t);
-	m_pWorld->nsides		= LoadLump(fileReader,LUMP_SIDES,(void**)&m_pWorld->sides)	/ sizeof(bspf_side_t);
-	m_pWorld->nverts		= LoadLump(fileReader,LUMP_VERTICES,(void**)&m_pWorld->verts) / sizeof(vector_t);
-	m_pWorld->niverts		= LoadLump(fileReader,LUMP_VERT_INDICES,(void**)&m_pWorld->iverts) / sizeof(int);
-	m_pWorld->nbrushes		= LoadLump(fileReader,LUMP_BRUSHES,	(void**)&m_pWorld->brushes) / sizeof(bspf_brush_t);
-	m_pWorld->ntexdefs		= LoadLump(fileReader,LUMP_TEXDEF,	(void**)&m_pWorld->texdefs) / sizeof(bspf_texdef_t);
-	m_pWorld->ntextures		= LoadLump(fileReader,LUMP_TEXNAMES,(void**)&m_pWorld->textures)/ sizeof(texname_t);
-	m_pWorld->nedges		= LoadLump(fileReader,LUMP_EDGES,	(void**)&m_pWorld->edges)	 / sizeof(bspf_edge_t);
-	m_pWorld->nentities		= LoadLump(fileReader,LUMP_ENTITIES,(void**)&m_pWorld->entities)/ sizeof(bspf_entity_t);
-	m_pWorld->nkeys			= LoadLump(fileReader,LUMP_KEYS,	(void**)&m_pWorld->keys)	 / sizeof(key_t);
-	m_pWorld->leafvis_size	= LoadLump(fileReader,LUMP_LEAF_VIS,(void**)&m_pWorld->leafvis) / m_pWorld->nleafs;
-	m_pWorld->light_size	= LoadLump(fileReader,LUMP_LIGHTMAP,(void**)&m_pWorld->lightdata);
-	m_pWorld->nlightdefs	= LoadLump(fileReader,LUMP_LIGHTDEF,(void**)&m_pWorld->lightdefs)/sizeof(bspf_texdef_t);
-
-
-	fileReader.Close();
+	m_pWorld->nnodes		= LoadLump(pFile,LUMP_NODES, (void**)&m_pWorld->nodes)	/ sizeof(bspf_node_t);
+	m_pWorld->nleafs		= LoadLump(pFile,LUMP_LEAFS, (void**)&m_pWorld->leafs)	/ sizeof(bspf_leaf_t);
+	m_pWorld->nplanes		= LoadLump(pFile,LUMP_PLANES,(void**)&m_pWorld->planes) / sizeof(plane_t);
+	m_pWorld->nsides		= LoadLump(pFile,LUMP_SIDES,(void**)&m_pWorld->sides)	/ sizeof(bspf_side_t);
+	m_pWorld->nverts		= LoadLump(pFile,LUMP_VERTICES,(void**)&m_pWorld->verts) / sizeof(vector_t);
+	m_pWorld->niverts		= LoadLump(pFile,LUMP_VERT_INDICES,(void**)&m_pWorld->iverts) / sizeof(int);
+	m_pWorld->nbrushes		= LoadLump(pFile,LUMP_BRUSHES,	(void**)&m_pWorld->brushes) / sizeof(bspf_brush_t);
+	m_pWorld->ntexdefs		= LoadLump(pFile,LUMP_TEXDEF,	(void**)&m_pWorld->texdefs) / sizeof(bspf_texdef_t);
+	m_pWorld->ntextures		= LoadLump(pFile,LUMP_TEXNAMES,(void**)&m_pWorld->textures)/ sizeof(texname_t);
+	m_pWorld->nedges		= LoadLump(pFile,LUMP_EDGES,	(void**)&m_pWorld->edges)	 / sizeof(bspf_edge_t);
+	m_pWorld->nentities		= LoadLump(pFile,LUMP_ENTITIES,(void**)&m_pWorld->entities)/ sizeof(bspf_entity_t);
+	m_pWorld->nkeys			= LoadLump(pFile,LUMP_KEYS,	(void**)&m_pWorld->keys)	 / sizeof(key_t);
+	m_pWorld->leafvis_size	= LoadLump(pFile,LUMP_LEAF_VIS,(void**)&m_pWorld->leafvis) / m_pWorld->nleafs;
+	m_pWorld->light_size	= LoadLump(pFile,LUMP_LIGHTMAP,(void**)&m_pWorld->lightdata);
+	m_pWorld->nlightdefs	= LoadLump(pFile,LUMP_LIGHTDEF,(void**)&m_pWorld->lightdefs)/sizeof(bspf_texdef_t);
 
 	//Cache pointer to the last loaded world
 	strcpy(m_szFileName,szFileName);
 	m_refCount++;
+
+	pFile->Destroy();
 	return m_pWorld;
 }
 
@@ -520,118 +529,3 @@ void CWorld::SetLightData(unsigned char *data, int len, bspf_texdef_t *defs, int
 	lightdefs = defs;
 	nlightdefs = numdefs;
 }
-
-
-
-//==========================================================================
-//==========================================================================
-
-
-
-/*
-int CWorld::LoadLump(FILE * fp, int l, void **data)
-{
-	*data = (void*) new byte[m_worldHeader.lumps[l].length+1];
-	memset(*data, 0, m_worldHeader.lumps[l].length+1);
-
-	fseek(fp, m_worldHeader.lumps[l].offset, SEEK_SET);
-	fread(*data, 1, m_worldHeader.lumps[l].length, fp);
-	return m_worldHeader.lumps[l].length;
-}
-*/
-
-
-
-
-#if 0
-
-
-	if(!strcmp(m_szFileName,szFileName) && m_pWorld)
-	{
-		m_refCount++;
-		return m_pWorld;
-	}
-
-	if(m_pWorld)
-	{
-		ComPrintf("CWorld::CreateWorld: Free current world (%s) first\n", m_szFileName);
-		return 0;
-	}
-
-	FILE *f = fopen(szFileName, "rb");
-
-	if(!f)
-	{
-		ComPrintf("CWorld::CreateWorld: Could not open %s\n",szFileName);
-		return 0;
-	}
-
-	fread(&m_worldHeader,sizeof(bspf_header_t),1, f);
-	if (m_worldHeader.id != BSP_FILE_ID)
-	{
-		ComPrintf("CWorld::CreateWorld: %s not a Void World file!", szFileName);
-		fclose(f);
-		return 0;
-	}
-
-	if (m_worldHeader.version != BSP_VERSION)
-	{
-		ComPrintf("CWorld::CreateWorld: World Version %d, need %d for %s\n", 
-							m_worldHeader.version, BSP_VERSION, szFileName);
-		fclose(f);
-		return 0;
-	}
-
-
-	m_pWorld = new CWorld;
-
-	// read in all the lumps
-	m_pWorld->nnodes		= LoadLump(f,LUMP_NODES, (void**)&m_pWorld->nodes)	/ sizeof(bspf_node_t);
-	m_pWorld->nleafs		= LoadLump(f,LUMP_LEAFS, (void**)&m_pWorld->leafs)	/ sizeof(bspf_leaf_t);
-	m_pWorld->nplanes		= LoadLump(f,LUMP_PLANES,(void**)&m_pWorld->planes) / sizeof(plane_t);
-	m_pWorld->nsides		= LoadLump(f,LUMP_SIDES,(void**)&m_pWorld->sides)	/ sizeof(bspf_side_t);
-	m_pWorld->nverts		= LoadLump(f,LUMP_VERTICES,(void**)&m_pWorld->verts) / sizeof(vector_t);
-	m_pWorld->niverts		= LoadLump(f,LUMP_VERT_INDICES,(void**)&m_pWorld->iverts) / sizeof(int);
-	m_pWorld->nbrushes		= LoadLump(f,LUMP_BRUSHES,	(void**)&m_pWorld->brushes) / sizeof(bspf_brush_t);
-	m_pWorld->ntexdefs		= LoadLump(f,LUMP_TEXDEF,	(void**)&m_pWorld->texdefs) / sizeof(bspf_texdef_t);
-	m_pWorld->ntextures		= LoadLump(f,LUMP_TEXNAMES,(void**)&m_pWorld->textures)/ sizeof(texname_t);
-	m_pWorld->nedges		= LoadLump(f,LUMP_EDGES,	(void**)&m_pWorld->edges)	 / sizeof(bspf_edge_t);
-	m_pWorld->nentities		= LoadLump(f,LUMP_ENTITIES,(void**)&m_pWorld->entities)/ sizeof(bspf_entity_t);
-	m_pWorld->nkeys			= LoadLump(f,LUMP_KEYS,	(void**)&m_pWorld->keys)	 / sizeof(key_t);
-	m_pWorld->leafvis_size	= LoadLump(f,LUMP_LEAF_VIS,(void**)&m_pWorld->leafvis) / m_pWorld->nleafs;
-	m_pWorld->light_size	= LoadLump(f,LUMP_LIGHTMAP,(void**)&m_pWorld->lightdata);
-	m_pWorld->nlightdefs	= LoadLump(f,LUMP_LIGHTDEF,(void**)&m_pWorld->lightdefs)/sizeof(bspf_texdef_t);
-
-	fclose(f);
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

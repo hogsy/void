@@ -4,7 +4,6 @@
 I_Console	  *	g_pConsole=0;
 I_Void		  *	g_pVoidExp=0;
 I_HunkManager * g_pHunkManager=0;
-CRasterizer   * g_pRast=0;
 CRenExp		  * g_pRenExp=0;
 
 const char MEM_SZLOGFILE[] = "mem_ren.log";
@@ -67,7 +66,6 @@ RENDERER_API RenderInfo_t * RENDERER_GetParms()
 //======================================================================================
 //Global utility funcs
 //======================================================================================
-
 /*
 ==========================================
 Dll Print func
@@ -88,6 +86,11 @@ void ComPrintf(const char* text, ...)
 	g_pConsole->ComPrint(buff);
 }
 
+/*
+================================================
+Misc System services
+================================================
+*/
 float GetCurTime()
 {	return g_pVoidExp->GetCurTime();
 }
@@ -98,6 +101,10 @@ float GetFrameTime()
 
 const char * GetCurPath()
 {	return g_pVoidExp->GetCurPath();
+}
+
+I_FileReader * CreateFileReader(EFileMode mode)
+{	return g_pVoidExp->CreateFileReader(mode);
 }
 
 
@@ -121,30 +128,19 @@ local Error and FATAL error funcs
 // fatal error - MUST quit
 void FError(char *error, ...)
 {
-	static char textBuffer[1024];
+	char textBuffer[1024];
 	va_list args;
 	va_start(args, error);
 	vsprintf(textBuffer, error, args);
 	va_end(args);
 
 	g_pVoidExp->SystemError(textBuffer);
- 
-/*
-
-	MessageBox(NULL, textBuffer, "Error", MB_OK);
-	
-	//Win32 func
-	PostMessage(g_rInfo.hWnd,	// handle of destination window 
-				WM_QUIT,			// message to post 
-				0,					// first message parameter 
-				0);					// second message parameter 
-*/
 }
 
-// just a small booboo. let us know and keep going
+// ust a small booboo. let us know and keep going
 void Error(char *error, ...)
 {
-	static char textBuffer[1024];
+	char textBuffer[1024];
 	va_list args;
 	va_start(args, error);
 	vsprintf(textBuffer, error, args);

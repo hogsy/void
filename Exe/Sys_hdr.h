@@ -9,11 +9,13 @@
 
 #include "I_hunkmem.h"
 #include "I_console.h"
+#include "I_file.h"
 
 #include "Com_cvar.h"
 
 //======================================================================================
 //======================================================================================
+
 const char VOID_DEFAULTMAPEXT  []	= "wld";
 const char VOID_DEFAULTGAMEDIR []	= "Game";
 
@@ -25,6 +27,8 @@ enum eGameState
 	INGAMECONSOLE,
 	INGAME
 };
+
+struct I_FileReader;
 
 namespace System
 {
@@ -38,6 +42,8 @@ namespace System
 	const char *	GetExePath();
 	const char *	GetCurGamePath();
 	eGameState		GetGameState();
+
+	I_FileReader *  CreateFileReader(EFileMode mode);
 
 	void  FatalError(const char *error);
 	void  SetGameState(eGameState state);

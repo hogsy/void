@@ -14,39 +14,80 @@ typedef struct
 
 /*
 =======================================
-Constructor 
+Constructor /Destructor
 =======================================
 */
 CModelSp2::CModelSp2()
-{	frames = NULL;
+{	
+	frames = NULL;
 }
 
-
-/*
-=======================================
-Destructor 
-=======================================
-*/
 CModelSp2::~CModelSp2()
 {
 	if (frames)
 		delete [] frames;
 }
 
-
 /*
 =======================================
 LoadModel 
 =======================================
 */
-void CModelSp2::LoadModel(const char *file)
+void CModelSp2::LoadModel(I_FileReader * pFile, const char * szFileName)
 {
+	ComPrintf("SP2: Loading %s\n", szFileName);
+
+	sp2_header_t header;
+	pFile->Read(&header, sizeof(sp2_header_t), 1);
+
+	// make sure it's a valid sp2
+	if ((header.ident != (('2'<<24)+('S'<<16)+('D'<<8)+'I')) || (header.version != 2))
+	{
+		ComPrintf("%s - invalid sp2 file", szFileName);
+		pFile->Close();
+		LoadFail();
+		return;
+	}
+
 	// save file name
-	modelfile = new char[strlen(file)+1];
-	strcpy(modelfile, file);
+	modelfile = new char[strlen(szFileName)+1];
+	strcpy(modelfile, szFileName);
 
-	ComPrintf("loading %s\n", modelfile);
+	num_skins = header.numframes;
+	num_frames= header.numframes;
 
+
+	frames = new sp2_frame_t[num_frames];
+
+	pFile->Read(frames, sizeof(sp2_frame_t), num_frames);
+	pFile->Close();
+
+	// skin names
+	skin_names = new char*[num_skins];
+
+	for (int s=0; s<num_frames; s++)
+	{
+		// md2 skin name list is 64 char strings
+		skin_names[s] = new char[64];
+
+		// strip path and extension
+		for (int c=strlen(frames[s].skin_name); c>=0; c--)
+		{
+			if (frames[s].skin_name[c] == '.')
+				frames[s].skin_name[c] = '\0';
+
+			else if ((frames[s].skin_name[c] == '/') || (frames[s].skin_name[c] == '/'))
+			{
+				skin_names[s][0] = '_';
+				strcpy(&skin_names[s][1], &frames[s].skin_name[c+1]);
+				break;
+			}
+		}
+	}
+
+//	pFile->Destroy();
+
+/*
 	CFileBuffer	 fileReader;
 
 	if(!fileReader.Open(modelfile))
@@ -104,6 +145,7 @@ void CModelSp2::LoadModel(const char *file)
 			}
 		}
 	}
+*/
 
 	LoadSkins();
 }
@@ -116,10 +158,12 @@ LoadFail
 */
 void CModelSp2::LoadFail()
 {
+	modelfile = new char[strlen(MODEL_DEFAULT_NAME)+1];
+	strcpy(modelfile, MODEL_DEFAULT_NAME);
+
 	// hard code a pyramid
 	num_skins = 1;
 	num_frames= 1;
-
 
 	frames = new sp2_frame_t[num_frames];
 
@@ -139,17 +183,16 @@ void CModelSp2::LoadFail()
 }
 
 
-
 /*
 =======================================
 Draw
 =======================================
 */
-extern	I_Void		  *	g_pVoidExp;
 extern const CCamera * camera;
+
 void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 {
-	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames-1);
+	float frame = fmodf(GetCurTime()*10, num_frames-1);
 	fframe = (int)floorf(frame);
 	cframe = fframe+1;
 	frac = frame - fframe;
@@ -191,13 +234,5 @@ void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 	g_pRast->PolyVertexi(-frames[cframe].origin_x, frames[cframe].height-frames[cframe].origin_y);
 	g_pRast->PolyEnd();
 */
-
 	g_pRast->MatrixPop();
 }
-
-
-
-
-
-
-

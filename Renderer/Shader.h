@@ -11,7 +11,7 @@
 // #define CACHE_PASS_NUM			3	// !! change this in shadermanager.h !!
 
 
-class CFileBuffer;
+struct I_FileReader;
 
 
 // where texture coords come from
@@ -118,7 +118,7 @@ public:
 	CShaderLayer();
 	~CShaderLayer();
 
-	void Parse(CFileBuffer *layer, int &texindex);
+	void Parse(I_FileReader *layer, int &texindex);
 	void Default(const char *name, int &texindex);
 	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
 
@@ -169,7 +169,7 @@ public:
 	CShader(const char *name);
 	~CShader();
 
-	void Parse(CFileBuffer *shader);
+	void Parse(I_FileReader *shader);
 	void Default(void);
 
 	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }

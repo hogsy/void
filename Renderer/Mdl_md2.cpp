@@ -28,7 +28,7 @@ typedef struct
 
 /*
 =======================================
-Constructor 
+Constructor/Destructor 
 =======================================
 */
 CModelMd2::CModelMd2()
@@ -38,12 +38,6 @@ CModelMd2::CModelMd2()
 	skin_names = NULL;
 }
 
-
-/*
-=======================================
-Destructor 
-=======================================
-*/
 CModelMd2::~CModelMd2()
 {
 	if (frames)
@@ -52,28 +46,104 @@ CModelMd2::~CModelMd2()
 			delete [] frames[f];
 		delete [] frames;
 	}
-
 	//Delete raw memory
 	if (cmds)
 		delete [] cmds;
 }
-
 
 /*
 =======================================
 LoadModel 
 =======================================
 */
-void CModelMd2::LoadModel(const char *file)
+void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 {
+	ComPrintf("MD2: Loading %s\n", szFileName);
+
+	md2_header_t header;
+	pFile->Read(&header, sizeof(md2_header_t), 1);
+
+	// make sure it's a valid md2
+	if ((header.id != 0x32504449) || (header.version != 8))
+	{
+		ComPrintf("%s - invalid md2 file", szFileName);
+		pFile->Close();
+		LoadFail();
+		return;
+	}
+
 	// save file name
-	modelfile = new char[strlen(file)+1];
-	strcpy(modelfile, file);
+	modelfile = new char[strlen(szFileName)+1];
+	strcpy(modelfile, szFileName);
 
-	ComPrintf("CModelMd2::LoadModel: Loading %s\n", modelfile);
+	num_skins = header.numSkins;
+	num_frames= header.numFrames;
 
-	CFileBuffer	 fileReader;
-	if(!fileReader.Open(modelfile))
+	// the gl command list
+	cmds = new byte [header.numGlCommands * 4];
+	pFile->Seek(header.offsetGlCommands, SEEK_SET);
+	pFile->Read(cmds, 4, header.numGlCommands);
+
+	// vertex info for all frames
+	frames = new vector_t* [num_frames];
+	pFile->Seek(header.offsetFrames, SEEK_SET);
+
+	int f, v;
+	byte vertex[4];
+	vector_t scale, trans;
+	char fname[16];
+
+	for (f = 0; f < num_frames; f++)
+	{
+		frames[f] = new vector_t[header.numVertices];
+
+		pFile->Read(&scale, sizeof(float), 3);
+		pFile->Read(&trans, sizeof(float), 3);
+		pFile->Read(&fname, 16, 1);
+
+		for (v = 0; v < header.numVertices; v++)
+		{
+			pFile->Read(vertex, 4, 1);	// the xyz coords and a light normal index
+
+			// scale and translate them to get the actual vertex
+			frames[f][v].x = vertex[0]*scale.x + trans.x;
+			frames[f][v].y = vertex[1]*scale.y + trans.y;
+			frames[f][v].z = vertex[2]*scale.z + trans.z;
+		}
+	}
+
+
+	// skin names
+	skin_names = new char* [header.numSkins];
+
+	pFile->Seek(header.offsetSkins, SEEK_SET);
+	for (int s=0; s<header.numSkins; s++)
+	{
+		// md2 skin name list is 64 char strings
+		char tskin[64];
+		pFile->Read(tskin, 64, 1);
+
+		skin_names[s] = new char[64];
+
+		// strip path and extension
+		for (int c=strlen(tskin); c>=0; c--)
+		{
+			if (tskin[c] == '.')
+				tskin[c] = '\0';
+
+			else if ((tskin[c] == '/') || (tskin[c] == '/'))
+			{
+				strcpy(skin_names[s], &tskin[c+1]);
+				break;
+			}
+		}
+	}
+
+	pFile->Close();
+
+//	pFile->Destroy();
+
+/*	if(!fileReader.Open(modelfile))
 	{
 		// load default model
 		fileReader.Close();
@@ -157,6 +227,7 @@ void CModelMd2::LoadModel(const char *file)
 	}
 
 	fileReader.Close();
+*/
 	LoadSkins();
 }
 
@@ -168,6 +239,9 @@ LoadFail
 */
 void CModelMd2::LoadFail()
 {
+	modelfile = new char[strlen(MODEL_DEFAULT_NAME)+1];
+	strcpy(modelfile, MODEL_DEFAULT_NAME);
+
 	// hard code a pyramid
 	num_skins = 1;
 	num_frames= 1;
@@ -271,12 +345,13 @@ void CModelMd2::LoadFail()
 	frames[0][4].y = -15;
 	frames[0][4].z = 0;
 
-
 	// skin names
 	skin_names = new char*[1];
+	
 	// md2 skin name list is 64 char strings
 	skin_names[0] = new char[64];
 	strcpy(skin_names[0], "none");
+	
 	LoadSkins();
 }
 
@@ -286,7 +361,6 @@ void CModelMd2::LoadFail()
 Draw
 =======================================
 */
-extern	I_Void		  *	g_pVoidExp;
 void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 {
 	if (!(skin & (MODEL_SKIN_UNBOUND_GAME|MODEL_SKIN_UNBOUND_LOCAL)))
@@ -305,7 +379,7 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	if (frac>=1) fframe = cframe;
 	if (frac<=0) cframe = fframe;
 
-	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames-1);
+	float frame = fmodf(GetCurTime()*10, num_frames-1);
 	fframe = (int)floorf(frame);
 	cframe = (int)ceilf(frame);
 	frac = frame-fframe;
@@ -373,10 +447,3 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 		num_cmds = *(int*)ptr;
 	}
 }
-
-
-
-
-
-
-

@@ -12,8 +12,7 @@ Constructor
 CWaveManager::CWaveManager(int maxResources) : m_maxItems(maxResources)
 {	
 	m_waveCache = new CWaveFile [m_maxItems];
-	m_pFileReader = new CFileBuffer();
-
+	m_pFileReader = System::CreateFileReader(FILE_BUFFERED);
 
 	m_freeWaves;
 	m_usedWaves;
@@ -39,7 +38,9 @@ CWaveManager::~CWaveManager()
 		}
 	}
 	delete [] m_waveCache;
-	delete m_pFileReader;
+	
+	if(m_pFileReader)
+		m_pFileReader->Destroy();
 }
 
 /*
@@ -177,7 +178,7 @@ Load a given file
 ==========================================
 */
 
-bool CWaveFile::LoadFile(const char * wavefile, CFileBuffer * pFile)
+bool CWaveFile::LoadFile(const char * wavefile, I_FileReader * pFile)
 {
 	if(!pFile->Open(wavefile))
 	{

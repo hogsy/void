@@ -62,6 +62,7 @@ private:
 	drawmodel_t* drawmodelGet(void);
 	void drawmodelRelease(drawmodel_t *d);
 
+	I_FileReader * m_pFile;
 	bool ready;
 
 	CModelCacheEntry *caches[CACHE_NUMCACHES][GAME_MAXMODELS];

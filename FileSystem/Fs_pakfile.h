@@ -3,6 +3,11 @@
 
 #include "Fs_hdr.h"
 
+/*
+================================================
+Pak File
+================================================
+*/
 
 class CPakFile:public CArchive
 {
@@ -20,16 +25,12 @@ public:
 	bool Seek(int offset, int origin, HFS handle);
 	uint GetPos(HFS handle);
 	uint GetSize(HFS handle);
-
-	uint LoadFile(byte ** ibuffer, 
-				  uint buffersize, 
-				  const char *ifilename);
+	uint LoadFile(byte ** ibuffer,  uint buffersize,   const char *ifilename);
 	
 	bool FindFile(char * buf, int buflen,const char * filename);
+	int  GetFileList (StringList &strlst, const char * path, const char *ext);
 	void ListFiles();
-	int  GetFileList (StringList &strlst, 
-					  const char * path,
-					  const char *ext);
+
 private:
 
 	enum 

@@ -15,6 +15,8 @@ CModelManager::CModelManager()
 	drawmodels = NULL;
 	ready = true;
 
+	m_pFile = CreateFileReader(FILE_BUFFERED);
+
 	//Initialize to 0
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
@@ -32,22 +34,11 @@ CModelManager::~CModelManager()
 {
 	UnloadModelAll();
 
-/*	for (int c=0; c<CACHE_NUMCACHES; c++)
-	{
-		for (int e=0; e<GAME_MAXMODELS; e++)
-		{
-			if (caches[c][e])
-			{
-				if (caches[c][e]->Release() == 0)
-					delete caches[c][e];
-				caches[c][e] = NULL;
-			}
-		}
-	}
-*/
 	// free any drawmodel structs we have allocated
 	for (int c=0; c<num_drawmodel_allocs; c++)
 		delete [] drawmodel_allocs[c];
+
+	m_pFile->Destroy();
 }
 
 /*
@@ -80,7 +71,6 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 		}
 	}
 
-
 	// make sure our spot is free
 	if (caches[mdlCache][mdlIndex])
 	{
@@ -95,7 +85,12 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 	else
 		caches[mdlCache][mdlIndex] =  new CModelSp2();
 
-	caches[mdlCache][mdlIndex]->LoadModel(model);
+
+	if(!m_pFile->Open(model))
+		caches[mdlCache][mdlIndex]->LoadFail();
+	else
+		caches[mdlCache][mdlIndex]->LoadModel(m_pFile,model);
+	
 	return mdlIndex;
 
 
@@ -197,8 +192,6 @@ void CModelManager::UnloadModelCache(CacheType mdlCache)
 {
 	for (int i=0; i<GAME_MAXMODELS; i++)
 	{
-//		if (caches[mdlCache][i])
-//			UnloadModel(mdlCache, i);
 		if (caches[mdlCache][i])
 		{
 			delete caches[mdlCache][i];
@@ -298,7 +291,6 @@ void CModelManager::LoadSkins(void)
 	ready = true;
 }
 
-
 /*
 =======================================
 UnLoadSkins
@@ -316,8 +308,6 @@ void CModelManager::UnLoadSkins(void)
 	}
 	ready = false;
 }
-
-
 
 /*
 =========

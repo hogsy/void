@@ -1,23 +1,19 @@
-
 #ifdef RENDERER
-#include "Standard.h"
-#include "Tex_image.h"
+	#include "Standard.h"
+	#include "Tex_image.h"
 #else
-#include "Com_defs.h"
-#include "Com_Vector.h"
-#include "Rast_main.h"
-#include "../Devvoid/Std_lib.h"
-#include "I_file.h"
+	#include "Com_defs.h"
+	#include "Com_Vector.h"
+	#include "Rast_main.h"
+	#include "../Devvoid/Std_lib.h"
+	#include "I_file.h"
 #endif
 
 #include "Shader.h"
 #include "ShaderManager.h"
 
 
-
-
 CShaderManager	*g_pShaders=0;
-
 
 const char * BaseTextureList[] =
 {
@@ -25,9 +21,6 @@ const char * BaseTextureList[] =
 	"textures/base/conback",
 	0
 };
-
-
-
 
 /*
 ===================================================================================================
@@ -44,30 +37,25 @@ CShaderManager::CShaderManager()
 	mFreePolys	 = NULL;
 	mNumCacheAllocs = 0;
 
+	I_FileReader * pFile = CreateFileReader(FILE_BUFFERED);
 
-	CFileBuffer	 fileReader;
-	if (!fileReader.Open("Scripts/shaderlist.txt"))
+	if (!pFile->Open("Scripts/shaderlist.txt"))
 		return;
-
 
 	for (int i=0; i<CACHE_PASS_NUM; i++)
 		mCache[i] = 0;
 
-
 	char token[1024];
 	while (1)
 	{
-		fileReader.GetToken(token, true);
+		pFile->GetToken(token, true);
 		if (!token[0])
 			break;
 
 		ParseShaders(token);
 	}
-
-	fileReader.Close();
+	pFile->Destroy();
 }
-
-
 
 CShaderManager::~CShaderManager()
 {
@@ -87,12 +75,13 @@ ParseShaders
 */
 void CShaderManager::ParseShaders(const char *shaderfile)
 {
-	CFileBuffer	 fileReader;
+	I_FileReader * pFile = CreateFileReader(FILE_BUFFERED);
+
 	char path[260];
 
 	sprintf(path, "scripts/%s.shader", shaderfile);
 
-	if (!fileReader.Open(path))
+	if (!pFile->Open(path))
 		return;
 
 	if (mNumShaders == MAX_SHADERS)
@@ -103,17 +92,16 @@ void CShaderManager::ParseShaders(const char *shaderfile)
 
 	while (1)
 	{
-		fileReader.GetToken(token, true);
+		pFile->GetToken(token, true);
 		if (!token[0])
 			break;
 
 		mShaders[mNumShaders] = new CShader(token);
-		fileReader.GetToken(token, true);
-		mShaders[mNumShaders]->Parse(&fileReader);
+		pFile->GetToken(token, true);
+		mShaders[mNumShaders]->Parse(pFile);
 		mNumShaders++;
 	}
-
-	fileReader.Close();
+	pFile->Destroy();
 }
 
 

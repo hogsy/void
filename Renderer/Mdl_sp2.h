@@ -12,7 +12,12 @@ public:
 	~CModelSp2();
 
 	void Draw(int skin, int fframe, int cframe, float frac);
-	void LoadModel(const char *file);	// load a md2
+	
+	// load am sp2
+	void LoadModel(I_FileReader * pFile, const char * szFileName);	
+
+	// default model
+	void LoadFail(void);	
 
 private:
 
@@ -23,13 +28,8 @@ private:
 		char skin_name[64];
 	};
 
-	void LoadFail(void);	// default model
-
 	// frame data
 	sp2_frame_t *frames;
-
-	// the glcommand list
-	void *cmds;
 };
 
 

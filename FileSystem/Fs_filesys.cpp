@@ -1,6 +1,6 @@
 #include "Fs_hdr.h"
+#include "Fs_readers.h"
 #include "Fs_filesys.h"
-#include "I_file.h"
 #include "Fs_pakfile.h"
 #include "Fs_zipfile.h"
 
@@ -604,3 +604,19 @@ void CFileSystem::RemoveSearchPath(const char *path)
 	}
 }
 
+/*
+================================================
+FileReader Creation func
+================================================
+*/
+I_FileReader * CFileSystem::CreateReader(EFileMode mode)
+{
+	I_FileReader * pReader = 0;
+	if(mode == FILE_BUFFERED)
+		pReader = new CFileBuffer();
+	else if(mode == FILE_STREAM)
+		pReader = new CFileStream();
+	else 
+		return 0;
+	return pReader;
+}

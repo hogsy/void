@@ -6,7 +6,7 @@
 #include "Com_trace.h"
 #include "Bsp_file.h"
 
-class CFileStream;
+struct I_FileReader;
 
 /*
 ============================================================================
@@ -81,7 +81,7 @@ private:
 	plane_t * Ray(int node, const vector_t &start, const vector_t &end, 
 				  float *endfrac, plane_t *lastplane);
 
-	static int  LoadLump(CFileStream &file, int l, void **data);
+	static int  LoadLump(I_FileReader  * pFile, int l, void **data);
 	static void AddLump(FILE *f, bspf_header_t &header, int l, void *data, int size);
 
 

@@ -20,9 +20,10 @@ Register all the Game CVars
 */
 void CGame::InitializeVars()
 {
-	g_pCons->RegisterCVar(&g_varGravity,this);
+/*	g_pCons->RegisterCVar(&g_varGravity,this);
 	g_pCons->RegisterCVar(&g_varMaxSpeed,this);
 	g_pCons->RegisterCVar(&g_varFriction,this);
+*/
 }
 
 

@@ -3,6 +3,7 @@
 #include "Mus_main.h"
 #include "Sv_defs.h"
 #include "I_renderer.h"
+#include "I_file.h"
 #include "I_filesystem.h"
 #include "Sys_exp.h"
 #include "Cl_main.h"
@@ -268,8 +269,8 @@ CVoid::~CVoid()
 	}
 
 	//Free the file system
-	FILESYSTEM_Free();	
 	RENDERER_Free();
+	FILESYSTEM_Free();	
 
 	if(m_pExport)
 		delete m_pExport;
@@ -520,6 +521,10 @@ namespace System
 
 	const float & GetCurTime() { return g_pVoid->m_Time.GetCurrentTime(); }
 	const float & GetFrameTime()   { return g_pVoid->m_Time.GetFrameTime(); }
+
+	I_FileReader *  CreateFileReader(EFileMode mode)
+	{	return g_pVoid->m_pFileSystem->CreateReader(mode);
+	}
 
 
 	void SetGameState(eGameState state) 

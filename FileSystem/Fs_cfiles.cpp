@@ -1,3 +1,20 @@
+#if 0
+
+//====================================================================================
+//C interface to file streams
+/*
+extern "C"
+{
+	FILESYSTEM_API uint FS_Open(const char *name);
+	FILESYSTEM_API void FS_Close(uint handle);
+	FILESYSTEM_API int  FS_Read(void *buffer,int size,uint handle);
+	FILESYSTEM_API void FS_Seek(uint handle,int offset, signed char mode);
+	FILESYSTEM_API int  FS_Tell(uint handle);
+}
+
+*/
+
+
 #include "Fs_hdr.h"
 #include "I_file.h"
 
@@ -90,3 +107,6 @@ ComPrintf("telling %s , at %d\n", m_fileStreams[handle].GetFileName(), pos);
 	}
 	return 0;
 }
+
+
+#endif

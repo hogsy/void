@@ -2,7 +2,8 @@
 #define VOID_SND_WAVEFILE
 
 //forward declare file
-class CFileBuffer;
+//class CFileBuffer;
+struct I_FileReader;
 
 namespace VoidSound {
 
@@ -20,7 +21,7 @@ class CWaveFile
 	CWaveFile();
 	~CWaveFile();
 	
-	bool LoadFile(const char * wavefile, CFileBuffer * pFile);
+	bool LoadFile(const char * wavefile, I_FileReader * pFile);
 	void Unload();
 	
 	bool IsEmpty() const;
@@ -80,7 +81,8 @@ private:
 	WaveList	*  m_freeWaves;
 	WaveList	*  m_usedWaves;
 
-	CFileBuffer *  m_pFileReader;
+//	CFileBuffer *  m_pFileReader;
+	I_FileReader * m_pFileReader;
 };
 
 

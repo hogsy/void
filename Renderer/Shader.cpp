@@ -55,7 +55,7 @@ CShaderLayer::~CShaderLayer()
 Parse
 ========
 */
-void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
+void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 {
 	char token[1024];
 
@@ -415,7 +415,7 @@ CShader::~CShader()
 Parse
 =========
 */
-void CShader::Parse(CFileBuffer *shader)
+void CShader::Parse(I_FileReader *shader)
 {
 	char token[1024];
 
