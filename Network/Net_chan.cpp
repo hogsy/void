@@ -13,10 +13,9 @@ Constructor/Destructor
 */
 CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
 					   m_reliableBuffer(MAX_DATAGRAM_SIZE),
-					   m_sendBuffer(MAX_DATAGRAM_SIZE)
-{
-	Reset();
-	m_pRecvBuffer = 0;
+					   m_sendBuffer(MAX_DATAGRAM_SIZE),
+					   m_pRecvBuffer(0)
+{	Reset();
 }
 
 CNetChan::~CNetChan()
@@ -50,21 +49,19 @@ void CNetChan::Reset()
 	m_addr.Reset();
 
 	m_buffer.Reset();
-
 	m_reliableBuffer.Reset();
 	m_sendBuffer.Reset();
 
 	m_state.Reset();
+	
+	m_rate = 0.0;
 
 	m_lastReceived = System::g_fcurTime;
-//	m_lastReceived = 0.0f;
+	m_clearTime = 0.0f;
 	
 	m_bOutReliableMsg = 0;
 	m_bInReliableMsg=0;			//Is the message recived supposed to be reliable ?
 	m_bInReliableAcked=0;		//Was the last reliabled message acked by the remote host ?
-
-	
-	m_clearTime = 0.0f;
 
 	m_bFatalError = false;
 }
@@ -77,7 +74,7 @@ True if the bandwidth choke isn't active
 */
 bool CNetChan::CanSend() 
 {
-	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_state.rate)
+	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
 	m_state.numChokes ++;
 	return false;
@@ -99,9 +96,9 @@ bool CNetChan::CanSendReliable()
 
 void CNetChan::SetRate(int rate)
 {
-	if(m_state.rate < 1000 || m_state.rate > 10000)
-		m_state.rate = 2500;
-	m_state.rate = 1.0/rate;
+	if(rate < 1000 || rate > 10000)
+		rate = 2500;
+	m_rate = 1.0/rate;
 }
 
 
@@ -168,9 +165,10 @@ void CNetChan::PrepareTransmit()
 	m_state.outMsgId++;
 
 	if (m_clearTime < System::g_fcurTime)
-		m_clearTime = System::g_fcurTime + (m_sendBuffer.GetSize() * (m_state.rate));
+		m_clearTime = System::g_fcurTime + (m_sendBuffer.GetSize() * m_rate);
 	else
-		m_clearTime += (m_sendBuffer.GetSize() * (m_state.rate));
+		m_clearTime += (m_sendBuffer.GetSize() * m_rate);
+	m_sendTime = System::g_fcurTime;
 }
 
 
@@ -190,6 +188,9 @@ bool CNetChan::BeginRead()
 	//get rid of high bits
 	seq &= ~(1<<31);	
 	seqacked &= ~(1<<31);	
+
+	if(seqacked == m_state.outMsgId)
+		m_state.latency = System::g_fcurTime - m_sendTime;
 
 	//Message is a duplicate or old, ignore it
 	if (seq <= m_state.inMsgId)
@@ -247,4 +248,8 @@ const char * CNetChan::GetAddrString() const
 
 const CNetAddr & CNetChan::GetAddr() const
 {	return m_addr;
+}
+
+int CNetChan::GetRate() const
+{	return (1.0/m_rate);
 }

@@ -453,8 +453,8 @@ void CServer::PrintServerStatus()
 			ComPrintf("%s:\n", m_clients[i].name);
 
 			const NetChanState & state = m_net.ChanGetState(i);
-			ComPrintf("  Rate:%.2f\n  In:%d\n  Acked:%d\n  Out:%d\n", 
-						1.0/state.rate, state.inMsgId, state.inAckedId, state.outMsgId);
+			ComPrintf("  Rate:%d\n  In:%d\n  Acked:%d\n  Out:%d\n", 
+						m_net.ChanGetRate(i), state.inMsgId, state.inAckedId, state.outMsgId);  //1.0/state.rate
 			ComPrintf("  Dropped:%d\n  Good:%d\n  Chokes:%d\n", 
 					state.dropCount, state.goodCount, state.numChokes);
 		}

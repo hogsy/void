@@ -156,6 +156,7 @@ public:
 	
 	//Set the Rate of the given channel
 	void ChanSetRate(int chanId, int rate);
+	int  ChanGetRate(int chanId);
 
 	//Reject client connection for given reason
 	void SendRejectMsg(const char * reason);

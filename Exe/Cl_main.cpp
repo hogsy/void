@@ -254,6 +254,8 @@ void CClient::RunFrame()
 
 		//Print Networking stats
 		const NetChanState & chanState = m_pNetCl->GetChanState();
+
+		m_pHud->HudPrintf(0,390,0, "Latency %f", chanState.latency);
 		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
 							chanState.dropCount + chanState.goodCount, chanState.numChokes);
 		m_pHud->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);

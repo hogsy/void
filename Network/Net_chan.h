@@ -23,8 +23,8 @@ public:
 	void Setup(const CNetAddr &addr, CBuffer * recvBuffer);
 	void Reset();
 	
-	void SetRate(int rate);	
-//	void ResetReliable();
+	void SetRate(int rate);
+	int  GetRate()const; 
 
 	bool MatchAddr(const CNetAddr &addr) const;
 	const CNetAddr & GetAddr() const;
@@ -48,10 +48,15 @@ public:
 	bool	m_bFatalError;	//Flag over flow errors
 
 	NetChanState m_state;	//Chan stat info
+	
 
 private:
 	friend class CNetSocket;
 
+	float     m_sendTime;
+//	int		  m_lastSendId;
+
+	double	  m_rate;
 	double    m_clearTime;
 
 	int		  m_bInReliableMsg;		//Is the message recived supposed to be reliable ?

@@ -247,10 +247,15 @@ void CNetServer::ChanFinishWrite()
 {	m_curChanId = 0;
 }
 	
+
 const NetChanState & CNetServer::ChanGetState(int chanId) const
 {	return m_clChan[chanId].m_netChan.m_state;
 }
 
 void CNetServer::ChanSetRate(int chanId,int rate)
 {	m_clChan[chanId].m_netChan.SetRate(rate);
+}
+
+int CNetServer::ChanGetRate(int chanId)
+{	return m_clChan[chanId].m_netChan.GetRate();
 }
