@@ -188,7 +188,7 @@ void CRHud::DrawHud()
 		if(m_hmessages[i].inuse)
 		{
 			m_hmessages[i].Draw();
-			g_pRast->ConAlpha(255, 255);
+//			g_pRast->ConAlpha(255, 255);
 		}
 	}
 

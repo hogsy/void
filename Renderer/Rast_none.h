@@ -29,7 +29,7 @@ public:
 	void TextureSet(hTexture texnum);
 	void TextureLoad(hTexture index, const TextureData &texdata);
 	void TextureUnLoad(hTexture index);
-	void TextureClamp(bool clamp) {}
+	void TextureClamp(bool clamp) { }
 
 	void MatrixReset(void);
 	void MatrixRotateX(float degrees);
@@ -40,7 +40,7 @@ public:
 	void MatrixPush(void);
 	void MatrixPop(void);
 
-	void PolyDraw(void) {};
+	void PolyDraw(void) { }
 
 	void ClearBuffers(int buffers);
 	void ProjectionMode(EProjectionMode mode);

@@ -49,56 +49,49 @@ void CRasterizer::PolyStart(EPolyType type)
 void CRasterizer::PolyEnd(void)
 {
 	int t;
-	int num;
-	unsigned short *indices = &mIndices[mFirstIndex];
 
 	// convert the type into triangles
 	switch (mType)
 	{
 	case VRAST_TRIANGLE_FAN:
-		num = mNumElements - mFirstElement - 2;
-		for (t=0; t<num; t++)
+		for (t=mFirstElement; t<mNumElements; t++)
 		{
-			indices[t*3 + 0] = 0;
-			indices[t*3 + 1] = t + 1;
-			indices[t*3 + 2] = t + 2;
+			mIndices[t*3 + 0] = mFirstElement;
+			mIndices[t*3 + 1] = t + 1;
+			mIndices[t*3 + 2] = t + 2;
 		}
-		mNumIndices += num*3;
+		mNumIndices += (mNumElements - mFirstElement - 2) * 3;
 		break;
 
 	case VRAST_TRIANGLE_STRIP:
-		num = mNumElements - mFirstElement - 2;
-		for (t=0; t<num; t++)
+		for (t=mFirstElement; t<(mNumElements-2); t++)
 		{
 			if (!(t%2))
 			{
-				indices[t*3 + 0] = t;
-				indices[t*3 + 1] = t+1;
-				indices[t*3 + 2] = t+2;
+				mIndices[t*3 + 0] = t;
+				mIndices[t*3 + 1] = t+1;
+				mIndices[t*3 + 2] = t+2;
 			}
 			else
 			{
-				indices[t*3 + 0] = t;
-				indices[t*3 + 1] = t+2;
-				indices[t*3 + 2] = t+1;
+				mIndices[t*3 + 0] = t;
+				mIndices[t*3 + 1] = t+2;
+				mIndices[t*3 + 2] = t+1;
 			}
 		}
-		mNumIndices += num*3;
+		mNumIndices += (mNumElements - mFirstElement - 2) * 3;
 		break;
 
 	case VRAST_QUADS:
-		num = (mNumElements - mFirstElement) / 4;
-		for (t=0; t<num; t++)
+		for (t=mFirstElement; t<mNumElements; t+=4)
 		{
-			indices[mNumIndices + 0] = t*4;
-			indices[mNumIndices + 1] = t*4+1;
-			indices[mNumIndices + 2] = t*4+2;
+			mIndices[mNumIndices++] = t;
+			mIndices[mNumIndices++] = t+1;
+			mIndices[mNumIndices++] = t+2;
 
-			indices[mNumIndices + 3] = t*4;
-			indices[mNumIndices + 4] = t*4+2;
-			indices[mNumIndices + 5] = t*4+3;
-
-			mNumIndices += 6;
+			mIndices[mNumIndices++] = t;
+			mIndices[mNumIndices++] = t+2;
+			mIndices[mNumIndices++] = t+3;
 		}
 
 		break;

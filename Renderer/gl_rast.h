@@ -82,6 +82,7 @@ private:
 	GLuint	m_glnames[MAX_TEXTURES];
 
 	bool	m_CVAsupported;
+	bool	m_vsynchsupported;
 
 
 

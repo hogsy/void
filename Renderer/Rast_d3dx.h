@@ -46,6 +46,7 @@ public:
 	void MatrixPop(void);
 
 	void PolyDraw(void);
+	void TriDraw(void);
 
 	void ClearBuffers(int buffers);
 	void ProjectionMode(EProjectionMode mode);

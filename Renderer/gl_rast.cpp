@@ -13,6 +13,7 @@ COpenGLRast::COpenGLRast()
 {
 	m_bInitialized = false;
 	m_CVAsupported = false;
+	m_vsynchsupported = false;
 	m_nummodes = 0;
 	m_devmodes = 0;
 
@@ -139,7 +140,7 @@ bool COpenGLRast::Init()
 				g_rInfo.rflags |= RFLAG_MULTITEXTURE;
 
 			else if (!strcmp(start, "WGL_EXT_swap_control"))
-				g_rInfo.rflags |= RFLAG_SWAP_CONTROL;
+				m_vsynchsupported = true;
 
 			else if (!strcmp(start, "GL_EXT_compiled_vertex_array"))
 				m_CVAsupported = true;
@@ -933,7 +934,8 @@ SetVidSynch - assumes that it can be done
 */
 void COpenGLRast::SetVidSynch(int v)
 {
-	wglSwapIntervalEXT(v);
+	if (m_vsynchsupported)
+		wglSwapIntervalEXT(v);
 }
 
 /*

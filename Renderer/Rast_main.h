@@ -146,12 +146,10 @@ public:
 	void PolyVertexi(int x, int y);
 	void PolyTexCoord(float s, float t);
 	void PolyColor(float r, float g, float b, float a);
-	virtual void PolyDraw(void)=0;
 
 	void ShaderSet(CShader *shader);
 	void TextureTexDef(bspf_texdef_t *def);
 	void TextureLightDef(bspf_texdef_t *def);
-
 
 	virtual void ClearBuffers(int buffers)=0;
 	virtual void ProjectionMode(EProjectionMode mode)=0;
@@ -168,7 +166,9 @@ public:
 
 
 private:
+
 	void DrawLayer(int l);
+	virtual void PolyDraw(void)=0;
 	virtual void TextureSet(hTexture texnum)=0;
 
 	virtual void DepthFunc(EDepthFunc func)=0;

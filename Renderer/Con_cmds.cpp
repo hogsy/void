@@ -166,16 +166,11 @@ toggle vid synch
 */
 bool CVar_VidSynch(int val)
 {
-	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
-	{
-		if (val)
-			g_pRast->SetVidSynch(1);
-		else
-			g_pRast->SetVidSynch(0);
-		return true;
-	}
-	ComPrintf("Video card doesnt support VidSynch\n");
-	return false;
+	if (val)
+		g_pRast->SetVidSynch(1);
+	else
+		g_pRast->SetVidSynch(0);
+	return true;
 }
 
 
@@ -253,7 +248,7 @@ bool CRConsole::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 
 	else if(cvar == (CVarBase*)&g_varD3DXShift)
 		return CVar_D3DXShift(strVal.IntVal());
-	
+
 	return false;
 }
 
