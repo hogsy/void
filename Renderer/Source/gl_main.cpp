@@ -11,6 +11,8 @@ Constructor/Destructor
 CGLUtil::CGLUtil() : m_cWndX("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
 					 m_cWndY("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 {
+	m_bInitialized = false;
+	
 	m_nummodes = 0;
 	m_devmodes = 0;
 
@@ -38,7 +40,6 @@ CGLUtil::~CGLUtil()
 	if(m_devmodes)
 		delete [] m_devmodes;
 	m_nummodes = 0;
-
 	OpenGLUnInit();
 	ConPrint("GL::Final Shutdown OK\n");
 }
@@ -78,7 +79,10 @@ Start up OpenGL
 */
 bool CGLUtil::Init()
 {
+	m_bInitialized = true;
+
 	ConPrint("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
+	ConPrint("CGLUtil::Init:Pos: %d %d\n",(int)m_cWndX.value,(int)m_cWndY.value);
 
 	//3dfx 3d only card. default to fullscreen mode and 16 bit
 	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
@@ -158,8 +162,8 @@ bool CGLUtil::Shutdown()
 		if(rect.left < 40)	rect.left= 40;
 		if(rect.top  < 20)	rect.top = 20;
 
-//		g_pConsole->CVarSet(&m_cWndX,(float)rect.left);
-//		g_pConsole->CVarSet(&m_cWndY,(float)rect.top);
+		m_cWndX.Set((float)rect.left);
+		m_cWndY.Set((float)rect.top);
 	}
 
 	_wglMakeCurrent(NULL, NULL);
@@ -327,8 +331,11 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-//	wndX < 80 ? g_pConsole->CVarSet(&m_cWndX,80.0) : g_pConsole->CVarSet(&m_cWndX,wndX);
-//	wndY < 80 ? g_pConsole->CVarSet(&m_cWndY,40.0) : g_pConsole->CVarSet(&m_cWndY,wndY);
+	//Dont bother with initial co-ords
+	if(!m_bInitialized)
+		return;
+	m_cWndX.Set(wndX);
+	m_cWndY.Set(wndY);
 }
 
 /*
@@ -346,18 +353,6 @@ void CGLUtil::Resize()
 	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	glViewport(0, 0, g_rInfo.width, g_rInfo.height);
 }
-
-/*
-==========================================
-Set Windows Initial Size
-==========================================
-*/
-void CGLUtil::SetInitializePos()
-{
-	//Initializing for the first time, set default Window Position
-	SetWindowCoords((int)m_cWndX.value,(int)m_cWndY.value);
-}
-
 
 /*
 ==========================================
@@ -459,3 +454,4 @@ bool CGLUtil::SetupPixelFormat()
 			  pfd.cColorBits, pfd.cDepthBits, pfd.cStencilBits);
 	return true;
 }
+

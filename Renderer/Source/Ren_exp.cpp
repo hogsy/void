@@ -119,7 +119,6 @@ bool CRenExp::InitRenderer()
 	ConPrint("\n***** Renderer Intialization *****\n\n");
 
 	//Start up opengl
-	g_pGL->SetInitializePos();
 	if(!g_pGL->Init())
 	{
 		ConPrint("CRenExp::InitRenderer:Failed to Init Opengl");

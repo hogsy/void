@@ -32,7 +32,7 @@ public:
 		value = 0.0f;
 		handler = 0;
 
-		ForceSet(varval);
+		CVar::ForceSet(varval);
 	}
 
 	//Destructor
@@ -108,11 +108,8 @@ public:
 
 	void ForceSet(float val)
 	{
-		char buffer[8];
-		memset(buffer,0,sizeof(buffer));
-		sprintf(buffer,"%f",val);
-		
-		ForceSet(buffer);
+		sprintf(m_buffer,"%.2f",val);
+		CVar::ForceSet(m_buffer);
 	}
 
 	/*
@@ -129,7 +126,7 @@ public:
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
-		ForceSet(varval);
+		CVar::ForceSet(varval);
 	}
 
 	void Set(float val)
@@ -141,9 +138,11 @@ public:
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
-		ForceSet(val);
+		CVar::ForceSet(val);
 	}
-};
 
+private:
+	char m_buffer[16];
+};
 
 #endif

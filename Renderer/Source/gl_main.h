@@ -24,7 +24,6 @@ public:
 
 	void Resize();
 	void SetWindowCoords(int wndX, int wndY);
-	void SetInitializePos();
 
 	bool UpdateDisplaySettings(unsigned int width, 
 							   unsigned int height, 
@@ -46,6 +45,9 @@ private:
 	bool	m_loadeddriver;
 	bool	m_initialized;
 	char	m_gldriver[256];
+
+	//Windowed Screen Co-ordinates
+	bool	m_bInitialized;
 	
 	CVar    m_cWndX;	//Windowed X pos
 	CVar    m_cWndY;	//Windowed Y pos
