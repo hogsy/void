@@ -183,6 +183,30 @@ bool CRastD3DX::Shutdown()
 
 /*
 ==========================================
+RestoreSurfaces
+==========================================
+*/
+void CRastD3DX::RestoreSurfaces(void)
+{
+	m_pD3DX->RestoreSurfaces();
+
+/*
+	for (int i=0; i<MAX_TEXTURE_BINS; i++)
+	{
+		for (int t=0; t<mTexBins[i].num; t++)
+		{
+			if (mTexBins[i].tex_surfs[t])
+				mTexBins[i].tex_surfs[t]->
+
+
+		}
+	}
+*/
+}
+
+
+/*
+==========================================
 Update Default window coords
 ==========================================
 */
@@ -316,39 +340,38 @@ void CRastD3DX::DepthWrite(bool write)
 
 void CRastD3DX::BlendFunc(ESourceBlend src, EDestBlend dest)
 {
-/*
 	int source = 0;
 	int destination = 0;
 
 	switch (src)
 	{
 	case VRAST_SRC_BLEND_NONE:
-		glDisable(GL_BLEND);
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
 		return;
 	case VRAST_SRC_BLEND_ZERO:
-		source = GL_ZERO;
+		source = D3DBLEND_ZERO;
 		break;
 	case VRAST_SRC_BLEND_SRC_ALPHA:
-		source = GL_SRC_ALPHA;
+		source = D3DBLEND_SRCALPHA;
 		break;
 	}
 
 	switch (dest)
 	{
 	case VRAST_DEST_BLEND_NONE:
-		glDisable(GL_BLEND);
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
 		return;
 	case VRAST_DEST_BLEND_SRC_COLOR:
-		destination = GL_SRC_COLOR;
+		destination = D3DBLEND_SRCCOLOR;
 		break;
 	case VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA:
-		destination = GL_ONE_MINUS_SRC_ALPHA;
+		destination = D3DBLEND_INVSRCALPHA;
 		break;
 	}
 
-	glEnable(GL_BLEND);
-	glBlendFunc(source, destination);
-*/
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, TRUE);
+    m_pD3DDevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, source);
+    m_pD3DDevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, destination);
 }
 
 
@@ -364,14 +387,24 @@ int CRastD3DX::TextureBinInit(int num)
 		if (mTexBins[i].num == -1)
 		{
 			mTexBins[i].num = num;
-/*			mTexBins[i].glnames = new GLuint[num];
-			if (!mTexBins[i].glnames)
-				FError("not enough mem for gl names");
+			mTexBins[i].tex_surfs = new LPDIRECTDRAWSURFACE7[num];
+			if (!mTexBins[i].tex_surfs)
+				FError("d3dx - not enough mem for texture surf pointers");
 
-			glEnable(GL_TEXTURE_2D);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-			glGenTextures(mTexBins[i].num, mTexBins[i].glnames);
-*/			return i;
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTFP_POINT);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+			m_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+			m_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+
+			for (int t=0; t<num; t++)
+				mTexBins[i].tex_surfs[t] = NULL;
+
+			return i;
 		}
 	}
 
@@ -393,11 +426,14 @@ void CRastD3DX::TextureBinDestroy(int bin)
 		Error("destroying non-existant texture bin!");
 		return;
 	}
-/*
-	glDeleteTextures(mTexBins[bin].num, mTexBins[bin].glnames);
-	delete mTexBins[bin].glnames;
-	mTexBins[bin].glnames = NULL;
-*/	
+
+	for (int t=0; t<mTexBins[bin].num; t++)
+		if (mTexBins[bin].tex_surfs[t])
+			mTexBins[bin].tex_surfs[t]->Release();
+
+	delete mTexBins[bin].tex_surfs;
+
+	mTexBins[bin].tex_surfs = NULL;
 	mTexBins[bin].num = -1;
 }
 
@@ -405,91 +441,69 @@ void CRastD3DX::TextureBinDestroy(int bin)
 
 void CRastD3DX::TextureSet(int bin, int texnum)
 {
-/*
-
-	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
-*/
+	m_pD3DDevice->SetTexture(0, mTexBins[bin].tex_surfs[texnum]);
+//	m_pD3DDevice->SetTexture(0, mTexBins[0].tex_surfs[0]);
 }
 
 void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 {
-/*
-	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[num]);
-
-	// clamping
-	if (texdata->clamp)
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	}
-	else
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	}
-
-	// mipmapping
-	if (texdata->mipmap)
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	}
-	else
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	}
-
-
-	int ext_format, int_format;
+	D3DX_SURFACEFORMAT ext_format, int_format;
 	if (texdata->format == IMG_RGB)
 	{
-		ext_format = GL_RGB;
-		int_format = GL_RGB8;
+		ext_format = D3DX_SF_R8G8B8;
+		int_format = D3DX_SF_R8G8B8;
 	}
 	else
 	{
-		ext_format = GL_RGBA;
-		int_format = GL_RGBA8;
+		ext_format = D3DX_SF_A8R8G8B8;
+		int_format = D3DX_SF_A8R8G8B8;
 	}
 
-	int w = texdata->width;
-	int h = texdata->height;
+	DWORD mipmap = texdata->mipmap ? 0 : D3DX_TEXTURE_NOMIPMAP;
+	DWORD nummips= texdata->mipmap ? texdata->mipmaps : 0;
+	DWORD width = texdata->width;
+	DWORD height = texdata->height;
+
+	D3DXCreateTexture(m_pD3DDevice, 
+					  &mipmap,
+					  &width,
+					  &height,
+					  &int_format,
+					  NULL,
+					  &mTexBins[bin].tex_surfs[num],
+					  &nummips);
+
+
 
 	if (texdata->mipmap)
 	{
+//		int m = texdata->mipmaps-1;
 		for (int m=texdata->mipmaps-1; m>=0; m--)
 		{
-			glTexImage2D(GL_TEXTURE_2D,
-					 texdata->mipmaps - m - 1,
-					 GL_RGB, //int_format,
-					 w,
-					 h,
-					 0,
-					 GL_RGB, //ext_format,
-					 GL_UNSIGNED_BYTE,
-					 texdata->mipdata[m]);
-
-			w /= 2;
-			h /= 2;
-			if (w==0) w=1;
-			if (h==0) h=1;
+			D3DXLoadTextureFromMemory(m_pD3DDevice,
+									  mTexBins[bin].tex_surfs[num],
+									  texdata->mipmaps-1-m,
+									  texdata->mipdata[m],
+									  NULL,
+									  ext_format,
+									  D3DX_DEFAULT,
+									  NULL,
+									  D3DX_FT_LINEAR);
 		}
 	}
 
 	else
 	{
-		glTexImage2D(GL_TEXTURE_2D,
-					 0,
-					 int_format,
-					 w,
-					 h,
-					 0,
-					 ext_format,
-					 GL_UNSIGNED_BYTE,
-					 texdata->mipdata[texdata->mipmaps - 1]);
+		D3DXLoadTextureFromMemory(m_pD3DDevice,
+								  mTexBins[bin].tex_surfs[num],
+								  0,
+								  texdata->mipdata[texdata->mipmaps-1],
+								  NULL,
+								  ext_format,
+								  D3DX_DEFAULT,
+								  NULL,
+								  D3DX_FT_LINEAR);
 	}
-*/
 }
 
 
@@ -603,7 +617,7 @@ void CRastD3DX::PolyEnd(void)
 void CRastD3DX::PolyVertexf(vector_t &vert)
 {
 	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(vert.x, vert.z, -vert.y),
-									rand(),
+									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
@@ -611,7 +625,7 @@ void CRastD3DX::PolyVertexf(vector_t &vert)
 void CRastD3DX::PolyVertexi(int x, int y)
 {
 	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(x, y, 0),
-									rand(),
+									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
@@ -639,8 +653,12 @@ ClearBuffers
 */
 void CRastD3DX::ClearBuffers(int buffers)
 {
-	if (FAILED(m_pD3DDevice->BeginScene()))
-		ComPrintf("failed to begin d3dx scene\n");
+	HRESULT hr = m_pD3DDevice->BeginScene();
+	if (FAILED(hr))
+	{
+		mhError = hr;
+		ReportErrors();
+	}
 
 //	glClearColor(0, 0, 1, 1);
 	int b = 0;
@@ -652,8 +670,6 @@ void CRastD3DX::ClearBuffers(int buffers)
 	if (buffers & VRAST_STENCIL_BUFFER)
 		b |= D3DCLEAR_STENCIL ;
 
-	if (FAILED(m_pD3DDevice->BeginScene()))
-		ComPrintf("failed to begin d3dx scene\n");
 	m_pD3DX->Clear(b);
 
 }
@@ -671,43 +687,6 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 
 	float r = g_rInfo.width;
 	float t = g_rInfo.height;
-/*
-	D3DMATRIX mat;
-	mat._11 = 2.0f / (r-0);
-	mat._21 = 0;
-	mat._31 = 0;
-	mat._41 = 0;
-	mat._12 = 0;
-	mat._22 = 2.0f / (t-0);
-	mat._32 = 0;
-	mat._42 = 0;
-	mat._13 = 0;
-	mat._23 = 0;
-	mat._33 = -2.0f / (1- -1);
-	mat._43 = 0;
-	mat._14 = (r+0) / (r-0);
-	mat._24 = (t+0) / (t-0);
-	mat._34 = (1+-1) / (1 - -1);
-	mat._44 = 1;
-*/
-/*
-	mat._11 = 2.0f / (r-0);
-	mat._12 = 0;
-	mat._13 = 0;
-	mat._14 = 0;
-	mat._21 = 0;
-	mat._22 = 2.0f / (t-0);
-	mat._23 = 0;
-	mat._24 = 0;
-	mat._31 = 0;
-	mat._32 = 0;
-	mat._33 = -2.0f / (1- -1);
-	mat._34 = 0;
-	mat._41 = (r+0) / (r-0);
-	mat._42 = (t+0) / (t-0);
-	mat._43 = (1+-1) / (1 - -1);
-	mat._44 = 1;
-*/
 
 	switch (mode)
 	{
@@ -764,27 +743,14 @@ void CRastD3DX::FrameEnd(void)
 	if (FAILED(hr))
 		mhError = hr;
 
-/*
+
     if(DDERR_SURFACELOST == hr || DDERR_SURFACEBUSY == hr)
     {
-        hr = g_pDD->TestCooperativeLevel();
+        hr = m_pDD->TestCooperativeLevel();
 
         if(SUCCEEDED(hr))
-        {
-            if(FAILED(hr = RestoreContext()))
-                return hr;
-        }
-        else if(DDERR_WRONGMODE == hr)
-        {
-            if(FAILED(hr = ReleaseContext()))
-                return hr;
-
-            if(FAILED(hr = CreateContext()))
-                return hr;
-        }
-
+            RestoreSurfaces();
     }
-*/
 }
 
 

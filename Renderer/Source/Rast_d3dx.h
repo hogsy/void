@@ -72,12 +72,16 @@ private:
 		tex_bin_t()
 		{
 			num = -1;
+			tex_surfs = NULL;
 		}
 
 		int		num;
+		LPDIRECTDRAWSURFACE7 *tex_surfs;
 	};
 	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
 
+
+	void RestoreSurfaces(void);
 
 	ID3DXContext		*m_pD3DX;
 	LPDIRECTDRAW7		m_pDD;
