@@ -534,7 +534,7 @@ void CDevvoidDlg::OnVis()
 	}
 
 	char * fileName = new char [_MAX_PATH];
-	sprintf(fileName,"%s/%s/%s/%s", GetVoidPath(), DEFAULT_GAME_DIR, DEFAULT_WORLDS_DIR, szListItem);
+	sprintf(fileName,"%s/%s", DEFAULT_WORLDS_DIR, szListItem);
 
 	m_curFile = szListItem;
 	BeginCompileThread();
@@ -782,8 +782,7 @@ UINT BeginLightMapCompile( LPVOID pParam )
 Vis
 ================================================
 */
-void CompileVis(const char * szFileName){}
-
+void CompileVis(const char * szFileName);
 UINT BeginVisCompile( LPVOID pParam )
 {
 	char * visFile = (char*)pParam;
@@ -793,6 +792,7 @@ UINT BeginVisCompile( LPVOID pParam )
 	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndVis();
 	return 0;
 }
+
 
 //=====================================================================================
 //=====================================================================================

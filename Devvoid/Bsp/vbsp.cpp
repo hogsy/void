@@ -45,7 +45,7 @@ void print_brushes(bsp_brush_t *b)
 
 void CompileBsp(const char * szFileName)
 {
-	ComPrintf ("======== vbsp ========\n");
+	ComPrintf ("\n\n======== vbsp ========\n");
 
 	reset_bsp_brush();
 

@@ -275,11 +275,9 @@ int light_assemble(unsigned char **data)
 light_write - rewrite the bsp file with light data
 ========
 */
-//void light_write(void)
 void light_write(const char * szPath)
 {
-	ComPrintf("Writing bsp with light info: ");
-
+	ComPrintf("Writing world with light info: ");
 
 	light_fill_defs();
 

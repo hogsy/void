@@ -390,6 +390,9 @@ void portal_flood_outside(bsp_node_t *head)
 	{
 		portal_flood_outside(head->children[0]);
 		portal_flood_outside(head->children[1]);
+
+		if (head->children[0]->outside && head->children[1]->outside)
+			head->outside = true;
 	}
 }
 
@@ -516,7 +519,7 @@ void portal_file(char *name)
 	int num=0;
 
 	FILE *f = fopen(name, "w");
-	fprintf(f, "%s\n", "VoidPortalFile");
+	fprintf(f, "\n%s\n", "VoidPortalFile");
 	for (int p=0; p<num_portals; p++)
 	{
 		// dont print any that link to outside leafs or are between two solids
@@ -540,7 +543,7 @@ void portal_file(char *name)
 										portals[p].side->num_verts);
 
 		for (int v=0; v<portals[p].side->num_verts; v++)
-			fprintf(f, " ( %f %f %f)",	portals[p].side->verts[v].x,
+			fprintf(f, " ( %f %f %f )",	portals[p].side->verts[v].x,
 										portals[p].side->verts[v].y,
 										portals[p].side->verts[v].z);
 
@@ -585,7 +588,7 @@ void portal_run(bsp_node_t *head)
 	ComPrintf("%d outside, %d inside, %d solid\n", out, in, solid);
 
 
-	// only remove invisible sides if there is a leak
+	// only remove invisible sides if there isn't a leak
 	if (in)
 	{
 		int vis, num;

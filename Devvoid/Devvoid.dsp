@@ -325,6 +325,18 @@ SOURCE=.\Light\vlight.cpp
 # Begin Group "Vis"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Vis\vis.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Vis\vis.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Vis\vvis.cpp
+# End Source File
 # End Group
 # Begin Source File
 

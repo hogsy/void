@@ -1,6 +1,6 @@
+
 #include "Com_defs.h"
 #include "Com_vector.h"
-#include "Com_trace.h"
 #include "../Std_lib.h"
 #include "light.h"
 
@@ -11,7 +11,7 @@
 
 void CompileLightmaps(const char * szPath, const char * szFileName)
 {
-	ComPrintf("======== vLight ========\n");
+	ComPrintf("\n\n======== vLight ========\n");
 
 	CWorld * pWorld = CWorld::CreateWorld(szFileName);
 	if(!pWorld)
