@@ -99,14 +99,13 @@ void CClient::Move(vector_t *dir, float time)
 
 	// can we clip through walls?  it's simple then
 	if ((int)m_noclip->value)
-//	if ((int)m_noclip.value)
 	{
 		VectorMA(&eye.origin, time, dir, &eye.origin);
 		return;
 	}
 
 	if (PointContents(eye.origin) & CONTENTS_SOLID)
-		m_rHud->HudPrintf(0, 10, 0, "Solid");
+		m_rHud->HudPrintf(0, 30, 0, "SOLID");
 
 
 	// regular collision
@@ -123,7 +122,7 @@ void CClient::Move(vector_t *dir, float time)
 	for (bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
 		VectorAdd(eye.origin, (*dir), end);
-		tr = trace(&eye.origin, &end, &eye.mins, &eye.maxs);
+		tr = trace(eye.origin, end, &eye.mins, &eye.maxs);
 
 
 		if (tr.fraction > 0)
@@ -137,11 +136,9 @@ void CClient::Move(vector_t *dir, float time)
 		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
 			break;
 
-		m_rHud->HudPrintf(0, 0, 0, "%f", dot(tr.plane->norm, eye.origin) - tr.plane->d);
-
-
 		VectorCopy(tr.plane->norm, hitplanes[hits]);
 		hits++;
+
 
 		// we're only touching 1 plane - project velocity onto it
 		if (hits==1)

@@ -28,7 +28,7 @@ typedef struct
 
 
 
-trace_t trace(vector_t *start, vector_t *end, vector_t *mins, vector_t *maxs);
+trace_t trace(vector_t &start, vector_t &end, vector_t *mins, vector_t *maxs);
 
 
 #endif
