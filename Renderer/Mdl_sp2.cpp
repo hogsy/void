@@ -134,6 +134,8 @@ void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 	cframe = fframe+1;
 	frac = frame - fframe;
 
+	// no lighting
+	g_pRast->LightOrigin(NULL);
 
 	// revers eye transform
 	g_pRast->MatrixPush();

@@ -85,7 +85,7 @@ void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 	pFile->Read(cmds, 4, header.numGlCommands);
 
 	// vertex info for all frames
-	frames = new vector_t* [num_frames];
+	frames = new model_vertex_t* [num_frames];
 	pFile->Seek(header.offsetFrames, SEEK_SET);
 
 	int f, v;
@@ -95,7 +95,7 @@ void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 
 	for (f = 0; f < num_frames; f++)
 	{
-		frames[f] = new vector_t[header.numVertices];
+		frames[f] = new model_vertex_t[header.numVertices];
 
 		pFile->Read(&scale, sizeof(float), 3);
 		pFile->Read(&trans, sizeof(float), 3);
@@ -106,9 +106,10 @@ void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 			pFile->Read(vertex, 4, 1);	// the xyz coords and a light normal index
 
 			// scale and translate them to get the actual vertex
-			frames[f][v].x = vertex[0]*scale.x + trans.x;
-			frames[f][v].y = vertex[1]*scale.y + trans.y;
-			frames[f][v].z = vertex[2]*scale.z + trans.z;
+			frames[f][v].v.x = vertex[0]*scale.x + trans.x;
+			frames[f][v].v.y = vertex[1]*scale.y + trans.y;
+			frames[f][v].v.z = vertex[2]*scale.z + trans.z;
+			frames[f][v].norm= vertex[4];
 		}
 	}
 
@@ -233,28 +234,28 @@ void CModelMd2::LoadFail()
 	*cmdint = 0;
 
 	// vertex info
-	frames = new vector_t* [1];
-	frames[0] = new vector_t[5];
+	frames = new model_vertex_t* [1];
+	frames[0] = new model_vertex_t[5];
 
-	frames[0][0].x = 0;
-	frames[0][0].y = 0;
-	frames[0][0].z = 20;
+	frames[0][0].v.x = 0;
+	frames[0][0].v.y = 0;
+	frames[0][0].v.z = 20;
 
-	frames[0][1].x = -15;
-	frames[0][1].y = 15;
-	frames[0][1].z = 0;
+	frames[0][1].v.x = -15;
+	frames[0][1].v.y = 15;
+	frames[0][1].v.z = 0;
 
-	frames[0][2].x = 15;
-	frames[0][2].y = 15;
-	frames[0][2].z = 0;
+	frames[0][2].v.x = 15;
+	frames[0][2].v.y = 15;
+	frames[0][2].v.z = 0;
 
-	frames[0][3].x = 15;
-	frames[0][3].y = -15;
-	frames[0][3].z = 0;
+	frames[0][3].v.x = 15;
+	frames[0][3].v.y = -15;
+	frames[0][3].v.z = 0;
 
-	frames[0][4].x = -15;
-	frames[0][4].y = -15;
-	frames[0][4].z = 0;
+	frames[0][4].v.x = -15;
+	frames[0][4].v.y = -15;
+	frames[0][4].v.z = 0;
 
 	// skin names
 	skin_names = new char*[1];
@@ -319,20 +320,20 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 			// if we're exactly on a frame, dont do any interpolation
 			if (cframe == fframe)
 			{
-				v.x = frames[fframe][cmd->vertex_index].x;
-				v.y = frames[fframe][cmd->vertex_index].y;
-				v.z = frames[fframe][cmd->vertex_index].z;
+				v.x = frames[fframe][cmd->vertex_index].v.x;
+				v.y = frames[fframe][cmd->vertex_index].v.y;
+				v.z = frames[fframe][cmd->vertex_index].v.z;
 			}
 
 			// find our interpolated vertex
 			else
 			{
-				v.x = frames[fframe][cmd->vertex_index].x * w1 +
-					  frames[cframe][cmd->vertex_index].x * w2;
-				v.y = frames[fframe][cmd->vertex_index].y * w1 +
-					  frames[cframe][cmd->vertex_index].y * w2;
-				v.z = frames[fframe][cmd->vertex_index].z * w1 +
-					  frames[cframe][cmd->vertex_index].z * w2;
+				v.x = frames[fframe][cmd->vertex_index].v.x * w1 +
+					  frames[cframe][cmd->vertex_index].v.x * w2;
+				v.y = frames[fframe][cmd->vertex_index].v.y * w1 +
+					  frames[cframe][cmd->vertex_index].v.y * w2;
+				v.z = frames[fframe][cmd->vertex_index].v.z * w1 +
+					  frames[cframe][cmd->vertex_index].v.z * w2;
 			}
 
 			g_pRast->PolyTexCoord(cmd->s, cmd->t);

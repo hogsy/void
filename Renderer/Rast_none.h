@@ -53,6 +53,8 @@ public:
 	void LockVerts(void) { }
 	void UnLockVerts(void) { }
 
+	void LightSet(bool enable) { }
+
 private:
 
 };

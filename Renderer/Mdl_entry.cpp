@@ -12,7 +12,6 @@ CModelCacheEntry::CModelCacheEntry()
 {
 	mRefCount = 1;
 	num_skins = 0;
-//	skin_bin = -1;
 	mShaderBin = -1;
 	skin_names = NULL;
 	num_frames = 0;
@@ -27,9 +26,6 @@ CModelCacheEntry::~CModelCacheEntry()
 {
 	if (modelfile)
 		delete [] modelfile;
-
-//	if (skin_bin != -1)
-//		g_pRast->TextureBinDestroy(skin_bin);
 
 	if (mShaderBin != -1)
 		g_pShaders->BinDestroy(mShaderBin);
@@ -50,12 +46,6 @@ LoadSkins
 */
 void CModelCacheEntry::LoadSkins(void)
 {
-//	if (skin_bin != -1)
-//	{
-//		ComPrintf("CModelCacheEntry::LoadSkins() - skins already loaded\n");
-//		return;
-//	}
-
 	if (mShaderBin != -1)
 	{
 		ComPrintf("CModelCacheEntry::LoadSkins() - shaders already loaded\n");
@@ -76,26 +66,14 @@ void CModelCacheEntry::LoadSkins(void)
 	}
 
 	mShaderBin = g_pShaders->BinInit(num_skins);
-/*
-	skin_bin = g_pRast->TextureBinInit(num_skins);
 
-	TextureData  tData;
-	tData.bMipMaps = true;
-	tData.bClamped = false;
-*/
 	for (int s=0; s<num_skins; s++)
 	{
 		strcpy(texname, path);
 		strcat(texname, "/");
 		strcat(texname, skin_names[s]);
-//
-//		if ((strcmp(skin_names[s], "none")==0) || !CImageReader::GetReader().Read(texname, tData))
-//			CImageReader::GetReader().DefaultTexture(tData);
-
 		g_pShaders->LoadShader(mShaderBin, s, texname, false);
-//		g_pRast->TextureLoad(skin_bin, s, tData);
 	}
-
 }
 
 /*
@@ -105,13 +83,9 @@ UnLoadSkins
 */
 void CModelCacheEntry::UnLoadSkins(void)
 {
-//	if (skin_bin != -1)
-//		g_pRast->TextureBinDestroy(skin_bin);
-
 	if (mShaderBin != -1)
 		g_pShaders->BinDestroy(mShaderBin);
 
 	mShaderBin = -1;
-//	skin_bin = -1;
 }
 

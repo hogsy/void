@@ -380,6 +380,10 @@ SOURCE=.\Rast_main.cpp
 
 SOURCE=.\Rast_main.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\rast_norms.h
+# End Source File
 # End Group
 # Begin Group "Client"
 

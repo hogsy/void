@@ -28,6 +28,7 @@ CVar * g_varBeamTolerance;
 CVar * g_varD3DXShift;
 CVar * g_varGLExtensions;
 CVar * g_varGLDriver;
+CVar * g_varNumLights;
 
 
 //======================================================================================
@@ -212,7 +213,8 @@ bool CVar_BeamTolerance(int val)
 }
 
 bool CVar_D3DXShift(int val)
-{	return true;
+{
+	return true;
 }
 
 bool CVar_GLDriver(int val)
@@ -220,6 +222,10 @@ bool CVar_GLDriver(int val)
 	return true;
 }
 
+bool CVar_NumLights(int val)
+{
+	return true;
+}
 
 //======================================================================================
 //======================================================================================
@@ -258,6 +264,9 @@ bool CRConsole::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 	else if(cvar == g_varGLDriver)
 		return CVar_GLDriver(strVal.IntVal());
 
+	else if(cvar == g_varNumLights)
+		return CVar_NumLights(strVal.IntVal());
+
 	return false;
 }
 
@@ -286,6 +295,7 @@ void CRConsole::RegisterConObjects()
 	g_varD3DXShift		= pConsole->RegisterCVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE,this);
 	g_varGLExtensions	= pConsole->RegisterCVar("r_glExts", "None", CVAR_STRING, CVAR_READONLY, this);
 	g_varGLDriver		= pConsole->RegisterCVar("r_glDriver", "0", CVAR_INT, CVAR_ARCHIVE, this);
+	g_varNumLights		= pConsole->RegisterCVar("r_numlights", "4", CVAR_INT, CVAR_ARCHIVE, this);
 }
 
 

@@ -8,6 +8,11 @@
 // for sky texgen
 extern const CCamera * camera;
 
+float q2norms[] = 
+{
+#include "rast_norms.h"
+};
+
 /*
 =======================================
 Constructor 
@@ -25,6 +30,8 @@ CRasterizer::CRasterizer()
 	mLightDef = NULL;
 	mUseLights = false;
 	m_bInitialized = false;
+	mLighting = false;
+	mLightNum = 0;
 
 	mCurDepthFunc	= VRAST_DEPTH_LEQUAL;
 	mCurDepthWrite	= true;
@@ -342,6 +349,28 @@ void CRasterizer::PolyVertexi(int x, int y)
 	mNumElements++;
 }
 
+void CRasterizer::PolyNormalf(float x, float y, float z)
+{
+	mVerts[mNumElements].norm[0] = x;
+	mVerts[mNumElements].norm[1] = y;
+	mVerts[mNumElements].norm[2] = z;
+}
+
+void CRasterizer::PolyNormalf(vector_t &norm)
+{
+	mVerts[mNumElements].norm[0] = norm.x;
+	mVerts[mNumElements].norm[1] = norm.y;
+	mVerts[mNumElements].norm[2] = norm.z;
+}
+
+void CRasterizer::PolyNormali(byte i)
+{
+	int index = i*3;
+	mVerts[mNumElements].norm[0] = q2norms[index++];
+	mVerts[mNumElements].norm[1] = q2norms[index++];
+	mVerts[mNumElements].norm[2] = q2norms[index];
+}
+
 
 // explicit coords go right into the array
 void CRasterizer::PolyTexCoord(float s, float t)
@@ -393,6 +422,26 @@ void CRasterizer::TextureLightDef(bspf_texdef_t *def)
 
 		Flush();
 		mLightDef = def;
+	}
+}
+
+
+void CRasterizer::LightAdd(RastLight_t &info)
+{
+	mLights[mLightNum++] = info;
+}
+
+void CRasterizer::LightOrigin(vector_t *v)
+{
+	Flush();
+
+	if (!v)
+		LightSet(false);	// turn lighting off
+
+	else
+	{
+		// just take first few in the list
+		LightSet(true);	// turn lighting off
 	}
 }
 

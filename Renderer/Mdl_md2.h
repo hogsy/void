@@ -26,8 +26,15 @@ private:
 	   int vertex_index;
 	} model_glcmd_t;
 
+	typedef struct
+	{
+		vector_t v;
+		byte norm;
+	} model_vertex_t;
+
 	// frame data
-	vector_t **frames;
+	model_vertex_t **frames;
+
 	// the glcommand list
 	void *cmds;
 };

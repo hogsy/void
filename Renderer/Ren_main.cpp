@@ -444,6 +444,25 @@ void r_drawframe(const CCamera * pcamera)
 	g_pRast->MatrixRotateZ(-camera->angles.YAW  * 180/PI);
 	g_pRast->MatrixTranslate(-camera->origin.x, -camera->origin.y, -camera->origin.z);
 
+	// turn off lights
+	RastLight_t l;
+	l.origin.Set(896, 16, 72);
+	l.color.Set(1, 1, 1);
+	l.rad = 500;
+	g_pRast->LightAdd(l);
+	l.origin.Set(984, 1016, 72);
+	l.color.Set(0.8f, 0.8f, 0.4f);
+	l.rad = 500;
+	g_pRast->LightAdd(l);
+	l.origin.Set(-328, 968, 72);
+	l.color.Set(0.8f, 0.8f, 0.4f);
+	l.rad = 500;
+	g_pRast->LightAdd(l);
+	l.origin.Set(-312, -56, 72);
+	l.color.Set(0.8f, 0.8f, 0.4f);
+	l.rad = 500;
+	g_pRast->LightAdd(l);
+
 	r_draw_world();
 }
 

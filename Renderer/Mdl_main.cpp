@@ -175,15 +175,14 @@ void CModelManager::Purge(void)
 	}
 
 	drawmodel_t *next, *walk;
-//	vector_t trans;
-
-//	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
-//	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
-//	g_pRast->PolyColor(1, 1, 1, 1);
 
 	for (walk=drawmodels; walk; walk=next)
 	{
 		next = walk->next;
+
+		// set lights in world coords
+		g_pRast->LightOrigin(&walk->state->origin);
+
 		g_pRast->MatrixPush();
 
 		// add this model transform to the stack
@@ -222,6 +221,7 @@ void CModelManager::Purge(void)
 		drawmodelRelease(walk);
 	}
 
+	g_pRast->LightOrigin(NULL);
 	drawmodels = NULL;
 }
 

@@ -166,13 +166,21 @@ bool COpenGLRast::Init()
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].pos[0]);
+	glNormalPointer(GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].norm[0]);
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rast_vertex_t), &mVerts[0].color);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].tex1[0]);
 
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	// get max lights
+	glGetIntegerv(GL_MAX_LIGHTS, &mLightMax);
+
+	// have material color follow face color
+	glEnable(GL_COLOR_MATERIAL);
 
 	m_bInitialized = true;
 	return true;
@@ -932,6 +940,9 @@ void COpenGLRast::FrameEnd(void)
 
 	glFlush();
 	SwapBuffers(hDC);
+
+	// drop all the lights - have to be added every frame
+	mLightNum = 0;
 }
 
 
@@ -984,5 +995,68 @@ void COpenGLRast::UnLockVerts(void)
 		glUnlockArraysEXT();
 }
 
+
+/*
+========
+UnLockVerts
+========
+*/
+void COpenGLRast::LightSet(bool enable)
+{
+	// dont need to do anything
+	if (!enable && !mLighting)
+		return;
+
+	if (!enable && mLighting)
+	{
+		glDisable(GL_LIGHTING);
+		mLighting = false;
+		return;
+	}
+
+	if (enable && !mLighting)
+		glEnable(GL_LIGHTING);
+
+	for (int i=0; i<mLightMax; i++)
+	{
+		// don't have to use all available lights
+		if ((i>=g_varNumLights->ival) || (i>mLightNum))
+			glDisable(GL_LIGHT0 + i);
+
+		else
+		{
+			glEnable(GL_LIGHT0 + i);
+			
+			float v[4];
+			v[3] = 0;
+
+			vector_t diff = mLights[i].origin - mLightOrigin;
+			float dist = diff.Length();
+
+			v[0] = diff.x;
+			v[1] = diff.y;
+			v[2] = diff.z;
+			glLightfv(GL_LIGHT0+i, GL_POSITION, v);
+
+
+			vector_t color(mLights[i].color);
+			float scale = dist / mLights[i].rad;
+			if (scale < 0) scale = 0;
+			if (scale > 1) scale = 1;
+			color.Scale(1-scale);
+			if (i != 0)
+				color.Scale(0);
+
+			v[0] = color.x;
+			v[1] = color.y;
+			v[2] = color.z;
+			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, v);
+			glLightfv(GL_LIGHT0+i, GL_SPECULAR, v);
+
+		}
+	}
+
+	mLighting = true;
+}
 
 

@@ -43,12 +43,6 @@ enum EDestBlend
 };
 
 
-// texture bins - base, world, lightmap
-#define VRAST_TEXBIN_BASE	0
-#define VRAST_TEXBIN_WORLD	1
-#define VRAST_TEXBIN_LIGHT	2
-
-
 // struct to hold all data needed to load a texture
 enum EImageFormat
 {
@@ -104,6 +98,13 @@ enum EPolyType
 };
 
 
+typedef struct
+{
+	vector_t origin;
+	vector_t color;
+	int rad;
+} RastLight_t;
+
 
 #ifdef RENDERER
 
@@ -147,10 +148,17 @@ public:
 	void PolyVertexi(int x, int y);
 	void PolyTexCoord(float s, float t);
 	void PolyColor(float r, float g, float b, float a);
+	void PolyNormalf(float x, float y, float z);
+	void PolyNormalf(vector_t &norm);
+	void PolyNormali(byte i);
 
 	void ShaderSet(CShader *shader);
 	void TextureTexDef(bspf_texdef_t *def);
 	void TextureLightDef(bspf_texdef_t *def);
+
+	void LightOrigin(vector_t *v);
+	void LightAdd(RastLight_t &info);
+
 
 	virtual void ClearBuffers(int buffers)=0;
 	virtual void ProjectionMode(EProjectionMode mode)=0;
@@ -176,6 +184,8 @@ private:
 	virtual void DepthWrite(bool write)=0;
 	virtual void BlendFunc(ESourceBlend src, EDestBlend dest)=0;
 
+	virtual void LightSet(bool enable)=0;
+
 	// called just before / after pushing verts through to the rasterizer
 	virtual void LockVerts(void)=0;
 	virtual void UnLockVerts(void)=0;
@@ -200,6 +210,7 @@ protected:
 	typedef struct
 	{
 		float	pos[3];
+		float	norm[3];
 		DWORD	color;
 		float	tex1[2];
 	} rast_vertex_t;
@@ -231,6 +242,12 @@ protected:
 
 	unsigned int	mTrisDrawn;	// number of tris pushed through per frame
 	bool			mUseLights;	// use any kind of light (light ents or lightmaps)
+
+	bool		mLighting;		// gl/d3d lighting enabled
+	vector_t	mLightOrigin;	// origin of object being lit
+	int			mLightMax;		// maximum # of lights supported by gl/d3d
+	RastLight_t mLights[128];	// list of lights that are potentials to use
+	int			mLightNum;		// number of lights in the list
 };
 
 // cvars the rasterizers use
@@ -242,6 +259,7 @@ extern CVar * g_var32BitTextures;
 extern CVar * g_varFov;
 extern CVar * g_varD3DXShift;
 extern CVar * g_varGLDriver;
+extern CVar * g_varNumLights;
 
 #endif	// RENDERER
 #endif

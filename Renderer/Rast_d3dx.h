@@ -60,6 +60,9 @@ public:
 	void LockVerts(void) { }
 	void UnLockVerts(void) { }
 
+	void LightSet(bool enable) { }
+
+
 private:
 
 	LPDIRECTDRAWSURFACE7 mTexSurfs[MAX_TEXTURES];

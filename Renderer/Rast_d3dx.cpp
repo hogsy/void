@@ -159,6 +159,11 @@ bool CRastD3DX::Init()
 	bool vsynch = (caps.dwCaps2 & DDCAPS2_FLIPNOVSYNC) ? true : false;
 */
 
+	// get max number of lights
+	D3DDEVICEDESC7 d3dcaps;
+	m_pD3DDevice->GetCaps(&d3dcaps);
+	mLightMax = d3dcaps.dwMaxActiveLights;    
+
 	m_bInitialized = true;
 	return true;
 }
@@ -623,7 +628,7 @@ void CRastD3DX::PolyDraw(void)
 {
 	// draw
 	m_pD3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
-		D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0),
+		D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0),
 		mVerts,
 		mNumElements,
 		mIndices,
@@ -766,6 +771,9 @@ void CRastD3DX::FrameEnd(void)
         if(SUCCEEDED(hr))
             RestoreSurfaces();
     }
+
+	// drop all the lights - have to be added every frame
+	mLightNum = 0;
 }
 
 
