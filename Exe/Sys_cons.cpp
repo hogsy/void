@@ -111,7 +111,7 @@ void CConsole::ComPrint(char* text)
 	if(m_pflog)
 	{
 		fputs(text,m_pflog);
-		fflush(m_pflog);
+//		fflush(m_pflog);
 	}
 	
 	//pass it the renderer

@@ -1,11 +1,15 @@
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 
+using namespace VoidClient;
+
+
+//======================================================================================
+//======================================================================================
+
 world_t	*g_pWorld;
-extern I_Renderer   *g_pRender;
 int PointContents(vector_t &v);
 
-using namespace VoidClient;
 
 /*
 ======================================
@@ -13,13 +17,27 @@ Constructor
 ======================================
 */
 
-CClient::CClient():	m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
+CClient::CClient(I_Renderer * prenderer):	
+					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
 					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,		CVar::CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientCmdHandler(this);
+
+	m_connected=false;
+	m_ingame = false;
+	m_active = false;
+
+	m_campath = -1;
+	m_acceleration = 400.0f;
+	m_maxvelocity =  200.0f;
+
+	m_pHud = 0;
+	m_pRender = prenderer;
+
+	g_pWorld = 0;
 
 	// FIXME - should be actual player size
 	VectorSet(&eye.mins, -10, -10, -40);
@@ -34,17 +52,6 @@ CClient::CClient():	m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCH
 	eye.origin.y = 0;
 	eye.origin.z = 48;
 
-	m_connected=false;
-	m_ingame = false;
-	m_active = false;
-
-	m_campath = -1;
-	m_acceleration = 400.0f;
-	m_maxvelocity =  200.0f;
-
-	m_rHud = 0;
-	g_pWorld = 0;
-//	m_pWorld = 0;
 
 	System::GetConsole()->RegisterCVar(&m_clport);
 	System::GetConsole()->RegisterCVar(&m_clrate);
@@ -66,7 +73,6 @@ CClient::CClient():	m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCH
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 }
 
-
 /*
 ======================================
 Destroy the client
@@ -74,71 +80,13 @@ Destroy the client
 */
 CClient::~CClient()
 {
+	m_pRender = 0;
+	m_pHud = 0;
+
 	g_pWorld = 0;
+	
 	delete m_pCmdHandler;
 }
-
-
-/*
-======================================
-Spawn the client into the game
-======================================
-*/
-/*
-
-bool CClient::InitGame()//sector_t *sec);
-{
-	m_rHud = g_pRender->GetHud();
-	if(!m_rHud) //g_pRender->GetHud(&m_rHud))
-	{
-		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
-		return false;
-	}
-
-
-// FIXME - should be taken care of at spawn
-// FIXME - should be actual player size
-
-	VectorSet(&eye.mins, -10, -10, -40);
-	VectorSet(&eye.maxs,  10,  10,  10);
-
-
-// FIXME - should be taken care of at spawn
-	eye.angles.ROLL = 0;
-	eye.angles.PITCH = 0;
-	eye.angles.YAW = 0;
-	eye.origin.x = 0;
-	eye.origin.y = 0;
-	eye.origin.z = 48;	// FIXME - origin + view height
-//	eye.origin.sector = sec;
-
-	ComPrintf("CClient::Init:: ok\n");// at :%s:%d\n",m_ipaddr,port);
-	return true;
-}
-*/
-
-/*
-======================================
-Shutdown the client
-Back to console, not connected anywhere
-======================================
-*/
-/*
-bool CClient::ShutdownGame()
-{
-#ifndef __VOIDALPHA
-	CloseNet();
-#endif
-
-	m_rHud = 0;
-
-	m_ingame = false;
-
-	ComPrintf("CClient::Shutdown:: Client shutdown ok\n");
-	return true;
-}
-*/
-
 
 /*
 =====================================
@@ -148,7 +96,7 @@ Load the world for the client to render
 bool CClient::LoadWorld(world_t *world)
 {
 	// load the textures
-	if(!g_pRender->LoadWorld(world,1))
+	if(!m_pRender->LoadWorld(world,1))
 	{
 		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
 		return false;
@@ -160,8 +108,8 @@ bool CClient::LoadWorld(world_t *world)
 //	g_pCons->ExecConfig(configname);
 //	g_pCons->ExecConfig("void.cfg");
 
-	m_rHud = g_pRender->GetHud();
-	if(!m_rHud) //g_pRender->GetHud(&m_rHud))
+	m_pHud = m_pRender->GetHud();
+	if(!m_pHud) //m_pRender->GetHud(&m_pHud))
 	{
 		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
 		return false;
@@ -181,7 +129,6 @@ bool CClient::LoadWorld(world_t *world)
 	eye.origin.x = 0;
 	eye.origin.y = 0;
 	eye.origin.z = 48;	// FIXME - origin + view height
-
 
 	//Spawn ourselves into the world
 /*	if(!InitGame())//&g_pWorld->sectors[0]))
@@ -211,7 +158,7 @@ Unload the world
 */
 bool CClient::UnloadWorld()
 {
-	if(!g_pRender->UnloadWorld())
+	if(!m_pRender->UnloadWorld())
 	{
 		ComPrintf("CClient::UnloadWorld - Renderer couldnt unload world\n");
 		return false;
@@ -219,12 +166,13 @@ bool CClient::UnloadWorld()
 
 	g_pWorld = 0;
 
+	m_ingame = false;
+	m_connected = false;
+
 	SetInputState(false);
 	System::SetGameState(INCONSOLE);
 	return true;
 }
-
-
 
 /*
 ======================================
@@ -236,7 +184,6 @@ void CClient::RunFrame()
 	if(m_ingame)
 	{
 		m_pCmdHandler->RunCommands();
-//		m_pCmdHandler.RunCommands();
 
 		if (!((desired_movement.x==0) && (desired_movement.y==0) && (desired_movement.z==0)) || (m_campath != -1))
 		{
@@ -248,10 +195,10 @@ void CClient::RunFrame()
 		}
 
 		//Print Stats
-		if(m_rHud)
+		if(m_pHud)
 		{
-		m_rHud->HudPrintf(0, 70,0, "%.2f", 1 / System::g_fframeTime);
-		m_rHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, 
+		m_pHud->HudPrintf(0, 70,0, "%.2f", 1 / System::g_fframeTime);
+		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, 
 											    eye.origin.y, 
 												eye.origin.z);
 		}
@@ -275,12 +222,12 @@ void CClient::RunFrame()
 			VectorSet(&screenblend, 1, 1, 1);
 		}
 
-		g_pRender->DrawFrame(&eye.origin,&eye.angles, &screenblend);
+		m_pRender->DrawFrame(&eye.origin,&eye.angles, &screenblend);
 	}
 	else
 	{
 		//draw the console or menues etc
-		g_pRender->DrawFrame(0,0,0);
+		m_pRender->DrawFrame(0,0,0);
 	}
 
 
@@ -656,3 +603,7 @@ void CClient::WriteBindTable(FILE *fp)
 }
 
 
+bool CClient::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+{
+	return false;
+}

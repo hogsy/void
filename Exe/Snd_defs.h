@@ -12,12 +12,12 @@ namespace VoidSound
 	//What channel to play a sound in
 	enum SndChannelType
 	{
-		CHAN_STREAM = 0,
+		CHAN_AUTO   = 0,		//first free
 		CHAN_WORLD  = 1,		//ambient, world sounds etc
 		CHAN_ITEM   = 2,		//item noises, pickups etc
 		CHAN_WEAPON	= 3,		//weapon noises
 		CHAN_PLAYER = 4,		//player sounds
-		CHAN_AUTO	= 5			//first freely available
+		CHAN_LOOP	= 5	
 	};
 
 

@@ -27,7 +27,9 @@ enum
 	CMD_BINDLIST	  =	9,
 	CMD_UNBIND		  =	10,
 	CMD_UNBINDALL	  =	11,
-	CMD_CAM			  =	12
+	CMD_CAM			  =	12,
+	CMD_CONNECT		  = 13,
+	CMD_DISCONNECT	  = 14
 };
 
 //======================================================================================

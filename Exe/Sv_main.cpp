@@ -146,10 +146,13 @@ void CServer::Shutdown()
 		//HACK calling client directly right now
 		m_pClient->UnloadWorld();
 		world_destroy(m_pWorld);
+		m_pWorld = 0;
 	}
 
 	m_pSock->Close();
 	m_active = false;
+
+	ComPrintf("CServer::Shutdown OK\n");
 }
 
 

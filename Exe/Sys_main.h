@@ -61,14 +61,16 @@ private:
 	
 	friend void ComPrintf(char* text, ...);
 	
-	//Private vars
-	char		   m_exePath[COM_MAXPATH];
-	eGameState	   m_gameState;
+	//Subsystems
+	//=========================================================
 	
 	CConsole	   m_Console;		//Console
-
+	
+	I_Renderer   * m_pRender;
 	RenderInfo_t * m_pRParms;		//Current Renderering info
+
 	VoidExport   * m_pExport;		//Exported Data
+	
 	CInput		 * m_pInput;		//Input 
 	CTime		 * m_pTime;			//Timer
 	CFileSystem  * m_pFileSystem;	//FileSystem
@@ -83,7 +85,10 @@ private:
 	CSoundManager* m_pSound;		//Sound subsystem
 #endif
 
-	//Private Member funcs
+	//=========================================================
+
+	char		   m_exePath[COM_MAXPATH];
+	eGameState	   m_gameState;
 
 	bool CreateVoidWindow();
 	void ParseCmdLine(const char * cmdLine);	//Parse Cmd Line

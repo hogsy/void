@@ -15,14 +15,6 @@ CHunkMem		m_HunkManager;
 
 /*
 ==========================================
-Subsystems
-==========================================
-*/
-I_Renderer  *	g_pRender  =0;	//Renderer
-extern CVoid*	g_pVoid;
-
-/*
-==========================================
 Private Definitions
 ==========================================
 */
@@ -38,6 +30,8 @@ namespace
 
 //======================================================================================
 //======================================================================================
+
+extern CVoid*	g_pVoid;
 
 /*
 ==========================================
@@ -72,11 +66,11 @@ CVoid::CVoid(const char * cmdLine)
 	m_pInput= new CInput();					
 	
 	//Create the Renderer
-	g_pRender = RENDERER_Create(m_pExport); 
+	m_pRender = RENDERER_Create(m_pExport); 
 	m_pRParms = RENDERER_GetParms();
 	
 	//Create the client
-	m_pClient = new CClient();		
+	m_pClient = new CClient(m_pRender);		
 
 	//Network Sys
 	m_pServer = new CServer(m_pClient);
@@ -147,12 +141,12 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize Console
-	m_Console.SetConsoleRenderer(g_pRender->GetConsole());
+	m_Console.SetConsoleRenderer(m_pRender->GetConsole());
 
 
 	//================================
 	//Initialize the Renderer
-	if(!g_pRender->InitRenderer())
+	if(!m_pRender->InitRenderer())
 	{
 		Error("Void::Init:Error Intializing Renderer\n");	
 		return false;
@@ -277,8 +271,8 @@ CVoid::~CVoid()
 		delete m_pTime;
 
 	//Shutdown, and free the Renderer Interface
-	if(g_pRender)
-		g_pRender->Shutdown();
+	if(m_pRender)
+		m_pRender->Shutdown();
 
 	m_HunkManager.PrintStats();
 
@@ -332,8 +326,8 @@ bool CVoid::Shutdown()
 	WriteConfig(configname);
 
 	//Renderer
-	if(g_pRender)
-		g_pRender->Shutdown();
+	if(m_pRender)
+		m_pRender->Shutdown();
 
 	if(m_Console)
 		m_Console->Shutdown(); 
@@ -379,8 +373,8 @@ Move Window Event
 */
 void CVoid::Move(int x, int y)
 {
-	if(g_pRender)	
-		g_pRender->MoveWindow(x,y);
+	if(m_pRender)	
+		m_pRender->MoveWindow(x,y);
 }
 
 /*
@@ -399,8 +393,8 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 	m_pRParms->active = true;
 
 	//Change the size of the rendering window
-	if (g_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
-		g_pRender->Resize();
+	if (m_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
+		m_pRender->Resize();
 
 	//Set Window extents for input if full screen
 	if(m_pInput)
@@ -426,8 +420,8 @@ void CVoid::Activate(bool focus)
 		if(m_pInput)
 			m_pInput->Acquire();
 
-		if (g_pRender && (m_pRParms->rflags & RFLAG_FULLSCREEN))
-			g_pRender->Resize();
+		if (m_pRender && (m_pRParms->rflags & RFLAG_FULLSCREEN))
+			m_pRender->Resize();
 	}
 }
 

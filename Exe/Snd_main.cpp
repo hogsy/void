@@ -132,8 +132,8 @@ bool CSoundManager::Init()
 
 	ComPrintf("CSound::Init OK\n");
 
-	RegisterSound("sounds/loop.wav");
-	RegisterSound("sounds/hum.wav");
+//	RegisterSound("sounds/loop.wav");
+//	RegisterSound("sounds/hum.wav");
 	return true;
 }
 
@@ -212,11 +212,17 @@ void CSoundManager::Play(hSnd index, int channel)
 	}
 
 	m_Channels[i].Create(m_Buffers[index]);
+
+	bool ret = false;
+	if(channel == CHAN_LOOP)
+		ret = m_Channels[i].Play(true);
+	else
+		ret = m_Channels[i].Play(false);
 	
-	if(m_Channels[i].Play(true))
+	if(ret)
 	{
 //TEMP, dont really need this info during gameplay
-		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
+//		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
 		m_channelsInUse ++;
 	}
 }

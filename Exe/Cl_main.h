@@ -4,6 +4,9 @@
 #include "Sys_hdr.h"
 #include "I_renderer.h"
 
+//======================================================================================
+//======================================================================================
+
 namespace VoidClient
 {
 	class CClientCmdHandler;
@@ -20,28 +23,26 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
-class CClient :	public I_CmdHandler 
+class CClient :	public I_CmdHandler,
+				public I_CVarHandler
 {
 public:
-	CClient();
+	CClient(I_Renderer * prenderer);
 	~CClient();
+
+	void RunFrame();
 	
 	bool LoadWorld(world_t * world);
 	bool UnloadWorld();
-
-	void WriteBindTable(FILE *fp);
-	
-	void SetInputState(bool on);
 
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 	//CVar Handler Interface
-//	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
-
-	//run local stuff, 
-	//messages received from the server would be handled here
-	void RunFrame();
+	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	
+	void SetInputState(bool on);
+	void WriteBindTable(FILE *fp);
 
 private:
 
@@ -78,7 +79,8 @@ private:
 	friend class VoidClient::CClientCmdHandler;
 	VoidClient::CClientCmdHandler * m_pCmdHandler;
 
-	I_RHud *	m_rHud;
+	I_Renderer* m_pRender;
+	I_RHud    *	m_pHud;
 
 //	CSocket	 	m_sock;
 	

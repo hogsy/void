@@ -101,9 +101,9 @@ void CClient::Move(vector_t *dir, float time)
 	}
 
 	if (PointContents(eye.origin) & CONTENTS_SOLID)
-		m_rHud->HudPrintf(0, 30, 0, "SOLID");
+		m_pHud->HudPrintf(0, 30, 0, "SOLID");
 	else if (PointContents(eye.origin) & CONTENTS_WATER)
-		m_rHud->HudPrintf(0, 30, 0, "WATER");
+		m_pHud->HudPrintf(0, 30, 0, "WATER");
 
 
 
