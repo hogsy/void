@@ -219,9 +219,9 @@ protected:
 
 
 // cvars the rasterizers use
-extern CVar *	g_p32BitTextures;
-extern CVar *	g_pFov;
-extern CVar *	g_pD3DXShift;
+extern CVar g_var32BitTextures;
+extern CVar g_varFov;
+extern CVar g_varD3DXShift;
 
 #endif	// RENDERER
 #endif

@@ -39,7 +39,7 @@ public:
 	bool Restart(void);
 
 	//Console Handler
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms) { }
 
 private:
@@ -53,10 +53,10 @@ private:
 	CVar   m_cRast;		// rasterizer
 
 	//CVar Handlers
-	bool CVar_FullScreen(const CVar * var, const CParms &parms);
-	bool CVar_Res(const CVar * var, const CParms &parms);
-	bool CVar_Bpp(const CVar * var, const CParms &parms);
-	bool CVar_Rast(const CVar * var, const CParms &parms);
+	bool CVar_FullScreen(const CStringVal &strVal);
+	bool CVar_Res(const CStringVal &strVal);
+	bool CVar_Bpp(const CStringVal &strVal);
+	bool CVar_Rast(const CStringVal &strVal);
 };
 
 #endif

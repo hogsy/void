@@ -6,7 +6,7 @@
 #include "Client.h"
 
 
-extern CVar		 * g_pVidSynch;
+extern CVar		 g_varVidSynch;
 const  CCamera   * camera=0;
 
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
@@ -82,7 +82,7 @@ void r_init(void)
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
 
-		if (g_pVidSynch->ival)
+		if (g_varVidSynch.ival)
 			g_pRast->SetVidSynch(1);
 		else
 			g_pRast->SetVidSynch(0);
@@ -234,7 +234,7 @@ void build_frust(void)
 	vector_t a, b, c, d, center;
 	float x, z;
 
-	x = (float) tan(g_pFov->ival * 0.5f * PI/180);
+	x = (float) tan(g_varFov.ival * 0.5f * PI/180);
 	z = x * 0.75f;			// always render in a 3:4 aspect ratio
 
 	VectorAdd(camera->origin, forward, center);

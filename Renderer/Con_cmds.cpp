@@ -16,13 +16,15 @@ enum
 	CMD_PCXSHOT = 1
 };
 
-CVar *	g_pFullbright=0;
-CVar *	g_pFov=0;
-CVar *	g_pMultiTexture=0;
-CVar *	g_pVidSynch=0;
-CVar *	g_p32BitTextures=0;
-CVar *	g_pBeamTolerance=0;
-CVar *	g_pD3DXShift=0;	// d3dx text shift value
+
+CVar g_varFullbright("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
+CVar g_varFov("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
+CVar g_varMultiTexture("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE);
+CVar g_varVidSynch("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
+CVar g_var32BitTextures("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
+CVar g_varBeamTolerance("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
+CVar g_varD3DXShift("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
+
 
 //======================================================================================
 //Command Handling routines
@@ -139,12 +141,8 @@ CVar Handling funcs
 switch fullbright (light) rendering
 =======================================
 */
-bool CVar_FullBright(const CVar * var, int val)
+bool CVar_FullBright(int val)
 {
-	//There was no second parm 
-	if(val == COM_INVALID_VALUE)
-		return false;
-
 	if (val)
 		g_rInfo.rflags |= RFLAG_FULLBRIGHT;
 	else
@@ -157,9 +155,9 @@ bool CVar_FullBright(const CVar * var, int val)
 toggle multitexture/multipass rendering
 =======================================
 */
-bool CVar_MultiTexture(const CVar * var, int val)
+bool CVar_MultiTexture(int val)
 {
-	if(val == COM_INVALID_VALUE)
+	if(val)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ComPrintf("Your video card does not support ARB multitexturing.\n");
@@ -173,11 +171,8 @@ bool CVar_MultiTexture(const CVar * var, int val)
 switch fullbright (light) rendering
 =======================================
 */
-bool CVar_Fov(const CVar * var, int val)
+bool CVar_Fov(int val)
 {
-	if(val == COM_INVALID_VALUE)
-		return false;
-
 	if (val>=10 && val<= 170)
 	{
 //		g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
@@ -191,11 +186,8 @@ bool CVar_Fov(const CVar * var, int val)
 toggle vid synch
 =======================================
 */
-bool CVar_VidSynch(const CVar * var, int val)
+bool CVar_VidSynch(int val)
 {
-	if(val == COM_INVALID_VALUE)
-		return false;
-
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
 		if (val)
@@ -214,11 +206,8 @@ bool CVar_VidSynch(const CVar * var, int val)
 16 / 32 bit textures
 =======================================
 */
-bool CVar_32BitTextures(const CVar * var, int val)
+bool CVar_32BitTextures(int val)
 {
-	if(val == COM_INVALID_VALUE) 
-		return false;
-
 	ComPrintf("Change will take effect on next level load.\n");
 	return true;
 }
@@ -229,38 +218,26 @@ bool CVar_32BitTextures(const CVar * var, int val)
 set how much the console will fade in
 =======================================
 */
-bool CVar_ConAlpha(const CVar * var, int val)
+bool CVar_ConAlpha(int val)
 {
 	if (val<100 || val>255)
 		return false;
 	return true;
 }
 
-
 /*
 =======================================
 tolerance for caching polys as zfill/beamtree or zbuffer
 =======================================
 */
-bool CVar_BeamTolerance(const CVar * var, const CParms &parms)
+bool CVar_BeamTolerance(int val)
 {
-	if (parms.NumTokens() > 1)
-	{
-		int temp= parms.IntTok(1);
-		if (temp<0)
-			return false;
-		return true;
-	}
-	return false;
+	if (val<0)
+		return false;
+	return true;
 }
 
-
-/*
-=======================================
-set how much the console will fade in
-=======================================
-*/
-bool CVar_D3DXShift(const CVar * var, int val)
+bool CVar_D3DXShift(int val)
 {
 	return true;
 }
@@ -275,24 +252,32 @@ bool CVar_D3DXShift(const CVar * var, int val)
 Handle Cvars
 ==========================================
 */
-bool CRConsole::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CRConsole::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 {
-	if(cvar == g_pFullbright)
-		return CVar_FullBright((CVar*)cvar,parms.IntTok(1));
-	else if(cvar == g_pFov)
-		return CVar_Fov((CVar*)cvar,parms.IntTok(1));
-	else if(cvar == g_pMultiTexture)
-		return CVar_MultiTexture((CVar*)cvar,parms.IntTok(1));
-	else if(cvar == g_pVidSynch)
-		return CVar_VidSynch((CVar*)cvar,parms.IntTok(1));
-	else if(cvar == g_p32BitTextures)
-		return CVar_32BitTextures((CVar*)cvar,parms.IntTok(1));
+	if(cvar == (CVarBase*)&g_varFullbright)
+		return CVar_FullBright(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_varFov)
+		return CVar_Fov(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_varMultiTexture)
+		return CVar_MultiTexture(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_varVidSynch)
+		return CVar_VidSynch(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_var32BitTextures)
+		return CVar_32BitTextures(strVal.IntVal());
+
 	else if(cvar == (CVarBase*)&m_conAlpha)
-		return CVar_ConAlpha(&m_conAlpha,parms.IntTok(1));
-	else if(cvar == g_pBeamTolerance)
-		return CVar_BeamTolerance((CVar*)cvar,parms);
-	else if(cvar == g_pD3DXShift)
-		return CVar_D3DXShift((CVar*)cvar,parms.IntTok(1));
+		return CVar_ConAlpha(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_varBeamTolerance)
+		return CVar_BeamTolerance(strVal.IntVal());
+
+	else if(cvar == (CVarBase*)&g_varD3DXShift)
+		return CVar_D3DXShift(strVal.IntVal());
+	
 	return false;
 }
 
@@ -307,6 +292,7 @@ void CRConsole::RegisterConObjects()
 	I_Console::GetConsole()->RegisterCommand("tga_shot",CMD_TGASHOT,this);
 	I_Console::GetConsole()->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
 
+/*
 	g_pFullbright= new CVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
 	g_pFov		 = new CVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
 	g_pVidSynch  = new CVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
@@ -314,14 +300,15 @@ void CRConsole::RegisterConObjects()
 	g_p32BitTextures = new CVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
 	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
 	g_pD3DXShift = new CVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
+*/
 
-	I_Console::GetConsole()->RegisterCVar(g_pFullbright,this);
-	I_Console::GetConsole()->RegisterCVar(g_pFov,this);
-	I_Console::GetConsole()->RegisterCVar(g_pMultiTexture,this);
-	I_Console::GetConsole()->RegisterCVar(g_pVidSynch,this);
-	I_Console::GetConsole()->RegisterCVar(g_p32BitTextures,this);
-	I_Console::GetConsole()->RegisterCVar(g_pBeamTolerance,this);
-	I_Console::GetConsole()->RegisterCVar(g_pD3DXShift,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varFullbright,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varFov,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varMultiTexture,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varVidSynch,this);
+	I_Console::GetConsole()->RegisterCVar(&g_var32BitTextures,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varBeamTolerance,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varD3DXShift,this);
 }
 
 /*
@@ -331,7 +318,7 @@ Called from console Destructor
 */
 void CRConsole::DestroyConObjects()
 {
-	delete g_pFullbright;
+/*	delete g_pFullbright;
 	delete g_pFov;
 	delete g_pVidSynch;
 	delete g_pMultiTexture;
@@ -346,5 +333,6 @@ void CRConsole::DestroyConObjects()
 	g_p32BitTextures = 0;
 	g_pBeamTolerance = 0;
 	g_pD3DXShift = 0;
+*/
 }
 

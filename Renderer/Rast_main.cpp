@@ -5,7 +5,7 @@
 // to evaluate console alphagen
 #include "Con_main.h"
 
-extern	CVar *	g_pFullbright;
+extern	CVar g_varFullbright;
 
 // for sky texgen
 extern const CCamera * camera;
@@ -151,7 +151,7 @@ void CRasterizer::DrawLayer(int l)
 	CShaderLayer *layer = mShader->mLayers[l];
 	int i;
 
-	if (layer->mIsLight && (g_pFullbright->bval || !world->light_size))
+	if (layer->mIsLight && (g_varFullbright.bval || !world->light_size))
 		return;
 
 	if (!layer->mNumTextures)

@@ -10,7 +10,7 @@ extern	plane_t frust[5];				// frustum
 //extern	eyepoint_t	eye;				// where we're gonna draw from
 extern const CCamera * camera;
 
-extern	CVar *	g_pBeamTolerance;
+extern	CVar g_varBeamTolerance;
 
 vector_t lines[1024][2];
 int		 num_lines;
@@ -397,7 +397,7 @@ sil_t* sil_build(bspf_brush_t *b)
 
 	// if our sil area is small enough, just add it to the zbuffer list 
 	// would take longer to pass through the beam tree
-	if (!sil->sky && (sil->area < g_pBeamTolerance->fval))
+	if (!sil->sky && (sil->area < g_varBeamTolerance.fval))
 	{
 		cpoly_t *next;
 		for (; sil->polys; sil->polys = next)

@@ -34,7 +34,7 @@ configs have been excuted to update the cvars with the
 saved rendering info
 =======================================
 */
-CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
+CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_BOOL,CVAR_ARCHIVE),
 					 m_cBpp("r_bpp", "16",CVAR_INT,CVAR_ARCHIVE),
 					 m_cRes("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE),
 					 m_cRast("r_rast", "gl",CVAR_STRING, CVAR_ARCHIVE)
@@ -347,9 +347,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		return;
 	}
 */
-
 	// shut the thing down
-
 	g_pTex->Shutdown();
 	g_pShaders->UnLoadBase();
 	g_pShaders->UnLoadWorld();
@@ -440,19 +438,19 @@ bool CRenExp::Restart(void)
 CVar Handlers
 ==========================================
 */
-bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
+bool CRenExp::HandleCVar(const CVarBase *cvar,const CStringVal &strVal)
 {
 	if(g_pRast)
 		g_pRast->SetFocus();
 
 	if(cvar == &m_cFull)
-		return CVar_FullScreen((CVar*)cvar, parms);
+		return CVar_FullScreen(strVal);
 	else if(cvar == &m_cRes)
-		return CVar_Res((CVar*)cvar, parms);
+		return CVar_Res(strVal);
 	else if(cvar == &m_cBpp)
-		return CVar_Bpp((CVar*)cvar, parms);
+		return CVar_Bpp(strVal);
 	else if(cvar == &m_cRast)
-		return CVar_Rast((CVar*)cvar, parms);
+		return CVar_Rast(strVal);
 	return false;
 }
 
@@ -461,44 +459,33 @@ bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
 CVar validation functions
 ==========================================
 */
-bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
+bool CRenExp::CVar_FullScreen(const CStringVal &strVal)
 {
-	int argc = parms.NumTokens();
-	if(argc ==1)
-	{	if(var->ival ==0)
-			ComPrintf("In windowed mode\n");
-		else
-			ComPrintf("In fullscreen mode\n");
-	}
-	else if(argc > 1)
-	{
-		int temp= parms.IntTok(1);
+	int temp= strVal.IntVal();
 
-		if(temp <= 0)
-		{
-			if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
-			{	ComPrintf("Already in windowed mode\n");
-				return false;
-			}
-			ComPrintf("Switching to windowed mode\n");
-			
-			if(g_rInfo.ready)
-				ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
+	if(temp <= 0)
+	{
+		if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
+		{	ComPrintf("Already in windowed mode\n");
+			return false;
 		}
-		else if( temp > 0)
-		{
-			if(g_rInfo.rflags & RFLAG_FULLSCREEN)
-			{	ComPrintf("Already in fullscreen mode\n");
-				return false;
-			}
-			ComPrintf("Switching to fullscreen mode\n");
-			
-			if(g_rInfo.ready)
-				ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
-		}
-		return true;
+		ComPrintf("Switching to windowed mode\n");
+		
+		if(g_rInfo.ready)
+			ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
 	}
-	return false;
+	else if( temp > 0)
+	{
+		if(g_rInfo.rflags & RFLAG_FULLSCREEN)
+		{	ComPrintf("Already in fullscreen mode\n");
+			return false;
+		}
+		ComPrintf("Switching to fullscreen mode\n");
+		
+		if(g_rInfo.ready)
+			ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
+	}
+	return true;
 }
 
 /*
@@ -506,63 +493,55 @@ bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 Handle Resolution changes
 ==========================================
 */
-bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
+bool CRenExp::CVar_Res(const CStringVal &strVal)
 {
-	int argc = parms.NumTokens();
-	if(argc == 1)
-		ComPrintf("Running in %s resolution\n", var->string);
-	else if(argc > 2)
+	char resString[16];
+	strcpy(resString, strVal.String());
+
+	char *c = strchr(resString, ' ');
+	if(!c)
 	{
-
-		char resString[16];
-		parms.StringTok(1,resString,16);
-
-		char *c = strchr(resString, ' ');
-		if(!c)
-		{
-			ComPrintf("Unable to read resolution in \"%s\". Format is \"x y\"\n", resString);
-			return false;
-		}
-		
-		char tmp[8];
-		uint x=0, y=0;
-		
-		//Read Width
-		int i = c - resString;
-		strncpy(tmp,resString,i);
-		sscanf(tmp,"%d",&x);
-
-		//Read Height
-		c++;
-		strcpy(tmp,resString+i+1);
-		sscanf(tmp,"%d",&y);
-
-		if(x <= 0)
-		{
-			ComPrintf("CVar_Res::Bad entry for Horizontal Resolution\n");
-			return false;
-		}
-
-		if(y <= 0)
-		{
-			ComPrintf("CVar_Res::Bad entry for Vertical Resolution\n");
-			return false;
-		}
-
-		// no go if we're not changing
-		if ((g_rInfo.width == x) && (g_rInfo.height == y))
-		{
-			ComPrintf("Already running in given resolution\n");
-			return false;
-		}
-
-		ComPrintf("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
-
-		if(g_rInfo.ready)
-			ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
-		return true;
+		ComPrintf("Unable to read resolution in \"%s\". Format should be \"x y\"\n", resString);
+		return false;
 	}
-	return false;
+	
+	char tmp[8];
+	uint x=0, y=0;
+	
+	//Read Width
+	int i = c - resString;
+	strncpy(tmp,resString,i);
+	sscanf(tmp,"%d",&x);
+
+	//Read Height
+	c++;
+	strcpy(tmp,resString+i+1);
+	sscanf(tmp,"%d",&y);
+
+	if(x <= 0)
+	{
+		ComPrintf("CVar_Res::Bad entry for Horizontal Resolution\n");
+		return false;
+	}
+
+	if(y <= 0)
+	{
+		ComPrintf("CVar_Res::Bad entry for Vertical Resolution\n");
+		return false;
+	}
+
+	// no go if we're not changing
+	if ((g_rInfo.width == x) && (g_rInfo.height == y))
+	{
+		ComPrintf("Already running in given resolution\n");
+		return false;
+	}
+
+	ComPrintf("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
+
+	if(g_rInfo.ready)
+		ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
+	return true;
 }
 
 /*
@@ -570,37 +549,29 @@ bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 Handle bpp changes
 ==========================================
 */
-bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
+bool CRenExp::CVar_Bpp(const CStringVal &strVal)
 {
-	int argc = parms.NumTokens();
-	if(argc==1)
-	{	ComPrintf("Running in %d bpp\n", var->ival);
-	}
-	else if(argc > 1)
+	uint bpp= strVal.IntVal();
+
+	// no go if we're not changing
+	if (bpp == g_rInfo.bpp)
 	{
-		uint bpp= parms.IntTok(1);
-
-		// no go if we're not changing
-		if (bpp == g_rInfo.bpp)
-		{
-			ComPrintf("Already at given bpp\n");
-			return false;
-		}
-
-		if(bpp < 0)
-		{
-			ComPrintf("Bad Bpp\n");
-			return false;
-		}
-
-		ComPrintf("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
-
-		if(g_rInfo.ready)
-			ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
-							(g_rInfo.rflags & RFLAG_FULLSCREEN));
-		return true;
+		ComPrintf("Already at given bpp\n");
+		return false;
 	}
-	return false;
+
+	if(bpp != 16 && bpp != 32)
+	{
+		ComPrintf("Bad Bpp\n");
+		return false;
+	}
+
+	if(g_rInfo.ready)
+	{
+		ComPrintf("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
+		ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, (g_rInfo.rflags & RFLAG_FULLSCREEN));
+	}
+	return true;
 }
 
 
@@ -609,16 +580,15 @@ bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 Handle rasterizer changes
 ==========================================
 */
-bool CRenExp::CVar_Rast(const CVar * var, const CParms &parms)
+bool CRenExp::CVar_Rast(const CStringVal &strVal)
 {
-	int argc = parms.NumTokens();
-	if(argc==1)
-	{	ComPrintf("using %s rasterizer\n", var->string);
-	}
-	else if(argc > 1)
+	if((stricmp(strVal.String(),"d3dx")==0) ||
+	   (stricmp(strVal.String(),"gl")==0) ||
+	   (stricmp(strVal.String(),"none")==0))
 	{
-		ComPrintf("rasterizer change will take effect next time you run void.\n");
+		ComPrintf("Rasterizer change will take effect next time you run void.\n");
 		return true;
 	}
+	ComPrintf("Invalid driver specified\n");
 	return false;
 }

@@ -753,12 +753,12 @@ void COpenGLRast::TextureLoad(int bin, int num, const TextureData &texdata)
 	if (texdata.format == IMG_RGB)
 	{
 		ext_format = GL_RGB;
-		int_format = g_p32BitTextures->bval ? GL_RGB8 : GL_RGB5;
+		int_format = g_var32BitTextures.bval ? GL_RGB8 : GL_RGB5;
 	}
 	else
 	{
 		ext_format = GL_RGBA;
-		int_format = g_p32BitTextures->bval ? GL_RGBA8 : GL_RGBA4;
+		int_format = g_var32BitTextures.bval ? GL_RGBA8 : GL_RGBA4;
 	}
 
 	int w = texdata.width;
@@ -909,7 +909,7 @@ void COpenGLRast::ProjectionMode(EProjectionMode mode)
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
-		x = (float) tan(g_pFov->ival*(PI/180) * 0.5f);
+		x = (float) tan(g_varFov.ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		glFrustum(-x, x, -z, z, 1, 10000);
 		break;
