@@ -126,7 +126,10 @@ void CRConsole::Printf(char *msg, ...)
 	//write to log
 #if RENDERER_LOGFILE 
 	if(m_logfile)
-		fputs(buff,m_logfile);
+	{
+		fprintf(m_logfile, "%s\n", buff);
+		fflush(m_logfile);
+	}
 #endif
 }
 
