@@ -253,6 +253,8 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 		m_devmodes[mode].dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 	}
 
+
+	ConPrint("GL::GoFull:Looking for %d x %d x %d\n", width, height, bpp);
 	ConPrint("GL::GoFull:Changing Display to %d x %d x %d\n", 
 				m_devmodes[best_mode].dmPelsWidth,
 				m_devmodes[best_mode].dmPelsHeight,
@@ -449,31 +451,41 @@ bool CGLUtil::UpdateDisplaySettings(unsigned int width,
 	//Shutdown openGL first
 	Shutdown();
 
-	//see if we have to toggle fullscreen
-	if(fullscreen)
-	{
-		rInfo->rflags |= RFLAG_FULLSCREEN;
-		if (!Init())
-		{
-			ConPrint("GL::UpdateDisplaySettings: Unable to select fullscreen mode\n");
-			rInfo->rflags &= ~RFLAG_FULLSCREEN;
-			Init();
-			return false;
-		}
-	}
+	// record old stats
 
+	unsigned int oldfull	= rInfo->rflags & RFLAG_FULLSCREEN;
+	unsigned int oldwidth	= rInfo->width;
+	unsigned int oldheight	= rInfo->height;
+	unsigned int oldbpp		= rInfo->bpp;
+
+	if (fullscreen)
+		rInfo->rflags |= RFLAG_FULLSCREEN;
 	else
-	{
 		rInfo->rflags &= ~RFLAG_FULLSCREEN;
-		if(!Init())
-		{
-			// if we couldn't start with the new settings, go back to fullscreen mode
-			//FIX ME
-			Shutdown();
+
+	rInfo->bpp		= bpp;
+	rInfo->width	= width;
+	rInfo->height	= height;
+
+
+	if (!Init())
+	{
+		ConPrint("GL::UpdateDisplaySettings: Unable to change to new settings\n");
+
+		// switch everythign back;
+		
+
+		if (oldfull)
 			rInfo->rflags |= RFLAG_FULLSCREEN;
-			Init();
-			return false;
-		}
+		else
+			rInfo->rflags &= ~RFLAG_FULLSCREEN;
+
+		rInfo->bpp		= oldbpp;
+		rInfo->width	= oldwidth;
+		rInfo->height	= oldheight;
+
+		Init();
+		return false;
 	}
 
 
