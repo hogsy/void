@@ -247,7 +247,7 @@ void CRasterizer::DrawLayer(int l)
 
 	// set texture
 	if (layer->mIsLight)
-		TextureSet(g_pShaders->mLightmapBin, layer->mTextureNames[0].index);
+		TextureSet(g_pShaders->mLightmapBin, mLightDef->texture); //layer->mTextureNames[0].index);
 	else
 	{
 		if (mShader->mLayers[l]->mNumTextures == 1)
