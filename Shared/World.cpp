@@ -61,7 +61,7 @@ CWorld::~CWorld()
 	if (leafs)
 		delete [] leafs;
 	if (planes)
-		delete [] planes;
+		delete [] (byte*)planes;
 	if (sides)
 		delete [] sides;
 	if (verts)
@@ -237,24 +237,26 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 
 #else
 
+//	void v_printf(char *msg, ...);
+
 	FILE * bsp_file = fopen(szFileName, "rb");
 	if (!bsp_file)
 	{
-		ComPrintf("couldn't open %s\n", filename);
+//		v_printf("couldn't open %s\n", szFileName);
 		return NULL;
 	}
 
 	fread(&m_worldHeader, 1, sizeof(bspf_header_t), bsp_file);
 	if (m_worldHeader.id != BSP_FILE_ID)
 	{
-		ComPrintf("%s not a void bsp file!", filename);
+//		v_printf("%s not a void bsp file!", szFileName);
 		fclose(bsp_file);
 		return NULL;
 	}
 
 	if (m_worldHeader.version != BSP_VERSION)
 	{
-		ComPrintf("bsp version %d, need %d\n", m_worldHeader.version, BSP_VERSION);
+//		v_printf("bsp version %d, need %d\n", m_worldHeader.version, BSP_VERSION);
 		fclose(bsp_file);
 		return NULL;
 	}

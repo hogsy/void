@@ -35,6 +35,7 @@ public:
 	~CWorld();
 
 	void PrintInfo() const;
+	void WriteToFile(void);
 	void WriteToFile(char * szFilename);
 
 	//Util Key Access funcs
@@ -47,7 +48,11 @@ public:
 	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end);
 	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end, 
 									 const vector_t &mins, const vector_t &maxs);
-	
+
+	// functions needed by vlight
+	void DestroyLightData(void);
+	void SetLightData(unsigned char *data, int len, bspf_texdef_t *defs, int numdefs);
+
 	//the world should be loaded and destroyed using these
 	static CWorld * CreateWorld(const char * szFileName);
 	static void DestroyWorld(CWorld * pworld);
@@ -93,7 +98,8 @@ private:
 
 	static int LoadLump(FILE * fp, int l, void **data);
 	static int LoadLump(CFileStream &file, int l, void **data);
-	
+	static void AddLump(FILE *f, bspf_header_t &header, int l, void *data, int size);
+
 	//Cached world data to prevent 
 	//the world from being loaded twice.
 	static bspf_header_t m_worldHeader;
