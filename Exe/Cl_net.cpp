@@ -76,6 +76,9 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		break;
 	case SVC_BASELINES:
 		break;
+	case SVC_BEGIN:
+		BeginGame();
+		break;
 	}
 }
 
@@ -86,7 +89,8 @@ Handle disconnect from server
 */
 void CClient::HandleDisconnect(bool listenserver)
 {
-	ComPrintf("KILLING SERVER\n");
+	ComPrintf("CL: KILLING LOCAL SERVER\n");
+
 	//Kill server if local
 	if(listenserver)
 		System::GetConsole()->ExecString("killserver");

@@ -38,12 +38,18 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	m_svState.maxClients = 4;
 	m_svState.port = SV_DEFAULT_PORT;
 
+
+	m_numModels = 0;
+	m_numImages = 0;
+	m_numSounds = 0;
+
 	m_pWorld = 0;
 	m_active = false;
 	
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
-	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
+	
+	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
 	
@@ -193,30 +199,21 @@ bool CServer::ParseEntities(NetSignOnBufs &signOnBuf)
 			}
 		}
 
-
 		//Check if the signOn buffer has space for this entity
 		if(!signOnBuf.entityList[signOnBuf.numEntityBufs].HasSpace(entBuffer.GetSize()))
 		{
-			if(signOnBuf.numEntityBufs < 3)
+			if(signOnBuf.numEntityBufs + 1 < NetSignOnBufs::MAX_ENTITY_BUFS)
 				signOnBuf.numEntityBufs ++;
 			else
 			{	
 				//Error ran out of space to write entity info
+				ComPrintf("CServer::ParseEntities: Out of space for Entities\n");
 				return false;
 			}
 		}
 		signOnBuf.entityList[signOnBuf.numEntityBufs].Write(entBuffer);
 	}
 
-/*		//Print the info we read
-		char *s = 0;
-		while(s = entbuffer.ReadString())
-		{
-			if(s[0] == 0)
-				break;
-			ComPrintf("%s\n",s);
-		}
-*/
 	for(i=0;i<=signOnBuf.numEntityBufs; i++)
 		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, signOnBuf.entityList[i].GetSize()); 
 	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
@@ -284,8 +281,13 @@ void CServer::LoadWorld(const char * mapname)
 		Shutdown();
 		return;
 	}
+
+	//Spawn entities now
+	for(int i=0; i<= buf.numEntityBufs; i++)
+	{	SpawnEntities(buf.entityList[i]);
+	}
+
 	
-//	buf.gameInfo.Write(SVC_INITCONNECTION);
 	buf.gameInfo.Write(m_svState.gameName);
 	buf.gameInfo.Write(m_svState.worldname);
 
@@ -320,7 +322,7 @@ void CServer::PrintServerStatus()
 		return;
 	}
 
-	ComPrintf("Local Addr : %d\n", m_svState.localAddr);
+	ComPrintf("Local Addr : %s\n", m_svState.localAddr);
 	ComPrintf("Map name   : %s\n", m_svState.worldname);
 	ComPrintf("Map id     : %d\n", m_svState.levelId);
 
@@ -339,6 +341,7 @@ void CServer::PrintServerStatus()
 	}
 }
 
+
 /*
 ==========================================
 Handle CVars
@@ -346,6 +349,16 @@ Handle CVars
 */
 bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {	
+	if(cvar == reinterpret_cast<CVarBase *>(&m_cPort))
+	{
+		if(parms.NumTokens() > 1)
+		{
+			return false;
+		}
+	}
+	else if(cvar == reinterpret_cast<CVarBase *>(&m_cMaxClients))
+	{
+	}
 	return false;
 }
 
@@ -373,4 +386,119 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	}
 }
+
+
+
+//======================================================================================
+//======================================================================================
+
+void CServer::SpawnEntities(CBuffer &buf)
+{
+	//parse buffer and load entities
+
+}
+
+
+/*
+======================================
+Return an id for the given model
+======================================
+*/
+hMdl CServer::RegisterModel(const char * model)
+{
+	if(m_numModels == GAME_MAXMODELS)
+		return -1;
+
+	//Check to see whether we already have a model Id by that name
+	for(int i=0; i<GAME_MAXMODELS; i++)
+	{
+		//we reached the end, no more models after this
+		if(!m_modelList[i].name)
+			break;
+		if(strcmp(m_modelList[i].name, model) == 0)
+		    return i;
+	}
+
+	m_numModels ++;
+	m_modelList[i].name = new char[strlen(model)+1];
+	strcpy(m_modelList[i].name,model);
+	m_modelList[i].id = i;
+	return i;
+}
+
+/*
+======================================
+Return an id for the given sound
+======================================
+*/
+int CServer::RegisterSound(const char * sound)
+{
+	if(m_numSounds == GAME_MAXMODELS)
+		return -1;
+
+	//Check to see whether we already have a model Id by that name
+	for(int i=0; i<GAME_MAXMODELS; i++)
+	{
+		//we reached the end, no more models after this
+		if(!m_soundList[i].name)
+			break;
+		if(strcmp(m_soundList[i].name, sound) == 0)
+		    return i;
+	}
+
+	m_numSounds ++;
+	m_soundList[i].name = new char[strlen(sound)+1];
+	strcpy(m_soundList[i].name,sound);
+	m_soundList[i].id = i;
+	return i;
+}
+
+/*
+======================================
+Return an id for the given image
+======================================
+*/
+hImg CServer::RegisterImage(const char * image)
+{
+	if(m_numImages == GAME_MAXMODELS)
+		return -1;
+
+	//Check to see whether we already have a model Id by that name
+	for(int i=0; i<GAME_MAXMODELS; i++)
+	{
+		//we reached the end, no more models after this
+		if(!m_imageList[i].name)
+			break;
+		if(strcmp(m_imageList[i].name, image) == 0)
+		    return i;
+	}
+
+	m_numImages ++;
+	m_imageList[i].name = new char[strlen(image)+1];
+	strcpy(m_imageList[i].name,image);
+	m_imageList[i].id = i;
+	return i;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

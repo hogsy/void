@@ -149,7 +149,7 @@ bool CSoundManager::Init()
 
 
 	m_pListener = new C3DListener(lpd3dlistener);
-	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor.fval,DS3D_DEFERRED);
+/*	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor.fval,DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetRolloffFactor(m_cRollOffFactor.fval,DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetDopplerFactor(m_cDopplerFactor.fval,DS3D_DEFERRED);
 	hr = m_pListener->m_pDS3dListener->CommitDeferredSettings();
@@ -159,6 +159,7 @@ bool CSoundManager::Init()
 		Shutdown();
 		return false;
 	}
+*/
 	ComPrintf("CSound::Init OK\n");
 	return true;
 }
@@ -224,11 +225,10 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &forward,
 								   const vector_t &up)
 {	
-/*	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
 												 up.x,up.y, up.z, DS3D_DEFERRED);
-*/
 }
 
 /*
@@ -485,7 +485,7 @@ bool CSoundManager::SetRollOffFactor(const CParms &parms)
 		return false;
 	}
 
-	if(m_pListener)
+/*	if(m_pListener)
 	{
 		HRESULT hr = m_pListener->m_pDS3dListener->SetRolloffFactor(factor,DS3D_DEFERRED);
 		if(FAILED(hr))
@@ -494,6 +494,7 @@ bool CSoundManager::SetRollOffFactor(const CParms &parms)
 			return false;
 		}
 	}
+*/
 	ComPrintf("RollOffFactor changed to = \"%f\"\n", factor);
 	return true;
 }
@@ -519,7 +520,7 @@ bool CSoundManager::SetDistanceFactor(const CParms &parms)
 		return false;
 	}
 
-	if(m_pListener)
+/*	if(m_pListener)
 	{
 		HRESULT hr = m_pListener->m_pDS3dListener->SetDistanceFactor(factor, DS3D_DEFERRED);
 		if(FAILED(hr))
@@ -528,6 +529,7 @@ bool CSoundManager::SetDistanceFactor(const CParms &parms)
 			return false;
 		}
 	}
+*/
 	ComPrintf("DistanceFactor changed to = \"%f\"\n", factor);
 	return true;
 }
@@ -555,7 +557,7 @@ bool CSoundManager::SetDopplerFactor(const CParms &parms)
 		return false;
 	}
 
-	if(m_pListener)
+/*	if(m_pListener)
 	{
 		HRESULT hr = m_pListener->m_pDS3dListener->SetDopplerFactor(factor, DS3D_DEFERRED);
 		if(FAILED(hr))
@@ -564,6 +566,7 @@ bool CSoundManager::SetDopplerFactor(const CParms &parms)
 			return false;
 		}
 	}
+*/
 	ComPrintf("DopplerFactor changed to = \"%f\"\n", factor);
 	return true;
 }

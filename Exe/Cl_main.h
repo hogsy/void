@@ -58,6 +58,8 @@ public:
 	
 private:
 
+	//spawn for the first time.
+	void BeginGame();
 	bool LoadWorld(const char *worldname);
 	void UnloadWorld();
 

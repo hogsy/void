@@ -5,16 +5,14 @@
 #include "Com_buffer.h"
 #include "3dmath.h"
 
-using namespace std;
-
 //======================================================================================
 //======================================================================================
 const int ENT_MAXCLASSNAME = 32;
 
+
 enum EntType
 {
 	ENT_ITEM,
-	ENT_WEAPON,
 	ENT_NPC,
 	ENT_WORLD,
 	ENT_CLIENT
@@ -103,7 +101,7 @@ public:
 		char * classname = parms.ReadString();
 		if(!parms.BadRead())
 		{
-			CEntityMaker * maker = (*makerRegistry.find(string(classname))).second;
+			CEntityMaker * maker = (*makerRegistry.find(std::string(classname))).second;
 			if(maker)
 				return maker->MakeEntity(parms);
 		}
@@ -112,10 +110,10 @@ public:
 	
 protected:
 
-	typedef map<string, CEntityMaker *> EntMakerMap;
+	typedef std::map<std::string, CEntityMaker *> EntMakerMap;
 	
-	CEntityMaker(string classname)
-	{	makerRegistry.insert( make_pair(classname,this));
+	CEntityMaker(std::string classname)
+	{	makerRegistry.insert( std::make_pair(classname,this));
 	}
 
 	virtual ~CEntityMaker() {}

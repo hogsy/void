@@ -481,6 +481,10 @@ SOURCE=.\Game_ents.cpp
 
 SOURCE=.\Game_ents.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\I_game.h
+# End Source File
 # End Group
 # Begin Source File
 

@@ -180,9 +180,8 @@ bool CVoid::Init()
 #ifdef INCLUDE_SOUND
 	if(!m_pSound->Init())
 	{
-		ComPrintf("CVoid::Init: couldnt init sound system\n");
-		delete m_pSound;
-		m_pSound = 0;
+		Error("CVoid::Init: Could not initalize Sound System");
+		return false;
 	}
 #endif
 

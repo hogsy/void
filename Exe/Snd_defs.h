@@ -6,7 +6,6 @@
 #include "3dmath.h"
 
 //This is all the game code needs to see
-
 namespace VoidSound
 {
 	//What channel to play a sound in
@@ -19,20 +18,17 @@ namespace VoidSound
 		CHAN_PLAYER = 4			//player sounds
 	};
 
-/*
-	min dis/ max dis
-	1 =	1/1 
-    0.5 = 1/2
-*/
-
 	//Cache type,
 	//not using this right now. should be the same for all resource managers ?
-	enum SndCacheType
+	enum CacheType
 	{
-		CACHE_EMPTY = 0,		//not loaded, default
-		CACHE_TEMP	= 1,		//temp object, manager should release once it has been used
-		CACHE_LEVEL	= 2,		//map specifc, should be unloaded after
-		CACHE_GAME	= 3,		//persist throughout the game
+		CACHE_EMPTY = 0,	//Default
+		CACHE_LOCAL	= 1,	//Persistant through out the game, Client is reponsible for loading these.
+
+		//Server is responsible for giving an index starting containing all files here
+
+		CACHE_GAME	= 2,	//Map specific, should be unloaded on map change
+		CACHE_TEMP	= 4,	//Temp object,  should release once it has been used
 	};
 }
 

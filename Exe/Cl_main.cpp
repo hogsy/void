@@ -131,6 +131,10 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
+	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
+	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
+
+/*
 	m_campath = -1;
 	m_acceleration = 400.0f;
 	m_maxvelocity =  200.0f;
@@ -152,12 +156,40 @@ bool CClient::LoadWorld(const char *worldname)
 
 	System::SetGameState(INGAME);
 	SetInputState(true);
-
-
 	Spawn(0,0);
+*/
 	
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
+}
+
+/*
+======================================
+Enter game
+======================================
+*/
+void CClient::BeginGame()
+{
+	m_campath = -1;
+	m_acceleration = 400.0f;
+	m_maxvelocity =  200.0f;
+	
+	VectorSet(&desired_movement, 0, 0, 0);
+
+	VectorSet(&m_gameClient.angles, 0.0f,0.0f,0.0f);
+	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
+
+	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
+
+	m_ingame = true;
+
+	System::SetGameState(INGAME);
+	SetInputState(true);
+
+	Spawn(0,0);
 }
 
 /*

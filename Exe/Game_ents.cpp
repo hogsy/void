@@ -3,6 +3,12 @@
 //======================================================================================
 //======================================================================================
 
+
+
+
+
+
+
 class CEntClientMaker: public CEntityMaker
 {
 public:
@@ -22,7 +28,7 @@ public:
 class CEntSpeakerMaker: public CEntityMaker
 {
 public:
-	CEntSpeakerMaker() : CEntityMaker("client")	{}
+	CEntSpeakerMaker() : CEntityMaker("ent_speaker")	{}
 
 	Entity * MakeEntity(CBuffer &parms) const
 	{

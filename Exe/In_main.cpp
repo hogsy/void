@@ -352,10 +352,11 @@ void PrintDIError(HRESULT err, const char * msg)
 	if(msg)
 	{
 		strcpy(error,msg);
-		strcat(error,"Error:\n");
+		strcat(error,"Error:");
 	}
 	else
-		strcpy(error,"Error:\n");
+		strcpy(error,"Error:");
+
 	switch(err)
 	{
 		case DI_BUFFEROVERFLOW: strcat(error,"NOTATTACHED/PROPNOEFFECT/BUFFEROVERFLOW"); break;
@@ -378,7 +379,7 @@ void PrintDIError(HRESULT err, const char * msg)
 		case DI_POLLEDDEVICE: strcat(error,"POLLEDDEVICE"); break;
 		default: strcat(error,"UNKNOWNERROR");	break;
 	}
-	ComPrintf(error);
+	ComPrintf("%s\n",error);
 }
 
 }

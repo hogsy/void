@@ -30,35 +30,30 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_CTRLVOLUME |DSBCAPS_PRIMARYBUFFER; 
-	dsbdesc.guid3DAlgorithm = GUID_NULL;
-    dsbdesc.dwBufferBytes = 0;
-    dsbdesc.lpwfxFormat = 0; 
-    
-	//Create buffer. 
+    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRLVOLUME; 
+
+  	//Create buffer. 
 	HRESULT hr = GetDirectSound()->CreateSoundBuffer(&dsbdesc,&m_pDSBuffer,0);
     if(FAILED(hr))
     { 
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:");
 		return 0;
-        //return false;
     } 
+
+	IDirectSound3DListener * p3dlistener=0;
+	hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DListener, (LPVOID *)&p3dlistener);
+	if(FAILED(hr))
+    {
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Get 3dlistener:");
+		Destroy();
+		return 0;
+	}
 
 	hr = m_pDSBuffer->SetFormat(&pcmwf);
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Set Format:");
 		Destroy();
-		//return false;
-		return 0;
-	}
-
-	hr = m_pDSBuffer->Play(0,0,DSBPLAY_LOOPING);
-	if(FAILED(hr))
-	{
-		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Can't start mixing:");
-		Destroy();
-		//return false;
 		return 0;
 	}
 
@@ -67,21 +62,17 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
 		Destroy();
-		//return false;
 		return 0;
 	}
 #endif
 
-	IDirectSound3DListener * p3dlistener=0;
-	hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DListener, (LPVOID *)&p3dlistener);
+	hr = m_pDSBuffer->Play(0,0,DSBPLAY_LOOPING);
 	if(FAILED(hr))
-    {
-		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Get 3dlistener:");
+	{
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Can't start mixing:");
 		Destroy();
-		//return false;
 		return 0;
 	}
-
 
 	ComPrintf("CPrimaryBuffer::Create: OK\n");
 	return p3dlistener;
@@ -181,7 +172,6 @@ bool CPrimaryBuffer::SetVolume(long vol)
 //======================================================================================
 //A Generic Sound buffer with wave data
 //======================================================================================
-
 /*
 ==========================================
 Constructor/Destructor
