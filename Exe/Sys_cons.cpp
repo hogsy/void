@@ -177,14 +177,18 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				}
 				
 				//Sort and print all the matched entries
-				if(matchingNames.size())
+				int numMatches = matchingNames.size();
+				if(!numMatches)
+					ComPrintf("No Matches\n");
+				else if(numMatches == 1)
+					m_conString.assign(matchingNames.front());
+				else
 				{
 					matchingNames.sort();
 					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
 						ComPrintf("%s\n", it->c_str());
-					ComPrintf("==========================\n");
-					m_conString.assign(matchingNames.back());
 				}
+				ComPrintf("==========================\n");
 				break;
 			}
 			case INKEY_BACKSPACE:
@@ -305,7 +309,7 @@ bool CConsole::ExecString(const char *string)
 					}
 				}
 			}
-			ComPrintf("%s = %s\n",(*it)->name,(*it)->string);
+			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
 			return true;
 		}
 	}

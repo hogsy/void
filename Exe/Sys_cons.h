@@ -48,8 +48,8 @@ config files
 struct I_ConsoleRenderer;
 
 class CConsole: public I_Console,		//Console interface exported to other modules
-				public I_InKeyListener,	//Key Event listener interface	
-				public I_ConHandler
+				public I_InKeyListener	//Key Event listener interface	
+				//public I_ConHandler
 {
 public:
 
@@ -63,10 +63,6 @@ public:
 	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
 	void ComPrint(const char* text);
 	bool ExecString(const char *string);
-
-	//looks through config file to see if any parms match the given token
-	//set parm to that token if found
-	bool GetTokenParms(const char * token, CParms * parms);
 
 	//==============================================================
 	//Key Listener interface
@@ -97,7 +93,10 @@ public:
     void SetVisible(bool down);
 
 private:
-	
+
+	//looks through config file to see if any parms match the given token
+	//set parm to that token if found
+	bool GetTokenParms(const char * token, CParms * parms);
 	int  ReadConfigParm(char *buf, int bufsize, FILE * fp);
 	bool IsCmdLineParm(const char * token, int tokenLen);
 

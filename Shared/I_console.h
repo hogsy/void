@@ -87,7 +87,7 @@ protected:
 Console Interface
 ==========================================
 */
-struct I_Console
+struct I_Console : public I_ConHandler
 {
 	//Cvar Registration
 	virtual void RegisterCVar(CVarBase * var,				 //The Cvar being registered
@@ -103,10 +103,6 @@ struct I_Console
 
 	//pass a string to be exec'ed
 	virtual bool ExecString(const char *string)=0;
-
-	//looks through config file to see if any parms match the given token
-	//set parm to that token if found
-	virtual bool GetTokenParms(const char * token, CParms * parms)=0;
 };
 
 #endif

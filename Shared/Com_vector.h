@@ -36,6 +36,14 @@ inline float DotProduct(const vector_t &a, const vector_t &b)
 {	return ( a.x*b.x + a.y*b.y + a.z*b.z );
 }
 
+inline void VectorSub(vector_t &dest, const vector_t &a, const vector_t &b)
+{
+	dest.x=a.x-b.x; 
+	dest.y=a.y-b.y; 
+	dest.z=a.z-b.z;
+}
+
+
 inline void VectorSet(vector_t &dest, const vector_t &a)
 {	dest.x = a.x; 
 	dest.y = a.y; 
@@ -87,12 +95,6 @@ inline void VectorAdd(vector_t &dest, vector_t &a, vector_t &b)
 	dest.z += (a.z + b.z);
 }
 
-inline void VectorSub(vector_t &dest, const vector_t &a, const vector_t &b)
-{
-	dest.x=a.x-b.x; 
-	dest.y=a.y-b.y; 
-	dest.z=a.z-b.z;
-}
 inline void VectorInv(vector_t &dest)
 {	dest.x = -dest.x;
 	dest.y = -dest.y;

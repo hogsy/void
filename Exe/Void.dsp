@@ -472,6 +472,10 @@ SOURCE=..\..\Mssdk\Include\WinEFS.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\Shared\Bg_defs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Game_defs.h
 # End Source File
 # Begin Source File
