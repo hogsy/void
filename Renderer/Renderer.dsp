@@ -232,6 +232,34 @@ SOURCE=.\Source\Hud_main.h
 # Begin Group "Shared"
 
 # PROP Default_Filter ""
+# Begin Group "3dfx"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\3dfx\3DFX.H
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\3dfx\glide.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\3dfx\glidesys.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\3dfx\glideutl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Ren_sky.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\3dfx\SST1VID.H
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\3dmath.cpp
@@ -255,6 +283,10 @@ SOURCE=..\Shared\clip.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_cvar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_list.h
 # End Source File
 # Begin Source File
 
@@ -315,15 +347,15 @@ SOURCE=.\Source\Util.h
 # End Group
 # Begin Source File
 
+SOURCE=..\Shared\Com_defs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\plan\ripper.plan
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Standard.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\todo
 # End Source File
 # End Target
 # End Project

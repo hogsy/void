@@ -8,9 +8,10 @@ These are the only functions directly
 exported by the dll
 ==========================================
 */
-
 static HFILE * g_hmemlog;
+
 extern RenderInfo_t g_rInfo;
+extern I_Console *  g_pConsole;
 
 /*
 ==========================================
@@ -18,8 +19,6 @@ Create the renderer interface, and
 start memory logging if in debug mode
 ==========================================
 */
-
-
 RENDERER_API I_Renderer * RENDERER_Create(VoidExport_t * vexp)
 {
 #ifdef _DEBUG
@@ -61,7 +60,6 @@ Free the renderer interface, and
 end memory logging if in debug mode
 ==========================================
 */
-
 RENDERER_API void RENDERER_Free()
 {
 	if(g_pRenExp)
@@ -78,58 +76,32 @@ RENDERER_API void RENDERER_Free()
 
 }
 
-
+/*
+==========================================
+Return current renderering parms
+==========================================
+*/
 RENDERER_API RenderInfo_t * RENDERER_GetParms()
 {	return &g_rInfo;
 }
 
 
-
 /*
-HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp)
-{
-#ifdef _DEBUG
-	
-	// memory debugging stuff
-	g_hmemlog = (HFILE*)CreateFile("mem_render.log", 
-					GENERIC_WRITE, FILE_SHARE_WRITE, NULL, 
-					CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-	// Send all reports to STDOUT, since this example is a console app
-   _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-   _CrtSetReportFile(_CRT_WARN, g_hmemlog);
-   _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-   _CrtSetReportFile(_CRT_ERROR, g_hmemlog);
-   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-   _CrtSetReportFile(_CRT_ASSERT, g_hmemlog);
-
-#endif
-
-	if(!*pRender)
-	{
-		g_pRenExp = new CRenExp(rinfo,vexp);
-		*pRender = g_pRenExp;
-		return S_OK;
-	}
-	return E_FAIL;
-}
+==========================================
+Dll Print func
+==========================================
 */
-/*
-HRESULT __stdcall FreeRenderer(I_Renderer ** pRender)
+void ComPrintf(char* text, ...)
 {
-	if(!*pRender)
-		return E_FAIL;
+	if ((!text) || (!text[0]))
+		return;
 
-	*pRender = 0;
-	delete g_pRenExp;
-	g_pRenExp = 0;
+	static char buff[2048];
 
-#ifdef _DEBUG
-	// memory debugging stuff
-   _CrtDumpMemoryLeaks();
-	CloseHandle(g_hmemlog);
-#endif
+	va_list args;
+	va_start(args, text);
+	vsprintf(buff, text, args);
+	va_end(args);
 
-	return S_OK;
+	g_pConsole->dprint(buff);
 }
-*/

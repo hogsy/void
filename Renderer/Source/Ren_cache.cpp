@@ -231,7 +231,7 @@ void cache_purge_single(void)
 		}
 
 
-		for(int t=0; t<tex->num_textures; t++)
+		for(uint t=0; t<tex->num_textures; t++)
 		{
 			// only bind if we have a poly that uses it
 			if (!tex->polycaches[t])
@@ -278,7 +278,7 @@ void cache_purge_multi(void)
 	glEnable(GL_BLEND);
 
 
-	for(int t=0; t<tex->num_textures; t++)
+	for(uint t=0; t<tex->num_textures; t++)
 	{
 		if (!tex->polycaches[t])
 			continue;
@@ -317,7 +317,7 @@ void cache_purge(void)
 
 
 	// free all the polys that are cached
-	for(int t=0; t<tex->num_textures; t++)
+	for(uint t=0; t<tex->num_textures; t++)
 	{
 		return_poly(tex->polycaches[t]);
 		tex->polycaches[t] = NULL;

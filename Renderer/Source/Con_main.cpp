@@ -1,30 +1,29 @@
 #include "Con_main.h"
-
 #include "Standard.h"
-
 #include "Tex_hdr.h"
 #include "Hud_main.h"
 
+//======================================================================================
+//======================================================================================
 #define CONBACK_INDEX			1
 #define CON_DIFFERENTIAL		150
 
-
-CRConsole * g_prCons;
-CVar *	CRConsole::g_pConspeed;
+CRConsole * g_prCons=0;
 
 /*
 =======================================
-Constructor and Destructor
+Constructor
 =======================================
 */
-
-CRConsole::CRConsole(I_Console * p_eCons): m_seperatorchar('^'), 
-												m_pExeCons(p_eCons)
+CRConsole::CRConsole(): m_seperatorchar('^')
 {
 	m_statuslen = 0;
 	m_statusline = 0;
 	m_alpha = 0.0;
 	m_curline = 0;
+	
+	m_status = CON_OPEN;
+	m_fullscreen = true;
 
 	//Allocate space for Lines
 	for (int i = 0; i < CON_MAX_LINES; i++)
@@ -39,11 +38,16 @@ CRConsole::CRConsole(I_Console * p_eCons): m_seperatorchar('^'),
 	RegisterFuncs();
 }
 
-
+/*
+==========================================
+Destructor
+==========================================
+*/
 CRConsole::~CRConsole()
 {
-	m_pExeCons = 0;
-	for (int c = 0; c < CON_MAX_LINES; c++)
+	m_statusline = 0;
+	
+	for (int c=0;c<CON_MAX_LINES;c++)
 	{
 		if(m_lines[c])
 			delete m_lines[c];
@@ -52,10 +56,9 @@ CRConsole::~CRConsole()
 
 /*
 ======================================
-Con_Init()
+Initialize the console
 ======================================
 */
-
 bool CRConsole::Init(bool fullscreen, bool down)
 {
 	m_status = CON_OPENING;
@@ -65,45 +68,21 @@ bool CRConsole::Init(bool fullscreen, bool down)
 	return true;
 }
 
-
 /*
 ======================================
 Console Shutdown Func
 ======================================
 */
-
 bool CRConsole::Shutdown()
 {	return true;
 }
 
 
 /*
-==========================================
-Console print function,
-for use by the renderer.
-==========================================
-*/
-void CRConsole::Printf(char *msg, ...)
-{
-	if ((!msg) || (!msg[0]))
-		return;
-
-	char buff[2048];
-
-	va_list args;
-	va_start(args, msg);
-	vsprintf(buff, msg, args);
-	va_end(args);
-
-	m_pExeCons->dprint(buff);
-}
-
-/*
 ======================================
 Used for updating Resolutions etc
 ======================================
 */
-
 void CRConsole::UpdateRes()
 {
 	if(m_fullscreen)
@@ -113,17 +92,13 @@ void CRConsole::UpdateRes()
 	m_maxchars =  g_rInfo.width / 8;
 }
 
-
 /*
 ======================================
 Console Draw func, called every frame
 ======================================
 */
-
 void CRConsole::Draw()
 {
-	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
-
 	switch(m_status)
 	{
 	case CON_CLOSED:
@@ -136,8 +111,7 @@ void CRConsole::Draw()
 		}
 	case CON_CLOSING:
 		{
-//			m_alpha -= (*g_pFrameTime * g_pConspeed->value);
-			m_alpha -= (*g_pFrameTime * 500);
+			m_alpha -= (*g_pFrameTime * g_pConspeed->value);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -159,8 +133,7 @@ void CRConsole::Draw()
 				break;
 			}
 
-//			m_alpha += (*g_pFrameTime * g_pConspeed->value);
-			m_alpha += (*g_pFrameTime * 500);
+			m_alpha += (*g_pFrameTime * g_pConspeed->value);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{
@@ -179,7 +152,6 @@ void CRConsole::Draw()
 			break;
 		}
 	}
-
 
 	DWORD top = (int) m_alpha;
 	if (m_alpha > 255)
@@ -200,37 +172,29 @@ void CRConsole::Draw()
 	glPushMatrix();
 	glLoadIdentity();
 	glOrtho(0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
-
 	glDisable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D, tex->base_names[1]);
+	
 	glBegin(GL_QUADS);
-
 
 	glColor4f(ftop, ftop, ftop, ftop);
 	glTexCoord2f(0, 0);
 	glVertex2i(0, g_rInfo.height);
-
-
 	glTexCoord2f(1, 0);
 	glVertex2i(g_rInfo.width, g_rInfo.height);
-
-
+	
 	glColor4f(fbot, fbot, fbot, fbot);
 	glTexCoord2f(1, 1);
-
 	if(m_fullscreen)
 		glVertex2i(g_rInfo.width, 0);
 	else
 		glVertex2i(g_rInfo.width, g_rInfo.height/2);
-
-
 	glTexCoord2f(0, 1);
-
 	if(m_fullscreen)
 		glVertex2i(0, 0);
 	else
 		glVertex2i(0, g_rInfo.height/2);
-
+	
 	glEnd();
 
 	//print all our text over the top
@@ -248,7 +212,6 @@ Print Current Console Messages -
 assumes view and tex filter are ok
 ======================================
 */
-
 void CRConsole::PrintBuffer()
 {
 	//Alpha values
@@ -257,7 +220,6 @@ void CRConsole::PrintBuffer()
 	float diff;
 	float alpha;
 	int a;
-
 
 	top = (int) m_alpha;
 	if (m_alpha > 255)
@@ -414,7 +376,7 @@ void CRConsole::PrintBuffer()
 
 
 	unsigned int endline = m_curline + m_maxlines - 1;
-	for(int l = m_curline; l < endline; l++)
+	for(uint l = m_curline; l < endline; l++)
 	{
 		if (m_lines[l]->line[0] == '\0')
 			break;
@@ -433,7 +395,7 @@ void CRConsole::PrintBuffer()
 
 		glBegin(GL_QUADS);
 
-		for (unsigned int c = 0; c < m_lines[l]->length; c++)
+		for (int c = 0; c < m_lines[l]->length; c++)
 		{
 			s = (m_lines[l]->line[c] % 16) * 0.0625f;
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
@@ -471,7 +433,6 @@ void CRConsole::PrintBuffer()
 Add a Message to the Console Buffer
 ======================================
 */
-
 void CRConsole::AddMessage(char *buff, bool first)
 {
 	//move everything back one spot.  end goes to the beginning
@@ -642,20 +603,3 @@ Add a line to the console buffer
 void  CRConsole::AddLine(char *line, int color, int size)
 {	PrintRecursive(true, line);
 }
-
-/*
-==========================================
-Pass over to the Exe
-==========================================
-*/
-CVar * CRConsole::RegCVar ( const char *varname, const char *varval, 
-						 CVar::CVarType vartype, int varinfo, CVAR_FUNC varfunc)
-{	return m_pExeCons->RegisterCVar(varname,varval,vartype,varinfo,varfunc);
-}
-
-void CRConsole::RegCFunc(const char *funcname, CFUNC pfunc)
-{	m_pExeCons->RegisterCFunc(funcname,pfunc);
-}
-
-
-

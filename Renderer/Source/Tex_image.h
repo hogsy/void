@@ -28,10 +28,10 @@ public:
 	EImageFormat GetFormat(){ return format; }
 	byte *		 GetData()  { return data; }
 
-	void LockBuffer(uint size);
+	void LockBuffer(int size);
 	void UnlockBuffer();
 
-	void LockMipMapBuffer(uint size);
+	void LockMipMapBuffer(int size);
 	void UnlockMipMapBuffer();
 
 	bool Read(const char *file);				//Read texture from path
@@ -48,14 +48,15 @@ public:
 
 protected:
 
-	uint			buffersize;
-	uint			mipbuffersize;
+	int		buffersize;
+	int		mipbuffersize;
 	
-	byte *			mipmapdata;
-	byte *			data;
-	int				width,
-					height;
-	int				type;
+	byte *	mipmapdata;
+	byte *	data;
+	int		width,
+			height;
+	int		type;
+
 	EImageFormat	format;
 
 	bool	Read_PCX();
@@ -99,6 +100,6 @@ protected:
 
 void	ImageReduce32(byte *dest, byte *src, int nwidth, int nheight);
 void	ImageReduce24(byte *dest, byte *src, int nwidth, int nheight);
-byte*   ImageConvert(byte *src, int format, int width, int height);
+byte*   ImageConvert(byte *src, int format, uint width, uint height);
 
 #endif

@@ -14,32 +14,19 @@ class CRConsole:public I_ConsoleRenderer
 {
 public:
 
-	//Interface functions
-	void  Toggle(bool down);
-	void  ToggleFullscreen(bool full);
-	void  Lineup();
-	void  Linedown();
-	void  Statusline(const char  *status_line, const int &len);
-	void  AddLine(char *line, int color=0, int size=0);
-
-
-	CRConsole(I_Console * p_eCons);
+	CRConsole();
 	~CRConsole();
 
 	bool Init(bool fullscreen, bool down);
 	bool Shutdown();
 
-	
-	CVar * RegCVar (const char *varname,
-				  const char *varval, 
-				  CVar::CVarType vartype, 
-				  int varinfo, 
-				  CVAR_FUNC varfunc=0);
-
-	void RegCFunc(const char *funcname, 
-				  CFUNC pfunc);
-	
-	void Printf(char *msg,...);
+	//Interface functions
+	void Toggle(bool down);
+	void ToggleFullscreen(bool full);
+	void Lineup();
+	void Linedown();
+	void Statusline(const char  *status_line, const int &len);
+	void AddLine(char *line, int color=0, int size=0);
 
 	void UpdateRes();
 	void Draw(); 
@@ -72,11 +59,8 @@ private:
 	void PrintRecursive(bool first, char *msg);
 	void PrintBuffer();
 
-	//Interface to executable functions
-	I_Console * m_pExeCons;
-	
 	//CVars
-	static CVar *	g_pConspeed;
+	CVar *		g_pConspeed;
 
 	bool		m_condown;		// is the console down
 	bool		m_fullscreen;	// fullscreen console?

@@ -66,7 +66,7 @@ Lock a static buffer to do texture i/o
 avoid continously allocing and freeing memory
 ==========================================
 */
-void CImageReader::LockBuffer(uint size)
+void CImageReader::LockBuffer(int size)
 {
 	UnlockBuffer();
 
@@ -89,7 +89,7 @@ void CImageReader::UnlockBuffer()
 	}
 }
 
-void CImageReader::LockMipMapBuffer(uint size)
+void CImageReader::LockMipMapBuffer(int size)
 {
 	UnlockMipMapBuffer();
 
@@ -175,7 +175,7 @@ bool CImageReader::DefaultTexture()
 		return false;
 	}
 */
-	for (unsigned int p = 0; p < width * height * 4; p++)
+	for (int p = 0; p < width * height * 4; p++)
 	{
 		data[p] = rand();
 		if (p%4 == 3)
@@ -256,7 +256,7 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 		return false;
 	}
 */
-	for (unsigned int p = 0; p < width * height * 4; p++)
+	for (int p = 0; p < width * height * 4; p++)
 	{
 		if (p%4 == 3)
 			data[p] = 255;	//make sure it's full alpha
@@ -444,7 +444,7 @@ bool CImageReader::Read_TGA()
 */
 	memset(data, 0xFF, width * height * 4);
 	
-	for (int h=height-1; h>=0; h--)
+	for (int h= height-1; h>=0; h--)
 	{
 		for (int w=0; w<width; w++)
 		{
@@ -507,7 +507,6 @@ void CImageReader::ImageReduce()
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *4)+ s];
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
 				color /= 4;
-
 //				temp[(r*width*4) + (c*4) + s] = (byte) color;
 				mipmapdata[(r*width*4) + (c*4) + s] = (byte) color;
 			}
@@ -818,7 +817,7 @@ void ImageReduce24(byte *dest, byte *src, int nwidth, int nheight)
 /**********************************************************
 convert a tex format from 8888 to something else
 **********************************************************/
-byte* ImageConvert(byte *src, int format, int width, int height)
+byte* ImageConvert(byte *src, int format, uint width, uint height)
 {
 	byte *dest = new byte[width * height * 2];
 	if (dest == NULL) FError("mem for pic format conversion");

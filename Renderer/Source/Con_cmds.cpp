@@ -1,15 +1,14 @@
-#include "Standard.h"
+#include "Con_main.h"
 #include "Tex_image.h"
 
-
 //======================================================================================
 //======================================================================================
 
-CVar *	g_pFullbright;
-CVar *	g_pDrawSils;
-CVar *  g_pFov;
-CVar *  g_pMultiTexture;
-CVar *	g_pVidSynch;
+CVar *	g_pFullbright=0;
+CVar *	g_pDrawSils=0;
+CVar *  g_pFov=0;
+CVar *  g_pMultiTexture=0;
+CVar *	g_pVidSynch=0;
 
 /*
 ======================================
@@ -39,9 +38,7 @@ void ScreenShot(char *name,EImageFormat type)
 		{
 			shotname[4] = i/10 + '0';
 			shotname[5] = i%10 + '0';
-
 			sprintf(checkname,"%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", shotname);
-
 			f = fopen(checkname,"rb");
 			if (!f)
 				break;
@@ -54,7 +51,6 @@ void ScreenShot(char *name,EImageFormat type)
 			return;
 		}
 	}
-
 	else
 	{
 		sprintf(checkname, "%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", name);
@@ -242,12 +238,12 @@ Register Cvars and Commands
 void CRConsole::RegisterFuncs()
 {
 	
-	g_pFullbright = RegCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullBright);
-	g_pConspeed = RegCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
-	g_pFov = RegCVar("r_fov", "90", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_Fov);
-	g_pMultiTexture = RegCVar("r_multitexture", "1", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_MultiTexture);
-	g_pVidSynch = RegCVar("r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
+	g_pFov			= g_pConsole->RegisterCVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Fov);
+	g_pFullbright	= g_pConsole->RegisterCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullBright);
+	g_pConspeed		= g_pConsole->RegisterCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
+	g_pMultiTexture = g_pConsole->RegisterCVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_MultiTexture);
+	g_pVidSynch		= g_pConsole->RegisterCVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,&CVar_VidSynch);
 
-	RegCFunc("screenshot", &CFunc_PCXShot);
-	RegCFunc("tgashot", &CFunc_TGAShot);
+	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
+	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);
 }

@@ -1,9 +1,8 @@
 #ifndef RENDERER_STANDARD_H
 #define RENDERER_STANDARD_H
 
-// disable those damn warnings
-#pragma warning(disable : 4018)     // signed/unsigned mismatch
-#pragma warning(disable : 4305)		// truncation from const double to float
+//disable those damn warnings
+#pragma warning(disable : 4305)		//truncation from const double to float
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -13,30 +12,29 @@
 #include <stdarg.h>
 #include <windows.h>
 
-#include "gl.h"
+#include "Com_defs.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
 
-#include "Con_main.h"
-
+#include "gl.h"
 #include "3dMath.h"
 #include "World.h"
 #include "Util.h"
 
-typedef unsigned char byte;
+#define ConPrint ComPrintf
 
-#define ConPrint g_prCons->Printf
+//Renderer Info
+extern RenderInfo_t g_rInfo;	
 
+//Console Interface for registering CVars
+extern I_Console *  g_pConsole;
 
-#define MAX_VERTS_PER_POLY 64
-
-
-extern RenderInfo_t g_rInfo;
-
-extern float * g_pCurTime;		//Current Time
-extern float * g_pFrameTime;	//Frame Time
-
+//The World
 extern world_t	*world;
+
+//Timing variables
+extern float * g_pCurTime;		
+extern float * g_pFrameTime;	
 
 
 void FError(char *error, ...);		//Fatal Error, shutdown and exit

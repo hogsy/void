@@ -1,15 +1,16 @@
 #include "Standard.h"
-
 #include "Ren_exp.h"
 #include "Ren_main.h"
 #include "Ren_cache.h"
 #include "Ren_beam.h"
-
 #include "Gl_main.h"
-
 #include "Hud_main.h"
 #include "Tex_main.h"
 #include "Mdl_main.h"
+#include "Con_main.h"
+
+//======================================================================================
+//======================================================================================
 
 //Static CVars
 CVar *	CRenExp::m_cFull=0;		//Fullscreen
@@ -26,7 +27,11 @@ world_t		* world=0;			//The World
 float		* g_pCurTime=0;		//Current Timer
 float		* g_pFrameTime=0;	//Frame Time
 
+I_Console   * g_pConsole=0;
 CRenExp		* g_pRenExp=0;
+
+//======================================================================================
+//======================================================================================
 
 /*
 =======================================
@@ -43,11 +48,12 @@ CRenExp::CRenExp(VoidExport_t * pVExp)
 	//Set Global Time pointers
 	g_pCurTime = pVExp->curtime; 
 	g_pFrameTime = pVExp->frametime;
+	g_pConsole = pVExp->vconsole;
 
 	//Create different subsystems
 
 	//Start the console first thing
-	g_prCons= new CRConsole(pVExp->vconsole);
+	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
 	g_prHud = new CRHud();
 	
@@ -59,11 +65,11 @@ CRenExp::CRenExp(VoidExport_t * pVExp)
 		return;
 	}
 
-	m_cFull = g_prCons->RegCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
-	m_cBpp = g_prCons->RegCVar("r_bpp",  "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
-	m_cWndX = g_prCons->RegCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	m_cWndY = g_prCons->RegCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	m_cRes = g_prCons->RegCVar("r_res",  "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
+	m_cFull= g_pConsole->RegisterCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
+	m_cBpp = g_pConsole->RegisterCVar("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
+	m_cWndX= g_pConsole->RegisterCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	m_cWndY= g_pConsole->RegisterCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	m_cRes = g_pConsole->RegisterCVar("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
 }
 
 /*
@@ -88,6 +94,8 @@ CRenExp::~CRenExp()
 	if(g_prCons)
 		delete g_prCons;
 	g_prCons = 0;
+
+	g_pConsole = 0;
 }
 
 
@@ -468,7 +476,7 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 	}
 	else if(argc >=3)
 	{
-		int x=0, y=0;
+		uint x=0, y=0;
 
 		if(!sscanf(argv[1],"%d",&x))
 		{
@@ -509,7 +517,7 @@ bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 	}
 	else if(argc >= 2)
 	{
-		int bpp=0;
+		uint bpp=0;
 		if(!sscanf(argv[1],"%d",&bpp))
 			bpp  = g_rInfo.bpp;
 

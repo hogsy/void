@@ -147,7 +147,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	if (!map)
 		return false;
 
-	int	   mipcount = 0,
+	uint	   mipcount = 0,
 		   t=0,m=0;
 
 	tex->num_lightmaps= 0;

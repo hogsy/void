@@ -3,7 +3,6 @@
 
 #include "I_renderer.h"
 
-
 class CRenExp : public I_Renderer
 {
 public:
