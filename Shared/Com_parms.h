@@ -12,10 +12,8 @@ validation funcs etc
 class CStringVal
 {
 public:
-	CStringVal() {}
+	CStringVal(const char * pString) : szString(pString) {}
 	~CStringVal() { szString = 0; }
-
-	void SetString(const char * pString) { szString = pString; }
 
 	int IntVal() const 
 	{
@@ -23,6 +21,10 @@ public:
 		if(!i)
 			return COM_INVALID_VALUE;
 		return i;
+	}
+
+	bool BoolVal() const
+	{	return IntVal() ? true : false;
 	}
 
 	float FloatVal() const

@@ -47,7 +47,7 @@ public:
 	void Resize(int x, int y, int w, int h);
 
 	//Console Handler
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms){}
 
 	I_InputFocusManager * GetFocusManager();
@@ -73,13 +73,12 @@ private:
 	
 	bool SetExclusive(bool on);
 
-	bool CSetExclusive(const CVar * var, const CParms &parms);
-	bool CXSens(const CVar * var, const CParms &parms);
-	bool CYSens(const CVar * var, const CParms &parms);
-	bool CSens(const CVar *var, const CParms &parms);
-	
-	bool CMouseMode(const CVar *var, const CParms &parms);
-	bool CKBMode(const CVar * cvar, const CParms &parms);
+	bool CSetExclusive(const CStringVal &strVal);
+	bool CXSens(const CStringVal &strVal);
+	bool CYSens(const CStringVal &strVal);
+	bool CSens(const CStringVal &strVal);
+	bool CMouseMode(const CStringVal &strVal);
+	bool CKBMode(const CStringVal &strVal);
 };
 
 #endif

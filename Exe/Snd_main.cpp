@@ -811,15 +811,9 @@ void CSoundManager::HandleCommand(int cmdId, const CParms &parms)
 Set volume
 ==========================================
 */
-bool CSoundManager::SetVolume(const CParms &parms)
+bool CSoundManager::SetVolume(const CStringVal &strVal)
 {
-	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("Volume : %.2f\n", m_pPrimary->GetVolume());
-		return false;
-	}
-
-	float fvol = parms.FloatTok(1);
+	float fvol = strVal.FloatVal();
 	if(fvol < 0.0f || fvol > 10.0f)
 	{
 		ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
@@ -837,13 +831,9 @@ Just validate values if the listener
 hasn't been created yet
 ======================================
 */
-bool CSoundManager::SetRollOffFactor(const CParms &parms)
+bool CSoundManager::SetRollOffFactor(const CStringVal &strVal)
 {
-	//Just print value and return
-	if(parms.NumTokens() < 2)
-		return false;
-
-	float factor = parms.FloatTok(1);
+	float factor = strVal.FloatVal();
 	if(factor < DS3D_MINROLLOFFFACTOR ||   factor > DS3D_MAXROLLOFFFACTOR)
 	{
 		ComPrintf("Valid range for Rolloff factor is %0.2f to %0.2f\n",
@@ -869,13 +859,9 @@ bool CSoundManager::SetRollOffFactor(const CParms &parms)
 Set the distance Factor
 ======================================
 */
-bool CSoundManager::SetDistanceFactor(const CParms &parms)
+bool CSoundManager::SetDistanceFactor(const CStringVal &strVal)
 {
-	//Just print value and return
-	if(parms.NumTokens() < 2)
-		return false;
-
-	float factor = parms.FloatTok(1);
+	float factor = strVal.FloatVal();
 	if(factor <= 0.0f)
 	{
 		ComPrintf("Distance factor should be greater than 0.0\n");
@@ -900,13 +886,9 @@ bool CSoundManager::SetDistanceFactor(const CParms &parms)
 Set the doppler factor
 ======================================
 */
-bool CSoundManager::SetDopplerFactor(const CParms &parms)
+bool CSoundManager::SetDopplerFactor(const CStringVal &strVal)
 {
-	//Just print value and return
-	if(parms.NumTokens() < 2)
-		return false;
-	
-	float factor = parms.FloatTok(1);
+	float factor = strVal.FloatVal();
 	if(factor < DS3D_MINDOPPLERFACTOR ||  factor > DS3D_MAXDOPPLERFACTOR)
 	{
 		ComPrintf("Valid range for Doppler factor is %0.2f to %0.2f\n",
@@ -933,19 +915,19 @@ bool CSoundManager::SetDopplerFactor(const CParms &parms)
 Handle CVar changes
 ==========================================
 */
-bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CSoundManager::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 {
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cVolume))
-		return SetVolume(parms);
+		return SetVolume(strVal);
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cRollOffFactor))
-		return SetRollOffFactor(parms);
+		return SetRollOffFactor(strVal);
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cDopplerFactor))
-		return SetDopplerFactor(parms);
+		return SetDopplerFactor(strVal);
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cDistanceFactor))
-		return SetDistanceFactor(parms);
+		return SetDistanceFactor(strVal);
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cSndFps))
 	{
-		int val = parms.IntTok(1);
+		int val = strVal.IntVal();
 		if(val >= 20)
 			return true;
 		ComPrintf("Max sound FPS must be higher than 20\n");
@@ -1029,24 +1011,19 @@ namespace VoidSound
 }
 
 
-
-
 /*
 ======================================
 Device Enumeration. Can't find any use yet
 ======================================
 */
-/*
-
-*/
 BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,  const char * szDesc,
 				const char * szModule, void * pContext)
 {
-//	if(szDesc)
-//		ComPrintf("Sound Device : %s\n", szDesc);
+	if(szDesc)
+		ComPrintf("Sound Device : %s\n", szDesc);
 	if(szDesc && szModule[0])
 	{
-//		ComPrintf("Module : %s\n", szModule);
+		ComPrintf("Module : %s\n", szModule);
 		strcpy(m_szSoundDriver,szDesc);
 		m_pSoundDriver = lpGuid;
 	}

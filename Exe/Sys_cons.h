@@ -74,7 +74,7 @@ public:
 	//==============================================================
 	//Command Handler
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal) { return false; } 
 
 	//==============================================================
 

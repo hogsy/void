@@ -113,7 +113,7 @@ public:
 	int  RegisterImage(const char * sound);
 
 	//Console Handler Interface
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms);
 
 private:

@@ -76,7 +76,7 @@ public:
 				 int chantype = CHAN_AUTO);
 
 	//Console handler
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms);
 
 private:
@@ -109,10 +109,10 @@ private:
 	void PlaySoundSource(SndSource &source);
 
 
-	bool SetVolume(const CParms &parms);
-	bool SetRollOffFactor(const CParms &parms);
-	bool SetDistanceFactor(const CParms &parms);
-	bool SetDopplerFactor(const CParms &parms);
+	bool SetVolume(const CStringVal &strVal);
+	bool SetRollOffFactor(const CStringVal &strVal);
+	bool SetDistanceFactor(const CStringVal &strVal);
+	bool SetDopplerFactor(const CStringVal &strVal);
 
 	//==========================================
 	//console funcs

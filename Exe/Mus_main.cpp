@@ -112,10 +112,10 @@ void CMusic::HandleCommand(int cmdId, const CParms &parms)
 Handle Chantes to CVars
 ==========================================
 */
-bool CMusic::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CMusic::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 {
-	if(cvar == &m_cVolume)
-		return Volume(&m_cVolume,parms);
+//	if(cvar == &m_cVolume)
+//		return Volume(&m_cVolume,parms);
 	return false;
 }
 

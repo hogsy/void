@@ -335,23 +335,16 @@ Console Loopback Func
 Set exclusive access
 ================================
 */
-bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
+bool CInput::CSetExclusive(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
+	int temp= strVal.IntVal();
+	if(temp >= 0)
 	{
-		int temp= parms.IntTok(1);
-		if(temp >= 0)
-		{
-			if(temp)
-				return SetExclusive(true);
-			else
-				return SetExclusive(false);
-		}
+		if(temp)
+			return SetExclusive(true);
+		else
+			return SetExclusive(false);
 	}
-	if(m_pVarExclusive.ival)
-		ComPrintf("Input in Exclusive mode\n");
-	else
-		ComPrintf("Input in NonExclusive mode\n");
 	return false;
 }
 
@@ -363,28 +356,21 @@ DI_Immediate
 Win32 update
 =====================================
 */
-bool CInput::CMouseMode(const CVar * var, const CParms &parms)
+bool CInput::CMouseMode(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
-	{
-		int mode= parms.IntTok(1);
+	int mode= strVal.IntVal();
 		
-		if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
-		{
-			ComPrintf("Invalid Mouse Mode specified\n");
-			return false;
-		}
-			
-		if(!m_pMouse->SetMouseMode((CMouse::EMouseMode)mode))
-		{
-			ComPrintf("CInput:CMouseMode: Couldn't change to mode %d\n",mode);
-			return false;
-		}
-		return true;
+	if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
+	{
+		ComPrintf("Invalid Mouse Mode specified\n");
+		return false;
 	}
-
-	//Show current info
-	ComPrintf("MouseMode is %d\n", m_pMouse->GetMouseMode());
+		
+	if(!m_pMouse->SetMouseMode((CMouse::EMouseMode)mode))
+	{
+		ComPrintf("CInput:CMouseMode: Couldn't change to mode %d\n",mode);
+		return false;
+	}
 
 	switch(m_pMouse->GetMouseMode())
 	{
@@ -400,7 +386,7 @@ bool CInput::CMouseMode(const CVar * var, const CParms &parms)
 		ComPrintf("Mouse mode::Win32 Mouse polling\n");
 		break;
 	}
-	return false;
+	return true;
 }
 
 /*
@@ -408,28 +394,23 @@ bool CInput::CMouseMode(const CVar * var, const CParms &parms)
 Change keyboard mode
 ================================================
 */
-bool CInput::CKBMode(const CVar * cvar, const CParms &parms)
+bool CInput::CKBMode(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
+	int mode = strVal.IntVal();
+
+	//Check for Vaild value
+	if(mode < CKeyboard::KB_DIBUFFERED ||  mode > CKeyboard::KB_WIN32POLL)
 	{
-		int mode = parms.IntTok(1);
-
-		//Check for Vaild value
-		if(mode < CKeyboard::KB_DIBUFFERED ||  mode > CKeyboard::KB_WIN32POLL)
-		{
-			ComPrintf("Invalid Keyboard mode specified\n");
-			return false;
-		}
-
-		if(!m_pKb->SetKeyboardMode((CKeyboard::EKbMode)mode))
-		{
-			ComPrintf("CInput:CKBMode: Couldnt change to mode %d\n",mode);
-			return false;
-		}
-		return true;
+		ComPrintf("Invalid Keyboard mode specified\n");
+		return false;
 	}
 
-	ComPrintf("Keyboard Mode is %d\n", m_pKb->GetKeyboardMode());
+	if(!m_pKb->SetKeyboardMode((CKeyboard::EKbMode)mode))
+	{
+		ComPrintf("CInput:CKBMode: Couldnt change to mode %d\n",mode);
+		return false;
+	}
+
 	switch(m_pKb->GetKeyboardMode())
 	{
 	case CKeyboard::KB_NONE:
@@ -447,7 +428,7 @@ bool CInput::CKBMode(const CVar * cvar, const CParms &parms)
 		ComPrintf("Keyboard mode::Win32 Keyboard Hooks\n");
 		break;
 	}
-	return false;
+	return true;
 }
 
 /*
@@ -455,19 +436,15 @@ bool CInput::CKBMode(const CVar * cvar, const CParms &parms)
 Console Func - Sets X-axis Sensitivity
 ======================================
 */
-bool CInput::CXSens(const CVar * var, const CParms &parms)
+bool CInput::CXSens(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
+	float sens = strVal.FloatVal();
+	if(sens > 0.0 && sens < 30.0)
 	{
-		float sens = parms.FloatTok(1);
-		if(sens > 0.0 && sens < 30.0)
-		{
-			m_pMouse->SetXSensitivity(sens);
-			return true;
-		}
-		ComPrintf("CMouse::CXSens:Invalid Value entered");
+		m_pMouse->SetXSensitivity(sens);
+		return true;
 	}
-	ComPrintf("X-axis Sensitivity: %.2f\n", m_pMouse->GetXSens());
+	ComPrintf("CMouse::CXSens:Invalid Value entered");
 	return false;
 }
 
@@ -476,19 +453,15 @@ bool CInput::CXSens(const CVar * var, const CParms &parms)
 Console Func - Sets Y-axis Sensitivity
 ======================================
 */
-bool CInput::CYSens(const CVar * var, const CParms &parms)
+bool CInput::CYSens(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
+	float sens = strVal.FloatVal();
+	if(sens > 0.0 && sens < 30.0)
 	{
-		float sens = parms.FloatTok(1);
-		if(sens > 0.0 && sens < 30.0)
-		{
-			m_pMouse->SetYSensitivity(sens);
-			return true;
-		}
-		ComPrintf("CMouse::CYSens:Invalid Value entered");
+		m_pMouse->SetYSensitivity(sens);
+		return true;
 	}
-	ComPrintf("Y-axis Sensitivity: %.2f\n", m_pMouse->GetYSens());
+	ComPrintf("CMouse::CYSens:Invalid Value entered");
 	return false;
 }
 
@@ -497,19 +470,15 @@ bool CInput::CYSens(const CVar * var, const CParms &parms)
 Console Func - Sets master Sensitivity
 ======================================
 */
-bool CInput::CSens(const CVar * var, const CParms &parms)
+bool CInput::CSens(const CStringVal &strVal)
 {
-	if(parms.NumTokens() > 1)
+	float sens = strVal.FloatVal();
+	if(sens > 0.0 && sens < 30.0)
 	{
-		float sens = parms.FloatTok(1);
-		if(sens > 0.0 && sens < 30.0)
-		{
-			m_pMouse->SetSensitivity(sens);
-			return true;
-		}
-		ComPrintf("CMouse::CSens:Invalid Value entered");
+		m_pMouse->SetSensitivity(sens);
+		return true;
 	}
-	ComPrintf("Mouse Sensitivity: %.2f\n", m_pMouse->GetSens());
+	ComPrintf("CMouse::CSens:Invalid Value entered");
 	return false;
 }
 
@@ -519,49 +488,35 @@ bool CInput::CSens(const CVar * var, const CParms &parms)
 Handle Cvar change notifications
 ================================================
 */
-bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CInput::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 {
 	if(cvar == &m_pVarExclusive)
-		return CSetExclusive((CVar*)cvar,parms);
+		return CSetExclusive(strVal);
 	else if(cvar == &m_pVarXSens)
-		return CXSens((CVar*)cvar,parms);
+		return CXSens(strVal);
 	else if(cvar == &m_pVarYSens)
-		return CYSens((CVar*)cvar,parms);
+		return CYSens(strVal);
 	else if(cvar == &m_pVarSens)
-		return CSens((CVar*)cvar,parms);
+		return CSens(strVal);
 	else if(cvar == &m_pVarMouseMode)
-		return CMouseMode((CVar*)cvar,parms);
+		return CMouseMode(strVal);
 	else if(cvar == &m_pVarKbMode)
-		return CKBMode((CVar*)cvar,parms);
+		return CKBMode(strVal);
 	else if(cvar == &m_pVarMouseFilter)
 	{
-		if(parms.NumTokens() > 1)
-		{
-			if(parms.IntTok(1))
-				m_pMouse->SetFilter(true);
-			else
-				m_pMouse->SetFilter(false);
-			return true;
-		}
-		if(m_pMouse->GetFilter())
-			ComPrintf("Mouse input is filtered\n");
+		if(strVal.IntVal())
+			m_pMouse->SetFilter(true);
 		else
-			ComPrintf("Mouse input is not filtered\n");
+			m_pMouse->SetFilter(false);
+		return true;
 	}
 	else if(cvar == &m_pVarInvert)
 	{
-		if(parms.NumTokens() > 1)
-		{
-			if(parms.IntTok(1))
-				m_pMouse->SetInvert(true);
-			else
-				m_pMouse->SetInvert(false);
-			return true;
-		}
-		if(m_pMouse->GetInvert())
-			ComPrintf("Mouse is inverted\n");
+		if(strVal.IntVal())
+			m_pMouse->SetInvert(true);
 		else
-			ComPrintf("Mouse is not inverted\n");
+			m_pMouse->SetInvert(false);
+		return true;
 	}
 	return false;
 }

@@ -8,7 +8,9 @@ CVar, Console, and Console Handler interfaces
 */
 struct I_Console;
 struct I_ConHandler;
+
 class  CParms;
+class  CStringVal;
 
 enum
 {
@@ -96,8 +98,17 @@ Auto-unregisters itself on destruction
 */
 struct I_ConHandler
 {
+	//Called everytime a the given command it entered
 	virtual void HandleCommand(int cmdId, const CParms &parms) = 0;
-	virtual bool HandleCVar(const CVarBase * cvar, const CParms &parms) = 0;
+
+	//Return true if proposed changes are accepted
+	virtual bool HandleCVar(const CVarBase * cvar,
+							const CStringVal &val) = 0;
 };
 
 #endif
+
+
+
+
+

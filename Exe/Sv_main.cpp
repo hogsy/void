@@ -703,14 +703,11 @@ void CServer::PrintServerStatus()
 Handle CVars
 ==========================================
 */
-bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CServer::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 {	
-	if(parms.NumTokens() == 1)
-		return false;
-
 	if(cvar == reinterpret_cast<CVarBase *>(&m_cPort))
 	{
-		int port = parms.IntTok(1);
+		int port = strVal.IntVal();
 		if(port > 32767 || port < 1024)
 		{
 			ComPrintf("Port out of range. Should be with in 1024 to 32767\n");
@@ -720,7 +717,7 @@ bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	}
 	else if(cvar == reinterpret_cast<CVarBase *>(&m_cMaxClients))
 	{
-		int maxclients = parms.IntTok(1);
+		int maxclients = strVal.IntVal();
 		if(maxclients < 1 || maxclients > GAME_MAXCLIENTS)
 		{
 			ComPrintf("Max Clients should be between 1 and %d\n", GAME_MAXCLIENTS);

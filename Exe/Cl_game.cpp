@@ -436,14 +436,11 @@ void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 Validate/Handle any CVAR changes
 ==========================================
 */
-bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CGameClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 {
 	if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
 	{
-		if(parms.NumTokens() < 2)
-			return true;
-
-		float val = parms.FloatTok(1);
+		float val = strval.FloatVal();
 		if(val < 0.6 || val >= 10.0)
 		{
 			ComPrintf("Out of range. Should be between 0.6 and 10.0\n");
@@ -452,13 +449,10 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return true;
 	}
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvInRate))
-		return ValidateRate(parms);
+		return ValidateRate(strval);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvOutRate))
 	{
-		if(parms.NumTokens() < 2)
-			return true;
-
-		int val = parms.IntTok(1);
+		int val = strval.IntVal();
 		if(val < 1000 || val > 10000)
 		{
 			ComPrintf("Out of range. Should be between 1000 and 10000\n");
@@ -468,9 +462,9 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return true;
 	}
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
-		return ValidateName(parms);
+		return ValidateName(strval);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvCharacter))
-		return ValidateCharacter(parms);
+		return ValidateCharacter(strval);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvDefaultChar))
 	{
 		return false;

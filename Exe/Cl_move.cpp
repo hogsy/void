@@ -41,7 +41,7 @@ void CGameClient::Jump()
 {	
 	if(m_bOnGround)
 	{
-		ComPrintf("Jumped: %f\n", m_pClGame->GetCurTime());
+//		ComPrintf("Jumped: %f\n", m_pClGame->GetCurTime());
 		m_cmd.moveFlags |= ClCmd::JUMP;
 	}
 }

@@ -371,22 +371,14 @@ Validate name locally before asking
 the server to update it
 ======================================
 */
-bool CGameClient::ValidateName(const CParms &parms)
+bool CGameClient::ValidateName(const CStringVal &stringval)
 {
-	char name[24];
-	parms.StringTok(1,name,24);
-
-	if(!name[0])
-	{
-		ComPrintf("Name = \"%s\"\n", m_cvName.string);
-		return false;
-	}
 	if(!m_ingame)
 		return true;
 
 	m_pClGame->GetReliableSendBuffer().WriteByte(CL_INFOCHANGE);
 	m_pClGame->GetReliableSendBuffer().WriteChar('n');
-	m_pClGame->GetReliableSendBuffer().WriteString(name);
+	m_pClGame->GetReliableSendBuffer().WriteString(stringval.String());
 	return true;
 }
 
@@ -396,15 +388,10 @@ Validate Rate before updating it
 on the server
 ======================================
 */
-bool CGameClient::ValidateRate(const CParms &parms)
+bool CGameClient::ValidateRate(const CStringVal &stringval)
 {
-	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("Rate = \"%d\"\n", m_cvInRate.ival);
-		return false;
-	}
 
-	int rate = parms.IntTok(1);
+	int rate = stringval.IntVal();
 	if(rate < 100 || rate > 10000)
 	{
 		ComPrintf("Rate needs to be in (1000-10000): %d\n", rate);
@@ -428,23 +415,11 @@ Validate Model/Skin change. make sure we
 locally have it
 ================================================
 */
-bool CGameClient::ValidateCharacter(const CParms &parms)
+bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 {
-	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("Current Character: %s\n", m_cvCharacter.string);
-		return false;
-	}
-
-	char szCharacter[CL_MAXCHARNAME];
-	if(!parms.StringTok(1,szCharacter,CL_MAXCHARNAME))
-	{
-		ComPrintf("Unable to read model string\n");
-		return false;
-	}
-
-	char modelName[CL_MAXMODELNAME];
+	const char * szCharacter = stringval.String();
 	char * pSkin = strchr(szCharacter,'/');
+	char modelName[CL_MAXMODELNAME];
 
 	if(pSkin)
 		strncpy(modelName,szCharacter,pSkin-szCharacter);
@@ -512,7 +487,7 @@ bool CGameClient::ValidateCharacter(const CParms &parms)
 		buffer.WriteChar('c');
 		buffer.WriteString(m_cvCharacter.string);
 	}
-	return true;
+	return false;
 }
 
 //==========================================================================

@@ -355,11 +355,11 @@ ComPrintf("CL : Reconnecting\n");
 Validate/Handle any CVAR changes
 ==========================================
 */
-bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
+bool CClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 {
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cvPort))
 	{
-		int port = parms.IntTok(1);
+		int port = strval.IntVal();
 		if(port < 1024 || port > 32767)
 		{
 			ComPrintf("Port is out of range, select another\n");

@@ -166,13 +166,13 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				StringList	matchingNames;
 				int	len	  = m_conString.size();
 
-				for(CVarList::iterator itVar= m_lCVars.begin(); itVar != m_lCVars.end(); itVar++)
+				for(CVarListIt itVar= m_lCVars.begin(); itVar != m_lCVars.end(); itVar++)
 				{
 					if(strncmp(m_conString.c_str(),(*itVar)->name,len) == 0)
 						matchingNames.push_back(std::string((*itVar)->name));
 				}
 
-				for(CmdList::iterator itCmd = m_lCmds.begin(); itCmd != m_lCmds.end(); itCmd ++)
+				for(CmdListIt itCmd = m_lCmds.begin(); itCmd != m_lCmds.end(); itCmd ++)
 				{
 					if(strncmp(m_conString.c_str(),itCmd->name,len) == 0)
 						matchingNames.push_back(std::string(itCmd->name));
@@ -262,7 +262,7 @@ bool CConsole::ExecString(const char *string)
 	const char * szfirstArg = m_parms.StringTok(0,m_szParmBuffer,1024);
 
 	//Try matching with registered commands
-	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
+	for(CmdListIt itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
 	{
 		if(strcmp(itcmd->name, szfirstArg)==0)
 		{	
@@ -272,30 +272,31 @@ bool CConsole::ExecString(const char *string)
 	}
 
 	//Try matching with registered cvars
-	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	for (CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
 		if(!strcmp((*it)->name,szfirstArg))
 		{
-			//only exec'ed IF function returns true
-			if((*it)->flags & CVAR_READONLY)
-				ComPrintf("%s is a read-only variable\n",  (*it)->name);
-			else if((!(*it)->handler) || (*it)->handler->HandleCVar((*it),m_parms))
-			{
-				int numtokens = 0;
-				if(numtokens = m_parms.NumTokens() > 1)
-				{
-					const char * argVal = m_parms.StringTok(1,m_szParmBuffer,1024);
+			CVarBase * pVar = *it;
 
-					(*it)->Set(argVal);
-					
-					if((*it)->flags & CVAR_LATCH)
+			if(m_parms.NumTokens() > 1)
+			{
+				const char * argVal = m_parms.StringTok(1,m_szParmBuffer,1024);
+
+				if(pVar->flags & CVAR_READONLY)
+				{
+					ComPrintf("%s is a read-only variable\n",  pVar->name);
+				}
+				else if((!pVar->handler) || pVar->handler->HandleCVar(pVar,CStringVal(argVal)))
+				{
+					pVar->Set(argVal);
+					if(pVar->flags & CVAR_LATCH)
 					{
-						ComPrintf("%s will be changed on restart\n", (*it)->name);
+						ComPrintf("%s will be changed on restart\n",pVar->name);
 						return true;
 					}
 				}
 			}
-			ComPrintf("%s = \"%s\" : default = \"%s\"\n",(*it)->name,(*it)->string, (*it)->default_string);
+			ComPrintf("%s = \"%s\" : default = \"%s\"\n",pVar->name,pVar->string, pVar->default_string);
 			return true;
 		}
 	}
@@ -329,7 +330,7 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 	if(handler)
 		var->handler = handler;
 
-	for(CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
 		if(strcmp((*it)->name, var->name) > 0)
 			break;
@@ -399,7 +400,7 @@ Only needed by the client
 */
 CCommand * CConsole::GetCommandByName(const char * cmdString)
 {
-	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
+	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
 	{
 		if(!strcmp(cmdString,it->name))
 			return &(*it);
@@ -443,7 +444,7 @@ void CConsole::CVarlist(const CParms &parms)
 	ComPrintf("Console Variable Listing\n");
 	ComPrintf("========================\n");
 
-	CVarList::iterator it;
+	CVarListIt it;
 	
 	if(parms.NumTokens() >=2)
 	{
@@ -473,7 +474,7 @@ void CConsole::CCmdList(const CParms &parms)
 	ComPrintf("Console Command Listing\n");
 	ComPrintf("========================\n");
 
-	CmdList::iterator it;
+	CmdListIt it;
 
 	if(parms.NumTokens() >=2)
 	{
@@ -687,7 +688,7 @@ void CConsole::WriteCVars(const char * szFilename)
 	}
 
 	//write all the archive flaged vars in the config file
-	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	for (CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
 		if((*it)->flags & CVAR_ARCHIVE)
 		{

@@ -55,7 +55,7 @@ public:
 
 	//Console Handler Implementation
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CStringVal &strval);
 
 private:
 
@@ -91,9 +91,9 @@ private:
 	//CVars and Commands
 
 	void Talk(const char * string);
-	bool ValidateName(const CParms &parms);
-	bool ValidateRate(const CParms &parms);
-	bool ValidateCharacter(const CParms &parms);
+	bool ValidateName(const CStringVal &strval);
+	bool ValidateRate(const CStringVal &strval);
+	bool ValidateCharacter(const CStringVal &strval);
 
 	CVar    m_cvKbSpeed;
 	CVar	m_cvName;

@@ -150,10 +150,10 @@ char * CParms::StringTok(int num, char * outString,
 			toklen ++;
 			s++;
 		}
+		*p = 0;
+		return outString;
 	}
-
-	*p = 0;
-	return outString;
+	return 0;
 }
 
 /*
