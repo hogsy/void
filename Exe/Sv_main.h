@@ -6,6 +6,69 @@
 #include "Game_defs.h"
 #include "I_game.h"
 
+/*
+============================================================================
+This info is sent to the client in a series of stages during the
+connection phase. Giving the client indexes for Images/Sounds/Models and
+Entity baselines will save a LOT of network traffic during gameplay.
+
+Therefore the Game Server NEEDs to update this data on every map change.
+
+The struct is HUGE in size, About 22k, 
+But making a list doesnt seem worth the hassle
+============================================================================
+*/
+struct NetSignOnBufs
+{
+	enum
+	{
+		MAX_IMAGE_BUFS = 4,
+		MAX_MODEL_BUFS = 4,
+		MAX_SOUND_BUFS = 4,
+		MAX_ENTITY_BUFS = 4
+	};
+
+	NetSignOnBufs() 
+	{
+		numImageBufs = 1;
+		numModelBufs = 1;
+		numSoundBufs = 1;
+		numEntityBufs = 1;
+	}
+
+	void Reset()
+	{	
+		gameInfo.Reset();
+		numImageBufs = 1;
+		for(int i=0; i< MAX_IMAGE_BUFS; i++)
+			imageList[i].Reset();
+		numSoundBufs = 1;
+		for(i=0; i< MAX_SOUND_BUFS; i++)
+			soundList[i].Reset();
+		numModelBufs = 1;
+		for(i=0; i< MAX_MODEL_BUFS; i++)
+			modelList[i].Reset();
+		numEntityBufs = 1;
+		for(i=0; i< MAX_ENTITY_BUFS; i++)
+			entityList[i].Reset();
+	}
+
+	CBuffer  gameInfo;
+
+	int		 numImageBufs;
+	CBuffer  imageList[MAX_IMAGE_BUFS];
+	
+	int      numModelBufs;
+	CBuffer  modelList[MAX_MODEL_BUFS];
+
+	int		 numSoundBufs;
+	CBuffer  soundList[MAX_SOUND_BUFS];
+
+	int      numEntityBufs;
+	CBuffer  entityList[MAX_ENTITY_BUFS];
+};
+
+
 //Predeclarations
 struct world_t;
 
@@ -35,7 +98,9 @@ public:
 	void OnClientDrop(int clNum, const DisconnectReason &reason);
 	void OnLevelChange(int clNum);
 	void WriteGameStatus(CBuffer &buffer);
-
+	int  NumConfigStringBufs(int stringId) const;
+	bool WriteConfigString(CBuffer &buffer, int stringId, int numBuffer=0);
+	
 	//Game Interface
 	void ExecCommand(const char * cmd);
 	void DebugPrint(const char * msg);
@@ -68,7 +133,7 @@ private:
 	void LoadWorld(const char * mapname);
 	
 	bool WriteEntBaseLine(const Entity * ent, CBuffer &buf) const;
-	void WriteSignOnBuffer(NetSignOnBufs &signOnBuf);
+	void WriteSignOnBuffer();
 	
 	//=================================================
 	//List of currenly loaded Resources
@@ -92,12 +157,14 @@ private:
 	bool		m_active;
 	
 	//=================================================
+	ServerState		m_svState;
 
-	ServerState m_svState;
-	CNetServer	m_net;
+	char			m_printBuffer[512];
+	NetSignOnBufs	m_signOnBufs;
+	
+	CNetServer		m_net;
 	NetChanWriter & m_chanWriter;
-	char		m_printBuffer[512];
-
+	
 	//The Game Interface
 	HINSTANCE m_hGameDll;
 	I_Game *  m_pGame;
@@ -116,8 +183,6 @@ private:
 	EntClient ** m_clients;
 };
 
-
 extern CServer * g_pServer;
-
 
 #endif

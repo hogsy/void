@@ -28,37 +28,6 @@ const char VNET_PING[]			= "ping";
 
 /*
 ======================================================================================
-Connection spawning protocol
-When the server sends client the S2C_ACCEPT message, the client switches to Spawn mode.
-
-The client then starts a reliable sequence of messages to request spawning data from
-the server. 
-
-The model/image/sound lists associate an index with a resourceName to save up on 
-in-game entity update messages.
-
-The spawnParm request packet sent by the client is made up of a Parm id which tells 
-the server which spawn sequence the client is querying for, and the sequence num
-which tells which packet in the sequence the client wants. 
-
-If the packetNum is 999, then the server replies with the NEXT sequence Id. and packetnum 0.
-If the packetNum is valid, then the server replies with the same sequence ID, and 999, if 
-there are no more packets in the given sequence.
-
-Once the client has received and acked all the messages it switches to Ingame mode and.
-once the server has received all the acks it switches its netclient to Ingame mode
-======================================================================================
-*/
-const byte SVC_GAMEINFO		= 1;			//Send the server vars, map info
-const byte SVC_MODELLIST	= 2;			//Sequenced list of models in use
-const byte SVC_SOUNDLIST	= 3;			//Sequenced list of sounds in use 
-const byte SVC_IMAGELIST	= 4;			//Sequenced list of images in use 
-const byte SVC_BASELINES	= 5;			//Static entity baselines data
-const byte SVC_BEGIN		= 6;			//Spawn NOW !
-
-
-/*
-======================================================================================
 The Game Protocol
 ======================================================================================
 */
@@ -76,14 +45,49 @@ const byte CL_DISCONNECT	= 15;	//client is disconnecting
 //Server to Client
 const byte SV_BAD			= 0;
 const byte SV_NOP			= 1;
-const byte SV_UPDATESTAT	= 2;	
-const byte SV_STUFFCMD		= 3;	// Client will execute this locally
-const byte SV_PRINT			= 4;    // Client will print this locally
-const byte SV_TALK			= 5;	// chat message
-const byte SV_CLIENTINFO	= 6;    // info about a given client
-const byte SV_CLUPDATE		= 20;	// update a clients position
+const byte SV_CONFIGSTRING  = 2;
+const byte SV_UPDATESTAT	= 3;	
+const byte SV_STUFFCMD		= 4;	// Client will execute this locally
+const byte SV_PRINT			= 5;    // Client will print this locally
+const byte SV_TALK			= 6;	// chat message
+const byte SV_CLIENTINFO	= 7;    // info about a given client
+const byte SV_CLUPDATE		= 8;	// update a clients position
 const byte SV_DISCONNECT	= 9;	// Server going down
 const byte SV_RECONNECT		= 10;	// Server is changing maps, tell all clients to reconnect
+
+
+/*
+======================================================================================
+Config Strings
+
+When the server sends client the S2C_ACCEPT message, the client switches to Spawn mode.
+It needs to get all the Config Strings from the Server at this point.
+
+The client then starts a reliable sequence of messages to request the string from
+the server.
+
+The model/image/sound ConfigStrings associate an index with a resourceName to save up on 
+in-game entity update messages.
+
+The request packet sent by the client is made up of a String id which tells 
+the server which ConfigString the client is querying for, and the sequence num which tells 
+which packet in the sequence the client wants. 
+
+The packet sent by the server, consists of the String ID, and the packetNumber. the High bit
+is set if its the last packet number of the Config String. in which case the client
+moves on to the next config string
+
+Once the client has received and acked all the messages it switches to Ingame mode and.
+once the server has send all the messages it switches its client struct to ingame mode
+======================================================================================
+*/
+const byte SVC_GAMEINFO		= 1;			//Send the server vars, map info
+const byte SVC_MODELLIST	= 2;			//Sequenced list of models in use
+const byte SVC_SOUNDLIST	= 3;			//Sequenced list of sounds in use 
+const byte SVC_IMAGELIST	= 4;			//Sequenced list of images in use 
+const byte SVC_BASELINES	= 5;			//Static entity baselines data
+const byte SVC_CLIENTINFO   = 6;
+const byte SVC_BEGIN		= 7;			//Last config string. nothing to do with GAME client/Server
 
 
 

@@ -73,7 +73,7 @@ public:
 
 private:
 
-	void HandleSpawnParms();
+	void HandleSpawnStrings();
 	void HandleOOBMessage();
 
 	//Send a connection request wtih a challenge number
@@ -93,8 +93,8 @@ private:
 	int		m_netState;
 
 	//Flow Control for an Unspawned client
-	float	m_fNextSendTime;	//Next send time
-	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
+	float	m_fNextSendTime;
+	const char* m_szLastOOBMsg;
 
 	I_NetClientHandler  * m_pClient;
 	

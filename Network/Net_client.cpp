@@ -74,7 +74,7 @@ void CNetClient::ReadPackets()
 			if(m_netState == CL_INGAME)
 				m_pClient->HandleGameMsg(m_buffer);
 			else if(m_netState == CL_CONNECTED)
-				HandleSpawnParms();
+				HandleSpawnStrings();
 		}
 		return;
 	}
@@ -89,7 +89,7 @@ void CNetClient::ReadPackets()
 			HandleOOBMessage();
 			continue;
 		}
-		//m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
+m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
 	}	
 }
 
@@ -140,28 +140,14 @@ void CNetClient::SendUpdate()
 			//We have connected. Need to ask server for baselines
 			if(m_pNetChan->CanSendReliable())
 			{
+//m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
 				m_pNetChan->m_buffer.Reset();
 				m_pNetChan->m_buffer.WriteInt(m_levelId);
 				m_pNetChan->m_buffer.WriteByte(m_spawnLevel);
 				m_pNetChan->m_buffer.WriteInt(m_spawnNextPacket);
-
-//m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
-
+				
 				m_pNetChan->PrepareTransmit();
 				m_pSock->SendTo(m_pNetChan);
-
-				//We just sent an Ack to the last spawn message of a sequence
-				//Switch to next sequence now, or in game mode, if this was
-				//the last sequence
-				//we got everything we needed
-/*
-				if(m_spawnLevel == SVC_BEGIN)
-				{
-					m_spawnLevel = 0;
-					m_spawnNextPacket = 0;
-					m_netState = CL_INGAME;
-				}
-*/
 			}
 		}
 		//Resent OOB queries
@@ -179,76 +165,85 @@ void CNetClient::SendUpdate()
 }
 
 
+
 /*
-======================================
-Read spawn info
+============================================================================
+Handle reading of all the Config Strings
+the server sends to the client before it first enters the game
 map name, server parms
 modellist
 soundlist
 imagelist
 entity baselines
-======================================
+============================================================================
 */
-void CNetClient::HandleSpawnParms()
+void CNetClient::HandleSpawnStrings()
 {
-	byte id      = m_buffer.ReadByte();
-
-	if(id == SV_DISCONNECT)
+	byte msgId  = m_buffer.ReadByte();
+	switch(msgId)
 	{
-		m_pClient->Print("Disconnected: %s\n", m_buffer.ReadString());
-		Disconnect(true);
-		return;
-	}
-
-	//Reconnect, the server probably changed maps 
-	//while we were getting spawn info. start again
-	if(id == SV_RECONNECT)
-	{
-		m_pClient->Print("CL: Server asked to reconnect\n");
-		Reconnect(true);
-		return;
-	}
-	
-	uint packNum = m_buffer.ReadInt();
-	uint lastinSeq = (packNum >> 31);		//Get last packet flag
-	
-	//get rid of high bits
-	packNum &= ~(1<<31);
-	
-	//Err, Packet is not what we requested
-	//ignore this and rerequest
-	if(packNum != m_spawnNextPacket)
-	{
-		m_pClient->Print("Error in getting spawn parms from server\n");
-		Disconnect(false);
-		return;
-	}
-
-//m_pClient->Print("CL: Got spawn level %d. Packet %d\n", id, packNum);
-
-/*
-	m_fNextSendTime = 0.0f;
-	//Update spawnstate
-	m_spawnLevel = id;
-	m_spawnNextPacket = packNum;
-*/
-
-	m_pClient->HandleSpawnMsg(m_spawnLevel,m_buffer);
-
-	if(!lastinSeq)
-		m_spawnNextPacket++;
-	else
-	{
-		//we just got a begin message from the server
-		if(m_spawnLevel == SVC_BEGIN)
+	case SV_DISCONNECT:
 		{
-			m_spawnLevel = 0;
-			m_spawnNextPacket = 0;
-			m_netState = CL_INGAME;
+			//Server told us to get lost
+			m_pClient->Print("%s\n", m_buffer.ReadString());
+			Disconnect(true);
 			return;
 		}
-		m_spawnLevel ++;
-		m_spawnNextPacket = 0;
+	case SV_RECONNECT:
+		{
+			//Reconnect, the server probably changed maps 
+			//while we were getting spawn info. start again
+			m_pClient->Print("CL: Server asked to reconnect\n");
+			Reconnect(true);
+			return;
+		}
+	case SV_CONFIGSTRING:
+		{
+			m_spawnLevel = m_buffer.ReadByte();
+			uint packNum = m_buffer.ReadInt();
+			uint lastinSeq = (packNum >> 31);		//Get last packet flag
+			
+			//get rid of high bits
+			packNum &= ~(1<<31);
+			
+			//Err, Packet is not what we requested
+			//ignore this and rerequest
+			if(packNum != m_spawnNextPacket)
+			{
+				m_pClient->Print("Error getting spawn parms from server\n");
+				Disconnect(false);
+				return;
+			}
+
+//m_pClient->Print("CL: Got spawn level %d. Packet %d\n", m_spawnLevel, packNum);
+			m_pClient->HandleSpawnMsg(m_spawnLevel,m_buffer);
+
+			if(!lastinSeq)
+				m_spawnNextPacket++;
+			else
+			{
+				//we just got a begin message from the server, which means we
+				//have recevied all the spawn messages we needed to
+				if(m_spawnLevel == SVC_BEGIN)
+				{
+					m_spawnLevel = 0;
+					m_spawnNextPacket = 0;
+					m_netState = CL_INGAME;
+					return;
+				}
+				//increment to request next id
+				m_spawnLevel ++;
+				m_spawnNextPacket = 0;
+			}
+			break;
+		}
+	default:
+		{	
+			//Should never happen
+			m_pClient->Print("Disconnected: Got bad spawnStrings\n");
+			Disconnect(false);
+			return;
+		}
 	}
 }
 

@@ -290,20 +290,22 @@ void CServer::LoadEntities()
 Get a handle to all the
 ======================================
 */
-void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
+void CServer::WriteSignOnBuffer() //NetSignOnBufs &signOnBuf)
 {
 	CBuffer buffer;
 	int numBufs, i;
 
+	m_signOnBufs.Reset();
+
 	//=================================
 	//Write game info
-	signOnBuf.gameInfo.WriteString(m_svState.gameName);
-	signOnBuf.gameInfo.WriteString(m_svState.worldname);
+	m_signOnBufs.gameInfo.WriteString(m_svState.gameName);
+	m_signOnBufs.gameInfo.WriteString(m_svState.worldname);
 
 	//==================================
 	//Write	imagelist
 	numBufs = 0;
-	signOnBuf.imageList[0].WriteShort(m_numImages);
+	m_signOnBufs.imageList[0].WriteShort(m_numImages);
 	for(i=0;i<m_numImages; i++)
 	{
 		buffer.Reset();
@@ -311,7 +313,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 		buffer.WriteString(m_imageList[i].name);
 
 		//Check if the signOn buffer has space for this entity
-		if(!signOnBuf.imageList[numBufs].HasSpace(buffer.GetSize()))
+		if(!m_signOnBufs.imageList[numBufs].HasSpace(buffer.GetSize()))
 		{
 			if(numBufs + 1 < NetSignOnBufs::MAX_MODEL_BUFS)
 				numBufs ++;
@@ -322,17 +324,17 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 				return;
 			}
 		}
-		signOnBuf.imageList[numBufs].WriteBuffer(buffer);
+		m_signOnBufs.imageList[numBufs].WriteBuffer(buffer);
 	}
-	signOnBuf.numImageBufs = numBufs+1;
-	for(i=0;i<signOnBuf.numImageBufs; i++)
-		ComPrintf("SignOn ImageBuf %d : %d bytes\n", i, signOnBuf.imageList[i].GetSize()); 
+	m_signOnBufs.numImageBufs = numBufs+1;
+	for(i=0;i<m_signOnBufs.numImageBufs; i++)
+		ComPrintf("SignOn ImageBuf %d : %d bytes\n", i, m_signOnBufs.imageList[i].GetSize()); 
 
 	
 	//==================================
 	//Write	modellist
 	numBufs = 0;
-	signOnBuf.modelList[0].WriteShort(m_numModels);
+	m_signOnBufs.modelList[0].WriteShort(m_numModels);
 	for(i=0;i<m_numModels; i++)
 	{
 		buffer.Reset();
@@ -340,7 +342,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 		buffer.WriteString(m_modelList[i].name);
 
 		//Check if the signOn buffer has space for this entity
-		if(!signOnBuf.modelList[numBufs].HasSpace(buffer.GetSize()))
+		if(!m_signOnBufs.modelList[numBufs].HasSpace(buffer.GetSize()))
 		{
 			if(numBufs + 1 < NetSignOnBufs::MAX_MODEL_BUFS)
 				numBufs ++;
@@ -351,16 +353,16 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 				return;
 			}
 		}
-		signOnBuf.modelList[numBufs].WriteBuffer(buffer);
+		m_signOnBufs.modelList[numBufs].WriteBuffer(buffer);
 	}
-	signOnBuf.numModelBufs= numBufs+1;
-	for(i=0;i<signOnBuf.numModelBufs; i++)
-		ComPrintf("SignOn ModelBuf %d : %d bytes\n", i, signOnBuf.modelList[i].GetSize()); 
+	m_signOnBufs.numModelBufs= numBufs+1;
+	for(i=0;i<m_signOnBufs.numModelBufs; i++)
+		ComPrintf("SignOn ModelBuf %d : %d bytes\n", i, m_signOnBufs.modelList[i].GetSize()); 
 
 	//==================================
 	//Write Soundlist
 	numBufs = 0;
-	signOnBuf.soundList[0].WriteShort(m_numSounds);
+	m_signOnBufs.soundList[0].WriteShort(m_numSounds);
 	for(i=0;i<m_numSounds; i++)
 	{
 		buffer.Reset();
@@ -368,7 +370,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 		buffer.WriteString(m_soundList[i].name);
 
 		//Check if the signOn buffer has space for this entity
-		if(!signOnBuf.soundList[numBufs].HasSpace(buffer.GetSize()))
+		if(!m_signOnBufs.soundList[numBufs].HasSpace(buffer.GetSize()))
 		{
 			if(numBufs + 1 < NetSignOnBufs::MAX_SOUND_BUFS)
 				numBufs ++;
@@ -379,11 +381,11 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 				return;
 			}
 		}
-		signOnBuf.soundList[numBufs].WriteBuffer(buffer);
+		m_signOnBufs.soundList[numBufs].WriteBuffer(buffer);
 	}
-	signOnBuf.numSoundBufs= numBufs+1;
-	for(i=0;i<signOnBuf.numSoundBufs; i++)
-		ComPrintf("SignOn SoundBuf %d : %d bytes\n", i, signOnBuf.soundList[i].GetSize()); 
+	m_signOnBufs.numSoundBufs= numBufs+1;
+	for(i=0;i<m_signOnBufs.numSoundBufs; i++)
+		ComPrintf("SignOn SoundBuf %d : %d bytes\n", i, m_signOnBufs.soundList[i].GetSize()); 
 
 	
 	//==================================
@@ -396,7 +398,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 			continue;
 
 		//Check if the signOn buffer has space for this entity
-		if(!signOnBuf.entityList[numBufs].HasSpace(buffer.GetSize()))
+		if(!m_signOnBufs.entityList[numBufs].HasSpace(buffer.GetSize()))
 		{
 			if(numBufs + 1 < NetSignOnBufs::MAX_ENTITY_BUFS)
 				numBufs ++;
@@ -407,12 +409,90 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 				return;
 			}
 		}
-		signOnBuf.entityList[numBufs].WriteBuffer(buffer);
+		m_signOnBufs.entityList[numBufs].WriteBuffer(buffer);
 	}
 
-	signOnBuf.numEntityBufs= numBufs+1;
-	for(i=0;i<signOnBuf.numEntityBufs; i++)
-		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, signOnBuf.entityList[i].GetSize()); 
+	m_signOnBufs.numEntityBufs= numBufs+1;
+	for(i=0;i<m_signOnBufs.numEntityBufs; i++)
+		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, m_signOnBufs.entityList[i].GetSize()); 
+}
+
+
+int CServer::NumConfigStringBufs(int stringId) const
+{
+	switch(stringId)
+	{
+	case SVC_GAMEINFO:
+		return 1;
+	case SVC_MODELLIST:
+		return m_signOnBufs.numModelBufs;
+	case SVC_SOUNDLIST:
+		return m_signOnBufs.numSoundBufs;
+	case SVC_IMAGELIST:
+		return m_signOnBufs.numImageBufs;
+	case SVC_BASELINES:
+		return m_signOnBufs.numEntityBufs;
+	case SVC_CLIENTINFO:
+		return 1;
+//	case SVC_BEGIN:
+//		return 1;
+	}
+	return 0;
+}
+
+bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
+{
+	switch(stringId)
+	{
+	case SVC_GAMEINFO:
+		{
+			buffer.WriteBuffer(m_signOnBufs.gameInfo);
+			return true;
+		}
+	case SVC_MODELLIST:
+		{
+			if(numBuffer >= m_signOnBufs.numModelBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.modelList[numBuffer]);
+			return true;
+		}
+	case SVC_SOUNDLIST:
+		{
+			if(numBuffer >= m_signOnBufs.numSoundBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.soundList[numBuffer]);
+			return true;
+		}
+	case SVC_IMAGELIST:
+		{
+			if(numBuffer >= m_signOnBufs.numImageBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.imageList[numBuffer]);
+			return true;
+		}
+	case SVC_BASELINES:
+		{
+			if(numBuffer >= m_signOnBufs.numEntityBufs)
+				return false;
+			buffer.WriteBuffer(m_signOnBufs.entityList[numBuffer]);
+			return true;
+		}
+	case SVC_CLIENTINFO:
+		{
+			//Write info about currently connected clients
+			return true;
+		}
+/*	case SVC_BEGIN:
+		{
+			if(numBuffer > 0)
+				return false;
+			//Begin client
+
+			break;
+		}
+*/
+	}
+	return false;
 }
 
 /*
@@ -462,7 +542,7 @@ void CServer::LoadWorld(const char * mapname)
 	LoadEntities();
 
 	//Create Sigon-messages
-	NetSignOnBufs & signOnBuf = m_net.GetSignOnBufs();
+/*	NetSignOnBufs & signOnBuf = m_net.GetSignOnBufs();
 	//first reset all the signON buffers
 	signOnBuf.gameInfo.Reset();
 	signOnBuf.numImageBufs = 0;
@@ -477,9 +557,9 @@ void CServer::LoadWorld(const char * mapname)
 	signOnBuf.numEntityBufs = 0;
 	for(i=0; i< NetSignOnBufs::MAX_ENTITY_BUFS; i++)
 		signOnBuf.entityList[i].Reset();
-
+*/
 	//Write SignON data
-	WriteSignOnBuffer(signOnBuf);
+	WriteSignOnBuffer(); //signOnBuf);
 
 	//update state
 	m_svState.levelId ++;

@@ -24,55 +24,8 @@ const DisconnectReason DR_CLQUIT	= {"Disconnected","%s disconnected" };
 const DisconnectReason DR_CLTIMEOUT = {"Connection timed out","%s timed out" };
 const DisconnectReason DR_CLOVERFLOW= {"Connection overflowed","%s overflowed" };
 const DisconnectReason DR_CLBADMSG	= {"Network message error","%s errored out" };
-//Custom reasons
+//Add More as needed
 const DisconnectReason DR_SVKICKED  = {"You were kicked","%s was kicked" };
-
-
-/*
-============================================================================
-This info is sent to the client in a series of stages during the
-connection phase. Giving the client indexes for Images/Sounds/Models and
-Entity baselines will save a LOT of network traffic during gameplay.
-
-Therefor the Game Server NEEDs to update this data on every map change.
-
-The struct is HUGE in size, About 22k, 
-But making a list doesnt seem worth the hassle
-============================================================================
-*/
-struct NetSignOnBufs
-{
-	enum
-	{
-		MAX_IMAGE_BUFS = 4,
-		MAX_MODEL_BUFS = 4,
-		MAX_SOUND_BUFS = 4,
-		MAX_ENTITY_BUFS = 4
-	};
-
-	NetSignOnBufs() 
-	{
-		numImageBufs = 1;
-		numModelBufs = 1;
-		numSoundBufs = 1;
-		numEntityBufs = 1;
-	}
-
-	CBuffer  gameInfo;
-
-	int		 numImageBufs;
-	CBuffer  imageList[MAX_IMAGE_BUFS];
-	
-	int      numModelBufs;
-	CBuffer  modelList[MAX_MODEL_BUFS];
-
-	int		 numSoundBufs;
-	CBuffer  soundList[MAX_SOUND_BUFS];
-
-	int      numEntityBufs;
-	CBuffer  entityList[MAX_ENTITY_BUFS];
-};
-
 
 /*
 ============================================================================
@@ -101,6 +54,13 @@ struct I_Server
 	//Have the game server write status info so the network server
 	//can respond to a status request
 	virtual void WriteGameStatus(CBuffer &buffer)=0;
+
+	//Return number of buffers for the given configString
+	virtual int  NumConfigStringBufs(int stringId) const = 0;
+
+	//Have the game server write a configString to the given buffer
+	//shouldnt be more than the max size, return false if invalid parms are given
+	virtual bool WriteConfigString(CBuffer &buffer, int stringId, int numBuffer=0)=0;
 
 	//Add more as needed
 };
@@ -177,7 +137,6 @@ public:
 	void BroadcastPrintf(const char* message);
 
 	//Access functions
-	NetSignOnBufs & GetSignOnBufs() { return m_signOnBufs; }
 	const char * GetLocalAddr() const { return m_szLocalAddr; }
 
 private:
@@ -198,19 +157,16 @@ private:
 	CBuffer	m_recvBuf;
 	CBuffer	m_sendBuf;
 
+	char	m_szLocalAddr[NET_IPADDRLEN];
+
 	struct NetChallenge;
 	NetChallenge		* m_challenges;
-
 	I_Server			* m_pServer;	//Main Server
 	const ServerState	* m_pSvState;	//Server Status
 
 	VoidNet::CNetSocket * m_pSock;		//The Socket
 	VoidNet::CNetClChan * m_clChan;		//Client channels
 
-	char	m_szLocalAddr[NET_IPADDRLEN];
-
-	NetSignOnBufs	m_signOnBufs;
-	
 	//CNetChan destination data
 	int				m_curChanId;
 	MultiCastSet	m_multicastInfo;

@@ -111,7 +111,7 @@ void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 	{
 	case SVC_GAMEINFO:
 		{
-			int slotNum = buffer.ReadInt();
+//			int slotNum = buffer.ReadInt();
 
 			char * game = buffer.ReadString();
 ComPrintf("CL: Game: %s\n", game);

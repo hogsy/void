@@ -403,127 +403,46 @@ Send requested spawn parms
 */
 void CNetServer::SendSpawnParms(int chanId)
 {
-	bool error = false;
 	int  lastInSeq = 0;
-	int  reqNum = m_clChan[chanId].m_spawnReqId;
+	int  reqNum  =  m_clChan[chanId].m_spawnReqId;
 
-	m_clChan[chanId].m_netChan.m_buffer.Reset();
-	
-	//What spawn level does the client want ?
-	switch(m_clChan[chanId].m_spawnLevel)
+	//We got the last message
+	if((m_clChan[chanId].m_spawnLevel == SVC_BEGIN) && 
+	   (reqNum == 0))
 	{
-	case SVC_GAMEINFO:
-		{
-			if(reqNum > 0)
-			{
-				error = true;
-				break;
-			}
+		lastInSeq = 1;
+		m_clChan[chanId].m_netChan.m_buffer.Reset();
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_CONFIGSTRING);
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BEGIN);
+		m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
 
-			lastInSeq = 1;
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_GAMEINFO);
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-			//Give client his slotNUM
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt(chanId);
-			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.gameInfo);
-			break;
-		}
-	case SVC_MODELLIST:
-		{
-			if(reqNum + 1 > m_signOnBufs.numModelBufs )
-			{
-				error = true;
-				break;
-			}
+		//Begin client
+		m_clChan[chanId].m_spawnLevel = 0;
+		m_clChan[chanId].m_state = CL_INGAME;
+		m_pServer->OnClientBegin(chanId);
+		return;
+	}
 
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_MODELLIST);
-			
-			//Will this be the last packet in the sequence, then let the client known
-			//so it doesnt ask for anymore
-			if((reqNum + 1) == m_signOnBufs.numModelBufs)
-				lastInSeq = 1;
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.modelList[reqNum]);
-			break;
-		}
-	case SVC_SOUNDLIST:
-		{
-			if(reqNum + 1 > m_signOnBufs.numSoundBufs)
-			{
-				error = true;
-				break;
-			}
+	bool error = false;
+	int  numBufs =  m_pServer->NumConfigStringBufs(m_clChan[chanId].m_spawnLevel);
 
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_SOUNDLIST);
+	//Was an invalid request, game server has no config strings for that id
+	if(!numBufs)
+		error = true;
+	else
+	{
+		m_clChan[chanId].m_netChan.m_buffer.Reset();
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_CONFIGSTRING);
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(m_clChan[chanId].m_spawnLevel);
 
-			if((reqNum + 1) >= m_signOnBufs.numSoundBufs)
-				lastInSeq = 1;
-			
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.soundList[reqNum]);
-			break;
-		}
-	case SVC_IMAGELIST:
-		{
-			if(reqNum + 1 > m_signOnBufs.numImageBufs)
-			{
-				error = true;
-				break;
-			}
-
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_IMAGELIST);
-
-			if((reqNum + 1) >= m_signOnBufs.numImageBufs)
-				lastInSeq = 1;
-			
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.imageList[reqNum]);
-			break;
-		}
-	case SVC_BASELINES:
-		{
-			if(reqNum + 1 > m_signOnBufs.numModelBufs)
-			{
-				error = true;
-				break;
-			}
-
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BASELINES);
-
-			if((reqNum + 1) >= m_signOnBufs.numEntityBufs)
-				lastInSeq = 1;
-
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.entityList[reqNum]);
-			break;
-		}
-	case SVC_BEGIN:
-		{
-			if(reqNum > 0)
-			{
-				error = true;
-				break;
-			}
-
+		if(reqNum + 1 >= numBufs )
 			lastInSeq = 1;
 
-			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BEGIN);
-			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-
-			//Begin client
-			m_clChan[chanId].m_spawnLevel = 0;
-			m_clChan[chanId].m_state = CL_INGAME;
-			m_pServer->OnClientBegin(chanId);
-
-			//Write spawn pos
-
-			break;
-		}
-	default:
-		{
+		m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+		if(!m_pServer->WriteConfigString(m_clChan[chanId].m_netChan.m_buffer, 
+										 m_clChan[chanId].m_spawnLevel,
+										 reqNum))
 			error = true;
-			break;
-		}
 	}
 
 	if(error)
@@ -579,7 +498,6 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	}
 
 //ComPrintf("SV:Client(%d) Requesting Spawn, Level:%d  Num:%d\n", chanId, spawnparm, reqNum);
-
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
@@ -696,13 +614,9 @@ void CNetServer::ReadPackets()
 				m_clChan[i].m_bSend = true;
 
 				if(m_clChan[i].m_state == CL_INGAME)
-				{
 					m_pServer->HandleClientMsg(i, m_recvBuf);
-				}
 				else if(m_clChan[i].m_state == CL_CONNECTED)
-				{
 					ParseSpawnMessage(i);
-				}
 				break;
 			}
 		}
@@ -797,4 +711,3 @@ bool CNetServer::InitWinsock()
 void CNetServer::ShutdownWinsock()
 {	WSACleanup();
 }
-
