@@ -1,9 +1,7 @@
 #ifndef VOID_SND_WAVEFILE
 #define VOID_SND_WAVEFILE
 
-//forward declare file
-//class CFileBuffer;
-struct I_FileReader;
+#include "Com_res.h"
 
 namespace VoidSound {
 
@@ -13,23 +11,8 @@ Util class which reads in Wave file data
 We do NOT support Stereo wave files
 ==========================================
 */
-
 class CWaveFile
 {
-	friend class CWaveManager;
-
-	CWaveFile();
-	~CWaveFile();
-	
-	bool LoadFile(const char * wavefile, I_FileReader * pFile);
-	void Unload();
-	
-	bool IsEmpty() const;
-
-	int	   m_refs;
-	char * m_filename;
-	byte * m_data;		// data stream, variable-sized
-
 public:
 
 	const byte * GetData() const	{ return m_data; }
@@ -41,50 +24,24 @@ public:
 	ushort m_blockAlign;
 	ushort m_bitsPerSample;
 
-};
-
-
-/*
-======================================
-The wavecache maintains all currently loaded
-wave files, and number of references to them
-======================================
-*/
-class CWaveManager
-{
-public:
-
-	CWaveManager(int maxResources);
-	~CWaveManager();
-
-	//Get a waveFile from the manager. it will create if its new
-	//and will increment counter and return a copy if it exists
-	CWaveFile * Create(const char * szFileName);
-
-	//Release a wave resource. will be unloaded if no one is using it now
-	int Release(CWaveFile * wave);
-
 private:
 
-	struct WaveList
-	{
-		WaveList() : waveFile(0), next(0) {}
-		~WaveList() { waveFile = 0; next = 0; }
+	friend class CResManager<CWaveFile>;
 
-		CWaveFile * waveFile;
-		WaveList  * next;
-	};
+	CWaveFile();
+	~CWaveFile();
+	
+	bool Load(const char * szFileName, I_FileReader * pFile);
+	void Unload();
+	bool IsEmpty() const;
 
-	int			   m_maxItems;
-	CWaveFile   *  m_waveCache;
+	int	   m_refs;		//Refcounts
+	char * m_filename;	//Resource manager will use this filename for searching.
 
-	WaveList	*  m_freeWaves;
-	WaveList	*  m_usedWaves;
-
-//	CFileBuffer *  m_pFileReader;
-	I_FileReader * m_pFileReader;
+	byte * m_data;		// data stream, variable-sized
 };
 
+typedef CResManager<CWaveFile> CWaveManager;
 
 }
 

@@ -4,110 +4,6 @@
 
 using namespace VoidSound;
 
-/*
-================================================
-Constructor
-================================================
-*/
-CWaveManager::CWaveManager(int maxResources) : m_maxItems(maxResources)
-{	
-	m_waveCache = new CWaveFile [m_maxItems];
-	m_pFileReader = System::CreateFileReader(FILE_BUFFERED);
-
-	m_freeWaves;
-	m_usedWaves;
-}
-
-
-/*
-================================================
-Destructor
-================================================
-*/
-CWaveManager::~CWaveManager()
-{
-	//Print diagnostic warnings
-	for(int i=0;i<m_maxItems;i++)
-	{
-		if(!m_waveCache[i].IsEmpty())
-		{
-			if(m_waveCache[i].m_refs > 0)
-				ComPrintf("Warning : %s still has %d references\n", 
-						m_waveCache[i].m_filename, m_waveCache[i].m_refs);
-			m_waveCache[i].Unload();
-		}
-	}
-	delete [] m_waveCache;
-	
-	if(m_pFileReader)
-		m_pFileReader->Destroy();
-}
-
-/*
-================================================
-Get a waveFile from the manager. it will create if its new
-and will increment counter and return a copy if it exists
-TODO, could use a hashing scheme here.
-================================================
-*/
-CWaveFile * CWaveManager::Create(const char * szFileName)
-{
-	//first check for duplicates in files which are in use
-	int freeIndex = -1;
-	for(int i=0; i<m_maxItems; i++)
-	{
-		if(m_waveCache[i].IsEmpty())
-		{
-			if(freeIndex == -1)
-				freeIndex = i;
-		}
-		else if(_stricmp(m_waveCache[i].m_filename, szFileName) == 0)
-		{
-			m_waveCache[i].m_refs ++;
-			return &m_waveCache[i];
-		}
-	}
-
-	if(freeIndex == -1)
-	{
-		ComPrintf("CWaveManager::Create: No space to load %s\n", szFileName);
-		return 0;
-	}
-
-	//Didnt find a matching file, load it now
-	if(m_waveCache[freeIndex].LoadFile(szFileName, m_pFileReader))
-	{
-		m_waveCache[freeIndex].m_refs ++;
-		return &m_waveCache[freeIndex];
-	}
-	return 0;
-}
-
-/*
-================================================
-Release a wave resource. will be 
-unloaded if no one is using it now
-================================================
-*/
-int CWaveManager::Release(CWaveFile * wave)
-{
-	if(wave)
-	{
-		wave->m_refs --;
-		if(wave->m_refs == 0)
-			wave->Unload();
-		return wave->m_refs;
-	}
-	return 0;
-}
-
-
-
-
-//======================================================================================
-//======================================================================================
-
-
 namespace
 {
 	struct wavChunkHeader
@@ -178,11 +74,11 @@ Load a given file
 ==========================================
 */
 
-bool CWaveFile::LoadFile(const char * wavefile, I_FileReader * pFile)
+bool CWaveFile::Load(const char * szFileName, I_FileReader * pFile)
 {
-	if(!pFile->Open(wavefile))
+	if(!pFile->Open(szFileName))
 	{
-		ComPrintf("CWaveFile::LoadFile: Failed to load %s\n", wavefile);
+		ComPrintf("CWaveFile::LoadFile: Failed to load %s\n", szFileName);
 		return false;
 	}
 
@@ -194,7 +90,7 @@ bool CWaveFile::LoadFile(const char * wavefile, I_FileReader * pFile)
 	    (wFilehdr.waveMarker != ('W' + ('A'<<8) + ('V'<<16) + ('E'<<24))))
 	{
 		pFile->Close();
-		ComPrintf("CWaveFile::LoadFile: Invalid wave format, %s",wavefile);
+		ComPrintf("CWaveFile::LoadFile: Invalid wave format, %s",szFileName);
 		return false;
 	}
 
@@ -246,12 +142,12 @@ bool CWaveFile::LoadFile(const char * wavefile, I_FileReader * pFile)
 
 	if(!readWave)
 	{
-		ComPrintf("CWaveFile::LoadFile:Error reading %s\n",wavefile);
+		ComPrintf("CWaveFile::LoadFile:Error reading %s\n",szFileName);
 		return false;
 	}
 
-	m_filename = new char[(strlen(wavefile)+1)];
-	strcpy(m_filename,wavefile);
+	m_filename = new char[(strlen(szFileName)+1)];
+	strcpy(m_filename,szFileName);
 	ComPrintf("Read %s, %d bytes, block %d, samples per sec %d\n", 
 		m_filename,m_size, m_blockAlign, m_samplesPerSecond);
 	return true;

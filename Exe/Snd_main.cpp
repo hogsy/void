@@ -68,7 +68,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 {
 	m_pListener = 0;	
 
-	m_pWaveManager = new CWaveManager(MAX_WAVEFILES);
+	m_pWaveManager = new CWaveManager(MAX_WAVEFILES, System::CreateFileReader(FILE_BUFFERED));
 
 	//Create buffer caches
 	for(int i=0; i< CACHE_NUMCACHES; i++)

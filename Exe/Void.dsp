@@ -235,6 +235,10 @@ SOURCE=..\Shared\Com_registry.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_res.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_trace.h
 # End Source File
 # Begin Source File

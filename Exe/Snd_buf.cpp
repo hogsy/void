@@ -199,7 +199,7 @@ bool CSoundBuffer::Create(const char * path)
 		Destroy();
 
 
-	m_pWaveFile = GetWaveManager()->Create(path);
+	m_pWaveFile = GetWaveManager()->Load(path);
 	if(!m_pWaveFile)
 		return false;
 
