@@ -94,35 +94,35 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Ren_beam.cpp
+SOURCE=.\Ren_beam.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_beam.h
+SOURCE=.\Ren_beam.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_cache.cpp
+SOURCE=.\Ren_cache.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_cache.h
+SOURCE=.\Ren_cache.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_exp.cpp
+SOURCE=.\Ren_exp.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_exp.h
+SOURCE=.\Ren_exp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_main.cpp
+SOURCE=.\Ren_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Ren_main.h
+SOURCE=.\Ren_main.h
 # End Source File
 # End Group
 # Begin Group "Console"
@@ -130,15 +130,19 @@ SOURCE=.\Source\Ren_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Con_cmds.cpp
+SOURCE=.\Con_cmds.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Con_main.cpp
+SOURCE=.\Con_cmds.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Con_main.h
+SOURCE=.\Con_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Con_main.h
 # End Source File
 # End Group
 # Begin Group "Textures"
@@ -146,23 +150,23 @@ SOURCE=.\Source\Con_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Tex_hdr.h
+SOURCE=.\Tex_hdr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Tex_image.cpp
+SOURCE=.\Tex_image.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Tex_image.h
+SOURCE=.\Tex_image.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Tex_main.cpp
+SOURCE=.\Tex_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Tex_main.h
+SOURCE=.\Tex_main.h
 # End Source File
 # End Group
 # Begin Group "Shared"
@@ -314,6 +318,10 @@ SOURCE=..\Shared\world.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\Shared\I_clientRenderer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
@@ -322,11 +330,11 @@ SOURCE=..\Shared\I_file.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_hud.h
+SOURCE=..\Shared\I_hunkmem.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_hunkmem.h
+SOURCE=..\Shared\I_renderer.h
 # End Source File
 # Begin Source File
 
@@ -338,7 +346,7 @@ SOURCE=..\Shared\I_void.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Dll_main.cpp
+SOURCE=.\Dll_main.cpp
 # End Source File
 # End Group
 # Begin Group "Rast"
@@ -349,19 +357,19 @@ SOURCE=.\Source\Dll_main.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\gl.h
+SOURCE=.\gl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\gl_driver.cpp
+SOURCE=.\gl_driver.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\gl_rast.cpp
+SOURCE=.\gl_rast.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\gl_rast.h
+SOURCE=.\gl_rast.h
 # End Source File
 # End Group
 # Begin Group "None"
@@ -369,11 +377,11 @@ SOURCE=.\Source\gl_rast.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Rast_none.cpp
+SOURCE=.\Rast_none.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Rast_none.h
+SOURCE=.\Rast_none.h
 # End Source File
 # End Group
 # Begin Group "D3DX"
@@ -381,16 +389,16 @@ SOURCE=.\Source\Rast_none.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Rast_d3dx.cpp
+SOURCE=.\Rast_d3dx.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Rast_d3dx.h
+SOURCE=.\Rast_d3dx.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\Rasterizer.h
+SOURCE=.\Rasterizer.h
 # End Source File
 # End Group
 # Begin Group "Client"
@@ -401,19 +409,19 @@ SOURCE=.\Source\Rasterizer.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Img_entry.cpp
+SOURCE=.\Img_entry.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Img_entry.h
+SOURCE=.\Img_entry.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Img_main.cpp
+SOURCE=.\Img_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Img_main.h
+SOURCE=.\Img_main.h
 # End Source File
 # End Group
 # Begin Group "Hud"
@@ -421,11 +429,11 @@ SOURCE=.\Source\Img_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Hud_main.cpp
+SOURCE=.\Hud_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Hud_main.h
+SOURCE=.\Hud_main.h
 # End Source File
 # End Group
 # Begin Group "Models"
@@ -433,57 +441,53 @@ SOURCE=.\Source\Hud_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Mdl_entry.cpp
+SOURCE=.\Mdl_cache.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_entry.h
+SOURCE=.\Mdl_cache.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_main.cpp
+SOURCE=.\Mdl_entry.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_main.h
+SOURCE=.\Mdl_entry.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_md2.cpp
+SOURCE=.\Mdl_md2.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_md2.h
+SOURCE=.\Mdl_md2.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_sp2.cpp
+SOURCE=.\Mdl_sp2.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_sp2.h
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\Source\Client.h
+SOURCE=.\Mdl_sp2.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=..\Shared\I_clientRenderer.h
+SOURCE=.\Client.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_renderer.h
+SOURCE=.\Mdl_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\plan\js.plan
+SOURCE=.\Mdl_main.h
 # End Source File
+# End Group
 # Begin Source File
 
-SOURCE=.\Source\Standard.h
+SOURCE=.\Standard.h
 # End Source File
 # End Target
 # End Project
