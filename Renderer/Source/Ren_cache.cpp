@@ -12,13 +12,20 @@ extern light_info_t light;
 extern bool			lights_available;
 
 // !!! only map polys are cached !!!
+#ifdef _DEBUG
 #define POLY_CACHE_POLYS	(1024/512)
 #define POLY_CACHE_ALLOCS	(32*512)
-
+#else
+#define POLY_CACHE_POLYS	1024
+#define POLY_CACHE_ALLOCS	32
+#endif
 
 cpoly_t *free_polys = NULL;
 cpoly_t* cache_allocs[POLY_CACHE_ALLOCS];
 int		 num_cache_allocs = 0;
+
+// FIXME - put in a different struct
+vector_t *fullblend;
 
 
 /*
@@ -205,6 +212,10 @@ clear out all cached polys
 ******************************************************************************/
 void cache_purge_single()
 {
+	bool lightmaps = ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT));
+
+	glColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
+
 	//
 	// single texture / multi pass rendering
 	//
@@ -221,7 +232,7 @@ void cache_purge_single()
 			break;
 
 		case CACHE_PASS_ZFILL*2+1:		// lightmap
-			if ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT))
+			if (lightmaps)
 			{
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -240,7 +251,7 @@ void cache_purge_single()
 			break;
 
 		case CACHE_PASS_ZBUFFER*2+1:	// lightmap
-			if ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT))
+			if (lightmaps)
 			{
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -258,13 +269,18 @@ void cache_purge_single()
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LEQUAL);
-			glColor4f(1, 1, 1, 0.2f);
+			if (lightmaps)
+				glColor4f(fullblend->x, fullblend->y, fullblend->z, 0.2f);
+			else
+				glColor4f(fullblend->x, fullblend->y, fullblend->z, 0.4f);
+
 			break;
 
 		case CACHE_PASS_ALPHABLEND*2+1:		// lightmap
-			if ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT))
+			if (lightmaps)
 			{
 				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 				glEnable(GL_DEPTH_TEST);
 				glDepthFunc(GL_LEQUAL);
@@ -306,42 +322,81 @@ void cache_purge_multi()
 	//
 	// arb multi texturing
 	//
-
+	
 
 	// world textures are unit 0, lightmaps are unit 1
 	// set up blending
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
 
-	glActiveTextureARB(GL_TEXTURE1_ARB);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
+	glColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
 
-
-	for(uint t=0; t<tex->num_textures; t++)
+	for (int pass=0; pass<CACHE_PASS_NUM; pass++)
 	{
-		if (!tex->polycaches[0][t])
+		// set blending mode for this pass
+		switch (pass)
+		{
+		// zfill
+		case CACHE_PASS_ZFILL:
+			glActiveTextureARB(GL_TEXTURE0_ARB);
+			glEnable(GL_TEXTURE_2D);
+			glDisable(GL_BLEND);
+
+			glActiveTextureARB(GL_TEXTURE1_ARB);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_TEXTURE_2D);
+			glEnable(GL_BLEND);
+
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_ALWAYS);
+			break;
+
+		// zbuffer
+		case CACHE_PASS_ZBUFFER:
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LEQUAL);
+			break;
+
+		// alphablend
+		case CACHE_PASS_ALPHABLEND:
+
+			glActiveTextureARB(GL_TEXTURE0_ARB);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+
+			glActiveTextureARB(GL_TEXTURE1_ARB);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+
+
+			glColor4f(fullblend->x, fullblend->y, fullblend->z, 0.2f);
+
+			break;
+
+		default:
 			continue;
+		}
 
-		// only bind world texture once for all polys that use it
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-		glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
+		for(uint t=0; t<tex->num_textures; t++)
+		{
+			if (!tex->polycaches[pass][t])
+				continue;
 
-		glActiveTextureARB(GL_TEXTURE1_ARB);
+			// only bind world texture once for all polys that use it
+			glActiveTextureARB(GL_TEXTURE0_ARB);
+			glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
 
-		for (cpoly_t *p=tex->polycaches[0][t]; p; p=p->next)
-			r_draw_multi_poly(&p->poly, tex->dims[t]);
+			glActiveTextureARB(GL_TEXTURE1_ARB);
+
+			for (cpoly_t *p=tex->polycaches[pass][t]; p; p=p->next)
+				r_draw_multi_poly(&p->poly, tex->dims[t]);
+		}
 	}
+
 
 	// turn unit 1 back off
 	glActiveTextureARB(GL_TEXTURE1_ARB);
 	glDisable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
 }
 
 
@@ -352,9 +407,9 @@ void cache_purge(void)
 					!(g_rInfo.rflags&RFLAG_FULLBRIGHT) 
 					&& world->nlightdefs && world->light_size);
 
-//	if (multitex)
-//		cache_purge_multi();
-//	else
+	if (multitex)
+		cache_purge_multi();
+	else
 		cache_purge_single();
 
 

@@ -22,6 +22,7 @@ int			eye_leaf;
 extern model_cache_t *tmodel;	// where model info is put so it can be rendered - FIXME
 plane_t frust[5];	// 4 sides + near-z
 
+extern	vector_t *fullblend;
 
 //====================================================================================
 
@@ -111,6 +112,13 @@ void r_init(void)
 //===========================================================
 void r_draw_leaf(int l)
 {
+	// pvs cull
+	if (world->leafvis_size > 0)
+	{
+		if (!(*(world->leafvis + world->leafs[eye_leaf].vis + (l>>3)) & (1<<(l&7))))
+			return;
+	}
+
 	//
 	//frustum cull - check this nodes bounding box to the frustum
 	//
@@ -124,13 +132,6 @@ void r_draw_leaf(int l)
 		point.z = (float)((frust[p].norm.z > 0) ? (world->leafs[l].maxs[2]) : (world->leafs[l].mins[2]));
 
 		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
-			return;
-	}
-
-	// pvs cull
-	if (world->leafvis_size > 0)
-	{
-		if (!(*(world->leafvis + world->leafs[eye_leaf].vis + (l>>3)) & (1<<(l&7))))
 			return;
 	}
 
@@ -222,10 +223,8 @@ void build_frust(void)
 /***********************
 build and draw the world
 ***********************/
-void r_draw_world(vector_t *blend)
+void r_draw_world()
 {
-	glColor3f(blend->x, blend->y, blend->z);
-
 	build_frust();
 	beam_reset();
 	r_draw_node(0);
@@ -238,16 +237,17 @@ Draw the current frame
 ***********************/
 void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 {
-
 //FIXME !!!!!!!!!!!!!!!!!!!!!
 	eye.origin = *origin;
 	eye.angles = *angles;
+	fullblend  =  blend;
 
 	AngleToVector (&eye.angles, &forward, &right, &up);
 	VectorNormalize(&forward);
 	VectorNormalize(&right);
 	VectorNormalize(&up);
 
+	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(eye.origin);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -261,7 +261,7 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	glRotatef( eye.angles.YAW   * 180/PI, 0, 1, 0);
 	glTranslatef(-eye.origin.x, -eye.origin.z, eye.origin.y);
 
-	r_draw_world(blend);
+	r_draw_world();
 
 	glPopMatrix();
 

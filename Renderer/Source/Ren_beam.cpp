@@ -5,6 +5,7 @@ extern	vector_t	forward, right, up;	// view directions
 extern	plane_t frust[5];				// frustum
 extern	eyepoint_t	eye;				// where we're gonna draw from
 
+extern	CVar *	g_pBeamTolerance;
 
 vector_t lines[1024][2];
 int		 num_lines;
@@ -19,17 +20,22 @@ defs only needed for beam tree
 #define BEAM_SOLID_FRONT	1
 #define BEAM_SOLID_BACK		2
 
-
+#ifdef _DEBUG
 #define MAX_SIL_ALLOCS		(8*32)
 #define SILS_PER_ALLOC		(32/32)
 #define MAX_BEAM_ALLOCS		(16*8)
 #define BEAMS_PER_ALLOC		(128/8)
+#else
+#define MAX_SIL_ALLOCS		8
+#define SILS_PER_ALLOC		32
+#define MAX_BEAM_ALLOCS		16
+#define BEAMS_PER_ALLOC		128
+#endif
+
 
 
 struct beam_node_t
 {
-//	beam_node_t() { stat = 0; children[0] = 0; children[1] = 0; }
-
 	plane_t	p;
 	int		stat;
 	beam_node_t * children[2];
@@ -38,8 +44,6 @@ struct beam_node_t
 
 struct sil_t
 {
-//	sil_t() { nedges = 0; area = 0.0f; polys = 0;  next = 0; }
-
 	vector_t		edges[32][2];
 	int				nedges;
 	vector_t		center;
@@ -47,26 +51,6 @@ struct sil_t
 	cpoly_t			*polys;
 	sil_t			*next;
 };
-
-/*
-typedef struct beam_node_s
-{
-	plane_t	p;
-	int		stat;
-	struct	beam_node_s *children[2];
-} beam_node_t;
-
-
-typedef struct sil_s
-{
-	vector_t		edges[32][2];
-	int				nedges;
-	vector_t		center;
-	float			area;
-	cpoly_t			*polys;
-	struct	sil_s	*next;
-} sil_t;
-*/
 
 beam_node_t *beam_head=NULL;
 
@@ -256,13 +240,33 @@ sil_t* sil_build(bspf_brush_t *b)
 			sil->polys = poly;
 
 			// add area
-//			d = -dot(p->norm, forward);
-//			sil->area += world->sides[s+b->first_side].area * d;
+			d = -dot(p->norm, forward);
+			if (d>0)
+				sil->area += world->sides[s+b->first_side].area * d;
+			else
+				sil->area -= world->sides[s+b->first_side].area * d;
 		}
 
 		else
 			facing[s] = false;
 	}
+
+	// if our sil area is small enough, just add it to the zbuffer list 
+	// would take longer to pass through the beam tree
+	if (sil->area < g_pBeamTolerance->fval)
+	{
+		cpoly_t *next;
+		for (; sil->polys; sil->polys = next)
+		{
+			next = sil->polys->next;
+			cache_add_poly(sil->polys, CACHE_PASS_ZBUFFER);
+		}
+
+		free_sil(sil);
+		return NULL;
+	}
+
+
 
 	// add all edges that we need
 	for (int e=0; e<b->num_edges; e++)
@@ -298,10 +302,6 @@ sil_t* sil_build(bspf_brush_t *b)
 		VectorScale(&sil->center, 1.0f/(2*sil->nedges), &sil->center);
 		return sil;
 	}
-
-	// scale area by dist
-	vector_t diff;
-	VectorSub(sil->center, eye.origin, diff);
 
 
 	free_sil(sil);
@@ -780,7 +780,7 @@ void beam_insert(bspf_brush_t *br, int contents)
 				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->poly.vertices[v]);
 			}
 
-			cache_add_poly(poly, CACHE_PASS_ALPHABLEND);
+			cache_add_poly(poly, cpass);
 		}
 
 		return;

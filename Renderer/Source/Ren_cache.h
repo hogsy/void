@@ -11,8 +11,6 @@
 
 struct cpoly_t
 {
-	cpoly_t() { next = 0; }
-
 	poly_t	poly;
 	cpoly_t *next;
 };
