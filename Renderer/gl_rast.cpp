@@ -155,6 +155,9 @@ bool COpenGLRast::Init()
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rast_vertex_t), &mVerts[0].color);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].tex1[0]);
 
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
 	return true;
 }
 
@@ -653,60 +656,11 @@ void COpenGLRast::BlendFunc(ESourceBlend src, EDestBlend dest)
 }
 
 
-/*
-========
-TextureBinInit
-========
-*/
-int COpenGLRast::TextureBinInit(int num)
-{
-	for (int i=0; i<MAX_TEXTURE_BINS; i++)
-	{
-		if (mTexBins[i].num == -1)
-		{
-			mTexBins[i].num = num;
-			mTexBins[i].glnames = new GLuint[num];
-			if (!mTexBins[i].glnames)
-				FError("not enough mem for gl names");
-
-			glEnable(GL_TEXTURE_2D);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-			glGenTextures(mTexBins[i].num, mTexBins[i].glnames);
-			return i;
-		}
-	}
-
-	Error("out of texture bins in vgl\n");
-	return -1;
-}
-
-
-/*
-========
-TextureBinDestroy
-========
-*/
-void COpenGLRast::TextureBinDestroy(int bin)
-{
-	if ((bin < 0) || (bin > MAX_TEXTURE_BINS) || (mTexBins[bin].num == -1))
-	{
-		Error("destroying non-existant texture bin!");
-		return;
-	}
-
-	glDeleteTextures(mTexBins[bin].num, mTexBins[bin].glnames);
-	delete [] mTexBins[bin].glnames;
-	mTexBins[bin].glnames = NULL;
-	mTexBins[bin].num = -1;
-}
-
-
-
-void COpenGLRast::TextureSet(int bin, int texnum)
+void COpenGLRast::TextureSet(hTexture texnum)
 {
 	if (texnum == -1)
 		return;
-	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
+	glBindTexture(GL_TEXTURE_2D, m_glnames[texnum]);
 }
 
 void COpenGLRast::TextureClamp(bool clamp)
@@ -724,9 +678,10 @@ void COpenGLRast::TextureClamp(bool clamp)
 }
 
 
-void COpenGLRast::TextureLoad(int bin, int num, const TextureData &texdata)
+void COpenGLRast::TextureLoad(hTexture index, const TextureData &texdata)
 {
-	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[num]);
+	glGenTextures(1, &m_glnames[index]);
+	glBindTexture(GL_TEXTURE_2D, m_glnames[index]);
 
 	// clamping
 	if (texdata.bClamped)
@@ -804,6 +759,12 @@ void COpenGLRast::TextureLoad(int bin, int num, const TextureData &texdata)
 }
 
 
+void COpenGLRast::TextureUnLoad(hTexture index)
+{
+	glDeleteTextures(1, &m_glnames[index]);
+}
+	
+	
 /*
 ========
 Matrix*
@@ -885,7 +846,7 @@ ClearBuffers
 void COpenGLRast::ClearBuffers(int buffers)
 {
 	mTrisDrawn = 0;
-	glClearColor(0, 0, 1, 1);
+	glClearColor(1, 1, 1, 1);
 	int b = 0;
 
 	if (buffers & VRAST_COLOR_BUFFER)

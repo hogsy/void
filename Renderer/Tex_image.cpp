@@ -148,6 +148,17 @@ void CImageReader::DefaultTexture(TextureData &imgData)
 	imgData.data = &m_mipmapdata[0];
 	imgData.format = m_format;
 	imgData.numMipMaps = m_miplevels;
+
+	//Create mipmaps if needed
+	if(imgData.bMipMaps)
+	{
+		int mipcount = imgData.numMipMaps - 1;
+		while (mipcount > 0)
+		{
+			ImageReduce(mipcount);
+			mipcount--;
+		}
+	}
 }
 
 /*

@@ -2,6 +2,7 @@
 
 #ifdef RENDERER
 #include "Standard.h"
+#include "Tex_main.h"
 #include "Tex_image.h"
 #else
 #include "Com_defs.h"
@@ -55,7 +56,7 @@ CShaderLayer::~CShaderLayer()
 Parse
 ========
 */
-void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
+void CShaderLayer::Parse(I_FileReader *layer)
 {
 	char token[1024];
 
@@ -153,7 +154,7 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 			}
 			else
 			{
-				mTextureNames[0].index = texindex++;
+				mTextureNames[0].index = 0;
 				strcpy(mTextureNames[0].filename, token);
 				// strip the extension off the filename
 				for (int c=strlen(mTextureNames[0].filename); c>=0; c--)
@@ -187,7 +188,7 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 			}
 			else
 			{
-				mTextureNames[0].index = texindex++;
+				mTextureNames[0].index = 0;
 				strcpy(mTextureNames[0].filename, token);
 				// strip the extension off the filename
 				for (int c=strlen(mTextureNames[0].filename); c>=0; c--)
@@ -217,7 +218,7 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 					mTextureNames[mNumTextures].index = -1;
 				else
 				{
-					mTextureNames[mNumTextures].index = texindex++;
+					mTextureNames[mNumTextures].index = 0;
 					strcpy(mTextureNames[mNumTextures].filename, token);
 					// strip the extension off the filename
 					for (int c=strlen(mTextureNames[mNumTextures].filename); c>=0; c--)
@@ -345,7 +346,7 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 Default
 =========
 */
-void CShaderLayer::Default(const char *name, int &texindex)
+void CShaderLayer::Default(const char *name)
 {
 	mNumTextures = 1;
 	mTextureNames = new texname_t[1];
@@ -363,7 +364,7 @@ void CShaderLayer::Default(const char *name, int &texindex)
 	}
 	else
 	{
-		mTextureNames[0].index = texindex++;
+		mTextureNames[0].index = 0;
 		strcpy(mTextureNames[0].filename, name);
 	}
 }
@@ -394,8 +395,6 @@ CShader
 CShader::CShader(const char *name)
 {
 	strcpy(mName, name);
-	mTextureBin = -1;
-	mNumTextures = 0;
 	mNumLayers = 0;
 	mRefCount = 0;
 	mPass = CACHE_PASS_ZFILL;
@@ -438,7 +437,7 @@ void CShader::Parse(I_FileReader *shader)
 		if (_stricmp(token, "{") == 0)
 		{
 			mLayers[mNumLayers] = new CShaderLayer();
-			mLayers[mNumLayers]->Parse(shader, mNumTextures);
+			mLayers[mNumLayers]->Parse(shader);
 			mNumLayers++;
 		}
 
@@ -546,17 +545,11 @@ LoadTextures
 void CShader::LoadTextures(void)
 {
 #ifdef RENDERER
-	if (mTextureBin != -1)
-		return;
-
-	mTextureBin = g_pRast->TextureBinInit(mNumTextures);
 
 	TextureData	 tData;
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
-
-	int t=0;
 	for (int l=0; l<mNumLayers; l++)
 	{
 		for (int tex=0; tex<mLayers[l]->mNumTextures; tex++)
@@ -564,12 +557,7 @@ void CShader::LoadTextures(void)
 			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
 				tData.bMipMaps = mLayers[l]->mbMipMap;
-
-				if (!CImageReader::GetReader().Read(mLayers[l]->mTextureNames[tex].filename, tData))
-					CImageReader::GetReader().DefaultTexture(tData);
-
-				g_pRast->TextureLoad(mTextureBin, t, tData);
-				t++;
+				mLayers[l]->mTextureNames[tex].index = g_pTex->Load(mLayers[l]->mTextureNames[tex].filename, tData);
 			}
 		}
 	}
@@ -585,9 +573,16 @@ UnLoadTextures
 void CShader::UnLoadTextures(void)
 {
 #ifdef RENDERER
-	if (mTextureBin != -1)
-		g_pRast->TextureBinDestroy(mTextureBin);
-	mTextureBin = -1;
+	for (int l=0; l<mNumLayers; l++)
+	{
+		for (int tex=0; tex<mLayers[l]->mNumTextures; tex++)
+		{
+			if (mLayers[l]->mTextureNames[tex].index != -1)
+			{
+				g_pTex->UnLoad(mLayers[l]->mTextureNames[tex].index);
+			}
+		}
+	}
 #endif
 }
 
@@ -603,8 +598,8 @@ void CShader::Default(void)
 	mLayers[0] = new CShaderLayer();
 	mLayers[1] = new CShaderLayer();
 
-	mLayers[0]->Default(mName, mNumTextures);
-	mLayers[1]->Default("$lightmap", mNumTextures);
+	mLayers[0]->Default(mName);
+	mLayers[1]->Default("$lightmap");
 }
 
 

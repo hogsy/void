@@ -36,6 +36,9 @@ struct cpoly_t
 
 class CShaderManager
 {
+	// rasterizer needs to be able to see the bins
+//	friend class CRasterizer;
+
 public:
 	CShaderManager();
 	~CShaderManager();
@@ -68,8 +71,8 @@ public:
 	int  BinInit(int num);
 	void BinDestroy(int bin);
 
+	hTexture *mLightmaps;	// indices to the global texture list
 	int mNumLightmaps;
-	int mLightmapBin;
 
 	int	mWorldBin;	// shader bin that holds the world shaders
 	int	mBaseBin;	// shader bin that holds the base shaders
@@ -88,7 +91,7 @@ private:
 		int		num;
 	};
 
-	shader_bin_t mBins[MAX_TEXTURE_BINS];
+	shader_bin_t mBins[MAX_SHADER_BINS];
 	cpoly_t		**mCache[CACHE_PASS_NUM];	// world poly cache
 
 	cpoly_t*	PolyAlloc(void);

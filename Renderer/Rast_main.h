@@ -4,7 +4,7 @@
 
 // max number of possible mipmaps 10 -> 1024 max dim size
 #define MAX_MIPMAPS 11
-#define MAX_TEXTURE_BINS 1024
+#define MAX_TEXTURES 2048
 
 #define MAX_INDICES		(8192*2)
 #define MAX_ELEMENTS	(8192*2)
@@ -80,6 +80,8 @@ struct TextureData
 	EImageFormat  format;
 };
 
+typedef int hTexture;
+
 // buffers that may be cleared
 #define VRAST_COLOR_BUFFER		1
 #define VRAST_DEPTH_BUFFER		2
@@ -129,10 +131,8 @@ public:
 	virtual void DepthWrite(bool write)=0;
 	virtual void BlendFunc(ESourceBlend src, EDestBlend dest)=0;
 
-	virtual int  TextureBinInit(int num)=0;
-	virtual int  TextureCount(int bin)=0;
-	virtual void TextureBinDestroy(int bin)=0;
-	virtual void TextureLoad(int bin, int num, const TextureData &texdata)=0;
+	virtual void TextureLoad(hTexture index, const TextureData &texdata)=0;
+	virtual void TextureUnLoad(hTexture index)=0;
 	virtual void TextureClamp(bool clamp)=0;
 
 	virtual void MatrixReset(void)=0;
@@ -176,7 +176,7 @@ public:
 
 private:
 	void DrawLayer(int l);
-	virtual void TextureSet(int bin, int texnum)=0;
+	virtual void TextureSet(hTexture texnum)=0;
 
 
 protected:

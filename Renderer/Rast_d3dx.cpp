@@ -129,6 +129,26 @@ bool CRastD3DX::Init()
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CLIPPLANEENABLE, 0);
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CULLMODE, D3DCULL_NONE);
 
+
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFG_LINEAR);
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTFP_POINT);
+
+	m_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	m_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+
+
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT );
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
+	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+
+
+
+
 	g_rInfo.ready = true;
 	return true;
 }
@@ -186,19 +206,6 @@ RestoreSurfaces
 void CRastD3DX::RestoreSurfaces(void)
 {
 	m_pD3DX->RestoreSurfaces();
-
-/*
-	for (int i=0; i<MAX_TEXTURE_BINS; i++)
-	{
-		for (int t=0; t<mTexBins[i].num; t++)
-		{
-			if (mTexBins[i].tex_surfs[t])
-				mTexBins[i].tex_surfs[t]->
-
-
-		}
-	}
-*/
 }
 
 
@@ -401,79 +408,6 @@ void CRastD3DX::BlendFunc(ESourceBlend src, EDestBlend dest)
 }
 
 
-/*
-========
-TextureBinInit
-========
-*/
-int CRastD3DX::TextureBinInit(int num)
-{
-	for (int i=0; i<MAX_TEXTURE_BINS; i++)
-	{
-		if (mTexBins[i].num == -1)
-		{
-			mTexBins[i].num = num;
-			mTexBins[i].tex_surfs = new LPDIRECTDRAWSURFACE7[num];
-			
-			if (!mTexBins[i].tex_surfs)
-				FError("d3dx - not enough mem for texture surf pointers");
-
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFG_LINEAR);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTFP_POINT);
-
-//			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-//			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-
-			m_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-			m_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-
-
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT );
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-
-			for (int t=0; t<num; t++)
-				mTexBins[i].tex_surfs[t] = NULL;
-
-			return i;
-		}
-	}
-
-	Error("CRastD3DX::TextureBinInit - out of texture bins\n");
-	return -1;
-}
-
-
-/*
-========
-TextureBinDestroy
-========
-*/
-void CRastD3DX::TextureBinDestroy(int bin)
-{
-	if ((bin < 0) || (bin > MAX_TEXTURE_BINS) || (mTexBins[bin].num == -1))
-	{
-		Error("destroying non-existant texture bin!");
-		return;
-	}
-
-	for (int t=0; t<mTexBins[bin].num; t++)
-	{
-		if (mTexBins[bin].tex_surfs[t])
-			mTexBins[bin].tex_surfs[t]->Release();
-	}
-
-	delete [] mTexBins[bin].tex_surfs;
-
-	mTexBins[bin].tex_surfs = NULL;
-	mTexBins[bin].num = -1;
-}
-
 
 void CRastD3DX::TextureClamp(bool clamp)
 {
@@ -491,14 +425,14 @@ void CRastD3DX::TextureClamp(bool clamp)
 
 
 
-void CRastD3DX::TextureSet(int bin, int texnum)
+void CRastD3DX::TextureSet(hTexture texnum)
 {
 	if (texnum <= -1)
 		return;
-	m_pD3DDevice->SetTexture(0, mTexBins[bin].tex_surfs[texnum]);
+	m_pD3DDevice->SetTexture(0, mTexSurfs[texnum]);
 }
 
-void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
+void CRastD3DX::TextureLoad(hTexture index, const TextureData &texdata)
 {
 	D3DX_SURFACEFORMAT ext_format, int_format;
 
@@ -548,7 +482,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
 					  &height,
 					  &int_format,
 					  NULL,
-					  &mTexBins[bin].tex_surfs[num],
+					  &mTexSurfs[index],
 					  &nummips);
 
 
@@ -558,7 +492,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
 		for (int m=texdata.numMipMaps-1; m>=0; m--)
 		{
 			D3DXLoadTextureFromMemory(m_pD3DDevice,
-									  mTexBins[bin].tex_surfs[num],
+									  mTexSurfs[index],
 									  texdata.numMipMaps-1-m,
 									  texdata.data[m],
 									  NULL,
@@ -572,7 +506,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
 	else
 	{
 		D3DXLoadTextureFromMemory(m_pD3DDevice,
-								  mTexBins[bin].tex_surfs[num],
+								  mTexSurfs[index],
 								  0,
 								  texdata.data[texdata.numMipMaps-1],
 								  NULL,
@@ -583,6 +517,10 @@ void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
 	}
 }
 
+void CRastD3DX::TextureUnLoad(hTexture index)
+{
+	mTexSurfs[index]->Release();
+}
 
 /*
 ========

@@ -26,11 +26,9 @@ public:
 	void DepthWrite(bool write);
 	void BlendFunc(ESourceBlend src, EDestBlend dest);
 
-	int  TextureBinInit(int num);
-	int  TextureCount(int bin) { return 0; }
-	void TextureBinDestroy(int bin);
-	void TextureSet(int bin, int texnum);
-	void TextureLoad(int bin, int num, const TextureData &texdata);
+	void TextureSet(hTexture texnum);
+	void TextureLoad(hTexture index, const TextureData &texdata);
+	void TextureUnLoad(hTexture index);
 	void TextureClamp(bool clamp) {}
 
 	void MatrixReset(void);

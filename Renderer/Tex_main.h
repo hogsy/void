@@ -8,6 +8,7 @@ Loads/Unloads lightmaps and textures
 ==========================================
 */
 
+
 class CTextureManager
 {
 public:
@@ -15,28 +16,32 @@ public:
 	CTextureManager();
 	~CTextureManager();
 
-	bool Init();		//Loads base game textures
-	bool Shutdown();	//Unload everything
-	
-	bool LoadWorldTextures(CWorld *map);
-	bool UnloadWorldTextures();
+	hTexture Load(const char *filename, TextureData &tData);
+	hTexture Load(unsigned char **data, TextureData &tData);
+	void UnLoad(hTexture tex);
 
 private:
 
-	enum ETextures
+	struct TextureName_s
 	{
-		NO_TEXTURES,
-		BASE_TEXTURES,
-		ALL_TEXTURES
+		TextureName_s() { refCount = 0; }
+
+		unsigned char *ptr;	// if not null, it's a pointer to lightmap data
+		char file[64];		// otherwise it's a filename
+
+		bool	mipmap;		// do we have mipmaps created for this texture?
+							// FIXME - do we really need to do this?
+		int		refCount;
 	};
 
-//	int				m_numBaseTextures;
-//	int				m_numWorldTextures;
-	ETextures		m_loaded;
+	TextureName_s mNames[MAX_TEXTURES];
 
-	char			m_textureDir[10];
 
-	void LoadTexture(const char *filename, TextureData &tData);
+
+
+
+
+
 };
 
 extern CTextureManager * g_pTex;

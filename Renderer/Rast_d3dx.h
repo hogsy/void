@@ -31,11 +31,9 @@ public:
 	void DepthWrite(bool write);
 	void BlendFunc(ESourceBlend src, EDestBlend dest);
 
-	int  TextureBinInit(int num);
-	int  TextureCount(int bin) { return mTexBins[bin].num; }
-	void TextureBinDestroy(int bin);
-	void TextureSet(int bin, int texnum);
-	void TextureLoad(int bin, int num, const TextureData &texdata);
+	void TextureSet(hTexture texnum);
+	void TextureLoad(hTexture index, const TextureData &texdata);
+	void TextureUnLoad(hTexture index);
 	void TextureClamp(bool clamp);
 
 	void MatrixReset(void);
@@ -60,18 +58,7 @@ public:
 
 private:
 
-	struct tex_bin_t
-	{
-		tex_bin_t()
-		{
-			num = -1;
-			tex_surfs = NULL;
-		}
-
-		int		num;
-		LPDIRECTDRAWSURFACE7 *tex_surfs;
-	};
-	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
+	LPDIRECTDRAWSURFACE7 mTexSurfs[MAX_TEXTURES];
 
 
 	void RestoreSurfaces(void);

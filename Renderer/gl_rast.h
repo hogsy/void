@@ -28,11 +28,9 @@ public:
 	void DepthWrite(bool write);
 	void BlendFunc(ESourceBlend src, EDestBlend dest);
 
-	int  TextureBinInit(int num);
-	int  TextureCount(int bin) { return mTexBins[bin].num; }
-	void TextureBinDestroy(int bin);
-	void TextureSet(int bin, int texnum);
-	void TextureLoad(int bin, int num, const TextureData &texdata);
+	void TextureSet(hTexture texnum);
+	void TextureLoad(hTexture index, const TextureData &texdata);
+	void TextureUnLoad(hTexture index);
 	void TextureClamp(bool clamp);
 
 
@@ -58,18 +56,6 @@ public:
 
 private:
 
-	struct tex_bin_t
-	{
-		tex_bin_t()
-		{
-			glnames = NULL;
-			num = -1;
-		}
-
-		GLuint *glnames;
-		int		num;
-	};
-
 
 	HDC			hDC;		//device context
 	HGLRC		hRC;		//the gl rendering context
@@ -90,7 +76,7 @@ private:
 
 	bool	m_bInitialized;
 
-	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
+	GLuint	m_glnames[MAX_TEXTURES];
 
 
 

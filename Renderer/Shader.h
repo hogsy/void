@@ -120,8 +120,8 @@ public:
 	CShaderLayer();
 	~CShaderLayer();
 
-	void Parse(I_FileReader *layer, int &texindex);
-	void Default(const char *name, int &texindex);
+	void Parse(I_FileReader *layer);
+	void Default(const char *name);
 	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
 
 
@@ -129,7 +129,7 @@ public:
 	// info about textures for all layers
 	struct texname_t
 	{
-		int index;	// either index to CShader::mTextureBin or -1 means lightmap
+		int index;	// either index to global texture list or -1 means lightmap
 		char filename[64];	// only relevant for non-lightmaps
 	};
 
@@ -200,10 +200,6 @@ private:
 
 	unsigned int mSurfaceFlags;
 	unsigned int mContentFlags;
-
-	int mNumTextures;	// total number of textures for all layers
-	int mTextureBin;	// rasterizer texture bin
-
 };
 
 

@@ -278,16 +278,16 @@ void CRasterizer::DrawLayer(int l)
 
 	// set texture
 	if (layer->mIsLight)
-		TextureSet(g_pShaders->mLightmapBin, mLightDef->texture); //layer->mTextureNames[0].index);
+		TextureSet(g_pShaders->mLightmaps[mLightDef->texture]);
 	else
 	{
 		if (mShader->mLayers[l]->mNumTextures == 1)
-			TextureSet(mShader->mTextureBin, layer->mTextureNames[0].index);
+			TextureSet(layer->mTextureNames[0].index);
 		else
 		{
 			int texture = (int)(mShader->mLayers[l]->mAnimFreq * mShader->mLayers[l]->mNumTextures * GetCurTime());
 			texture %= mShader->mLayers[l]->mNumTextures;
-			TextureSet(mShader->mTextureBin, layer->mTextureNames[texture].index);
+			TextureSet(layer->mTextureNames[texture].index);
 		}
 	}
 

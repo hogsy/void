@@ -152,13 +152,6 @@ bool CRenExp::InitRenderer()
 
 	g_pShaders->LoadBase();
 
-	//Start up the texture manager
-	if(!g_pTex->Init())
-	{
-		ComPrintf("CRenExp::InitRenderer:Failed to initialize Texture manager\n");
-		Shutdown();
-		return false;
-	}
 
 	//Update the res/bpp cvars
 	char res[16];
@@ -188,7 +181,6 @@ bool CRenExp::Shutdown(void)
 	g_pClient->UnLoadSkins();
 	g_pShaders->UnLoadBase();
 	g_pShaders->UnLoadWorld();
-	g_pTex->Shutdown();
 	g_pRast->Shutdown();
 	m_pRConsole->Shutdown();
 	return true;
@@ -292,20 +284,8 @@ bool CRenExp::LoadWorld(CWorld *level)
 	if(!world && level)
 	{
 		g_pShaders->UnLoadWorld();
-		if(!g_pTex->UnloadWorldTextures())
-		{
-			ComPrintf("CRenExp::LoadWorld::Error Unloading textures\n");
-			return false;
-		}
-		
 		world = level;
-
 		g_pShaders->LoadWorld(world);
-		if(!g_pTex->LoadWorldTextures(world))
-		{
-			ComPrintf("CRenExp::LoadWorld::Error Reloading textures\n");
-			return false;
-		}
 		return true;
 	}
 	ComPrintf("CRenExp::LoadWorld::Error Bad World Pointer\n");
@@ -326,7 +306,6 @@ bool CRenExp::UnloadWorld()
 	if(world)
 	{
 		g_pShaders->UnLoadWorld();
-		g_pTex->UnloadWorldTextures();
 		world = 0;
 		return true;
 	}
@@ -346,17 +325,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 {
 	g_pRast->SetFocus();
 
-/*	// if we're not changing bpp, we can skip a lot of stuff
-	if (bpp == g_rInfo.bpp)
-	{
-		g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
-		m_pRConsole->UpdateRes();
-		r_init();
-		return;
-	}
-*/
 	// shut the thing down
-	g_pTex->Shutdown();
 	g_pShaders->UnLoadBase();
 	g_pShaders->UnLoadWorld();
 	g_pClient->UnLoadSkins();
@@ -366,22 +335,9 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 
 	g_pShaders->LoadBase();
 
-	if(!g_pTex->Init())
-	{
-		ComPrintf("failed to init texture base\n");
-		return;
-	}
-
 	// reload our textures and models
 	if(world)
-	{
 		g_pShaders->LoadWorld(world);
-		if(!g_pTex->LoadWorldTextures(world))
-		{
-			FError("ChangeDispSettings::Error Reloading textures\n");
-			return;
-		}
-	}
 
 	g_pClient->LoadTextures();
 	g_pClient->LoadSkins();
@@ -401,7 +357,6 @@ bool CRenExp::Restart(void)
 {
 	g_pRast->SetFocus();
 
-	g_pTex->Shutdown();
 	g_pShaders->UnLoadBase();
 	g_pShaders->UnLoadWorld();
 	g_pClient->UnLoadSkins();
@@ -413,18 +368,9 @@ bool CRenExp::Restart(void)
 
 	//Start up the texture manager
 	g_pShaders->LoadBase();
-	if(!g_pTex->Init())
-	{
-		ComPrintf("failed to init texture base\n");
-		return false;
-	}
 
 	// reload our textures
 	g_pShaders->LoadWorld(world);
-	if(!g_pTex->LoadWorldTextures(world))
-	{
-		ComPrintf("Restart::Error Reloading textures\n");
-	}
 
 	//reload our model skins
 	g_pClient->LoadTextures();

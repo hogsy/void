@@ -104,35 +104,23 @@ void CRastNone::BlendFunc(ESourceBlend src, EDestBlend dest)
 }
 
 
-/*
-========
-TextureBinInit
-========
-*/
-int CRastNone::TextureBinInit(int num)
-{
-	return 0;
-}
-
 
 /*
 ========
-TextureBinDestroy
+Texture*
 ========
 */
-void CRastNone::TextureBinDestroy(int bin)
+void CRastNone::TextureSet(hTexture texnum)
 {
 }
 
-
-void CRastNone::TextureSet(int bin, int texnum)
+void CRastNone::TextureLoad(hTexture index, const TextureData &texdata)
 {
 }
 
-void CRastNone::TextureLoad(int bin, int num, const TextureData &texdata)
+void CRastNone::TextureUnLoad(hTexture index)
 {
 }
-
 
 /*
 ========

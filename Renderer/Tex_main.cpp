@@ -3,8 +3,6 @@
 #include "Tex_image.h"
 
 
-
-//tex_t			* tex=0;
 CTextureManager * g_pTex=0;
 extern	CVar *	g_p32BitTextures;
 
@@ -16,11 +14,6 @@ Constructor
 
 CTextureManager::CTextureManager()
 {
-	strcpy(m_textureDir,"textures");
-	
-	m_loaded = NO_TEXTURES;
-//	m_numBaseTextures = 0;
-//	m_numWorldTextures = 0;
 }
 
 /*
@@ -29,232 +22,15 @@ Destructor
 ==========================================
 */
 CTextureManager::~CTextureManager()
-{	CImageReader::GetReader().FreeMipData();
-}
-
-
-/*
-==========================================
-Initialize
-Load base game textures
-==========================================
-*/
-bool CTextureManager::Init()
 {
-/*
-	//allocate all mem
-	tex = new tex_t();
-	if (tex == NULL) 
+#ifdef DEBUG
+	// make sure there arent any textures referenced
+	for (int i=0; i<MAX_TEXTURES; i++)
 	{
-		FError("CTextureManager::Init:No mem for tex struct");
-		return false;
+		if (mNames[i].refCount)
+			ComPrintf("CTextureManager::~CTextureManager() - %s still referenced\n", mNames[i].file);
 	}
-
-	//Get count of base textures
-	for(int count=0; BaseTextureList[count] != 0; count++)
-		m_numBaseTextures =  count +1;
-
-	//Alloc space for base textures
-//	tex->bin_base = g_pRast->TextureBinInit(m_numBaseTextures);
-
-	ComPrintf("CTextureManager::Init:Creating base textures");
-
-	TextureData tData;
-	// load base textures
-	for(count=0;count<m_numBaseTextures;count++)
-	{
-		LoadTexture(BaseTextureList[count], tData);
-
-		tData.bClamped = true;
-		tData.bMipMaps = false;
-
-		g_pRast->TextureLoad(tex->bin_base, count, tData);
-	}
-	m_loaded = BASE_TEXTURES;
-	
-	CImageReader::GetReader().FreeMipData();
-*/
-	return true;
-}
-
-
-/*
-==========================================
-Shutdown
-Release all textures
-==========================================
-*/
-bool CTextureManager::Shutdown()
-{
-/*	if (!tex)
-		return false;
-
-	UnloadWorldTextures();
-
-	ComPrintf("CTextureManager::Shutdown:Destroying base textures :");
-
-//	g_pRast->TextureBinDestroy(tex->bin_base);
-
-	delete tex;	
-	tex = 0;
-
-	m_loaded = NO_TEXTURES;
-
-	ComPrintf("OK\n");
-*/
-	return true;
-}
-
-/*
-==========================================
-LoadWorld Textures
-==========================================
-*/
-bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
-{
-/*
-	if(m_loaded != BASE_TEXTURES)
-		return false;
-
-	if (!tex)
-		return false;
-
-	if (!pWorld)
-		return false;
-
-	uint   mipcount = 0,
-		   t=0,m=0;
-
-	m_numWorldTextures = 0;
-
-*/	//Count number of textures
-//	while (pWorld->textures[m_numWorldTextures][0] != '\0')
-//		m_numWorldTextures++;
-
-
-//	tex->bin_world = g_pRast->TextureBinInit(m_numWorldTextures);
-/*
-	// allocate the poly cache
-	for (int i=0; i<CACHE_PASS_NUM; i++)
-	{
-		tex->polycaches[i] = new cpoly_t* [world->ntextures];
-		if (!tex->polycaches[i]) 
-		{
-			FError("mem for map tex cache");
-			return false;
-		}
-		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * world->ntextures);
-	}
-
-	// allocate dim's
-	tex->dims = new dimension_t[m_numWorldTextures];
-	if (!tex->dims) 
-	{
-		FError("mem for map tex dims");
-		return false;
-	}
-*/
-/*
-	TextureData tData;
-	tData.bMipMaps = true;
-	tData.bClamped  = false;
-
-	for (t=0; t<m_numWorldTextures; t++)
-	{
-		LoadTexture(pWorld->textures[t], tData);
-
-		tex->dims[t][0] = tData.width;
-		tex->dims[t][1] = tData.height;
-*/
-		// create all mipmaps
-/*		int mipcount = tData.numMipMaps - 1;
-		while (mipcount > 0)
-		{
-			CImageReader::GetReader().ImageReduce(mipcount);
-			mipcount--;
-		}
-*/
-//		g_pRast->TextureLoad(tex->bin_world, t, tData);
-//	}
-/*
-// FIXME - temp hack to get lightmapping working
-	if (!pWorld->nlightdefs || !pWorld->light_size)
-	{
-		m_loaded = ALL_TEXTURES;
-		CImageReader::GetReader().FreeMipData();
-		return true;
-	}
-
-	tex->bin_light = g_pRast->TextureBinInit(pWorld->nlightdefs);	// each lightdef has a unique lightmap
-
-	byte *ptr = pWorld->lightdata;
-	for (t = 0; t < g_pRast->TextureCount(tex->bin_light); t++)
-	{
-
-		CImageReader::GetReader().ReadLightMap(&ptr, tData);
-
-		tData.bMipMaps = true;
-		tData.bClamped = true;
-
-		int mipcount = tData.numMipMaps - 1;
-		while (mipcount > 0)
-		{
-			CImageReader::GetReader().ImageReduce(mipcount);
-			mipcount--;
-		}
-
-		g_pRast->TextureLoad(tex->bin_light, t, tData);
-	}
-
-	CImageReader::GetReader().FreeMipData();
-*/
-	m_loaded = ALL_TEXTURES;
-	return true;
-}
-
-
-/*
-==========================================
-UnloadWorld Textures
-==========================================
-*/
-bool CTextureManager::UnloadWorldTextures()
-{
-/*
-	if(m_loaded != ALL_TEXTURES)
-		return true;
-
-	if (!tex)
-		return false;
-
-	ComPrintf("Destroying map textures: ");
-
-	g_pRast->TextureBinDestroy(tex->bin_world);
-	tex->bin_world = -1;
-*/
-/*	for (int i=0; i<CACHE_PASS_NUM; i++)
-	{
-		delete [] tex->polycaches[i];
-		tex->polycaches[i] = 0;
-	}
-
-	// free lightmaps
-	if (tex->bin_light != -1)
-	{
-		g_pRast->TextureBinDestroy(tex->bin_light);
-		tex->bin_light = -1;
-	}
-
-	if(tex->dims)
-	{
-		delete [] tex->dims;
-		tex->dims = 0;
-	}
-*/
-	ComPrintf("OK\n");
-
-	m_loaded = BASE_TEXTURES;
-	return true;
+#endif
 }
 
 /*
@@ -262,11 +38,108 @@ bool CTextureManager::UnloadWorldTextures()
 Load a map texture
 ==========================================
 */
-void CTextureManager::LoadTexture(const char *filename, TextureData &tData)
+hTexture CTextureManager::Load(const char *filename, TextureData &tData)
 {
-	static char texname[COM_MAXPATH];
-	sprintf(texname,"%s/%s",m_textureDir,filename);
+	hTexture available = -1;
+	for (hTexture t=0; t<MAX_TEXTURES; t++)
+	{
+		// store first available slot
+		if (mNames[t].refCount == 0)
+			if (available == -1)
+				available = t;
+		else
+		{
+			// only check file textures, not lightmap (data) textures
+			if (!mNames[t].ptr && (strcmp(filename, mNames[t].file) == 0) && (tData.bMipMaps == mNames[t].mipmap))
+			{
+				mNames[t].refCount++;
+				return t;
+			}
+		}
+	}
 
-	if(!CImageReader::GetReader().Read(texname, tData))
+	if (available == -1)
+		FError("no available texture slots\n");
+
+	// create a new texture
+	if (!CImageReader::GetReader().Read(filename, tData))
 		CImageReader::GetReader().DefaultTexture(tData);
+
+	g_pRast->TextureLoad(available, tData);
+
+	mNames[available].ptr = NULL;
+	strcpy(mNames[available].file, filename);
+	mNames[available].mipmap = tData.bMipMaps;
+	mNames[available].refCount = 1;
+
+	// FIXME - we dont want this here
+	CImageReader::GetReader().FreeMipData();
+
+	return available;
 }
+
+hTexture CTextureManager::Load(unsigned char **data, TextureData &tData)
+{
+	hTexture available = -1;
+	for (hTexture t=0; t<MAX_TEXTURES; t++)
+	{
+		// store first available slot
+		if (mNames[t].refCount == 0)
+			if (available == -1)
+				available = t;
+
+		else
+		{
+			// only check data textures, not file textures
+			if (mNames[t].ptr && (*data == mNames[t].ptr) && (tData.bMipMaps == mNames[t].mipmap))
+			{
+				// this should really never happen
+				mNames[t].refCount++;
+				return t;
+			}
+		}
+
+	}
+
+	if (available == -1)
+		FError("no available texture slots\n");
+
+	// create a new texture
+	mNames[available].ptr = *data;
+	mNames[available].mipmap = tData.bMipMaps;
+	mNames[available].refCount = 1;
+
+	if (!CImageReader::GetReader().ReadLightMap(data, tData))
+		CImageReader::GetReader().DefaultTexture(tData);
+
+	g_pRast->TextureLoad(available, tData);
+
+	// FIXME - we dont want this here
+	CImageReader::GetReader().FreeMipData();
+
+	return available;
+}
+	
+
+void CTextureManager::UnLoad(hTexture tex)
+{
+	mNames[tex].refCount--;
+
+	// free the texture
+	if (!mNames[tex].refCount)
+	{
+		g_pRast->TextureUnLoad(tex);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,6 @@
 #ifdef RENDERER
 	#include "Standard.h"
+	#include "Tex_main.h"
 	#include "Tex_image.h"
 #else
 	#include "Com_defs.h"
@@ -31,7 +32,7 @@ CShaderManager::CShaderManager()
 {
 	mNumShaders = 0;
 	mNumLightmaps = 0;
-	mLightmapBin = -1;
+	mLightmaps	 = NULL;
 	mWorldBin	 = -1;
 	mBaseBin	 = -1;
 	mFreePolys	 = NULL;
@@ -244,11 +245,14 @@ void CShaderManager::LoadWorld(CWorld *map)
 	if (map->nlightdefs && map->light_size)
 	{
 
-		if (mLightmapBin != -1)
+		if (mLightmaps)
+		{
 			ComPrintf("CShaderManager::LoadShaders - lightmaps already loaded\n");
+			delete [] mLightmaps;
+		}
 
 		mNumLightmaps = map->nlightdefs;
-		mLightmapBin = g_pRast->TextureBinInit(mNumLightmaps);
+		mLightmaps = new hTexture[mNumLightmaps];
 
 		TextureData	 tData;
 		tData.bClamped = true;
@@ -256,10 +260,8 @@ void CShaderManager::LoadWorld(CWorld *map)
 
 		byte *ptr = map->lightdata;
 		for (int t=0; t<mNumLightmaps; t++)
-		{
-			CImageReader::GetReader().ReadLightMap(&ptr, tData);
-			g_pRast->TextureLoad(mLightmapBin, t, tData);
-		}
+			mLightmaps[t] = g_pTex->Load(&ptr, tData);
+
 	}
 
 
@@ -270,14 +272,8 @@ void CShaderManager::LoadWorld(CWorld *map)
 			ComPrintf("CShaderManager::LoadWorld - world bin in use\n");
 
 	mWorldBin = BinInit(world->ntextures);
-//	char texname[260];
 	for (int t=0; t<world->ntextures; t++)
-	{
-//		strcpy(texname, "textures");
-//		strcat(texname, "/");
-//		strcat(texname, map->textures[t]);
 		LoadShader(mWorldBin, t, map->textures[t]);
-	}
 }
 
 /*
@@ -288,9 +284,9 @@ UnLoadWorld
 void CShaderManager::UnLoadWorld(void)
 {
 	// unload lightmaps
-	if (mLightmapBin != -1)
-		g_pRast->TextureBinDestroy(mLightmapBin);
-	mLightmapBin = -1;
+	if (mLightmaps)
+		delete [] mLightmaps;
+	mLightmaps = NULL;
 	mNumLightmaps = 0;
 
 
