@@ -285,6 +285,8 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	else
 		g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, skin));
 
+	g_pRast->TextureTexDef(NULL);
+	g_pRast->TextureLightDef(NULL);
 
 	vector_t v;
 
@@ -300,7 +302,6 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	while (num_cmds)
 	{
 		ptr += 1;
-
 
 		if (num_cmds > 0)
 			g_pRast->PolyStart(VRAST_TRIANGLE_STRIP);

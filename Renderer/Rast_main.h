@@ -142,6 +142,7 @@ public:
 
 	void PolyStart(EPolyType type);
 	void PolyEnd(void);
+	void PolyVertexf(float x, float y, float z);
 	void PolyVertexf(vector_t &vert);
 	void PolyVertexi(int x, int y);
 	void PolyTexCoord(float s, float t);

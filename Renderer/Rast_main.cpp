@@ -50,13 +50,13 @@ void CRasterizer::PolyEnd(void)
 	switch (mType)
 	{
 	case VRAST_TRIANGLE_FAN:
-		for (t=mFirstElement; t<mNumElements; t++)
+		for (t=mFirstElement; t<(mNumElements-2); t++)
 		{
-			mIndices[t*3 + 0] = mFirstElement;
-			mIndices[t*3 + 1] = t + 1;
-			mIndices[t*3 + 2] = t + 2;
+			mIndices[mNumIndices++] = mFirstElement;
+			mIndices[mNumIndices++] = t+1;
+			mIndices[mNumIndices++] = t+2;
 		}
-		mNumIndices += (mNumElements - mFirstElement - 2) * 3;
+
 		break;
 
 	case VRAST_TRIANGLE_STRIP:
@@ -64,18 +64,17 @@ void CRasterizer::PolyEnd(void)
 		{
 			if (!(t%2))
 			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+1;
-				mIndices[t*3 + 2] = t+2;
+				mIndices[mNumIndices++] = t;
+				mIndices[mNumIndices++] = t+1;
+				mIndices[mNumIndices++] = t+2;
 			}
 			else
 			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+2;
-				mIndices[t*3 + 2] = t+1;
+				mIndices[mNumIndices++] = t;
+				mIndices[mNumIndices++] = t+2;
+				mIndices[mNumIndices++] = t+1;
 			}
 		}
-		mNumIndices += (mNumElements - mFirstElement - 2) * 3;
 		break;
 
 	case VRAST_QUADS:
@@ -253,7 +252,6 @@ void CRasterizer::DrawLayer(int l)
 		break;
 
 	case TEXGEN_VECTOR:
-
 		for (i=0; i<mNumElements; i++)
 		{
 			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[0].x +
@@ -316,6 +314,15 @@ void CRasterizer::DrawLayer(int l)
 	PolyDraw();
 }
 
+void CRasterizer::PolyVertexf(float x, float y, float z)
+{
+	mVerts[mNumElements].pos[0] = x;
+	mVerts[mNumElements].pos[1] = y;
+	mVerts[mNumElements].pos[2] = z;
+	mVerts[mNumElements].color = mColor;
+	mNumElements++;
+}
+
 
 void CRasterizer::PolyVertexf(vector_t &vert)
 {
@@ -324,7 +331,7 @@ void CRasterizer::PolyVertexf(vector_t &vert)
 	mVerts[mNumElements].pos[2] = vert.z;
 	mVerts[mNumElements].color = mColor;
 	mNumElements++;
-};
+}
 
 void CRasterizer::PolyVertexi(int x, int y)
 {
@@ -333,7 +340,7 @@ void CRasterizer::PolyVertexi(int x, int y)
 	mVerts[mNumElements].pos[2] = 0;
 	mVerts[mNumElements].color = mColor;
 	mNumElements++;
-};
+}
 
 
 // explicit coords go right into the array
@@ -366,14 +373,14 @@ void CRasterizer::ShaderSet(CShader *shader)
 void CRasterizer::TextureTexDef(bspf_texdef_t *def)
 {
 	// changing texdef doesnt need a flush because
-	// the texture field of it isn't used
+	// the texture field of it isn't used here
 	mTexDef	= def;
 }
 
 void CRasterizer::TextureLightDef(bspf_texdef_t *def)
 {
 	// only flush if the lightmap texture is changing
-/*	if (def != mLightDef)
+	if (def != mLightDef)
 	{
 		if (def && mLightDef)
 		{
@@ -383,10 +390,10 @@ void CRasterizer::TextureLightDef(bspf_texdef_t *def)
 				return;
 			}
 		}
-*/
+
 		Flush();
 		mLightDef = def;
-//	}
+	}
 }
 
 

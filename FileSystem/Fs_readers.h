@@ -34,7 +34,7 @@ public:
 	uint Read(void *buf,uint size, uint count);
 	
 	//Return the current byte, advance current position
-	int GetChar();
+	int GetChar(bool perror);
 	void GetToken(char *buff, bool newline);
 	
 	//Seek to given offset starting from given origin
@@ -88,7 +88,7 @@ public:
 	//Read "count" number of items of "size" into buffer
 	uint Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
-	int GetChar();
+	int GetChar(bool perror);
 	void GetToken(char *buff, bool newline);
 	//Seek to given offset starting from given origin
 	bool Seek(int offset,  int origin);

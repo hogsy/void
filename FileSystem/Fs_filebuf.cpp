@@ -117,11 +117,12 @@ uint CFileBuffer::Read(void *buf,uint size, uint count)
 Get current character
 ===========================================
 */
-int CFileBuffer::GetChar()
+int CFileBuffer::GetChar(bool perror)
 {
 	if((m_curpos) >= m_size)
 	{
-		ComPrintf("CFileReader::GetByte:EOF reached: %s\n",m_filename);
+		if (perror)
+			ComPrintf("CFileReader::GetByte:EOF reached: %s\n",m_filename);
 		return -1;
 	}
 	return (m_buffer[m_curpos++]);
@@ -144,7 +145,7 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 	if (newline)
 		while (1)
 		{
-			tmp = GetChar();
+			tmp = GetChar(false);
 			if (tmp == '\n')
 				break;
 
@@ -159,7 +160,7 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 	// advance until we find characters
 	while (1)
 	{
-		tmp = GetChar();
+		tmp = GetChar(false);
 
 		// dont want a new line but we found one
 		if ((tmp == '\n' && !newline) || (tmp == EOF) || (tmp == -1))
@@ -182,7 +183,7 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 		(*ptr) = tmp;
 		ptr++;
 
-		tmp = GetChar();
+		tmp = GetChar(false);
 	}
 
 	// null terminate

@@ -147,7 +147,7 @@ uint CFileStream::Read(void *buf,uint size, uint count)
 Get current character
 ===========================================
 */
-int  CFileStream::GetChar()
+int  CFileStream::GetChar(bool perror)
 {
 	if(m_fp)
 		return ::fgetc(m_fp);
@@ -170,7 +170,7 @@ void CFileStream::GetToken(char *buff, bool newline)
 	if (newline)
 		while (1)
 		{
-			tmp = GetChar();
+			tmp = GetChar(false);
 			if (tmp == '\n')
 				break;
 
@@ -184,7 +184,7 @@ void CFileStream::GetToken(char *buff, bool newline)
 	// advance until we find characters
 	while (1)
 	{
-		tmp = GetChar();
+		tmp = GetChar(false);
 
 		// dont want a new line but we found one
 		if ((tmp == '\n' && !newline) || (tmp == EOF) || (tmp == -1))
@@ -207,7 +207,7 @@ void CFileStream::GetToken(char *buff, bool newline)
 		(*ptr) = tmp;
 		ptr++;
 
-		tmp = GetChar();
+		tmp = GetChar(false);
 	}
 
 	// null terminate

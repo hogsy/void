@@ -134,42 +134,26 @@ void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 	cframe = fframe+1;
 	frac = frame - fframe;
 
-//	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 
 	// revers eye transform
 	g_pRast->MatrixPush();
-	g_pRast->MatrixRotateY(-camera->angles.YAW   * 180/PI);
-	g_pRast->MatrixRotateX( camera->angles.PITCH * 180/PI);
-	g_pRast->MatrixRotateZ(-camera->angles.ROLL  * 180/PI);
+	g_pRast->MatrixRotateZ(camera->angles.YAW  * 180/PI);
+	g_pRast->MatrixRotateY(-camera->angles.PITCH * 180/PI);
+	g_pRast->MatrixRotateX(camera->angles.ROLL * 180/PI);
 
-
-//	g_pRast->PolyColor4f(1, 1, 1, 1-frac);
-//	g_pRast->TextureSet(skin_bin, fframe);
+	g_pRast->TextureTexDef(NULL);
+	g_pRast->TextureLightDef(NULL);
 	g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, fframe));
 
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 	g_pRast->PolyTexCoord(0, 0);
-	g_pRast->PolyVertexi(-frames[fframe].origin_x, -frames[fframe].origin_y);
+	g_pRast->PolyVertexf(0, -frames[fframe].origin_x, -frames[fframe].origin_y);
 	g_pRast->PolyTexCoord(1, 0);
-	g_pRast->PolyVertexi(frames[fframe].width-frames[fframe].origin_x, -frames[fframe].origin_y);
+	g_pRast->PolyVertexf(0, frames[fframe].width-frames[fframe].origin_x, -frames[fframe].origin_y);
 	g_pRast->PolyTexCoord(1, 1);
-	g_pRast->PolyVertexi(frames[fframe].width-frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
+	g_pRast->PolyVertexf(0, frames[fframe].width-frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
 	g_pRast->PolyTexCoord(0, 1);
-	g_pRast->PolyVertexi(-frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
+	g_pRast->PolyVertexf(0, -frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
 	g_pRast->PolyEnd();
-/*
-	g_pRast->PolyColor4f(1, 1, 1, frac);
-	g_pRast->TextureSet(skin_bin, cframe);
-	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
-	g_pRast->PolyTexCoord(0, 0);
-	g_pRast->PolyVertexi(-frames[cframe].origin_x, -frames[cframe].origin_y);
-	g_pRast->PolyTexCoord(1, 0);
-	g_pRast->PolyVertexi(frames[cframe].width-frames[cframe].origin_x, -frames[cframe].origin_y);
-	g_pRast->PolyTexCoord(1, 1);
-	g_pRast->PolyVertexi(frames[cframe].width-frames[cframe].origin_x, frames[cframe].height-frames[cframe].origin_y);
-	g_pRast->PolyTexCoord(0, 1);
-	g_pRast->PolyVertexi(-frames[cframe].origin_x, frames[cframe].height-frames[cframe].origin_y);
-	g_pRast->PolyEnd();
-*/
 	g_pRast->MatrixPop();
 }

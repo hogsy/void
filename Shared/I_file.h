@@ -29,7 +29,7 @@ struct I_FileReader
 	virtual uint Read(void *buf,uint size, uint count)=0;
 	
 	//Return the current byte, advance current position
-	virtual int  GetChar()=0;
+	virtual int  GetChar(bool perror)=0;
 	virtual void GetToken(char *buff, bool newline)=0;
 	
 	//Seek to given offset starting from given origin

@@ -280,13 +280,13 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 		{
 			for (countx = 0; countx < m_width; )
 			{
-				ch = m_pFile->GetChar();
+				ch = m_pFile->GetChar(true);
 
 				// Verify if the uppers two bits are sets
 				if ((ch >= 192) && (ch <= 255))
 				{
 					number = ch - 192;
-					ch = m_pFile->GetChar();
+					ch = m_pFile->GetChar(true);
 				}
 				else
 					number = 1;
@@ -320,11 +320,11 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 {
 	m_pFile->Seek(12,SEEK_SET);
 
-	m_width   = m_pFile->GetChar();
-	m_width  |= m_pFile->GetChar() << 8;
-	m_height  = m_pFile->GetChar();
-	m_height |= m_pFile->GetChar() << 8;
-	int bpp = m_pFile->GetChar() / 8;
+	m_width   = m_pFile->GetChar(true);
+	m_width  |= m_pFile->GetChar(true) << 8;
+	m_height  = m_pFile->GetChar(true);
+	m_height |= m_pFile->GetChar(true) << 8;
+	int bpp = m_pFile->GetChar(true) / 8;
 
 	m_format = (EImageFormat)bpp;
 
@@ -348,7 +348,7 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 		m_format = IMG_RGBA;
 
 	// alpha/no alpha?  we already know that
-	m_pFile->GetChar();
+	m_pFile->GetChar(true);
 
 	ConfirmMipData();
 	memset(m_mipmapdata[m_miplevels-1], 0xFF, m_width * m_height * (int)m_format);
@@ -357,12 +357,12 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 	{
 		for (int w=0; w<m_width; w++)
 		{
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 2] = m_pFile->GetChar();
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 1] = m_pFile->GetChar();
-			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format    ] = m_pFile->GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 2] = m_pFile->GetChar(true);
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 1] = m_pFile->GetChar(true);
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format    ] = m_pFile->GetChar(true);
 
 			if (bpp == 4)
-				m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 3] = m_pFile->GetChar();
+				m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 3] = m_pFile->GetChar(true);
 		}
 	}
 
