@@ -10,7 +10,8 @@ namespace
 	enum 
 	{
 		CMD_MAP = 1,
-		CMD_KILLSERVER = 2
+		CMD_KILLSERVER = 2,
+		CMD_STATUS	= 3
 	};
 }
 
@@ -62,6 +63,7 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 	
 	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
 	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
+	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
 }	
 
 CServer::~CServer()
@@ -165,7 +167,18 @@ void CServer::Shutdown()
 			System::GetConsole()->ExecString("disconnect");
 
 		for(int i=0;i<m_cMaxClients.ival;i++)
+		{
+			if(m_clients[i].m_state != CL_SPAWNED) 
+				continue;
+
+			//send disconect messages
+			m_clients[i].m_netChan.m_reliableBuffer.Reset();
+			m_clients[i].m_netChan.m_buffer.Reset();
+			m_clients[i].m_netChan.m_buffer += SV_DISCONNECT;
+			m_clients[i].m_netChan.m_buffer += "Server quit";
+			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 			m_clients[i].Reset();
+		}
 
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
@@ -484,8 +497,11 @@ void CServer::ParseClientMessage(SVClient &client)
 	{
 	case CL_TALK:
 		{
-			char * msg = m_recvBuf.ReadString();
-			int len = strlen(msg) + strlen(client.m_name);
+			char msg[128];
+			strcpy(msg,m_recvBuf.ReadString());
+			int len = strlen(msg);
+			msg[len] = 0;
+			len += strlen(client.m_name);
 		
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0; i<m_cMaxClients.ival;i++)
@@ -549,7 +565,7 @@ void CServer::ReadPackets()
 					if(spawnstate == SVC_BEGIN+1)
 					{
 						m_clients[i].m_state = CL_SPAWNED;
-//ComPrintf("SV: Client has spawned\n");
+ComPrintf("SV:%s entered the game\n", m_clients[i].m_name);
 					}
 					else
 					{
@@ -655,11 +671,6 @@ void CServer::WritePackets()
 		//In game clients
 		if(m_clients[i].m_state == CL_SPAWNED)
 		{
-/*			if(m_clients[i].m_netChan.m_buffer.GetSize())
-			{
-				int size = m_clients[i].m_netChan.m_buffer.GetSize();
-			}
-*/
 			m_clients[i].m_netChan.PrepareTransmit();
 			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 			//m_clients[i].m_bSend = false;
@@ -702,6 +713,11 @@ void CServer::RunFrame()
 
 //======================================================================================
 //======================================================================================
+
+void CServer::PrintServerStatus()
+{
+}
+
 /*
 ==========================================
 Handle CVars
@@ -725,6 +741,8 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_KILLSERVER:
 		Shutdown();
+	case CMD_STATUS:
+		PrintServerStatus();
 		break;
 	}
 }

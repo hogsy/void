@@ -174,7 +174,7 @@ bool CNetChan::BeginRead()
 	//Message is a duplicate or old, ignore it
 	if (seq <= m_inMsgId)
 	{
-ComPrintf("CNetChan: dropping old/dup packet %d >= %d\n", seq, m_inMsgId);
+//ComPrintf("CNetChan: dropping old/dup packet, %d >= %d\n", seq, m_inMsgId);
 		return false;
 	}
 
@@ -201,18 +201,6 @@ ComPrintf("CNetChan: dropping old/dup packet %d >= %d\n", seq, m_inMsgId);
 	m_lastReceived = System::g_fcurTime;
 	return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

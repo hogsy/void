@@ -62,6 +62,7 @@ const int CL_MOVE			= 2;	//angles/velocity
 const int CL_STRING			= 3;	//Command string
 const int CL_DELTA			= 4;	//update a specific field only ?
 const int CL_TALK			= 5;	//client said something
+const int CL_DISCONNECT		= 6;	//client is disconnecting
 
 //===============================
 //Server to Client

@@ -149,11 +149,19 @@ void CClient::ReadPackets()
 			switch(msgId)
 			{
 			case SV_TALK:
-				char name[32];
-				strcpy(name,m_buffer.ReadString());
+				{
+					char name[32];
+					strcpy(name,m_buffer.ReadString());
 ComPrintf("%s: %s\n", name , m_buffer.ReadString());
 System::GetSoundManager()->Play(m_hsTalk);
-				break;
+					break;
+				}
+			case SV_DISCONNECT:
+				{
+ComPrintf("Server quit\n");
+					Disconnect(true);
+					break;
+				}
 			}
 			continue;
 		}
@@ -366,15 +374,24 @@ void CClient::ConnectTo(const char * ipaddr)
 Disconnect if connected to a server
 =====================================
 */
-void CClient::Disconnect()
+void CClient::Disconnect(bool serverControlled)
 {
 	if(m_ingame)
 	{
 		UnloadWorld();
 
-		if(m_bLocalServer)
-			System::GetConsole()->ExecString("killserver");
+		if(!serverControlled)
+		{
+			if(m_bLocalServer)
+				System::GetConsole()->ExecString("killserver");
+			else
+			{
+				//CL_DISCONNECT
+			}
+		}
 	}
+
+ComPrintf("CL: Disconnected\n");
 
 	m_netChan.Reset();
 	

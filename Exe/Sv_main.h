@@ -92,6 +92,8 @@ private:
 	void ProcessQueryPacket();
 	void ReadPackets();
 	void WritePackets();
+
+	void PrintServerStatus();
 	
 	void SendSpawnParms(SVClient &client);
 	void SendReconnect(SVClient &client);

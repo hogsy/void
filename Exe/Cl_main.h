@@ -56,7 +56,7 @@ private:
 	//==================================================
 	//Console commands
 	void ConnectTo(const char * ipaddr);
-	void Disconnect();
+	void Disconnect(bool serverControlled = false);
 
 	//Movement
 	void Move(vector_t *dir, float time);
