@@ -44,9 +44,12 @@ public:
 	//Print out the list of files in added archives
 	void ListArchiveFiles();
 	void ListFiles(const char *path, const char *ext);
-	
+
 	//Handle Console Commands
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
+	//Finds the full file name and returns it
+	bool FindFileName(char * buf, int buflen, const char * path);
 
 	//Returns current path EXE+Game
 	const char * GetCurrentPath() const;

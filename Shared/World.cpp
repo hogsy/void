@@ -8,6 +8,7 @@
 //Include proper project header
 #ifdef _VOID_EXE_
 	#include "../Exe/Source/Sys_hdr.h"
+	#include "I_file.h"
 	#define PRINT ComPrintf
 
 #elif defined _VVIS
@@ -17,9 +18,7 @@
 #elif defined _VLIGHT_
 	#include "../vlight/source/std_lib.h"
 	#define PRINT v_printf
-#else
-	#include "../Exe/Source/Sys_hdr.h"
-	#define PRINT ComPrintf
+
 #endif
 
 

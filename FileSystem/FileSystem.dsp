@@ -93,6 +93,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\Fs_cfiles.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_filebuf.cpp
 # End Source File
 # Begin Source File
@@ -158,6 +162,14 @@ SOURCE=..\Shared\Com_mem.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Com_mem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.h
 # End Source File
 # End Group
 # Begin Group "Interface"

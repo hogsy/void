@@ -62,7 +62,10 @@ private:
 	CInput		 * m_pInput;		//Input 
 	CTime		 * m_pTime;			//Timer Class
 	CFileSystem  * m_pFileSystem;	//FileSystem
+
+#ifdef INCLUDE_MUSIC
 	CMusic		 * m_pMusic;
+#endif
 
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 	VoidExport   * m_pExport;		//Exported Data

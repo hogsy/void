@@ -188,7 +188,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 	
 	for(std::list<std::string>::iterator itor = archivelist.begin(); itor != archivelist.end(); itor++)
 	{
-		if(FileUtil::CompareExts(itor->c_str(),"zip"))
+		if(Util::CompareExts(itor->c_str(),"zip"))
 		{
 			CZipFile * zipfile = new CZipFile();
 			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
@@ -199,7 +199,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 				delete zipfile;
 		}
 		//Found a Pak file, try adding
-		if(FileUtil::CompareExts(itor->c_str(),"pak"))
+		if(Util::CompareExts(itor->c_str(),"pak"))
 		{
 			CPakFile * pakfile = new CPakFile();
 			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
@@ -527,17 +527,17 @@ bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
 		else
 		{
 			sprintf(searchpath,"%s/%s/%s*", m_exepath, iterator->path, path);
-ComPrintf("Searching in %s\n",searchpath);
+//ComPrintf("Searching in %s\n",searchpath);
 			
 			hsearch= FindFirstFile(searchpath,&finddata);
 			if(hsearch != INVALID_HANDLE_VALUE)
 			{
 				char ext[8];
-				FileUtil::ParseExtension(ext,8,finddata.cFileName);
+				Util::ParseExtension(ext,8,finddata.cFileName);
 
 				if(FindClose(hsearch) == FALSE)   // file search handle
 					ComPrintf("CFileSystem::FindFileName:Unable to close search handle\n");
-
+				
 				if(strlen(ext) + pathlen < buflen)
 				{
 					sprintf(buf,"%s.%s", path,ext);

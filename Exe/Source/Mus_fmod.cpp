@@ -1,4 +1,7 @@
+#ifdef INCLUDE_FMOD
+
 #include "Mus_fmod.h"
+#include "I_file.h"
 
 using namespace VoidMusic;
 
@@ -29,9 +32,11 @@ CMusFMod::~CMusFMod()
 */
 bool CMusFMod::Init()
 {
+	m_hwnd = System::GetHwnd();
+	FSOUND_File_SetCallbacks(&FS_Open,&FS_Close, &FS_Read, & FS_Seek, &FS_Tell);
 	FSOUND_SetOutput(FSOUND_OUTPUT_WINMM);
 	FSOUND_SetDriver(0);
-	FSOUND_SetHWND(System::GetHwnd());
+	FSOUND_SetHWND(&m_hwnd);
 	
 	if(!FSOUND_Init(44100, MAXCHANNELS, 0))
 	{
@@ -190,3 +195,5 @@ const char * CMusFMod::ErrorMessage(long err)
 	};
 }
 
+
+#endif

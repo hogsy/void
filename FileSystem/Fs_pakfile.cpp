@@ -133,7 +133,6 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 Check to see if the archive contains this file
 ==========================================
 */
-
 bool CPakFile::FindFile(char * buf, int buflen,const char * filename)
 {
 	PakEntry_t * entry=0;
@@ -141,10 +140,10 @@ bool CPakFile::FindFile(char * buf, int buflen,const char * filename)
 	if(BinarySearchForEntry(filename,&entry,0,m_numFiles,filelen))
 	{
 		char ext[8];
-		FileUtil::ParseExtension(ext,8,entry->filename);
+		Util::ParseExtension(ext,8,entry->filename);
 		if(strlen(entry->filename) + strlen(m_archiveName) + 2 < buflen)
 		{
-			sprintf("%s/%s.%s",m_archiveName,entry->filename);
+			sprintf(buf,"%s/%s",m_archiveName,entry->filename,ext);
 			return true;
 		}
 	}
@@ -212,7 +211,7 @@ int  CPakFile::GetFileList (StringList &strlst,
 		{
 			//Win32 specific
 			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
-			   (!ext || FileUtil::CompareExts(m_files[i]->filename,ext)))
+			   (!ext || Util::CompareExts(m_files[i]->filename,ext)))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -223,7 +222,7 @@ int  CPakFile::GetFileList (StringList &strlst,
 	{
 		for(int i=0;i<m_numFiles;i++)
 		{
-			if(!ext || FileUtil::CompareExts(m_files[i]->filename,ext))
+			if(!ext || Util::CompareExts(m_files[i]->filename,ext))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -393,31 +392,40 @@ Update file Handle's current position with
 requested offset
 ==========================================
 */
-bool CPakFile::Seek(uint offset, int origin, HFS handle)
+bool CPakFile::Seek(int offset, int origin, HFS handle)
 {
-	uint newpos = m_openFiles[handle].file->filepos;
+	int newpos = 0; //m_openFiles[handle].file->filepos;
 	switch(origin)
 	{
 	case SEEK_SET:
+			if(offset > m_openFiles[handle].file->filelen)
+				offset = m_openFiles[handle].file->filelen;
 			newpos += offset;
 			break;
 	case SEEK_END:
-			newpos += (m_openFiles[handle].file->filelen - offset);
+			if(offset)	//should be negative
+				offset = 0;
+			newpos += (m_openFiles[handle].file->filelen + offset);
 			break;
 	case SEEK_CUR:
+			if((offset + m_openFiles[handle].curpos)  > m_openFiles[handle].file->filelen)
+				offset = m_openFiles[handle].file->filelen - m_openFiles[handle].curpos;
 			newpos += (m_openFiles[handle].curpos + offset);
 			break;
 	default:
 			ComPrintf("CPakFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
 			return false;
 	}
-	if((newpos > m_openFiles[handle].file->filepos + m_openFiles[handle].file->filelen) ||
-		(newpos < m_openFiles[handle].file->filepos))
+
+//	return(!::fseek(m_fp,newpos,SEEK_SET));
+
+	int filepos = newpos + m_openFiles[handle].file->filepos;
+	if(!::fseek(m_fp,filepos,SEEK_SET))
 	{
-		ComPrintf("CPakFile::Seek: Bad parameters. %s\n", m_openFiles[handle].file->filename);
-		return false;
+		m_openFiles[handle].curpos = newpos;
+		return true;
 	}
-	return(!::fseek(m_fp,newpos,SEEK_SET));
+	return false;
 }
 
 
@@ -438,5 +446,4 @@ get size of file belonging to handle
 uint CPakFile::GetSize(HFS handle)
 {	return m_openFiles[handle].file->filelen;
 }
-
 

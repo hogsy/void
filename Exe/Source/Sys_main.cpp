@@ -24,14 +24,12 @@ CClient		*	g_pClient  =0;	//Client and UI
 #ifdef INCLUDE_SOUND
 CSound		*	g_pSound=0;		//Sound Subsystem
 #endif
-
 #ifndef __VOIDALPHA
 CServer		*	g_pServer=0;	//Network Server
 #endif
 
 world_t		*	g_pWorld=0;		//The World
-
-extern CVoid * g_pVoid;
+extern CVoid*	g_pVoid;
 
 //======================================================================================
 //Console loopback func
@@ -105,8 +103,10 @@ CVoid::CVoid(const char * cmdLine)
 	g_pSound = new CSound();
 #endif
 
+#ifdef INCLUDE_MUSIC
 	//Music
 	m_pMusic = new CMusic();
+#endif
 
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
@@ -145,10 +145,12 @@ CVoid::~CVoid()
 
 #endif
 
+#ifdef INCLUDE_MUSIC
 	if(m_pMusic)
 	{	delete m_pMusic;
 		m_pMusic = 0;
 	}
+#endif
 	
 	if(m_pInput)
 	{	delete m_pInput;
@@ -283,6 +285,7 @@ bool CVoid::Init()
 	}
 #endif
 
+#ifdef INCLUDE_MUSIC
 	//================================
 	//Music
 	if(!m_pMusic->Init())
@@ -291,6 +294,7 @@ bool CVoid::Init()
 		delete m_pMusic;
 		m_pMusic = 0;
 	}
+#endif
 
 #ifndef __VOIDALPHA
 	//================================
@@ -345,9 +349,11 @@ bool CVoid::Shutdown()
 		g_pSound->Shutdown();
 #endif
 
+#ifdef INCLUDE_MUSIC
 	//music
 	if(m_pMusic)
 		m_pMusic->Shutdown();
+#endif
 
 	//input
 	if(m_pInput)
@@ -445,7 +451,7 @@ bool CVoid::InitServer(char *map)
 	char mapname[128];
 	
 	strcpy(mapname, map);
-	FileUtil::SetDefaultExtension(mapname,".bsp");
+	Util::SetDefaultExtension(mapname,".bsp");
 	
 //	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
 	

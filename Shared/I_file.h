@@ -10,10 +10,6 @@
 #include "Com_defs.h"
 
 //====================================================================================
-//Declarations to reduce dependencies.
-class CArchive;
-
-//====================================================================================
 
 struct I_FileReader
 {
@@ -22,13 +18,24 @@ struct I_FileReader
 	virtual bool isOpen()const =0;
 	virtual uint Read(void * buf, uint size, uint count)=0;
 	virtual int  GetChar()=0;
-	virtual bool Seek(uint offset, int origin)=0;
+	virtual bool Seek(int offset, int origin)=0;
 	virtual uint GetPos() const =0;
 	virtual uint GetSize() const =0;
+	virtual const char * GetFileName() const= 0;
 };
 
 //====================================================================================
+//Not all of these really need to be here, move them to ComUtil ?
+//Only FindFileExtension is REALLY needed to be exported.
 
+namespace FileUtil
+{
+	FILESYSTEM_API bool FindFileExtension(char * ext, int extlen, const char * path);
+	FILESYSTEM_API void ConfirmDir(char* dir);
+	FILESYSTEM_API bool PathExists(const char * path);
+}
+
+//====================================================================================
 /*
 ==========================================
 FileBuffer Reader Class
@@ -53,10 +60,11 @@ public:
 	//Return the current byte, advance current position
 	int GetChar();
 	//Seek to given offset starting from given origin
-	bool Seek(uint offset,  int origin);
+	bool Seek(int offset, int origin);
 
 	uint GetPos() const;
 	uint GetSize()const;
+	const char * GetFileName() const;
 	byte * GetData() const;
 
 private:
@@ -72,6 +80,8 @@ private:
 
 
 //====================================================================================
+//Declaration to reduce dependencies.
+class CArchive;
 
 /*
 ==========================================
@@ -98,10 +108,11 @@ public:
 	//Return the current byte, advance current position
 	int GetChar();
 	//Seek to given offset starting from given origin
-	bool Seek(uint offset,  int origin);
+	bool Seek(int offset,  int origin);
 
 	uint GetPos() const;
 	uint GetSize()const;
+	const char * GetFileName() const;
 
 private:
 
@@ -112,6 +123,20 @@ private:
 	int     m_filehandle;	//handle to filestream in an archive
 	CArchive * m_archive;   //Arhive containing the given file
 };
+
+
+//====================================================================================
+//C interface to file streams
+
+extern "C"
+{
+	FILESYSTEM_API uint FS_Open(char *name);
+	FILESYSTEM_API void FS_Close(uint handle);
+	FILESYSTEM_API int  FS_Read(void *buffer,int size,uint handle);
+	FILESYSTEM_API void FS_Seek(uint handle,int offset, signed char mode);
+	FILESYSTEM_API int  FS_Tell(uint handle);
+}
+
 
 
 #endif

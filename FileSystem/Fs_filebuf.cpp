@@ -140,27 +140,30 @@ int CFileBuffer::GetChar()
 Seek to end/start, certain offset
 ===========================================
 */
-bool CFileBuffer::Seek(uint offset, int origin)
+bool CFileBuffer::Seek(int offset, int origin)
 {
+	if(!m_size)
+		return false;
 	switch(origin)
 	{
 	case SEEK_SET:
 		if(offset > m_size)
-			return false;
+			offset = m_size;
 		m_curpos = offset;
-		return true;
+		break;
 	case SEEK_CUR:
 		if(m_curpos + offset > m_size)
-			return false;
+			offset = m_size;
 		m_curpos += offset;
-		return true;
+		break;
 	case SEEK_END:
-		if(offset > m_size)
-			return false;
-		m_curpos = m_size - offset;
-		return true;
+		//Offset should be negative for this
+		if(offset)
+			offset = 0;
+		m_curpos = m_size + offset;
+		break;
 	}
-	return false;
+	return true;
 }
 
 //======================================================================================

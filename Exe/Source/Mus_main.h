@@ -45,7 +45,11 @@ protected:
 namespace VoidMusic
 {
 	extern const int MAXCHANNELS;
+
+#ifdef INCLUDE_FMOD
 	class CMusFMod;
+#endif
+
 //	class CMusCDAudio;
 //	class CMusDirectMusic;
 }
@@ -73,7 +77,9 @@ private:
 
 	CMusDriver	* m_curDriver;
 
+#ifdef INCLUDE_FMOD
 	VoidMusic::CMusFMod	* m_pFMod;
+#endif
 	
 	CVar m_cVolume;		//playback volume
 	CVar m_cDriver;

@@ -1,5 +1,7 @@
 #include "Mus_main.h"
+#include "I_file.h"
 #include "Mus_fmod.h"
+
 
 
 //======================================================================================
@@ -46,7 +48,9 @@ CMusic::CMusic() : m_cVolume("mus_vol","8", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
 {
 	m_curDriver = 0;
 
+#ifdef INCLUDE_FMOD
 	m_pFMod = new CMusFMod();
+#endif
 
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
 	System::GetConsole()->RegisterCVar(&m_cDriver,this);
@@ -62,8 +66,11 @@ CMusic::~CMusic()
 {	
 	Shutdown();
 	m_curDriver = 0;
+
+#ifdef INCLUDE_FMOD
 	delete m_pFMod;
 	m_pFMod = 0;
+#endif
 }
 	
 /*
@@ -75,8 +82,10 @@ bool CMusic::Init()
 {
 	if(!strcmp(m_cDriver.string,DRIVER_FMOD))
 	{
+#ifdef INCLUDE_FMOD
 		m_curDriver = m_pFMod;
 		return m_curDriver->Init();
+#endif
 	}
 	else if(!strcmp(m_cDriver.string,DRIVER_CD))
 	{
@@ -95,7 +104,9 @@ Shutdown the music driver
 void CMusic::Shutdown()
 {	
 	if(m_curDriver)
-		m_curDriver->Shutdown();
+	{	m_curDriver->Shutdown();
+		m_curDriver =0;
+	}
 }
 
 /*
@@ -165,7 +176,7 @@ void CMusic::Play(int argc, char** argv)
 
 		sprintf(filename,"%s%s",MUSICPATH,argv[1]);
 
-		FileUtil::ParseExtension(filename,ext,4);
+		Util::ParseExtension(ext,4,filename);
 
 		//no extension entered, lets see if we can findit
 		if(!strlen(ext))	
@@ -175,8 +186,11 @@ void CMusic::Play(int argc, char** argv)
 				ComPrintf("CMusic::Play: Unable to play %s, file doesnt exist\n", filename);
 				return;
 			}
+			strcat(filename,".");
+			strcat(filename,ext);
 		}
-		
+
+#ifdef INCLUDE_FMOD		
 		if(m_curDriver == m_pFMod)
 		{
 			if(strcmp(ext,"mp3"))
@@ -186,29 +200,26 @@ void CMusic::Play(int argc, char** argv)
 			}
 			m_curDriver->Play(filename);
 		}
-
+#endif
 	}
 }
 
 void CMusic::Pause()
 {
 	if(m_curDriver)
-	{
-	}
+		m_curDriver->SetPause(true);
 }
 
 void CMusic::Stop()
 {
 	if(m_curDriver)
-	{
-	}
+		m_curDriver->Stop();
 }
 
 void CMusic::Resume()
 {
 	if(m_curDriver)
-	{
-	}
+		m_curDriver->SetPause(false);
 }
 
 void CMusic::PrintStats()
@@ -250,66 +261,3 @@ bool CMusic::Driver(const CVar * var, int argc, char** argv)
 	}
 	return false;
 }
-
-
-
-
-
-
-#if 0
-
-
-/*
-=======================================
-Play
-=======================================
-*/
-void MusPlay(int argc, char** argv)
-{
-	if(argc==1)
-	{
-		ComPrintf("Usage - mplay <filename>\n");
-		return;
-	}
-
-	if(musinfo.state != M_INACTIVE)
-	{	MusStop(0,0);
-	}
-
-	strcpy(musinfo.name,muspath);
-	strcat(musinfo.name,argv[1]);
-
-	char	ext[4];		//extension
-	Util::GetExtension(argv[1],ext);
-
-	if(!strlen(ext))	//no extension entered, lets see if we can findit
-	{	
-		Util::FindExtension(musinfo.name,ext);
-		strcat(musinfo.name,".");	
-		strcat(musinfo.name,ext);
-	}
-
-	ComPrintf("CMusic:: Attempting to play %s\n",musinfo.name);
-
-	fmod_stream = FSOUND_Stream_OpenMpeg(musinfo.name, 
-										 FSOUND_LOOP_NORMAL|FSOUND_NORMAL);	
-	if(!fmod_stream)
-	{
-		ComPrintf("MusPlay, Couldnt Open music at %s, %s\n",
-						 musinfo.name, ErrorString(FSOUND_GetError()));
-		memset(musinfo.name,0,sizeof(128));
-		return;
-	}
-	
-	if(FSOUND_Stream_Play(FSOUND_FREE, fmod_stream) == -1)
-	{
-		ComPrintf("MusPlay, Couldnt Play music at %s, %s\n",
-						musinfo.name, ErrorString(FSOUND_GetError()));
-		memset(musinfo.name,0,sizeof(128));
-		return;
-	}
-	musinfo.state = M_PLAYING;
-
-}
-
-#endif

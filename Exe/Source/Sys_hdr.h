@@ -5,7 +5,8 @@
 
 #include <winsock2.h>
 
-  #define __VOIDALPHA	1
+#define __VOIDALPHA	1
+#define INCLUDE_MUSIC
 
 #pragma warning(disable : 4786)
 
@@ -14,7 +15,6 @@
 
 #include "I_hunkmem.h"
 #include "I_console.h"
-#include "I_file.h"
 
 #include "Com_cvar.h"
 #include "Com_util.h"

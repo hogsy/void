@@ -8,6 +8,8 @@
 #include "Com_mem.h"
 #include "I_hunkmem.h"
 
+#include "Com_util.h"
+
 //======================================================================================
 //======================================================================================
 
@@ -31,7 +33,7 @@ public:
 	virtual void CloseFile(HFS handle) =0;
 	virtual uint Read(void * buf, uint size, uint count, HFS handle) =0;
 	virtual int  GetChar(HFS handle) =0;
-	virtual bool Seek(uint offset, int origin, HFS handle) =0;
+	virtual bool Seek(int offset, int origin, HFS handle) =0;
 	virtual uint GetPos(HFS handle) = 0;
 	virtual uint GetSize(HFS handle) = 0;
 

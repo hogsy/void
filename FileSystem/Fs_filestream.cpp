@@ -1,6 +1,6 @@
-#include "Fs_hdr.h"
 #include "I_file.h"
 #include "I_filesystem.h"
+#include "Fs_hdr.h"
 
 extern CFileSystem * g_pFileSystem;
 
@@ -160,7 +160,7 @@ int CFileStream::GetChar()
 Seek to end/start, certain offset
 ===========================================
 */
-bool CFileStream::Seek(uint offset, int origin)
+bool CFileStream::Seek(int offset, int origin)
 {
 	if(m_fp)
 		return !(::fseek(m_fp,offset,origin));

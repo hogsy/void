@@ -1,3 +1,6 @@
+#ifdef INCLUDE_FMOD
+
+
 #ifndef VOID_MUSIC_FMOD
 #define VOID_MUSIC_FMOD
 
@@ -27,11 +30,15 @@ private:
 
 	const char * ErrorMessage(long err);
 
+	HWND	m_hwnd;
 	FSOUND_STREAM * m_pStream;
 	int	  m_volume;
 };
 
 
 }
+
+#endif
+
 
 #endif

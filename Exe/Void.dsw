@@ -15,31 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "LineCounter"=..\LineCounter\LineCounter.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "Renderer"=..\Renderer\Renderer.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "VLight"=..\Vlight\vLight.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -64,6 +40,18 @@ Package=<4>
 ###############################################################################
 
 Project: "vbsp"=..\VBsp\vbsp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "vlight"=..\Vlight\vLight.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

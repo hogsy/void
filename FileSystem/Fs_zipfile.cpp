@@ -456,7 +456,7 @@ int  CZipFile::GetFileList (StringList &strlst,
 		for(int i=0;i<m_numFiles;i++)
 		{
 			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
-			   (!ext || FileUtil::CompareExts(m_files[i]->filename,ext)))
+			   (!ext || Util::CompareExts(m_files[i]->filename,ext)))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -467,7 +467,7 @@ int  CZipFile::GetFileList (StringList &strlst,
 	{
 		for(int i=0;i<m_numFiles;i++)
 		{
-			if(!ext || FileUtil::CompareExts(m_files[i]->filename,ext))
+			if(!ext || Util::CompareExts(m_files[i]->filename,ext))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -490,10 +490,10 @@ bool CZipFile::FindFile(char * buf, int buflen,const char * filename)
 	if(BinarySearchForEntry(filename,&entry,0,m_numFiles,filelen))
 	{
 		char ext[8];
-		FileUtil::ParseExtension(ext,8,entry->filename);
+		Util::ParseExtension(ext,8,entry->filename);
 		if(strlen(entry->filename) + strlen(m_archiveName) + 2 < buflen)
 		{
-			sprintf("%s/%s.%s",m_archiveName,entry->filename);
+			sprintf(buf,"%s/%s",m_archiveName,entry->filename,ext);
 			return true;
 		}
 	}
@@ -679,9 +679,9 @@ int  CZipFile::GetChar(HFS handle)
 Seek to given pos within the file data
 ==========================================
 */
-bool CZipFile::Seek(uint offset, int origin, HFS handle)
+bool CZipFile::Seek(int offset, int origin, HFS handle)
 {
-	uint newpos = m_openFiles[handle].file->filepos;
+/*	uint newpos = m_openFiles[handle].file->filepos;
 	switch(origin)
 	{
 	case SEEK_SET:
@@ -704,7 +704,44 @@ bool CZipFile::Seek(uint offset, int origin, HFS handle)
 		return false;
 	}
 	return(!::fseek(m_fp,newpos,SEEK_SET));
+*/
+	int newpos = 0; //m_openFiles[handle].file->filepos;
+	switch(origin)
+	{
+	case SEEK_SET:
+			if(offset > m_openFiles[handle].file->filelen)
+				offset = m_openFiles[handle].file->filelen;
+			newpos += offset;
+			break;
+	case SEEK_END:
+			if(offset)	//should be negative
+				offset = 0;
+			newpos += (m_openFiles[handle].file->filelen + offset);
+			break;
+	case SEEK_CUR:
+			if((offset + m_openFiles[handle].curpos)  > m_openFiles[handle].file->filelen)
+				offset = m_openFiles[handle].file->filelen - m_openFiles[handle].curpos;
+			newpos += (m_openFiles[handle].curpos + offset);
+			break;
+	default:
+			ComPrintf("CZipFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
+			return false;
+	}
+
+	int filepos = newpos + m_openFiles[handle].file->filepos;
+	if(!::fseek(m_fp,filepos,SEEK_SET))
+	{
+		m_openFiles[handle].curpos = newpos;
+		return true;
+	}
+	return false;
 }
+
+/*
+SEEK_END must reposition your file pointer at the END of the file, plus any negative offset. 
+To do this you must know the size of the file, it is suggested you find and store this in 
+the open function. Remember that a SEEK_END position value of -1 is the last byte.
+*/
 
 /*
 ==========================================

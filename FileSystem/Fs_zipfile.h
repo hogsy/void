@@ -16,7 +16,7 @@ public:
 	void CloseFile(HFS handle);
 	uint Read(void * buf, uint size, uint count, HFS handle);
 	int  GetChar(HFS handle);
-	bool Seek(uint offset, int origin, HFS handle);
+	bool Seek(int offset, int origin, HFS handle);
 	uint GetPos(HFS handle);
 	uint GetSize(HFS handle);
 	
