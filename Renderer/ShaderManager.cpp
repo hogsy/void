@@ -36,14 +36,21 @@ CShaderManager::CShaderManager()
 	mBaseBin	 = -1;
 	mFreePolys	 = NULL;
 	mNumCacheAllocs = 0;
+	
+	int i=0;
+	for (i=0; i<CACHE_PASS_NUM; i++)
+		mCache[i] = 0;
+	for(i=0; i<MAX_SHADERS;i++)
+		mShaders[i] = 0;
+
 
 	I_FileReader * pFile = CreateFileReader(FILE_BUFFERED);
 
 	if (!pFile->Open("Scripts/shaderlist.txt"))
+	{
+		FError("CShaderManager:: Unable to open shaderlist.txt\n");
 		return;
-
-	for (int i=0; i<CACHE_PASS_NUM; i++)
-		mCache[i] = 0;
+	}
 
 	char token[1024];
 	while (1)
@@ -51,7 +58,6 @@ CShaderManager::CShaderManager()
 		pFile->GetToken(token, true);
 		if (!token[0])
 			break;
-
 		ParseShaders(token);
 	}
 	pFile->Destroy();
@@ -60,7 +66,10 @@ CShaderManager::CShaderManager()
 CShaderManager::~CShaderManager()
 {
 	for (int s=0; s<mNumShaders; s++)
-		delete mShaders[s];
+	{
+		if(mShaders[s])
+			delete mShaders[s];
+	}
 
 #ifdef RENDERER
 	CacheDestroy();
@@ -87,7 +96,6 @@ void CShaderManager::ParseShaders(const char *shaderfile)
 	if (mNumShaders == MAX_SHADERS)
 		FError("too many shaders - tell js\n");
 
-
 	char token[1024];
 
 	while (1)
@@ -95,7 +103,6 @@ void CShaderManager::ParseShaders(const char *shaderfile)
 		pFile->GetToken(token, true);
 		if (!token[0])
 			break;
-
 		mShaders[mNumShaders] = new CShader(token);
 		pFile->GetToken(token, true);
 		mShaders[mNumShaders]->Parse(pFile);
@@ -481,7 +488,10 @@ cpoly_t* CShaderManager::PolyAlloc(void)
 void CShaderManager::CacheDestroy(void)
 {
 	for (int i=0; i<mNumCacheAllocs; i++)
-		delete [] mCacheAllocs[i];
+	{
+		if(mCacheAllocs[i])
+			delete [] mCacheAllocs[i];
+	}
 
 	mNumCacheAllocs = 0;
 	mFreePolys = NULL;

@@ -29,21 +29,6 @@ Destructor
 CImageManager::~CImageManager()
 {
 	UnloadImageAll();
-
-/*	int c, e;
-	for (c=0; c<CACHE_NUMCACHES; c++)
-	{
-		for (e=0; e<GAME_MAXIMAGES; e++)
-		{
-			if (caches[c][e])
-			{
-				if (caches[c][e]->Release() == 0)
-					delete caches[c][e];
-				caches[c][e] = NULL;
-			}
-		}
-	}
-*/
 }
 
 void CImageManager::Set(CacheType cache, int index)

@@ -43,7 +43,7 @@ CImageCacheEntry::~CImageCacheEntry()
 LoadTexture
 =======================================
 */
-void CImageCacheEntry::LoadTexture(void)
+void CImageCacheEntry::LoadTexture()
 {
 //	if (tex_bin != -1)
 //	{

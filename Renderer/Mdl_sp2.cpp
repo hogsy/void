@@ -84,69 +84,6 @@ void CModelSp2::LoadModel(I_FileReader * pFile, const char * szFileName)
 			}
 		}
 	}
-
-//	pFile->Destroy();
-
-/*
-	CFileBuffer	 fileReader;
-
-	if(!fileReader.Open(modelfile))
-	{
-		// load default model
-		fileReader.Close();
-		LoadFail();
-		return;
-	}
-
-
-	sp2_header_t header;
-	fileReader.Read(&header, sizeof(sp2_header_t), 1);
-
-	// make sure it's a valid sp2
-	if ((header.ident != (('2'<<24)+('S'<<16)+('D'<<8)+'I')) || (header.version != 2))
-	{
-		ComPrintf("%s - invalid sp2 file", modelfile);
-		fileReader.Close();
-		LoadFail();
-		return;
-	}
-
-	num_skins = header.numframes;
-	num_frames= header.numframes;
-
-
-	frames = new sp2_frame_t[num_frames];
-
-	fileReader.Read(frames, sizeof(sp2_frame_t), num_frames);
-	fileReader.Close();
-
-
-	// skin names
-	skin_names = new char*[num_skins];
-	if (!skin_names) FError("mem for skin names");
-
-
-	for (int s=0; s<num_frames; s++)
-	{
-		// md2 skin name list is 64 char strings
-		skin_names[s] = new char[64];
-
-		// strip path and extension
-		for (int c=strlen(frames[s].skin_name); c>=0; c--)
-		{
-			if (frames[s].skin_name[c] == '.')
-				frames[s].skin_name[c] = '\0';
-
-			else if ((frames[s].skin_name[c] == '/') || (frames[s].skin_name[c] == '/'))
-			{
-				skin_names[s][0] = '_';
-				strcpy(&skin_names[s][1], &frames[s].skin_name[c+1]);
-				break;
-			}
-		}
-	}
-*/
-
 	LoadSkins();
 }
 
