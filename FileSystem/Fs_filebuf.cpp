@@ -145,9 +145,9 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 {
 	char tmp;
 
-	// if we want a new line, find the first '/n'
+	// if we want a new line, find the first '\n'
 	if (newline)
-		while (GetChar() != '/n');
+		while (GetChar() != '\n');
 
 	// advance until we find characters
 	while (1)
@@ -155,9 +155,9 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 		tmp = GetChar();
 
 		// dont want a new line but we found one
-		if ((tmp == '/n' && !newline) || (tmp == EOF) || (tmp == -1))
+		if ((tmp == '\n' && !newline) || (tmp == EOF) || (tmp == -1))
 		{
-			(*buff) = 0;
+			(*buff) = '\0';
 			return;
 		}
 
@@ -178,14 +178,14 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 	}
 
 	// null terminate
-	(*ptr) = 0;
+	(*ptr) = '\0';
 
 
 	// if it's a comment, we don't want it
-	if ((buff[0] == '//') && (buff[1] == '//'))
+	if ((buff[0] == '/') && (buff[1] == '/'))
 	{
 		if (!newline)
-			buff[0] = 0;
+			buff[0] = '\0';
 
 		else
 			GetToken(buff, true);
