@@ -15,7 +15,7 @@ int			eye_leaf;
 //extern model_cache_t *tmodel;	// where model info is put so it can be rendered - FIXME
 plane_t frust[5];	// 4 sides + near-z
 
-extern	vector_t *fullblend;
+extern	const vector_t *fullblend;
 
 //====================================================================================
 

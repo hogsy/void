@@ -22,7 +22,7 @@ cpoly_t* cache_allocs[POLY_CACHE_ALLOCS];
 int		 num_cache_allocs = 0;
 */
 // FIXME - put in a different struct
-vector_t *fullblend;
+const vector_t *fullblend;
 //extern eyepoint_t	eye;			// where we're gonna draw from
 extern const CCamera * camera;
 
