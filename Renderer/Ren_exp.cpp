@@ -3,12 +3,10 @@
 #include "Ren_main.h"
 #include "Ren_cache.h"
 #include "Ren_beam.h"
-//#include "Hud_main.h"
 #include "Tex_main.h"
-//#include "Mdl_main.h"
 #include "Con_main.h"
-//#include "Img_main.h"
 #include "Client.h"
+#include "ShaderManager.h"
 
 #include "gl_rast.h"
 #include "Rast_none.h"
@@ -43,6 +41,7 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 
 	//Start the console first thing
 	g_prCons= new CRConsole();
+	g_pShaders = new CShaderManager();
 	g_pTex  = new CTextureManager();
 	g_pClient = new CClientRenderer();
 
@@ -68,6 +67,10 @@ Destructor
 */
 CRenExp::~CRenExp()
 {
+	if (g_pShaders)
+		delete g_pShaders;
+	g_pShaders = 0;
+
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;

@@ -207,8 +207,9 @@ CShaderLayer::Load(CFileBuffer *layer, int &texindex)
 CShader
 ===================================================================================================
 */
-CShader::CShader()
+CShader::CShader(const char *name)
 {
+	strcpy(mName, name);
 	mTextureBin = -1;
 	mNumTextures = 0;
 	mNumLayers = 0;
@@ -218,6 +219,9 @@ CShader::CShader()
 
 CShader::~CShader()
 {
+	if (mRefCount != 0)
+		ComPrintf("*** deleting shader with refcounts ***\n");
+
 	for (int l=0; l<mNumLayers; l++)
 		delete (mLayers[l]);
 

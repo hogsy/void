@@ -48,7 +48,7 @@ public:
 class CShader
 {
 public:
-	CShader();
+	CShader(const char *name);
 	~CShader();
 
 	void Load(CFileBuffer *shader);
@@ -63,6 +63,7 @@ public:
 private:
 
 
+	char mName[64];
 
 	int mRefCount;
 
