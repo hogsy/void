@@ -5,86 +5,12 @@
 #include "Com_util.h"
 #include "Com_world.h"
 
-
-
-I_World * CServer::GetWorld()
-{	return m_pWorld;
-}
-
-/*
-======================================
-Util funcs
-======================================
-*/
-void CServer::AddServerCmd(const char * cmd)
-{	m_svCmds.push_back(std::string(cmd));
-}
-
-void CServer::DebugPrint(const char * msg)
-{	System::GetConsole()->ComPrint(msg);
-}
-
-/*
-======================================
-Game messed up. kill server
-======================================
-*/
-void CServer::FatalError(const char * msg)
-{
-	for(int i=0; i< m_svState.numClients; i++)
-		m_net.SendDisconnect(i,DR_SVERROR);
-	ComPrintf("Server Error : %s\n", msg);
-	Shutdown();
-}
-
-
-/*
-======================================
-Print a broadcast message
-======================================
-*/
-void CServer::BroadcastPrintf(const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.BroadcastPrintf(m_printBuffer);
-}
-
-/*
-======================================
-Print a message to a given client
-======================================
-*/
-void CServer::ClientPrintf(int clNum, const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.ClientPrintf(clNum,msg);
-}
-
-
-
-
 //==========================================================================
 //==========================================================================
 
-
-
-NetChanWriter & CServer::GetNetChanWriter()
-{	return (reinterpret_cast<NetChanWriter &>(m_net));
-}
-
-
-
-
-
 /*
 ======================================
-
+Get a multicast set
 ======================================
 */
 void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
@@ -108,16 +34,14 @@ void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
 	}
 }
 
+/*
+================================================
+Set a set based on source org to find out pvs
+================================================
+*/
 void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vector_t &source)
 {
 }
-
-
-
-
-
-
-
 
 
 /*
@@ -134,10 +58,8 @@ void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, floa
 }
 
 
-
 //==========================================================================
 //==========================================================================
-
 
 
 /*
@@ -213,4 +135,69 @@ int CServer::RegisterImage(const char * image)
 	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
 	return i;
+}
+
+
+//==========================================================================
+//==========================================================================
+
+
+/*
+======================================
+Print a broadcast message
+======================================
+*/
+void CServer::BroadcastPrintf(const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+	m_net.BroadcastPrintf(m_printBuffer);
+}
+
+/*
+======================================
+Print a message to a given client
+======================================
+*/
+void CServer::ClientPrintf(int clNum, const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+	m_net.ClientPrintf(clNum,msg);
+}
+
+/*
+======================================
+Util funcs
+======================================
+*/
+//Return handler to World interface forpoint contents and traces etc
+I_World * CServer::GetWorld()
+{	return m_pWorld;
+}
+
+NetChanWriter & CServer::GetNetChanWriter()
+{	return m_net;
+}
+
+//Add a command which will be executed at the end of the frame
+void CServer::AddServerCmd(const char * cmd)
+{	m_svCmds.push_back(std::string(cmd));
+}
+
+void CServer::DebugPrint(const char * msg)
+{	System::GetConsole()->ComPrint(msg);
+}
+
+//Game messed up. kill server
+void CServer::FatalError(const char * msg)
+{
+	for(int i=0; i< m_svState.numClients; i++)
+		m_net.SendDisconnect(i,DR_SVERROR);
+	ComPrintf("Server Error : %s\n", msg);
+	Shutdown();
 }

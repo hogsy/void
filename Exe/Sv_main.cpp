@@ -5,12 +5,18 @@
 #include "Com_util.h"
 #include "Com_world.h"
 
+namespace {
 enum 
 {
-	CMD_MAP = 1,
-	CMD_KILLSERVER = 2,
-	CMD_STATUS	= 3,
-	CMD_KICK = 4
+	//Shutdown Server and send reconnects if needed. Then reintialize with new data
+	CMD_MAP = 1,		
+	//Send Reconnect. and just change map.
+	CMD_CHANGELEVEL = 2,
+	//Shutdown Server and send disconnects
+	CMD_KILLSERVER = 3,
+	
+	CMD_STATUS	= 4,
+	CMD_KICK = 5
 };
 
 const float GAME_FRAMETIME = 1/20;
@@ -18,13 +24,15 @@ const float GAME_FRAMETIME = 1/20;
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
 
+}
 
 //==========================================================================
+//Server Controller interface
 //==========================================================================
-
-static CServer * g_pServer=0;
 
 namespace VoidServer {
+
+static CServer * g_pServer=0;
 
 bool InitializeNetwork()
 {	return CNetServer::InitWinsock();
@@ -34,14 +42,12 @@ void ShutdownNetwork()
 }
 
 void Create()
-{	
-	if(!g_pServer)
+{	if(!g_pServer)
 		g_pServer = new CServer;
 }
 
 void Destroy()
-{
-	if(g_pServer)
+{	if(g_pServer)
 		delete g_pServer;
 }
 
@@ -51,11 +57,8 @@ void RunFrame()
 
 }
 
-
-
 //==========================================================================
 //==========================================================================
-
 
 /*
 ======================================
@@ -87,6 +90,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
 
 	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
+	System::GetConsole()->RegisterCommand("changelevel",CMD_CHANGELEVEL, this);
 	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
 	System::GetConsole()->RegisterCommand("kick",CMD_KICK, this);
 	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
@@ -113,6 +117,7 @@ Initialize the Server from dead state
 bool CServer::Init()
 {
 	//Unlatch all CVARS
+/*
 	m_cGame.Unlatch();
 	m_cHostname.Unlatch();
 	m_cPort.Unlatch();
@@ -122,8 +127,11 @@ bool CServer::Init()
 	strcpy(m_svState.hostName, m_cHostname.string);
 	m_svState.maxClients = m_cMaxClients.ival;
 	m_svState.port = m_cPort.ival;
-	m_svState.worldname[0] = 0;
+	memset(m_svState.worldname, 0, sizeof(m_svState.worldname));
 	m_svState.levelId = 0;
+*/
+	m_svCmds.clear();
+	ResetServerState();
 
 	//Initialize Network
 	if(!m_net.Init(this, &m_svState))
@@ -154,9 +162,12 @@ bool CServer::Init()
 		Shutdown();
 		return false;
 	}
+
 	m_entities = m_pGame->entities;
 	m_clients = m_pGame->clients;
 	m_active = true;
+
+	ComPrintf("CServer::Init OK: %d commands in buffer\n", m_svCmds.size());
 	return true;
 }
 
@@ -195,6 +206,8 @@ void CServer::Shutdown()
 		m_hGameDll = 0;
 	}
 
+	ResetServerState();
+/*
 	//Unlatch Vars
 	m_cGame.Unlatch();
 	m_cHostname.Unlatch();
@@ -205,7 +218,6 @@ void CServer::Shutdown()
 	strcpy(m_svState.hostName, m_cHostname.string);
 	m_svState.maxClients = m_cMaxClients.ival;
 	m_svState.port = m_cPort.ival;
-	m_svState.worldname[0] = 0;
 	m_svState.levelId = 0;
 	m_svState.numClients = 0;
 	m_svState.levelId = 0;
@@ -215,6 +227,7 @@ void CServer::Shutdown()
 	if(m_pWorld)
 		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
+*/
 
 	ComPrintf("CServer::Shutdown OK\n");
 }
@@ -232,14 +245,56 @@ void CServer::Restart()
 	m_pGame->ShutdownGame();
 	m_net.Restart();
 
-	if(m_pWorld)
+	ResetServerState();
+/*	if(m_pWorld)
 	{
 		CWorld::DestroyWorld(m_pWorld);
 		m_pWorld = 0;
-		m_svState.worldname[0] = 0;
+		memset(m_svState.worldname, 0, sizeof(m_svState.worldname));
 	}
+*/
 	m_pGame->InitGame();
 	ComPrintf("CServer::Restart OK\n");
+}
+
+
+/*
+================================================
+
+================================================
+*/
+void CServer::ChangeLevel(const char * worldName)
+{
+}
+
+
+
+/*
+================================================
+Reset Server State Vars
+================================================
+*/
+void CServer::ResetServerState()
+{
+	//Unlatch Vars
+	m_cGame.Unlatch();
+	m_cHostname.Unlatch();
+	m_cPort.Unlatch();
+
+	//Reset State info
+	strcpy(m_svState.gameName, m_cGame.string);
+	strcpy(m_svState.hostName, m_cHostname.string);
+	m_svState.maxClients = m_cMaxClients.ival;
+	m_svState.port = m_cPort.ival;
+	m_svState.levelId = 0;
+	m_svState.numClients = 0;
+	m_svState.levelId = 0;
+	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
+	
+	//destroy world data
+	if(m_pWorld)
+		CWorld::DestroyWorld(m_pWorld);
+	m_pWorld = 0;
 }
 
 
@@ -302,7 +357,7 @@ void CServer::RunFrame()
 
 /*
 ================================================
-
+Execute the buffer server commands
 ================================================
 */
 void CServer::ExecServerCommands()
@@ -311,13 +366,74 @@ void CServer::ExecServerCommands()
 	{
 		for(StringList::iterator it = m_svCmds.begin(); it != m_svCmds.end(); it++)
 			System::GetConsole()->ExecString(it->c_str());
-		m_svCmds.erase(m_svCmds.begin(), m_svCmds.end());
+		m_svCmds.clear();
 	}		
 }
 
+//======================================================================================
+//======================================================================================
 
-//======================================================================================
-//======================================================================================
+/*
+==========================================
+Load the World
+==========================================
+*/
+void CServer::LoadWorld(const char * mapname)
+{
+	if(!mapname)
+		return;
+
+	bool bRestarting = false;
+	char mappath[COM_MAXPATH];
+	char worldName[64];
+
+	strcpy(worldName,mapname);
+	strcpy(mappath, GAME_WORLDSDIR);
+	strcat(mappath, mapname);
+	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
+
+	//Restart if already active
+	if(m_active)
+	{	
+		Restart();
+		bRestarting = true;
+	}
+	else
+	{
+		if(!Init())
+		{	
+			ComPrintf("CServer::LoadWorld: Error initializing server\n");
+			return;
+		}
+	}
+
+	//Load World
+	m_pWorld = CWorld::CreateWorld(mappath);
+	if(!m_pWorld)
+	{
+		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
+		Shutdown();
+		return;
+	}
+	//Load Entitiys in the world
+	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
+	LoadEntities();
+
+	//Write SignON data
+	WriteSignOnBuffer();
+
+	//update state
+	m_svState.levelId ++;
+	m_active = true;
+
+	//if its not a dedicated server, then push "connect loopback" into the console
+	if(!bRestarting)
+		System::GetConsole()->ExecString("connect localhost");
+
+	ComPrintf("CServer::LoadWorld : OK\n");
+}
+
+
 /*
 ======================================
 Parse and read entities
@@ -495,67 +611,6 @@ void CServer::WriteSignOnBuffer()
 }
 
 /*
-==========================================
-Load the World
-==========================================
-*/
-void CServer::LoadWorld(const char * mapname)
-{
-	if(!mapname)
-		return;
-
-	bool bRestarting = false;
-	char mappath[COM_MAXPATH];
-	char worldName[64];
-
-	strcpy(worldName,mapname);
-	strcpy(mappath, GAME_WORLDSDIR);
-	strcat(mappath, mapname);
-	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
-
-	//Restart if already active
-	if(m_active)
-	{	
-		Restart();
-		bRestarting = true;
-	}
-	else
-	{
-		if(!Init())
-		{	
-			ComPrintf("CServer::LoadWorld: Error initializing server\n");
-			return;
-		}
-	}
-
-	//Load World
-	m_pWorld = CWorld::CreateWorld(mappath);
-	if(!m_pWorld)
-	{
-		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
-		Shutdown();
-		return;
-	}
-	//Load Entitiys in the world
-	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
-	LoadEntities();
-
-	//Write SignON data
-	WriteSignOnBuffer();
-
-	//update state
-	m_svState.levelId ++;
-	m_active = true;
-
-	//if its not a dedicated server, then push "connect loopback" into the console
-	if(!bRestarting)
-		System::GetConsole()->ExecString("connect localhost");
-}
-
-//======================================================================================
-//======================================================================================
-
-/*
 ======================================
 Write baselines of entities
 ======================================
@@ -596,6 +651,9 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 }
 
 
+//==========================================================================
+//==========================================================================
+
 /*
 ======================================
 Print Status info
@@ -632,12 +690,6 @@ void CServer::PrintServerStatus()
 		}
 	}
 }
-
-
-
-//==========================================================================
-//==========================================================================
-
 
 /*
 ==========================================
@@ -695,11 +747,13 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_STATUS:
 		PrintServerStatus();
 		break;
+	case CMD_CHANGELEVEL:
+		{
+			break;
+		}
 	case CMD_KICK:
 		{
 			break;
 		}
 	}
 }
-
-

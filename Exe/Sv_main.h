@@ -120,9 +120,12 @@ private:
 
 	bool Init();
 	void Shutdown();
+	
 	void Restart();
+	void ChangeLevel(const char * worldName);
+	
 	void PrintServerStatus();
-
+	void ResetServerState();
 	void ExecServerCommands();
 
 	void LoadEntities();

@@ -2,7 +2,6 @@
 #include "Sv_main.h"
 #include "Com_world.h"
 
-
 /*
 ======================================
 Validate connection request from a client
@@ -130,7 +129,7 @@ Handle Client spawning
 */
 void CServer::OnClientBegin(int clNum)
 {
-	//This should set the clients spawn pos, and write an temp effects
+	//This should set the clients spawn pos, and write any temp effects
 	m_pGame->ClientBegin(clNum);
 }
 
@@ -162,11 +161,12 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
 
-
-	//TODO: Check for Dedicated later
+	//TODO: Only if the server isn't dedicated
 	if(m_svState.numClients == 0)
+	{
+ComPrintf("No Clients left. Disconnecting\n");
 		AddServerCmd("killserver");
-
+	}
 }
 
 
@@ -179,7 +179,6 @@ void CServer::OnLevelChange(int clNum)
 {
 }
 
-
 /*
 ======================================
 Write Game Status to buffer
@@ -188,8 +187,6 @@ Write Game Status to buffer
 void CServer::WriteGameStatus(CBuffer &buffer)
 {
 }
-
-
 
 /*
 ======================================
