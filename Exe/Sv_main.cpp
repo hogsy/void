@@ -712,7 +712,7 @@ void CServer::PrintServerStatus()
 
 			const NetChanState & state = m_net.ChanGetState(i);
 			ComPrintf("  Rate:%d\n  In:%d\n  Acked:%d\n  Out:%d\n", 
-						m_net.ChanGetRate(i), state.inMsgId, state.inAckedId, state.outMsgId);  //1.0/state.rate
+						m_net.ChanGetRate(i), state.inMsgId, state.inAckedId, state.outMsgId);
 			ComPrintf("  Dropped:%d\n  Good:%d\n  Chokes:%d\n", 
 					state.dropCount, state.goodCount, state.numChokes);
 		}
@@ -775,6 +775,10 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_STATUS:
 		PrintServerStatus();
 		break;
+	case CMD_KICK:
+		{
+			break;
+		}
 	}
 }
 

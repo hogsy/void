@@ -17,33 +17,24 @@ bool CServer::ValidateClConnection(int clNum,
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
+
 	m_net.ChanSetRate(clNum, buffer.ReadInt());
-	
 	m_svState.numClients = m_pGame->numClients;
 
+	//Add client info to all connected clients
 	int len = strlen(m_clients[clNum]->name) + 
 			  strlen(m_clients[clNum]->modelName) + 
 			  strlen(m_clients[clNum]->skinName) + 10;
 
-	//Add client info to all connected clients
-	for(int i=0;i<m_svState.maxClients;i++)
-	{
-		//dont send to source
-		if(i == clNum)
-			continue;
-
-		if(m_clients[i] && m_clients[i]->spawned)
-		{
-			m_net.ChanBeginWrite(i,SV_CLINFO, len);
-			m_net.ChanWriteByte(m_clients[clNum]->num);
-			m_net.ChanWriteString(m_clients[clNum]->name);
-			m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
-			m_net.ChanWriteString(m_clients[clNum]->modelName);
-			m_net.ChanWriteShort(m_clients[clNum]->skinNum);
-			m_net.ChanWriteString(m_clients[clNum]->skinName);
-			m_net.ChanFinishWrite();
-		}
-	}
+	GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X,clNum);
+	m_net.ChanBeginWrite(m_multiCastSet, SV_CLFULLINFO, len);
+	m_net.ChanWriteByte(m_clients[clNum]->num);
+	m_net.ChanWriteString(m_clients[clNum]->name);
+	m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
+	m_net.ChanWriteString(m_clients[clNum]->modelName);
+	m_net.ChanWriteShort(m_clients[clNum]->skinNum);
+	m_net.ChanWriteString(m_clients[clNum]->skinName);
+	m_net.ChanFinishWrite();
 	return true;
 }
 
@@ -77,14 +68,21 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				break;	
 			}
 		//client updating its local info
-		case CL_UPDATEINFO:
+		case CL_INFOCHANGE:
 			{
 				char id = buffer.ReadChar();
 				if(id == 'n')
 				{
 					const char * clname = buffer.ReadString();
-					BroadcastPrintf("%s renamed to %s", m_clients[clNum]->name, clname);
+ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
 					strcpy(m_clients[clNum]->name, clname);
+
+					GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X, clNum);
+					m_net.ChanBeginWrite(m_multiCastSet,SV_CLINFOCHANGE, strlen(m_clients[clNum]->name)+2);
+					m_net.ChanWriteByte(clNum);
+					m_net.ChanWriteByte('n');
+					m_net.ChanWriteString(m_clients[clNum]->name);
+					m_net.ChanFinishWrite();
 				}
 				else if (id == 'r')
 				{
@@ -127,18 +125,37 @@ Handle Client disconnection
 */
 void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 {
+//	if(reason.broadcastMsg)
+//		BroadcastPrintf(reason.broadcastMsg, m_clients[clNum]->name);
+
+	GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X, clNum);
 	if(reason.broadcastMsg)
-		BroadcastPrintf(reason.broadcastMsg, m_clients[clNum]->name);
+	{
+		m_net.ChanBeginWrite(m_multiCastSet,SV_CLDISCONNECT, 
+							 strlen(reason.broadcastMsg) + 2);
+		m_net.ChanWriteByte(clNum);
+		m_net.ChanWriteString(reason.broadcastMsg);
+	}
+	else
+	{
+		m_net.ChanBeginWrite(m_multiCastSet,SV_CLDISCONNECT, 
+							 strlen(DR_CLQUIT.broadcastMsg) + 2);
+		m_net.ChanWriteByte(clNum);
+		m_net.ChanWriteString(DR_CLQUIT.broadcastMsg);
+	}
+	m_net.ChanFinishWrite();
+	
+
+	m_pGame->ClientDisconnect(clNum);
+	m_svState.numClients = m_pGame->numClients;
+}
+
 /*
 	m_net.ChanBeginWrite(
 	m_net.ChanBeginWrite(i,SV_CLINFO, len);
 	m_net.ChanWriteByte(m_clients[clNum]->num);
 	m_net.ChanWriteString(m_clients[clNum]->name);
 */
-	
-	m_pGame->ClientDisconnect(clNum);
-	m_svState.numClients = m_pGame->numClients;
-}
 
 /*
 ======================================
@@ -170,6 +187,11 @@ void CServer::OnLevelChange(int clNum)
 }
 
 
+/*
+======================================
+
+======================================
+*/
 void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
 {
 	if((type == MULTICAST_ALL) || (type == MULTICAST_ALL_X))

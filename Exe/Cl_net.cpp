@@ -48,7 +48,7 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				m_pNetCl->Reconnect(true);
 				break;
 			}
-		case SV_CLINFO:
+		case SV_CLFULLINFO:
 			{
 				int num = buffer.ReadByte();
 				m_clients[num].Reset();
@@ -73,6 +73,27 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 
 				m_clients[num].inUse = true;
 
+				break;
+			}
+		case SV_CLINFOCHANGE:
+			{
+				int num = buffer.ReadByte();
+				char field = buffer.ReadChar();
+				if(field == 'n')
+				{
+					char * newName = buffer.ReadString();
+					m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+					ComPrintf("%s renamed to %s\n", m_clients[num].name, newName);
+					strcpy(m_clients[num].name, newName);
+				}
+				break;
+			}
+		case SV_CLDISCONNECT:
+			{
+				int  num = buffer.ReadByte();
+				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
+				m_clients[num].Reset();
 				break;
 			}
 		case SV_CLUPDATE:
@@ -339,7 +360,7 @@ bool CClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-	m_pNetCl->GetReliableBuffer().WriteByte(CL_UPDATEINFO);
+	m_pNetCl->GetReliableBuffer().WriteByte(CL_INFOCHANGE);
 	m_pNetCl->GetReliableBuffer().WriteChar('n');
 	m_pNetCl->GetReliableBuffer().WriteString(name);
 	return true;
@@ -371,7 +392,7 @@ bool CClient::ValidateRate(const CParms &parms)
 		return true;
 
 	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
-	buffer.WriteByte(CL_UPDATEINFO);
+	buffer.WriteByte(CL_INFOCHANGE);
 	buffer.WriteChar('r');
 	buffer.WriteInt(rate);
 	return true;
