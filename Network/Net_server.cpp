@@ -27,6 +27,7 @@ CNetServer::CNetServer()
 {	
 	m_pSock  = new CNetSocket(&m_recvBuf);
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
+	m_clChan = 0;
 
 	memset(m_printBuffer,0,sizeof(m_printBuffer));
 }
@@ -35,9 +36,12 @@ CNetServer::~CNetServer()
 {	
 	m_pSvState = 0;
 	m_pServer = 0;
-	delete [] m_challenges;
-	delete [] m_clChan;
-	delete m_pSock;
+	if(m_challenges)
+		delete [] m_challenges;
+	if(m_clChan)
+		delete [] m_clChan;
+	if(m_pSock)
+		delete m_pSock;
 }
 
 /*
