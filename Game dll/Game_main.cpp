@@ -134,10 +134,26 @@ void CGame::RunFrame(float curTime, float frameTime)
 
 
 
+			//Get desired move
 			desiredMove.Set(0,0,0);
-			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.forwardmove, f);
-			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, r);
-			desiredMove.z = clients[i]->clCmd.upmove;
+			// forward
+			if (clients[i]->clCmd.forwardmove & 1)
+				desiredMove.VectorMA(desiredMove,200, f);
+			// back
+			if (clients[i]->clCmd.forwardmove & 2)
+				desiredMove.VectorMA(desiredMove,-200, f);
+			// right
+			if (clients[i]->clCmd.rightmove & 1)
+				desiredMove.VectorMA(desiredMove,200, r);
+			// left
+			if (clients[i]->clCmd.rightmove & 2)
+				desiredMove.VectorMA(desiredMove,-200, r);
+			// up (jump)
+			if (clients[i]->clCmd.upmove & 1)
+				desiredMove.z += 400;
+
+			// FIXME - use gravity cvar
+			// always add gravity
 			desiredMove.z -= 800 * frameTime;
 
 

@@ -142,10 +142,24 @@ void CGameClient::RunFrame(float frameTime)
 
 
 	//Get desired move
-	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.forwardmove, f);
-	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, r);
-	m_vecDesiredMove.z += m_cmd.upmove;
+	// forward
+	if (m_cmd.forwardmove & 1)
+		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, f);
+	// back
+	if (m_cmd.forwardmove & 2)
+		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, f);
+	// right
+	if (m_cmd.rightmove & 1)
+		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, r);
+	// left
+	if (m_cmd.rightmove & 2)
+		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, r);
+	// up (jump)
+	if (m_cmd.upmove & 1)
+		m_vecDesiredMove.z += 400;
+
 	// FIXME - use gravity cvar
+	// always add gravity
 	m_vecDesiredMove.z -= 800 * frameTime;
 
 
@@ -159,6 +173,8 @@ void CGameClient::RunFrame(float frameTime)
 
 
 	m_pGameClient->velocity += m_vecDesiredMove;
+
+	// FIXME - cap velocity somewhere around here
 
 
 	//Perform the actual move and update angles
@@ -397,7 +413,7 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_JUMP:
 		//m_vecDesiredMove.z += 5000.0f;
-		m_cmd.upmove += 400;
+		m_cmd.upmove |= 1;
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);
