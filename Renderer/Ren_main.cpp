@@ -1,9 +1,7 @@
 
 #include "Standard.h"
 #include "Ren_main.h"
-//#include "Ren_sky.h"
 #include "Ren_beam.h"
-
 #include "Tex_hdr.h"
 #include "Con_main.h"
 #include "Mdl_main.h"

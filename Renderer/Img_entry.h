@@ -1,7 +1,7 @@
 #ifndef IMG_ENTRY_H
 #define IMG_ENTRY_H
 
-#include <string.h>
+#include "Standard.h"
 
 class CImageCacheEntry
 {
@@ -23,6 +23,7 @@ private:
 	int mRefCount;
 
 	int	tex_bin;		// rasterizer texture name
+	int mShaderBin;
 	char *imagefile;	// text texture name
 };
 

@@ -1,6 +1,7 @@
-#include "Standard.h"
+
 #include "Img_entry.h"
 #include "Tex_image.h"
+#include "ShaderManager.h"
 
 /*
 =======================================
@@ -12,6 +13,7 @@ CImageCacheEntry::CImageCacheEntry(const char *file)
 	imagefile = new char[strlen(file)+1];
 	strcpy(imagefile, file);
 	tex_bin = -1;
+	mShaderBin = -1;
 	mRefCount = 1;
 	LoadTexture();
 }
@@ -28,6 +30,9 @@ CImageCacheEntry::~CImageCacheEntry()
 
 	if (tex_bin != -1)
 		g_pRast->TextureBinDestroy(tex_bin);
+
+	if (mShaderBin != -1)
+		g_pShaders->BinDestroy(mShaderBin);
 }
 
 /*
@@ -42,6 +47,16 @@ void CImageCacheEntry::LoadTexture(void)
 		ComPrintf("CImageCacheEntry::LoadTexture() - texture already loaded\n");
 		return;
 	}
+
+	if (mShaderBin != -1)
+	{
+		ComPrintf("CImageCacheEntry::LoadTexture() - shaders already loaded\n");
+		return;
+	}
+
+	mShaderBin = g_pShaders->BinInit(1);
+	g_pShaders->LoadShader(mShaderBin, 0, imagefile);
+
 
 	tex_bin = g_pRast->TextureBinInit(1);
 	CImageReader *texReader = new CImageReader();
@@ -76,6 +91,10 @@ UnLoadTexture
 */
 void CImageCacheEntry::UnLoadTexture(void)
 {
+	if (mShaderBin != -1)
+		g_pShaders->BinDestroy(mShaderBin);
+	mShaderBin = -1;
+
 	if (tex_bin != -1)
 		g_pRast->TextureBinDestroy(tex_bin);
 	tex_bin = -1;

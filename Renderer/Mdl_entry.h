@@ -2,8 +2,7 @@
 #ifndef MDL_ENTRY_H
 #define MDL_ENTRY_H
 
-#include <string.h>
-//#include "3dmath.h"
+#include "Standard.h"
 
 
 class CModelCacheEntry
@@ -33,6 +32,7 @@ private:
 protected:
 	// skin info
 	int num_skins;
+	int mShaderBin;
 	int	skin_bin;		// rasterizer texture names
 	char **skin_names;	// text texture names
 

@@ -1,4 +1,4 @@
-#include "standard.h"
+#include "Standard.h"
 #include "ren_cache.h"
 
 extern	vector_t	forward, right, up;	// view directions

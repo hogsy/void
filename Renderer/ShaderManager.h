@@ -36,6 +36,9 @@ public:
 	int mNumLightmaps;
 	int mLightmapBin;
 
+	int	mWorldBin;	// shader bin that holds the world shaders
+	int	mBaseBin;	// shader bin that holds the base shaders
+
 private:
 
 	struct shader_bin_t
@@ -51,9 +54,6 @@ private:
 	};
 
 	shader_bin_t mBins[MAX_TEXTURE_BINS];
-
-	int	mWorldBin;	// shader bin that holds the world shaders
-	int	mBaseBin;	// shader bin that holds the base shaders
 
 	int mNumShaders;
 	void ParseShaders(const char *shaderfile);	// parse all shaders into memory

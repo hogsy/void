@@ -1,4 +1,4 @@
-#include "Standard.h"
+
 #include "Hud_main.h"
 #include "Tex_hdr.h"
 

@@ -1,7 +1,7 @@
-#include "Standard.h"
+
 #include "Mdl_entry.h"
 #include "Tex_image.h"
-//#include "Client.h"
+#include "ShaderManager.h"
 
 
 /*
@@ -14,6 +14,7 @@ CModelCacheEntry::CModelCacheEntry()
 	mRefCount = 1;
 	num_skins = 0;
 	skin_bin = -1;
+	mShaderBin = -1;
 	skin_names = NULL;
 	num_frames = 0;
 }
@@ -31,6 +32,10 @@ CModelCacheEntry::~CModelCacheEntry()
 
 	if (skin_bin != -1)
 		g_pRast->TextureBinDestroy(skin_bin);
+
+	if (mShaderBin != -1)
+		g_pShaders->BinDestroy(mShaderBin);
+
 
 	if (skin_names)
 	{
@@ -54,6 +59,12 @@ void CModelCacheEntry::LoadSkins(void)
 		return;
 	}
 
+	if (mShaderBin != -1)
+	{
+		ComPrintf("CModelCacheEntry::LoadSkins() - shaders already loaded\n");
+		return;
+	}
+
 	char texname[260];
 	char path[260];
 
@@ -68,6 +79,8 @@ void CModelCacheEntry::LoadSkins(void)
 	}
 
 	skin_bin = g_pRast->TextureBinInit(num_skins);
+	mShaderBin = g_pShaders->BinInit(num_skins);
+
 	CImageReader *texReader = new CImageReader();
 
 	for (int s=0; s<num_skins; s++)
@@ -96,6 +109,7 @@ void CModelCacheEntry::LoadSkins(void)
 			mipcount--;
 		}
 
+		g_pShaders->LoadShader(mShaderBin, s, texname);
 		g_pRast->TextureLoad(skin_bin, s, &tdata);
 	}
 
@@ -111,6 +125,11 @@ void CModelCacheEntry::UnLoadSkins(void)
 {
 	if (skin_bin != -1)
 		g_pRast->TextureBinDestroy(skin_bin);
+
+	if (mShaderBin != -1)
+		g_pShaders->BinDestroy(mShaderBin);
+
+	mShaderBin = -1;
 	skin_bin = -1;
 }
 
