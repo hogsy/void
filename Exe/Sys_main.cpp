@@ -247,17 +247,16 @@ CVoid::~CVoid()
 	}
 #endif
 	
+	//Shutdown, and free the Renderer Interface
+	if(m_pRender)
+		m_pRender->Shutdown();
+	m_Console.SetConsoleRenderer(0);
+
 	if(m_pInput)
 	{
 		m_pInput->Shutdown();
 		delete m_pInput;
 	}
-	
-	//Shutdown, and free the Renderer Interface
-	if(m_pRender)
-		m_pRender->Shutdown();
-
-	m_HunkManager.PrintStats();
 
 	//Free the file system
 	FILESYSTEM_Free();	
@@ -265,6 +264,8 @@ CVoid::~CVoid()
 
 	if(m_pExport)
 		delete m_pExport;
+
+	m_HunkManager.PrintStats();
 	
 	CoUninitialize();
 }

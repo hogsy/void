@@ -59,21 +59,14 @@ void CImageCacheEntry::LoadTexture(void)
 	mShaderBin = g_pShaders->BinInit(1);
 	g_pShaders->LoadShader(mShaderBin, 0, imagefile);
 
-
 	tex_bin = g_pRast->TextureBinInit(1);
 
-	TextureData  tData;
-	
-	CImageReader::GetReader().Read(imagefile, tData);
+	TextureData   tData;
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
-	int mipCount = tData.numMipMaps - 1;
-	while (mipCount > 0)
-	{
-		CImageReader::GetReader().ImageReduce(mipCount);
-		mipCount--;
-	}
+	CImageReader::GetReader().Read(imagefile, tData);
+
 	g_pRast->TextureLoad(tex_bin, 0, tData);
 }
 

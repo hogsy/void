@@ -157,6 +157,8 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 	}
 
 	TextureData tData;
+	tData.bMipMaps = true;
+	tData.bClamped  = false;
 
 	for (t=0; t<m_numWorldTextures; t++)
 	{
@@ -166,15 +168,13 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 		tex->dims[t][1] = tData.height;
 
 		// create all mipmaps
-		tData.bMipMaps = true;
-		tData.bClamped  = false;
-
-		int mipcount = tData.numMipMaps - 1;
+/*		int mipcount = tData.numMipMaps - 1;
 		while (mipcount > 0)
 		{
 			CImageReader::GetReader().ImageReduce(mipcount);
 			mipcount--;
 		}
+*/
 		g_pRast->TextureLoad(tex->bin_world, t, tData);
 	}
 

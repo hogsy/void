@@ -79,6 +79,8 @@ void CModelCacheEntry::LoadSkins(void)
 	mShaderBin = g_pShaders->BinInit(num_skins);
 
 	TextureData  tData;
+	tData.bMipMaps = true;
+	tData.bClamped = false;
 
 	for (int s=0; s<num_skins; s++)
 	{
@@ -88,17 +90,6 @@ void CModelCacheEntry::LoadSkins(void)
 
 		if ((strcmp(skin_names[s], "none")==0) || !CImageReader::GetReader().Read(texname, tData))
 			CImageReader::GetReader().DefaultTexture(tData);
-
-		// create all mipmaps
-		tData.bMipMaps = true;
-		tData.bClamped = false;
-
-		int mipCount = tData.numMipMaps - 1;
-		while (mipCount > 0)
-		{
-			CImageReader::GetReader().ImageReduce(mipCount);
-			mipCount--;
-		}
 
 		g_pShaders->LoadShader(mShaderBin, s, texname);
 		g_pRast->TextureLoad(skin_bin, s, tData);

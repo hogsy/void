@@ -68,13 +68,13 @@ private:
 	bool Read_TGA(TextureData &imgData);
 	bool Read_JPG(TextureData &imgData);
 
-	byte *	mipmapdata[MAX_MIPMAPS];
-	int		width,
-			height;
+	byte *	m_mipmapdata[MAX_MIPMAPS];
+	int		m_width,
+			m_height;
 	int		h, w;	// for mipmap creation
-	int		miplevels;
+	int		m_miplevels;
 
-	EImageFormat  format;
+	EImageFormat  m_format;
 	CFileBuffer	  m_fileReader;
 };
 
@@ -88,10 +88,10 @@ class CImageWriter
 {
 public:
 
-	CImageWriter(int iwidth, int iheight, 
+	CImageWriter(int iwidth, 
+				 int iheight, 
 				 const byte * idata);
-
-	virtual ~CImageWriter();
+	~CImageWriter();
 
 	void Write(const char *name, EImageFileFormat iformat=FORMAT_TGA);
 
@@ -105,8 +105,5 @@ protected:
 	void	Write_PCX( FILE *fp);
 };
 
-
-//======================================================================================
-//======================================================================================
 
 #endif

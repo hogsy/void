@@ -314,6 +314,8 @@ void CShader::LoadTextures(void)
 	mTextureBin = g_pRast->TextureBinInit(mNumTextures);
 
 	TextureData	 tData;
+	tData.bMipMaps = true;
+	tData.bClamped = false;
 
 	int t=0;
 	for (int l=0; l<mNumLayers; l++)
@@ -324,17 +326,6 @@ void CShader::LoadTextures(void)
 			{
 				if (!CImageReader::GetReader().Read(mLayers[l]->mTextureNames[tex].filename, tData))
 					CImageReader::GetReader().DefaultTexture(tData);
-
-				// create all mipmaps
-				tData.bMipMaps = true;
-				tData.bClamped = false;
-
-				int mipCount = tData.numMipMaps - 1;
-				while (mipCount > 0)
-				{
-					CImageReader::GetReader().ImageReduce(mipCount);
-					mipCount--;
-				}
 
 				g_pRast->TextureLoad(mTextureBin, t, tData);
 				t++;

@@ -14,7 +14,7 @@ namespace
 		byte encoding;
 		byte bits_per_pixel;
 		WORD x, y;
-		WORD width, height;
+		WORD m_width, m_height;
 		WORD x_res, y_res;
 		byte ega_palette[48];
 		byte reserved;
@@ -40,11 +40,11 @@ ImageReader object will ever exits
 */
 CImageReader::CImageReader()
 {
-	width = height = 0;
-	format = IMG_NONE;
+	m_width = m_height = 0;
+	m_format = IMG_NONE;
 
 	for (int i=0; i<MAX_MIPMAPS; i++)
-		mipmapdata[i] = NULL;
+		m_mipmapdata[i] = NULL;
 }
 
 CImageReader::~CImageReader()		
@@ -72,9 +72,9 @@ void CImageReader::FreeMipData(void)
 {
 	for (int i=0; i<MAX_MIPMAPS; i++)
 	{
-		if (mipmapdata[i])
-			g_pHunkManager->HunkFree(mipmapdata[i]);
-		mipmapdata[i] = 0;
+		if (m_mipmapdata[i])
+			g_pHunkManager->HunkFree(m_mipmapdata[i]);
+		m_mipmapdata[i] = 0;
 	}
 }
 
@@ -85,10 +85,10 @@ Key the transparent color
 */
 void CImageReader::ColorKey(byte *data)
 {
-	if(!data || format != IMG_RGBA)
+	if(!data || m_format != IMG_RGBA)
 		return;
 
-	int size = width * height * 4;
+	int size = m_width * m_height * 4;
 	for (int p = 0; p < size ; p+=4)
 	{
 		if ((data[p  ] == 228) && (data[p+1] == 41) &&	(data[p+2] == 226))
@@ -106,21 +106,21 @@ used as a replacement when we can't find a texture
 */
 void CImageReader::DefaultTexture(TextureData &imgData)
 {
-	width = DEFAULT_TEXTURE_WIDTH;
-	height = DEFAULT_TEXTURE_HEIGHT;
+	m_width = DEFAULT_TEXTURE_WIDTH;
+	m_height = DEFAULT_TEXTURE_HEIGHT;
 
 	ConfirmMipData();
 
-	for (int p = 0; p < width * height * 3; p++)
-		mipmapdata[miplevels-1][p] = rand();
+	for (int p = 0; p < m_width * m_height * 3; p++)
+		m_mipmapdata[m_miplevels-1][p] = rand();
 
-	format = IMG_RGB;
+	m_format = IMG_RGB;
 
-	imgData.height = height;
-	imgData.width = width;
-	imgData.data = &mipmapdata[0];
-	imgData.format = format;
-	imgData.numMipMaps = miplevels;
+	imgData.height = m_height;
+	imgData.width = m_width;
+	imgData.data = &m_mipmapdata[0];
+	imgData.format = m_format;
+	imgData.numMipMaps = m_miplevels;
 }
 
 /*
@@ -133,34 +133,36 @@ bool CImageReader::Read(const char * file, TextureData &imgData)
 	char filename[MAX_PATH];
 	bool err = false;
 
-/*	sprintf(filename,"%s.jpg",file);
-	if(m_fileReader.Open(filename) == true)
-	{
-		ComPrintf("Read JPEG!\n");
-		bool err = Read_JPG();
-		m_fileReader.Close();
-		return err;
-	}
-*/
 	//default to a tga
 	sprintf(filename,"%s.tga",file);
 	if(m_fileReader.Open(filename) == true)
-	{
 		err = Read_TGA(imgData);
-		m_fileReader.Close();
-		return err;
-	}
-
-	sprintf(filename,"%s.pcx",file);
-	if(m_fileReader.Open(filename) == true)
+	else
 	{
-		err = Read_PCX(imgData);
-		m_fileReader.Close();
-		return err;
+		//Now try pcx
+		sprintf(filename,"%s.pcx",file);
+		if(m_fileReader.Open(filename) == true)
+			err = Read_PCX(imgData);
+		else
+		{
+			ComPrintf("CImageReader::Read: Couldnt open %s\n",filename);
+			return false;
+		}
 	}
 
-	ComPrintf("CImageReader::Read: Couldnt open %s\n",filename);
-	return false;
+	//Create mipmaps if needed
+	if(imgData.bMipMaps)
+	{
+		int mipcount = imgData.numMipMaps - 1;
+		while (mipcount > 0)
+		{
+			ImageReduce(mipcount);
+			mipcount--;
+		}
+	}
+
+	m_fileReader.Close();
+	return err;
 }
 
 //======================================================================================
@@ -210,33 +212,33 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 
 	if (colorkey || (header.num_planes==4))
 	{
-		format = IMG_RGBA;
+		m_format = IMG_RGBA;
 		bpp = 4;
 	}
 	else
 	{
-		format = IMG_RGB;
+		m_format = IMG_RGB;
 		bpp = 3;
 	}
 
 
-	width = header.width - header.x + 1;
-	height= header.height - header.y + 1;
+	m_width = header.m_width - header.x + 1;
+	m_height= header.m_height - header.y + 1;
 
 	ConfirmMipData();
-	memset(mipmapdata[miplevels-1], 0xFF, width * height * bpp);
+	memset(m_mipmapdata[m_miplevels-1], 0xFF, m_width * m_height * bpp);
 
 	byte ch;
 	int number, color;
 	int countx, county, index;
 
 	//for every line
-	for (county = 0; county < height; county++)
+	for (county = 0; county < m_height; county++)
 	{
 		//decode this line for each r g b		
 		for (color = 0; color < header.num_planes; color++)
 		{
-			for (countx = 0; countx < width; )
+			for (countx = 0; countx < m_width; )
 			{
 				ch = m_fileReader.GetChar();
 
@@ -251,7 +253,7 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 
 				for (index = 0; index < number; index++)
 				{
-					mipmapdata[miplevels-1][(county * bpp * (width)) + (bpp * countx) + color] = ch;
+					m_mipmapdata[m_miplevels-1][(county * bpp * (m_width)) + (bpp * countx) + color] = ch;
 					countx++;
 				}
 			}
@@ -259,13 +261,13 @@ bool CImageReader::Read_PCX(TextureData &imgData)
 	}
 
 	if (colorkey)
-		ColorKey(mipmapdata[miplevels-1]);
+		ColorKey(m_mipmapdata[m_miplevels-1]);
 
-	imgData.height = height;
-	imgData.width = width;
-	imgData.data = &mipmapdata[0];
-	imgData.format = format;
-	imgData.numMipMaps = miplevels;
+	imgData.height = m_height;
+	imgData.width = m_width;
+	imgData.data = &m_mipmapdata[0];
+	imgData.format = m_format;
+	imgData.numMipMaps = m_miplevels;
 	return true;
 }
 
@@ -278,13 +280,13 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 {
 	m_fileReader.Seek(12,SEEK_SET);
 
-	width   = m_fileReader.GetChar();
-	width  |= m_fileReader.GetChar() << 8;
-	height  = m_fileReader.GetChar();
-	height |= m_fileReader.GetChar() << 8;
+	m_width   = m_fileReader.GetChar();
+	m_width  |= m_fileReader.GetChar() << 8;
+	m_height  = m_fileReader.GetChar();
+	m_height |= m_fileReader.GetChar() << 8;
 	int bpp = m_fileReader.GetChar() / 8;
 
-	format = (EImageFormat)bpp;
+	m_format = (EImageFormat)bpp;
 
 	bool colorkey = false;
 	const char *tname = m_fileReader.GetFileName();
@@ -303,36 +305,35 @@ bool CImageReader::Read_TGA(TextureData &imgData)
 			colorkey = true;
 
 	if (colorkey)
-		format = IMG_RGBA;
-
+		m_format = IMG_RGBA;
 
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();
 
 	ConfirmMipData();
-	memset(mipmapdata[miplevels-1], 0xFF, width * height * (int)format);
+	memset(m_mipmapdata[m_miplevels-1], 0xFF, m_width * m_height * (int)m_format);
 
-	for (int h= height-1; h>=0; h--)
+	for (int h= m_height-1; h>=0; h--)
 	{
-		for (int w=0; w<width; w++)
+		for (int w=0; w<m_width; w++)
 		{
-			mipmapdata[miplevels-1][h*width*(int)format + w*(int)format + 2] = m_fileReader.GetChar();
-			mipmapdata[miplevels-1][h*width*(int)format + w*(int)format + 1] = m_fileReader.GetChar();
-			mipmapdata[miplevels-1][h*width*(int)format + w*(int)format    ] = m_fileReader.GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 2] = m_fileReader.GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 1] = m_fileReader.GetChar();
+			m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format    ] = m_fileReader.GetChar();
 
 			if (bpp == 4)
-				mipmapdata[miplevels-1][h*width*(int)format + w*(int)format + 3] = m_fileReader.GetChar();
+				m_mipmapdata[m_miplevels-1][h*m_width*(int)m_format + w*(int)m_format + 3] = m_fileReader.GetChar();
 		}
 	}
 
 	if (colorkey)
-		ColorKey(mipmapdata[miplevels-1]);
+		ColorKey(m_mipmapdata[m_miplevels-1]);
 
-	imgData.height = height;
-	imgData.width = width;
-	imgData.data = &mipmapdata[0];
-	imgData.format = format;
-	imgData.numMipMaps = miplevels;
+	imgData.height = m_height;
+	imgData.width = m_width;
+	imgData.data = &m_mipmapdata[0];
+	imgData.format = m_format;
+	imgData.numMipMaps = m_miplevels;
 	return true;
 }
 
@@ -369,23 +370,23 @@ bool CImageReader::Read_JPG(TextureData &imgData)
 		return false;
 	}
 
-	width=jcprop.JPGWidth;
-	height=jcprop.JPGHeight;
+	m_width=jcprop.JPGWidth;
+	m_height=jcprop.JPGHeight;
 
 	ConfirmMipData();
-	memset(mipmapdata[miplevels-1], 0, width * height * jcprop.JPGChannels);
+	memset(m_mipmapdata[m_miplevels-1], 0, m_width * m_height * jcprop.JPGChannels);
 
 	jcprop.DIBWidth    = jcprop.JPGWidth;
 	jcprop.DIBHeight   = jcprop.JPGHeight;
 	jcprop.DIBChannels = jcprop.JPGChannels;
-	jcprop.DIBBytes    = mipmapdata[miplevels-1]; 
+	jcprop.DIBBytes    = m_mipmapdata[m_miplevels-1]; 
 	jcprop.DIBColor	   = IJL_RGB;
 	
 	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
 	{
 		ComPrintf("CImageReader::Read_JPG: Can't read jpeg file\n");
-		h = height = 0;
-		w = width = 0;
+		h = m_height = 0;
+		w = m_width = 0;
 		return false;
 	}
 
@@ -395,7 +396,7 @@ bool CImageReader::Read_JPG(TextureData &imgData)
 		return false;
 	}
 
-	format=IMG_RGB;
+	m_format=IMG_RGB;
 	return true;
 */
 	return false;
@@ -414,33 +415,33 @@ and return number of possible mipmaps
 void CImageReader::GetMipCount()
 {
 	int tmps = 1;
-	miplevels = 0;
+	m_miplevels = 0;
 	
 	// make it a power of 2
 	for (tmps=1<<10; tmps; tmps>>=1)
 	{
-		if (width & tmps)
+		if (m_width & tmps)
 			break;
 	}
-	w = width = tmps;
+	w = m_width = tmps;
 	
 	for (tmps=1<<10; tmps; tmps>>=1)
 	{
-		if (height & tmps)
+		if (m_height & tmps)
 			break;
 	}
-	h = height = tmps;
+	h = m_height = tmps;
 
-	int largestdim = width;
-	if (width < height)
-		largestdim = height;
+	int largestdim = m_width;
+	if (m_width < m_height)
+		largestdim = m_height;
 
 	// figure out how many mip map levels we should have
-	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
-		miplevels++;
+	for (m_miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
+		m_miplevels++;
 
-	if(miplevels > 10)
-		miplevels = 10;
+	if(m_miplevels > 10)
+		m_miplevels = 10;
 }
 
 
@@ -476,7 +477,7 @@ void CImageReader::ImageReduce(int m)
 		tfactor = 1;
 	}
 
-	int bpp = (int)format;
+	int bpp = (int)m_format;
 
 	for (r = 0; r < h; r++)
 	{
@@ -484,13 +485,13 @@ void CImageReader::ImageReduce(int m)
 		{
 			for (s = 0; s < bpp; s++)
 			{
-				color  = mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           +  (sfactor*c*bpp) + s];
-				color += mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           + ((sfactor*c+sfactor-1)*bpp) + s];
-				color += mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp +  (sfactor*c*bpp) + s];
-				color += mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp + ((sfactor*c+sfactor-1)*bpp) + s];
+				color  = m_mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           +  (sfactor*c*bpp) + s];
+				color += m_mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           + ((sfactor*c+sfactor-1)*bpp) + s];
+				color += m_mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp +  (sfactor*c*bpp) + s];
+				color += m_mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp + ((sfactor*c+sfactor-1)*bpp) + s];
 				color /= 4;
 
-				mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
+				m_mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
 	}
@@ -506,13 +507,13 @@ void CImageReader::ConfirmMipData(void)
 {
 	GetMipCount();
 
-	for (int m=miplevels-1; m>=0; m--)
+	for (int m=m_miplevels-1; m>=0; m--)
 	{
-		if (mipmapdata[m])
+		if (m_mipmapdata[m])
 			continue;
 
-		mipmapdata[m] = (byte*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
-		if (!mipmapdata[m])
+		m_mipmapdata[m] = (byte*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
+		if (!m_mipmapdata[m])
 		{
 			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
 			return;
@@ -529,27 +530,27 @@ used for reading Lightmaps from the world file
 bool CImageReader::ReadLightMap(unsigned char **stream, TextureData &imgData)
 {
 	// read the data from the stream
-	w = width = **stream;
+	w = m_width = **stream;
 	(*stream)++;
-	h = height= **stream;
+	h = m_height= **stream;
 	(*stream)++;
 
-	if(!width || !height)
+	if(!m_width || !m_height)
 		return false;
 
 	ConfirmMipData();
 
-	for (int p = 0; p < (width * height * 3); p++)
+	for (int p = 0; p < (m_width * m_height * 3); p++)
 	{
-		mipmapdata[miplevels-1][p] = **stream;
+		m_mipmapdata[m_miplevels-1][p] = **stream;
 		(*stream)++;
 	}
 	
-	imgData.height = height;
-	imgData.width = width;
+	imgData.height = m_height;
+	imgData.width = m_width;
 	imgData.format = IMG_RGB;
-	imgData.data = &mipmapdata[0];
-	imgData.numMipMaps = miplevels;
+	imgData.data = &m_mipmapdata[0];
+	imgData.numMipMaps = m_miplevels;
 
 	return true;
 }
@@ -632,8 +633,8 @@ void CImageWriter::Write_PCX( FILE *fp)
 	pcx.bits_per_pixel = 8;		// 256 color
 	pcx.x      = 0;
 	pcx.y      = 0;
-	pcx.width  = (short)(m_width-1);
-	pcx.height = (short)(m_height-1);
+	pcx.m_width  = (short)(m_width-1);
+	pcx.m_height = (short)(m_height-1);
 	pcx.x_res  = (short)m_width;
 	pcx.y_res  = (short)m_height;
 	memset (pcx.ega_palette,0,sizeof(pcx.ega_palette));
@@ -865,12 +866,12 @@ void TexMng::JPG_Decode(VFile *vf, texinfo *tex){
 
 	jpeg_start_decompress(&cinfo);
 
-    tex->width = cinfo.output_width;
-    tex->height = cinfo.output_height;
+    tex->m_width = cinfo.output_width;
+    tex->m_height = cinfo.output_height;
 
 	if (cinfo.out_color_space == JCS_GRAYSCALE){
 		/*tex->bpp=1;
-		tex->mem = (byte *) malloc(1*tex->width*tex->height);
+		tex->mem = (byte *) malloc(1*tex->m_width*tex->m_height);
 		if (!tex->mem) {
 			tex->mem=NULL;
 			return;
@@ -879,7 +880,7 @@ void TexMng::JPG_Decode(VFile *vf, texinfo *tex){
 	}
 	else{
 		tex->bpp=3;
-		tex->mem = (byte *) malloc(3*tex->width*tex->height);
+		tex->mem = (byte *) malloc(3*tex->m_width*tex->m_height);
 		if (!tex->mem) {
 			return;
 		}
