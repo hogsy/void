@@ -116,10 +116,6 @@ SOURCE=.\Fs_pakfile.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Fs_util.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\Fs_zipfile.cpp
 # End Source File
 # End Group

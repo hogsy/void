@@ -16,10 +16,3 @@ entities
 add delay var to sound sources
 add renderering flags to model entities
 add frame range to model entities
-
-
-
-//AFTER TEST
-
-give file access to game
-change to I_fileReaders

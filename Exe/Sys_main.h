@@ -12,10 +12,9 @@ const char VOID_MAINWINDOWCLASS[]	= "Void";
 const char VOID_MAINWINDOWTITLE[]	= "Void";
 const char VOID_DEFAULTBINARYNAME[]	= "Void.exe";
 
-
-struct	VoidExport;
 struct  I_Renderer;
 struct  I_FileSystem;
+struct  VoidExports;
 struct 	RenderInfo_t;
 
 class	CInput;
@@ -54,8 +53,8 @@ public:
 private:
 
 	//Give this friend access
-	friend const float& System::GetCurTime();
-	friend const float& System::GetFrameTime();
+	friend float System::GetCurTime();
+	friend float System::GetFrameTime();
 	friend const char * System::GetExePath();
 	friend const char * System::GetCurGamePath();
 	friend I_Console  *	System::GetConsole();
@@ -75,7 +74,7 @@ private:
 	CConsole	   m_Console;		//Console
 	CTime		   m_Time;
 
-	VoidExport   * m_pExport;		//Exported Stuff
+	VoidExports	 * m_pExport;		//Exported Stuff
 	
 	I_FileSystem * m_pFileSystem;	//FileSystem
 	

@@ -1,6 +1,7 @@
 #ifndef VOID_EXPORTS_IMPLEMENTATION
 #define VOID_EXPORTS_IMPLEMENTATION
 
+/*
 #include "Sys_hdr.h"
 #include "I_void.h"
 
@@ -17,6 +18,6 @@ struct VoidExport : public I_Void
 
 	void SystemError(const char *message) { System::FatalError(message); };
 };
-
+*/
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef INC_RENDERER_INTERFACE
 #define INC_RENDERER_INTERFACE
 
-#include "I_void.h"
-
 #ifdef RENDERER_EXPORTS
 #define RENDERER_API __declspec(dllexport)
 #else
@@ -51,11 +49,9 @@ typedef struct RenderInfo_t
 	
 	byte 	rflags;
 
-	uint    width, 
-			height, 
-			bpp,
-			zdepth,
-			stencil;
+	uint    width, height, bpp,
+			zdepth,	stencil;
+
 }RenderInfo_t;
 
 /*
@@ -129,7 +125,46 @@ struct I_ConsoleRenderer
 };
 
 
-RENDERER_API I_Renderer   * RENDERER_Create(I_Void * vexp);
+/*
+================================================
+The Void exe exports these to the Renderer
+================================================
+*/
+struct I_FileReader;
+struct I_Console;
+struct I_HunkManager;
+
+struct VoidExports
+{
+	VoidExports()  
+	{ 
+		pConsole = 0; pHunkManager = 0; 
+		
+		//Add more as needed
+		pfnGetCurTime   = 0;
+		pfnGetFrameTime = 0;
+		pfnGetCurPath = 0;
+		pfnCreateFileReader = 0;
+		pfnSystemError = 0;
+	}
+	
+	//Misc func points
+	float (*pfnGetCurTime)();
+	float (*pfnGetFrameTime)();
+	const char * (*pfnGetCurPath)();
+	I_FileReader * (*pfnCreateFileReader)(EFileMode mode);
+	void  (*pfnSystemError)(const char *message);
+
+	//Pointers to other Interfaces
+	I_Console     * pConsole;
+	I_HunkManager * pHunkManager;
+};
+
+
+//==========================================================================
+//==========================================================================
+
+RENDERER_API I_Renderer   * RENDERER_Create(VoidExports * pExp);
 RENDERER_API RenderInfo_t * RENDERER_GetParms();
 RENDERER_API void RENDERER_Free();
 

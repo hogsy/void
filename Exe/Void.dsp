@@ -143,10 +143,6 @@ SOURCE=.\Sys_cons.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sys_exp.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Sys_hdr.h
 # End Source File
 # Begin Source File
@@ -448,10 +444,6 @@ SOURCE=..\Shared\I_renderer.h
 # Begin Source File
 
 SOURCE=..\Shared\I_sound.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_void.h
 # End Source File
 # End Group
 # Begin Group "Network"

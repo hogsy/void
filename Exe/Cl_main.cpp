@@ -170,7 +170,6 @@ void CClient::RunFrame()
 {
 	m_pNetCl->ReadPackets();
 
-//if(m_clientState == CLIENT_INGAME)
 	if(m_bInGame)
 	{
 		//Print FPS, Update frame time

@@ -1,4 +1,3 @@
-
 #include "Standard.h"
 #include "Shader.h"
 #include "ShaderManager.h"
@@ -7,9 +6,6 @@
 #include "Con_main.h"
 
 extern	CVar *	g_pFullbright;
-
-// to get the time for tcmods
-extern	I_Void		  *	g_pVoidExp;
 
 // for sky texgen
 extern const CCamera * camera;
@@ -243,7 +239,7 @@ void CRasterizer::DrawLayer(int l)
 
 	// tcmod's
 	for (i=0; i<mNumElements; i++)
-		mShader->mLayers[l]->mHeadTCMod->Evaluate(mVerts[i].tex1[0], mVerts[i].tex1[1], g_pVoidExp->GetCurTime());
+		mShader->mLayers[l]->mHeadTCMod->Evaluate(mVerts[i].tex1[0], mVerts[i].tex1[1], GetCurTime());
 
 	// set texture
 	if (layer->mIsLight)
@@ -254,7 +250,7 @@ void CRasterizer::DrawLayer(int l)
 			TextureSet(mShader->mTextureBin, layer->mTextureNames[0].index);
 		else
 		{
-			int texture = (int)(mShader->mLayers[l]->mAnimFreq * mShader->mLayers[l]->mNumTextures * g_pVoidExp->GetCurTime());
+			int texture = (int)(mShader->mLayers[l]->mAnimFreq * mShader->mLayers[l]->mNumTextures * GetCurTime());
 			texture %= mShader->mLayers[l]->mNumTextures;
 			TextureSet(mShader->mTextureBin, layer->mTextureNames[texture].index);
 		}

@@ -11,6 +11,8 @@
 #include "Com_world.h"
 #include "Com_camera.h"
 
+#include "I_hunkmem.h"
+#include "I_console.h"
 #include "I_file.h"
 #include "I_renderer.h"
 

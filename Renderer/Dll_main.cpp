@@ -2,7 +2,7 @@
 #include "Ren_exp.h"
 
 I_Console	  *	g_pConsole=0;
-I_Void		  *	g_pVoidExp=0;
+VoidExports	  *	g_pVoidExp=0;
 I_HunkManager * g_pHunkManager=0;
 CRenExp		  * g_pRenExp=0;
 
@@ -14,11 +14,11 @@ Create the renderer interface, and
 start memory logging if in debug mode
 ==========================================
 */
-RENDERER_API I_Renderer * RENDERER_Create(I_Void * vexp)
+RENDERER_API I_Renderer * RENDERER_Create(VoidExports * vexp)
 {
 	g_pVoidExp    = vexp;
-	g_pHunkManager= vexp->hunkManager;
-	g_pConsole	  = vexp->console;
+	g_pHunkManager= vexp->pHunkManager;
+	g_pConsole	  = vexp->pConsole;
 
 	if(!g_pRenExp)
 	{
@@ -92,21 +92,20 @@ Misc System services
 ================================================
 */
 float GetCurTime()
-{	return g_pVoidExp->GetCurTime();
+{	return g_pVoidExp->pfnGetCurTime();
 }
 
 float GetFrameTime()
-{	return g_pVoidExp->GetFrameTime();
+{	return g_pVoidExp->pfnGetFrameTime();
 }
 
 const char * GetCurPath()
-{	return g_pVoidExp->GetCurPath();
+{	return g_pVoidExp->pfnGetCurPath();
 }
 
 I_FileReader * CreateFileReader(EFileMode mode)
-{	return g_pVoidExp->CreateFileReader(mode);
+{	return g_pVoidExp->pfnCreateFileReader(mode);
 }
-
 
 /*
 ======================================
@@ -115,10 +114,9 @@ Handle out of mem conditions
 */
 int HandleOutOfMemory(size_t size)
 {
-	g_pVoidExp->SystemError("Renderer: Out of memory");
+	g_pVoidExp->pfnSystemError("Renderer: Out of memory");
 	return 0;
 }
-
 
 /*
 =======================================
@@ -134,7 +132,7 @@ void FError(char *error, ...)
 	vsprintf(textBuffer, error, args);
 	va_end(args);
 
-	g_pVoidExp->SystemError(textBuffer);
+	g_pVoidExp->pfnSystemError(textBuffer);
 }
 
 // ust a small booboo. let us know and keep going

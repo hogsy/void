@@ -5,7 +5,6 @@
 #include "I_renderer.h"
 #include "I_file.h"
 #include "I_filesystem.h"
-#include "Sys_exp.h"
 #include "Cl_main.h"
 #include "Snd_main.h"
 
@@ -83,10 +82,15 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
 
 	//================================
 	//Export structure
-	m_pExport = new VoidExport();
-	m_pExport->console    = (I_Console*)&m_Console;
-	m_pExport->hunkManager= g_pHunkManager; 
-	
+	m_pExport = new VoidExports();
+	m_pExport->pConsole    = (I_Console*)&m_Console;
+	m_pExport->pHunkManager= g_pHunkManager; 
+	m_pExport->pfnGetCurTime = System::GetCurTime;
+	m_pExport->pfnGetCurPath = System::GetCurGamePath;
+	m_pExport->pfnSystemError = System::FatalError;
+	m_pExport->pfnGetFrameTime = System::GetFrameTime;
+	m_pExport->pfnCreateFileReader = System::CreateFileReader;
+
 	//================================
 	//Create and initialize the file system
 	m_pFileSystem = FILESYSTEM_Create(ComPrintf,
@@ -519,8 +523,8 @@ namespace System
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
-	const float & GetCurTime() { return g_pVoid->m_Time.GetCurrentTime(); }
-	const float & GetFrameTime()   { return g_pVoid->m_Time.GetFrameTime(); }
+	float GetCurTime()	{ return g_pVoid->m_Time.GetCurrentTime(); }
+	float GetFrameTime(){ return g_pVoid->m_Time.GetFrameTime(); }
 
 	I_FileReader *  CreateFileReader(EFileMode mode)
 	{	return g_pVoid->m_pFileSystem->CreateReader(mode);

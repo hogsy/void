@@ -35,8 +35,8 @@ namespace System
 	//Common System functions
 	
 	//Current Time
-	const float &	GetCurTime();
-	const float &	GetFrameTime();
+	float GetCurTime();
+	float GetFrameTime();
 	
 	I_Console  *	GetConsole();
 	const char *	GetExePath();
