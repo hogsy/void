@@ -21,6 +21,7 @@ public:
 
 	I_ConsoleRenderer * GetConsole();
 	I_RHud *			GetHud();
+	I_Model *			GetModel();
 
 	//Windowing
 	void MoveWindow(int x, int y);

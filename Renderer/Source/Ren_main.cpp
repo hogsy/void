@@ -21,7 +21,7 @@ const CCamera * camera=0;
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
 int			eye_leaf;
 
-extern model_cache_t *tmodel;	// where model info is put so it can be rendered - FIXME
+//extern model_cache_t *tmodel;	// where model info is put so it can be rendered - FIXME
 plane_t frust[5];	// 4 sides + near-z
 
 extern	vector_t *fullblend;

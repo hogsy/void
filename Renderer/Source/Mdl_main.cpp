@@ -7,8 +7,10 @@
 
 
 #include "Mdl_main.h"
+#include "Tex_image.h"
 
-model_t *models;	// all model data
+CModelManager	*g_pModel=0;
+
 
 
 typedef struct
@@ -33,11 +35,453 @@ typedef struct
 } md2_header_t;
 
 
+/*
+=======================================
+Constructor 
+=======================================
+*/
+CModelManager::CModelManager()
+{
+	// reset
+	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	{
+		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		{
+			caches[c][e] = NULL;
+		}
+	}
+}
 
-/******************************************************************************
-draw a model - assumes all gl transforms are correct
-******************************************************************************/
-void model_draw(int mindex, float frame)
+/*
+=======================================
+Destructor 
+=======================================
+*/
+CModelManager::~CModelManager()
+{
+	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	{
+		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		{
+			if (caches[c][e])
+			{
+				delete caches[c][e];
+				caches[c][e] = NULL;
+			}
+		}
+	}
+}
+
+/*
+=======================================
+LoadModel 
+=======================================
+*/
+hMdl CModelManager::LoadModel(const char *model, hMdl index, CacheType cache)
+{
+	return 0;
+}
+
+
+/*
+=======================================
+DrawModel 
+=======================================
+*/
+void CModelManager::DrawModel(hMdl index, CacheType cache, const R_EntState &state)
+{
+
+}
+
+
+
+/*
+=======================================
+UnloadModel 
+=======================================
+*/
+void CModelManager::UnloadModel(CacheType cache, int index)
+{
+
+}
+
+
+
+/*
+=======================================
+UnloadModelCache 
+=======================================
+*/
+void CModelManager::UnloadModelCache(CacheType cache)
+{
+
+}
+
+
+
+/*
+=======================================
+UnloadModelAll 
+=======================================
+*/
+void CModelManager::UnloadModelAll(void)
+{
+
+}
+
+
+
+
+
+//=========================================================================================================================
+/*
+=======================================
+Constructor 
+=======================================
+*/
+CModelCacheEntry::CModelCacheEntry(const char *file)
+{
+	// save file name
+	modelfile = new char[strlen(file)+1];
+	strcpy(modelfile, file);
+
+	
+
+}
+
+
+/*
+=======================================
+Destructor 
+=======================================
+*/
+CModelCacheEntry::~CModelCacheEntry()
+{
+	num_skins = 0;
+	skin_bin = -1;
+	skin_names = NULL;
+	modelfile  = NULL;
+	num_frames = 0;
+	frames = NULL;
+	cmds = NULL;
+}
+
+
+/*
+=======================================
+LoadModel 
+=======================================
+*/
+void CModelCacheEntry::LoadModel()
+{
+	ComPrintf("loading %s\n", modelfile);
+
+	CFileBuffer	 fileReader;
+
+	if(!fileReader.Open(modelfile))
+	{
+		// load default model
+		fileReader.Close();
+		LoadFail();
+		return;
+	}
+
+
+	md2_header_t header;
+	fileReader.Read(&header, sizeof(md2_header_t), 1);
+
+// make sure it's a valid md2
+	if ((header.id != 0x32504449) || (header.version != 8))
+	{
+		ComPrintf("%s - invalid md2 file", modelfile);
+		fileReader.Close();
+		LoadFail();
+		return;
+	}
+
+	num_skins = header.numSkins;
+	num_frames= header.numFrames;
+
+
+// the gl command list
+	cmds = (void*) new byte[header.numGlCommands * 4];
+	if (!cmds) FError("mem for model command list");
+	fileReader.Seek(header.offsetGlCommands, SEEK_SET);
+	fileReader.Read(cmds, 4, header.numGlCommands);
+
+
+// vertex info for all frames
+	frames = new vector_t*[num_frames];
+	if (!frames) FError("mem for model frames");
+	fileReader.Seek(header.offsetFrames, SEEK_SET);
+
+
+	int f, v;
+	byte vertex[4];
+	vector_t scale, trans;
+	char fname[16];
+
+	for (f = 0; f < num_frames; f++)
+	{
+		frames[f] = new vector_t[header.numVertices];
+		if (!frames[f]) FError("mem for frame vertices");
+
+		fileReader.Read(&scale, sizeof(float), 3);
+		fileReader.Read(&trans, sizeof(float), 3);
+		fileReader.Read(&fname, 16, 1);
+
+		for (v = 0; v < header.numVertices; v++)
+		{
+			fileReader.Read(vertex, 4, 1);	// the xyz coords and a light normal index
+
+			// scale and translate them to get the actual vertex
+			frames[f][v].x = vertex[0]*scale.x + trans.x;
+			frames[f][v].y = vertex[1]*scale.y + trans.y;
+			frames[f][v].z = vertex[2]*scale.z + trans.z;
+		}
+	}
+
+
+	// skin names
+
+	char path[260];
+	strcpy(path, modelfile);
+	for (int c=strlen(path); c>=0; c--)
+	{
+		if ((path[c] == '\\') || (path[c] == '/'))
+		{
+			path[c] = '\0';
+			break;
+		}
+	}
+
+	char texname[260];
+
+	skin_bin = g_pRast->TextureBinInit(header.numSkins);
+	skin_names = new char*[header.numSkins];
+	if (!skin_names) FError("mem for skin names");
+
+	CImageReader *texReader = new CImageReader();
+
+	fileReader.Seek(header.offsetSkins, SEEK_SET);
+	for (int s=0; s<header.numSkins; s++)
+	{
+		// md2 skin name list is 64 char strings
+		skin_names[s] = new char[64];
+		if (!skin_names[s])	 FError("mem for skin names");
+
+		fileReader.Read(skin_names[s], 64, 1);
+
+		strcpy(texname, path);
+		strcat(texname, skin_names[s]);
+
+		if (!texReader->Read(texname))
+			texReader->DefaultTexture();
+
+		// create all mipmaps
+		tex_load_t tdata;
+		tdata.format = texReader->GetFormat();
+		tdata.height = texReader->GetHeight();
+		tdata.width  = texReader->GetWidth();
+		tdata.mipmaps= texReader->GetNumMips();
+		tdata.mipdata= texReader->GetMipData();
+		tdata.mipmap = true;
+		tdata.clamp  = false;
+
+		int mipcount = tdata.mipmaps - 1;
+		while (mipcount > 0)
+		{
+			texReader->ImageReduce(mipcount);
+			mipcount--;
+		}
+
+		g_pRast->TextureLoad(skin_bin, s, &tdata);
+
+
+	}
+
+	delete texReader;
+
+	fileReader.Close();
+}
+
+
+/*
+=======================================
+LoadFail
+=======================================
+*/
+void CModelCacheEntry::LoadFail()
+{
+	// hard code a pyramid
+	num_skins = 1;
+	num_frames= 1;
+
+	int *cmdint;
+	model_glcmd_t *glcmd;
+
+
+// the gl command list
+	cmds = (void*) new byte[33*4];
+	if (!cmds) FError("mem for model fail!");
+
+	cmdint = (int*)cmds;
+	*cmdint = -6;	// triangle fan
+	cmdint += 1;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0.5f;
+	glcmd->t = 0.5f;
+	glcmd->vertex_index = 0;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0;
+	glcmd->t = 0;
+	glcmd->vertex_index = 1;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 1;
+	glcmd->t = 0;
+	glcmd->vertex_index = 2;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 1;
+	glcmd->t = 1;
+	glcmd->vertex_index = 3;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0;
+	glcmd->t = 1;
+	glcmd->vertex_index = 4;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0;
+	glcmd->t = 0;
+	glcmd->vertex_index = 1;
+
+	*cmdint = -4;
+	cmdint += 1;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0;
+	glcmd->t = 0;
+	glcmd->vertex_index = 1;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 0;
+	glcmd->t = 1;
+	glcmd->vertex_index = 4;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 1;
+	glcmd->t = 1;
+	glcmd->vertex_index = 3;
+
+	glcmd = (model_glcmd_t*)cmdint;
+	cmdint += 3;
+	glcmd->s = 1;
+	glcmd->t = 0;
+	glcmd->vertex_index = 2;
+
+	*cmdint = 0;
+
+// vertex info
+	frames = new vector_t*[1];
+	if (!frames) FError("mem for model fail frames");
+
+	frames[0] = new vector_t[5];
+	if (!frames[0]) FError("mem for model fail vertices");
+
+	frames[0][0].x = 0;
+	frames[0][0].y = 0;
+	frames[0][0].z = 20;
+
+	frames[0][1].x = -15;
+	frames[0][1].y = 15;
+	frames[0][1].z = 0;
+
+	frames[0][2].x = 15;
+	frames[0][2].y = 15;
+	frames[0][2].z = 0;
+
+	frames[0][3].x = 15;
+	frames[0][3].y = -15;
+	frames[0][3].z = 0;
+
+	frames[0][4].x = -15;
+	frames[0][4].y = -15;
+	frames[0][4].z = 0;
+
+
+
+	// skin names
+
+	char path[260];
+	strcpy(path, modelfile);
+	for (int c=strlen(path); c>=0; c--)
+	{
+		if ((path[c] == '\\') || (path[c] == '/'))
+		{
+			path[c] = '\0';
+			break;
+		}
+	}
+
+
+
+	skin_bin = g_pRast->TextureBinInit(1);
+	skin_names = new char*[1];
+	if (!skin_names) FError("mem for skin names");
+
+	CImageReader *texReader = new CImageReader();
+
+	// md2 skin name list is 64 char strings
+	skin_names[0] = new char[64];
+	if (!skin_names[0])	 FError("mem for skin names");
+
+	strcpy(skin_names[0], "none");
+	texReader->DefaultTexture();
+
+	// create all mipmaps
+	tex_load_t tdata;
+	tdata.format = texReader->GetFormat();
+	tdata.height = texReader->GetHeight();
+	tdata.width  = texReader->GetWidth();
+	tdata.mipmaps= texReader->GetNumMips();
+	tdata.mipdata= texReader->GetMipData();
+	tdata.mipmap = true;
+	tdata.clamp  = false;
+
+	int mipcount = tdata.mipmaps - 1;
+	while (mipcount > 0)
+	{
+		texReader->ImageReduce(mipcount);
+		mipcount--;
+	}
+
+	g_pRast->TextureLoad(skin_bin, 0, &tdata);
+
+	delete texReader;
+}
+
+
+
+/*
+=======================================
+Draw
+=======================================
+*/
+/*
+void CModelCacheEntry::Draw()
 {
 	while (frame > (models[mindex].num_frames-1))
 		frame -= models[mindex].num_frames-1;
@@ -109,248 +553,4 @@ void model_draw(int mindex, float frame)
 		num_cmds = *(int*)ptr;
 	}
 }
-
-
-/******************************************************************************
-load a default model in case there is a prob loading one from disk
-******************************************************************************/
-void model_create_fail(model_t *m)
-{
-	// hard code a pyramid
-	m->num_skins = 1;
-	m->num_frames= 1;
-
-	int *cmdint;
-	model_glcmd_t *glcmd;
-
-
-// the gl command list first
-	m->cmds = (void*) new byte[33*4];
-	if (!m->cmds) FError("mem for model fail!");
-
-	cmdint = (int*)m->cmds;
-	*cmdint = -6;	// triangle fan
-	cmdint += 1;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0.5f;
-	glcmd->t = 0.5f;
-	glcmd->vertex_index = 0;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0;
-	glcmd->t = 0;
-	glcmd->vertex_index = 1;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 1;
-	glcmd->t = 0;
-	glcmd->vertex_index = 2;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 1;
-	glcmd->t = 1;
-	glcmd->vertex_index = 3;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0;
-	glcmd->t = 1;
-	glcmd->vertex_index = 4;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0;
-	glcmd->t = 0;
-	glcmd->vertex_index = 1;
-
-	*cmdint = -4;
-	cmdint += 1;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0;
-	glcmd->t = 0;
-	glcmd->vertex_index = 1;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 0;
-	glcmd->t = 1;
-	glcmd->vertex_index = 4;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 1;
-	glcmd->t = 1;
-	glcmd->vertex_index = 3;
-
-	glcmd = (model_glcmd_t*)cmdint;
-	cmdint += 3;
-	glcmd->s = 1;
-	glcmd->t = 0;
-	glcmd->vertex_index = 2;
-
-	*cmdint = 0;
-
-// vertex info
-	m->frames = new model_frame_t[1];
-	if (!m->frames) FError("mem for model fail frames");
-
-	m->frames->vertices = new vector_t[5];
-	if (!m->frames->vertices) FError("mem for model fail vertices");
-
-	m->frames->vertices[0].x = 0;
-	m->frames->vertices[0].y = 0;
-	m->frames->vertices[0].z = 20;
-
-	m->frames->vertices[1].x = -15;
-	m->frames->vertices[1].y = 15;
-	m->frames->vertices[1].z = 0;
-
-	m->frames->vertices[2].x = 15;
-	m->frames->vertices[2].y = 15;
-	m->frames->vertices[2].z = 0;
-
-	m->frames->vertices[3].x = 15;
-	m->frames->vertices[3].y = -15;
-	m->frames->vertices[3].z = 0;
-
-	m->frames->vertices[4].x = -15;
-	m->frames->vertices[4].y = -15;
-	m->frames->vertices[4].z = 0;
-}
-
-
-/******************************************************************************
-read a md2 file from disk
-******************************************************************************/
-void model_read_md2(model_t *m, char *name)
-{
-	char path[260];
-
-//	sprintf(path, "%s\\game\\models\\%s\\tris.md2", rInfo->base_dir, name);
-//	sprintf(path, "%s/models/%s/tris.md2",CFileSystem::GetCurrentPath(), name);
-
-	ComPrintf("loading %s\n", path);
-
-	FILE *fin = fopen(path, "rb");
-
-	if (!fin)
-	{
-		ComPrintf("couldn't find %s", name);
-		model_create_fail(m);
-		return;
-	}
-
-	md2_header_t header;
-	fread(&header, sizeof(md2_header_t), 1, fin);
-
-// make sure it's a valid md2
-	if ((header.id != 0x32504449) || (header.version != 8))
-	{
-		ComPrintf("%s - invalid md2 file", name);
-		model_create_fail(m);
-		return;
-	}
-
-	m->num_skins = header.numSkins;
-	m->num_frames= header.numFrames;
-
-// the gl command list first
-	m->cmds = (void*) new byte[header.numGlCommands * 4];
-	if (!m->cmds) FError("mem for model command list");
-	fseek(fin, header.offsetGlCommands, SEEK_SET);
-	fread(m->cmds, 4, header.numGlCommands, fin);
-
-
-
-// vertex info for all frames
-	m->frames = new model_frame_t[m->num_frames];
-	if (!m->frames) FError("mem for model frames");
-	fseek(fin, header.offsetFrames, SEEK_SET);
-
-
-	int f, v;
-	byte vertex[4];
-	vector_t scale, trans;
-	char fname[16];
-
-	for (f = 0; f < m->num_frames; f++)
-	{
-		m->frames[f].vertices = new vector_t[header.numVertices];
-		if (!m->frames[f].vertices) FError("mem for frame vertices");
-
-		fread(&scale, sizeof(float), 3, fin);
-		fread(&trans, sizeof(float), 3, fin);
-		fread(&fname, 16, 1, fin);
-
-		for (v = 0; v < header.numVertices; v++)
-		{
-			fread(vertex, 4, 1, fin);	// the xyz coords and a light normal index
-
-			// scale and translate them to get the actual vertex
-			m->frames[f].vertices[v].x = vertex[0]*scale.x + trans.x;
-			m->frames[f].vertices[v].y = vertex[1]*scale.y + trans.y;
-			m->frames[f].vertices[v].z = vertex[2]*scale.z + trans.z;
-		}
-	}
-}
-
-
-/******************************************************************************
-load all the entity models in a map
-******************************************************************************/
-void model_load_map(void)
-{
-/*
-	models = (model_t*) MALLOC(sizeof(model_t) * world->header.num_entities);
-	if (!models) FError("mem for models");
-
-	int m;
-
-	for (m = 0; m < world->header.num_entities; m++)
-	{
-		model_read_md2(&models[m], &world->entities[MAX_ENTITY_NAME_LENGTH*m]);
-	}
 */
-}
-
-
-
-/******************************************************************************
-destroy all the models in the map
-******************************************************************************/
-void model_destroy_map(void)
-{
-	if (!models)
-		return;
-/*
-	int m, f;
-	for (m = 0; m < world->header.num_entities; m++)
-	{
-		free(models[m].cmds);
-
-		for(f = 0; f < models[m].num_frames; f++)
-			free(models[m].frames[f].vertices);
-
-		free(models[m].frames);
-
-//		glDeleteTextures(models[m].num_skins, models[m].skins);
-//		free(models[m].skins);
-	}
-
-	free (models);
-	models = NULL;
-*/
-}
-
-
-
-
-
-

@@ -38,6 +38,7 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	//Start the console first thing
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
+	g_pModel= new CModelManager();
 	g_prHud = new CRHud();
 	g_pRast = new COpenGLRast();
 
@@ -56,6 +57,10 @@ CRenExp::~CRenExp()
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;
+
+	if (g_pModel)
+		delete g_pModel;
+	g_pModel = 0;
 
 	if (g_pRast)
 		delete g_pRast;
@@ -178,6 +183,16 @@ I_RHud * CRenExp::GetHud()
 
 /*
 ==========================================
+Return the Hud interface
+==========================================
+*/
+I_Model * CRenExp::GetModel()
+{	return g_pModel;
+}
+
+
+/*
+==========================================
 DrawFrame
 ==========================================
 */
@@ -261,7 +276,7 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 			return false;
 		}
 		
-		model_destroy_map();
+//		model_destroy_map();
 		world = level;
 		
 		if(!g_pTex->LoadWorldTextures(world))
@@ -269,7 +284,7 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 			ComPrintf("CRenExp::LoadWorld::Error Reloading textures\n");
 			return false;
 		}
-		model_load_map();
+//		model_load_map();
 		return true;
 	}
 	ComPrintf("CRenExp::LoadWorld::Error Bad World Pointer\n");
@@ -288,7 +303,7 @@ bool CRenExp::UnloadWorld()
 	if(world)
 	{
 		g_pTex->UnloadWorldTextures();
-		model_destroy_map();
+//		model_destroy_map();
 
 		world = 0;
 		return true;
@@ -325,7 +340,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		FError("ChangeDispSettings::Error Reloading textures\n");
 		return;
 	}
-	model_load_map();
+//	model_load_map();
 	
 	// make sure our console is up to date
 	g_prCons->UpdateRes();
@@ -361,7 +376,7 @@ bool CRenExp::Restart(void)
 	}
 
 	//reload our models
-	model_load_map();
+//	model_load_map();
 
 	//make sure our console is up to date
 	g_prCons->UpdateRes();

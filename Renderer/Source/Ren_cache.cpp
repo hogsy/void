@@ -442,7 +442,7 @@ void cache_purge(void)
 	}
 
 	// fixme - put this in the cache_purge_* funcs
-	model_cache_purge();
+//	model_cache_purge();
 }
 
 

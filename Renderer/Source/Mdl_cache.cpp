@@ -3,15 +3,15 @@
 #include "Mdl_cache.h"
 
 #define MAX_CACHED_MODELS	256
-model_cache_t *model_cache;
-model_cache_t *tmodel;
+////model_cache_t *model_cache;
+//model_cache_t *tmodel;
 int used_models;
 
 
 
 /************************************************
 purge the model cache
-************************************************/
+************************************************
 void model_cache_purge(void)
 {
 	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
@@ -41,7 +41,7 @@ void model_cache_purge(void)
 
 /************************************************
 add a model to the cache
-************************************************/
+************************************************
 void model_cache_add(void)
 {
 	used_models++;
@@ -55,7 +55,7 @@ void model_cache_add(void)
 
 /************************************************
 init the model cache
-************************************************/
+************************************************
 void model_cache_init(void)
 {
 	model_cache = new model_cache_t[MAX_CACHED_MODELS];
@@ -69,7 +69,7 @@ void model_cache_init(void)
 
 /************************************************
 destroy the model cache
-************************************************/
+************************************************
 void model_cache_destroy(void)
 {
 	if (model_cache)
@@ -77,3 +77,4 @@ void model_cache_destroy(void)
 	model_cache = NULL;
 }
 
+*/

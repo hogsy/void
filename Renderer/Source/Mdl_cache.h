@@ -4,7 +4,7 @@
 
 
 #include "Standard.h"
-
+/*
 typedef struct
 {
 	vector_t origin;
@@ -19,7 +19,7 @@ void model_cache_purge(void);
 void model_cache_add(void);
 void model_cache_init(void);
 void model_cache_destroy(void);
-
+*/
 #endif
 
 
