@@ -20,10 +20,19 @@ class C3DListener
 {
 public:
 
-	C3DListener(IDirectSound3DListener * listener) : m_pDS3dListener(listener)	{}
-	~C3DListener()	{ m_pDS3dListener->Release(); m_pDS3dListener =0;	}
-
 	IDirectSound3DListener * m_pDS3dListener;
+
+	C3DListener(IDirectSound3DListener * listener) : 
+		m_pDS3dListener(listener)	{}
+	
+	~C3DListener()
+	{ 
+		if(m_pDS3dListener) 
+		{	
+			m_pDS3dListener->Release(); 
+			m_pDS3dListener =0;
+		}	
+	}
 };
 
 

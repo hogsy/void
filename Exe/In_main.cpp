@@ -8,12 +8,6 @@ using namespace VoidInput;
 
 LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 
-namespace VoidInput
-{	LPDIRECTINPUT7  GetDirectInput() {	return m_pDInput;  }
-}
-
-static void DIErrorMessageBox(HRESULT err, char * msg);
-
 //========================================================================================
 //========================================================================================
 
@@ -22,7 +16,7 @@ static void DIErrorMessageBox(HRESULT err, char * msg);
 Constructor
 =====================================
 */
-CInput::CInput() : m_pVarExclusive("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+CInput::CInput() : m_pVarExclusive("in_ex","0", CVAR_INT,CVAR_ARCHIVE)
 {
 	m_pStateManager = new CInputState();
 
@@ -307,21 +301,26 @@ bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 //======================================================================================
 //======================================================================================
 
+namespace VoidInput
+{
+
+LPDIRECTINPUT7  GetDirectInput() {	return m_pDInput;  }
+
 /*
 =====================================
 Throws an error message box
 =====================================
 */
-void DIErrorMessageBox(HRESULT err, char * msg)
+void DIErrorMessageBox(HRESULT err, const char * msg)
 {
 	char error[128];
 	if(msg)
 	{
 		strcpy(error,msg);
-		strcat(error,"DirectInput Error:\n");
+		strcat(error,"Error:\n");
 	}
 	else
-		strcpy(error,"DirectInput Error:\n");
+		strcpy(error,"Error:\n");
 	switch(err)
 	{
 		case DI_BUFFEROVERFLOW: strcat(error,"NOTATTACHED/PROPNOEFFECT/BUFFEROVERFLOW"); break;
@@ -345,4 +344,41 @@ void DIErrorMessageBox(HRESULT err, char * msg)
 		default: strcat(error,"UNKNOWNERROR");	break;
 	}
 	Util::ShowMessageBox(error);
+}
+
+void PrintDIError(HRESULT err, const char * msg)
+{
+	char error[128];
+	if(msg)
+	{
+		strcpy(error,msg);
+		strcat(error,"Error:\n");
+	}
+	else
+		strcpy(error,"Error:\n");
+	switch(err)
+	{
+		case DI_BUFFEROVERFLOW: strcat(error,"NOTATTACHED/PROPNOEFFECT/BUFFEROVERFLOW"); break;
+		case DIERR_INPUTLOST: strcat(error,"INPUTLOST"); break;
+		case DIERR_INVALIDPARAM: strcat(error,"INVALIDPARAM"); break;
+		case DIERR_READONLY: strcat(error,"OTHERAPPHASPRIO/HANDLEEXISTS/READONLY"); break;
+		case DIERR_ACQUIRED: strcat(error,"ACQUIRED"); break;
+		case DIERR_NOTACQUIRED: strcat(error,"NOTACQUIRED"); break;
+		case DIERR_NOAGGREGATION: strcat(error,"NOAGGREGATION"); break;
+		case DIERR_ALREADYINITIALIZED: strcat(error,"ALREADYINITIALIZED"); break;
+		case DIERR_NOTINITIALIZED: strcat(error,"NOTINITIALIZED"); break;
+		case DIERR_UNSUPPORTED: strcat(error,"UNSUPPORTED"); break;
+		case DIERR_OUTOFMEMORY: strcat(error,"OUTOFMEMORY"); break;
+		case DIERR_GENERIC: strcat(error,"GENERIC"); break;
+		case DIERR_NOINTERFACE: strcat(error,"NOINTERFACE"); break;
+		case DIERR_DEVICENOTREG: strcat(error,"DEVICENOTREG"); break;
+		case DIERR_OBJECTNOTFOUND: strcat(error,"OBJECTNOTFOUND"); break;
+		case DIERR_BETADIRECTINPUTVERSION: strcat(error,"BETADIRECTINPUTVERSION"); break;
+		case DIERR_BADDRIVERVER: strcat(error,"BADDRIVERVER"); break;
+		case DI_POLLEDDEVICE: strcat(error,"POLLEDDEVICE"); break;
+		default: strcat(error,"UNKNOWNERROR");	break;
+	}
+	ComPrintf(error);
+}
+
 }

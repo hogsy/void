@@ -20,30 +20,25 @@ struct I_ConHandler
 //======================================================================================
 //======================================================================================
 
+enum CVarFlags
+{
+	CVAR_ARCHIVE = 1,
+	CVAR_LATCH = 2,
+	CVAR_READONLY = 4
+};
+
+enum CVarType
+{
+	CVAR_UNDEFINED,
+	CVAR_INT,
+	CVAR_FLOAT,
+	CVAR_STRING,
+	CVAR_BOOL
+};
+
 class CVarBase
 {
 public:
-
-	enum
-	{
-		CVAR_MAXSTRINGLEN =	512
-	};
-
-	enum CVarFlags
-	{
-		CVAR_ARCHIVE = 1,
-		CVAR_LATCH = 2,
-		CVAR_READONLY = 4
-	};
-
-	enum CVarType
-	{
-		CVAR_UNDEFINED,
-		CVAR_INT,
-		CVAR_FLOAT,
-		CVAR_STRING,
-		CVAR_BOOL
-	};
 
 	union
 	{
@@ -66,6 +61,10 @@ public:
 	virtual void Set(int val)=0;
 
 protected:
+
+	enum
+	{	CVAR_MAXSTRINGLEN =	512
+	};
 	
 	friend class CConsole;
 

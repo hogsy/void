@@ -25,11 +25,11 @@ using namespace VoidSound;
 Constructor/Destructor
 ==========================================
 */
-CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
-								 m_cHighQuality("s_highquality", "1", CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE),
-								 m_cRollOffFactor("s_rolloff", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
-								 m_cDopplerFactor("s_doppler", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
-								 m_cDistanceFactor("s_distance", "15.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE)
+CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cHighQuality("s_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
+								 m_cRollOffFactor("s_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDopplerFactor("s_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDistanceFactor("s_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
@@ -145,6 +145,9 @@ bool CSoundManager::Init()
 		return false;
 	}
 
+//	lpd3dlistener->Release();
+
+
 	m_pListener = new C3DListener(lpd3dlistener);
 	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor.fval,DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetRolloffFactor(m_cRollOffFactor.fval,DS3D_DEFERRED);
@@ -156,7 +159,6 @@ bool CSoundManager::Init()
 		Shutdown();
 		return false;
 	}
-
 	ComPrintf("CSound::Init OK\n");
 	return true;
 }
@@ -171,7 +173,7 @@ void CSoundManager::Shutdown()
 	if(m_pListener)
 	{
 		delete m_pListener;
-		m_pListener;
+		m_pListener=0;
 	}
 
 	if(m_Buffers)
@@ -209,7 +211,7 @@ once wave streams are supported
 */
 void CSoundManager::RunFrame()
 {
-	m_pListener->m_pDS3dListener->CommitDeferredSettings();
+//	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 }
 
 /*
@@ -222,10 +224,11 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &forward,
 								   const vector_t &up)
 {	
-	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
+/*	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
 												 up.x,up.y, up.z, DS3D_DEFERRED);
+*/
 }
 
 /*

@@ -70,7 +70,10 @@ private:
 };
 
 //Return the DirectInput object
-LPDIRECTINPUT7	GetDirectInput();	
+LPDIRECTINPUT7	GetDirectInput();
+
+void DIErrorMessageBox(HRESULT err, const char * msg);
+void PrintDIError(HRESULT err, const char * msg);
 }
 
 #endif

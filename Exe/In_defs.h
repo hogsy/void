@@ -6,7 +6,8 @@
 /*
 Listeners need these definations to handle input events
 */
-const int IN_NUMKEYS = 256;
+const int   IN_NUMKEYS = 256;
+const float IN_DEFAULTREPEATRATE = 0.04f;
 
 /*
 ===========================================
@@ -167,8 +168,6 @@ This is what the listeners register to
 */
 struct I_InputFocusManager
 {
-	#define IN_DEFAULTREPEATRATE	0.04f
-
 	virtual void SetKeyListener(I_InKeyListener * plistener,
 								bool bRepeatEvents = false,
 								float fRepeatRate = IN_DEFAULTREPEATRATE)=0;

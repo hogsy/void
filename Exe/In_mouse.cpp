@@ -13,12 +13,12 @@ Constructor
 =====================================
 */
 CMouse::CMouse(CInputState * pStateManager) :
-					m_pVarXSens("m_xsens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
-					m_pVarYSens("m_ysens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
-					m_pVarSens ("m_sens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
-					m_pVarInvert("m_invert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE),
-					m_pVarMode("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-					m_pVarFilter("m_filter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
+					m_pVarXSens("m_xsens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
+					m_pVarYSens("m_ysens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
+					m_pVarSens ("m_sens","5.0",CVAR_FLOAT,CVAR_ARCHIVE),
+					m_pVarInvert("m_invert","0",CVAR_BOOL,CVAR_ARCHIVE),
+					m_pVarMode("m_mode","1",CVAR_INT,CVAR_ARCHIVE),
+					m_pVarFilter("m_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
 {
 	m_pStateManager = pStateManager;
 
@@ -718,30 +718,27 @@ bool CMouse::CMouseMode(const CVar * var, const CParms &parms)
 	if(parms.NumTokens() > 1)
 	{
 		int mode= parms.IntTok(1);
-		if(mode >= 0)
+		
+		if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
 		{
-			if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
-			{
-				ComPrintf("Invalid Mouse Mode specified\n");
-				return false;
-			}
+			ComPrintf("Invalid Mouse Mode specified\n");
+			return false;
+		}
 			
-			//Allow configs to change the mousemode if its valid
-			//even before the mouse actually inits
-			if(m_eMouseState == DEVNONE)
-			{
-				m_eMouseMode = (CMouse::EMouseMode)mode;
-				return true;
-			}
-
-			if(FAILED(Init(m_bExclusive,(CMouse::EMouseMode)mode)))
-			{
-				ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",mode);
-				return false;
-			}
+		//Allow configs to change the mousemode if its valid
+		//even before the mouse actually inits
+		if(m_eMouseState == DEVNONE)
+		{
+			m_eMouseMode = (CMouse::EMouseMode)mode;
 			return true;
 		}
-		ComPrintf("CMouse::CMouseMoude:couldnt read required mode (valid 1-3)\n");
+
+		if(FAILED(Init(m_bExclusive,(CMouse::EMouseMode)mode)))
+		{
+			ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",mode);
+			return false;
+		}
+		return true;
 	}
 
 	//Show current info

@@ -150,6 +150,14 @@ struct world_t
 };
 
 
+
+/*
+======================================
+The camera class.
+keeps pointers to client angle/position data. 
+Client creates this locally when starting into a game
+======================================
+*/
 class CCamera
 {
 public:
@@ -164,19 +172,15 @@ public:
 	vector_t & origin;
 	vector_t & angles;
 	vector_t & blend;
+	
+/*	vector_t & forward;
+	vector_t & right;
+	vector_t & up;
+*/
 };
 
 
-// info the renderer needs to know where to render from
-/*
-typedef struct
-{
-	vector_t	origin;	// (x,y,z) location
-	vector_t	angles;	// where he's looking
-	vector_t	mins, maxs;
 
-} eyepoint_t;
-*/
 
 void world_destroy(world_t *world);
 world_t* world_create(char *filename);

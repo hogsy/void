@@ -111,7 +111,7 @@ private:
 	//the following should be accessible by the game dll
 
 	//This is the client we should do local prediction on
-	CEntClient	m_gameClient;
+	EntClient	m_gameClient;
 
 	//This should hook up to the game client whne the client
 	//enters a game

@@ -17,10 +17,10 @@ Constructor
 CClient::CClient(I_Renderer * prenderer,
 				 CSoundManager * psound,
 				 CMusic	* pmusic):
-					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
-					m_clport("cl_port","20011", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE| CVar::CVAR_LATCH),
-					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
-					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE),
+					m_noclip("cl_noclip","0",   CVAR_INT,0),
+					m_clport("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
+					m_clrate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+					m_clname("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -137,11 +137,11 @@ bool CClient::LoadWorld(const char *worldname)
 	
 	VectorSet(&desired_movement, 0, 0, 0);
 
-	VectorSet(&m_gameClient.angles, 0,0,0);
-	VectorSet(&m_gameClient.origin, 0,0,48);	// FIXME - origin + view height
-	VectorSet(&m_gameClient.mins, -10, -10, -40);
-	VectorSet(&m_gameClient.maxs, 10, 10, 10);
-	VectorSet(&m_screenBlend,0,0,0);
+	VectorSet(&m_gameClient.angles, 0.0f,0.0f,0.0f);
+	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
 
 	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
 
@@ -361,11 +361,12 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
-	static int hHowl = 0;
+/*	static int hHowl = 0;
 	if(!hHowl)
 		hHowl = m_pSound->RegisterSound("sounds/wind.wav");
 
 	static vector_t horigin;
 	VectorSet(&horigin,0,0,48);
 	m_pSound->PlaySnd(hHowl, VoidSound::CHAN_WORLD, &horigin, 0, true);
+*/
 }

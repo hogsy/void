@@ -106,6 +106,10 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 		m_keyEvent.id = keyid;
 		m_keyEvent.time = System::g_fcurTime;
 		m_keyEvent.state = BUTTONDOWN;
+
+		m_aHeldKeys[keyid].id = keyid;
+		m_aHeldKeys[keyid].state = BUTTONHELD;
+		m_aHeldKeys[keyid].time = System::g_fcurTime + (m_fRepeatRate + 0.4);
 		
 		//Apply flags
 		if(m_keyEvent.flags & SHIFTDOWN)
@@ -113,10 +117,6 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 			
 		//Dispatch event
 		m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-
-		m_aHeldKeys[keyid].id = keyid;
-		m_aHeldKeys[keyid].state = BUTTONHELD;
-		m_aHeldKeys[keyid].time = System::g_fcurTime + (m_fRepeatRate + 0.4);
 	}
 	else if((keyState == BUTTONUP) &&
 			(m_aHeldKeys[keyid].state != BUTTONUP))
@@ -126,17 +126,17 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 		m_keyEvent.time = System::g_fcurTime;
 		m_keyEvent.state = BUTTONUP;
 
+		//Reset old keystate
+		m_aHeldKeys[keyid].id = keyid;
+		m_aHeldKeys[keyid].time = 0.0f;
+		m_aHeldKeys[keyid].state = BUTTONUP;
+
 		//Apply flags
 		if(m_keyEvent.flags & SHIFTDOWN)
 			ShiftCharacter(m_keyEvent.id);
 		
 		//Dispatch event
 		m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-
-		//Reset old keystate
-		m_aHeldKeys[keyid].id = keyid;
-		m_aHeldKeys[keyid].time = 0.0f;
-		m_aHeldKeys[keyid].state = BUTTONUP;
 	}
 }
 
@@ -162,13 +162,13 @@ void CInputState::DispatchKeys()
 				m_keyEvent.time = System::g_fcurTime;
 				m_keyEvent.state= BUTTONHELD;
 
+				//Update time
+				m_aHeldKeys[i].time = System::g_fcurTime + m_fRepeatRate;
+
 				if(m_keyEvent.flags & SHIFTDOWN)
 					ShiftCharacter(m_keyEvent.id);
 
 				m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-
-				//Update time
-				m_aHeldKeys[i].time = System::g_fcurTime + m_fRepeatRate;
 			}
 		}
 	}
@@ -186,7 +186,7 @@ void CInputState::FlushKeys()
 
 	for(int i=0;i<IN_NUMKEYS;i++)
 	{
-		m_keyEvent.flags = 0;
+//		m_keyEvent.flags = 0;
 
 		if(m_aHeldKeys[i].state != BUTTONUP)
 		{
@@ -194,13 +194,14 @@ void CInputState::FlushKeys()
 			m_keyEvent.state = BUTTONUP;
 			m_keyEvent.id = m_aHeldKeys[i].id; 
 
+			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+
 			m_aHeldKeys[i].time = 0.0f;
 			m_aHeldKeys[i].state = BUTTONUP;
 			m_aHeldKeys[i].id = 0;
-			
-			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
 		}
 	}
+	m_keyEvent.flags = 0;
 }
 
 /*

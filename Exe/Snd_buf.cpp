@@ -234,8 +234,9 @@ bool CSoundBuffer::Create(const char * path)
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
 	//Need default controls (pan, volume, frequency). 
-    dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS //|DSBCAPS_STATIC
-						| DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
+    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | 
+					DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC
+						| DSBCAPS_CTRL3D; //| DSBCAPS_MUTE3DATMAXDISTANCE;
 
 	//DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME |
 

@@ -2,11 +2,11 @@
 #define VOID_GAME_ENTITIES
 
 #include "Com_defs.h"
+#include "Com_buffer.h"
 #include "3dmath.h"
 
 //======================================================================================
 //======================================================================================
-
 const int ENT_MAXCLASSNAME = 32;
 
 enum EntType
@@ -24,11 +24,9 @@ The base game entitiy.
 can be subclasses for more specific stuff
 ======================================
 */
-
-class CEntity
+struct Entity
 {
-public:
-	CEntity(const char * ename, EntType etype) : type(etype)
+	Entity(const char * ename, EntType etype) : type(etype)
 	{	strcpy(classname, ename);
 		
 		origin.x = origin.y = origin.z = 0.0f;
@@ -43,16 +41,37 @@ public:
 	vector_t	angles;
 };
 
+
+/*
+======================================
+Speaker
+======================================
+*/
+struct EntSpeaker : public Entity
+{
+	enum	//attenuation etc 
+	{	
+		MAX_SOUNDFILENAME = 64
+	};
+	
+	EntSpeaker(): Entity("ent_speaker", ENT_WORLD)
+	{
+	}
+
+	int	 volume;
+	int  attenuation;
+	char soundName[MAX_SOUNDFILENAME];
+};
+
+
 /*
 ======================================
 Client Entity on the server
 ======================================
 */
-
-class CEntClient : public CEntity
+struct EntClient : public Entity
 {
-public:
-	CEntClient() : CEntity("client", ENT_CLIENT)
+	EntClient() : Entity("client", ENT_CLIENT)
 	{	
 		memset(name,0,32); 
 		inUse = false; 
@@ -63,6 +82,47 @@ public:
 
 	vector_t mins;
 	vector_t maxs;
+};
+
+
+/*
+======================================================================================
+To support creation of a new entity type
+Derive class from CBaseEntityMaker
+create an object of that class
+======================================================================================
+*/
+class CEntityMaker
+{
+public:
+
+	static Entity * CreateEnt(CBuffer &parms)
+	{
+		char * classname = parms.ReadString();
+		if(!parms.BadRead())
+		{
+			CEntityMaker * maker = (*makerRegistry.find(string(classname))).second;
+			if(maker)
+				return maker->MakeEntity(parms);
+		}
+		return 0; 
+	}
+	
+protected:
+
+	typedef map<string, CEntityMaker *> EntMakerMap;
+	
+	CEntityMaker(string classname)
+	{	makerRegistry.insert( make_pair(classname,this));
+	}
+
+	virtual ~CEntityMaker() {}
+	//Every subclass has to implement this
+	virtual Entity * MakeEntity(CBuffer &parms) const = 0;
+
+private:
+	static EntMakerMap			 makerRegistry;
+	static EntMakerMap::iterator itRegistry;
 };
 
 #endif

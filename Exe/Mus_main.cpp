@@ -38,7 +38,7 @@ using namespace VoidMusic;
 Constructor/Destructor
 ==========================================
 */
-CMusic::CMusic() : m_cVolume("mus_vol","8", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+CMusic::CMusic() : m_cVolume("mus_vol","8", CVAR_INT,CVAR_ARCHIVE)
 {
 	m_pCDAudio = new CMusCDAudio();
 

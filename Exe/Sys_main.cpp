@@ -435,7 +435,7 @@ Fatal Error
 */
 void CVoid::Error(char *error, ...)
 {
-	static char textBuffer[1024];
+	char textBuffer[1024];
 	va_list args;
 	va_start(args, error);
 	vsprintf(textBuffer, error, args);

@@ -471,6 +471,10 @@ SOURCE=..\..\Mssdk\Include\WinEFS.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Game_ents.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Game_ents.h
 # End Source File
 # End Group

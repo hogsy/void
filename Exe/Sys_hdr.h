@@ -5,8 +5,6 @@
 
 #define __VOIDALPHA	1
 
-#pragma warning(disable : 4786)
-
 #include "Com_mem.h"
 #include "Com_defs.h"
 

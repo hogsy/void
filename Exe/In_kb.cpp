@@ -39,7 +39,7 @@ Constructor
 =====================================
 */
 CKeyboard::CKeyboard(CInputState * pStateManager) : 
-				m_pVarKbMode("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+				m_pVarKbMode("kb_mode","1",CVAR_INT,CVAR_ARCHIVE)
 
 {
 	m_pKeyboard = this;
@@ -219,8 +219,8 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 		return ::GetLastError();
 	}
 
+
 	hr = m_pDIKb->SetEventNotification(m_hDIKeyboardEvent);
-	
 	if(FAILED(hr))
 	{
 		ComPrintf("CKeyboard::DI_Init : Unable to set event\n");
@@ -376,8 +376,8 @@ bool CKeyboard::UnAcquire()
 		}
 		else if(m_eKbMode == KB_DIBUFFERED || m_eKbMode == KB_DIIMMEDIATE)
 		{
-			m_pDIKb->Unacquire();
 			FlushKeyBuffer();
+			m_pDIKb->Unacquire();
 		}
 		m_eKbState = DEVINITIALIZED;
 		ComPrintf("CKeyboard::UnAcquire :OK\n");
@@ -404,8 +404,8 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 													DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
-			ComPrintf("CKeyboard::SetExclusive, Now in Exclusive Mode");
-			hr = Acquire();
+			ComPrintf("CKeyboard::SetExclusive, Now in Exclusive Mode\n");
+			Acquire();
 			m_bExclusive = true;
 			return hr;
 		}
@@ -416,8 +416,8 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 														DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
-			ComPrintf("CKeyboard::SetExclusive, Now in Non-Exclusive Mode");
-			hr =  Acquire();
+			ComPrintf("CKeyboard::SetExclusive, Now in Non-Exclusive Mode\n");
+			Acquire();
 			m_bExclusive = false;
 			return hr;
 		}
@@ -520,17 +520,16 @@ void CKeyboard::Update_DIBuffered()
 	//Unable to get data
 	if (hr != DI_OK)
 	{
-		//we've lost contact with the keyboard try to reacquire
-		if (hr==DIERR_NOTACQUIRED)
+		//unknown error, kill the keyboard here ?
+		if (hr!=DIERR_NOTACQUIRED)
+			ComPrintf("CKeyboard::Update_DIBuffered:Failed,Unable to Query keyboard\n");
+		else
 		{
-			ComPrintf("CKeyboard::Update_DIBuffered:Failed,Keyboard is not acquired\n");
-			
 			//Try to acquire it again
 			m_eKbState = DEVINITIALIZED;
-			hr = Acquire();
+			ComPrintf("CKeyboard::Update_DIBuffered:Failed,Keyboard is not acquired\n");
+			Acquire();
 		}
-		else
-			ComPrintf("CKeyboard::Update_DIBuffered:Failed,Unable to Query keyboard\n");
 		
 		//Flush and Return
 		FlushKeyBuffer();
@@ -560,18 +559,15 @@ void CKeyboard::Update_DIImmediate()
 										 &m_aKeyState);
     if(hr != DI_OK)  
 	{
-		//we've lost contact with the keyboard try to reacquire
-		if (hr==DIERR_NOTACQUIRED)
-		{
-			ComPrintf("CKeyboard::UpdateDI:Failed, Keyboard is not acquired\n");
-
-			//try to acquire it and then return
-			m_eKbState = DEVINITIALIZED;
-			hr = Acquire();
-		}
-		else
+		if (hr!=DIERR_NOTACQUIRED)
 			ComPrintf("CKeyboard::Update_DIIImmediate: Unable to get device state\n");
-
+		else
+		{
+			//we've lost contact with the keyboard try to reacquire
+			ComPrintf("CKeyboard::UpdateDI:Failed, Keyboard is not acquired\n");
+			m_eKbState = DEVINITIALIZED;
+			Acquire();
+		}
 		//Flush and return
 		FlushKeyBuffer();
 		return;
@@ -649,32 +645,28 @@ bool CKeyboard::CKBMode(const CVar * cvar, const CParms &parms)
 	if(parms.NumTokens() > 1)
 	{
 		int mode = parms.IntTok(1);
-		if(mode >= 0)
+
+		//Check for Vaild value
+		if(mode < KB_DIBUFFERED ||  mode > KB_WIN32POLL)
 		{
-			//Check for Vaild value
-			if(mode < KB_DIBUFFERED &&
-			   mode > KB_WIN32POLL)
-			{
-				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
-				return false;
-			}
+			ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
+			return false;
+		}
 
-			//Allow configs to change the mousemode if its valid
-			//even before the mouse actually inits
-			if(m_eKbState == DEVNONE) 
-			{
-				m_eKbMode = (EKbMode)mode;
-				return true;
-			}
-
-			if(FAILED(Init(m_bExclusive,(EKbMode)mode)))
-			{
-				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",mode);
-				return false;
-			}
+		//Allow configs to change the mode if its valid
+		//even before the mouse actually inits
+		if(m_eKbState == DEVNONE) 
+		{
+			m_eKbMode = (EKbMode)mode;
 			return true;
 		}
-		ComPrintf("CKeyboard::CKBMode:couldnt read required mode\n");
+
+		if(FAILED(Init(m_bExclusive,(EKbMode)mode)))
+		{
+			ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",mode);
+			return false;
+		}
+		return true;
 	}
 
 	ComPrintf("Keyboard Mode is %d\n",m_eKbMode);

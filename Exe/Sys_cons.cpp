@@ -132,7 +132,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				{
 					if(m_cmdBuffer.size() == MAX_OLDCMDS)
 						m_cmdBuffer.pop_front();
-					m_cmdBuffer.push_back(std::string(m_conString));
+					m_cmdBuffer.push_back(string(m_conString));
 					m_itCmd = m_cmdBuffer.end();
 
 					ComPrintf("]%s\n",m_conString.c_str());
@@ -160,13 +160,13 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				for(CVarList::iterator itVar= m_lCVars.begin(); itVar != m_lCVars.end(); itVar++)
 				{
 					if(strncmp(m_conString.c_str(),(*itVar)->name,len) == 0)
-						matchingNames.push_back(std::string((*itVar)->name));
+						matchingNames.push_back(string((*itVar)->name));
 				}
 
 				for(CmdList::iterator itCmd = m_lCmds.begin(); itCmd != m_lCmds.end(); itCmd ++)
 				{
 					if(strncmp(m_conString.c_str(),itCmd->name,len) == 0)
-						matchingNames.push_back(std::string(itCmd->name));
+						matchingNames.push_back(string(itCmd->name));
 				}
 				
 				if(matchingNames.size())
@@ -269,7 +269,7 @@ void CConsole::ExecString(const char *string)
 					//char argVal[128];
 					const char * argVal = m_parms.UnsafeStringTok(1);
 					
-					if((*it)->type != CVarBase::CVAR_STRING)
+					if((*it)->type != CVAR_STRING)
 						(*it)->Set(argVal);
 					else
 					{
@@ -378,7 +378,7 @@ void CConsole::WriteCVars(FILE * fp)
 	//write all the archive flaged vars in the config file
 	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
-		if((*it)->flags & CVarBase::CVAR_ARCHIVE)
+		if((*it)->flags & CVAR_ARCHIVE)
 		{
 			char line[80];
 			strcpy(line,(*it)->name);

@@ -2,6 +2,7 @@
 #define VOID_COM_BUFFER
 
 #include "Com_defs.h"
+#include "3dmath.h"
 
 /*
 ==========================================
@@ -38,6 +39,7 @@ public:
 	float ReadAngle();
 	float ReadCoord();
 	char* ReadString(char delim=0);
+	void  ReadVector(vector_t &vec);
 
 	//Other util
 	const byte* GetData() const { return m_buffer;  }
@@ -46,6 +48,7 @@ public:
 	int   GetMaxSize()  const { return m_maxSize; }
 	bool  OverFlowed()  const { return m_overFlowed; }
 	int   UnreadBytes() const { return m_curSize - m_readCount; }
+	bool  HasSpace(int space) const { return (m_maxSize - m_curSize >= space); }
 	
 	void  BeginRead() { m_badRead = false; m_readCount = 0; }
 	void  Reset();

@@ -19,11 +19,9 @@
 typedef struct
 {
 	float x, y, z;
-} vector_t;
-
+}vector_t;
 
 typedef float matrix_t[4][4];
-
 
 // rvertex_t - what the renderer thinks in
 typedef struct
@@ -50,6 +48,65 @@ typedef struct
 	float		d;		// distance from origin
 } plane_t;
 
+
+//new replacement 3d funcs
+namespace Void3d
+{
+/*
+int		VectorCompare (const vector_t *v1, const vector_t *v2);
+float	VectorNormalize2 (vector_t *v, vector_t *out);
+void	VectorMA (const vector_t *veca, float scale, const vector_t *vecb, vector_t *vecc);
+void	_CrossProduct(const vector_t *a, const vector_t *b, vector_t *normal);
+float	VectorLength(const vector_t *v);
+float	VectorNormalize(vector_t *v);
+void	VectorScale (const vector_t *in, float scale, vector_t *out);
+void	AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, vector_t *up);
+int		VectorCompare2 (const vector_t *v1, const vector_t *v2, float thresh);
+void	MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm);
+*/
+
+inline float DotProduct(const vector_t &a, const vector_t &b)
+{	return ( a.x*b.x + a.y*b.y + a.z*b.z );
+}
+
+inline void VectorSet(vector_t &dest, const vector_t &a)
+{	dest.x = a.x; 
+	dest.y = a.y; 
+	dest.z = a.z;
+}
+
+inline void VectorSet(vector_t &dest, float x, float y, float z)
+{	dest.x = x;
+	dest.y = y;
+	dest.z = z;
+}
+
+inline void VectorAdd(vector_t &dest, const vector_t &a, const vector_t &b)
+{	dest.x=a.x+b.x; 
+	dest.y=a.y+b.y; 
+	dest.z=a.z+b.z;
+}
+
+inline void VectorAdd(vector_t &dest, const vector_t &a)
+{	dest.x +=a.x;
+	dest.y +=a.y;
+	dest.z +=a.z;
+}
+
+inline void VectorSub(vector_t &dest, const vector_t &a, const vector_t &b)
+{
+	dest.x=a.x-b.x; 
+	dest.y=a.y-b.y; 
+	dest.z=a.z-b.z;
+}
+
+inline void VectorInv(vector_t &dest)
+{	dest.x = -dest.x;
+	dest.y = -dest.y;
+	dest.z = -dest.z;
+}
+
+}
 
 
 // math prototypes

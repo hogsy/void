@@ -48,7 +48,8 @@ private:
 
 	//=============================================
 	enum
-	{	M_DIBUFFER_SIZE	  =	16,
+	{	
+		M_DIBUFFER_SIZE	  =	8,
 		M_MOUSEBUTTONS	  =	4,
 		M_W32MOUSEBUTTONS =	3
 	};

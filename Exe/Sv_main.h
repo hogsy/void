@@ -6,7 +6,7 @@
 
 //Predeclarations
 struct world_t;
-class  CEntClient;
+struct EntClient;
 
 /*
 ======================================
@@ -44,6 +44,10 @@ private:
 	void Shutdown();
 	void Restart();
 
+	//Parse entity data from world file into 
+	//Entity spawn buffers
+	bool ParseEntities(NetSignOnBufs &signOnBuf);
+
 	void LoadWorld(const char * mapname);
 	void PrintServerStatus();
 
@@ -54,7 +58,7 @@ private:
 	CNetServer	m_net;
 	ServerState m_svState;
 
-	CEntClient *m_client;
+	EntClient *m_client;
 
 	NetChanWriter & m_chanWriter;
 

@@ -18,17 +18,17 @@ enum
 Constructor/Destructor
 ======================================
 */
-CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
-					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
-					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
-					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
-					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
+CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
+					 m_cDedicated("sv_dedicated", "0", CVAR_BOOL,CVAR_LATCH),
+					 m_cHostname("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
+					 m_cMaxClients("sv_maxclients", "4", CVAR_INT,CVAR_ARCHIVE),
+					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_chanWriter(m_net)
 {
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
-	m_client= new CEntClient[SV_MAX_CLIENTS];
+	m_client= new EntClient[SV_MAX_CLIENTS];
 
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
@@ -152,12 +152,86 @@ void CServer::RunFrame()
 //======================================================================================
 
 /*
+======================================
+Parse and read entities
+======================================
+*/
+bool CServer::ParseEntities(NetSignOnBufs &signOnBuf)
+{
+	//create a spawnstring 
+	int i=0, j=0;
+	int classkey= -1;
+	int keyLen = 0;
+	CBuffer entBuffer;
+
+	for(i=0; i< m_pWorld->nentities; i++)
+	{
+		classkey = -1;
+		entBuffer.Reset();
+
+		//Look for classname
+		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
+		{
+			if(strcmp("classname",m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name) == 0)
+			{
+				classkey = m_pWorld->entities[i].first_key + j;
+				entBuffer.Write(m_pWorld->keys[classkey].value);
+			}
+		}
+
+		//found classkey, see if we want info about this entity
+		//then copy over all the parms
+		if(classkey == -1)
+			continue;
+
+		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
+		{
+			if(m_pWorld->entities[i].first_key + j != classkey)
+			{
+				entBuffer.Write(m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name);
+				entBuffer.Write(m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
+			}
+		}
+
+
+		//Check if the signOn buffer has space for this entity
+		if(!signOnBuf.entityList[signOnBuf.numEntityBufs].HasSpace(entBuffer.GetSize()))
+		{
+			if(signOnBuf.numEntityBufs < 3)
+				signOnBuf.numEntityBufs ++;
+			else
+			{	
+				//Error ran out of space to write entity info
+				return false;
+			}
+		}
+		signOnBuf.entityList[signOnBuf.numEntityBufs].Write(entBuffer);
+	}
+
+/*		//Print the info we read
+		char *s = 0;
+		while(s = entbuffer.ReadString())
+		{
+			if(s[0] == 0)
+				break;
+			ComPrintf("%s\n",s);
+		}
+*/
+	for(i=0;i<=signOnBuf.numEntityBufs; i++)
+		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, signOnBuf.entityList[i].GetSize()); 
+	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
+	return true;
+}
+
+
+/*
 ==========================================
 Load the World
 ==========================================
 */
 void CServer::LoadWorld(const char * mapname)
 {
+	//Get Map name
 	if(!mapname)
 	{
 		if(m_svState.worldname[0])
@@ -186,10 +260,11 @@ void CServer::LoadWorld(const char * mapname)
 	else if(!Init())
 		return;
 
+	//Load World
 	m_pWorld = world_create(mappath);
 	if(!m_pWorld)
 	{
-		ComPrintf("CServer::LoadWorld: couldnt load map %s\n", mappath);
+		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
 		Shutdown();
 		return;
 	}
@@ -197,69 +272,26 @@ void CServer::LoadWorld(const char * mapname)
 	//Set worldname
 	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldname);
 
-	//Load entities
-	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
-	
-	//create a spawnstring 
-	//char entparms[512];
-/*	int classkey = -1, j=0;
-	CBuffer		entbuffer(512);
-
-	for(int i=0; i< m_pWorld->nentities; i++)
-	{
-		ComPrintf("Entity num %d\n", i);
-		classkey = -1;
-
-		entbuffer.Reset();
-
-		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
-		{
-			if(strcmp("classname",m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name) == 0)
-			{
-				classkey = m_pWorld->entities[i].first_key + j;
-				entbuffer += m_pWorld->keys[classkey].value;
-
-				//strcpy(entparms, m_pWorld->keys[classkey].value);
-			}
-		}
-
-		//found class key, now copy everything else 
-		if(classkey == -1)
-			continue;
-
-		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
-		{
-			if(m_pWorld->entities[i].first_key + j != classkey)
-			{
-				entbuffer += m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name;
-				entbuffer += m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value;
-				
-				//strcat(entparms," ");
-				//strcat(entparms,m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name);
-				//strcat(entparms," ");
-				//strcat(entparms,m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
-			}
-		}
-		
-	}
-
-//			ComPrintf("%d: %s = %s\n",j, m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name,
-//					 m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
-*/
-
-	//update state
-	m_svState.levelId ++;
-	m_active = true;
-
 	//Create Sigon-message. includes static entity baselines
 	//=======================
 	//all we need is the map name right now
 
 	NetSignOnBufs & buf = m_net.GetSignOnBufs();
+
+	if(!ParseEntities(buf))
+	{
+		ComPrintf("CServer::LoadWorld: Could not parse map entities for: %s\n", mappath);
+		Shutdown();
+		return;
+	}
 	
 	buf.gameInfo.Write(SVC_INITCONNECTION);
 	buf.gameInfo.Write(m_svState.gameName);
 	buf.gameInfo.Write(m_svState.worldname);
+
+	//update state
+	m_svState.levelId ++;
+	m_active = true;
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)

@@ -106,15 +106,15 @@ private:
 	};
 
 	//==============================================================
-	typedef std::list<CCommand>	 CmdList;
-	typedef std::list<CVarBase*> CVarList;
+	typedef list<CCommand>	 CmdList;
+	typedef list<CVarBase*> CVarList;
 	
 	CmdList		m_lCmds;		//List of registered commands
 	CVarList	m_lCVars;
 
 	CParms		m_parms;
 	
-	std::string	m_conString;	//Current String in Console
+	string		m_conString;	//Current String in Console
 	StringList	m_cmdBuffer;	//Fixed List of previously entered strings
 	
 	//iterator to keep track of the Command buffer

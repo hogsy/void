@@ -3,6 +3,10 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+//disable horrible vc problem of identifiers 
+//getting truncated to 255 char 
+#pragma warning(disable : 4786)
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -13,11 +17,13 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <map>
 
 const int COM_MAXPATH	  = 256;
 const int COM_MAXFILENAME = 128;
 
-typedef std::list<std::string> StringList;
+using namespace std;
+typedef list<string> StringList;
 
 #ifndef byte
 typedef unsigned char byte;

@@ -18,10 +18,10 @@
 
 //========================================================================================
 
-#define VOID_MAINWINDOWCLASS "Void"
-#define VOID_MAINWINDOWTITLE "Void"
+const char VOID_MAINWINDOWCLASS[] = "Void";
+const char VOID_MAINWINDOWTITLE[] = "Void";
 
-#define VOID_DEFAULTGAMEDIR	"Game"
+const char VOID_DEFAULTGAMEDIR [] = "Game";
 
 //========================================================================================
 
