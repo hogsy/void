@@ -169,6 +169,7 @@ public:
 	virtual void SetFocus(void)=0;
 
 	unsigned int GetNumTris(void)	{ return mTrisDrawn;	}
+	void UseLights(bool l)	{	mUseLights = l;		}
 
 	void ConAlpha(byte t, byte b)	{	mConAlphaTop = t;	mConAlphaBot = b;	}
 
@@ -220,6 +221,7 @@ protected:
 	byte		mConAlphaBot;
 
 	unsigned int	mTrisDrawn;	// number of tris pushed through per frame
+	bool			mUseLights;	// use any kind of light (light ents or lightmaps)
 };
 
 

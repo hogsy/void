@@ -25,6 +25,8 @@ CWorld			*	world=0;			//The World
 CClientRenderer *	g_pClient=0;
 CRasterizer		*	g_pRast=0;
 
+extern	CVar g_varFullbright;
+
 /*
 =======================================
 Constructor 
@@ -225,7 +227,15 @@ void CRenExp::Draw(const CCamera * camera)
 {
 	g_pRast->SetFocus();
 	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
-	
+
+	// decide whether or not to use lights before doing anything
+	if (!world)
+		g_pRast->UseLights(false);
+	else if (!g_varFullbright.bval  && world->light_size)
+		g_pRast->UseLights(true);
+	else
+		g_pRast->UseLights(false);
+
 	if(camera)
 	{
 		r_drawframe(camera);
