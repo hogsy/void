@@ -42,6 +42,9 @@ struct CFileSystem::SearchPath_t
 CFileSystem
 =======================================================================
 */
+
+char CFileSystem::m_curpath[COM_MAXPATH];
+
 /*
 ==========================================
 Constructor and Destructor
@@ -150,11 +153,11 @@ bool CFileSystem::AddGameDir(const char *dir)
 		gamedir[dirnamelen] = '\0';
 
 	//Check to see Dir exists.
-	char fullpath[COM_MAXPATH];
-	sprintf(fullpath,"%s/%s",m_exepath,gamedir);
-	if(!PathExists(fullpath))
+	sprintf(m_curpath,"%s/%s",m_exepath,gamedir);
+	if(!PathExists(m_curpath))
 	{
-		ComPrintf("CFileSystem::AddGameDir: Game dir does not exist : %s\n",fullpath);
+		ComPrintf("CFileSystem::AddGameDir: Game dir does not exist : %s\n",m_curpath);
+		memset(m_curpath,0, COM_MAXPATH);
 		return false;
 	}
 
@@ -225,6 +228,15 @@ void CFileSystem::ResetGameDir()
 		else
 			iterator = iterator->prev;
 	}
+}
+
+/*
+==========================================
+Returns current path
+==========================================
+*/
+const char * CFileSystem::GetCurrentPath()
+{	return m_curpath;
 }
 
 /*
@@ -534,260 +546,3 @@ bool CFileSystem::CompareExts(const char *file, const char *ext)
 	}
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*	
-	//Returns a filelisting matching the criteria	
-	int FindFiles(CStringList *filelist,		//File List to fill
-				  const char  *ext,				//Extension		  
-				  const char  *path=0);			//Search in a specific path
-*/
-
-/*
-===========================================
-Reinits the file system, then adds the new game dir
-===========================================
-*/
-/*
-bool CFileSystem::ChangeGameDir(const char *dir)
-{
-	//Remove all search paths associated with the current game dir
-	//including the archive files
-	SearchPath_t * iterator = m_lastpath;
-	while(iterator)
-	{
-		//remove this entry if it doesnt match the base dir
-		if(strcmp(iterator->path,m_basedir))
-		{
-			SearchPath_t * temp = iterator;
-			iterator = iterator->prev;
-			delete temp;
-			m_lastpath = iterator;
-		}
-		else
-			iterator = iterator->prev;
-	}
-	//Now add the new dir
-	return AddGameDir(dir);
-}
-*/
-
-
-#if 0
-/*
-===========================================
-Returns a filelisting matching the criteria	
--returns number of files found
--extension
--File List to fill
--search in a specific path
-===========================================
-*/
-
-int CFileSystem::FindFiles(CFileList  *filelist,			//File List to fill
-							const char *ext,				//extension
-							const char *path)				//Search in a specific path
-{
-	int nummatches = 0;
-	
-	if(!path)
-	{
-	}
-
-	//Path is given, search through just one dir
-	if(path)
-	{
-		CDirectory * dir = 0;
-		CFileList *fl = filelist;
-		int len = strlen(path);
-		
-		if(path[len-1] == '\\' || path[len-1] == '/')
-			--len;
-		
-		//Get rid of leading slash
-		if(path[0] == '\\' || path[0] == '/')
-			dir = GetDirFromPath(path+1,len,m_pbasedir);
-		else
-			dir = GetDirFromPath(path,len-1,m_pbasedir);
-
-		if(!dir)
-		{
-			ComPrintf("CFileSystem::FindFiles: Invalid Path\n");
-			return 0;
-		}
-
-		for(int i=0; i< dir->m_numfiles; i++)
-		{
-			if(CompareExts(dir->m_files[i].filename,ext))
-			{
-
-				fl->file = &dir->m_files[i];
-				fl->next = new CFileList();
-				fl = fl->next;
-				nummatches ++;
-			}
-		}
-		return nummatches;
-	}
-	filelist = BuildSearchList(m_pbasedir,filelist,ext, nummatches);
-	return nummatches;
-}
-
-/*
-===========================================
-
-===========================================
-*/
-CFileList * CFileSystem::BuildSearchList(const CDirectory * dir, CFileList * list,
-										  const char * ext, int &numfiles)
-{
-	CFileList * fl = list;
-
-	//Add any local files
-	for(int i=0; i< dir->m_numfiles; i++)
-	{
-		if(CompareExts(dir->m_files[i].filename,ext))
-		{
-			fl->file = &dir->m_files[i];
-			fl->next = new CFileList();
-			fl = fl->next;
-			numfiles ++;
-		}
-	}
-
-	//Iterate through subdirs and add those files
-	for(i=0;i<dir->m_numdirs; i++)
-		  fl = BuildSearchList(&dir->m_dirs[i],fl,ext,numfiles);
-	return fl;
-}
-
-#endif
-
-
-
-
-#if 0
-
-/*
-===========================================
-QuickSorts the String list of files
-===========================================
-*/
-void CFileSystem::QuickSortStringList(CStringList * const list,const int numitems)
-{
-	if(numitems < 2)
-		return;
-
-	CStringList *	sorted = new CStringList[numitems];		//dest array
-	CStringList * pivot = list;							//let the first one be the pivot
-	CStringList *	iterator = list->next;					
-	
-	int maxindex = numitems-1;
-	int left=0;
-	int right = maxindex; 
-	
-	//loop one less time since the first item is the pivot
-	for(int i=0,comp=0;i<maxindex;i++)
-	{
-		comp = _stricmp(iterator->string,pivot->string);
-		
-		if(comp < 0)
-		{
-			strcpy(sorted[left].string,iterator->string);
-			sorted[left].next = &sorted[(left+1)];
-			left++;
-		}
-		else if(comp >= 0)
-		{
-		    strcpy(sorted[right].string,iterator->string);
-			sorted[(right-1)].next = &sorted[right];
-			right--;
-		}
-		iterator = iterator->next;
-	}
-	
-	//Copy the pivot point in the empty space
-	strcpy(sorted[left].string, pivot->string);
-	if(right == maxindex)
-		sorted[left].next = 0;
-	else
-		sorted[left].next = &sorted[(left+1)];
-		
-
-	if(left > 1) 
-		QuickSortStringList(sorted,left);								
-	if((numitems - (right+1)) > 1)
-		QuickSortStringList(&sorted[left+1],(numitems - (right+1)));		//starting from the one right after the pivot
-	
-	//List is sorted, copy into return filelist now
-	//everything is sorted now copy it over
-
-	iterator = list;
-	for(i=0;i<numitems;i++)
-	{
-		strcpy(iterator->string,sorted[i].string);
-		iterator=iterator->next;
-		sorted[i].next = 0;						//get rid of the links so we dont have problems deleting the array
-	}
-	delete [] sorted;
-}
-
-
-#endif
-
-

@@ -62,7 +62,7 @@ Create the fileSystem and return it
 copy pointer to console for cvar/printing functions
 ==========================================
 */
-FILESYSTEM_API CFileSystem * CreateFileSystem(I_ExeConsole * pconsole)
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_ExeConsole * pconsole)
 {	
 	InitMemReporting();
 
@@ -80,7 +80,7 @@ FILESYSTEM_API CFileSystem * CreateFileSystem(I_ExeConsole * pconsole)
 Destroy the fileSystem
 ==========================================
 */
-FILESYSTEM_API void DestroyFileSystem()
+FILESYSTEM_API void FILESYSTEM_Free()
 {
 	if(g_pFileSystem)
 	{
