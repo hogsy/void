@@ -57,6 +57,8 @@ struct vector_t //Vec3d
 		return *this;
 	}
 
+	//Other utility funcs
+
 	inline float Length() const
 	{	return FM::SquareRoot((x*x)+(y*y)+(z*z));	
 	}
@@ -75,7 +77,7 @@ struct vector_t //Vec3d
 		z = z*scale;
 	}
 
-	inline void Scale(vector_t &out,float scale)
+	inline void Scale(vector_t &out,float scale) const
 	{	
 		out.x = x*scale;
 		out.y = y*scale;
@@ -96,8 +98,15 @@ struct vector_t //Vec3d
 		out.z = -z;
 	}
 
+	const char * ToString() const
+	{
+		static char vecString[64];
+		sprintf(vecString,"{ %.2f, %.2f, %.2f }", x,y,z);
+		return vecString;
+	}
+
 	float Normalize();
-	float Normalize(vector_t &out);
+	float Normalize(vector_t &out) const;
 	void  VectorMA (const vector_t &veca, float scale, const vector_t &vecb);
 	void  AngleToVector(vector_t * forward, vector_t * right, vector_t *up);
 
@@ -148,19 +157,16 @@ Plane
 */
 struct plane_t
 {
-	plane_t () {}
+	inline plane_t () {}
 	~plane_t () {}
 
-	vector_t	norm;	// normal to plane
-	float		d;		// distance from origin
+	vector_t norm;	// normal to plane
+	float	 d;		// distance from origin
 };
 
 
-
-
 /*
-Blah, macros suck ass. can't even define my own funcs in a diff namespace cause 
-these mess up the names.
+FIXME: use DotProduct instead.
 */
 #define dot(a, b) ( a.x*b.x + a.y*b.y + a.z*b.z )
 

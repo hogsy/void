@@ -13,7 +13,7 @@ float vector_t::Normalize()
 	return mag;
 }
 
-float vector_t::Normalize(vector_t &out)
+float vector_t::Normalize(vector_t &out) const
 {
 	float mag = Length();
 	float imag= FM::INV(mag);
