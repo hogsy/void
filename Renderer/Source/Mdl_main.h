@@ -17,7 +17,7 @@
 #endif
 
 
-class CModelManager// : public I_Model
+class CModelManager
 {
 public:
 	CModelManager();
@@ -68,44 +68,6 @@ private:
 	CModelCacheEntry *caches[MODEL_CACHE_NUM][MODEL_CACHE_SIZE];
 };
 
-
-//extern	CModelManager	*g_pModel;
-
-
-
-
-
-/*
-typedef struct
-{
-   float s, t;
-   int vertex_index;
-} model_glcmd_t;
-
-
-
-typedef struct
-{
-   vector_t *vertices;
-   // FIXME - lightnormal
-} model_frame_t;
-
-
-
-typedef struct
-{
-	int				num_skins;
-	int				num_frames;
-
-	void			*cmds;		// the glcommand list
-	model_frame_t	*frames;
-	int				skin_bin;	// rasterizer texture bin for skins
-} model_t;
-
-void model_load_map(void);
-void model_destroy_map(void);
-void model_draw(int mindex, float frame);
-*/
 
 #endif
 

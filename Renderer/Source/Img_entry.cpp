@@ -15,6 +15,7 @@ CImageCacheEntry::CImageCacheEntry(const char *file)
 	imagefile = new char[strlen(file)+1];
 	strcpy(imagefile, file);
 	tex_bin = -1;
+	mRefCount = 1;
 	LoadTexture();
 }
 
@@ -82,7 +83,8 @@ UnLoadTexture
 */
 void CImageCacheEntry::UnLoadTexture(void)
 {
-	g_pRast->TextureBinDestroy(tex_bin);
+	if (tex_bin != -1)
+		g_pRast->TextureBinDestroy(tex_bin);
 	tex_bin = -1;
 }
 

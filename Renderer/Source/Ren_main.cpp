@@ -160,7 +160,6 @@ void r_draw_node(int n)
 	}
 
 	int nn;
-//	float d = dot(world->planes[world->nodes[n].plane].norm, eye.origin) - world->planes[world->nodes[n].plane].d;
 	float d = dot(world->planes[world->nodes[n].plane].norm, camera->origin) - world->planes[world->nodes[n].plane].d;
 
 	// front to back traversal
@@ -217,24 +216,6 @@ void build_frust(void)
 // near-z
 	VectorCopy(forward, frust[4].norm);
 	frust[4].d = dot(frust[4].norm, camera->origin);
-/*
-// poly right in front of eye
-	cpoly_t *poly = get_poly();
-	poly->poly.lightdef = 0;
-	poly->poly.texdef = 0;
-	poly->poly.num_vertices = 4;
-	VectorMA(&a, 5, &forward, &poly->poly.vertices[0]);
-	VectorMA(&b, 5, &forward, &poly->poly.vertices[1]);
-	VectorMA(&c, 5, &forward, &poly->poly.vertices[2]);
-	VectorMA(&d, 5, &forward, &poly->poly.vertices[3]);
-
-	g_pRast->PolyStart(VRAST_QUADS);
-	for (int i=0; i<4; i++)
-		g_pRast->PolyVertexf(poly->poly.vertices[i]);
-	g_pRast->PolyEnd();
-
-	cache_add_poly(poly, CACHE_PASS_ZBUFFER);
-*/
 }
 
 
@@ -257,7 +238,6 @@ void r_drawframe(const CCamera * pcamera)
 {
 	camera = pcamera;
 
-//	VectorSet(&camera->angles, 0, 0, 0);
 	AngleToVector (&camera->angles, &forward, &right, &up);
 	
 	fullblend  =  &camera->blend;
@@ -267,7 +247,6 @@ void r_drawframe(const CCamera * pcamera)
 	VectorNormalize(&up);
 
 	// find eye leaf for pvs tests
-	//eye_leaf = get_leaf_for_point(eye.origin);
 	eye_leaf = get_leaf_for_point(camera->origin);
 
 	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);

@@ -38,7 +38,8 @@ CImageManager::~CImageManager()
 		{
 			if (caches[c][e])
 			{
-				delete caches[c][e];
+				if (caches[c][e]->Release() == 0)
+					delete caches[c][e];
 				caches[c][e] = NULL;
 			}
 		}
@@ -71,15 +72,29 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 		}
 	}
 
-	// add it in the specified spot
+	// make sure our spot is free
 	if (caches[cache][index])
 	{
 		ComPrintf("image already in specified index\n");
 		delete caches[cache][index];
 	}
 
-	caches[cache][index] =  new CImageCacheEntry(image);
+	// search all caches to see if it is already loaded somewhere
+	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	{
+		for (int i=0; i<IMAGE_CACHE_SIZE; i++)
+		{
+			if (caches[c][i] && caches[c][i]->IsFile(image))
+			{
+				caches[cache][index] = caches[c][i];
+				caches[c][i]->AddRef();
+				return index;
+			}
+		}
+	}
 
+	// else create a new one
+	caches[cache][index] =  new CImageCacheEntry(image);
 	return index;
 }
 
@@ -96,7 +111,8 @@ void CImageManager::UnloadImage(CacheType cache, hImg index)
 
 	else
 	{
-		delete caches[cache][index];
+		if (caches[cache][index]->Release() == 0)
+			delete caches[cache][index];
 		caches[cache][index] = NULL;
 	}
 }

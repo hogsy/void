@@ -5,36 +5,32 @@
 #include <string.h>
 #include "3dmath.h"
 
-typedef struct
-{
-   float s, t;
-   int vertex_index;
-} model_glcmd_t;
-
-
 
 class CModelCacheEntry
 {
 public:
-	CModelCacheEntry(const char *file);
-	~CModelCacheEntry();
+	CModelCacheEntry();
+	virtual ~CModelCacheEntry();
 
 
-	void Draw(int skin, int fframe, int cframe, float frac);
+	virtual void LoadModel(const char *file)=0;
+	virtual void Draw(int skin, int fframe, int cframe, float frac)=0;
 	bool IsFile(const char *file) { return (strcmp(file, modelfile)==0); }
 
 	void LoadSkins(void);
 	void UnLoadSkins(void);
 
-
 	int GetNumSkins(void)	{ return num_skins;		}
 	int	GetNumFrames(void)	{ return num_frames;	}
 
+	int  Release(void)	{ return --mRefCount; }
+	void AddRef(void)	{ mRefCount++;	}
+
 private:
 
-	void LoadModel(void);	// load a md2
-	void LoadFail(void);	// default model
+	int mRefCount;
 
+protected:
 	// skin info
 	int num_skins;
 	int	skin_bin;		// rasterizer texture names
@@ -45,10 +41,6 @@ private:
 
 	// frame data
 	int		 num_frames;
-	vector_t **frames;
-
-	// the glcommand list
-	void *cmds;
 };
 
 

@@ -45,11 +45,7 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
 	g_pClient = new CClientRenderer();
-/*
-	g_pModel= new CModelManager();
-	g_pImage= new CImageManager();
-	g_prHud = new CRHud();
-*/
+
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
@@ -75,19 +71,6 @@ CRenExp::~CRenExp()
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;
-/*
-	if (g_pModel)
-		delete g_pModel;
-	g_pModel = 0;
-
-	if (g_pImage)
-		delete g_pImage;
-	g_pImage = 0;
-
-	if(g_prHud)
-		delete g_prHud;
-	g_prHud = 0;
-*/
 
 	if (g_pClient)
 		delete g_pClient;
@@ -209,35 +192,6 @@ Returns the ClientRenderer Interface
 I_ClientRenderer * CRenExp::GetClient()
 {	return g_pClient;
 }
-/*
-==========================================
-Return the Hud interface
-==========================================
-I_RHud * CRenExp::GetHud()
-{	return g_prHud;
-}
-*/
-
-
-/*
-==========================================
-Return the Hud interface
-==========================================
-I_Model * CRenExp::GetModel()
-{	return g_pModel;
-}
-*/
-
-
-/*
-==========================================
-Return the Hud interface
-==========================================
-I_Image * CRenExp::GetImage()
-{	return g_pImage;
-}
-*/
-
 
 /*
 ==========================================
@@ -256,19 +210,6 @@ void CRenExp::Draw(const CCamera * camera)
 #endif
 }
 
-/*
-void CRenExp::Draw(vector_t *origin, vector_t *angles, vector_t *blend)
-{
-	//draw a frame from the current viewpoint
-	r_drawframe(origin,angles,blend);
-
-// make sure all was well
-#ifdef _DEBUG
-	g_pRast->ReportErrors();
-#endif
-
-}
-*/
 
 void CRenExp::DrawConsole()
 {	
@@ -332,7 +273,6 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 			return false;
 		}
 		
-//		model_destroy_map();
 		world = level;
 		
 		if(!g_pTex->LoadWorldTextures(world))
@@ -340,7 +280,6 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 			ComPrintf("CRenExp::LoadWorld::Error Reloading textures\n");
 			return false;
 		}
-//		model_load_map();
 		return true;
 	}
 	ComPrintf("CRenExp::LoadWorld::Error Bad World Pointer\n");
@@ -361,8 +300,6 @@ bool CRenExp::UnloadWorld()
 	if(world)
 	{
 		g_pTex->UnloadWorldTextures();
-//		model_destroy_map();
-
 		world = 0;
 		return true;
 	}

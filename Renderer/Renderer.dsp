@@ -411,6 +411,22 @@ SOURCE=.\Source\Mdl_main.cpp
 
 SOURCE=.\Source\Mdl_main.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_md2.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_md2.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_sp2.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_sp2.h
+# End Source File
 # End Group
 # Begin Source File
 

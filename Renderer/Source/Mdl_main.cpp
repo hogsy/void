@@ -1,8 +1,7 @@
 
 #include "Mdl_main.h"
-
-//CModelManager	*g_pModel=0;
-
+#include "Mdl_md2.h"
+#include "Mdl_sp2.h"
 
 
 
@@ -41,7 +40,8 @@ CModelManager::~CModelManager()
 		{
 			if (caches[c][e])
 			{
-				delete caches[c][e];
+				if (caches[c][e]->Release() == 0)
+					delete caches[c][e];
 				caches[c][e] = NULL;
 			}
 		}
@@ -78,15 +78,35 @@ hMdl CModelManager::LoadModel(const char *model, CacheType cache, hMdl index)
 		}
 	}
 
-	// add it in the specified spot
+	// make sure our spot is free
 	if (caches[cache][index])
 	{
 		ComPrintf("model already in specified index\n");
 		delete caches[cache][index];
 	}
 
-	caches[cache][index] =  new CModelCacheEntry(model);
 
+	// search all caches to see if it is already loaded somewhere
+	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	{
+		for (int i=0; i<MODEL_CACHE_SIZE; i++)
+		{
+			if (caches[c][i] && caches[c][i]->IsFile(model))
+			{
+				caches[cache][index] = caches[c][i];
+				caches[c][i]->AddRef();
+				return index;
+			}
+		}
+	}
+
+	// else create a new one
+	if (stricmp("md2", &model[strlen(model)-3])==0)
+		caches[cache][index] =  new CModelMd2();
+	else
+		caches[cache][index] =  new CModelSp2();
+
+	caches[cache][index]->LoadModel(model);
 	return index;
 }
 
@@ -118,7 +138,8 @@ void CModelManager::UnloadModel(CacheType cache, hMdl index)
 
 	else
 	{
-		delete caches[cache][index];
+		if (caches[cache][index]->Release() == 0)
+			delete caches[cache][index];
 		caches[cache][index] = NULL;
 	}
 }
@@ -163,7 +184,6 @@ void CModelManager::GetInfo(R_EntState &state)
 {
 	state.num_frames = caches[state.cache][state.index]->GetNumFrames();
 	state.num_skins  = caches[state.cache][state.index]->GetNumSkins();
-
 }
 
 

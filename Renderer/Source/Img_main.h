@@ -36,8 +36,6 @@ private:
 };
 
 
-//extern	CImageManager	*g_pImage;
-
 
 #endif
 

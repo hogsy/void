@@ -199,15 +199,8 @@ Parse and add a message to the hud
 ==========================================
 */
 
-void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg,...)
+void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg)
 {
-	char buff[256];
-
-	va_list args;
-	va_start(args, msg);
-	vsprintf(buff, msg, args);
-	va_end(args);
-
 	for(int i=0;i<MAX_MESSAGES;i++)
 		if(m_hmessages[i].inuse == false)
 			break;
@@ -216,7 +209,7 @@ void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg,...)
 	if(i== MAX_MESSAGES)
 		return;
 
-	m_hmessages[i].Set(buff,x,y,time+(GetCurTime()));
+	m_hmessages[i].Set(msg,x,y,time+(GetCurTime()));
 }
 
 

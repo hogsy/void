@@ -74,7 +74,7 @@ public:
 Renderer HUD Interface
 ==========================================
 */
-class CRHud : public I_RHud
+class CRHud
 {
 public:
 
@@ -84,7 +84,7 @@ public:
 	void DrawHud();				//Draw all the items 
 
 	//Printing
-	void __stdcall HudPrintf(int x, int y, float time, char *msg,...);
+	void __stdcall HudPrintf(int x, int y, float time, char *msg);
 	void __stdcall HudPrint(char *msg, int x, int y, float time =0.0, int color=0);
 	void __stdcall PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME);	//Console Type
 	
@@ -99,8 +99,6 @@ private:
 	CHudMessage	*   m_hmessages;//[MAX_MESSAGES];
 	CHudMessage  *  m_conmessages;//[MAX_TEXTLINES];		//text messages that appear on the top of the screen
 };
-
-//extern CRHud * g_prHud;
 
 
 #endif
