@@ -2,7 +2,6 @@
 #include "Snd_hdr.h"
 #include "Snd_wave.h"
 #include "Snd_buf.h"
-#include "Snd_listener.h"
 #include "Com_util.h"
 
 namespace
@@ -14,24 +13,23 @@ namespace
 		CMD_INFO  = 5,
 		CMD_LIST  = 6
 	};
-	IDirectSound	*	m_pDSound = 0;	// The global sound object.
+	//Direct sound object.
+	IDirectSound	*	m_pDSound = 0;	
 }
 
 using namespace VoidSound;
 
 //======================================================================================
-//======================================================================================
-
 /*
 ==========================================
 Constructor/Destructor
 ==========================================
 */
-CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
 								 m_cHighQuality("s_highquality", "1", CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE),
 								 m_cRollOffFactor("s_rolloff", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
 								 m_cDopplerFactor("s_doppler", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
-								 m_cDistanceFactor("s_distance", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE)
+								 m_cDistanceFactor("s_distance", "15.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE)
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
@@ -39,7 +37,6 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
 	
 	m_numBuffers = 0;
-//	m_channelsInUse =0;
 
 	m_bHQSupport=false;
 	m_bStereoSupport= false;
@@ -57,23 +54,7 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 }
 
 CSoundManager::~CSoundManager()
-{
-
-	if(m_pListener)
-		delete m_pListener;
-
-	delete [] m_Buffers;
-	delete [] m_Channels;
-	delete m_pPrimary;
-
-//	m_pPrimary->Destroy();
-
-	if(m_pDSound)
-	{
-		m_pDSound->Release();
-		m_pDSound = 0;
-		ComPrintf("CSound::Shutdown : Released DirectSound\n");
-	}
+{	Shutdown();
 }
 
 /*
@@ -85,7 +66,7 @@ bool CSoundManager::Init()
 {
 	// Nothing to do if already created.
 	if (m_pDSound) 
-		Shutdown();
+		return true;
 
 	// Create the DirectSound object.
 	HRESULT hr = CoCreateInstance(CLSID_DirectSound, 
@@ -165,25 +146,51 @@ bool CSoundManager::Init()
 	}
 
 	m_pListener = new C3DListener(lpd3dlistener);
+	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor.fval,DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetRolloffFactor(m_cRollOffFactor.fval,DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetDopplerFactor(m_cDopplerFactor.fval,DS3D_DEFERRED);
+	hr = m_pListener->m_pDS3dListener->CommitDeferredSettings();
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CSoundManager::Init:Setting Listener parms:");
+		Shutdown();
+		return false;
+	}
 
 	ComPrintf("CSound::Init OK\n");
 	return true;
 }
 
-
 /*
-==========================================
-shutdown the system
-==========================================
+======================================
+Shutdown
+======================================
 */
 void CSoundManager::Shutdown()
 {
-//	UnregisterAll();
-
-/*	if(m_pListener)
+	if(m_pListener)
+	{
 		delete m_pListener;
+		m_pListener;
+	}
+
+	if(m_Buffers)
+	{
+		delete [] m_Buffers;
+		m_Buffers= 0;
+	}
 	
-	m_pPrimary->Destroy();
+	if(m_Channels)
+	{
+		delete [] m_Channels;
+		m_Channels = 0;
+	}
+	
+	if(m_pPrimary)
+	{
+		delete m_pPrimary;
+		m_pPrimary = 0;
+	}
 
 	if(m_pDSound)
 	{
@@ -191,7 +198,6 @@ void CSoundManager::Shutdown()
 		m_pDSound = 0;
 		ComPrintf("CSound::Shutdown : Released DirectSound\n");
 	}
-*/
 }
 
 /*
@@ -203,6 +209,7 @@ once wave streams are supported
 */
 void CSoundManager::RunFrame()
 {
+	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 }
 
 /*
@@ -214,9 +221,58 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &velocity,
 								   const vector_t &forward,
 								   const vector_t &up)
-{
-	m_pListener->UpdateState(pos,velocity,forward,up);
+{	
+	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
+												 up.x,up.y, up.z, DS3D_DEFERRED);
 }
+
+/*
+======================================
+Update Sound position
+The SoundManager needs to automatically stop sounds out of range
+======================================
+*/
+void CSoundManager::UpdateSnd(hSnd index, vector_t * pos, vector_t * velocity)
+{
+}
+
+/*
+==========================================
+Play sound at index blah, at this channel
+hook this up with an entity, for speed and origin
+==========================================
+*/
+void CSoundManager::PlaySnd(hSnd index, int channel,
+							  const vector_t * origin,
+							  const vector_t * velocity,
+							  bool looping)
+{
+	//Find an unused channel
+	for(int i=0; i<MAX_CHANNELS; i++)
+		if(!m_Channels[i].IsPlaying())
+			break;
+	if(i== MAX_CHANNELS)
+	{
+		ComPrintf("CSoundManager::Play: Unable to play %s, max sounds reached\n", m_Buffers[index].GetFilename());
+		return;
+	}
+
+	m_Channels[i].Create(m_Buffers[index],origin,velocity);
+	bool ret = false;
+	if(looping == true)
+		ret = m_Channels[i].Play(true);
+	else
+		ret = m_Channels[i].Play(false);
+	
+	if(ret)
+	{
+//TEMP, dont really need this info during gameplay
+//		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
+	}
+}
+
 
 /*
 ==========================================
@@ -244,63 +300,9 @@ void CSoundManager::UnregisterAll()
 		m_Buffers[i].Destroy();
 }
 
-/*
-==========================================
-Play sound at index blah, at this channel
-==========================================
-*/
-void CSoundManager::Play(hSnd index, int channel)
-{
-	for(int i=0; i<MAX_CHANNELS; i++)
-		if(!m_Channels[i].IsPlaying())
-			break;
-
-	if(i== MAX_CHANNELS)
-	{
-		ComPrintf("CSoundManager::Play: Unable to play %s, max sounds reached\n", m_Buffers[index].GetFilename());
-		return;
-	}
-
-	m_Channels[i].Create(m_Buffers[index]);
-
-	bool ret = false;
-	if(channel == CHAN_LOOP)
-		ret = m_Channels[i].Play(true);
-	else
-		ret = m_Channels[i].Play(false);
-	
-	if(ret)
-	{
-//TEMP, dont really need this info during gameplay
-//		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
-//		m_channelsInUse ++;
-	}
-}
-
-/*
-==========================================
-Handle Commands
-==========================================
-*/
-void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
-{
-	switch(cmdId)
-	{
-	case CMD_PLAY:
-		SPlay(parms.UnsafeStringTok(1));
-		break;
-	case CMD_STOP:
-		SStop(parms.IntTok(1));
-		break;
-	case CMD_INFO:
-		SPrintInfo();
-		break;
-	case CMD_LIST:
-		SListSounds();
-		break;
-	}
-}
-
+//======================================================================================
+//Console commands and CVars
+//======================================================================================
 /*
 ==========================================
 Play a sound
@@ -325,11 +327,12 @@ void CSoundManager::SPlay(const char * arg)
 		//Create a new buffer
 		if(i == m_numBuffers)
 		{
-			if(!RegisterSound(wavfile))
+			i = RegisterSound(wavfile);
+			if(!i)
 				return;
 		}
 		//Play the sound
-		Play(i);
+		PlaySnd(i);
 		return;
 	}
 	ComPrintf("Usage : splay <wavepath>\n");
@@ -348,7 +351,6 @@ void CSoundManager::SStop(int channel)
 		{
 			m_Channels[channel].Stop();
 			m_Channels[channel].Destroy();
-//			m_channelsInUse--;
 			return;
 		}
 	}
@@ -427,35 +429,140 @@ bool CSoundManager::SPrintInfo()
 Set volume
 ==========================================
 */
-bool CSoundManager::SVolume(const CParms &parms)
+bool CSoundManager::SetVolume(const CParms &parms)
 {
+	long lvol = 0;
 	float fvol = 0.0f;
-	long  lvol = 0;
-	int numParms = parms.NumTokens();
-	if(numParms==1)
+
+	if(parms.NumTokens() < 2)
 	{
 		lvol = m_pPrimary->GetVolume();
-		fvol = (5000 - lvol)/500;
+		fvol = (5000.0 - lvol)/500.0;
 		ComPrintf("Volume : %.2f (%d)\n", fvol,lvol);
 		return false;
 	}
-	else if(numParms > 1)
+
+	fvol = parms.FloatTok(1);
+	if(fvol < 0.0f || fvol > 10.0f)
 	{
-		fvol = parms.FloatTok(1);
-		if(fvol < 0.0f || fvol > 10.0f)
-		{
-			ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
-			return false;
-		}
-		lvol = -(5000 - fvol*500);
-		if(m_pPrimary->SetVolume(lvol))
-		{
-			ComPrintf("CSoundManager::SVolume: Changed to %.2f (%d)\n", fvol, lvol);
-			return true;
-		}
+		ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
 		return false;
 	}
+	lvol = -(5000 - fvol*500);
+	if(m_pPrimary->SetVolume(lvol))
+	{
+		ComPrintf("Volume changed to %.2f (%d)\n", fvol, lvol);
+		return true;
+	}
 	return false;
+}
+
+/*
+======================================
+Set the RollOFF factor
+Just validate values if the listener
+hasn't been created yet
+======================================
+*/
+bool CSoundManager::SetRollOffFactor(const CParms &parms)
+{
+	//Just print value and return
+	if(parms.NumTokens() < 2)
+	{
+		ComPrintf("%s = \"%s\"\n", m_cRollOffFactor.name, m_cRollOffFactor.string);
+		return false;
+	}
+
+	float factor = parms.FloatTok(1);
+	if(factor < DS3D_MINROLLOFFFACTOR ||
+	   factor > DS3D_MAXROLLOFFFACTOR)
+	{
+		ComPrintf("Valid range for Rolloff factor is %0.2f to %0.2f\n",
+			DS3D_MINROLLOFFFACTOR,DS3D_MAXROLLOFFFACTOR);
+		return false;
+	}
+
+	if(m_pListener)
+	{
+		HRESULT hr = m_pListener->m_pDS3dListener->SetRolloffFactor(factor,DS3D_DEFERRED);
+		if(FAILED(hr))
+		{
+			PrintDSErrorMessage(hr,"CSoundManager::SetRollOffFactor:");
+			return false;
+		}
+	}
+	ComPrintf("RollOffFactor changed to = \"%f\"\n", factor);
+	return true;
+}
+
+/*
+======================================
+Set the distance Factor
+======================================
+*/
+bool CSoundManager::SetDistanceFactor(const CParms &parms)
+{
+	//Just print value and return
+	if(parms.NumTokens() < 2)
+	{
+		ComPrintf("%s = \"%s\"\n", m_cDistanceFactor.name, m_cDistanceFactor.string);
+		return false;
+	}
+
+	float factor = parms.FloatTok(1);
+	if(factor <= 0.0f)
+	{
+		ComPrintf("Distance factor should be greater than 0.0\n");
+		return false;
+	}
+
+	if(m_pListener)
+	{
+		HRESULT hr = m_pListener->m_pDS3dListener->SetDistanceFactor(factor, DS3D_DEFERRED);
+		if(FAILED(hr))
+		{
+			PrintDSErrorMessage(hr,"CSoundManager::SetDistance:");
+			return false;
+		}
+	}
+	ComPrintf("DistanceFactor changed to = \"%f\"\n", factor);
+	return true;
+}
+
+/*
+======================================
+Set the doppler factor
+======================================
+*/
+bool CSoundManager::SetDopplerFactor(const CParms &parms)
+{
+	//Just print value and return
+	if(parms.NumTokens() < 2)
+	{
+		ComPrintf("%s = \"%s\"\n", m_cDopplerFactor.name, m_cDopplerFactor.string);
+		return false;
+	}
+
+	float factor = parms.FloatTok(1);
+	if(factor < DS3D_MINDOPPLERFACTOR ||
+	   factor > DS3D_MAXDOPPLERFACTOR)
+	{
+		ComPrintf("Valid range for Doppler factor is %0.2f to %0.2f\n",
+			DS3D_MINDOPPLERFACTOR, DS3D_MAXDOPPLERFACTOR);
+		return false;
+	}
+
+	if(m_pListener)
+	{
+		HRESULT hr = m_pListener->m_pDS3dListener->SetDopplerFactor(factor, DS3D_DEFERRED);
+		if(FAILED(hr))
+		{
+			PrintDSErrorMessage(hr,"CSoundManager::SetDopplerFactor:");
+			return false;
+		}
+	}
+	ComPrintf("DopplerFactor changed to = \"%f\"\n", factor);
+	return true;
 }
 
 
@@ -466,29 +573,54 @@ Handle CVar changes
 */
 bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
-	if(cvar == (CVarBase *)&m_cVolume)
-		return SVolume(parms);
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cVolume))
+		return SetVolume(parms);
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cRollOffFactor))
+		return SetRollOffFactor(parms);
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cDopplerFactor))
+		return SetDopplerFactor(parms);
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cDistanceFactor))
+		return SetDistanceFactor(parms);
 	return false;
 }
 
+
 /*
-======================================
-Device Enumeration. Can't find any use yet
-======================================
+==========================================
+Handle Commands
+==========================================
 */
-/*
-BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
-									  const char * szDesc,
-									  const char * szModule,
-									  void * pContext)
+void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
 {
-	if(szDesc)
-		ComPrintf("Desc : %s\n", szDesc);
-	if(szModule)
-		ComPrintf("Module : %s\n", szModule);
-	return true;
+	switch(cmdId)
+	{
+	case CMD_PLAY:
+		SPlay(parms.UnsafeStringTok(1));
+		break;
+	case CMD_STOP:
+		SStop(parms.IntTok(1));
+		break;
+	case CMD_INFO:
+		SPrintInfo();
+		break;
+	case CMD_LIST:
+		SListSounds();
+		break;
+	}
 }
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //======================================================================================
 //======================================================================================
@@ -558,3 +690,22 @@ namespace VoidSound
 		ComPrintf("%s\n",error);
 	}
 }
+
+/*
+======================================
+Device Enumeration. Can't find any use yet
+======================================
+*/
+/*
+BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
+									  const char * szDesc,
+									  const char * szModule,
+									  void * pContext)
+{
+	if(szDesc)
+		ComPrintf("Desc : %s\n", szDesc);
+	if(szModule)
+		ComPrintf("Module : %s\n", szModule);
+	return true;
+}
+*/

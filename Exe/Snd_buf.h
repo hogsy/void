@@ -12,6 +12,22 @@
 namespace VoidSound {
 
 /*
+======================================
+3d listener
+======================================
+*/
+class C3DListener
+{
+public:
+
+	C3DListener(IDirectSound3DListener * listener) : m_pDS3dListener(listener)	{}
+	~C3DListener()	{ m_pDS3dListener->Release(); m_pDS3dListener =0;	}
+
+	IDirectSound3DListener * m_pDS3dListener;
+};
+
+
+/*
 ==========================================
 The Primary sound Buffer
 ==========================================
@@ -46,6 +62,7 @@ A sound buffer with access to wave data
 class CSoundBuffer
 {
 public:
+
 	CSoundBuffer();
 	~CSoundBuffer();
 
@@ -77,7 +94,10 @@ public:
 	CSoundChannel();
 	~CSoundChannel();
 
-	bool Create(CSoundBuffer &buffer);	//Create a duplicate buffer
+	//Create a duplicate buffer. then get a 3dinterface from it
+	bool Create(CSoundBuffer &buffer,
+				const vector_t * porigin=0,
+				const vector_t * pvelocity=0);	
 	void Destroy();
 	
 	bool Play(bool looping = false);
@@ -87,8 +107,11 @@ public:
 	ulong GetVolume();
 	void  SetVolume(ulong vol);
 
-private:
-	IDirectSoundBuffer * m_pDSBuffer;	//DirectSoundBuffer
+	const vector_t * origin;
+	const vector_t * velocity;
+
+	IDirectSound3DBuffer * m_pDS3dBuffer; 
+	IDirectSoundBuffer   * m_pDSBuffer;	//DirectSoundBuffer
 };
 
 

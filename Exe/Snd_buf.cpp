@@ -19,7 +19,6 @@ CPrimaryBuffer::~CPrimaryBuffer()
 {
 	Destroy();
 }
-
 /*
 ==========================================
 Initialize, set format and start mixing
@@ -31,7 +30,7 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_CTRLVOLUME |DSBCAPS_PRIMARYBUFFER; //DSBCAPS_CTRLPAN
+    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_CTRLVOLUME |DSBCAPS_PRIMARYBUFFER; 
 	dsbdesc.guid3DAlgorithm = GUID_NULL;
     dsbdesc.dwBufferBytes = 0;
     dsbdesc.lpwfxFormat = 0; 
@@ -63,7 +62,7 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 		return 0;
 	}
 
-#if 0
+#if 1
 	if(!SetVolume(m_volume))
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
@@ -219,16 +218,6 @@ bool CSoundBuffer::Create(const char * path)
 	}
 
 
-/*	PCMWAVEFORMAT pcmwf; 
-	// Set up wave format structure. 
-    memset(&pcmwf, 0, sizeof(PCMWAVEFORMAT)); 
-    pcmwf.wf.wFormatTag = WAVE_FORMAT_PCM; 
-    pcmwf.wf.nChannels = 1; 
-    pcmwf.wf.nSamplesPerSec = m_pWaveData->m_samplesPerSecond; 
-    pcmwf.wf.nBlockAlign    = m_pWaveData->m_blockAlign;  //
-    pcmwf.wf.nAvgBytesPerSec =  pcmwf.wf.nSamplesPerSec * pcmwf.wf.nBlockAlign; 
-    pcmwf.wBitsPerSample = m_pWaveData->m_bitsPerSample; 
-*/
 	WAVEFORMATEX waveFormat;
 	// Set up wave format structure. 
     memset(&waveFormat, 0, sizeof(WAVEFORMATEX)); 
@@ -245,8 +234,11 @@ bool CSoundBuffer::Create(const char * path)
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
 	//Need default controls (pan, volume, frequency). 
-    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
-					  DSBCAPS_GLOBALFOCUS | DSBCAPS_STATIC;
+    dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS //|DSBCAPS_STATIC
+						| DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
+
+	//DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME |
+
 	// 5-second buffer. 
     dsbdesc.dwBufferBytes = m_pWaveData->m_size;
     dsbdesc.lpwfxFormat = &waveFormat; 
@@ -327,11 +319,11 @@ Constructor/Destructor
 CSoundChannel::CSoundChannel()
 {
 	m_pDSBuffer= 0;
-//	m_pWaveData= 0;
+	m_pDS3dBuffer = 0;
 }
 
 CSoundChannel::~CSoundChannel()
-{
+{	Destroy();
 }
 
 /*
@@ -346,6 +338,13 @@ void CSoundChannel::Destroy()
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
 	}
+	if(m_pDS3dBuffer)
+	{
+		m_pDS3dBuffer->Release();
+		m_pDS3dBuffer = 0;
+	}
+	origin = 0;
+	velocity = 0;
 }
 
 /*
@@ -353,7 +352,9 @@ void CSoundChannel::Destroy()
 from another buffer
 ==========================================
 */
-bool CSoundChannel::Create(CSoundBuffer &buffer)	//Create a duplicate buffer
+bool CSoundChannel::Create(CSoundBuffer &buffer,       //Create a duplicate buffer
+						   const vector_t * porigin,
+						   const vector_t * pvelocity)	
 {
 	//Destry current buffer if active
 	Destroy();
@@ -371,8 +372,6 @@ bool CSoundChannel::Create(CSoundBuffer &buffer)	//Create a duplicate buffer
 
 	// lock the buffer
 	hr = m_pDSBuffer->Lock(0, 0, &lockPtr1, &lockSize1, 0,0,DSBLOCK_ENTIREBUFFER);
-	//m_pDSBuffer->Lock(0, buffer.GetWaveData()->m_size, &lockPtr1, &lockSize1, &lockPtr2, &lockSize2, 0);
-
 	if(FAILED(hr))
 	{
 		if (hr != DSERR_BUFFERLOST)
@@ -391,12 +390,29 @@ bool CSoundChannel::Create(CSoundBuffer &buffer)	//Create a duplicate buffer
 	// write the data
 	if (lockSize1)
 		memcpy(lockPtr1, buffer.GetWaveData()->m_data, lockSize1);
-//	if (lockSize2)
-//		memcpy(lockPtr2, buffer.GetWaveData()->m_data + lockSize1, lockSize2);
-
-	// unlock it
-//	m_pDSBuffer->Unlock(lockPtr1, lockSize1, lockPtr2, lockSize2);
 	m_pDSBuffer->Unlock(lockPtr1, lockSize1, 0, 0);
+
+	//Get a 3d Interface if its a 3d sound
+	if(porigin || pvelocity)
+	{
+		hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer,(LPVOID *)&m_pDS3dBuffer);
+		if(FAILED(hr))
+		{
+ComPrintf("Unable to get 3d interface\n");
+			Destroy();
+			return false;
+		}
+
+		m_pDS3dBuffer->SetMinDistance(150, DS3D_IMMEDIATE);
+		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
+
+		if(porigin) 
+			m_pDS3dBuffer->SetPosition(porigin->x, porigin->y, porigin->z, DS3D_IMMEDIATE); //DS3D_DEFERRED);
+		if(pvelocity)
+			m_pDS3dBuffer->SetVelocity(pvelocity->x, pvelocity->y, pvelocity->z, DS3D_IMMEDIATE);
+		origin = porigin;
+		velocity = pvelocity;
+	}
 	return true;
 }
 
@@ -442,7 +458,8 @@ Stop playback
 ==========================================
 */
 void CSoundChannel::Stop()
-{	m_pDSBuffer->Stop();
+{	
+	m_pDSBuffer->Stop();
 }
 
 /*
@@ -464,6 +481,6 @@ bool CSoundChannel::IsPlaying() const
 		else if(status & DSBSTATUS_LOOPING)
 			return true;
 	}
-	return 0;
+	return false;
 }
 

@@ -240,10 +240,7 @@ CVoid::~CVoid()
 	
 #ifdef INCLUDE_SOUND
 	if(m_pSound)	
-	{
-		m_pSound->Shutdown();
 		delete m_pSound;
-	}
 #endif
 
 #ifdef INCLUDE_MUSIC

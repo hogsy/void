@@ -15,9 +15,12 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
-//======================================================================================
-//Main Sound manager
-//======================================================================================
+/*
+======================================================================================
+Main Sound manager
+play a sound at a given channel and pos, looping or not looping
+======================================================================================
+*/
 
 class CSoundManager : public I_SoundManager,
 					  public I_ConHandler 
@@ -34,12 +37,14 @@ public:
 	~CSoundManager();
 
 	bool Init();
-	void Shutdown();	//Unload all sounds
-	
+	void Shutdown();
+
 	void RunFrame();
 
 	hSnd RegisterSound(const char * path);
 	void UnregisterAll();
+
+
 
 	//update pos
 	void UpdateListener(const vector_t &pos,
@@ -48,7 +53,13 @@ public:
 						const vector_t &up);
 
 	//hook this up with an entity, for speed and origin
-	void Play(hSnd index, int channel= VoidSound::CHAN_AUTO);
+	void PlaySnd(hSnd index, int channel= VoidSound::CHAN_AUTO,
+							   const vector_t * origin=0,
+							   const vector_t * velocity=0,
+							   bool looping = false);
+	//Update Sound position
+	//The SoundManager needs to automatically stop sounds out of range
+	void UpdateSnd(hSnd index, vector_t * pos, vector_t * velocity);
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
@@ -63,8 +74,6 @@ private:
 	VoidSound::CSoundChannel *	m_Channels;	//Channels which are actually played
 	
 	int	 m_numBuffers;
-//	int	 m_channelsInUse;
-
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
 	
@@ -74,7 +83,10 @@ private:
 	CVar m_cDopplerFactor;
 	CVar m_cDistanceFactor;
 
-	bool SVolume(const CParms &parms);
+	bool SetVolume(const CParms &parms);
+	bool SetRollOffFactor(const CParms &parms);
+	bool SetDistanceFactor(const CParms &parms);
+	bool SetDopplerFactor(const CParms &parms);
 
 	//==========================================
 	//Temp debug funcs

@@ -138,7 +138,7 @@ bool CClient::LoadWorld(const char *worldname)
 	VectorSet(&desired_movement, 0, 0, 0);
 
 	VectorSet(&m_gameClient.angles, 0,0,0);
-	VectorSet(&m_gameClient.origin, 0,0,0);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.origin, 0,0,48);	// FIXME - origin + view height
 	VectorSet(&m_gameClient.mins, -10, -10, -40);
 	VectorSet(&m_gameClient.maxs, 10, 10, 10);
 	VectorSet(&m_screenBlend,0,0,0);
@@ -152,6 +152,9 @@ bool CClient::LoadWorld(const char *worldname)
 
 	System::SetGameState(INGAME);
 	SetInputState(true);
+
+
+	Spawn(0,0);
 	
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
@@ -217,6 +220,13 @@ void CClient::RunFrame()
 		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
 		m_fFrameTime = System::g_fcurTime;
 
+
+		vector_t forward, up, velocity;
+		VectorSet(&velocity, 0,0,0);
+		AngleToVector(&m_gameClient.angles, &forward, 0, &up);
+		m_pHud->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
+		m_pHud->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
+
 		//Print Networking stats
 		const NetChanState & chanState = m_pNetCl->GetChanState();
 		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
@@ -237,6 +247,7 @@ void CClient::RunFrame()
 		else
 			VectorSet(&m_screenBlend, 1, 1, 1);
 
+		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 		m_pRender->Draw(m_pCamera);
 	}
 	else
@@ -350,4 +361,11 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
+	static int hHowl = 0;
+	if(!hHowl)
+		hHowl = m_pSound->RegisterSound("sounds/wind.wav");
+
+	static vector_t horigin;
+	VectorSet(&horigin,0,0,48);
+	m_pSound->PlaySnd(hHowl, VoidSound::CHAN_WORLD, &horigin, 0, true);
 }

@@ -16,10 +16,14 @@ namespace VoidSound
 		CHAN_WORLD  = 1,		//ambient, world sounds etc
 		CHAN_ITEM   = 2,		//item noises, pickups etc
 		CHAN_WEAPON	= 3,		//weapon noises
-		CHAN_PLAYER = 4,		//player sounds
-		CHAN_LOOP	= 5	
+		CHAN_PLAYER = 4			//player sounds
 	};
 
+/*
+	min dis/ max dis
+	1 =	1/1 
+    0.5 = 1/2
+*/
 
 	//Cache type,
 	//not using this right now. should be the same for all resource managers ?
@@ -43,7 +47,10 @@ struct  I_SoundManager
 	//Setup listener
 
 	//hook this up with an entity, for speed and origin
-	virtual void Play(hSnd index, int channel=VoidSound::CHAN_AUTO)=0;
+	virtual void PlaySnd(hSnd index, int channel= VoidSound::CHAN_AUTO,
+							   const vector_t * origin=0,
+							   const vector_t * velocity=0,
+							   bool looping = false)=0;
 };
 
 #endif
