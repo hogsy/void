@@ -314,6 +314,8 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 				mAlphaGen.func = ALPHAGEN_IDENTITY;
 			else if (_stricmp(token, "console") == 0)
 				mAlphaGen.func = ALPHAGEN_CONSOLE;
+			else if (_stricmp(token, "wave") == 0)
+				mAlphaGen.func = ALPHAGEN_WAVE;
 		}
 
 

@@ -153,7 +153,7 @@ void CRasterizer::PolyEnd(void)
 void CRasterizer::DrawLayer(int l)
 {
 	CShaderLayer *layer = mShader->mLayers[l];
-	int i;
+	int i, a;
 	vector_t dir, norm;
 
 	if (layer->mIsLight && !mUseLights)
@@ -168,6 +168,16 @@ void CRasterizer::DrawLayer(int l)
 	case ALPHAGEN_IDENTITY:
 		for (i=0; i<mNumElements; i++)
 			mVerts[i].color |= 0xff000000;
+		break;
+
+	case ALPHAGEN_WAVE:
+		a = (int)((sin(GetCurTime()) + 1) * 255.0f / 2.0f);
+		for (i=0; i<mNumElements; i++)
+		{
+			mVerts[i].color &= 0x00ffffff;
+			mVerts[i].color |= a << 24;
+		}
+
 		break;
 
 	case ALPHAGEN_CONSOLE:

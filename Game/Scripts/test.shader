@@ -16,3 +16,17 @@ textures/void/chrome
 		tcmod scroll 0 0.1
 	}
 }
+
+
+textures/base/void
+{
+	{
+		map textures/base/void
+	}
+	{
+		map textures/base/lineglow
+		blendfunc src_alpha one
+		alphagen wave
+	}
+}
+
