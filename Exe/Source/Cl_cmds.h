@@ -16,6 +16,7 @@ class CClientCommandHandler //: public I_InKeyListener
 */
 };
 
+
 /*
 =========================================
 List of all the Keys and a pointer to 
@@ -26,20 +27,17 @@ struct ClientKey
 {
 	ClientKey()
 	{ 	
-		pFunc = 0;
 		szCommand = 0;
-		bBuffered = false;
+		pCmd = 0;
 	}
 	
 	~ClientKey()
 	{
-		if(szCommand) delete szCommand;
-		pFunc = 0;
+		if(szCommand) delete [] szCommand;
+		pCmd = 0;
 	}
-
-	CFUNC    pFunc;		//Function the key is bound to
-	char   * szCommand;	//The Command String
-	bool	 bBuffered;	//Is the function supposed to be added to the command buffer ?
+	char	 * szCommand;
+	CCommand * pCmd;
 };
 
 /*
@@ -67,12 +65,11 @@ and their corresponding values
 only 
 ============================================================================
 */
-typedef struct clkeynames_s
+struct keyconstants_t
 {
 	const char		*key;
 	unsigned int	val;
-
-}keyconstants_t;
+};
 
 const keyconstants_t keytable[] =
 {

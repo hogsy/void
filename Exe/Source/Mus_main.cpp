@@ -52,11 +52,11 @@ CMusic::CMusic()
 {
 	musinfo.state  = M_INACTIVE;
 
-	Sys_GetConsole()->RegisterCFunc("mplay",&MusPlay);
+/*	Sys_GetConsole()->RegisterCFunc("mplay",&MusPlay);
 	Sys_GetConsole()->RegisterCFunc("mstop",&MusStop);
 	Sys_GetConsole()->RegisterCFunc("mpause",&MusPause);
 	Sys_GetConsole()->RegisterCFunc("mresume",&MusResume);
-	
+*/	
 	m_pvolume = Sys_GetConsole()->RegisterCVar("mvol","0",CVar::CVAR_INT,0,&MusVolume);
 }
 

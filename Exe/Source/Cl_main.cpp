@@ -64,7 +64,7 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 	m_noclip = Sys_GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
 
 	
-	Sys_GetConsole()->RegisterCFunc("say", &Talk);
+//	Sys_GetConsole()->RegisterCFunc("say", &Talk);
 
 
 	RegCommands();

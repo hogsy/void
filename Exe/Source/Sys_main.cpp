@@ -6,7 +6,6 @@
 #include "Snd_main.h"
 #include "Mus_main.h"
 
-
 //========================================================================================
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
@@ -47,12 +46,32 @@ const char* Sys_GetExeDir()	  { return g_exedir;}
 //Console loopback func
 //======================================================================================
 
+#define CMD_QUIT	0
+#define CMD_MAP		1
+
 static void CFuncQuit(int argc, char** argv);		//quit game
 static void CFuncMap(int argc, char** argv);		//start local server with map + connect to it
 static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
 
+
+void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_QUIT:
+		{
+			CFuncQuit(numArgs,szArgs);
+			break;
+		}
+	case CMD_MAP:
+		{
+			CFuncMap(numArgs,szArgs);
+			break;
+		}
+	}
+}
 
 /*
 ==========================================
@@ -108,10 +127,16 @@ CVoid::CVoid(HINSTANCE hInstance,
 	//Set game state - full screen console - not connected
 	g_gameState = INCONSOLE;
 
+	Sys_GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
+	Sys_GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
+	Sys_GetConsole()->RegisterCommand("map",CMD_MAP,this );
+	Sys_GetConsole()->RegisterCommand("connect",CMD_MAP,this);
+/*
 	Sys_GetConsole()->RegisterCFunc("quit",&CFuncQuit);			
 	Sys_GetConsole()->RegisterCFunc("exit",&CFuncQuit);			
 	Sys_GetConsole()->RegisterCFunc("map", &CFuncMap);
 	Sys_GetConsole()->RegisterCFunc("connect",&CFuncConnect);
+*/
 //	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
 

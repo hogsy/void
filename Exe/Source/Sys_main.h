@@ -11,7 +11,7 @@
 
 #define VOID_DEFAULTGAMEDIR	"Game"
 
-class CVoid
+class CVoid : public I_CmdHandler
 {
 	public:
 		
@@ -39,6 +39,8 @@ class CVoid
 		void Activate(bool focus);
 		void OnFocus();
 		void LostFocus();
+
+		void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 	private:
 	

@@ -67,30 +67,24 @@ CVar * CConsole::RegisterCVar(const char *varname,
 }
 
 /*
-void CConsole::RegisterCVar(CVar **var, 
-							const char *varname, 
-							const char *varval,
-							CVar::CVarType vartype, 
-							int varflags,
-							CVAR_FUNC varfunc)
+==========================================
+Register CFunc
+==========================================
+*/
+
+void CConsole::RegisterCommand(const char *cmdname,
+							   HCMD id,
+							   I_CmdHandler * handler)
 {
-	*var = new CVar();
-	(*var)->name = new char[strlen(varname)+1];
-	strcpy((*var)->name,varname);
-	if(varfunc)
-		(*var)->func = varfunc;
-	(*var)->type = vartype;
-	(*var)->flags = varflags;
-	CVarForceSet(var,varval);
-
-
+	CCommand * newfunc = new CCommand(cmdname,id,handler);
+	
 	//Add Item to CvarList
-	CPtrList<CVar>* i1 = m_pcList;
-	CPtrList<CVar>* i2 = 0;
+	CPtrList<CCommand>* i1 = m_pfList;
+	CPtrList<CCommand>* i2 = 0;
 	
 	//Loop till there are no more items in list, or the variable name is 
 	//bigger than the item in the list
-	while(i1->next && i1->item && (strcmp((*var)->name, i1->item->name) > 0))
+	while(i1->next && i1->item && (strcmp(newfunc->name, i1->item->name) > 0))
 	{
 		i2 = i1;
 		i1 = i1->next;
@@ -100,36 +94,32 @@ void CConsole::RegisterCVar(CVar **var,
 	if(i2 == 0)
 	{
 		//New item comes before the first item in the list
-		if(m_pcList->item)
+		if(m_pfList->item)
 		{
-			CPtrList<CVar> * newentry = new CPtrList <CVar>;
-			newentry->item = * var;
+			CPtrList<CCommand> * newentry = new CPtrList <CCommand>;
+			newentry->item = newfunc;
 			newentry->next = i1;
-			m_pcList = newentry;
+			m_pfList = newentry;
 		}
 		//List is empty, add to it
 		else
 		{
-			i1->item = *var;
-			i1->next = new CPtrList<CVar>;
+			i1->item = newfunc;
+			i1->next = new CPtrList<CCommand>;
 		}
 	}
 	//Item comes after the item in list pointer to by i2, and before i1
 	else
 	{
-		CPtrList<CVar> * newentry = new CPtrList <CVar>;
-		newentry->item = *var;
+		CPtrList<CCommand> * newentry = new CPtrList <CCommand>;
+		newentry->item = newfunc;
 		i2->next = newentry;
 		newentry->next = i1;
 	}
 }
-*/
+
 
 /*
-==========================================
-Register CFunc
-==========================================
-*/
 void CConsole::RegisterCFunc(const char *funcname, 
 							 CFUNC pfunc)
 {
@@ -191,6 +181,19 @@ CFUNC CConsole::GetFuncByName(const char * fname)
 	}
 	return 0;
 }
+*/
+
+CCommand * CConsole::GetCommandByName(const char * cmdString)
+{
+	CPtrList<CCommand>* iterator = m_pfList;
+	while(iterator->next && iterator->item)
+	{
+		if(strcmp(cmdString,iterator->item->name) ==0)
+			return iterator->item;
+		iterator = iterator->next;
+	}
+	return 0;
+}
 
 
 /*
@@ -230,7 +233,6 @@ void CConsole::CVarSet(CVar **cvar, float val)
 Forceset functions
 ===================
 */
-
 void CConsole::CVarForceSet(CVar **cvar, const char *varval)
 {
 	if(!varval)

@@ -17,7 +17,8 @@ The client
 #include "In_defs.h"
 
 class CClient : public I_InCursorListener, 
-				public I_InKeyListener
+				public I_InKeyListener,
+				public I_CmdHandler
 {
 public:
 	CClient();
@@ -39,19 +40,26 @@ public:
 
 	void SetInputState(bool on);
 
+	//Input Listener Interface
 	void HandleKeyEvent	(const KeyEvent_t &kevent);
 	void HandleCursorEvent(const float &ix,
 					   const float &iy,
 					   const float &iz);
+
+	//Command Handler Interface
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
 
 	//run local stuff, 
 	//messages received from the server would be handled here
 	void RunFrame();
 
 	static bool Name(const CVar * var, int argc, char** argv);
-	
+
+
 	//Console funcs
-	static void BindFuncToKey(int argc, char** argv);
+	void BindFuncToKey(int argc, char** argv);
+
 	static void BindList(int argc, char** argv);
 	static void Unbindall(int argc, char** argv);
 	static void Unbind(int argc, char** argv);
@@ -108,9 +116,6 @@ private:
 
 
 	CSocket	 	m_sock;
-
-
-//	char		m_ipaddr[16];
 	
 	char		m_svipaddr[16];		//addr we are currently connected to
 	int			m_svport;
