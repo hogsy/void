@@ -26,6 +26,7 @@ heh, should i bother with this ?
 */
 CWorld::CWorld()
 {
+	edges =0;
 	verts=0;
 	iverts=0;
 	planes=0;

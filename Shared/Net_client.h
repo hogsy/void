@@ -16,7 +16,7 @@ struct I_NetClientHandler
 	virtual void HandleSpawnMsg(byte msgId, CBuffer &buffer)=0; 
 	
 	//Handle disconnect from server
-	virtual void HandleDisconnect(bool listenserver)=0;
+	virtual void HandleDisconnect()=0;
 	
 	//Writes the Game clients userinfo
 	virtual void WriteUserInfo(CBuffer &buffer)=0;
