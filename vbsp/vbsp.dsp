@@ -91,6 +91,10 @@ SOURCE=..\Shared\bsp_file.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_defs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_vector.cpp
 # End Source File
 # Begin Source File

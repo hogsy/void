@@ -2,7 +2,7 @@
 #ifndef MAP_FILE_H
 #define MAP_FILE_H
 
-#include "3dmath.h"
+#include "Com_vector.h"
 #include "bsp_file.h"
 
 #define MAX_MAP_ENTITIES		2048
