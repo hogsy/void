@@ -24,7 +24,7 @@ extern	const vector_t *fullblend;
 get_node_for_vert
 ==============
 */
-int get_leaf_for_point(vector_t &v)
+int get_leaf_for_point(const vector_t &v)
 {
 	int n=0;
 	float d;
@@ -219,7 +219,7 @@ void r_draw_node(int n, bool testfrust)
 build initial view frustrum
 *************************************************/
 // build a plane using 3 arbitrary points
-void build_plane3(vector_t &a, vector_t &b, vector_t &c, plane_t &p)
+void build_plane3(const vector_t &a, const vector_t &b, const vector_t &c, plane_t &p)
 {
 	vector_t u = c - a;
 	vector_t v = b - a;

@@ -200,8 +200,10 @@ void CClientGameInput::IntializeBinds()
 	BindFuncToKey(parms, false);
 	parms = "bind SPACE jump";
 	BindFuncToKey(parms, false);
-	parms = "bind MOUSE2 crouch";
+	parms = "bind MOUSE2 +crouch";
 	BindFuncToKey(parms, false);
+//	parms = "bind RSHIFT +walk";
+//	BindFuncToKey(parms, false);
 
 	//Exec binds file
 	ExecBindsFile("vbinds.cfg");

@@ -14,28 +14,26 @@ class CCamera
 {
 public:
 
-	CCamera(vector_t & refOrigin,
-			vector_t & refAngles,
+	CCamera(vector_t & refAngles,
 			vector_t & refForward,
 			vector_t & refRight,
 			vector_t & refUp,
 			vector_t & refVelocity):
-				origin(refOrigin), angles(refAngles), 
+				angles(refAngles), 
 				forward(refForward), right(refRight), up(refUp),
-				velocity(refVelocity), viewHeight(0)
+				velocity(refVelocity)
 	{}
 	
 	~CCamera() {} 
 
 	//Always tied to an entity
-	vector_t & origin;
 	vector_t & angles;
 	vector_t & forward;
 	vector_t & right;
 	vector_t & up;
 	vector_t & velocity;
 
-	int		 viewHeight;
+	vector_t origin;		//includes viewheight
 	vector_t blend;
 };
 

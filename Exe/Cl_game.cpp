@@ -156,6 +156,11 @@ void CGameClient::RunFrame(float frameTime)
 		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, r);
 	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
 		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, r);
+
+	//Scale down x/y velocity if walking or crouching
+	if(m_cmd.moveFlags & ClCmd::WALK || m_cmd.moveFlags & ClCmd::CROUCH)
+		vecDesiredMove.Scale(0.5);
+
 	if(m_cmd.moveFlags & ClCmd::JUMP)
 		vecDesiredMove.z += 300;
 
@@ -172,8 +177,6 @@ void CGameClient::RunFrame(float frameTime)
 
 	m_pGameClient->velocity += vecDesiredMove;
 
-	// FIXME - cap velocity somewhere around here
-
 	//Perform the actual move and update angles
 	UpdatePosition(frameTime);
 	UpdateViewAngles(frameTime);
@@ -186,10 +189,11 @@ void CGameClient::RunFrame(float frameTime)
 		m_cmd.time = 255.0f;
 
 	//Print misc crap
-	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
+	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %.2f, %.2f, %.2f", 
+		m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
 	m_pClGame->HudPrintf(0,120,0,"VELOCITY  : %.2f,%.2f,%.2f", 
 		m_pGameClient->velocity.x,m_pGameClient->velocity.y,m_pGameClient->velocity.z);
-//	m_pClGame->HudPrintf(0,140,0,"MAXS  : %.2f,%.2f,%.2f", m_pGameClient->maxs.x,m_pGameClient->maxs.y,m_pGameClient->maxs.z);
+
 //	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
 //	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
 //	m_pClGame->HudPrintf(0,160,0,"ANGLES : %.2f,%.2f,%.2f", m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);

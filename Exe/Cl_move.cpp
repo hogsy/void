@@ -13,6 +13,8 @@ namespace {
 const float CL_TILT_RESTORE_SPEED = 0.05f;
 const float CL_TILT_SPEED = 0.1f;
 
+const int	CL_VIEWHEIGHT = 22;
+
 }
 
 /*
@@ -40,14 +42,17 @@ void CGameClient::MoveLeft()
 void CGameClient::Jump()
 {	
 	if(m_bOnGround)
-	{
-//		ComPrintf("Jumped: %f\n", m_pClGame->GetCurTime());
 		m_cmd.moveFlags |= ClCmd::JUMP;
-	}
 }
 
 void CGameClient::Crouch()
 {	m_cmd.moveFlags |= ClCmd::CROUCH;
+}
+
+void CGameClient::Walk()
+{	
+ComPrintf("WALKING");
+	m_cmd.moveFlags |= ClCmd::WALK;
 }
 
 /*
@@ -130,21 +135,8 @@ void CGameClient::UpdateViewAngles(const float &time)
 Perform the actual move
 ================================================
 */
-//void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
-
 void CGameClient::UpdatePosition(const float &time)
 {
-
-	// figure out what dir we want to go if we're folling a path
-//	if (m_campath != -1)
-//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pGameClient->origin, &dir, time);
-
-	//Clipping should be on by default
-//	if (m_cvClip.ival)
-//	EntMove::ClientMove(m_pGameClient, time);
-///	else
-//		EntMove::NoClipMove(m_pGameClient, dir, time);
-
 	EntMove::ClientMove(m_pGameClient, time);
 
 /*	if(EntMove::ClientMove(m_pGameClient, time) == 2)
@@ -194,6 +186,11 @@ ComPrintf("Stepped up !");
 		m_bOnGround = true;
 	else
 		m_bOnGround = false;
+
+		//Need a better transition
+	if(!(m_cmd.moveFlags & ClCmd::CROUCH))
+		m_pCamera->origin.z += CL_VIEWHEIGHT;
+	m_pCamera->origin = m_pGameClient->origin;
 }
 
 /*

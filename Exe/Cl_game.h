@@ -73,6 +73,7 @@ private:
 	void MoveRight();
 	void MoveLeft();
 	void Jump();
+	void Walk();
 	void Crouch();
 	void RotateRight(const float &val);
 	void RotateLeft(const float &val);

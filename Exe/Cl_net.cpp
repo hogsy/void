@@ -588,7 +588,7 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	m_campath = -1;
 	
 	//Setup camera
-	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, 
+	m_pCamera = new CCamera(m_pGameClient->angles,   //m_pGameClient->origin,
 							m_vecForward, m_vecRight, m_vecUp,	
 							m_pGameClient->velocity);
 
