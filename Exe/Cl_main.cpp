@@ -1,4 +1,8 @@
 #include "Cl_main.h"
+#include "I_renderer.h"
+#include "I_hud.h"
+#include "Snd_main.h"
+#include "Mus_main.h"
 #include "Cl_cmds.h"
 #include "Com_util.h"
 #include "Net_defs.h"

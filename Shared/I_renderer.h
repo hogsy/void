@@ -3,7 +3,7 @@
 
 #include "I_hud.h"
 #include "I_void.h"
-#include "Res_defs.h"
+#include "Game_defs.h"
 #include "World.h"
 
 #ifdef RENDERER_EXPORTS

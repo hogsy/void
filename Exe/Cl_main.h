@@ -2,19 +2,17 @@
 #define VOID_CLIENT_MAIN
 
 #include "Sys_hdr.h"
-#include "I_renderer.h"
-#include "Snd_main.h"
-#include "Mus_main.h"
 #include "Net_client.h"
 #include "Game_ents.h"
+#include "I_renderer.h"
 
 //Pre-declarations
-/*
-	CSoundManager	  * m_pSound;
-	CMusic		      * m_pMusic;
-	CClientCmdHandler * m_pCmdHandler;
-	CNetClient		  * m_pNetCl;
-*/
+
+class  CSoundManager;
+class  CMusic;
+struct I_Renderer;
+struct I_RHud;
+struct I_Model;
 
 /*
 =====================================
