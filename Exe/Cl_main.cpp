@@ -1,12 +1,13 @@
 #include "Cl_main.h"
 #include "I_renderer.h"
-#include "I_hud.h"
+//#include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
 #include "Cl_cmds.h"
 #include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
+#include "World.h"
 
 //======================================================================================
 //======================================================================================
@@ -313,7 +314,7 @@ void CClient::RunFrame()
 		{
 			if(m_entities[i].inUse)
 			{
-				if(m_entities[i].index >= 0)
+				if(m_entities[i].mdlIndex >= 0)
 				{
 					m_pClRen->DrawModel(m_entities[i]);	
 				}
@@ -329,7 +330,7 @@ void CClient::RunFrame()
 
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
-			if(m_clients[i].inUse && m_clients[i].index >=0)
+			if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
 				m_pClRen->DrawModel(m_clients[i]);
 		}
 

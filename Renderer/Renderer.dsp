@@ -204,14 +204,38 @@ SOURCE=..\Shared\3dfx\SST1VID.H
 SOURCE=..\Shared\Ijl\ijl.h
 # End Source File
 # End Group
+# Begin Group "D3d"
+
+# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\3dmath.cpp
+SOURCE=..\..\Mssdk\Include\d3dx.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\3dmath.h
+SOURCE=..\..\Mssdk\Include\d3dxcore.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\d3dxerr.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\d3dxmath.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\d3dxmath.inl
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\d3dxshapes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Mssdk\Include\d3dxsprite.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\Bsp_file.h
@@ -226,7 +250,15 @@ SOURCE=..\Shared\clip.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_3dstructs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_cvar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
@@ -262,7 +294,15 @@ SOURCE=..\Shared\Com_util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Res_defs.h
+SOURCE=..\Shared\Com_vector.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_vector.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
 # End Source File
 # Begin Source File
 
@@ -287,10 +327,6 @@ SOURCE=..\Shared\I_hud.h
 # Begin Source File
 
 SOURCE=..\Shared\I_hunkmem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_renderer.h
 # End Source File
 # Begin Source File
 
@@ -435,7 +471,11 @@ SOURCE=.\Source\Client.h
 # End Group
 # Begin Source File
 
-SOURCE=..\Shared\Com_defs.h
+SOURCE=..\Shared\I_clientRenderer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_renderer.h
 # End Source File
 # Begin Source File
 

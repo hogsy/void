@@ -1,11 +1,10 @@
-
 #ifndef CLIENTRENDERER_H
 #define CLIENTRENDERER_H
 
-#include "I_Renderer.h"
 #include "Hud_main.h"
 #include "Img_main.h"
 #include "Mdl_main.h"
+#include "I_clientRenderer.h"
 
 
 class CClientRenderer : public I_ClientRenderer
@@ -17,7 +16,7 @@ public:
 	/* Model Interface */
 	inline hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1)
 		{	return mModel.LoadModel(model, cache, index);	}
-	inline void DrawModel(const R_EntState &state)
+	inline void DrawModel(const EntState &state)
 		{	mModel.DrawModel(state);	}
 	inline void UnloadModel(CacheType cache, hMdl index)
 		{	mModel.UnloadModel(cache, index);	}
@@ -25,7 +24,7 @@ public:
 		{	mModel.UnloadModelCache(cache);	}
 	inline void UnloadModelAll(void)
 		{	mModel.UnloadModelAll();	}
-	inline void GetInfo(R_EntState &state)
+	inline void GetInfo(EntState &state)
 		{	mModel.GetInfo(state);	}
 
 	/* Image Interface */

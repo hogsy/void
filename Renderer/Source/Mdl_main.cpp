@@ -57,32 +57,32 @@ CModelManager::~CModelManager()
 LoadModel 
 =======================================
 */
-hMdl CModelManager::LoadModel(const char *model, CacheType cache, hMdl index)
+hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlIndex)
 {
-	// find the first available spot in this cache
-	if (index == -1)
+	// find the first available spot in this mdlCache
+	if (mdlIndex == -1)
 	{
 		for (int i=0; i<MODEL_CACHE_SIZE; i++)
 		{
-			if (!caches[cache][i])
+			if (!caches[mdlCache][i])
 			{
-				index = i;
+				mdlIndex = i;
 				break;
 			}
 		}
 
 		if (i==MODEL_CACHE_SIZE)
 		{
-			ComPrintf("no available cache entries for model %s\n", model);
+			ComPrintf("no available mdlCache entries for model %s\n", model);
 			return -1;
 		}
 	}
 
 	// make sure our spot is free
-	if (caches[cache][index])
+	if (caches[mdlCache][mdlIndex])
 	{
-		ComPrintf("model already in specified index\n");
-		delete caches[cache][index];
+		ComPrintf("model already in specified mdlIndex\n");
+		delete caches[mdlCache][mdlIndex];
 	}
 
 
@@ -93,21 +93,21 @@ hMdl CModelManager::LoadModel(const char *model, CacheType cache, hMdl index)
 		{
 			if (caches[c][i] && caches[c][i]->IsFile(model))
 			{
-				caches[cache][index] = caches[c][i];
+				caches[mdlCache][mdlIndex] = caches[c][i];
 				caches[c][i]->AddRef();
-				return index;
+				return mdlIndex;
 			}
 		}
 	}
 
 	// else create a new one
 	if (stricmp("md2", &model[strlen(model)-3])==0)
-		caches[cache][index] =  new CModelMd2();
+		caches[mdlCache][mdlIndex] =  new CModelMd2();
 	else
-		caches[cache][index] =  new CModelSp2();
+		caches[mdlCache][mdlIndex] =  new CModelSp2();
 
-	caches[cache][index]->LoadModel(model);
-	return index;
+	caches[mdlCache][mdlIndex]->LoadModel(model);
+	return mdlIndex;
 }
 
 
@@ -116,7 +116,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType cache, hMdl index)
 DrawModel 
 =======================================
 */
-void CModelManager::DrawModel(const R_EntState &state)
+void CModelManager::DrawModel(const EntState &state)
 {
 	// add model to list to be drawn
 	drawmodel_t *ndm = drawmodelGet();
@@ -131,16 +131,16 @@ void CModelManager::DrawModel(const R_EntState &state)
 UnloadModel 
 =======================================
 */
-void CModelManager::UnloadModel(CacheType cache, hMdl index)
+void CModelManager::UnloadModel(CacheType mdlCache, hMdl mdlIndex)
 {
-	if (!caches[cache][index])
+	if (!caches[mdlCache][mdlIndex])
 		ComPrintf("CModelManager::UnloadModel - model not loaded\n");
 
 	else
 	{
-		if (caches[cache][index]->Release() == 0)
-			delete caches[cache][index];
-		caches[cache][index] = NULL;
+		if (caches[mdlCache][mdlIndex]->Release() == 0)
+			delete caches[mdlCache][mdlIndex];
+		caches[mdlCache][mdlIndex] = NULL;
 	}
 }
 
@@ -151,12 +151,12 @@ void CModelManager::UnloadModel(CacheType cache, hMdl index)
 UnloadModelCache 
 =======================================
 */
-void CModelManager::UnloadModelCache(CacheType cache)
+void CModelManager::UnloadModelCache(CacheType mdlCache)
 {
 	for (int i=0; i<MODEL_CACHE_SIZE; i++)
 	{
-		if (caches[cache][i])
-			UnloadModel(cache, i);
+		if (caches[mdlCache][i])
+			UnloadModel(mdlCache, i);
 	}
 
 }
@@ -180,10 +180,10 @@ void CModelManager::UnloadModelAll(void)
 GetInfo 
 =======================================
 */
-void CModelManager::GetInfo(R_EntState &state)
+void CModelManager::GetInfo(EntState &state)
 {
-	state.num_frames = caches[state.cache][state.index]->GetNumFrames();
-	state.num_skins  = caches[state.cache][state.index]->GetNumSkins();
+	state.numFrames = caches[state.mdlCache][state.mdlIndex]->GetNumFrames();
+	state.numSkins  = caches[state.mdlCache][state.mdlIndex]->GetNumSkins();
 }
 
 
@@ -219,8 +219,8 @@ void CModelManager::Purge(void)
 		g_pRast->MatrixRotateX( walk->state->angle.PITCH * 180/PI);
 		g_pRast->MatrixRotateZ(-walk->state->angle.ROLL  * 180/PI);
 
-		caches[walk->state->cache][walk->state->index]->Draw(walk->state->skinnum, walk->state->frame,
-					walk->state->nextframe, walk->state->frac);
+		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, walk->state->frame,
+					walk->state->nextFrame, walk->state->frac);
 
 		g_pRast->MatrixPop();
 

@@ -65,13 +65,13 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 
 				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
 
-				m_clients[num].cache = CACHE_GAME;
-				m_clients[num].skinnum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
-				m_clients[num].skinnum |= MODEL_SKIN_UNBOUND_GAME;
+				m_clients[num].mdlCache = CACHE_GAME;
+				m_clients[num].skinNum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
+				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
-				m_clients[num].index = m_pClRen->LoadModel(path, CACHE_GAME,mindex);
-				m_clients[num].cache = CACHE_GAME;
+				m_clients[num].mdlIndex = m_pClRen->LoadModel(path, CACHE_GAME,mindex);
+				m_clients[num].mdlCache = CACHE_GAME;
 
 				m_clients[num].inUse = true;
 
@@ -189,15 +189,16 @@ void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 							
 				if(type == 'm')
 				{
-					m_entities[id].index = buffer.ReadShort();
-					m_entities[id].skinnum = buffer.ReadShort();
+					m_entities[id].mdlIndex = buffer.ReadShort();
+					m_entities[id].skinNum = buffer.ReadShort();
 					m_entities[id].frame = buffer.ReadShort();
-					m_entities[id].nextframe = m_entities[id].frame;
+					m_entities[id].nextFrame = m_entities[id].frame;
 					m_entities[id].frac = 0;
-					m_entities[id].cache = CACHE_GAME;
+					m_entities[id].mdlCache = CACHE_GAME;
 				}
 				else
 				{
+					m_entities[id].sndCache = CACHE_GAME;
 					m_entities[id].soundIndex = buffer.ReadShort();
 					m_entities[id].volume = buffer.ReadShort();
 					m_entities[id].attenuation = buffer.ReadShort();

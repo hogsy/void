@@ -1,7 +1,5 @@
-
 EXE
 ==============================================================
-
 -Get 3d sound system working
 -Seperate client / client game code
 -Seperate server/ server game code

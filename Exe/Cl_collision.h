@@ -1,9 +1,8 @@
 #ifndef CL_COLLISION
 #define CL_COLLISION
 
-#include "3dmath.h"
-//#include "World.h"
-#include "clip.h"
+#include "Clip.h"
+#include "World.h"
 
 
 /*

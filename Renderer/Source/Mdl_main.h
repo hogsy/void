@@ -5,6 +5,7 @@
 #include "Standard.h"
 #include "I_file.h"
 #include "Mdl_entry.h"
+#include "I_clientRenderer.h"
 
 
 
@@ -29,7 +30,7 @@ public:
 	hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1);
 
 	// add the model to the render cache
-	void DrawModel(const R_EntState &state);
+	void DrawModel(const EntState &state);
 	void Purge(void);
 
 	// unload models from memory
@@ -37,7 +38,7 @@ public:
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
 
-	void GetInfo(R_EntState &state);
+	void GetInfo(EntState &state);
 
 	// funcs for vid restarts
 	void LoadSkins(void);
@@ -49,7 +50,7 @@ private:
 	// struct to hold a list of models to be drawn
 	typedef struct drawmodel_s
 	{
-		const R_EntState *state;
+		const EntState *state;
 		drawmodel_s *next;
 	} drawmodel_t;
 

@@ -3,6 +3,9 @@
 
 #include "I_renderer.h"
 
+
+struct I_ClientRenderer;
+
 class CRenExp : public I_Renderer,
 			    public I_ConHandler
 {

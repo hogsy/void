@@ -1,7 +1,8 @@
 #ifndef _INC_HUD
 #define _INC_HUD
 
-#include "I_hud.h"
+//#include "I_hud.h"
+#include "I_clientRenderer.h"
 
 
 //Need to be able to pass some sort of layout info to the hud

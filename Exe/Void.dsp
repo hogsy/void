@@ -176,14 +176,6 @@ SOURCE=.\Sys_win.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\3dmath.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\3dmath.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Bsp_file.h
 # End Source File
 # Begin Source File
@@ -193,6 +185,10 @@ SOURCE=..\Shared\Clip.cpp
 # Begin Source File
 
 SOURCE=..\Shared\clip.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_3dstructs.h
 # End Source File
 # Begin Source File
 
@@ -245,6 +241,14 @@ SOURCE=..\Shared\Com_util.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Com_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_vector.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_vector.h
 # End Source File
 # Begin Source File
 
@@ -344,10 +348,6 @@ SOURCE=.\Mus_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\Game_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Game_ents.cpp
 # End Source File
 # Begin Source File
@@ -417,6 +417,10 @@ SOURCE=.\In_state.h
 # Begin Source File
 
 SOURCE=..\Shared\I_client.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_clientRenderer.h
 # End Source File
 # Begin Source File
 
@@ -495,6 +499,10 @@ SOURCE=..\..\Mssdk\Include\Tvout.h
 SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\todo

@@ -3,7 +3,7 @@
 #define MDL_ENTRY_H
 
 #include <string.h>
-#include "3dmath.h"
+//#include "3dmath.h"
 
 
 class CModelCacheEntry

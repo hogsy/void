@@ -2,7 +2,8 @@
 #define VOID_SOUND_INTERFACE
 
 #include "Sys_hdr.h"
-#include "3dmath.h"
+//#include "3dmath.h"
+#include "Com_vector.h"
 #include "Game_defs.h"
 #include "Clgame_defs.h"
 

@@ -1,8 +1,6 @@
-
 #include "Standard.h"
 #include "Img_entry.h"
 #include "Tex_image.h"
-
 
 
 /*

@@ -3,7 +3,8 @@
 
 #include "Com_defs.h"
 #include "Com_keys.h"
-#include "3dmath.h"
+#include "Com_vector.h"
+//#include "3dmath.h"
 
 /*
 ======================================

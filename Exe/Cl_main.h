@@ -3,9 +3,8 @@
 
 #include "Sys_hdr.h"
 #include "Net_client.h"
+#include "I_clientRenderer.h"
 #include "Clgame_defs.h"
-
-//#include "I_renderer.h"
 #include "Game_ents.h"
 
 
@@ -13,6 +12,7 @@
 class  CCamera;
 class  CSoundManager;
 class  CMusic;
+//struct I_ClientRenderer;
 struct I_Renderer;
 /*
 struct I_RHud;

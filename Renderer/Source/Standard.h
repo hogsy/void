@@ -11,8 +11,8 @@
 #include "I_renderer.h"
 
 #include "Com_cvar.h"
+#include "Com_vector.h"
 
-#include "3dMath.h"
 #include "World.h"
 
 

@@ -1,7 +1,9 @@
 #ifndef REN_CACHE_H
 #define REN_CACHE_H
 
-#include "3dmath.h"
+//#include "3dmath.h"
+#include "Com_vector.h"
+#include "Com_3dstructs.h"
 
 #define CACHE_PASS_SKY			0
 #define	CACHE_PASS_ZFILL		1

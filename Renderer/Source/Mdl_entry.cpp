@@ -1,8 +1,7 @@
-
 #include "Standard.h"
 #include "Mdl_entry.h"
 #include "Tex_image.h"
-#include "Client.h"
+//#include "Client.h"
 
 
 /*
