@@ -1,116 +1,123 @@
 #ifndef VOID_COM_PARMS
 #define VOID_COM_PARMS
 
+#include "Com_defs.h"
+
 /*
-This class is used to handle parameters 
+======================================
+Util class which can parse a 
+string for arguments
+======================================
 */
-
-#define COM_DEFAULTPARMS	5
-#define COM_MAXARGLEN		80
-
 class CParms
 {
 public:
 
-	//Constructor, accepts max num of arguments as parameter
-	CParms(int imaxargs=COM_DEFAULTPARMS) : m_maxargs(imaxargs), 
-											m_numargs(0)
-	{ 
-		m_szargv = new char * [imaxargs];
-		for(int i=0;i<imaxargs;i++)
-			m_szargv[i] = new char[COM_MAXARGLEN+1];
+	CParms(int len) : length(len)
+	{	string = new char[length];
 	}
 	
+	CParms(const CParms &parms)
+	{
+		length = strlen(parms.string) + 1;
+		string = new char[length];
+		strcpy(const_cast<char *>(string),parms.string);
+	}
+
 	~CParms() 
-	{	
-		for(int i=0;i<m_maxargs;i++)
+	{ 	if(string) 	delete [] const_cast<char *>(string); 
+	}
+
+	CParms & operator = (const char * istr)
+	{
+		int len = strlen(istr) + 1;
+		if(len > length)
 		{
-			delete [] m_szargv[i];
-			m_szargv[i] =0;
+			delete [] const_cast<char *>(string);
+			length = len;
+			string = new char [length];
 		}
-		delete [] m_szargv;
-		m_szargv =0;
-		m_numargs = 0;
+		strcpy(const_cast<char *>(string),istr);
+		return *this;
 	}
 
-	void Reset()
+	//Return the number of tokens
+	int NumTokens(char delim =' ') const
 	{
-		for(int i=0;i<m_maxargs;i++)
-			memset(m_szargv[i],0,COM_MAXARGLEN);
-		m_numargs = 0;
-	}
+		int tokens = 1;
+		bool intoken = true;
+		bool leading = true;
+		const char * s = string;
 
-	void Set(const char * const * iargv, int inumargs)
-	{
-		if(m_numargs || m_szargv)
-			Reset();
-
-		for(int i=0;i<inumargs;i++)
-		{	strcpy(m_szargv[i],iargv[i]);
-		}
-		m_numargs = inumargs;
-	}
-
-	void Set(const char *string)
-	{
-		if(m_numargs || m_szargv)
-			Reset();
-
-		const char *p = string;
-		const char *last = string;
-		bool  inquotes=false;
-		int	  arglen=0;
-
-		//stuff enclosed in " " is treated as 1 arg
-		while((*p || *p=='\0') && m_numargs < m_maxargs)
+		while(*s && *s != '\0')
 		{
-			//are we in quotes
-			if(*p == '\"')
+			if(*s != delim)
 			{
-				if(inquotes==false) 
-					inquotes=true;
-				else
-					inquotes=false;
+				leading = false;
+				if(!intoken)
+				{
+					tokens ++;
+					intoken = true;
+				}
+			}
+			else if(!leading)
+				intoken = false;
+			s++;
+		}
+		return tokens;
+	}
+
+	//Return token number. Token 0 is the first one
+	const char * GetToken(int num, char delim=' ') const
+	{
+		const char * s = string;
+		bool found = false;
+		bool intoken = false;
+		int tok = 0;
+
+		//Find the appropriate token
+		while(*s && *s != '\0')
+		{
+			if(*s != delim)
+			{
+				if(!intoken)
+				{
+					if(tok == num)
+					{
+						found = true;
+						break;
+					}
+					tok++;
+					intoken = true;
+				}
 			}
 			else
-			{
-				if(((*p == ' ') && 	!(inquotes)) 
-					|| (*p == '\0')) 
-				{
-					strncpy(m_szargv[m_numargs],last,arglen);
-					m_szargv[m_numargs][arglen+1] = '\0';
-					
-					last = p;
-					last++;
-					arglen =0;
-					m_numargs++;
-
-					if(*p=='\0')
-						break;
-				}
-				else if(arglen < CON_MAXARGSIZE)
-					arglen++;
-			}
-			p++;
+				intoken = false;
+			s++;
 		}
+
+		if(!found)
+			return 0;
+		
+		//copy it to the buffer
+		int toklen = 0;
+		while(*s && *s!='\0' && *s != delim)
+		{
+			szParmBuffer[toklen] = *s;
+			toklen ++;
+			s++;
+		}
+		szParmBuffer[toklen] = 0;
+		return szParmBuffer;
 	}
-	
-	int	  GetNumArgs() const { return m_numargs;}
-	const char * const * GetArgs() const { return m_szargv; }
-	
-	const char * operator [] (int i) const
-	{
-		if(i<=m_numargs)
-			return m_szargv[i];
-		return 0;
-	}
+
+	const char * string;
+	int			 length;
 
 private:
-
-	int		m_maxargs;
-	int		m_numargs;
-	char ** m_szargv;
+	static char szParmBuffer[1024];
 };
 
+char CParms::szParmBuffer[1024];
 
 #endif

@@ -1,5 +1,6 @@
 #include "Sys_cons.h"
 #include "Com_util.h"
+#include "Com_parms.h"
 
 #include <direct.h>
 
@@ -497,6 +498,37 @@ Util test func
 */
 void CConsole::CFunctest(int argc, char** argv)
 {
+	if(argc > 1 && argv[1])
+	{
+		CParms blah(20);
+		const char * tok=0;
+		int i=0;
+		blah = " bwa heh bla ";
+		ComPrintf("Tokens in <%s> = %d\n", blah.string, blah.NumTokens());
+		i=0; tok = 0;
+		while(tok = blah.GetToken(i))
+		{
+			ComPrintf("%s\n",tok);
+			i++;
+		}
+		blah = "blah heh b";
+		ComPrintf("Tokens in <%s> = %d\n", blah.string, blah.NumTokens());
+		i=0; tok = 0;
+		while(tok = blah.GetToken(i))
+		{
+			ComPrintf("%s\n",tok);
+			i++;
+		}
+		blah = "blah";
+		ComPrintf("Tokens in <%s> = %d\n", blah.string, blah.NumTokens());
+		i=0; tok = 0;
+		while(tok = blah.GetToken(i))
+		{
+			ComPrintf("%s\n",tok);
+			i++;
+		}
+
+	}
 }
 
 
