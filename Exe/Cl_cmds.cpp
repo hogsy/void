@@ -103,7 +103,7 @@ void CClientGameInput::HandleCursorEvent(const float &ix,
 Bind a command to a key
 ==========================================
 */
-void CClientGameInput::BindFuncToKey(const CParms &parms)
+void CClientGameInput::BindFuncToKey(const CParms &parms, bool bPrint)
 {
 	//no arguments
 	int argc = parms.NumTokens();
@@ -161,7 +161,8 @@ void CClientGameInput::BindFuncToKey(const CParms &parms)
 
 	strcpy(m_cmdKeys[keynum].szCommand, cmdName);
 
-	ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum].szCommand);
+	if(bPrint)
+		ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum].szCommand);
 }
 
 
@@ -175,32 +176,32 @@ void CClientGameInput::IntializeBinds()
 	CParms parms(80);
 
 	parms = "bind ` contoggle";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind o +forward";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind l +back";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind k +moveleft";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind ; +moveright";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind a +lookup";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind z +lookdown";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind q quit";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind UPARROW +forward";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind DOWNARROW +back";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind LEFTARROW +left";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 	parms = "bind RIGHTARROW +right";
-	BindFuncToKey(parms);
+	BindFuncToKey(parms, false);
 
 	//Exec binds file
-	((CConsole*)System::GetConsole())->ExecConfig("vbinds.cfg");
+	ExecBindsFile("vbinds.cfg");
 }
 
 /*
@@ -395,3 +396,63 @@ void CClientGameInput::WriteBinds(const char * szBindsfile)
 	fclose(fp);
 }
 
+/*
+================================================
+Exec the binds file
+================================================
+*/
+void CClientGameInput::ExecBindsFile(const char * szBindsfile)
+{
+	char file[128];
+	sprintf(file,"%s/%s",System::GetExePath(),szBindsfile);
+
+	FILE * fpcfg=fopen(file,"r");
+	if(fpcfg == NULL)
+	{
+		ComPrintf("CConsole::ExecConfig:Error opening %s\n",file);
+		return;
+	}
+
+	//Configs files are linited to 256 lines, 80 chars each
+	int  lines=0;
+	int len = 0;
+	char c = 0;
+
+	CParms parm(80);
+	char line[80];
+	
+	memset(line,0,80);
+	
+	do
+	{
+		len = 0;
+		c = fgetc(fpcfg);
+
+		if(c == EOF || c == '\0')
+			break;
+
+		while(c && (c != '\n') && (c != EOF) && (len < 80))
+		{
+			line[len++] = c;
+			c = fgetc(fpcfg);
+		}
+		line[len] = '\0';
+		
+		if(!len)
+			break;
+		
+		parm = line;
+
+		parm.StringTok(0,line,80);
+		if(strcmp(line,"bind")==0)
+			BindFuncToKey(parm,false);
+		
+		memset(line,0,80);
+		lines ++;
+
+	}while(lines < 256);
+
+	fclose(fpcfg);
+	ComPrintf("CConsole::Exec'ed %s\n",file);
+
+}

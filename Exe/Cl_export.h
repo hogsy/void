@@ -61,9 +61,6 @@ public:
 	inline void RemoveSoundSource(const ClEntity * ent)
 	{	m_refClient.m_pSound->RemoveStaticSource(ent);
 	}
-	inline void UpdateSoundSource(const ClEntity * ent)
-	{	m_refClient.m_pSound->UpdateStaticSource(ent);
-	}
 
 	inline void PlaySnd3d(const ClEntity * ent,
 						  int index, CacheType cache,

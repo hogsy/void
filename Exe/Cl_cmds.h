@@ -142,11 +142,12 @@ public:
 						   const float &iy,
 					       const float &iz);
 
-	void BindFuncToKey(const CParms &parms);
+	void BindFuncToKey(const CParms &parms, bool bPrint = true);
 	void Unbind(const CParms &parms);
 	void Unbindall();
 	void BindList() const;
 
+	void ExecBindsFile(const char * szBindsfile);
 	void WriteBinds(const char * szBindsfile);
 
 private:

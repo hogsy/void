@@ -54,7 +54,6 @@ struct I_ClientGame
 
 	virtual void AddSoundSource(const ClEntity * ent)=0;
 	virtual void RemoveSoundSource(const ClEntity * ent)=0;
-	virtual void UpdateSoundSource(const ClEntity * ent)=0;
 
 	virtual void PlaySnd3d(const ClEntity * ent,
 				   int index, CacheType cache,int volume = 10, 

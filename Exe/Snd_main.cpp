@@ -8,7 +8,6 @@
 #include "Com_util.h"
 #include "Com_camera.h"
 
-
 using namespace VoidSound;
 
 namespace
@@ -24,6 +23,31 @@ namespace
 	IDirectSound	*	m_pDSound = 0;	
 	CWaveManager	*	m_pWaveManager = 0;
 }
+
+
+/*
+======================================
+A Sound Source
+======================================
+*/
+struct CSoundManager::SndSource
+{
+	SndSource() { Reset(); }
+	~SndSource() { Reset(); }
+
+	void Reset() { bStatic = false; 
+				   channel = 0; 
+				   ent = 0; 
+				   flags = 0;
+				   muteDist =0.0f; }
+	int   flags;
+	float muteDist;
+	const ClEntity * ent;
+	bool  bStatic;
+	CSoundChannel * channel;
+};
+
+
 
 /*
 ==========================================
@@ -49,6 +73,8 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 	//Create sound channels
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
 
+	m_sndSources = new SndSource[MAX_SOUNDSOURCES];
+
 	m_bHQSupport=false;
 	m_bStereoSupport= false;
 	m_fLastFrame = 0.0f;
@@ -73,7 +99,13 @@ Destructor
 ======================================
 */
 CSoundManager::~CSoundManager()
-{	
+{
+	if(m_sndSources)
+	{
+		delete [] m_sndSources;
+		m_sndSources = 0;
+	}
+
 	if(m_pListener)
 	{
 		delete m_pListener;
@@ -251,22 +283,12 @@ bool CSoundManager::Init()
 Update Listener pos
 ======================================
 */
-/*
-void CSoundManager::UpdateListener(const vector_t &pos,
-								   const vector_t &velocity,
-								   const vector_t &forward,
-								   const vector_t &up)
-*/
 void CSoundManager::UpdateListener(const CCamera * pCamera)
 {	
-	//Void3d::VectorSet(,pos);
-	
 	m_listenerPos = pCamera->origin;
 	m_pListener->m_pDS3dListener->SetPosition(m_listenerPos.x, m_listenerPos.y, m_listenerPos.z, 
 											  DS3D_DEFERRED);
-
 //	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
-	
 	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
 												 pCamera->up.x,pCamera->up.y, pCamera->up.z, 
 												 DS3D_DEFERRED);
@@ -458,7 +480,8 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 
 /*
 ======================================
-
+Add a sound source to be automatically
+processed each frame
 ======================================
 */
 void CSoundManager::AddStaticSource(const ClEntity * ent)
@@ -488,7 +511,7 @@ void CSoundManager::AddStaticSource(const ClEntity * ent)
 
 /*
 ======================================
-
+Remove a sound source from the list
 ======================================
 */
 void CSoundManager::RemoveStaticSource(const ClEntity * ent)
@@ -507,11 +530,6 @@ void CSoundManager::RemoveStaticSource(const ClEntity * ent)
 	if(m_sndSources[i].channel)
 		m_sndSources[i].channel->Destroy();
 	m_sndSources[i].Reset();
-}
-
-
-void CSoundManager::UpdateStaticSource(const ClEntity * ent)
-{
 }
 
 

@@ -58,7 +58,6 @@ public:
 	//NOTE: there can only be ONE static Source per entity
 	void AddStaticSource(const ClEntity * ent);
 	void RemoveStaticSource(const ClEntity * ent);
-	void UpdateStaticSource(const ClEntity * ent);
 
 	//update pos CCamera
 	void UpdateListener(const CCamera * pCamera);
@@ -91,32 +90,9 @@ private:
 	//Channels which are actually played
 	VoidSound::CSoundChannel *	m_Channels;			
 
-	/*
-	======================================
-	A Sound Source
-	======================================
-	*/
-	struct SndSource
-	{
-		SndSource() { Reset(); }
-		~SndSource() { Reset(); }
+	struct SndSource;
+	SndSource * m_sndSources;
 
-		void Reset() { bStatic = false; 
-					   channel = 0; 
-					   ent = 0; 
-					   flags = 0;
-					   muteDist =0.0f; }
-		int   flags;
-		float muteDist;
-		const ClEntity * ent;
-		bool  bStatic;
-		VoidSound::CSoundChannel * channel;
-	};
-	
-	SndSource m_sndSources[MAX_SOUNDSOURCES];
-
-	void PlaySoundSource(SndSource &source);
-	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
 
@@ -129,6 +105,9 @@ private:
 	CVar m_cDopplerFactor;
 	CVar m_cDistanceFactor;
 	CVar m_cSndFps;
+
+	void PlaySoundSource(SndSource &source);
+
 
 	bool SetVolume(const CParms &parms);
 	bool SetRollOffFactor(const CParms &parms);

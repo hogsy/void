@@ -43,14 +43,9 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCVar(&m_cvModel,this);
 	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
 
-	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
-	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
-	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
-	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
+	//Register Commands
+	for(int i=0; g_clGameCmds[i].szCmd; i++)
+		System::GetConsole()->RegisterCommand(g_clGameCmds[i].szCmd,g_clGameCmds[i].id,this);	
 
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
