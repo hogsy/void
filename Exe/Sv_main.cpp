@@ -16,7 +16,7 @@ CServer * g_pServer=0;
 
 /*
 ======================================
-Constructor/Destructor
+Constructor
 ======================================
 */
 CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
@@ -50,6 +50,11 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
 }	
 
+/*
+======================================
+Destructor
+======================================
+*/
 CServer::~CServer()
 {	
 	g_pServer = 0;
@@ -222,9 +227,6 @@ void CServer::RunFrame()
 			}
 		}
 	}
-
-
-
 	//write to clients
 	m_net.SendPackets();
 }
@@ -520,12 +522,10 @@ void CServer::PrintServerStatus()
 	ComPrintf("Map name   : %s\n", m_svState.worldname);
 	ComPrintf("Map id     : %d\n", m_svState.levelId);
 
-//	EntClient * client = 0;
 	for(int i=0; i<m_svState.maxClients; i++)
 	{
 		if(m_clients[i])
 		{
-//			client = reinterpret_cast<EntClient *>(m_entities[i]);
 			ComPrintf("%s:\n", m_clients[i]->name);
 
 			const NetChanState & state = m_net.ChanGetState(i);

@@ -18,8 +18,6 @@ const int GAME_MAXSOUNDS	= 256;
 const int GAME_MAXIMAGES	= 256;
 const int GAME_MAXENTITIES	= 1024;
 
-const int RES_NUMCACHES = 3;
-
 enum SndChannelType
 {
 	CHAN_AUTO   = 0,		//first free
@@ -38,7 +36,6 @@ enum SndChannelType
 //Sound attenuation
 
 
-
 //Cache type,
 enum CacheType
 {
@@ -46,6 +43,10 @@ enum CacheType
 	CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
 	CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
 };
+const int CACHE_NUMMODELS = 256;
+const int CACHE_NUMIMAGES = 256;
+const int CACHE_NUMSOUNDS = 256;
+const int CACHE_NUMCACHES = 3;
 
 
 

@@ -108,7 +108,8 @@ void SetDefaultExtension (char *filename, const char *extension)
 		}
 		src--;
 	}
-	strcat (filename, extension);
+	strcat(filename,".");
+	strcat(filename, extension);
 }
 /*
 ==========================================

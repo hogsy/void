@@ -34,49 +34,6 @@ int PointContents(vector_t &v)
 	return 0;
 }
 
-
-
-
-void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
-{
-	t /= 2.0f;
-
-	int eq = (int)t;
-	if (eq >= key_get_int(g_pWorld, ent, "num_eqs"))
-	{
-		ent = -1;	// done with the path
-		VectorSet(dir, 0, 0, 0);
-		return;
-	}
-
-	// find the point we wanna move to - get our equation
-	float powers[4];
-	powers[0] = 1;
-	powers[1] = powers[0] * t;
-	powers[2] = powers[1] * t;
-	powers[3] = powers[2] * t;
-
-	vector_t comp, p;
-	VectorSet(&p, 0, 0, 0);
-	char name[] = "e00t0";
-	name[1] = eq/10 + '0';
-	name[2] = eq%10 + '0';
-	for (int i=0; i<4; i++)
-	{
-		name[4] = i + '0';
-		key_get_vector(g_pWorld, ent, name, comp);
-
-
-		p.x += powers[i] * comp.x;
-		p.y += powers[i] * comp.y;
-		p.z += powers[i] * comp.z;
-	}
-
-	VectorSub(p, (*origin), (*dir));
-	time = VectorNormalize(dir);
-}
-
-
 // FIXME - this should be an entitiy move, not a client move
 void CClient::Move(vector_t *dir, float time)
 {
@@ -349,3 +306,42 @@ void CClient::CamPath()
 	}
 }
 
+
+void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
+{
+	t /= 2.0f;
+
+	int eq = (int)t;
+	if (eq >= key_get_int(g_pWorld, ent, "num_eqs"))
+	{
+		ent = -1;	// done with the path
+		VectorSet(dir, 0, 0, 0);
+		return;
+	}
+
+	// find the point we wanna move to - get our equation
+	float powers[4];
+	powers[0] = 1;
+	powers[1] = powers[0] * t;
+	powers[2] = powers[1] * t;
+	powers[3] = powers[2] * t;
+
+	vector_t comp, p;
+	VectorSet(&p, 0, 0, 0);
+	char name[] = "e00t0";
+	name[1] = eq/10 + '0';
+	name[2] = eq%10 + '0';
+	for (int i=0; i<4; i++)
+	{
+		name[4] = i + '0';
+		key_get_vector(g_pWorld, ent, name, comp);
+
+
+		p.x += powers[i] * comp.x;
+		p.y += powers[i] * comp.y;
+		p.z += powers[i] * comp.z;
+	}
+
+	VectorSub(p, (*origin), (*dir));
+	time = VectorNormalize(dir);
+}

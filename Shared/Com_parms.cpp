@@ -131,7 +131,13 @@ char * CParms::StringTok(int num, char * outString, int stringlen,  char delim) 
 	{
 		//copy it to the buffer
 		int toklen = 0;
-		while(*s && *s!='\0' && *s != delim && toklen+1 < stringlen)
+		if(*s == '"')
+		{
+			delim = '"';
+			s++;
+		}
+
+		while(*s && *s!='\0' && toklen+1 < stringlen && *s != delim)
 		{
 			*p++ = *s;
 			toklen ++;
@@ -146,7 +152,9 @@ char * CParms::StringTok(int num, char * outString, int stringlen,  char delim) 
 
 const char * CParms::UnsafeStringTok(int num, char delim) const
 {
-	const char * s = string;
+	return StringTok(num,szParmBuffer,1024,delim);
+
+/*	const char * s = string;
 	bool found = false;
 	bool intoken = false;
 	int tok = 0;
@@ -185,6 +193,7 @@ const char * CParms::UnsafeStringTok(int num, char delim) const
 	}
 	szParmBuffer[toklen] = 0;
 	return szParmBuffer;
+*/
 }
 
 /*

@@ -1,6 +1,8 @@
 #ifndef VOID_CLIENT_RENDERER
 #define VOID_CLIENT_RENDERER
 
+#include "Game_defs.h"
+
 /*
 ============================================================================
 This header is shared between the renderer, the exe and the clientside dll.
@@ -8,28 +10,12 @@ The struct defs should be considerer as constant by the clientside dll
 it can subclass the EntState struct if more functionality is wanted.
 ============================================================================
 */
-//#include "Res_defs.h"
-#include "Game_defs.h"
-
-/*
-==========================================
-Renderer Model Interface
-==========================================
-*/
-enum
-{
-	MODEL_CACHE_NUM	= 3,
-	MODEL_CACHE_SIZE =256
-};
-
 enum
 {
 	MODEL_SKIN_BOUND = 0,
 	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
 	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
 };
-
-
 
 enum EHudItemType
 {
@@ -40,18 +26,9 @@ enum EHudItemType
 	HUDIMAGE,
 	HUDMODEL
 };
+
 #define HUD_DEFAULTMSGTIME	3.0
 
-/*
-==========================================
-Renderer Image Interface
-==========================================
-*/
-enum
-{
-	IMAGE_CACHE_NUM	= 2,
-	IMAGE_CACHE_SIZE =256
-};
 
 /*
 ==========================================

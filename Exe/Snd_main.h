@@ -89,7 +89,7 @@ private:
 	VoidSound::C3DListener   *  m_pListener;
 	
 	//All sounds are buffered when registered
-	VoidSound::CSoundBuffer  *	m_bufferCache[RES_NUMCACHES];	
+	VoidSound::CSoundBuffer  *	m_bufferCache[CACHE_NUMCACHES];	
 	
 	//Channels which are actually played
 	VoidSound::CSoundChannel *	m_Channels;			
@@ -121,6 +121,8 @@ private:
 	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
+
+	float	 m_fLastFrame;
 	vector_t m_listenerPos;		//HACK ?
 
 	CVar m_cVolume;			//Master Volume 
@@ -128,6 +130,7 @@ private:
 	CVar m_cRollOffFactor;
 	CVar m_cDopplerFactor;
 	CVar m_cDistanceFactor;
+	CVar m_cSndFps;
 
 	bool SetVolume(const CParms &parms);
 	bool SetRollOffFactor(const CParms &parms);

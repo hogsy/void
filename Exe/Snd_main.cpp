@@ -29,7 +29,8 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 								 m_cHighQuality("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
 								 m_cRollOffFactor("snd_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE)
+								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cSndFps("snd_maxfps", "30", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
@@ -37,7 +38,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 	m_pWaveManager = new CWaveManager(MAX_WAVEFILES);
 
 	//Create buffer caches
-	for(int i=0; i< RES_NUMCACHES; i++)
+	for(int i=0; i< CACHE_NUMCACHES; i++)
 		m_bufferCache[i] =  new CSoundBuffer[GAME_MAXSOUNDS];
 	
 	//Create sound channels
@@ -45,7 +46,9 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 
 	m_bHQSupport=false;
 	m_bStereoSupport= false;
+	m_fLastFrame = 0.0f;
 
+	System::GetConsole()->RegisterCVar(&m_cSndFps);
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
 	System::GetConsole()->RegisterCVar(&m_cHighQuality,this);
 	System::GetConsole()->RegisterCVar(&m_cRollOffFactor,this);
@@ -78,7 +81,7 @@ CSoundManager::~CSoundManager()
 		m_Channels = 0;
 	}
 
-	for(int i=0; i<RES_NUMCACHES; i++)
+	for(int i=0; i<CACHE_NUMCACHES; i++)
 		delete [] m_bufferCache[i];
 
 	if(m_pPrimary)
@@ -265,6 +268,10 @@ of range now, and silence them
 */
 void CSoundManager::RunFrame()
 {
+	if(m_cSndFps.fval + m_fLastFrame > System::g_fcurTime)
+		return;
+	m_fLastFrame = System::g_fcurTime;
+
 	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 
 	//Go through all the sound sources to play the ones in range,

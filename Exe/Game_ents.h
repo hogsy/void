@@ -4,7 +4,6 @@
 #include "Com_defs.h"
 #include "Com_keys.h"
 #include "Com_vector.h"
-//#include "3dmath.h"
 
 /*
 ======================================
@@ -40,17 +39,13 @@ struct Entity
 		strcpy(classname, ename);
 		origin.x = origin.y = origin.z = 0.0f;
 		angles.x = angles.y = angles.z = 0.0f;
-
 		modelIndex = -1;
 		soundIndex = -1;
-
 		memset(modelName,0,64);
 		memset(skinName,0,64);
-
 		skinNum = frameNum = 0;
 		volume = attenuation = 0;
 	}
-	
 	virtual ~Entity() {}
 
 	int			num;
@@ -156,9 +151,6 @@ struct EntClient : public Entity
 	vector_t mins;
 	vector_t maxs;
 };
-
-
-
 
 //======================================================================================
 //======================================================================================

@@ -1,13 +1,43 @@
 #ifndef VOID_GAME_INTERFACE
 #define VOID_GAME_INTERFACE
 
-//#include "3dmath.h"
 #include "Com_defs.h"
 #include "Com_buffer.h"
+#include "Com_vector.h"
+#include "Net_defs.h"
+
 
 #if 0
 
 const int ENT_MAXCLASSNAME = 32
+
+
+
+/*
+======================================
+interface exported by the Exe
+======================================
+*/
+struct I_GameHandler
+{
+	virtual void BroadcastPrint(const char * msg)=0;
+	virtual void ClientPrint(const char * msg)=0;
+
+	virtual NetChanWriter & GetNetChanWriter() const;
+
+	virtual void DebugPrint(const char * msg)=0;
+	virtual void FatalError(const char * msg)=0;
+
+	virtual void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten);
+	virtual void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten);
+
+	virtual void ExecCommand(const char * cmd)=0;
+
+	virtual int  RegisterModel(const char * model)=0;
+	virtual int  RegisterSound(const char * image)=0;
+	virtual int  RegisterImage(const char * sound)=0;
+};
+
 
 /*
 ======================================
@@ -41,30 +71,6 @@ struct GameEnts
 	GameEnt ** gameEnts;
 	int maxEnts;
 	int numEnts;
-};
-
-
-/*
-======================================
-interface exported by the Exe
-======================================
-*/
-struct I_GameHandler
-{
-	virtual void BroadcastPrint(const char * msg)=0;
-	virtual void ClientPrint(const char * msg)=0;
-
-	virtual void DebugPrint(const char * msg)=0;
-	virtual void FatalError(const char * msg)=0;
-
-	virtual void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten);
-	virtual void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten);
-
-	virtual void ExecCommand(const char * cmd)=0;
-
-	virtual int RegisterModel(const char * model)=0;
-	virtual int RegisterSound(const char * image)=0;
-	virtual int RegisterImage(const char * sound)=0;
 };
 
 

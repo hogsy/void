@@ -336,18 +336,6 @@ SOURCE=.\Mus_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Game_ents.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Game_ents.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_game.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Sv_main.cpp
 # End Source File
 # Begin Source File
@@ -485,6 +473,22 @@ SOURCE=..\..\Mssdk\Include\Tvout.h
 # Begin Source File
 
 SOURCE=..\..\Mssdk\Include\WinEFS.h
+# End Source File
+# End Group
+# Begin Group "Game"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Game_ents.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Game_ents.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_game.h
 # End Source File
 # End Group
 # Begin Source File

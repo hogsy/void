@@ -300,7 +300,7 @@ bool CConsole::ExecString(const char *string)
 						ComPrintf("%s will be changed on restart\n", (*it)->name);
 				}
 			}
-			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
+			ComPrintf("%s = %s\n",(*it)->name,(*it)->string);
 			return true;
 		}
 	}

@@ -95,21 +95,14 @@ CClient::~CClient()
 	if(m_pCamera)
 		delete m_pCamera;
 
-//	if(m_pModel)
-//		m_pModel->UnloadModelAll();
-	
-//	if(m_pImage)
-//		m_pImage->UnloadImageAll();
-
-
-	m_pRender = 0;
 	if(m_pClRen)
+	{
 		m_pClRen->UnloadModelAll();
+		m_pClRen->UnloadImageAll();
+	}
 	m_pClRen = 0;
-/*	m_pHud = 0;
-	m_pModel = 0;
-	m_pImage =0;
-*/
+	m_pRender = 0;
+	
 	m_pSound = 0;
 	m_pMusic = 0;
 
@@ -214,6 +207,7 @@ void CClient::UnloadWorld()
 
 ComPrintf("CL :UNLOADED MODELS\n");
 	m_pClRen->UnloadModelCache(CACHE_GAME);
+	m_pClRen->UnloadImageCache(CACHE_GAME);
 
 	delete m_pCamera;
 	m_pCamera = 0;
@@ -231,6 +225,8 @@ ComPrintf("CL :UNLOADED MODELS\n");
 				m_pSound->RemoveStaticSource(&m_entities[i]);
 			m_entities[i].Reset();
 		}
+
+
 	
 	world_destroy(g_pWorld);
 	g_pWorld = 0;
