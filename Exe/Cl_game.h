@@ -103,6 +103,7 @@ private:
 	CVar	m_cvClip;
 	CVar    m_cvDefaultChar;
 	CVar	m_cvViewTilt;
+	CVar	m_cvLocalMove;
 
 	//==================================================
 

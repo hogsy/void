@@ -24,6 +24,8 @@ CInput::CInput() :
 				m_pVarKbMode("in_kbmode","1",CVAR_INT, CVAR_ARCHIVE),
 				m_pVarMouseFilter("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
 {
+	m_bCursorVisible = true;
+
 	m_pStateManager = new CInputState();
 
 	m_pMouse = new CMouse(m_pStateManager);
@@ -253,6 +255,9 @@ bool CInput::SetExclusive(bool on)
 			ComPrintf("Failed to change Input mode to NonExclusive\n");
 		return false;
 	}
+
+	//Only if not in fullscreen mode
+	ShowMouse(!on);
 	return true;
 }
 
@@ -275,9 +280,51 @@ void CInput::UpdateDevices()
 	m_pKb->Update();
 }
 
+/*
+================================================
+Show/Hide mouse cursor
+================================================
+*/
+void CInput::ShowMouse(bool show)
+{
+	if(show == m_bCursorVisible)
+		return;
 
-bool CInput::GetExclusiveVar() const {	return m_pVarExclusive.bval; }
-I_InputFocusManager * CInput::GetFocusManager() { return m_pStateManager; }
+	if(show)
+	{
+		ComPrintf("SHOWING CURSOR\n");
+
+		//Try a max of five times
+		for(int i=0; i<5; i++)
+		{
+			if(::ShowCursor(TRUE) >= 0)
+			{
+				m_bCursorVisible = true;
+				break;
+			}
+		}
+	}
+	else
+	{
+		ComPrintf("HIDING CURSOR\n");
+
+		//Try a max of five times
+		for(int i=0; i<5; i++)
+		{
+			if(::ShowCursor(FALSE) < 0)
+			{
+				m_bCursorVisible = false;
+				break;
+			}
+		}
+	}
+}
+
+
+I_InputFocusManager * CInput::GetFocusManager()
+{ return m_pStateManager; 
+}
+
 
 //========================================================================================
 //========================================================================================

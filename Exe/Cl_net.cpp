@@ -107,9 +107,12 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 						m_pGameClient->maxSpeed = buffer.ReadFloat();
 				}
 				
-				m_pGameClient->origin.x = x;
-				m_pGameClient->origin.y = y;
-				m_pGameClient->origin.z = z;
+				if(!m_cvLocalMove.bval)
+				{
+					m_pGameClient->origin.x = x;
+					m_pGameClient->origin.y = y;
+					m_pGameClient->origin.z = z;
+				}
 				break;
 			}
 

@@ -26,7 +26,8 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE),
 				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE),
-				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_ARCHIVE)
+				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_ARCHIVE),
+				m_cvLocalMove("cl_localMove","0", CVAR_BOOL, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -43,6 +44,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvClip);
+	System::GetConsole()->RegisterCVar(&m_cvLocalMove);
 	System::GetConsole()->RegisterCVar(&m_cvViewTilt);
 	System::GetConsole()->RegisterCVar(&m_cvInRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvOutRate,this);

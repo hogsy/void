@@ -29,8 +29,7 @@ public:
 	bool Init();				//Initialize the Input System
 	void Shutdown();			//Shutdown the Input System
 
-	bool SetExclusive(bool on);
-	bool GetExclusiveVar() const;
+	void ShowMouse(bool show);
 
 	void Acquire();				//Acquire all devices
 	bool AcquireMouse();		//Unacquire Mouse
@@ -59,6 +58,8 @@ private:
 	VoidInput::CMouse		* m_pMouse;
 	VoidInput::CKeyboard	* m_pKb;
 
+	bool m_bCursorVisible;
+
 	CVar m_pVarExclusive;
 	
 	CVar m_pVarXSens;
@@ -70,6 +71,8 @@ private:
 	CVar m_pVarMouseMode;
 	CVar m_pVarKbMode;
 	
+	bool SetExclusive(bool on);
+
 	bool CSetExclusive(const CVar * var, const CParms &parms);
 	bool CXSens(const CVar * var, const CParms &parms);
 	bool CYSens(const CVar * var, const CParms &parms);

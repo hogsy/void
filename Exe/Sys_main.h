@@ -43,14 +43,13 @@ public:
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
 	//Application Events
-	void Move(int x, int y);
-	void Resize( bool focus, int x, int y, int w, int h);
-	void Activate(bool focus);
+	void OnMove(int x, int y);
+	void OnResize( bool focus, int x, int y, int w, int h);
+	void OnActivate(bool focus);
+	void OnDisplayChange(int bpp, int width, int height);
 	void OnFocus();
-	void LostFocus();
-	
-	//hack
-	void HandleMM(uint wParam, long lParam);	//MCI Multimedia event
+	void OnLostFocus();
+	void OnMultiMedia(uint wParam, long lParam);	//MCI Multimedia event
 
 private:
 

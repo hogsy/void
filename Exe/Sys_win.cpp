@@ -118,7 +118,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 	{
 	case WM_MOVE:
 		{
-			g_pVoid->Move((SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+			g_pVoid->OnMove((SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+			break;
+		}
+	case WM_DISPLAYCHANGE:
+		{
+			g_pVoid->OnDisplayChange(wParam, LOWORD(lParam), HIWORD(lParam));
 			break;
 		}
 	case WM_SIZE:
@@ -126,49 +131,45 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			//Check to see if we are losing our window
 			if(wParam == SIZE_MAXHIDE || wParam == SIZE_MINIMIZED)
 			{
-				g_pVoid->Resize(false,0,0,0,0);
+				g_pVoid->OnResize(false,0,0,0,0);
 				break;
 			}
 
 			RECT rect;
 			::GetClientRect(hWnd,&rect);
-			g_pVoid->Resize(true,rect.left,rect.top, rect.right, rect.bottom);
+			g_pVoid->OnResize(true,rect.left,rect.top, rect.right, rect.bottom);
 			break;
 		}
-//	case WM_MOUSEACTIVATE:
+	case WM_MOUSEACTIVATE:
+		{
+			return MA_ACTIVATEANDEAT;
+		}
 	case WM_ACTIVATE:
 		{
 			if (wParam == WA_INACTIVE)
-				g_pVoid->Activate(false);
-			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)  ////if (wParam == WA_ACTIVE)
-				g_pVoid->Activate(true);
+				g_pVoid->OnActivate(false);
+			else if ((wParam == WA_ACTIVE) || (wParam == WA_CLICKACTIVE))
+				g_pVoid->OnActivate(true);
 			break;
 		}
 	case WM_ENTERSIZEMOVE:
 	case WM_ENTERMENULOOP:
+		{
+			return 0;
+		}
 	case WM_SETFOCUS:
-//	case WM_MOUSEACTIVATE:
 		{
 			g_pVoid->OnFocus();
 			break;
 		}
-//FIXME. hack to get MCI notifications routed properly
 	case MM_MCINOTIFY :
 		{
-			g_pVoid->HandleMM(wParam,lParam);
+			g_pVoid->OnMultiMedia(wParam,lParam);
 			break;
 		}
-/*	case WM_ENTERSIZEMOVE:
-	case WM_ENTERMENULOOP:
-		{
-//			if(g_pInput)
-//				g_pInput->UnAcquire();
-			break;
-		}
-*/
 	case WM_KILLFOCUS:
 		{
-			g_pVoid->LostFocus();
+			g_pVoid->OnLostFocus();
 			break;
 		}
 	case WM_NCDESTROY:

@@ -310,13 +310,10 @@ void CVoid::RunFrame()
 Move Window Event
 ==========================================
 */
-void CVoid::Move(int x, int y)
+void CVoid::OnMove(int x, int y)
 {
 	if(m_pRender)	
-	{
-//ComPrintf("WINDOW MOVE\n");
 		m_pRender->MoveWindow(x,y);
-	}
 }
 
 /*
@@ -324,7 +321,7 @@ void CVoid::Move(int x, int y)
 Resize Window Event
 ==========================================
 */
-void CVoid::Resize(bool focus, int x, int y, int w, int h)
+void CVoid::OnResize(bool focus, int x, int y, int w, int h)
 {
 	if(focus==false)
 	{
@@ -334,18 +331,6 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 
 	m_pRParms->active = true;
 
-	//If changing to fullscreem, /./then make sure the input is exclusive
-	if(m_pRParms->rflags & RFLAG_FULLSCREEN)
-	{
-//ComPrintf("SET INPUT EX\n");
-		m_pInput->SetExclusive(true);
-	}
-	else if(!m_pInput->GetExclusiveVar())
-	{
-//ComPrintf("SET INPUT NON-EX\n");
-		m_pInput->SetExclusive(false);
-	}
-		
 	//Change the size of the rendering window
 	if (m_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
 		m_pRender->Resize();
@@ -355,20 +340,28 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 		m_pInput->Resize(x,y,w,h);
 }
 
+
+/*
+================================================
+Handle Display Change
+================================================
+*/
+void CVoid::OnDisplayChange(int bpp, int width, int height)
+{
+	if(m_pRParms->rflags & RFLAG_FULLSCREEN)
+		m_pInput->ShowMouse(false);
+}
+
+
 /*
 ==========================================
 Activiate window Event
 ==========================================
 */
-void CVoid::Activate(bool focus)
+void CVoid::OnActivate(bool focus)
 {
-//ComPrintf("Win: Activate");
 	if (focus == false)
-	{
 		m_pRParms->active = false;
-//		if(m_pInput)
-//			m_pInput->UnAcquire();
-	}
 	else 
 	{
 		m_pRParms->active = true;
@@ -387,11 +380,9 @@ Get Focus Event
 */
 void CVoid::OnFocus()
 {
-//ComPrintf("Focus: Activate");
 	if (m_pRParms)
 		m_pRParms->active = true;
 	
-	//Input Focus
 	if(m_pInput)
 		m_pInput->Acquire();
 }
@@ -402,7 +393,7 @@ void CVoid::OnFocus()
 Lose Focus Event
 ==========================================
 */
-void CVoid::LostFocus()
+void CVoid::OnLostFocus()
 {
 	//Input loses Focus
 	if(m_pInput)
@@ -415,10 +406,10 @@ void CVoid::LostFocus()
 
 /*
 ==========================================
-
+Hackish way to handle MM messages
 ==========================================
 */
-void CVoid::HandleMM(WPARAM wParam, LPARAM lParam)
+void CVoid::OnMultiMedia(WPARAM wParam, LPARAM lParam)
 {
 	if(m_pMusic)
 		m_pMusic->HandleMCIMsg(wParam,lParam);

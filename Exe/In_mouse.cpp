@@ -665,7 +665,6 @@ bool CMouse::Acquire()
 	
 	if((m_eMouseMode == M_WIN32) && (m_eMouseState==DEVINITIALIZED))
 	{	
-		::ShowCursor(false);				//Make cursor disappear for Win32 mode	
 		m_eMouseState = DEVACQUIRED;
 		return true;
 	}
@@ -701,7 +700,6 @@ bool CMouse :: UnAcquire()
 
 	if(m_eMouseMode == M_WIN32)
 	{
-		::ShowCursor(true);					//Show cursor now	
 		::ClipCursor(0);					//Get rid of any clipping
 		m_eMouseState = DEVINITIALIZED;
 		return true;
