@@ -100,7 +100,6 @@ private:
 	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
 };
 
-void ComPrintf(char* text, ...);
 void FError(char *error, ...);
 void Error(char *error, ...);
 

@@ -114,12 +114,12 @@ bool CRenExp::InitRenderer()
 	g_prCons->Init(true, true);
 	g_prCons->UpdateRes();
 
-	ConPrint("\n***** Renderer Intialization *****\n\n");
+	ComPrintf("\n***** Renderer Intialization *****\n\n");
 
 	//Start up opengl
 	if(!g_pRast->Init())
 	{
-		ConPrint("CRenExp::InitRenderer:Failed to Init Rasterizer");
+		ComPrintf("CRenExp::InitRenderer:Failed to Init Rasterizer");
 		Shutdown();
 		return false;
 	}
@@ -127,7 +127,7 @@ bool CRenExp::InitRenderer()
 	//Start up the texture manager
 	if(!g_pTex->Init())
 	{
-		ConPrint("CRenExp::InitRenderer:Failed to initialize Texture manager\n");
+		ComPrintf("CRenExp::InitRenderer:Failed to initialize Texture manager\n");
 		Shutdown();
 		return false;
 	}
@@ -135,7 +135,7 @@ bool CRenExp::InitRenderer()
 	//Start up the renderer
 	r_init();
 
-	ConPrint("\n***** Renderer Initialization Successful *****\n\n");
+	ComPrintf("\n***** Renderer Initialization Successful *****\n\n");
 	return true;
 }
 
@@ -251,7 +251,7 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 	{
 		if(!g_pTex->UnloadWorldTextures())
 		{
-			ConPrint("CRenExp::LoadWorld::Error Unloading textures\n");
+			ComPrintf("CRenExp::LoadWorld::Error Unloading textures\n");
 			return false;
 		}
 		
@@ -260,13 +260,13 @@ bool CRenExp::LoadWorld(world_t *level, int reload)
 		
 		if(!g_pTex->LoadWorldTextures(world))
 		{
-			ConPrint("CRenExp::LoadWorld::Error Reloading textures\n");
+			ComPrintf("CRenExp::LoadWorld::Error Reloading textures\n");
 			return false;
 		}
 		model_load_map();
 		return true;
 	}
-	ConPrint("CRenExp::LoadWorld::Error Bad World Pointer\n");
+	ComPrintf("CRenExp::LoadWorld::Error Bad World Pointer\n");
 	return false;
 }
 
@@ -287,7 +287,7 @@ bool CRenExp::UnloadWorld()
 		world = 0;
 		return true;
 	}
-	ConPrint("CRenExp::UnloadWorld::Error No World to Unload\n");
+	ComPrintf("CRenExp::UnloadWorld::Error No World to Unload\n");
 	return false;
 }
 
@@ -308,7 +308,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 
 	if(!g_pTex->Init())
 	{
-		ConPrint("failed to init texture base\n");
+		ComPrintf("failed to init texture base\n");
 		return;
 	}
 
@@ -344,14 +344,14 @@ bool CRenExp::Restart(void)
 	//Start up the texture manager
 	if(!g_pTex->Init())
 	{
-		ConPrint("failed to init texture base\n");
+		ComPrintf("failed to init texture base\n");
 		return false;
 	}
 	
 	// reload our textures
 	if(!g_pTex->LoadWorldTextures(world))
 	{
-		ConPrint("Restart::Error Reloading textures\n");
+		ComPrintf("Restart::Error Reloading textures\n");
 	}
 
 	//reload our models
@@ -394,9 +394,9 @@ bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 	int argc = parms.NumTokens();
 	if(argc ==1)
 	{	if(var->ival ==0)
-			ConPrint("In windowed mode\n");
+			ComPrintf("In windowed mode\n");
 		else
-			ConPrint("In fullscreen mode\n");
+			ComPrintf("In fullscreen mode\n");
 	}
 	else if(argc > 1)
 	{
@@ -406,10 +406,10 @@ bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 			if(temp <= 0)
 			{
 				if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
-				{	ConPrint("Already in windowed mode\n");
+				{	ComPrintf("Already in windowed mode\n");
 					return false;
 				}
-				ConPrint("Switching to windowed mode\n");
+				ComPrintf("Switching to windowed mode\n");
 				
 				if(g_rInfo.ready)
 					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
@@ -417,10 +417,10 @@ bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 			else if( temp > 0)
 			{
 				if(g_rInfo.rflags & RFLAG_FULLSCREEN)
-				{	ConPrint("Already in fullscreen mode\n");
+				{	ComPrintf("Already in fullscreen mode\n");
 					return false;
 				}
-				ConPrint("Switching to fullscreen mode\n");
+				ComPrintf("Switching to fullscreen mode\n");
 				
 				if(g_rInfo.ready)
 					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
@@ -440,7 +440,7 @@ bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 {
 	int argc = parms.NumTokens();
 	if(argc ==1)
-		ConPrint("Running in %s resolution\n", var->string);
+		ComPrintf("Running in %s resolution\n", var->string);
 	else if(argc >2)
 	{
 		uint x=0, y=0;
@@ -456,23 +456,23 @@ bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 
 /*		if(!sscanf(argv[1],"%d",&x))
 		{
-			ConPrint("CVar_Res::Bad entry for Horizontal Resolution, Defaulting\n");
+			ComPrintf("CVar_Res::Bad entry for Horizontal Resolution, Defaulting\n");
 			x = g_rInfo.width;
 		}
 		if(!sscanf(argv[2],"%d",&y))
 		{
-			ConPrint("CVar_Res::Bad entry for Vertical Resolution, Defaulting\n");
+			ComPrintf("CVar_Res::Bad entry for Vertical Resolution, Defaulting\n");
 			y = g_rInfo.height;
 		}
 */
 		// no go if we're not changing
 		if ((g_rInfo.width == x) && (g_rInfo.height == y))
 		{
-			ConPrint("Already running in given resolution\n");
+			ComPrintf("Already running in given resolution\n");
 			return false;
 		}
 
-		ConPrint("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
+		ComPrintf("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
 
 		if(g_rInfo.ready)
 			ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
@@ -490,7 +490,7 @@ bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 {
 	int argc = parms.NumTokens();
 	if(argc==1)
-	{	ConPrint("Running in %d bpp\n", var->ival);
+	{	ComPrintf("Running in %d bpp\n", var->ival);
 	}
 	else if(argc > 1)
 	{
@@ -501,17 +501,17 @@ bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 		// no go if we're not changing
 		if (bpp == g_rInfo.bpp)
 		{
-			ConPrint("Already at given bpp\n");
+			ComPrintf("Already at given bpp\n");
 			return false;
 		}
 
 		if(bpp < 0)
 		{
-			ConPrint("Bad Bpp\n");
+			ComPrintf("Bad Bpp\n");
 			return false;
 		}
 
-		ConPrint("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
+		ComPrintf("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
 
 		if(g_rInfo.ready)
 			ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 

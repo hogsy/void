@@ -15,8 +15,6 @@
 #include "3dMath.h"
 #include "World.h"
 
-#define ConPrint ComPrintf
-
 //Renderer Info
 extern RenderInfo_t g_rInfo;	
 

@@ -3,18 +3,7 @@
 
 #include "Sys_hdr.h"
 #include "World.h"
-#include "Sv_net.h"
-
-/*
-======================================
-Expose to system
-======================================
-*/
-namespace VoidNet
-{
-	bool InitNetwork();
-	void ShutdownNetwork();
-}
+#include "Net_server.h"
 
 
 class CServer : public CNetServer,

@@ -169,7 +169,7 @@ bool CVoid::Init()
 
 	//================================
 	//Server
-	if(!VoidNet::InitNetwork())
+	if(!InitNetwork())
 	{
 		Error("CVoid::Init: Could not initalize Winsock");
 		return false;
@@ -236,7 +236,7 @@ CVoid::~CVoid()
 	if(m_pServer)	
 		delete m_pServer;	
 
-	VoidNet::ShutdownNetwork();
+	ShutdownNetwork();
 	
 #ifdef INCLUDE_SOUND
 	if(m_pSound)	
@@ -582,7 +582,7 @@ print a string to debugging window
 and handle any arguments
 ===============================================
 */
-void ComPrintf(char* text, ...)
+void ComPrintf(const char* text, ...)
 {
 	static char textBuffer[1024];
 	va_list args;

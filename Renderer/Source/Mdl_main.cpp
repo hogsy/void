@@ -236,13 +236,13 @@ void model_read_md2(model_t *m, char *name)
 //	sprintf(path, "%s\\game\\models\\%s\\tris.md2", rInfo->base_dir, name);
 //	sprintf(path, "%s/models/%s/tris.md2",CFileSystem::GetCurrentPath(), name);
 
-	ConPrint("loading %s\n", path);
+	ComPrintf("loading %s\n", path);
 
 	FILE *fin = fopen(path, "rb");
 
 	if (!fin)
 	{
-		ConPrint("couldn't find %s", name);
+		ComPrintf("couldn't find %s", name);
 		model_create_fail(m);
 		return;
 	}
@@ -253,7 +253,7 @@ void model_read_md2(model_t *m, char *name)
 // make sure it's a valid md2
 	if ((header.id != 0x32504449) || (header.version != 8))
 	{
-		ConPrint("%s - invalid md2 file", name);
+		ComPrintf("%s - invalid md2 file", name);
 		model_create_fail(m);
 		return;
 	}

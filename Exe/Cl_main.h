@@ -1,10 +1,13 @@
 #ifndef VOID_CLIENT_MAIN
 #define VOID_CLIENT_MAIN
 
+
 #include "Sys_hdr.h"
 #include "I_renderer.h"
 #include "Snd_defs.h"
-#include "I_client.h"
+
+#include "../Network/Net_chan.h"
+#include "Net_client.h"
 
 /*
 ======================================
@@ -26,7 +29,7 @@ Client class
 =====================================
 */
 class CClient :	public I_ConHandler,
-				public I_ClientNetHandler //I_Client
+				public I_ClientNetHandler
 {
 public:
 	CClient(I_Renderer * prenderer);

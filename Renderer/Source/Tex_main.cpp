@@ -65,7 +65,7 @@ bool CTextureManager::Init()
 	//Alloc space for base textures
 	tex->bin_base = g_pRast->TextureBinInit(m_numBaseTextures);
 
-	ConPrint("CTextureManager::Init:Creating base textures");
+	ComPrintf("CTextureManager::Init:Creating base textures");
 
 	// load base textures
 	for(count=0;count<m_numBaseTextures;count++)
@@ -102,7 +102,7 @@ bool CTextureManager::Shutdown()
 
 	UnloadWorldTextures();
 
-	ConPrint("CTextureManager::Shutdown:Destroying base textures :");
+	ComPrintf("CTextureManager::Shutdown:Destroying base textures :");
 
 	g_pRast->TextureBinDestroy(tex->bin_base);
 
@@ -111,7 +111,7 @@ bool CTextureManager::Shutdown()
 
 	m_loaded = NO_TEXTURES;
 
-	ConPrint("OK\n");
+	ComPrintf("OK\n");
 	return true;
 }
 
@@ -246,7 +246,7 @@ bool CTextureManager::UnloadWorldTextures()
 	if (!tex)
 		return false;
 
-	ConPrint("Destroying map textures: ");
+	ComPrintf("Destroying map textures: ");
 
 	g_pRast->TextureBinDestroy(tex->bin_world);
 	tex->bin_world = -1;
@@ -270,7 +270,7 @@ bool CTextureManager::UnloadWorldTextures()
 		tex->dims = 0;
 	}
 
-	ConPrint("OK\n");
+	ComPrintf("OK\n");
 
 	m_loaded = BASE_TEXTURES;
 	return true;

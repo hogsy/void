@@ -1,4 +1,4 @@
-#include "Cl_net.h"
+//#include "Cl_net.h"
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 #include "Com_util.h"
@@ -9,7 +9,7 @@
 world_t	*g_pWorld;
 int PointContents(vector_t &v);
 
-using namespace VoidNet;
+//using namespace VoidNet;
 
 /*
 ======================================
@@ -97,7 +97,8 @@ bool CClient::LoadWorld(const char *worldname)
 
 	char mappath[COM_MAXPATH];
 	
-	strcpy(mappath,VoidNet::szWORLDDIR);
+//	strcpy(mappath,VoidNet::szWORLDDIR);
+	strcpy(mappath,szWORLDDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,".bsp");
 

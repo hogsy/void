@@ -38,8 +38,8 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\Debug\Out\Exe"
-# PROP Intermediate_Dir "..\Debug\Temp\Exe"
+# PROP Output_Dir "..\Debug\"
+# PROP Intermediate_Dir "..\Debug\Exe"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
@@ -54,8 +54,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ...\Debug\Out\FileSystem\vfs.lib ..\Debug\Out\Renderer\vrender.lib /nologo /subsystem:windows /profile /machine:I386 /out:"..\Void.exe"
-# SUBTRACT LINK32 /map /debug
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib /nologo /subsystem:windows /machine:I386 /out:"..\Void.exe"
+# SUBTRACT LINK32 /profile /map /debug
 
 !ELSEIF  "$(CFG)" == "Void - Win32 Debug"
 
@@ -66,8 +66,8 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "..\Debug\Out\Exe"
-# PROP Intermediate_Dir "..\Debug\Temp\Exe"
+# PROP Output_Dir "..\Debug\"
+# PROP Intermediate_Dir "..\Debug\Exe"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\Out\Renderer\vrender.lib ..\Debug\Out\FileSystem\vfs.lib /nologo /subsystem:windows /debug /machine:I386 /out:"..\Void.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib /nologo /subsystem:windows /debug /machine:I386 /out:"..\Void.exe"
 # SUBTRACT LINK32 /profile
 
 !ENDIF 
@@ -143,6 +143,10 @@ SOURCE=.\Sys_exp.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Sys_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Sys_main.cpp
 # End Source File
 # Begin Source File
@@ -196,6 +200,10 @@ SOURCE=..\Shared\Com_buffer.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_cvar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
@@ -269,14 +277,6 @@ SOURCE=.\Cl_main.h
 
 SOURCE=.\Cl_move.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\Cl_net.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Cl_net.h
-# End Source File
 # End Group
 # Begin Group "Resources"
 
@@ -322,49 +322,9 @@ SOURCE=.\Mus_main.cpp
 SOURCE=.\Mus_main.h
 # End Source File
 # End Group
-# Begin Group "Network"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Net_chan.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_chan.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_hdr.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_sock.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_sock.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_util.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_util.h
-# End Source File
-# End Group
 # Begin Group "Server"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Sv_client.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Sv_client.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\Sv_ents.h
@@ -376,14 +336,6 @@ SOURCE=.\Sv_main.cpp
 # Begin Source File
 
 SOURCE=.\Sv_main.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Sv_net.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Sv_net.h
 # End Source File
 # End Group
 # Begin Group "Input"
@@ -466,7 +418,43 @@ SOURCE=..\Shared\I_renderer.h
 SOURCE=..\Shared\I_void.h
 # End Source File
 # End Group
-# Begin Group "Ext"
+# Begin Group "Network"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Net_chan.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Net_client.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Net_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Net_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Net_hdr.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Net_server.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Net_sock.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Net_util.h
+# End Source File
+# End Group
+# Begin Group "External"
 
 # PROP Default_Filter ""
 # Begin Source File
@@ -490,18 +478,6 @@ SOURCE=..\..\Mssdk\Include\Tvout.h
 SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=..\Shared\Com_defs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Net_defs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Sys_hdr.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\todo

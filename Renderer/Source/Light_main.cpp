@@ -29,7 +29,7 @@ void create_light_data(char *file)
 	lights_available = false;
 
 /*
-	ConPrint("creating light data:  \n");
+	ComPrintf("creating light data:  \n");
 
 
 	FILE *fin = fopen(file, "rb");
@@ -40,7 +40,7 @@ void create_light_data(char *file)
 	fread(&i, sizeof(unsigned int), 1, fin);
 	if (i != LIGHT_ID)
 	{
-		ConPrint("!!! Not a valid light data file !!!\n");
+		ComPrintf("!!! Not a valid light data file !!!\n");
 		fclose(fin);
 		return;
 	}
@@ -50,14 +50,14 @@ void create_light_data(char *file)
 	fread(&h, sizeof(light_header_t), 1, fin);
 	if (world->header.light_id != h.world_id)
 	{
-		ConPrint("!!! Light data doesn't match world file !!!\n");
+		ComPrintf("!!! Light data doesn't match world file !!!\n");
 		fclose(fin);
 		return;
 	}
 
 	if (h.version != LIGHT_VERSION)
 	{
-		ConPrint("!!! bad light data version !!!\n");
+		ComPrintf("!!! bad light data version !!!\n");
 		fclose(fin);
 		return;
 	}
@@ -176,7 +176,7 @@ void create_light_data(char *file)
 
 	lights_available = true;
 
-	ConPrint("OK\n");
+	ComPrintf("OK\n");
 */
 }
 
@@ -188,7 +188,7 @@ destroy light info
 */
 void destroy_light_data(void)
 {
-	ConPrint("destroying light data:  \n");
+	ComPrintf("destroying light data:  \n");
 /*
 	if (light.light_names)
 	{
@@ -211,7 +211,7 @@ void destroy_light_data(void)
 	light.light_names = NULL;
 	light.sector_lights = NULL;
 */
-	ConPrint("OK\n");
+	ComPrintf("OK\n");
 }
 
 

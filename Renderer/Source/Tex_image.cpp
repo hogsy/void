@@ -161,7 +161,7 @@ bool CImageReader::Read(const char * file)
 		return err;
 	}
 
-	ConPrint("CImageReader::Read: Couldnt open %s\n",filename);
+	ComPrintf("CImageReader::Read: Couldnt open %s\n",filename);
 	return false;
 }
 
@@ -185,7 +185,7 @@ bool CImageReader::Read_PCX()
 	   (header.encoding != 1)|| 
 	   (header.bits_per_pixel != 8))
 	{
-		ConPrint("CImageReader::Read_PCX:Bad texture file");
+		ComPrintf("CImageReader::Read_PCX:Bad texture file");
 		return false;
 	}
 
@@ -580,7 +580,7 @@ void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 {
 	if(!m_pData)
 	{
-		ConPrint("CImageWriter::Write: No file data to write to %s\n", name);
+		ComPrintf("CImageWriter::Write: No file data to write to %s\n", name);
 		return;
 	}
 
@@ -588,7 +588,7 @@ void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 	fp = fopen(name,"w+b");
 	if(!fp)
 	{
-		ConPrint("CImageWriter::Write: Unable to open %s for writing\n", name);
+		ComPrintf("CImageWriter::Write: Unable to open %s for writing\n", name);
 		return;
 	}
 
@@ -603,7 +603,7 @@ void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 	}
 	fclose(fp);
 
-	ConPrint("CImageReader::Write:Wrote %s\n", name);
+	ComPrintf("CImageReader::Write:Wrote %s\n", name);
 }
 
 /*

@@ -62,7 +62,7 @@ private:
 	friend I_InputFocusManager * System::GetInputFocusManager();
 	friend I_SoundManager * System::GetSoundManager();
 	
-	friend void ComPrintf(char* text, ...);
+	friend void ComPrintf(const char* text, ...);
 	
 	//Subsystems
 	//=========================================================

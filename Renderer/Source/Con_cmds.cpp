@@ -59,7 +59,7 @@ void ScreenShot(const char *name, EImageFileFormat type)
 
 		if (i==100) 
 		{
-			ConPrint("too many screen shots - try deleteing or moving some\n"); 
+			ComPrintf("too many screen shots - try deleteing or moving some\n"); 
 			return;
 		}
 	}
@@ -106,7 +106,7 @@ bool CVar_FullBright(const CVar * var, int val)
 	//There was no second parm 
 	if(val == CParms::INVALID_VALUE) // or -1
 	{
-		ConPrint("r_fullbright = %d\n", var->ival);
+		ComPrintf("r_fullbright = %d\n", var->ival);
 		return false;
 	}
 
@@ -127,8 +127,8 @@ bool CVar_MultiTexture(const CVar * var, int val)
 	if(val == CParms::INVALID_VALUE)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
-			ConPrint("Your video card does not support ARB multitexturing.\n");
-		ConPrint("multitexturing is %d\n", var->ival);
+			ComPrintf("Your video card does not support ARB multitexturing.\n");
+		ComPrintf("multitexturing is %d\n", var->ival);
 		return false;
 	}
 	return true;
@@ -144,7 +144,7 @@ bool CVar_Fov(const CVar * var, int val)
 {
 	if(val == CParms::INVALID_VALUE)
 	{
-		ConPrint("r_fov = %d\n", var->ival);
+		ComPrintf("r_fov = %d\n", var->ival);
 		return false;
 	}
 
@@ -165,7 +165,7 @@ bool CVar_VidSynch(const CVar * var, int val)
 {
 	if(val == CParms::INVALID_VALUE)
 	{
-		ConPrint("r_vidsynch = %d\n", var->ival);
+		ComPrintf("r_vidsynch = %d\n", var->ival);
 		return false;
 	}
 
@@ -193,7 +193,7 @@ bool CVar_32BitTextures(const CVar * var, int val)
 	if(val == CParms::INVALID_VALUE) 
 		return false;
 
-	ConPrint("Change will take effect on next level load.\n");
+	ComPrintf("Change will take effect on next level load.\n");
 	return true;
 }
 

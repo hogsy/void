@@ -72,7 +72,7 @@ RENDERER_API RenderInfo_t * RENDERER_GetParms()
 Dll Print func
 ==========================================
 */
-void ComPrintf(char* text, ...)
+void ComPrintf(const char* text, ...)
 {
 	if ((!text) || (!text[0]))
 		return;
