@@ -390,8 +390,10 @@ void CClient::Talk(const char * string)
 	System::GetSoundManager()->Play(m_hsTalk);
 
 	//Send this reliably ?
-	m_pNetCl->GetSendBuffer().Write(CL_TALK);
-	m_pNetCl->GetSendBuffer().Write(msg);
+//	m_pNetCl->GetSendBuffer().Write(CL_TALK);
+//	m_pNetCl->GetSendBuffer().Write(msg);
+	m_pNetCl->GetReliableBuffer().Write(CL_TALK);
+	m_pNetCl->GetReliableBuffer().Write(msg);
 }
 
 /*
@@ -411,14 +413,14 @@ bool CClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
+/*
 	m_pNetCl->GetSendBuffer().Write(CL_UPDATEINFO);
 	m_pNetCl->GetSendBuffer().Write('n');
 	m_pNetCl->GetSendBuffer().Write(name);
-
-/*	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
+*/
+	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
 	m_pNetCl->GetReliableBuffer().Write('n');
 	m_pNetCl->GetReliableBuffer().Write(name);
-*/
 	return true;
 }
 
@@ -447,7 +449,8 @@ bool CClient::ValidateRate(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-	CBuffer &buffer = m_pNetCl->GetSendBuffer();
+//	CBuffer &buffer = m_pNetCl->GetSendBuffer();
+	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
 	buffer.Write(CL_UPDATEINFO);
 	buffer.Write('r');
 	buffer.Write(rate);

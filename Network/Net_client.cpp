@@ -11,7 +11,7 @@ Constructor/Destructor
 CNetClient::CNetClient(I_NetClientHandler * client): 
 						m_pClient(client),
 						m_buffer(MAX_BUFFER_SIZE),
-						m_backBuffer(MAX_BUFFER_SIZE)
+						m_reliableBuf(MAX_BUFFER_SIZE)
 {
 	m_pSock = new CNetSocket(&m_buffer);
 	
@@ -29,7 +29,7 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 	m_fNextSendTime= 0.0f;	
 	m_numResends= 0;		
 	m_szLastOOBMsg= 0;
-	
+
 	m_spawnState=0;
 	m_netState= CL_FREE;
 }
@@ -105,6 +105,14 @@ void CNetClient::SendUpdate()
 		//Checks local rate
 		if(m_pNetChan->CanSend())
 		{
+//Check for overflows here ? m_overFlowed
+
+			if(m_reliableBuf.GetSize() && m_pNetChan->CanSendReliable())
+			{
+				m_pNetChan->m_buffer.Write(m_reliableBuf);
+				m_reliableBuf.Reset();
+			}
+
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
 			m_pNetChan->m_buffer.Reset();
@@ -127,7 +135,7 @@ void CNetClient::SendUpdate()
 		//Its been a while and our reliable packet hasn't been answered, try again
 //		if(m_fNextSendTime > System::g_fcurTime)
 //			return;
-//			m_pNetChan->m_reliableBuffer.Reset();
+//		m_pNetChan->m_reliableBuffer.Reset();
 		
 		//Ask for next spawn parm if we have received a reply to the last
 		//otherwise, keep asking for the last one
@@ -465,7 +473,7 @@ CBuffer & CNetClient::GetSendBuffer()
 {	return m_pNetChan->m_buffer;
 }
 CBuffer & CNetClient::GetReliableBuffer()
-{	return m_backBuffer;
+{	return m_reliableBuf;
 }
 const NetChanState & CNetClient::GetChanState() const
 {	return m_pNetChan->m_state;

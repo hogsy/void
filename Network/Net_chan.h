@@ -42,11 +42,11 @@ public:
 
 	//================================================================
 	
-	CBuffer		 m_buffer;			//Write to this buffer for transmission
 	NetChanState m_state;
-	
-	float		 m_lastReceived;
-	bool		 m_bFatalError;
+	CBuffer	  m_buffer;				//Write to this buffer for transmission
+
+	float	  m_lastReceived;
+	bool	  m_bFatalError;
 
 private:
 
@@ -62,8 +62,8 @@ private:
 	CNetAddr  m_addr;				//Client addr
 	int		  m_vPort;				//Client vport
 
-	CBuffer	  m_sendBuffer;			//the channel writes data to here for sending
 	CBuffer   m_reliableBuffer;		//Internal, keep reliable messages for retransmit
+	CBuffer	  m_sendBuffer;			//the channel writes data to here for sending
 	CBuffer * m_pRecvBuffer;		//ptr to receiving sockets buffer
 };
 

@@ -43,7 +43,7 @@ struct ServerState
 /*
 ======================================
 The "Game" Server needs to be able
-to write to client channels.
+to write directly to client channels.
 ======================================
 */
 class CClientChan
@@ -97,6 +97,27 @@ private:
 	int		m_id;
 	char	m_name[32];
 };
+
+
+//callback interface for game server
+struct I_NetServerHandler
+{
+	//process client message
+	virtual void HandleClientMsg(int clientNum, CBuffer &buffer)=0;
+	
+	//notify client connection
+	//will return a clientId. -1 if connection failed for some reason
+	virtual int HandleClientConnect(CBuffer &buffer)=0;
+	
+	//notify client disconnection
+	virtual void HandleClientDrop(int clientNum)=0;
+
+	//validate connection
+	virtual void ValidateConnRequest(CBuffer &buffer)=0;
+};
+
+
+
 
 /*
 ======================================

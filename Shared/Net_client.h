@@ -99,7 +99,8 @@ private:
 	VoidNet::CNetSocket * m_pSock;
 
 	CBuffer	m_buffer;
-	CBuffer	m_backBuffer;
+	
+	CBuffer	m_reliableBuf;
 };
 
 #endif
