@@ -3,9 +3,21 @@
 
 #include "Com_vector.h"
 
-// same contents as qbsp
+
+// content flags
 #define	CONTENTS_SOLID			0x00000001		// an eye is never valid in a solid
-#define	CONTENTS_WINDOW			0x00000002		// translucent, but not watery
+#define	CONTENTS_SKY			0x00000002		// is a sky brush - moves with eye
+#define CONTENTS_SKYVIEW		0x00000004		// allows viewing of sky
+#define CONTENTS_TRANSPARENT	0x00000008		// partially visible
+#define CONTENTS_INVISIBLE		(0x00000010 | CONTENTS_TRANSPARENT)		// completely invisible
+
+// surface flags
+#define SURF_INVISIBLE	0x00000001	// not drawn
+#define SURF_SKYVIEW	0x00000002	// implies CONTENTS_SKYVIEW
+
+
+
+/*
 #define	CONTENTS_AUX			0x00000004
 #define CONTENTS_SKY			0x00000004		// my sky contents is same sas q2 AUX
 #define	CONTENTS_LAVA			0x00000008
@@ -35,6 +47,9 @@
 #define	CONTENTS_DETAIL			0x08000000	// brushes to be added after vis leafs
 #define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
 #define	CONTENTS_LADDER			0x20000000
+*/
+
+
 
 /*
 ============================================================================

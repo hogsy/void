@@ -18,6 +18,17 @@ implementation of .map file reading/parsing
 #include "Com_Vector.h"
 #include "com_trace.h"
 
+// required for filesystem
+#include "Com_defs.h"
+#include "I_file.h"
+#include "I_filesystem.h"
+
+
+// shaders
+#include "../Renderer/Rast_main.h"
+#include "../Renderer/ShaderManager.h"
+
+
 //=======================================================
 
 int					num_map_entities;
@@ -319,10 +330,12 @@ int parse_brush_side(void)
 
 	// find contents of this side
 	get_token(false);
-	int contents = atoi(token);
 	get_token(false);
-	map_brush_sides[num_map_brush_sides].flags = atoi(token);
 	get_token(false);
+
+//	get the contents/surface flags from the shader
+	int contents = g_pShaders->GetContentFlags(map_texinfos[num_map_texinfos].name);
+	map_brush_sides[num_map_brush_sides].flags = g_pShaders->GetSurfaceFlags(map_texinfos[num_map_texinfos].name);;
 
 
 	num_map_texinfos++;
@@ -420,6 +433,10 @@ bool load_map(char *path)
 {
 	v_printf("loading map file %s\n", path);
 
+	// load shaders
+	g_pShaders = new CShaderManager();
+
+
 	map_file = fopen(path, "r");
 	if (!map_file)
 		return false;
@@ -482,6 +499,8 @@ bool load_map(char *path)
 	}
 */
 	fclose(map_file);
+
+	delete g_pShaders;
 	return true;
 }
 
