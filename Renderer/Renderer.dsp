@@ -351,7 +351,7 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\plan\ripper.plan
+SOURCE=..\plan\js.plan
 # End Source File
 # Begin Source File
 
