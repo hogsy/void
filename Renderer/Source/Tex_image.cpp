@@ -305,12 +305,12 @@ bool CImageReader::Read_TGA()
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();
 
-	if(buffersize < width * height * bpp)
+	if(buffersize < width * height * (int)format)
 	{
-		buffersize = width * height * bpp;
+		buffersize = width * height * (int)format;
 		LockBuffer(buffersize);
 	}
-	memset(data, 0xFF, width * height * bpp);
+	memset(data, 0xFF, width * height * (int)format);
 
 	for (int h= height-1; h>=0; h--)
 	{
