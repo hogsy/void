@@ -20,12 +20,12 @@ struct DisconnectReason
 
 const DisconnectReason DR_SVQUIT	= {"Server quit",0};
 const DisconnectReason DR_SVERROR	= {"Server error", 0};
-const DisconnectReason DR_CLQUIT	= {"Disconnected","%s disconnected" };
-const DisconnectReason DR_CLTIMEOUT = {"Connection timed out","%s timed out" };
-const DisconnectReason DR_CLOVERFLOW= {"Connection overflowed","%s overflowed" };
-const DisconnectReason DR_CLBADMSG	= {"Network message error","%s errored out" };
+const DisconnectReason DR_CLQUIT	= {"Disconnected","disconnected" };
+const DisconnectReason DR_CLTIMEOUT = {"Connection timed out","timed out" };
+const DisconnectReason DR_CLOVERFLOW= {"Connection overflowed","overflowed" };
+const DisconnectReason DR_CLBADMSG	= {"Network message error","errored out" };
 //Add More as needed
-const DisconnectReason DR_SVKICKED  = {"You were kicked","%s was kicked" };
+const DisconnectReason DR_SVKICKED  = {"You were kicked","was kicked" };
 
 /*
 ============================================================================

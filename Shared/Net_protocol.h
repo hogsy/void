@@ -38,8 +38,8 @@ const byte CL_MOVE			= 2;	//angles/velocity
 const byte CL_STRING		= 3;	//Command string
 const byte CL_DELTA			= 4;	//update a specific field only ?
 const byte CL_TALK			= 5;	//client said something
-const byte CL_UPDATEINFO	= 6;	//client wants to update its info. name/rate/skin/model etc
-									// n=name r=rate
+const byte CL_INFOCHANGE	= 6;	//client wants to update its info. name/rate/skin/model etc
+									// n=name r=rate, m=model, s=skin
 const byte CL_DISCONNECT	= 15;	//client is disconnecting
 
 //Server to Client
@@ -50,11 +50,15 @@ const byte SV_UPDATESTAT	= 3;
 const byte SV_STUFFCMD		= 4;	// Client will execute this locally
 const byte SV_PRINT			= 5;    // Client will print this locally
 const byte SV_TALK			= 6;	// chat message
-const byte SV_CLINFO		= 7;    // info about a given client, might create a new client
-const byte SV_CLDISCONNECT  = 8;	// A client disconnected, let everyone know
-const byte SV_CLUPDATE		= 9;	// update a clients position
-const byte SV_DISCONNECT	= 10;	// Server going down
-const byte SV_RECONNECT		= 11;	// Server is changing maps, tell all clients to reconnect
+
+const byte SV_CLFULLINFO	= 7;    // complete info about a given client, might create a new client
+									// {num,name,modelindex,modelname,skinindex,skinname}
+const byte SV_CLINFOCHANGE  = 8;    // just something minor. n for name, m for model, s for skin etc
+const byte SV_CLDISCONNECT  = 9;	// A client disconnected, let everyone know
+const byte SV_CLUPDATE		= 10;	// update a clients position
+
+const byte SV_DISCONNECT	= 11;	// Server going down
+const byte SV_RECONNECT		= 12;	// Server is changing maps, tell all clients to reconnect
 
 
 /*
