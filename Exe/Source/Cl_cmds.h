@@ -55,7 +55,8 @@ Client Command Handler
 ======================================
 */
 
-class CClientCmdHandler : public I_InKeyListener
+class CClientCmdHandler : public I_InKeyListener,
+								 I_InCursorListener
 {
 public:
 
@@ -72,8 +73,10 @@ public:
 
 	void BindFuncToKey(int argc, char** argv);
 	void Unbind(int argc, char** argv);
-	void BindList();
 	void Unbindall();
+	void BindList() const;
+
+	void WriteBindTable(FILE *fp);
 
 private:
 
@@ -84,25 +87,6 @@ private:
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
 };
-
-
-/*
-=========================================
-256 item array signifying all key constants
-whenever a key is pressed, the client Handlekeys function looks
-through this array to see if there is a function bound to that key, and 
-executes it if there is.
-=========================================
-*/
-extern ClientKey *  m_clientkeys;			
-
-/*
-=========================================
-command buffer which gets executed each frame
-and is filled/emptied according to input
-=========================================
-*/
-extern ClientKey ** m_commandbuffer;		
 
 /*
 ============================================================================

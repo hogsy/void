@@ -1,8 +1,9 @@
 #include "Cl_main.h"
+#include "Sys_cons.h"
 #include "I_renderer.h"
 #include "Cl_cmds.h"
 #include "Sys_hdr.h"
-#include "Sys_cons.h"
+
 
 extern world_t		*g_pWorld;
 extern I_Renderer   *g_pRender;
@@ -12,9 +13,6 @@ CVar *		CClient::m_clname;
 CVar *		CClient::m_clrate;
 CVar *		CClient::m_noclip;
 
-ClientKey  * m_clientkeys=0;
-ClientKey ** m_commandbuffer=0;
-
 /*
 ======================================
 Constructor
@@ -23,6 +21,9 @@ Constructor
 
 CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 {
+
+	m_pCmdHandler = new CClientCmdHandler(this);
+
 	// FIXME - should be actual player size
 	VectorSet(&eye.mins, -10, -10, -40);
 	VectorSet(&eye.maxs,  10,  10,  10);
@@ -35,11 +36,6 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 	eye.origin.x = 0;
 	eye.origin.y = 0;
 	eye.origin.z = 48;
-
-	m_clientkeys = new ClientKey[256];
-	m_commandbuffer = new ClientKey * [CL_CMDBUFFERSIZE];
-	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
-		m_commandbuffer[i] =0;
 
 	m_connected=false;
 	m_ingame = false;
@@ -74,10 +70,7 @@ CClient::~CClient()
 	CloseNet();
 #endif
 
-	delete [] m_clientkeys;
-	for(int i=0; i<CL_CMDBUFFERSIZE;i++)
-		m_commandbuffer[i] = 0;
-	delete [] m_commandbuffer;
+	delete m_pCmdHandler;
 }
 
 
@@ -282,7 +275,7 @@ void CClient::RunFrame()
 {
 	if(m_ingame)
 	{
-		RunCommands();
+		m_pCmdHandler->RunCommands();
 
 		if (!((desired_movement.x==0) && (desired_movement.y==0) && (desired_movement.z==0)) || (m_campath != -1))
 		{
@@ -605,4 +598,101 @@ void Talk(int argc,char **argv)
 #endif
 	ComPrintf("Not connected to the server\n");
 }
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+
+==========================================
+*/
+
+void CClient::SetInputState(bool on)
+{
+	m_pCmdHandler->SetListenerState(on);
+}
+
+
+/*
+==========================================
+
+==========================================
+*/
+
+void CClient::RegCommands()
+{
+	Sys_GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
+	Sys_GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
+	Sys_GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
+	Sys_GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
+	Sys_GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
+	Sys_GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
+	Sys_GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
+	Sys_GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
+	Sys_GetConsole()->RegisterCommand("bind",CMD_BIND,this);
+	Sys_GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
+	Sys_GetConsole()->RegisterCommand("cam",CMD_CAM,this);
+	Sys_GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
+	Sys_GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+}
+
+void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_MOVE_FORWARD:
+		MoveForward();
+		break;
+	case CMD_MOVE_BACKWARD:
+		MoveBackward();
+		break;
+	case CMD_MOVE_LEFT:
+		MoveLeft();
+		break;
+	case CMD_MOVE_RIGHT:
+		MoveRight();
+		break;
+	case CMD_ROTATE_LEFT:
+		RotateLeft();
+		break;
+	case CMD_ROTATE_RIGHT:
+		RotateRight();
+		break;
+	case CMD_ROTATE_UP:
+		RotateUp();
+		break;
+	case CMD_ROTATE_DOWN:
+		RotateDown();
+		break;
+	case CMD_BIND:
+		m_pCmdHandler->BindFuncToKey(numArgs,szArgs);
+		break;
+	case CMD_BINDLIST:
+		m_pCmdHandler->BindList();
+		break;
+	case CMD_UNBIND:
+		m_pCmdHandler->Unbind(numArgs,szArgs);
+		break;
+	case CMD_UNBINDALL:
+		m_pCmdHandler->Unbindall();
+		break;
+	case CMD_CAM:
+		CamPath(numArgs,szArgs);
+		break;
+	}
+}
+
+/*
+======================================
+Writes the current Bind table to a config file
+called from the Console Shutdown func
+======================================
+*/
+
+void CClient::WriteBindTable(FILE *fp)
+{
+	m_pCmdHandler->WriteBindTable(fp);
+}
+
 

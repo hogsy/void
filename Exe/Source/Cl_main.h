@@ -6,17 +6,13 @@
 #include "Net_util.h"
 #include "Net_sock.h"
 #include "I_hud.h"
-#include "In_defs.h"
-
 
 /*
 =====================================
 The client
 =====================================
 */
-class CClient : public I_InCursorListener, 
-				public I_InKeyListener,
-				public I_CmdHandler
+class CClient :	public I_CmdHandler
 {
 public:
 	CClient();
@@ -37,12 +33,6 @@ public:
 	bool UnloadWorld();
 
 	void SetInputState(bool on);
-
-	//Input Listener Interface
-	void HandleKeyEvent	(const KeyEvent_t &kevent);
-	void HandleCursorEvent(const float &ix,
-						   const float &iy,
-						   const float &iz);
 
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
@@ -74,10 +64,6 @@ private:
 	void RotateDown(float val=5.0);
 
 	//Console funcs
-	void BindFuncToKey(int argc, char** argv);
-	void BindList(int argc, char** argv);
-	void Unbindall(int argc, char** argv);
-	void Unbind(int argc, char** argv);
 	void CamPath(int argc,char **argv);
 
 
@@ -99,10 +85,7 @@ private:
 	friend class CClientCmdHandler;
 	CClientCmdHandler * m_pCmdHandler;
 
-//	CClientCommandHandler * m_pCmdHandler;
-
 	I_RHud *	m_rHud;
-
 
 	CSocket	 	m_sock;
 	
@@ -113,7 +96,6 @@ private:
 	vector_t	desired_movement;
 
 	void RegCommands();		//register commmands
-	void RunCommands();		//exec the commands in the command buffer
 	
 	//the following should be accessible by the game dll
 	

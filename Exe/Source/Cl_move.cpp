@@ -324,3 +324,29 @@ void CClient:: RotateDown(float val)
 	if (eye.angles.PITCH > PI/2)
 		eye.angles.PITCH = PI/2;
 }
+
+
+
+/*
+===========
+follow a camera path
+===========
+*/
+void CClient::CamPath(int argc,char **argv)
+{
+	// find the head path node
+	for (int ent=0; ent<g_pWorld->nentities; ent++)
+	{
+		if (strcmp(key_get_value(g_pWorld, ent, "classname"), "misc_camera_path_head") == 0)
+		{
+			m_campath = ent;
+			m_camtime = g_fcurTime;
+
+			vector_t origin;
+			key_get_vector(g_pWorld, ent, "origin", origin);
+			VectorCopy(origin, eye.origin); // move to first point of path
+			return;
+		}
+	}
+}
+
