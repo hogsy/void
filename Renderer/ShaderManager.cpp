@@ -408,6 +408,7 @@ CachePurge
 */
 void CShaderManager::CachePurge(void)
 {
+	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 	for (int p=0; p<CACHE_PASS_NUM; p++)
 	{
 		for (int t=0; t<world->ntextures; t++)
