@@ -469,26 +469,26 @@ Add a Message to the Console Buffer
 */
 void CRConsole::AddMessage(char *buff, bool first)
 {
-	//move everything back one spot.  end goes to the beginning
-	Conline_t *last = m_lines[CON_MAX_LINES - 1];
+	// the first message includes that last message in the buffer
+	// only scroll up if we aren't redoing this message
+	if (!first)
+	{
+		//move everything back one spot.  end goes to the beginning
+		Conline_t *last = m_lines[CON_MAX_LINES - 1];
 
-	for (int l = CON_MAX_LINES-1; l > 0; l--)
-		m_lines[l] = m_lines[l-1];
+		for (int l = CON_MAX_LINES-1; l > 0; l--)
+			m_lines[l] = m_lines[l-1];
 
-	m_lines[0] = last;
+		m_lines[0] = last;
+	}
 
 	//set up the new entry
-	last->length = strlen(buff); // + 2;
-	if (last->length > m_maxchars)	// will never be more than we can fit
-		last->length = m_maxchars;
+	m_lines[0]->length = strlen(buff); // + 2;
+	if (m_lines[0]->length > m_maxchars)	// will never be more than we can fit
+		m_lines[0]->length = m_maxchars;
 
-//	int c = first ? '>' : ' ';
-//	last->line[0] = last->line[1] = c;
-//	memcpy(&last->line[2], buff, last->length-2);
-//	if(first)
-		memcpy(&last->line, buff, last->length);
-//	else
-//		memcpy(&last->line[2], buff, last->length-2);
+	memcpy(&m_lines[0]->line, buff, m_lines[0]->length);
+	m_lines[0]->line[m_lines[0]->length] = '\0';
 
 	//we're scrolled up, stay in the same spot
 	if(m_curline > 0)
@@ -507,11 +507,15 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 	int c, len = strlen(msg);
 	char tmp;
 
-	//take trailing \n off if there is one
-	if (msg[len-1] == '\n')
+	if (msg[0] == '\0')
+		return;
+
+	// see  if it starts with a newline
+	if (msg[0] == '\n')
 	{
-		msg[len-1] = 0;
-		len--;
+		AddMessage("\n", first);
+		PrintRecursive(false, &msg[1]);
+		return;
 	}
 
 	//find the first \n char
@@ -521,15 +525,16 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 			break;
 	}
 
-	if ((c < len) && c>0)	// was split by a \n
+	// was split by a \n - dont care about \n at end of line if there is one
+	if ((c < len-1) && c>0)	
 	{
-		tmp = msg[c];
-		msg[c] = 0;
+		tmp = msg[c+1];
+		msg[c+1] = '\0';
 
 		PrintRecursive(first, msg);
 
-		msg[c] = tmp;
-		PrintRecursive(false, &msg[c]);
+		msg[c+1] = tmp;
+		PrintRecursive(false, &msg[c+1]);
 
 		return;
 	}
@@ -551,7 +556,7 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 			msg[m_maxchars-2] = 0;
 
 			PrintRecursive(first, msg);
-			
+
 			msg[m_maxchars-2] = tmp;
 			PrintRecursive(false, &msg[m_maxchars-2]);
 			return;
@@ -562,6 +567,7 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 			msg[c] = 0;
 			PrintRecursive(first, msg);
 
+			// skip the space
 			msg[c] = ' ';
 			PrintRecursive(false, &msg[c+1]);
 			return;
@@ -648,5 +654,10 @@ Add a line to the console buffer
 ==========================================
 */
 void  CRConsole::AddLine(char *line, int color, int size)
-{	PrintRecursive(true, line);
+{
+	char message[1024 + CON_MAX_CHARS_PER_LINE];	// max ComPrintf + max previous line
+	strcpy(message, m_lines[0]->line);
+	strcat(message, line);
+
+	PrintRecursive(true, message);
 }
