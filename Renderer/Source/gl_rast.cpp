@@ -877,3 +877,13 @@ void COpenGLRast::ScreenShot(unsigned char *dest)
 {
 }
 
+
+/*
+========
+SetVidSynch - assumes that it can be done
+========
+*/
+void COpenGLRast::SetVidSynch(int v)
+{
+	wglSwapIntervalEXT(v);
+}

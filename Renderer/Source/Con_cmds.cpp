@@ -171,12 +171,10 @@ bool CVar_VidSynch(const CVar * var, int val)
 
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
-/*
 		if (val)
-			wglSwapIntervalEXT(1);
+			g_pRast->SetVidSynch(1);
 		else
-			wglSwapIntervalEXT(0);
-*/
+			g_pRast->SetVidSynch(0);
 		return true;
 	}
 	ComPrintf("Video card doesnt support VidSynch\n");

@@ -135,6 +135,7 @@ public:
 	virtual void ReportErrors(void)=0;
 	virtual void FrameEnd(void)=0;
 	virtual void ScreenShot(unsigned char *dest)=0;
+	virtual void SetVidSynch(int v)=0;
 
 
 protected:

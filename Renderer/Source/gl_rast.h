@@ -71,6 +71,7 @@ public:
 	void ReportErrors(void);
 	void FrameEnd(void);
 	void ScreenShot(unsigned char *dest);
+	void SetVidSynch(int v);
 
 
 
