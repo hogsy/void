@@ -1,16 +1,24 @@
 
 
 
-
-
-
+//Implemented by the server
 
 struct I_GameHandler
 {
-	virtual int RegisterEntity(const char * ent) =0;
-	virtual int RegisterModel(const char * model)=0;
-	virtual int RegisterSound(const char * image)=0;
-	virtual int RegisterImage(const char * sound)=0;
+	virtual void BroadcastPrint(const char * msg)=0;
+	virtual void ClientPrint(const char * msg)=0;
+
+	virtual void DebugPrint(const char * msg)=0;
+	virtual void FatalError(const char * msg)=0;
+
+	virtual void PlaySnd(const Entity &ent, hSnd index, int channel, float vol, float atten);
+	virtual void PlaySnd(vector_t &origin,  hSnd index, int channel, float vol, float atten);
+
+	virtual void ExecCommand(const char * cmd)=0;
+
+	virtual int  RegisterModel(const char * model)=0;
+	virtual int  RegisterSound(const char * image)=0;
+	virtual int  RegisterImage(const char * sound)=0;
 };
 
 
@@ -22,28 +30,11 @@ class CGameServer
 
 #if 0 // quake2
 //===============================================================
-
 //
 // functions provided by the main engine
 //
 typedef struct
 {
-	// special messages
-	void	(*bprintf) (int printlevel, char *fmt, ...);
-	void	(*dprintf) (char *fmt, ...);
-	void	(*cprintf) (edict_t *ent, int printlevel, char *fmt, ...);
-	void	(*centerprintf) (edict_t *ent, char *fmt, ...);
-	void	(*sound) (edict_t *ent, int channel, int soundindex, float volume, float attenuation, float timeofs);
-	void	(*positioned_sound) (vec3_t origin, edict_t *ent, int channel, int soundinedex, float volume, float attenuation, float timeofs);
-
-	// config strings hold all the index strings, the lightstyles,
-	// and misc data like the sky definition and cdtrack.
-	// All of the current configstrings are sent to clients when
-	// they connect, and changes are sent to all connected clients.
-	void	(*configstring) (int num, char *string);
-
-	void	(*error) (char *fmt, ...);
-
 	void	(*setmodel) (edict_t *ent, char *name);
 
 	// collision detection
@@ -61,12 +52,6 @@ typedef struct
 	void	(*unlinkentity) (edict_t *ent);		// call before removing an interactive edict
 	int		(*BoxEdicts) (vec3_t mins, vec3_t maxs, edict_t **list,	int maxcount, int areatype);
 	void	(*Pmove) (pmove_t *pmove);		// player movement code common with client prediction
-
-	// add commands to the server console as if they were typed in
-	// for map changing, etc
-	void	(*AddCommandString) (char *text);
-
-
 } game_import_t;
 
 //

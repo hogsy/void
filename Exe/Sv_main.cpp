@@ -407,13 +407,20 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 void CServer::SpawnEntities(CBuffer &buf)
 {
 	//parse buffer and load entities
-	buf.BeginRead();
+/*	buf.BeginRead();
 	
 	//get classname
 	char * classname = buf.ReadString();
 	if(buf.BadRead())
 		return;
 
+	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
+	if(ent)
+	{
+		m_entities[m_numEntities] = ent;
+		m_numEntities++;
+	}
+*/
 /*	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
 	if(ent)
 	{

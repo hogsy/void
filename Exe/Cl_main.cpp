@@ -35,6 +35,7 @@ CClient::CClient(I_Renderer * prenderer,
 	m_fFrameTime = 0.0f;
 	
 	m_pHud = 0;
+	m_pModel = 0;
 	
 	m_pCamera = 0;
 	
@@ -81,8 +82,13 @@ CClient::~CClient()
 	if(m_pCamera)
 		delete m_pCamera;
 
+	if(m_pModel)
+		m_pModel->UnloadModelAll();
+
 	m_pRender = 0;
 	m_pHud = 0;
+	m_pModel = 0;
+
 	m_pSound = 0;
 	m_pMusic = 0;
 
@@ -104,6 +110,30 @@ bool CClient::LoadWorld(const char *worldname)
 //	strcat(configname,"\\void.cfg");
 //	g_pCons->ExecConfig(configname);
 
+	m_pHud = m_pRender->GetHud();
+	if(!m_pHud)
+	{
+		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
+		return false;
+	}
+
+	m_pModel = m_pRender->GetModel();
+	if(!m_pModel)
+	{
+		ComPrintf("CClient::Init:: Couldnt get model interface from renderer\n");
+		return false;
+	}
+
+	//Create local ent
+	VectorSet(&m_entQuad.angle,0,0,0);
+	VectorSet(&m_entQuad.origin,0,0,32);
+	m_entQuad.frame = 0;
+	m_entQuad.skinnum= 0;
+	m_entQuad.cache = MODEL_CACHE_LOCAL;
+	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
+	
+
+
 	char mappath[COM_MAXPATH];
 	
 	strcpy(mappath,szWORLDDIR);
@@ -124,40 +154,9 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
-	m_pHud = m_pRender->GetHud();
-	if(!m_pHud)
-	{
-		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
-		return false;
-	}
-
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
 
-/*
-	m_campath = -1;
-	m_acceleration = 400.0f;
-	m_maxvelocity =  200.0f;
-	
-	VectorSet(&desired_movement, 0, 0, 0);
-
-	VectorSet(&m_gameClient.angles, 0.0f,0.0f,0.0f);
-	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
-	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
-	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
-
-	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
-
-	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
-	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
-
-	m_ingame = true;
-
-	System::SetGameState(INGAME);
-	SetInputState(true);
-	Spawn(0,0);
-*/
 	
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
@@ -280,6 +279,14 @@ void CClient::RunFrame()
 			VectorSet(&m_screenBlend, 1, 1, 1);
 
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
+
+/*	m_entQuad.frame = 0;
+	m_entQuad.skinnum= 0;
+	m_entQuad.cache = MODEL_CACHE_LOCAL;
+	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
+*/
+		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
+
 		m_pRender->Draw(m_pCamera);
 	}
 	else

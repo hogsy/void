@@ -5,6 +5,7 @@
 #include "Com_buffer.h"
 #include "3dmath.h"
 
+
 //======================================================================================
 //SERVER ENTITIES
 //======================================================================================
@@ -27,9 +28,9 @@ can be subclasses for more specific stuff
 */
 struct Entity
 {
-	Entity(const char * ename, EntType etype) : type(etype)
-	{	strcpy(classname, ename);
-		
+	Entity(const char * ename) //, EntType etype) : type(etype)
+	{	
+		strcpy(classname, ename);
 		origin.x = origin.y = origin.z = 0.0f;
 		angles.x = angles.y = angles.z = 0.0f;
 	}
@@ -37,7 +38,9 @@ struct Entity
 	int	 num;
 	char classname[ENT_MAXCLASSNAME];
 	
-	EntType		type;
+//	EntType		type;
+//	char *		name;	
+
 	vector_t	origin;
 	vector_t	angles;
 };
@@ -55,7 +58,7 @@ struct EntSpeaker : public Entity
 		MAX_SOUNDFILENAME = 64
 	};
 	
-	EntSpeaker(): Entity("ent_speaker", ENT_WORLD)
+	EntSpeaker(): Entity("ent_speaker") //, ENT_WORLD)
 	{
 	}
 
@@ -72,7 +75,7 @@ Client Entity on the server
 */
 struct EntClient : public Entity
 {
-	EntClient() : Entity("client", ENT_CLIENT)
+	EntClient() : Entity("client") //, ENT_CLIENT)
 	{	
 		memset(name,0,32); 
 		inUse = false; 
@@ -93,21 +96,39 @@ Derive class from CBaseEntityMaker
 create an object of that class
 ======================================================================================
 */
+class CEntityMaker;
+typedef std::map<std::string, CEntityMaker *> EntMakerMap;
+
 class CEntityMaker
 {
 public:
-
 	static Entity * CreateEnt(const char * classname, CBuffer &parms)
 	{
-		CEntityMaker * maker = (*makerRegistry.find(std::string(classname))).second;
-		if(maker)
-			return maker->MakeEntity(parms);
-		return 0; 
+		itRegistry = makerRegistry.find(std::string(classname));
+		if(itRegistry != makerRegistry.end())
+			return (*itRegistry).second->MakeEntity(parms);
+		
+		//just read default stuff
+		Entity * ent = new Entity(classname);
+//		strcpy(ent->classname,classname);
+
+		char * key = 0;
+		
+		do
+		{
+			key = parms.ReadString();
+			if(strcmp(key,"origin") == 0)
+				parms.ReadVector(ent->origin);
+			else if(strcmp(key,"angles") == 0)
+				parms.ReadVector(ent->angles);
+
+		}while(key != 0);
+		
+		return ent; 
 	}
 	
 protected:
 
-	typedef std::map<std::string, CEntityMaker *> EntMakerMap;
 	
 	CEntityMaker(std::string classname)
 	{	makerRegistry.insert( std::make_pair(classname,this));

@@ -78,13 +78,13 @@ private:
 		char * name; 
 	};
 
-	ResInfo	m_modelList[256];
+	ResInfo	m_modelList[GAME_MAXMODELS];
 	int		m_numModels;
 
-	ResInfo m_imageList[256];
+	ResInfo m_imageList[GAME_MAXIMAGES];
 	int     m_numImages;
 
-	ResInfo m_soundList[256];
+	ResInfo m_soundList[GAME_MAXSOUNDS];
 	int		m_numSounds;
 	
 	//=================================================

@@ -9,6 +9,20 @@
 #include "Game_ents.h"
 
 /*
+struct R_EntState 
+{
+	CacheType	cache;
+	hMdl		index;
+	int			skinnum;
+	float		frame;	// fixme - make 2 ints - last frame and next frame
+
+	vector_t origin;
+	vector_t angle;
+};
+*/
+
+
+/*
 =====================================
 Client class
 -controls the camera
@@ -96,6 +110,9 @@ private:
 	
 	I_Renderer		  * m_pRender;
 	I_RHud		 	  *	m_pHud;
+	I_Model			  * m_pModel;
+
+
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;
 	CClientCmdHandler * m_pCmdHandler;
@@ -114,6 +131,9 @@ private:
 
 	//This is the client we should do local prediction on
 	EntClient	m_gameClient;
+
+
+	R_EntState  m_entQuad; //bah
 
 	//This should hook up to the game client whne the client
 	//enters a game
