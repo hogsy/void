@@ -41,8 +41,7 @@ CHudMessage::CHudMessage()
 {
 	len = 0;
 	//memset(data,0,len);
-	//data = new char [HUD_MSGBUFFER];
-	data = (char *)MALLOC(HUD_MSGBUFFER);
+	data = new char [HUD_MSGBUFFER];
 }
 
 
@@ -69,8 +68,7 @@ void CHudMessage::Set(const char *msg, int ix, int iy, float itime)
 //Destructor
 CHudMessage::~CHudMessage()
 {
-	//delete [] data;
-	free(data);
+	delete [] data;
 	len = 0;
 }
 

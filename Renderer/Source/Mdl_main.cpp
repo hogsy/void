@@ -125,7 +125,7 @@ void model_create_fail(model_t *m)
 
 
 // the gl command list first
-	m->cmds = MALLOC(33*4);
+	m->cmds = (void*) new byte[33*4];
 	if (!m->cmds) FError("mem for model fail!");
 
 	cmdint = (int*)m->cmds;
@@ -198,10 +198,10 @@ void model_create_fail(model_t *m)
 	*cmdint = 0;
 
 // vertex info
-	m->frames = (model_frame_t*)MALLOC(sizeof(model_frame_t));
+	m->frames = new model_frame_t[1];
 	if (!m->frames) FError("mem for model fail frames");
 
-	m->frames->vertices = (vector_t*)MALLOC(sizeof(vector_t) * 5);
+	m->frames->vertices = new vector_t[5];
 	if (!m->frames->vertices) FError("mem for model fail vertices");
 
 	m->frames->vertices[0].x = 0;
@@ -262,7 +262,7 @@ void model_read_md2(model_t *m, char *name)
 	m->num_frames= header.numFrames;
 
 // the gl command list first
-	m->cmds = MALLOC(header.numGlCommands * 4);
+	m->cmds = (void*) new byte[header.numGlCommands * 4];
 	if (!m->cmds) FError("mem for model command list");
 	fseek(fin, header.offsetGlCommands, SEEK_SET);
 	fread(m->cmds, 4, header.numGlCommands, fin);
@@ -270,7 +270,7 @@ void model_read_md2(model_t *m, char *name)
 
 
 // vertex info for all frames
-	m->frames = (model_frame_t*)MALLOC(sizeof(model_frame_t) * m->num_frames);
+	m->frames = new model_frame_t[m->num_frames];
 	if (!m->frames) FError("mem for model frames");
 	fseek(fin, header.offsetFrames, SEEK_SET);
 
@@ -282,7 +282,7 @@ void model_read_md2(model_t *m, char *name)
 
 	for (f = 0; f < m->num_frames; f++)
 	{
-		m->frames[f].vertices = (vector_t*)MALLOC(sizeof(vector_t) * header.numVertices);
+		m->frames[f].vertices = new vector_t[header.numVertices];
 		if (!m->frames[f].vertices) FError("mem for frame vertices");
 
 		fread(&scale, sizeof(float), 3, fin);

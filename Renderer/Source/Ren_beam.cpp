@@ -69,7 +69,7 @@ void sil_alloc(void)
 	if (sil_allocs == MAX_SIL_ALLOCS)
 		FError("too many sil allocs! Tell Ripper\n");
 
-	sil_a[sil_allocs] = (sil_t*)MALLOC(sizeof(sil_t) * SILS_PER_ALLOC);
+	sil_a[sil_allocs] = new sil_t[SILS_PER_ALLOC];
 	if (!sil_a[sil_allocs])
 		FError("not enough mem for sils!");
 
@@ -123,7 +123,7 @@ void beam_alloc(void)
 	if (beam_allocs == MAX_BEAM_ALLOCS)
 		FError("too many sil allocs! Tell Ripper\n");
 
-	beam_a[beam_allocs] = (beam_node_t*)MALLOC(sizeof(beam_node_t) * BEAMS_PER_ALLOC);
+	beam_a[beam_allocs] = new beam_node_t[BEAMS_PER_ALLOC];
 	if (!beam_a[beam_allocs])
 		FError("not enough mem for beam nodes!");
 
@@ -180,10 +180,10 @@ void beam_shutdown(void)
 {
 	int i;
 	for (i=0; i<sil_allocs; i++)
-		free(sil_a[i]);
+		delete [] sil_a[i];
 
 	for (i=0; i<beam_allocs; i++)
-		free(beam_a[i]);
+		delete [] beam_a[i];
 
 	
 	sil_allocs = 0;

@@ -32,7 +32,7 @@ cpoly_t* poly_alloc(void)
 		FError("too many cache alloc's!  ** tell Ripper **");
 
 	// free_polys must be NULL
-	free_polys = (cpoly_t*)MALLOC(sizeof(cpoly_t) * POLY_CACHE_POLYS);
+	free_polys = new cpoly_t[POLY_CACHE_POLYS];
 	if (!free_polys)	FError("mem for poly cache");
 
 	// set the linkage
@@ -341,7 +341,7 @@ free mem from the whole cache
 void cache_destroy(void)
 {
 	for (int i=0; i<num_cache_allocs; i++)
-		free(cache_allocs[i]);
+		delete [] cache_allocs[i];
 
 	num_cache_allocs = 0;
 	free_polys = NULL;

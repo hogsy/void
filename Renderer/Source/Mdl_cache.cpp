@@ -61,7 +61,7 @@ init the model cache
 ************************************************/
 void model_cache_init(void)
 {
-	model_cache = (model_cache_t*) MALLOC(sizeof(model_cache_t) * MAX_CACHED_MODELS);
+	model_cache = new model_cache_t[MAX_CACHED_MODELS];
 	if (!model_cache) FError("mem for model cache!");
 
 	used_models = 0;
