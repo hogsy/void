@@ -54,31 +54,32 @@ extern CMemManager g_memManager;
 //Debug mode
 #ifdef _DEBUG
 
-#include <crtdbg.h>
-
 #define MALLOC(size)		g_memManager.MallocDbg(size,__FILE__,__LINE__)
-#define REMALLOC(p,size)	g_memManager.ReallocDbg(p,size,__FILE__,__LINE__)
+#define REALLOC(p,size)		g_memManager.ReallocDbg(p,size,__FILE__,__LINE__)
 #define FREE(p)				g_memManager.FreeDbg(p)
 
+//standard new/delete
 inline void* operator new(uint size)
-{ 	return g_memManager.MallocDbg(size,__FILE__,__LINE__);
-}
-
-inline void* operator new[] (uint size)
 {	return g_memManager.MallocDbg(size,__FILE__,__LINE__);
 }
-
-inline void  operator delete(void* ptr)	 
+inline void  operator delete (void* ptr, const char * file, int line)
 {	g_memManager.FreeDbg(ptr);	
 }
 
-inline void  operator delete[](void* ptr)
+//Placement new/delete
+inline void* operator new(uint size, const char * file, int line)
+{	return g_memManager.MallocDbg(size,file,line);
+}
+
+inline void  operator delete (void* ptr)
 {	g_memManager.FreeDbg(ptr);	
 }
 
-#else
+#define DEBUG_NEW new(__FILE__,__LINE__)
+#define new DEBUG_NEW
 
 //Release mode
+#else
 
 #define MALLOC(size)		g_memManager.Malloc(size)
 #define REALLOC(p,size)		g_memManager.Realloc(p, size)
@@ -88,15 +89,7 @@ inline void* operator new(uint size)
 {	return g_memManager.Malloc(size);
 }
 
-inline void* operator new[] (uint size)
-{ 	return g_memManager.Malloc(size); 
-}
-
 inline void  operator delete(void* ptr)	 
-{	g_memManager.Free(ptr);	
-}
-
-inline void  operator delete[](void* ptr)
 {	g_memManager.Free(ptr);	
 }
 

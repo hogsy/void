@@ -1,3 +1,4 @@
+#include <crtdbg.h>
 #include "Com_mem.h"
 
 /*
@@ -197,11 +198,11 @@ void CMemManager::FreeDbg(void *mem)
 {
 	if(mem)
 	{	
-		if (!_CrtIsValidHeapPointer(mem))
+/*		if (!_CrtIsValidHeapPointer(mem))
 		{
-			int blah=0;
-			blah ++;
+					
 		}
+*/
 		_free_dbg(mem,_NORMAL_BLOCK);
 		m_curAllocs --;
 	}
