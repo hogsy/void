@@ -54,28 +54,7 @@ inline float INV(float p)
 	return r;
 #endif
 }
-/*
-inline float INV(const float &p)
-{
-// devvoid needs more accuracy
-#ifdef DEVVOID
-	return (1.0f/p);
-#else
-	static float two = 2.0f;
-	float r;
 
-	__asm { mov		eax,0x7F000000	  }; 
-	__asm { sub		eax,dword ptr [p] }; 
-	__asm { mov		dword ptr [r],eax }; 
-	__asm { fld		dword ptr [p]     }; 
-	__asm { fmul	dword ptr [r]     }; 
-	__asm { fsubr	[two]             }; 
-	__asm { fmul	dword ptr [r]     }; 
-	__asm { fstp	dword ptr [r]     }; 
-	return r;
-#endif
-}
-*/
 inline ulong NORM_TO_BYTE(float p)
 {
     float _n = (p) + 1.0f;
