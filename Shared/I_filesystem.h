@@ -152,7 +152,7 @@ private:
 	friend class CFileStream;
 	friend class CFileBuffer;
 
-	uint OpenFileStream(FILE * ifp, int &ifileHandle, CArchive * iarchive, 
+	uint OpenFileStream(FILE ** ifp, int &ifileHandle, CArchive * iarchive, 
 						const char *ifilename);
 
 	//Loads data from file into given buffer. return size of buffer
