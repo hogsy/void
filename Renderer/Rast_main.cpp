@@ -27,14 +27,6 @@ CRasterizer::CRasterizer()
 	mMaxIndices = mNumIndices = 0;
 	mFirstIndex = mFirstElement = 0;
 
-	for (int i=0; i<MAX_ELEMENTS; i++)
-	{
-		mVerts[i].norm[0] = -1;
-		mVerts[i].norm[1] = 0;
-		mVerts[i].norm[2] = 0;
-	}
-
-
 	mColor = 0xffffffff;
 	mShader = NULL;
 	mTexDef = NULL;

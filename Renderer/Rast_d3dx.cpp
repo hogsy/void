@@ -131,6 +131,11 @@ bool CRastD3DX::Init()
 	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION,(D3DMATRIX *)D3DXMatrixIdentity(&m_matProjection));
 
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, FALSE);
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_AMBIENT, 0x00000000);
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_COLORVERTEX, TRUE);
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_SPECULARMATERIALSOURCE, D3DMCS_COLOR1);
+
 
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CLIPPLANEENABLE, 0);
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CULLMODE, D3DCULL_NONE);
@@ -161,8 +166,10 @@ bool CRastD3DX::Init()
 
 	// get max number of lights
 	D3DDEVICEDESC7 d3dcaps;
-	m_pD3DDevice->GetCaps(&d3dcaps);
-	mLightMax = d3dcaps.dwMaxActiveLights;    
+	if (FAILED(m_pD3DDevice->GetCaps(&d3dcaps)))
+		ComPrintf("wtf\n");
+	mLightMax = d3dcaps.dwMaxActiveLights;
+	ComPrintf("%d available lights\n", mLightMax);
 
 	m_bInitialized = true;
 	return true;
@@ -800,3 +807,78 @@ void CRastD3DX::SetVidSynch(int v)
 {
 	mVidSynch = v ? true : false;
 }
+
+
+
+/*
+========
+UnLockVerts
+========
+*/
+void CRastD3DX::LightSet(bool enable)
+{
+	// dont need to do anything
+	if (!enable && !mLighting)
+		return;
+
+	if (!enable && mLighting)
+	{
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, FALSE);
+		mLighting = false;
+		return;
+	}
+
+	if (enable && !mLighting)
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, TRUE);
+
+
+//	ComPrintf("%d available lights\n", mLightMax);
+//	for (int i=0; i<mLightMax; i++)
+	for (int i=0; i<8; i++)
+	{
+		// don't have to use all available lights
+		if ((i>=g_varNumLights->ival) || (i>=mLightNum))
+			m_pD3DDevice->LightEnable(i, FALSE);
+
+		else
+		{
+			// find direction
+			vector_t diff = mLightOrigin - mLights[i].origin;
+			float dist = diff.Length();
+
+			// find color
+			vector_t color(mLights[i].color);
+			color.ColorNormalize();
+			float scale = dist / mLights[i].radius;
+			if (scale < 0) scale = 0;
+			if (scale > 1)
+			{
+				m_pD3DDevice->LightEnable(i, FALSE);
+				continue;
+			}
+			color.Scale(1.5f*(1-scale));
+
+
+			D3DLIGHT7 d3dLight;
+			memset(&d3dLight, 0, sizeof(D3DLIGHT7));
+			d3dLight.dltType = D3DLIGHT_DIRECTIONAL;
+			d3dLight.dcvDiffuse.r = color.x;
+			d3dLight.dcvDiffuse.g = color.y;
+			d3dLight.dcvDiffuse.b = color.z;
+			d3dLight.dcvSpecular.r = color.x;
+			d3dLight.dcvSpecular.g = color.y;
+			d3dLight.dcvSpecular.b = color.z;
+			d3dLight.dvDirection.x = diff.x;
+			d3dLight.dvDirection.y = diff.y;
+			d3dLight.dvDirection.z = diff.z;
+
+			m_pD3DDevice->SetLight(i, &d3dLight);
+			m_pD3DDevice->LightEnable(i, TRUE);
+		}
+	}
+
+	mLighting = true;
+}
+
+
+

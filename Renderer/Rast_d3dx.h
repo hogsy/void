@@ -60,7 +60,7 @@ public:
 	void LockVerts(void) { }
 	void UnLockVerts(void) { }
 
-	void LightSet(bool enable) { }
+	void LightSet(bool enable);
 
 
 private:
