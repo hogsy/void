@@ -1,5 +1,5 @@
-#ifndef VOID_GAME_ANIM_DEFS
-#define VOID_GAME_ANIM_DEFS
+#ifndef VOID_GAME_ANIM_SEQUENCES
+#define VOID_GAME_ANIM_SEQUENCES
 
 enum
 {
@@ -62,28 +62,6 @@ enum
 
 	DEATH3_BEGIN = 190,
 	DEATH3_END = 197,
-};
-
-/*
-================================================
-Store preset animation frames and sequences.
-Can attach a sequence to the 
-================================================
-*/
-
-struct AnimSeq
-{
-	AnimSeq(int begin, int end) : frameBegin(begin), frameEnd(end) {}
-	AnimSeq(const AnimSeq &anim) : frameBegin(anim.frameBegin) , frameEnd(anim.frameEnd) {}
-	AnimSeq & operator = (const AnimSeq &anim)
-	{
-		frameBegin = anim.frameBegin;
-		frameEnd = anim.frameEnd;
-		return *this;
-	}
-
-	int frameBegin;
-	int frameEnd;
 };
 
 #endif

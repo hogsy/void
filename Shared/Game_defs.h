@@ -150,7 +150,8 @@ struct ClCmd
 		MOVELEFT = 4,
 		MOVERIGHT = 8,
 		JUMP = 16,
-		CROUCH = 32
+		CROUCH = 32,	//move modifiers
+		WALK = 64,		//move modifiers
 	};
 
 	enum
@@ -188,9 +189,47 @@ struct ClCmd
 
 /*
 ================================================
+Maintain frame animation state
+================================================
+*/
+struct AnimState
+{
+	explicit AnimState(int frame) 
+		: frameBegin(frame), frameEnd(frame), totalFrames(0),
+		  animFrac(0.0f), currentFrame (0)	{}
+
+	AnimState(int begin, int end) 
+		: frameBegin(begin), frameEnd(end) , totalFrames(0)
+		  animFrac(0.0f), currentFrame (0)	{}
+	
+	AnimState(const AnimState &anim)
+		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
+		  animFrac(0.0f), currentFrame (0)	{}
+	
+	AnimState & operator = (const AnimSeq &anim)
+	{
+		frameBegin = anim.frameBegin;
+		frameEnd = anim.frameEnd;
+		totalFrames = anim.totalFrames;
+		currentFrame = 0;
+		animFrac = 0;
+		return *this;
+	}
+
+	int frameBegin;
+	int frameEnd;
+	
+	int	currentFrame;
+	int totalFrames;
+
+	float animFrac;
+};
+
+/*
+================================================
 Applied to SV_UPDATE and SV_CLUPDATE messages
-to indicate type of incoming data. not sure if
-this should be here
+to indicate type of incoming data. 
+FIXME : this doesn't fit in here
 ================================================
 */
 enum EClUpdateFlags
