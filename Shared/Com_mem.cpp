@@ -1,4 +1,5 @@
 #include <crtdbg.h>
+#include <new.h>
 #include "Com_mem.h"
 
 /*
@@ -12,6 +13,12 @@ CMemManager::CMemManager(const char * memfile)
 	m_numAllocs=0;
 	m_curAllocs = 0;
 	m_memAllocated=0;
+
+	_set_new_handler(HandleOutOfMemory);
+
+	//make malloc use the c++ set_new_handler
+	if(!_query_new_mode())
+		_set_new_mode(1);
 
 #ifdef _DEBUG
 	h_memfile = (HFILE*)::CreateFile(memfile,
@@ -64,7 +71,7 @@ Malloc a block
 */
 void * CMemManager::Malloc(uint size)
 {
-	if(size <=0)
+	if(size < 0)
 	{
 		ComPrintf("CMemManger::Malloc: bad count\n");
 		return 0;
@@ -93,7 +100,7 @@ void * CMemManager::Realloc(void *mem, uint size)
 {
 	void *ptr;
 
-	if(mem && size) 
+	if(mem) // && size) 
 	{
 		ptr = realloc(mem,size);
 		m_memAllocated += size;
@@ -137,7 +144,7 @@ void CMemManager::Free(void *mem )
 
 void * CMemManager::MallocDbg(uint size, const char * file, int line)
 {
-	if(size <=0)
+	if(size < 0)
 	{
 		ComPrintf("CMemManger::Malloc: bad size\n");
 		return 0;
@@ -170,12 +177,12 @@ void * CMemManager::ReallocDbg(void *mem, uint size, const char * file, int line
 {
 	void *ptr;
 
-	if(mem && size) 
+	if(mem) // && size) 
 	{
 		ptr = _realloc_dbg(mem,size,_NORMAL_BLOCK,file,line);
 		m_memAllocated += size;
 	}
-	else if(size) 
+	else  if(size) 
 	{
 		ptr = _malloc_dbg(size,_NORMAL_BLOCK,file,line);
 		m_numAllocs++;
@@ -198,11 +205,6 @@ void CMemManager::FreeDbg(void *mem)
 {
 	if(mem)
 	{	
-/*		if (!_CrtIsValidHeapPointer(mem))
-		{
-					
-		}
-*/
 		_free_dbg(mem,_NORMAL_BLOCK);
 		m_curAllocs --;
 	}

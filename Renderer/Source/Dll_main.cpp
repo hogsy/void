@@ -101,6 +101,18 @@ const char * GetCurPath()
 
 
 /*
+======================================
+Handle out of mem conditions
+======================================
+*/
+int HandleOutOfMemory(size_t size)
+{
+	g_pVoidExp->SystemError("Renderer: Out of memory");
+	return 0;
+}
+
+
+/*
 =======================================
 local Error and FATAL error funcs
 =======================================

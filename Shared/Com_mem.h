@@ -3,6 +3,15 @@
 
 #include "Com_defs.h"
 
+/*
+======================================
+Must be defined in module to handle
+out of memory conditions
+======================================
+*/
+int HandleOutOfMemory(size_t size);
+
+
 /*/
 ======================================================================================
 Every module includes this

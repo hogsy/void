@@ -19,6 +19,10 @@ struct I_Void
 	virtual float & GetFrameTime()=0;
 	virtual const char * GetCurPath()=0;
 
+	//Tell the Main application that the given module died so that
+	//it can cleanly shutdown everything.
+	virtual void SystemError(const char *message)=0;
+
 	//Interfaces
 	I_Console     * console;
 	I_HunkManager * hunkManager;

@@ -10,6 +10,9 @@ CMemManager		g_memManager("mem_fs.log");
 
 I_HunkManager * g_pHunkManager = 0;
 I_Console     * g_pConsole = 0;
+
+static I_Void * g_pVoid = 0;
+
 CFileSystem	  *	g_pFileSystem = 0;
 
 /*
@@ -20,6 +23,7 @@ copy pointer to console for cvar/printing functions
 */
 FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp)
 {
+	g_pVoid = vexp;
 	g_pHunkManager = vexp->hunkManager;
 	g_pConsole    = vexp->console;
 	
@@ -40,6 +44,7 @@ FILESYSTEM_API void FILESYSTEM_Free()
 		delete g_pFileSystem;
 		g_pFileSystem = 0;
 	}
+	g_pVoid = 0;
 	g_pConsole = 0;
 	g_pHunkManager = 0;
 }
@@ -59,6 +64,17 @@ void ComPrintf(const char* text, ...)
 	va_end(args);
 
 	g_pConsole->ComPrint(buff);
+}
+
+/*
+======================================
+Com mem hancler
+======================================
+*/
+int HandleOutOfMemory(size_t size)
+{	
+	g_pVoid->SystemError("FileSystem: Out of Memory");
+	return 0;
 }
 
 
