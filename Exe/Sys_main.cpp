@@ -513,7 +513,7 @@ void CVoid::WriteConfig(const char *config)
 Handle Commands
 ==========================================
 */
-void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CVoid::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
@@ -529,7 +529,7 @@ void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		}
 	case CMD_WRITECONFIG:
 		{
-			WriteConfig(szArgs[1]);
+			WriteConfig(parms.StringTok(1));
 			break;
 		}
 	}

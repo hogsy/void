@@ -42,7 +42,7 @@ public:
 	int		GetDeviceState() const;
 
 	//CVar Handler
-	bool	HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 private:
 	enum
@@ -89,7 +89,7 @@ private:
 	void	Update_DIImmediate();
 	void	Update_Win32();
 
-	bool CKBMode(const CVar * var, int argc, char** argv);
+	bool CKBMode(const CVar * cvar, const CParms &parms);
 
 	friend LRESULT CALLBACK VoidInput::Win32_KeyboardProc(int code,       // hook code
 											   WPARAM wParam,  // virtual-key code

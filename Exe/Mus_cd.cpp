@@ -526,12 +526,12 @@ void CMusCDAudio::HandleMCIMsg(uint &wParam, long &lParam)
 Command Handler
 ==========================================
 */
-void CMusCDAudio::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CMusCDAudio::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case CD_PLAY:
-		Play(szArgs[1]);
+		Play(parms.StringTok(1));
 		break;
 	case CD_PAUSE:
 		SetPause(true);

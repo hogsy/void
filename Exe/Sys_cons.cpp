@@ -1,6 +1,5 @@
 #include "Sys_cons.h"
 #include "Com_util.h"
-#include "Com_parms.h"
 
 #include <direct.h>
 
@@ -15,9 +14,9 @@ namespace
 		CMD_CMDLIST  = 2,
 		CMD_TEST	 = 3
 	};
-
 	const int  CON_MAXARGSIZE  = 80;
 }
+char CParms::szParmBuffer[1024];
 
 //======================================================================================
 
@@ -26,18 +25,12 @@ namespace
 Constructor
 ======================================
 */ 
-CConsole::CConsole()
+CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
 {
 	m_itCmd = 0;
 
 	m_pflog = NULL;
 	m_prCons = NULL;
-
-	m_szargv = new char * [CVarBase::CVAR_MAXARGS];
-	for(int i=0;i<CVarBase::CVAR_MAXARGS;i++)
-	{
-		m_szargv[i] = new char[CON_MAXARGSIZE];;
-	}
 
 	//open logfile
 	char debugfilename[COM_MAXPATH];
@@ -76,10 +69,6 @@ CConsole::~CConsole()
 	CloseHandle(m_hOut);
 	FreeConsole();
 #endif
-
-	for(int i=0;i<CVarBase::CVAR_MAXARGS;i++)
-			delete [] m_szargv[i]; 
-	delete [] m_szargv;
 
 	m_prCons = 0;
 }
@@ -150,16 +139,10 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					m_cmdBuffer.push_back(std::string(m_conString));
 					m_itCmd = m_cmdBuffer.end();
 				}
+				
 				//print out the line
-				ComPrintf("%s\n",m_conString.c_str());
-				nargc = Util::BufParse(m_conString.c_str(), m_szargv);
-
-				//parse the string and try to exec it
-				//play a sound if it fails ?
-				if(Exec(nargc,m_szargv))
-				{
-				}
-			
+				ExecString(m_conString.c_str());
+	
 				//reset the buffer
 				m_conString.erase();
 				break;
@@ -250,10 +233,8 @@ Exec a command line in the console
 */
 void CConsole::ExecCommand(CCommand * cmd, const char * cmdString)
 {
-	int nargc = Util::BufParse(cmdString, m_szargv);
-
-	cmd->handler->HandleCommand(cmd->id, nargc, m_szargv);
-	m_conString.erase();
+	m_parms = cmdString;
+	cmd->handler->HandleCommand(cmd->id,m_parms);
 }
 
 /*
@@ -262,7 +243,7 @@ See if the first arg matches any funcs or commands.
 exec func if it does.
 ==========================================
 */
-bool CConsole::Exec(int argc, char** argv) 
+/*bool CConsole::Exec(int argc, char** argv) 
 {
 	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
 	{
@@ -306,7 +287,7 @@ bool CConsole::Exec(int argc, char** argv)
 	}
 	return false;
 }
-
+*/
 
 /*
 =======================================
@@ -315,13 +296,63 @@ bool CConsole::Exec(int argc, char** argv)
 */
 void CConsole::ExecString(const char *string) //const
 {
-	int nargc = Util::BufParse(string, m_szargv);
+	m_parms = string;
+	const char * szfirstArg = m_parms.StringTok(0);
+
+	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
+	{
+		if(strcmp(itcmd->name, szfirstArg)==0)
+		{	itcmd->handler->HandleCommand(itcmd->id,m_parms);
+			return;
+		}
+	}
+
+	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	{
+		if(!strcmp((*it)->name,szfirstArg))
+		{
+			//only exec'ed IF function returns true
+			if((!(*it)->handler) || (*it)->handler->HandleCVar((*it),m_parms))
+			{
+				int numtokens = 0;
+				if(numtokens = m_parms.NumTokens() > 1)
+				{
+					const char * argVal = m_parms.StringTok(1);
+					
+					if((*it)->type != CVarBase::CVAR_STRING)
+						(*it)->Set(argVal);
+					else
+					{
+						char newstr[80];
+						const char * arg=0;
+						strcpy(newstr,argVal);
+				
+						for(int i=2,len=0;i<numtokens;i++)
+						{
+							arg = m_parms.StringTok(i);
+							len += strlen(arg+1);
+							if(len >= 80)
+								break;
+							strcat(newstr," ");
+							strcat(newstr,arg);
+						}
+						(*it)->Set(newstr);
+					}
+				}
+				ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
+			}
+			return;
+		}
+	}
+	ComPrintf("%s\n",string);
+/*	int nargc = Util::BufParse(string, m_szargv);
 
 	if((nargc) && !Exec(nargc,m_szargv))
 	{
 		ComPrintf("%s\n",string);
 	}
 	m_conString.erase();
+*/
 }
 
 /*
@@ -378,18 +409,18 @@ void CConsole::ExecConfig(const char *filename)
 Handle Console command
 ==========================================
 */
-void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CConsole::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case CMD_CVARLIST:
-		CVarlist(numArgs,szArgs);
+		CVarlist(parms);
 		break;
 	case CMD_CMDLIST:
-		CCmdList(numArgs,szArgs);
+		CCmdList(parms);
 		break;
 	case CMD_TEST:
-		CFunctest(numArgs,szArgs);
+		CFunctest(parms);
 		break;
 	}
 }
@@ -439,19 +470,20 @@ void CConsole::SetVisible(bool down)
 Prints out all the CVars and their values
 ======================================
 */
-void CConsole::CVarlist(int argc,  char** argv)
+void CConsole::CVarlist(const CParms &parms)
 {
 	ComPrintf("Console Variable Listing\n");
 	ComPrintf("========================\n");
 
 	CVarList::iterator it;
 	
-	if(argc==2)
+	if(parms.NumTokens() >=2)
 	{
-		int len= strlen(argv[1]);
+		const char * arg = parms.StringTok(1);
+		int len= strlen(arg);
 		for(it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 		{
-			if(strncmp((*it)->name,argv[1],len)==0)
+			if(strncmp((*it)->name,arg,len)==0)
 				ComPrintf("\"%s\" is \"%s\"\n",(*it)->name,(*it)->string);
 		}
 	}
@@ -468,19 +500,20 @@ void CConsole::CVarlist(int argc,  char** argv)
 Prints out all the CVars and their values
 ======================================
 */
-void CConsole::CCmdList(int argc,  char** argv)
+void CConsole::CCmdList(const CParms &parms)
 {
 	ComPrintf("Console Command Listing\n");
 	ComPrintf("========================\n");
 
 	CmdList::iterator it;
 
-	if(argc==2)
+	if(parms.NumTokens() >=2)
 	{
-		int len= strlen(argv[1]);
+		const char * arg = parms.StringTok(1);
+		int len= strlen(arg);
 		for(it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
 		{
-			if(!strncmp(it->name,argv[1],len))
+			if(!strncmp(it->name,arg,len))
 				ComPrintf("%s\n",it->name);
 		}
 	}
@@ -496,9 +529,9 @@ void CConsole::CCmdList(int argc,  char** argv)
 Util test func
 =====================================
 */
-void CConsole::CFunctest(int argc, char** argv)
+void CConsole::CFunctest(const CParms &parms)
 {
-	if(argc > 1 && argv[1])
+/*	if(argc > 1 && argv[1])
 	{
 		CParms blah(20);
 		const char * tok=0;
@@ -527,8 +560,8 @@ void CConsole::CFunctest(int argc, char** argv)
 			ComPrintf("%s\n",tok);
 			i++;
 		}
-
 	}
+*/
 }
 
 

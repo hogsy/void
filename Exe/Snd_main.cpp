@@ -233,15 +233,15 @@ void CSoundManager::Play(hSnd index, int channel)
 Handle Commands
 ==========================================
 */
-void CSoundManager::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case CMD_PLAY:
-		SPlay(numArgs,szArgs);
+		SPlay(parms.StringTok(1));
 		break;
 	case CMD_STOP:
-		SStop(numArgs,szArgs);
+		SStop(parms.IntTok(1));
 		break;
 	case CMD_INFO:
 		SPrintInfo();
@@ -257,13 +257,13 @@ void CSoundManager::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 Play a sound
 ==========================================
 */
-void CSoundManager::SPlay(int numArgs, char ** szArgs)
+void CSoundManager::SPlay(const char * arg)
 {
-	if(numArgs > 1 && szArgs[1])
+	if(arg)
 	{
 		char wavfile[COM_MAXPATH];
 
-		strcpy(wavfile,szArgs[1]);
+		strcpy(wavfile,arg);
 		Util::SetDefaultExtension(wavfile,"wav");
 
 		//Run through the buffers to check if it has been registered
@@ -291,24 +291,17 @@ void CSoundManager::SPlay(int numArgs, char ** szArgs)
 Stop the given channel
 ==========================================
 */
-void CSoundManager::SStop(int numArgs, char ** szArgs)
+void CSoundManager::SStop(int channel)
 {
-	int index = 0;
-	if(szArgs[1] && sscanf(szArgs[1],"%d",&index))
+	if(channel >= 0)
 	{
-		if(index >= 0 && index < MAX_CHANNELS)
+		if(m_Channels[channel].IsPlaying())
 		{
-			if(m_Channels[index].IsPlaying())
-			{
-				m_Channels[index].Stop();
-				m_Channels[index].Destroy();
-				m_channelsInUse--;
-				return;
-			}
-
+			m_Channels[channel].Stop();
+			m_Channels[channel].Destroy();
+			m_channelsInUse--;
+			return;
 		}
-		ComPrintf("Bad channel index\n");
-		return;
 	}
 	ComPrintf("Usage : sstop <channel num>\n");
 }
@@ -385,19 +378,21 @@ bool CSoundManager::SPrintInfo()
 Set volume
 ==========================================
 */
-bool CSoundManager::SVolume(int numArgs, char ** szArgs)
+bool CSoundManager::SVolume(const CParms &parms)
 {
 	float fvol = 0.0f;
 	long  lvol = 0;
-	if(numArgs==1)
+	int numParms = parms.NumTokens();
+	if(numParms==1)
 	{
 		lvol = m_pPrimary->GetVolume();
 		fvol = (5000 - lvol)/500;
 		ComPrintf("Volume : %.2f (%d)\n", fvol,lvol);
 		return false;
 	}
-	else if(szArgs[1] && sscanf(szArgs[1],"%f",&fvol))
+	else if(numParms > 1)
 	{
+		fvol = parms.FloatTok(1);
 		if(fvol < 0.0f || fvol > 10.0f)
 		{
 			ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
@@ -420,10 +415,10 @@ bool CSoundManager::SVolume(int numArgs, char ** szArgs)
 Handle CVar changes
 ==========================================
 */
-bool CSoundManager::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == (CVarBase *)&m_cVolume)
-		return SVolume(numArgs,szArgs);
+		return SVolume(parms);
 	return false;
 }
 

@@ -46,7 +46,7 @@ public:
 	void Resize(int x, int y, int w, int h);
 
 	//CVar Handler
-	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 	I_InputFocusManager * GetFocusManager();
 
@@ -57,7 +57,7 @@ private:
 	VoidInput::CKeyboard	* m_pKb;
 
 	CVar m_pVarExclusive;
-	bool CSetExclusive(const CVar * var, int argc, char** argv);	
+	bool CSetExclusive(const CVar * var, const CParms &parms);
 };
 
 #endif

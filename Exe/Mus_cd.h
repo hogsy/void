@@ -18,7 +18,7 @@ public:
 	bool Shutdown();
 
 	void HandleMCIMsg(uint &wParam, long &lParam);
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 	
 private:
 

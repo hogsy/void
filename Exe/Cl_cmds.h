@@ -43,10 +43,10 @@ the function they are bound to
 */
 struct ClientKey
 {
-	ClientKey()	{ szCommand = 0; pCmd = 0;	}
-	~ClientKey(){ if(szCommand)	delete [] szCommand; pCmd = 0; }
+	ClientKey()	{ pCmd = 0;	szCommand[0] = 0;}
+	~ClientKey(){ pCmd = 0; } 
 	
-	char *	   szCommand;
+	char 	   szCommand[80];
 	CCommand * pCmd;
 };
 
@@ -126,8 +126,8 @@ public:
 						   const float &iy,
 					       const float &iz);
 
-	void BindFuncToKey(int argc, char** argv);
-	void Unbind(int argc, char** argv);
+	void BindFuncToKey(const CParms &parms);
+	void Unbind(const CParms &parms);
 	void Unbindall();
 	void BindList() const;
 
@@ -137,6 +137,8 @@ private:
 
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
+
+	CParms		m_Parms;
 
 	CClient   * m_pClient;
 

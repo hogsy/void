@@ -256,10 +256,10 @@ I_InputFocusManager * CInput::GetFocusManager() { return m_pStateManager; }
 //========================================================================================
 //========================================================================================
 
-bool CInput::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == &m_pVarExclusive)
-		return CSetExclusive((CVar*)cvar,numArgs,szArgs);
+		return CSetExclusive((CVar*)cvar,parms);
 	return false;
 }
 
@@ -269,12 +269,12 @@ Console Loopback Func
 Set exclusive access
 ================================
 */
-bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
+bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 {
-	if(argc == 2 && argv[1])
+	if(parms.NumTokens() > 1)
 	{
-		float temp=0;
-		if(argv[1] && sscanf(argv[1],"%f",&temp))
+		int temp= parms.IntTok(1);
+		if(temp >= 0)
 		{
 			if(temp)
 			{

@@ -38,8 +38,8 @@ public:
 
 	void HandleMCIMsg(uint &wParam, long &lParam);
 
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
-	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 private:
 
@@ -47,10 +47,10 @@ private:
 
 	//playback volume
 	CVar m_cVolume;		
-	bool Volume(const CVar * var, int argc, char** argv);
+	bool Volume(const CVar * var, const CParms &parms);
 
 	//Command Handling
-	void Play(int argc, char** argv);
+	void Play(const char* arg);
 	void Pause();
 	void Stop();
 	void Resume();

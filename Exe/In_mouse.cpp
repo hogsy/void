@@ -691,18 +691,17 @@ Console Variable validation functions
 The CVars are updated with the proposed value if the function allows it
 ========================================================================================
 */
-
 //CVar Handler
-bool CMouse::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CMouse::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == &m_pVarXSens)
-		return CXSens((CVar*)cvar,numArgs,szArgs);
+		return CXSens((CVar*)cvar,parms);
 	else if(cvar == &m_pVarYSens)
-		return CYSens((CVar*)cvar,numArgs,szArgs);
+		return CYSens((CVar*)cvar,parms);
 	else if(cvar == &m_pVarSens)
-		return CSens((CVar*)cvar,numArgs,szArgs);
+		return CSens((CVar*)cvar,parms);
 	else if(cvar == &m_pVarMode)
-		return CMouseMode((CVar*)cvar,numArgs,szArgs);
+		return CMouseMode((CVar*)cvar,parms);
 	return false;
 }
 
@@ -714,14 +713,14 @@ DI_Immediate
 Win32 update
 =====================================
 */
-bool CMouse::CMouseMode(const CVar * var, int argc,char** argv)
+bool CMouse::CMouseMode(const CVar * var, const CParms &parms)
 {
-	if(argc >= 2 && argv[1])
+	if(parms.NumTokens() > 1)
 	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
+		int mode= parms.IntTok(1);
+		if(mode >= 0)
 		{
-			if(temp < CMouse::M_DIIMMEDIATE || temp > CMouse::M_WIN32)
+			if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
 			{
 				ComPrintf("Invalid Mouse Mode specified\n");
 				return false;
@@ -731,13 +730,13 @@ bool CMouse::CMouseMode(const CVar * var, int argc,char** argv)
 			//even before the mouse actually inits
 			if(m_eMouseState == DEVNONE)
 			{
-				m_eMouseMode = (CMouse::EMouseMode)temp;
+				m_eMouseMode = (CMouse::EMouseMode)mode;
 				return true;
 			}
 
-			if(FAILED(Init(m_bExclusive,(CMouse::EMouseMode)temp)))
+			if(FAILED(Init(m_bExclusive,(CMouse::EMouseMode)mode)))
 			{
-				ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",temp);
+				ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",mode);
 				return false;
 			}
 			return true;
@@ -770,17 +769,14 @@ bool CMouse::CMouseMode(const CVar * var, int argc,char** argv)
 Console Func - Sets X-axis Sensitivity
 ======================================
 */
-bool CMouse::CXSens(const CVar * var, int argc,char** argv)
+bool CMouse::CXSens(const CVar * var, const CParms &parms)
 {
-	if(argc == 2 && argv[1])
+	if(parms.NumTokens())
 	{
-		float temp=0.0;
-		if(argv[1] && sscanf(argv[1],"%f",&temp))
-		{
-			if(temp > 0.0 && temp < 30.0)
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
 				return true;
-			ComPrintf("CMouse::CXSens:Invalid Value entered");
-		}
+		ComPrintf("CMouse::CXSens:Invalid Value entered");
 	}
 	ComPrintf("X-axis Sensitivity: %.2f\n", m_pVarXSens.fval);
 	return false;
@@ -791,17 +787,14 @@ bool CMouse::CXSens(const CVar * var, int argc,char** argv)
 Console Func - Sets Y-axis Sensitivity
 ======================================
 */
-bool CMouse::CYSens(const CVar * var, int argc,char** argv)
+bool CMouse::CYSens(const CVar * var, const CParms &parms)
 {
-	if(argc == 2 && argv[1])
+	if(parms.NumTokens())
 	{
-		float temp=0.0;
-		if(argv[1] && sscanf(argv[1],"%f",&temp))
-		{
-			if(temp > 0.0 && temp < 30.0)
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
 				return true;
-			ComPrintf("CMouse::CYSens:Invalid Value entered");
-		}
+		ComPrintf("CMouse::CYSens:Invalid Value entered");
 	}
 	ComPrintf("Y-axis Sensitivity: %.2f\n", m_pVarYSens.fval);
 	return false;
@@ -812,17 +805,14 @@ bool CMouse::CYSens(const CVar * var, int argc,char** argv)
 Console Func - Sets master Sensitivity
 ======================================
 */
-bool CMouse::CSens(const CVar * var, int argc, char** argv)
+bool CMouse::CSens(const CVar * var, const CParms &parms)
 {
-	if(argc == 2 && argv[1])
+	if(parms.NumTokens())
 	{
-		float temp=0.0;
-		if(argv[1] && sscanf(argv[1],"%f",&temp))
-		{
-			if(temp > 0.0 && temp < 30.0)
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
 				return true;
-			ComPrintf("CMouse::CSens:Invalid Value entered");
-		}
+		ComPrintf("CMouse::CSens:Invalid Value entered");
 	}
 	ComPrintf("Mouse Sensitivity: %.2f\n", m_pVarSens.fval);
 	return false;

@@ -38,7 +38,7 @@ public:
 
 	//Needed by the Win32 handler to calc center co-drds
 	void	Resize(int x, int y, int w, int h);
-	bool	HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
 	EDeviceState 
 			GetDeviceState() const; 
@@ -87,10 +87,10 @@ private:
 
 	//=============================================
 	
-	bool	CXSens(const CVar * var, int argc, char** argv);
-	bool	CYSens(const CVar * var, int argc, char** argv);
-	bool	CSens(const CVar *var, int argc, char** argv);
-	bool	CMouseMode(const CVar *var, int argc, char** argv);
+	bool	CXSens(const CVar * var, const CParms &parms);
+	bool	CYSens(const CVar * var, const CParms &parms);
+	bool	CSens(const CVar *var, const CParms &parms);
+	bool	CMouseMode(const CVar *var, const CParms &parms);
 
 	void	Update_DIBuffered();
 	void	Update_DIImmediate();	

@@ -80,7 +80,7 @@ public:
 
 	//==============================================================
 	//Command Handler
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 	//==============================================================
 
@@ -115,7 +115,7 @@ private:
 	
 	FILE  *		m_pflog;		//log file
 
-	char **		m_szargv;		//console arguments	
+	CParms		m_parms;
 	
 	std::string	m_conString;	//Current String in Console
 	StringList	m_cmdBuffer;	//Fixed List of previously entered strings
@@ -133,10 +133,10 @@ private:
 
 	//==============================================================
 
-	bool Exec	  (int argc, char** argv);	
-	void CVarlist (int argc, char** argv);
-	void CCmdList (int argc, char** argv);
-	void CFunctest(int argc, char** argv);
+//	bool Exec	  (int argc, char** argv);	
+	void CVarlist (const CParms &parms);
+	void CCmdList (const CParms &parms);
+	void CFunctest(const CParms &parms);
 
 };
 

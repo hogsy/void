@@ -12,7 +12,7 @@ using namespace VoidClient;
 Constructor/Destructor
 ==========================================
 */
-CClientCmdHandler::CClientCmdHandler(CClient * pclient)
+CClientCmdHandler::CClientCmdHandler(CClient * pclient) : m_Parms(80)
 {
 	m_pClient = pclient;
 
@@ -57,7 +57,12 @@ void CClientCmdHandler::RunCommands()
 	{
 		if(m_cmdBuffer[i])
 		{
-			((CConsole*)System::GetConsole())->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
+
+			m_Parms = m_cmdBuffer[i]->szCommand;
+			m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
+			//m_parms = cmdString;
+			//cmd->handler->HandleCommand(cmd->id,m_parms);
+//			((CConsole*)System::GetConsole())->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
 			if(m_cmdBuffer[i]->szCommand[0] != '+')
 				m_cmdBuffer[i] = 0;
 		}
@@ -72,7 +77,7 @@ Handle Key Event
 void CClientCmdHandler::HandleKeyEvent(const KeyEvent &kevent)
 {
 	//check if there is a command bound to that key
-	if(m_cmdKeys[(kevent.id)].szCommand)
+	if(m_cmdKeys[(kevent.id)].szCommand[0])
 	{
 		//if its a keydown event
 		if(kevent.state == BUTTONDOWN)
@@ -110,9 +115,10 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 Bind a command to a key
 ==========================================
 */
-void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
+void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 {
 	//no arguments
+	int argc = parms.NumTokens();
 	if(argc==1)
 	{
 		ComPrintf("Usage : bind <key> <command>\n");
@@ -120,14 +126,15 @@ void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 	}
 
 	byte keynum= 0;
+	const char * arg = parms.StringTok(1);
 
 	//Check the name of the key being bound to
-	if(strlen(argv[1]) > 1)
+	if(strlen(arg) > 1)
 	{
 		//Find Keyname in table if its bigger than a char
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,argv[1]))
+			if(!stricmp(keytable[x].key,arg))
 			{
 				keynum = keytable[x].val;
 				break;
@@ -137,67 +144,38 @@ void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 	else
 	{
 		//make sure that the keynum is valid
-		if((argv[1][0] <= 0) || (argv[1][0] > 255))
+		if((arg[0] <= 0) || (arg[0] > 255))
 		{
-			ComPrintf("Bind : Error %s(%d) is not a valid key.\n",argv[1],keynum);
+			ComPrintf("Bind : Error %s(%d) is not a valid key.\n",arg,keynum);
 			return;
 		}
-		keynum = argv[1][0];
+		keynum = arg[0];
 	}
 		
 	//Only two args, just show binding for the key and return
 	if(argc == 2)
 	{
-		if(m_cmdKeys[keynum].szCommand && m_cmdKeys[keynum].pCmd)
-			ComPrintf("\"%s\" = \"%s\"\n", argv[1], m_cmdKeys[keynum].szCommand);
-		else
-			ComPrintf("\"%s\" = \"\"\n", argv[1]);
+		ComPrintf("\"%s\" = \"%s\"\n", arg, m_cmdKeys[keynum].szCommand);
 		return;
 	}
 
-	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(argv[2]);
+	arg = parms.StringTok(2);
+	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(arg);
 	if(m_cmdKeys[keynum].pCmd < 0)
 	{
-		ComPrintf("Bind : %s is not a valid command\n",argv[2]);
+		ComPrintf("Bind : %s is not a valid command\n",arg);
 		return;
 	}
-	
-	//If there are more arguments then just the functions name
-	//then they will be used as function paramters
-	
-	//Get their length and allocate space
-	int parmlen = 1;
 
-	for(int i=2;i<argc;i++)
-		parmlen += strlen(argv[i]);
+	strcpy(m_cmdKeys[keynum].szCommand, arg);
 
-	if(m_cmdKeys[keynum].szCommand)
-		delete [] m_cmdKeys[keynum].szCommand;
-	m_cmdKeys[keynum].szCommand = new char[parmlen];
-
-	//Copy the parms into ONE string
-	char *p= m_cmdKeys[keynum].szCommand;
-	for(int x=2;x<=argc;x++)
+	//copy token 3 and up to the command
+	for(int i=3; i< argc; i++)
 	{
-		char *c = argv[x];
-		while(*c && * c!='\0')
-		{
-			*p=*c;
-			c++;
-			p++;
-		}
-		//no more strings, break
-		if((x+1)>=argc)
-		{
-			*p = '\0';
-			break;
-		}
-		//add a space
-		*p = ' ';
-		p++;
+		strcat(m_cmdKeys[keynum].szCommand," ");
+		strcat(m_cmdKeys[keynum].szCommand, parms.StringTok(i));
 	}
-
-	ComPrintf("\"%s\"(%d) = \"%s\"\n",argv[1],keynum, m_cmdKeys[keynum].szCommand);
+	ComPrintf("\"%s\"(%d) = \"%s\"\n",parms.StringTok(1),keynum, m_cmdKeys[keynum].szCommand);
 }
 
 /*
@@ -205,22 +183,23 @@ void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 Unbind a key
 ==========================================
 */
-void CClientCmdHandler::Unbind(int argc, char** argv)
+void CClientCmdHandler::Unbind(const CParms &parms)
 {
-	if(argc <2)
+	if(parms.NumTokens() <2)
 	{
 		ComPrintf("Usage - <unbind> <keyname>\n");
 		return;
 	}
 
 	byte keynum= 0;
+	const char * arg = parms.StringTok(1);
 
 	//not a special KEY
-	if(strlen(argv[1]) > 1)
+	if(strlen(arg) > 1)
 	{
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,argv[1]))
+			if(!stricmp(keytable[x].key,arg))
 			{
 				keynum = keytable[x].val;
 				break;
@@ -229,11 +208,11 @@ void CClientCmdHandler::Unbind(int argc, char** argv)
 	}
 	else
 	{
-		keynum = argv[1][0];
+		keynum = arg[0];
 		//make sure that the key is valid
 		if((keynum == 0) || (keynum > 255))
 		{
-			ComPrintf("Unbind : Error %s(%d) is not a valid key\n",argv[1],keynum);
+			ComPrintf("Unbind : Error %s(%d) is not a valid key\n",arg,keynum);
 			return;
 		}
 	}
@@ -241,10 +220,10 @@ void CClientCmdHandler::Unbind(int argc, char** argv)
 	if(m_cmdKeys[keynum].szCommand && m_cmdKeys[keynum].pCmd)
 	{
 		m_cmdKeys[keynum].pCmd = 0;
-		delete [] m_cmdKeys[keynum].szCommand;
-		m_cmdKeys[keynum].szCommand=0;
+//		delete [] m_cmdKeys[keynum].szCommand;
+		m_cmdKeys[keynum].szCommand[0] = 0;
 	}
-	ComPrintf("\"%s\" = \"\"\n",argv[1]);
+	ComPrintf("\"%s\" = \"\"\n",arg);
 }
 
 /*
@@ -294,8 +273,7 @@ void CClientCmdHandler::Unbindall()
 	{
 		if(m_cmdKeys[i].szCommand && m_cmdKeys[i].pCmd)
 		{
-			delete [] m_cmdKeys[i].szCommand;
-			m_cmdKeys[i].szCommand=0;
+			m_cmdKeys[i].szCommand[0]=0;
 			m_cmdKeys[i].pCmd = 0;
 		}
 	}

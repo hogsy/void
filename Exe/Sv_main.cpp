@@ -407,7 +407,7 @@ void CServer::RunFrame()
 Handle CVars
 ==========================================
 */
-bool CServer::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	return false;
 }
@@ -417,12 +417,12 @@ bool CServer::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 Handle Commands
 ==========================================
 */
-void CServer::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case CMD_MAP:
-		LoadWorld(szArgs[1]);
+		LoadWorld(parms.StringTok(1));
 		break;
 	case CMD_KILLSERVER:
 		Shutdown();

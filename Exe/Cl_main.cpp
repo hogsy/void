@@ -408,8 +408,9 @@ Talk message sent to server if
 we are connected
 =====================================
 */
-void CClient::Talk(int argc,char **argv)
+void CClient::Talk(const char *msg)
 {
+#if 0
 	if((m_ingame==true) &&  (argc > 1))
 	{
 		char message[80];
@@ -447,6 +448,7 @@ void CClient::Talk(int argc,char **argv)
 //		ComPrintf("%s:%s\n",g_pClient->m_clname->string,message);
 		return;
 	}
+#endif
 }
 
 //======================================================================================
@@ -460,7 +462,7 @@ void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
 Handle Registered Commands
 ==========================================
 */
-void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
@@ -489,27 +491,27 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		RotateDown();
 		break;
 	case CMD_BIND:
-		m_pCmdHandler->BindFuncToKey(numArgs,szArgs);
+		m_pCmdHandler->BindFuncToKey(parms);
 		break;
 	case CMD_BINDLIST:
 		m_pCmdHandler->BindList();
 		break;
 	case CMD_UNBIND:
-		m_pCmdHandler->Unbind(numArgs,szArgs);
+		m_pCmdHandler->Unbind(parms);
 		break;
 	case CMD_UNBINDALL:
 		m_pCmdHandler->Unbindall();
 		break;
 	case CMD_CAM:
-		CamPath(numArgs,szArgs);
+		CamPath();
 		break;
 	case CMD_CONNECT:
-		ConnectTo(szArgs[1]);
+		ConnectTo(parms.StringTok(1));
 		break;
 	case CMD_DISCONNECT:
 		Disconnect();
 	case CMD_TALK:
-		Talk(numArgs,szArgs);
+		Talk(parms.StringTok(1));
 		break;
 	}
 }
@@ -519,7 +521,7 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 Validate/Handle any CVAR changes
 ==========================================
 */
-bool CClient::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	return false;
 }

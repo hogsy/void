@@ -1,6 +1,9 @@
 EXE
 ==============================================================
 
+//	virtual bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)=0;
+//	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
+
 //soon
 add 3d sound buffers and a listener
 CVar/Command/CmdLine Parms class

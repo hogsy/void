@@ -35,7 +35,7 @@ public:
 	bool Init();							//Init subsystems
 	void RunFrame();						//Game Loop
 
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 	void Error(char *error, ...);
 

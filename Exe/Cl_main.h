@@ -39,10 +39,10 @@ public:
 	bool UnloadWorld();
 
 	//Command Handler Interface
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 	//CVar Handler Interface
-	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
 	void SetInputState(bool on);
 	void WriteBindTable(FILE *fp);
@@ -65,8 +65,8 @@ private:
 	void RotateUp(float val=5.0);
 	void RotateDown(float val=5.0);
 
-	void CamPath(int argc,char **argv);
-	void Talk(int argc,char **argv);
+	void CamPath();
+	void Talk(const char * msg);
 
 	//==================================================
 	//Private Member funcs

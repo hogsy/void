@@ -85,12 +85,12 @@ void CMusic::Shutdown()
 Handle one of the registered commands
 ==========================================
 */
-void CMusic::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CMusic::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case MUS_PLAY:
-		Play(numArgs,szArgs);
+		Play(parms.StringTok(1));
 		break;
 	case MUS_STOP:
 		Stop();
@@ -112,21 +112,21 @@ void CMusic::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 Handle Chantes to CVars
 ==========================================
 */
-bool CMusic::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CMusic::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == &m_cVolume)
-		return Volume(&m_cVolume,numArgs,szArgs);
+		return Volume(&m_cVolume,parms);
 	return false;
 }
 
 //======================================================================================
 //======================================================================================
 
-void CMusic::Play(int argc, char** argv)
+void CMusic::Play(const char* arg)
 {
-	if(argc > 1 && argv[1])
+/*	if(argc > 1 && argv[1])
 	{
-/*		char	filename[COM_MAXPATH];
+		char	filename[COM_MAXPATH];
 		char	ext[4];		//extension
 
 		memset(filename,0,COM_MAXPATH);
@@ -159,8 +159,8 @@ void CMusic::Play(int argc, char** argv)
 			m_curDriver->Play(filename);
 		}
 #endif
-*/	
 	}
+*/
 }
 
 void CMusic::Pause()
@@ -182,7 +182,7 @@ void CMusic::PrintStats()
 //======================================================================================
 //======================================================================================
 
-bool CMusic::Volume(const CVar * var, int argc, char** argv)
+bool CMusic::Volume(const CVar * var, const CParms &parms)
 {	return true;
 }
 

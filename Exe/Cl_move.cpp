@@ -335,7 +335,7 @@ void CClient:: RotateDown(float val)
 follow a camera path
 ===========
 */
-void CClient::CamPath(int argc,char **argv)
+void CClient::CamPath()
 {
 	// find the head path node
 	for (int ent=0; ent<g_pWorld->nentities; ent++)

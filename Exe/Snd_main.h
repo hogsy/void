@@ -46,10 +46,10 @@ public:
 	void Play(hSnd index, int channel= VoidSound::CHAN_AUTO);
 
 	//CVar Handler
-	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 	//Cmd Handler
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 private:
 
@@ -66,13 +66,13 @@ private:
 	CVar m_cVolume;			//Master Volume 
 	CVar m_cHighQuality;	//16bit buffer if on.
 
-	bool SVolume(int numArgs, char ** szArgs);
+	bool SVolume(const CParms &parms);
 
 	//==========================================
 	//Temp debug funcs
 	
-	void SPlay(int numArgs, char ** szArgs);
-	void SStop(int numArgs, char ** szArgs);
+	void SPlay(const char * arg);
+	void SStop(int channel);
 	void SListSounds();
 	bool SPrintInfo();
 };

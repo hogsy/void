@@ -453,10 +453,10 @@ void CKeyboard::FlushKeyBuffer()
 }
 
 
-bool CKeyboard::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
+bool CKeyboard::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == &m_pVarKbMode)
-		return CKBMode((CVar*)cvar, numArgs,szArgs);
+		return CKBMode((CVar*)cvar, parms);
 	return false;
 }
 
@@ -644,16 +644,16 @@ void CKeyboard::Update_Win32()
 Change keyboard mode
 =====================================
 */
-bool CKeyboard::CKBMode(const CVar * var, int argc, char** argv)
+bool CKeyboard::CKBMode(const CVar * cvar, const CParms &parms)
 {
-	if(argc == 2 && argv[1])
+	if(parms.NumTokens() > 1)
 	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
+		int mode = parms.IntTok(1);
+		if(mode >= 0)
 		{
 			//Check for Vaild value
-			if(temp < KB_DIBUFFERED &&
-			   temp > KB_WIN32POLL)
+			if(mode < KB_DIBUFFERED &&
+			   mode > KB_WIN32POLL)
 			{
 				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
 				return false;
@@ -663,13 +663,13 @@ bool CKeyboard::CKBMode(const CVar * var, int argc, char** argv)
 			//even before the mouse actually inits
 			if(m_eKbState == DEVNONE) 
 			{
-				m_eKbMode = (EKbMode)temp;
+				m_eKbMode = (EKbMode)mode;
 				return true;
 			}
 
-			if(FAILED(Init(m_bExclusive,(EKbMode)temp)))
+			if(FAILED(Init(m_bExclusive,(EKbMode)mode)))
 			{
-				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",temp);
+				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",mode);
 				return false;
 			}
 			return true;
