@@ -771,7 +771,7 @@ Console Func - Sets X-axis Sensitivity
 */
 bool CMouse::CXSens(const CVar * var, const CParms &parms)
 {
-	if(parms.NumTokens())
+	if(parms.NumTokens() > 1)
 	{
 		float sens = parms.FloatTok(1);
 		if(sens > 0.0 && sens < 30.0)
@@ -789,7 +789,7 @@ Console Func - Sets Y-axis Sensitivity
 */
 bool CMouse::CYSens(const CVar * var, const CParms &parms)
 {
-	if(parms.NumTokens())
+	if(parms.NumTokens() > 1)
 	{
 		float sens = parms.FloatTok(1);
 		if(sens > 0.0 && sens < 30.0)
@@ -807,7 +807,7 @@ Console Func - Sets master Sensitivity
 */
 bool CMouse::CSens(const CVar * var, const CParms &parms)
 {
-	if(parms.NumTokens())
+	if(parms.NumTokens() > 1)
 	{
 		float sens = parms.FloatTok(1);
 		if(sens > 0.0 && sens < 30.0)
