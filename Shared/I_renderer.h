@@ -126,17 +126,7 @@ struct R_EntState
 	vector_t origin;
 	vector_t angle;
 };
-/*
-struct I_Model
-{
-	virtual hMdl LoadModel(const char *model, hMdl index, CacheType cache)=0;
-	virtual void DrawModel(const R_EntState &state)=0;
-	virtual void UnloadModel(CacheType cache, hMdl index)=0;
-	virtual void UnloadModelCache(CacheType cache)=0;
-	virtual void UnloadModelAll(void)=0;
-	virtual void GetInfo(R_EntState &state)=0;
-};
-*/
+
 
 /*
 ==========================================
@@ -148,15 +138,6 @@ enum
 	IMAGE_CACHE_NUM	= 2,
 	IMAGE_CACHE_SIZE =256
 };
-/*
-struct I_Image
-{
-	virtual hImg LoadImage(const char *image, hImg index, CacheType cache)=0;
-	virtual void UnloadImage(CacheType cache, hImg index)=0;
-	virtual void UnloadImageCache(CacheType cache)=0;
-	virtual void UnloadImageAll(void)=0;
-};
-*/
 
 
 /*
@@ -206,11 +187,7 @@ struct I_Renderer
 	//Get other interfaces
 	virtual I_ClientRenderer  * GetClient()=0;
 	virtual I_ConsoleRenderer * GetConsole()=0;
-/*
-	virtual I_RHud *			GetHud()=0;
-	virtual I_Model	*			GetModel()=0;
-	virtual I_Image *			GetImage()=0;
-*/
+
 	//Windowing
 	virtual void MoveWindow(int x, int y) = 0;
 	virtual void Resize() =0;
