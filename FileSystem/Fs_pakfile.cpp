@@ -2,13 +2,12 @@
 #include "I_file.h"
 
 //Pak file header
-typedef struct
+struct CPakFile::PakHeader_t
 {
 	char	id[4];
 	int		dirofs;
 	int		dirlen;
-}PakHeader_t;
-
+};
 
 /*
 ===========================================
@@ -66,6 +65,7 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	//Read Header
 	PakHeader_t phead;
 	fread(&phead,sizeof(PakHeader_t),1,m_fp);
+	
 	//Verify id
 	if (phead.id[0] != 'P' || 
 		phead.id[1] != 'A' || 
@@ -104,7 +104,7 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 
 			//If new filename is smaller then entry at current index, 
 			//then shift all the entires forward to make space for new entry
-			if(strcmp(temp->filename, m_files[j]->filename) < 0)
+			if(_stricmp(temp->filename, m_files[j]->filename) < 0)
 			{
 				destIndex = j;
 				//start from the last entry and

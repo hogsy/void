@@ -52,18 +52,13 @@ CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 	m_searchpaths = new SearchPath_t();
 	m_lastpath = m_searchpaths;
 
-	//Validate given base dir
-	if(!exedir)
-	{	ComPrintf("CFileSystem:: No Exe directory specified\n");
-		return;
-	}
-
 	//Validate EXE dir name
 	//check for length
 	int exepathlen =0;
 	exepathlen = strlen(exedir);
 	if(!exepathlen || (exepathlen) > COM_MAXPATH)		
-	{	ComPrintf("CFileSystem:: Exe directory exceeds COM_MAXPATH : %s\n",exedir);
+	{	
+		ComPrintf("CFileSystem:: Exe directory exceeds COM_MAXPATH : %s\n",exedir);
 		return;
 	}
 	//make sure there is no trailing slash
@@ -74,16 +69,12 @@ CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 
 	//Make sure the given path exists.
 	if(!Util::PathExists(m_exepath))
-	{	ComPrintf("CFileSystem:: Exe directory does not exist : %s\n",m_exepath);
+	{	
+		ComPrintf("CFileSystem:: Exe directory does not exist : %s\n",m_exepath);
 		return;
 	}
 
-	//Validate given base dir
-	if(!basedir)
-	{	ComPrintf("CFileSystem:: No Base directory specified\n");
-		return;
-	}
-	//Add to search path now
+	//Validate given base dir and add to search path now
 	if(!AddGameDir(basedir))
 	{
 		ComPrintf("CFileSystem:: Unable to add base dir, %s\n", basedir);
@@ -92,10 +83,6 @@ CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 	strcpy(m_basedir,basedir);
 	
 	m_bActive = true;
-}
-
-bool CFileSystem::IsActive() const
-{	return m_bActive;
 }
 
 CFileSystem::~CFileSystem()
@@ -155,6 +142,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 
 	//Directoy is Valid. Reset the current GAME directoy before changing to new one
 	ResetGameDir();
+	
 	//Add to SearchPath
 	AddSearchPath(gamedir);
 
@@ -225,11 +213,15 @@ void CFileSystem::ResetGameDir()
 
 /*
 ==========================================
-Returns current path
+Access funcs
 ==========================================
 */
 const char * CFileSystem::GetCurrentPath() const
 {	return m_curpath;
+}
+
+bool CFileSystem::IsActive() const
+{	return m_bActive;
 }
 
 /*
@@ -287,7 +279,6 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 			}
 		}
 	}
-//	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
 
@@ -340,7 +331,6 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 			}
 		}
 	}
-//	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
 

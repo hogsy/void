@@ -83,17 +83,14 @@ namespace
 	//Utility funcs to read ZipHeader data in correcy byte order
 	inline void getShort (FILE* fin, ushort &is)
 	{
-		static int ix=0;
-		ix = fgetc(fin);
+		int	ix = fgetc(fin);
 		ix += (((ulong)fgetc(fin)) << 8);
 		is = ix;
 	}
 
 	inline void getLong (FILE* fin, ulong &ix)
 	{
-		static int i=0;
-    
-		i = fgetc(fin);
+		int i = fgetc(fin);
 		ix = (ulong)i;
     
 		i = fgetc(fin);
@@ -238,24 +235,18 @@ and seeks backwords until it find the signature
 */
 ulong CZipFile::GetLastRecordOffset(FILE * fin)
 {
-	unsigned char* buf=0;
-	ulong uSizeFile=0;
-	ulong uBackRead=0;
-	ulong uMaxBack =0xffff; // maximum size of global comment
-	ulong uPosFound=0;
-
 	if (fseek(fin,0,SEEK_END) != 0)
 		return 0;
 
-	uSizeFile = ftell( fin );
+	
+	byte  buf[MAXCOMMENTBUFFERSIZE+4];
+	ulong uBackRead=4;
+	ulong uMaxBack =0xffff; // maximum size of global comment
+	ulong uPosFound=0;
+	ulong uSizeFile = ftell( fin );
 
 	if (uMaxBack > uSizeFile)
 		uMaxBack = uSizeFile;
-
-	buf = new byte[MAXCOMMENTBUFFERSIZE+4];
-
-
-	uBackRead = 4;
 
 	while (uBackRead< uMaxBack)
 	{
@@ -289,7 +280,6 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 		if(uPosFound!=0)
 			break;
 	}
-	delete [] buf;
 	return uPosFound;
 }
 
@@ -304,26 +294,21 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 {
 	char	bufname[COM_MAXFILENAME];	
 	char	bufhdr[5];
-	ZIP_central_directory_file_header	cdfh;
 	bool	err = false;
 	int		i,j,destIndex=0;
 	size_t	curpos = 0;
+	ZIP_central_directory_file_header	cdfh;
 
 	m_numFiles = 0;
 	m_files = new ZipEntry_t * [numfiles];
-	
+
+
 	for (i=0;i<numfiles;i++) 
 	{
 		if(!fread(bufhdr,sizeof(zip_hdr_central),1,fp) ||
 			memcmp(bufhdr,zip_hdr_central,sizeof(zip_hdr_central)))
 		{
 			ComPrintf("CZipFile::BuildZipEntriesList: Bad CentralDir Sig %s\n", m_archiveName);
-			
-			for(i=0;i<m_numFiles;i++)
-				m_files[i] = 0;
-			m_numFiles = 0;
-			delete [] m_files;
-			
 			return false;
 		}
 
@@ -351,72 +336,53 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 		//Validate entry. don't add if name is too long, or can't read name
 		//Only add FILE entries. and Uncompressed files at that.
 		if((cdfh.csize == cdfh.ucsize) &&
-		   (cdfh.filename_length < COM_MAXFILENAME) &&
-		   (fread(bufname, cdfh.filename_length, 1, fp)) &&
-		   (bufname[cdfh.filename_length - 1] != '/'))
+		   (cdfh.filename_length < COM_MAXFILENAME))
 		{
-			bufname[cdfh.filename_length] = '\0';
-			ComPrintf("%s\n", bufname);
-
-			ZipEntry_t * newfile = new ZipEntry_t();
-			strcpy(newfile->filename,bufname);
-			newfile->filelen = cdfh.ucsize;
-			newfile->filepos = cdfh.relative_offset_local_header + 
-							   sizeof(zip_hdr_local) + 
-							   ZIP_LOCAL_FILE_HEADER_SIZE +
-							   cdfh.filename_length + 
-							   cdfh.extra_field_length;
-
-			//Find a place to insert the new entry
-			destIndex = m_numFiles;	//default to last position
-
-			for(j=0;j<m_numFiles;j++)
+			if(fread(bufname, cdfh.filename_length, 1, fp) &&
+			  (bufname[cdfh.filename_length - 1] != '/'))
 			{
-				if(!m_files[j])
-					break;
+				bufname[cdfh.filename_length] = '\0';
+				ComPrintf("%s\n", bufname);
 
-				//If new filename is smaller then entry at current index, 
-				//then shift all the entires forward to make space for new entry
-				if(strcmp(newfile->filename, m_files[j]->filename) < 0)
-				{
-					destIndex = j;
+				ZipEntry_t * newfile = new ZipEntry_t();
+				strcpy(newfile->filename,bufname);
+				newfile->filelen = cdfh.ucsize;
+				newfile->filepos = cdfh.relative_offset_local_header + 
+								   sizeof(zip_hdr_local) + 
+								   ZIP_LOCAL_FILE_HEADER_SIZE +
+								   cdfh.filename_length + 
+								   cdfh.extra_field_length;
 
-					//start from the last entry and
-					//move all the old pointers forward by one
-					j = m_numFiles;
-					while(j > destIndex)
-					{
-						m_files[j] = m_files[j-1];
-						j--;
-					}
-					break;
-				}
-			}
-			m_files[destIndex] = newfile;
-			m_numFiles++;
-
-/*			curpos = ftell(m_fp);
-			if(fseek(fp,cdfh.relative_offset_local_header + 
-					sizeof(zip_hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE,
-					SEEK_SET)==0)
-			{
-				fseek(fp,cdfh.filename_length + cdfh.extra_field_length, SEEK_CUR);
-
-				char fname[128];
-				sprintf(fname,"file%d.pcx",i);
+				//Find a place to insert the new entry
 				
-				FILE * fout = fopen(fname,"w+b");
-				if(fout)
+				//default to last position
+				destIndex = m_numFiles;	
+
+				for(j=0;j<m_numFiles;j++)
 				{
-					byte  * outbuf = (byte*)malloc(cdfh.ucsize);
-					fread(outbuf,cdfh.ucsize,1,fp);
-					fwrite(outbuf,cdfh.ucsize,1,fout);
-					fclose(fout);
-					free(outbuf);
+					if(!m_files[j])
+						break;
+
+					//If new filename is smaller then entry at current index, 
+					//then shift all the entires forward to make space for new entry
+					if(_stricmp(newfile->filename, m_files[j]->filename) < 0)
+					{
+						destIndex = j;
+
+						//start from the last entry and
+						//move all the old pointers forward by one
+						j = m_numFiles;
+						while(j > destIndex)
+						{
+							m_files[j] = m_files[j-1];
+							j--;
+						}
+						break;
+					}
 				}
+				m_files[destIndex] = newfile;
+				m_numFiles++;
 			}
-			fseek(fp,curpos,SEEK_SET);
-*/
 		}
 
 		if(fseek(fp,cdfh.extra_field_length + cdfh.file_comment_length, SEEK_CUR)) 
@@ -684,31 +650,7 @@ Seek to given pos within the file data
 */
 bool CZipFile::Seek(int offset, int origin, HFS handle)
 {
-/*	uint newpos = m_openFiles[handle].file->filepos;
-	switch(origin)
-	{
-	case SEEK_SET:
-			newpos += offset;
-			break;
-	case SEEK_END:
-			newpos += (m_openFiles[handle].file->filelen - offset);
-			break;
-	case SEEK_CUR:
-			newpos += (m_openFiles[handle].curpos + offset);
-			break;
-	default:
-			ComPrintf("CZipFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
-			return false;
-	}
-	if((newpos > m_openFiles[handle].file->filepos + m_openFiles[handle].file->filelen) ||
-		(newpos < m_openFiles[handle].file->filepos))
-	{
-		ComPrintf("CZipFile::Seek: Bad parameters. %s\n", m_openFiles[handle].file->filename);
-		return false;
-	}
-	return(!::fseek(m_fp,newpos,SEEK_SET));
-*/
-	int newpos = 0; //m_openFiles[handle].file->filepos;
+	int newpos = 0;
 	switch(origin)
 	{
 	case SEEK_SET:
@@ -741,12 +683,6 @@ bool CZipFile::Seek(int offset, int origin, HFS handle)
 }
 
 /*
-SEEK_END must reposition your file pointer at the END of the file, plus any negative offset. 
-To do this you must know the size of the file, it is suggested you find and store this in 
-the open function. Remember that a SEEK_END position value of -1 is the last byte.
-*/
-
-/*
 ==========================================
 Get current pos in the file for the handle
 ==========================================
@@ -765,7 +701,38 @@ uint CZipFile::GetSize(HFS handle)
 }
 
 
+
+
+
+//==========================================================================
+//==========================================================================
+
+
+
 #if 0
+
+/*			curpos = ftell(m_fp);
+			if(fseek(fp,cdfh.relative_offset_local_header + 
+					sizeof(zip_hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE,
+					SEEK_SET)==0)
+			{
+				fseek(fp,cdfh.filename_length + cdfh.extra_field_length, SEEK_CUR);
+
+				char fname[128];
+				sprintf(fname,"file%d.pcx",i);
+				
+				FILE * fout = fopen(fname,"w+b");
+				if(fout)
+				{
+					byte  * outbuf = (byte*)malloc(cdfh.ucsize);
+					fread(outbuf,cdfh.ucsize,1,fp);
+					fwrite(outbuf,cdfh.ucsize,1,fout);
+					fclose(fout);
+					free(outbuf);
+				}
+			}
+			fseek(fp,curpos,SEEK_SET);
+*/
 
 /*--- ZIP_local_file_header layout ---------------------------------------------*/
 #define ZIP_LOCAL_FILE_HEADER_SIZE              26

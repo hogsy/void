@@ -35,6 +35,8 @@ private:
 	enum 
 	{	PAKENTRYSIZE =	64
 	};
+
+	struct PakHeader_t;
 	
 	struct PakEntry_t
 	{
