@@ -10,6 +10,14 @@
 SERVER ENTITIES
 ======================================
 */
+
+/*
+Entity "id" layout
+id 0 is worldspawn
+ids after that, upto MAX_ENTITIES can be used for game/map entities
+client ids begin at 0, end at MAX_CLIENTS and they have the high bit set
+*/
+
 const int ENT_MAXCLASSNAME = 32;
 const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;

@@ -47,7 +47,7 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_RECONNECT:
 			{
-				m_pNetCl->Reconnect();
+				m_pNetCl->Reconnect(true);
 				break;
 			}
 		case SV_CLIENTINFO:
@@ -105,12 +105,14 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 Process Spawn message
 ======================================
 */
-void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
+void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 {
 	switch(msgId)
 	{
 	case SVC_GAMEINFO:
 		{
+			int slotNum = buffer.ReadInt();
+
 			char * game = buffer.ReadString();
 //ComPrintf("CL: Game: %s\n", game);
 			char * map = buffer.ReadString();

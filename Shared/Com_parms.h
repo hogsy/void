@@ -50,6 +50,7 @@ public:
 private:
 	char * string;
 	int	 length;
+	mutable int  numTokens;
 	
 	static char szParmBuffer[1024];
 };

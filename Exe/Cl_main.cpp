@@ -31,6 +31,11 @@ CClient::CClient(I_Renderer * prenderer,
 					m_pSound(psound),
 					m_pMusic(pmusic)
 {
+
+	m_pHud   = m_pRender->GetHud();
+	m_pModel = m_pRender->GetModel();
+	m_pImage = m_pRender->GetImage();
+
 	m_pCmdHandler = new CClientCmdHandler(*this);
 
 	//Setup network listener
@@ -41,10 +46,6 @@ CClient::CClient(I_Renderer * prenderer,
 	m_fFrameTime = 0.0f;
 
 	m_numEnts = 0;
-	
-	m_pHud = 0;
-	m_pModel = 0;
-	m_pImage = 0;
 	
 	m_pCamera = 0;
 	
@@ -97,6 +98,10 @@ CClient::~CClient()
 
 	if(m_pModel)
 		m_pModel->UnloadModelAll();
+	
+//	if(m_pImage)
+//		m_pImage->UnloadImageAll();
+
 
 	m_pRender = 0;
 	m_pHud = 0;
@@ -107,8 +112,6 @@ CClient::~CClient()
 	m_pMusic = 0;
 
 	g_pWorld = 0;
-
-//	m_pClient = 0; 
 
 	delete m_pNetCl;
 	delete m_pCmdHandler;
@@ -121,32 +124,6 @@ Load the world for the client to render
 */
 bool CClient::LoadWorld(const char *worldname)
 {
-//	char configname[128];
-//	strcpy(configname,g_gamedir);
-//	strcat(configname,"\\void.cfg");
-//	g_pCons->ExecConfig(configname);
-
-	m_pHud = m_pRender->GetHud();
-	if(!m_pHud)
-	{
-		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
-		return false;
-	}
-
-	m_pModel = m_pRender->GetModel();
-	if(!m_pModel)
-	{
-		ComPrintf("CClient::Init:: Couldnt get model interface from renderer\n");
-		return false;
-	}
-
-	m_pImage = m_pRender->GetImage();
-	if(!m_pImage)
-	{
-		ComPrintf("CClient::Init:: Couldnt get image interface from renderer\n");
-		return false;
-	}
-
 	char mappath[COM_MAXPATH];
 	
 	strcpy(mappath,szWORLDDIR);
@@ -317,7 +294,6 @@ void CClient::RunFrame()
 		}
 
 
-//		m_pModel->DrawModel(m_clients[0]);
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].index >=0)
@@ -351,7 +327,6 @@ void CClient::RunFrame()
 		m_pRender->DrawConsole();
 	}
 
-	
 	//Write updates
 	m_pNetCl->SendUpdate();
 
@@ -362,7 +337,6 @@ void CClient::RunFrame()
 //======================================================================================
 
 void CClient::SetInputState(bool on)  {	m_pCmdHandler->SetListenerState(on); }
-//void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
 
 /*
 ==========================================
@@ -423,7 +397,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		m_pNetCl->Disconnect(false);
 		break;
 	case CMD_RECONNECT:
-		m_pNetCl->Reconnect();
+		m_pNetCl->Reconnect(false);
 		break;
 	case CMD_TALK:
 		Talk(parms.String());

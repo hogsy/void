@@ -8,18 +8,23 @@ Constructor/Destructor
 ======================================
 */
 CParms::CParms(int len) : length(len)
-{	string = new char[length];
+{	
+	string = new char[length];
+	memset(string,0,length);
+	numTokens = 0;
 }
 
 CParms::CParms(const char * buf)
 {
 	length = 0;
+	numTokens = 0;
 	Set(buf);
 }
 	
 CParms::CParms(const CParms &parms)
 {
 	length = 0;
+	numTokens = 0;
 	Set(parms.string);
 }
 
@@ -37,6 +42,7 @@ void CParms::Set(const char * buf)
 		string = new char [length];
 	}
 	strcpy(string,buf);
+	numTokens = 0;
 }
 
 /*
@@ -57,27 +63,32 @@ Return the number of tokens
 */
 int CParms::NumTokens(char delim) const
 {
-	int tokens = 1;
-	bool intoken = true;
-	bool leading = true;
-	const char * s = string;
-
-	while(*s && *s != '\0')
+	if(!numTokens)
 	{
-		if(*s != delim)
+		int tokens = 1;
+		bool intoken = true;
+		bool leading = true;
+		const char * s = string;
+
+		while(*s && *s != '\0')
 		{
-			leading = false;
-			if(!intoken)
+			if(*s != delim)
 			{
-				tokens ++;
-				intoken = true;
+				leading = false;
+				if(!intoken)
+				{
+					tokens ++;
+					intoken = true;
+				}
 			}
+			else if(!leading)
+				intoken = false;
+			s++;
 		}
-		else if(!leading)
-			intoken = false;
-		s++;
+		numTokens = tokens;
+		return tokens;
 	}
-	return tokens;
+	return numTokens;
 }
 
 /*

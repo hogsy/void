@@ -60,6 +60,9 @@ public:
 	virtual void Set(float val)=0;
 	virtual void Set(int val)=0;
 
+	virtual void Unlatch() = 0;
+	virtual void Reset() = 0;
+
 protected:
 
 	enum
@@ -94,9 +97,6 @@ struct I_Console
 	virtual void RegisterCommand(const char *cmdname,		//Command Name
 							  HCMD id,						//ID in the registering class
 							  I_ConHandler * handler)=0;	//the class registering the command
-
-	//Subsystem has restarted, unlatch its cvars
-	virtual void UnlatchCVars(I_ConHandler * handler)=0;
 
 	//Print Functions
 	virtual void ComPrint(char* text)=0;

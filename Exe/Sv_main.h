@@ -10,15 +10,6 @@
 struct world_t;
 
 /*
-Entity "id" layout
-id 0 is worldspawn
-ids after that, upto MAX_ENTITIES can be used for game/map entities
-
-client ids begin at 0, end at MAX_CLIENTS
-they have the high bit set
-*/
-
-/*
 ======================================
 The Main Server class
 ======================================
@@ -102,7 +93,6 @@ private:
 
 	//=================================================
 	//CVars
-	CVar	m_cDedicated;
 	CVar	m_cPort;		//Listen port
 	CVar 	m_cHostname;	//Hostname
 	CVar 	m_cMaxClients;	//Max Clients

@@ -21,9 +21,8 @@ Constructor/Destructor
 ======================================
 */
 CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
-					 m_cDedicated("sv_dedicated", "0", CVAR_BOOL,CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
-					 m_cMaxClients("sv_maxclients", "4", CVAR_INT,CVAR_ARCHIVE),
+					 m_cMaxClients("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_chanWriter(m_net)
 {
@@ -35,14 +34,6 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
-	//Default State values
-	strcpy(m_svState.gameName,"Game");
-	strcpy(m_svState.hostName,"Void Server");
-	m_svState.worldname[0] = 0;
-	m_svState.levelId = 0;
-	m_svState.maxClients = 4;
-	m_svState.port = SV_DEFAULT_PORT;
-
 	m_numModels = 0;
 	m_numImages = 0;
 	m_numSounds = 0;
@@ -50,10 +41,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	m_pWorld = 0;
 	m_active = false;
 	
-	System::GetConsole()->RegisterCVar(&m_cDedicated);
-	System::GetConsole()->RegisterCVar(&m_cGame);
-	
 	System::GetConsole()->RegisterCVar(&m_cHostname);
+	System::GetConsole()->RegisterCVar(&m_cGame);
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
 
@@ -88,25 +77,34 @@ CServer::~CServer()
 	}
 }
 
-
 /*
 ======================================
-Initialize the Server
+Initialize the Server from dead state
 ======================================
 */
 bool CServer::Init()
 {
+	m_cGame.Unlatch();
+	m_cHostname.Unlatch();
+	m_cPort.Unlatch();
+
+	//Initialize State values
+	strcpy(m_svState.gameName, m_cGame.string);
+	strcpy(m_svState.hostName, m_cHostname.string);
+	m_svState.maxClients = m_cMaxClients.ival;
+	m_svState.port = m_cPort.ival;
+	m_svState.worldname[0] = 0;
+	m_svState.levelId = 0;
+
 	if(!m_net.Init())
 		return false;
 	
-	//more initialization here ?
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 	m_active = true;
 
-	//Game
+	//Initialize Game
 	m_maxEntities=0;
 	m_numEntities= 0;
-//	m_numClients = 0;
 
 	m_entities = new Entity * [GAME_MAXENTITES];
 	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
@@ -130,6 +128,17 @@ void CServer::Shutdown()
 		return;
 
 	m_net.Shutdown();
+
+	m_cGame.Unlatch();
+	m_cHostname.Unlatch();
+	m_cPort.Unlatch();
+
+	strcpy(m_svState.gameName, m_cGame.string);
+	strcpy(m_svState.hostName, m_cHostname.string);
+	m_svState.maxClients = m_cMaxClients.ival;
+	m_svState.port = m_cPort.ival;
+	m_svState.worldname[0] = 0;
+	m_svState.levelId = 0;
 
 	m_svState.numClients = 0;
 	m_svState.levelId = 0;
@@ -157,7 +166,7 @@ void CServer::Restart()
 	if(!m_active)
 		return;
 
-	m_active = false;
+//	m_active = false;
 
 	m_net.Restart();
 
@@ -465,7 +474,7 @@ void CServer::LoadWorld(const char * mapname)
 	m_active = true;
 
 	//if its not a dedicated server, then push "connect loopback" into the console
-	if(!bRestarting && !m_cDedicated.bval)
+	if(!bRestarting)
 		System::GetConsole()->ExecString("connect localhost");
 }
 
@@ -512,7 +521,6 @@ void CServer::PrintServerStatus()
 	}
 }
 
-
 /*
 ==========================================
 Handle CVars
@@ -520,15 +528,29 @@ Handle CVars
 */
 bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {	
+	if(parms.NumTokens() == 1)
+		return false;
+
 	if(cvar == reinterpret_cast<CVarBase *>(&m_cPort))
 	{
-		if(parms.NumTokens() > 1)
+		int port = parms.IntTok(1);
+		if(port > 32767 || port < 1024)
 		{
+			ComPrintf("Port out of range. Should be with in 1024 to 32767\n");
 			return false;
 		}
+		return true;
 	}
 	else if(cvar == reinterpret_cast<CVarBase *>(&m_cMaxClients))
 	{
+		int maxclients = parms.IntTok(1);
+		if(maxclients < 1 || maxclients > GAME_MAXCLIENTS)
+		{
+			ComPrintf("Max Clients should be between 1 and %d\n", GAME_MAXCLIENTS);
+			return false;
+		}
+		m_svState.maxClients = maxclients;
+		return true;
 	}
 	return false;
 }

@@ -16,7 +16,7 @@ struct I_NetClientHandler
 	virtual void HandleGameMsg(CBuffer &buffer)=0; 
 	
 	//Parse and handle spawm parms
-	virtual void HandleSpawnMsg(const byte &msgId, CBuffer &buffer)=0; 
+	virtual void HandleSpawnMsg(byte msgId, CBuffer &buffer)=0; 
 	
 	//Handle disconnect from server
 	virtual void HandleDisconnect(bool listenserver)=0;
@@ -27,7 +27,6 @@ struct I_NetClientHandler
 	//Client print func. Route this to the console/Client area. whatever
 	virtual void Print(const char * msg, ...)=0;
 };
-
 
 //Internal Class declarations
 namespace VoidNet
@@ -55,15 +54,17 @@ public:
 	//should be the last thing in a client frame
 	void SendUpdate();
 
+	//Access outgoing message buffer
 	bool CanSend();
-	CBuffer & GetSendBuffer();			//Access message buffer
+	CBuffer & GetSendBuffer();			
 
+	//Access outgoing reliable buffer
 	bool CanSendReliable();
-	CBuffer & GetReliableBuffer();		//Access reliable buffer
+	CBuffer & GetReliableBuffer();		
 
 	void ConnectTo(const char * ipaddr);
 	void Disconnect(bool serverPrompted);
-	void Reconnect();
+	void Reconnect(bool serverPrompted);
 
 	void SetPort(short port);
 	void SetRate(int rate);

@@ -42,7 +42,6 @@ public:
 	void RunFrame();
 	
 	void SetInputState(bool on);
-//	void WriteBindTable(FILE *fp);
 
 	//Client Interface
 	
@@ -50,7 +49,7 @@ public:
 	void HandleGameMsg(CBuffer &buffer); 
 	
 	//Parse and handle spawm parms
-	void HandleSpawnMsg(const byte &msgId, CBuffer &buffer); 
+	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
 
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
@@ -119,6 +118,9 @@ private:
 	CNetClient		  * m_pNetCl;
 
 	//==================================================
+	//the following should be accessible by the client game dll
+
+	//==================================================
 	//Client side stuff
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
@@ -126,25 +128,15 @@ private:
 	float		m_fFrameTime;
 	bool		m_ingame;
 
-	//==================================================
-	//the following should be accessible by the game dll
+
 
 	//This is the client we should do local prediction on
-//	ClClient	m_gameClient;
 
-//	int			m_numClients;
-//	ClClient    m_clients[GAME_MAXCLIENTS];
-	
-	int			m_numEnts;
-//	ClEntity 	m_gameEnts[GAME_MAXENTITIES];
-
-	ClClient	m_gameClient;	//We
-	
+	ClClient	m_gameClient;
 	ClClient 	m_clients[GAME_MAXCLIENTS];
+
+	int			m_numEnts;
 	ClEntity 	m_entities[GAME_MAXENTITIES];
-
-
-	
 
 	//This should hook up to the game client whne the client
 	//enters a game

@@ -64,7 +64,6 @@ public:
 
 	void RegisterCVar(CVarBase * var,I_ConHandler * handler=0);
 	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
-	void UnlatchCVars(I_ConHandler * handler);
 	void ComPrint(char* text);
 	void ExecString(const char *string);
 

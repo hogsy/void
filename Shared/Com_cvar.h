@@ -16,10 +16,8 @@ class CVar : public CVarBase
 public:
 
 	//Constructor
-	CVar(const char *varname, 
-		 const char *varval,
-		 CVarType vartype,	
-		 int varflags)
+	CVar(const char *varname,  const char *varval, 
+		 CVarType vartype,	int varflags)
 	{
 		name = new char[strlen(varname)+1];
 		strcpy(name,varname);
@@ -133,13 +131,15 @@ public:
 
 	void ForceSet(float val)
 	{
-		sprintf(m_buffer,"%.2f",val);
-		ForceSet(m_buffer);
+		char buffer[16];
+		sprintf(buffer,"%.2f",val);
+		ForceSet(buffer);
 	}
 	void ForceSet(int val)
 	{
-		sprintf(m_buffer,"%d",val);
-		ForceSet(m_buffer);
+		char buffer[16];
+		sprintf(buffer,"%d",val);
+		ForceSet(buffer);
 	}
 
 	/*
@@ -150,8 +150,14 @@ public:
 	void Set(const char *varval)
 	{
 		//Return if its a latched var
-		if(flags & CVAR_LATCH)		
+		if(flags & CVAR_LATCH)	
+		{
+			if(latched_string)
+				delete [] latched_string;
+			latched_string = new char [strlen(varval) +1];
+			strcpy(latched_string, varval);
 			return;
+		}
 
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
@@ -162,8 +168,16 @@ public:
 	void Set(float val)
 	{
 		//Return if its a latched var
-		if(flags & CVAR_LATCH)		
+		if(flags & CVAR_LATCH)	
+		{
+			if(latched_string)
+				delete [] latched_string;
+			char buffer[16];
+			sprintf(buffer,"%.2f",val);
+			latched_string = new char [strlen(buffer) +1];
+			strcpy(latched_string, buffer);
 			return;
+		}
 
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
@@ -174,8 +188,16 @@ public:
 	void Set(int val)
 	{
 		//Return if its a latched var
-		if(flags & CVAR_LATCH)		
+		if(flags & CVAR_LATCH)	
+		{
+			if(latched_string)
+				delete [] latched_string;
+			char buffer[16];
+			sprintf(buffer,"%d",val);
+			latched_string = new char [strlen(buffer) +1];
+			strcpy(latched_string, buffer);
 			return;
+		}
 
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
@@ -183,8 +205,35 @@ public:
 		CVar::ForceSet(val);
 	}
 
-private:
-	char m_buffer[16];
+	/*
+	======================================
+	Unlatch the cvar
+	======================================
+	*/
+	void Unlatch()
+	{	
+		if(latched_string)
+		{
+			CVar::ForceSet(latched_string);
+			delete [] latched_string;
+			latched_string = 0;
+		}
+	}
+
+	/*
+	======================================
+	Reset to default value
+	======================================
+	*/
+	void Reset()
+	{	
+		CVar::ForceSet(default_string);
+		if(latched_string)
+		{
+			delete [] latched_string;
+			latched_string = 0;
+		}
+	}
 };
 
 #endif

@@ -404,10 +404,3 @@ void CClientCmdHandler::WriteBinds(const char * szBindsfile)
 	fclose(fp);
 }
 
-
-/*
-======================================
-Exec binds file
-======================================
-*/
-

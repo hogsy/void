@@ -18,7 +18,6 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		return false;
 	}
 
-	
 	m_clients[clNum] = new EntClient();
 	
 	strcpy(m_clients[clNum]->name, buffer.ReadString());
@@ -33,8 +32,6 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 	
 	m_clients[clNum]->inUse = true;
 	m_clients[clNum]->spawned = false;
-
-	m_numEntities++;
 
 	if(!reconnect)
 		m_svState.numClients++;

@@ -290,6 +290,10 @@ SOURCE=.\Cl_move.cpp
 
 SOURCE=.\Cl_net.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Clgame_defs.h
+# End Source File
 # End Group
 # Begin Group "Resources"
 
@@ -338,6 +342,22 @@ SOURCE=.\Mus_main.h
 # Begin Group "Server"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Game_ents.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Game_ents.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\I_game.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Sv_main.cpp
@@ -444,6 +464,10 @@ SOURCE=..\Shared\Net_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Net_protocol.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Net_server.h
 # End Source File
 # End Group
@@ -471,38 +495,6 @@ SOURCE=..\..\Mssdk\Include\Tvout.h
 SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
-# Begin Group "Game"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\Game_defs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Game_ents.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Game_ents.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\I_game.h
-# End Source File
-# End Group
-# Begin Group "Client Game"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\Clgame_defs.h
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=..\Shared\Net_protocol.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\todo

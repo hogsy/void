@@ -13,6 +13,7 @@ struct ClEntity : public R_EntState
 
 	virtual void Reset()
 	{
+		num = -1;
 		num_skins = num_frames = 0;
 		index = -1;
 		skinnum = 0;
@@ -25,7 +26,8 @@ struct ClEntity : public R_EntState
 	}
 
 	virtual ~ClEntity() {}
-
+	
+	int	num;
 	bool inUse;
 
 	int			soundIndex;

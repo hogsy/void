@@ -258,7 +258,9 @@ void CConsole::ExecString(const char *string)
 		if(!strcmp((*it)->name,szfirstArg))
 		{
 			//only exec'ed IF function returns true
-			if((!(*it)->handler) || (*it)->handler->HandleCVar((*it),m_parms))
+			if((*it)->flags & CVAR_READONLY)
+				ComPrintf("%s is a read-only variable\n",  (*it)->name);
+			else if((!(*it)->handler) || (*it)->handler->HandleCVar((*it),m_parms))
 			{
 				int numtokens = 0;
 				if(numtokens = m_parms.NumTokens() > 1)
@@ -285,13 +287,15 @@ void CConsole::ExecString(const char *string)
 						}
 						(*it)->Set(newstr);
 					}
+
+					if((*it)->flags & CVAR_LATCH)
+						ComPrintf("%s will be changed on restart\n", (*it)->name);
 				}
 			}
 			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
 			return;
 		}
 	}
-	
 	//Couldn't exec
 	ComPrintf("Unknown command \"%s\"\n",string);
 }
@@ -360,15 +364,6 @@ void CConsole::RegisterCommand(const char *cmdname,
 		handler->HandleCommand(id,parms);
 	
 	m_lCmds.insert(it,CCommand(cmdname,id,handler));
-}
-
-/*
-======================================
-Unlatch the cvars of the given handler
-======================================
-*/
-void CConsole::UnlatchCVars(I_ConHandler * handler)
-{
 }
 
 /*
