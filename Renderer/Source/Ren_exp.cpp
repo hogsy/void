@@ -26,6 +26,17 @@ CVar *  CRenExp::m_cBpp=0;		//Bpp
 
 //======================================================================================
 
+bool CRenExp::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
+{
+	if(cvar == m_cFull)
+		return CVar_FullScreen(cvar,numArgs,szArgs);
+	else if(cvar == m_cRes)
+		return CVar_Res(cvar,numArgs,szArgs);
+	else if(cvar == m_cBpp)
+		return CVar_Bpp(cvar,numArgs,szArgs);
+	return false;
+}
+
 /*
 =======================================
 Constructor 
@@ -52,9 +63,9 @@ CRenExp::CRenExp()
 		return;
 	}
 
-	m_cFull= g_pConsole->RegisterCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
-	m_cBpp = g_pConsole->RegisterCVar("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
-	m_cRes = g_pConsole->RegisterCVar("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
+	m_cFull= g_pConsole->RegisterCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	m_cBpp = g_pConsole->RegisterCVar("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	m_cRes = g_pConsole->RegisterCVar("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,this);
 }
 
 /*

@@ -238,6 +238,20 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 	return true;
 }
 
+
+bool CRConsole::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
+{
+	if(cvar == g_pFullbright)
+		return CVar_FullBright(cvar,numArgs,szArgs);
+	else if(cvar == g_pFov)
+		return CVar_Fov(cvar,numArgs,szArgs);
+	else if(cvar == g_pMultiTexture)
+		return CVar_MultiTexture(cvar,numArgs,szArgs);
+	else if(cvar == g_pVidSynch)
+		return CVar_VidSynch(cvar,numArgs,szArgs);
+	return false;
+}
+
 /*
 ==========================================
 Register Cvars and Commands
@@ -246,11 +260,12 @@ Register Cvars and Commands
 void CRConsole::RegisterFuncs()
 {
 	
-	g_pFov			= g_pConsole->RegisterCVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Fov);
-	g_pFullbright	= g_pConsole->RegisterCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullBright);
-	g_pConspeed		= g_pConsole->RegisterCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
-	g_pMultiTexture = g_pConsole->RegisterCVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_MultiTexture);
-	g_pVidSynch		= g_pConsole->RegisterCVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,&CVar_VidSynch);
+	g_pConspeed		= g_pConsole->RegisterCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+
+	g_pFov			= g_pConsole->RegisterCVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pFullbright	= g_pConsole->RegisterCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pMultiTexture = g_pConsole->RegisterCVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pVidSynch		= g_pConsole->RegisterCVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,this);
 
 //	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
 //	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);

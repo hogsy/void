@@ -30,7 +30,6 @@ public:
 							   unsigned int height, 
 							   unsigned int bpp, 
 							   bool fullscreen);
-	
 	bool IsDriverLoaded() { return m_loadeddriver; }
 
 private:

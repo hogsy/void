@@ -3,7 +3,8 @@
 
 #include "I_renderer.h"
 
-class CRenExp : public I_Renderer
+class CRenExp : public I_Renderer,
+			    public I_CVarHandler
 {
 public:
 	
@@ -25,10 +26,14 @@ public:
 	void ChangeDispSettings(unsigned int width, unsigned int height, 
 							unsigned int bpp, bool fullscreen);
 
+
 	bool LoadWorld(world_t *level, int reload);
 	bool UnloadWorld();
 
 	bool Restart(void);
+
+	//CVar Handler
+	bool HandleCVar(const CVar *cvar,int numArgs, char ** szArgs);
 
 private:
 

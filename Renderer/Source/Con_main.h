@@ -10,7 +10,8 @@
 //Shouldnt need to worry about logging here.
 //Just display the data it accumulates 
 
-class CRConsole:public I_ConsoleRenderer
+class CRConsole:public I_ConsoleRenderer,
+				public I_CVarHandler
 {
 public:
 
@@ -30,6 +31,8 @@ public:
 
 	void UpdateRes();
 	void Draw(); 
+
+	bool HandleCVar(const CVar *cvar,int numArgs, char ** szArgs);
 
 private:
 
