@@ -5,6 +5,7 @@
 #include "I_renderer.h"
 #include "Sys_time.h"
 #include "Sys_exp.h"
+#include "In_main.h"
 
 //========================================================================================
 
@@ -42,22 +43,25 @@ public:
 	void OnFocus();
 	void LostFocus();
 
-	//Globally Accesible data
-	const char * GetCurrentPath() const;
-	const char * GetExePath()	  const;
-	eGameState   GetGameState()	  const;
-	void SetGameState(eGameState state);
-
 private:
+
+	//Give these friend access
+	friend const char * System::GetExePath();
+	friend const char * System::GetCurrentPath();
+	friend eGameState   System::GetGameState();
+	friend void	System::SetGameState(eGameState state);
+	friend I_InputFocusManager * System::GetInputFocusManager();
+
 
 	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
 
+	CInput		 * m_pInput;		//Input 
 	CTime		 * m_pTime;			//Timer Class
 	CFileSystem  * m_pFileSystem;	//FileSystem
 
 	RenderInfo_t * m_pRParms;		//Current Renderering info
-	VoidExport  *  m_pExport;
+	VoidExport   * m_pExport;		//Exported Data
 
 	bool CreateVoidWindow();
 	void ParseCmdLine(const char * cmdLine);	//Parse Cmd Line
@@ -70,7 +74,5 @@ private:
 
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 };
-
-extern CVoid * g_pVoid;
 
 #endif

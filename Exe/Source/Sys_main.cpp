@@ -2,7 +2,6 @@
 #include "Sys_cons.h"
 #include "Sv_main.h"
 #include "Cl_main.h"
-#include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
 #include "Com_hunk.h"
@@ -17,7 +16,6 @@ CHunkMem		m_HunkManager;
 
 I_Renderer  *	g_pRender  =0;	//Renderer
 CConsole	*	g_pConsole =0;	//Console
-CInput		*	g_pInput   =0;	//Input 
 CClient		*	g_pClient  =0;	//Client and UI
 
 #ifdef INCLUDE_SOUND
@@ -31,6 +29,8 @@ CServer		*	g_pServer=0;	//Network Server
 #endif
 
 world_t		*	g_pWorld=0;		//The World
+
+extern CVoid * g_pVoid;
 
 //======================================================================================
 //Console loopback func
@@ -49,10 +49,11 @@ void CToggleConsole(int argc, char** argv);			//this should be non-static so the
 
 namespace System
 {
-	const char* GetExePath()    { return g_pVoid->GetExePath();		}
-	const char* GetCurrentPath(){ return g_pVoid->GetCurrentPath(); }
-	eGameState  GetGameState()  { return g_pVoid->GetGameState();   }
-	void SetGameState(eGameState state) { g_pVoid->SetGameState(state); }
+	const char* GetExePath()    { return g_pVoid->m_exePath; } 
+	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
+	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
+	void SetGameState(eGameState state) { g_pVoid->m_gameState = state; }
+	I_InputFocusManager * GetInputFocusManager() { return g_pVoid->m_pInput->GetFocusManager(); }
 }
 
 /*
@@ -84,7 +85,7 @@ CVoid::CVoid(const char * cmdLine)
 	m_pFileSystem = FILESYSTEM_Create(m_pExport);
 	
 	//Create the input system
-	g_pInput= new CInput();					
+	m_pInput= new CInput();					
 	
 	//Create the Renderer
 	g_pRender = RENDERER_Create(m_pExport); 
@@ -151,9 +152,9 @@ CVoid::~CVoid()
 	}
 #endif
 	
-	if(g_pInput)
-	{	delete g_pInput;
-		g_pInput = 0;
+	if(m_pInput)
+	{	delete m_pInput;
+		m_pInput = 0;
 	}
 
 	if(m_pTime)
@@ -252,7 +253,7 @@ bool CVoid::Init()
 
 	//================================
 	//Input
-	if(!g_pInput->Init()) 
+	if(!m_pInput->Init()) 
 	{
 		Error("CVoid::Init: Could not Initialize Input");
 		return false;
@@ -310,7 +311,7 @@ bool CVoid::Init()
 	m_pTime->Reset();
 
 	//Set focus to console
-	GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+	System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
 	//Exec any autoexec file
 	g_pConsole->ExecConfig("autoexec.cfg");
@@ -357,8 +358,8 @@ bool CVoid::Shutdown()
 #endif
 
 	//input
-	if(g_pInput)
-		g_pInput->Shutdown();
+	if(m_pInput)
+		m_pInput->Shutdown();
 
 	//console
 	char configname[128];
@@ -387,8 +388,8 @@ void CVoid::RunFrame()
 	m_pTime->Update();
 	
 	//Run Input frame
-	g_pInput->UpdateCursor();
-	g_pInput->UpdateKeys();
+	m_pInput->UpdateCursor();
+	m_pInput->UpdateKeys();
 
 	//Run Server
 #ifndef __VOIDALPHA
@@ -629,8 +630,8 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 		g_pRender->Resize();
 
 	//Set Window extents for input if full screen
-	if(g_pInput)
-		g_pInput->Resize(x,y,w,h);
+	if(m_pInput)
+		m_pInput->Resize(x,y,w,h);
 }
 
 /*
@@ -643,14 +644,14 @@ void CVoid::Activate(bool focus)
 	if (focus == false)
 	{
 		m_pRParms->active = false;
-//		if(g_pInput)
-//			g_pInput->UnAcquire();
+//		if(m_pInput)
+//			m_pInput->UnAcquire();
 	}
 	else 
 	{
 		m_pRParms->active = true;
-		if(g_pInput)
-			g_pInput->Acquire();
+		if(m_pInput)
+			m_pInput->Acquire();
 
 		if (g_pRender && (m_pRParms->rflags & RFLAG_FULLSCREEN))
 			g_pRender->Resize();
@@ -668,8 +669,8 @@ void CVoid::OnFocus()
 		m_pRParms->active = true;
 	
 	//Input Focus
-	if(g_pInput)
-		g_pInput->Acquire();
+	if(m_pInput)
+		m_pInput->Acquire();
 }
 
 
@@ -681,8 +682,8 @@ Lose Focus Event
 void CVoid::LostFocus()
 {
 	//Input loses Focus
-	if(g_pInput)
-		g_pInput->UnAcquire();
+	if(m_pInput)
+		m_pInput->UnAcquire();
 	
 	//stop rendering
 	if (m_pRParms)
@@ -694,13 +695,22 @@ void CVoid::LostFocus()
 //Other Utility Functions
 //==============================================================================================
 
+/*
 const char * CVoid::GetCurrentPath() const
 {	return m_pFileSystem->GetCurrentPath();
 }
+*/
 
+/*
 const char * CVoid::GetExePath() const
 {	return m_exePath;
 }
+*/
+/*
+	friend const char * System::GetExePath();
+	friend const char*  System::GetCurrentPath();
+	friend eGameState   System::GetGameState();
+	friend void	System::SetGameState(eGameState state);
 
 eGameState  CVoid::GetGameState()  const
 {	return m_gameState;
@@ -708,7 +718,7 @@ eGameState  CVoid::GetGameState()  const
 void CVoid::SetGameState(eGameState state)
 {	m_gameState = state;
 }
-
+*/
 
 
 /*
@@ -873,18 +883,18 @@ void CFuncConnect(int argc, char ** argv)
 */
 void CToggleConsole(int argc, char** argv)
 {
-	if(g_pVoid->GetGameState() == INGAMECONSOLE)
+	if(System::GetGameState() == INGAMECONSOLE)
 	{
-		g_pVoid->SetGameState(INGAME);
+		System::SetGameState(INGAME);
 		g_pConsole->Toggle(false);
 		g_pClient->SetInputState(true);
 	}
-	else if(g_pVoid->GetGameState() == INGAME)
+	else if(System::GetGameState() == INGAME)
 	{
-		GetInputFocusManager()->SetCursorListener(0);
-		GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+		System::GetInputFocusManager()->SetCursorListener(0);
+		System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
-		g_pVoid->SetGameState(INGAMECONSOLE);
+		System::SetGameState(INGAMECONSOLE);
 		g_pConsole->Toggle(true);
 	}
 }

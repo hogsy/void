@@ -15,14 +15,6 @@ Constructor
 ======================================
 */
 
-//CVar Handler Interface
-/*
-bool CClient::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
-{
-	return false;
-}
-*/
-
 CClient::CClient():	m_sock(&m_recvBuf,&m_sendBuf),
 					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),

@@ -4,6 +4,8 @@
 #include "In_main.h"
 #include "In_hdr.h"
 
+using namespace VoidInput;
+ 
 /*
 ===========================================
 The Keyboard interface Class
@@ -11,8 +13,9 @@ Inherits from listener interface so we can have
 a default handler implementation
 ===========================================
 */
-class CKeyboard : public I_InKeyListener,
-				  public I_CVarHandler	
+#define KB_DIBUFFERSIZE	16
+
+class CKeyboard : public I_CVarHandler	
 {
 public:
 
@@ -25,7 +28,7 @@ public:
 		KB_WIN32POLL =4
 	};
 	
-	CKeyboard();
+	CKeyboard(CInputState * pStateManager);
 	~CKeyboard();
 
 	HRESULT	Init(int exclusive,EKbMode mode);
@@ -35,27 +38,20 @@ public:
 	bool	UnAcquire();
 
 	//CVar Handler
-	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
+	bool	HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
 	//Toggle Exclusive mode
 	HRESULT	SetExclusive(bool exclusive);
 
-	void SetKeyListener(I_InKeyListener * plistener,
-						bool bRepeatEvents,
-						float fRepeatRate);
-	void HandleKeyEvent(const KeyEvent_t &kevent) {}
-	
-	void SendKeyEvent(int &keyid, EButtonState &keyState);
-
-	void Update();
-	int	 GetDeviceState();
+	void	Update();
+	int		GetDeviceState();
 
 private:
 
-	#define KB_DIBUFFERSIZE	16
-
 	//========================================================================
 	//Private Member Vars
+
+	CInputState * m_pStateManager;
 	
 	//Event handle
 	HANDLE			m_hDIKeyboardEvent;	
@@ -65,14 +61,15 @@ private:
 	EKbMode			m_eKbMode;
 	bool			m_bExclusive;
 	
-	float			m_fRepeatRate;		//Current repeat rate
-	bool			m_bRepeatEvents;	//Report Held events ?
-	I_InKeyListener* m_pKeyHandler;		//Key listener object
-
 	CVar 			m_pVarKbMode;
 
+ HHOOK	hWinKbHook;	//Keyboard Hook handle
+
+//Device Query Buffers
+ BYTE					m_aKeyState[IN_NUMKEYS];		  //Receives immediate and Win32 data
+
 	//Key Translation table		
-	uint			m_aCharVal[IN_NUMKEYS]; 	
+	int				m_aCharVal[IN_NUMKEYS]; 	
 	
 	//Receives DI buffered data 
 	DIDEVICEOBJECTDATA	 m_aDIBufKeydata[KB_DIBUFFERSIZE]; 
@@ -99,13 +96,10 @@ private:
 	void	Update_DIImmediate();
 	void	Update_Win32();
 
-	static void	ShiftCharacter(int &val);
-
 	friend LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 											   WPARAM wParam,  // virtual-key code
 											   LPARAM lParam); // keystroke-message information
-
-	friend bool	CKBMode(const CVar * var, int argc, char** argv);
+	bool CKBMode(const CVar * var, int argc, char** argv);
 };
 
 #endif

@@ -369,6 +369,10 @@ SOURCE=.\Source\In_mouse.cpp
 
 SOURCE=.\Source\In_mouse.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Source\In_state.cpp
+# End Source File
 # End Group
 # Begin Group "Interface"
 

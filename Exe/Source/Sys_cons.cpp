@@ -223,6 +223,10 @@ void CConsole::HandleKeyEvent(const KeyEvent_t &kevent)
 				if(matchingNames.size())
 				{
 					matchingNames.sort();
+					
+					//Print all the matched entries
+					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
+						ComPrintf("%s\n", *it);
 					m_conString.assign(matchingNames.back());
 				}
 				break;

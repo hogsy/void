@@ -4,6 +4,13 @@
 #include "Sys_hdr.h"
 #include "In_defs.h"
 
+//Heh, is this overkill ?
+namespace VoidInput
+{
+class CInputState;
+class CMouse;
+}
+
 /*
 ===========================================
 The Input Interface Class
@@ -11,9 +18,7 @@ is only exposed to Sys_main so it can
 initialize, destroy and run updates
 ===========================================
 */
-
-class CInput : public I_InputFocusManager,
-			   public I_CVarHandler
+class CInput : public I_CVarHandler
 {
 public:
 
@@ -24,8 +29,6 @@ public:
 	bool Init();				//Initialize the Input System
 	void Shutdown();			//Shutdown the Input System
 
-	void Resize(int x, int y, int w, int h);				//Handle resizes, needed for Win32 mouse clipping
-	
 	void Acquire();				//Acquire all devices
 	bool AcquireMouse();		//Unacquire Mouse
 	bool AcquireKeyboard();		//Unacquire KB
@@ -35,25 +38,24 @@ public:
 	bool UnAcquireKeyboard();	//Unacquire Mouse
 
 	void UpdateDevices();		//Update Input states for all devices
-	void UpdateKeys();			//Just update keys
 	void UpdateCursor();		//Update the cursor position
+	void UpdateKeys();			//Just update keys
+
+	//Handle resizes, needed for Win32 mouse clipping
+	void Resize(int x, int y, int w, int h);
 
 	//CVar Handler
 	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
-	//Input Focus Manager Implementation
-
-	void SetKeyListener(I_InKeyListener * plistener,
-						bool bRepeatEvents,
-						float fRepeatRate);
-
-	void SetCursorListener(I_InCursorListener * plistener);
+	I_InputFocusManager * GetFocusManager();
 
 private:
-	CVar m_pVarExclusive;
 
+	VoidInput::CInputState	* m_pStateManager;
+	VoidInput::CMouse		* m_pMouse;
+
+	CVar m_pVarExclusive;
 	bool CSetExclusive(const CVar * var, int argc, char** argv);	
 };
 
 #endif
-

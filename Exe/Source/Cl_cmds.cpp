@@ -34,13 +34,13 @@ void CClientCmdHandler::SetListenerState(bool on)
 {
 	if(on = true)
 	{
-		GetInputFocusManager()->SetCursorListener(this);
-		GetInputFocusManager()->SetKeyListener(this,false);
+		System::GetInputFocusManager()->SetCursorListener(this);
+		System::GetInputFocusManager()->SetKeyListener(this,false);
 	}
 	else
 	{
-		GetInputFocusManager()->SetCursorListener(0);
-		GetInputFocusManager()->SetKeyListener(0);
+		System::GetInputFocusManager()->SetCursorListener(0);
+		System::GetInputFocusManager()->SetKeyListener(0);
 	}
 }
 

@@ -6,8 +6,7 @@
 /*
 Listeners need these definations to handle input events
 */
-
-#define IN_NUMKEYS	256
+const int IN_NUMKEYS = 256;
 
 /*
 ===========================================
@@ -19,9 +18,7 @@ enum EButtonState
 	BUTTONUP		= 0,	
 	BUTTONDOWN		= 1,	
 	BUTTONHELD		= 2,	
-	BUTTONDBLCLICK  = 4
 };
-
 
 /*
 ===========================================
@@ -122,23 +119,28 @@ enum EInKey
 	INKEY_MOUSE4	= 255
 };
 
-
-//================================================================
-//================================================================
-
+//======================================================================================
+//======================================================================================
 /*
 ===========================================
 Key Event Object
 ===========================================
 */
-typedef struct
+struct KeyEvent_t
 {
+	KeyEvent_t() 
+	{ 
+		state = BUTTONUP;
+		flags = 0;
+		id = 0;
+		time = 0.0f;
+	}
+
 	EButtonState state;		//Button State
 	byte		 flags;		//Button Flags
 	int			 id;		//Button Id var
 	float		 time;		//Time the event occured
-}KeyEvent_t;
-
+};
 
 /*
 ===========================================
@@ -157,7 +159,6 @@ struct I_InKeyListener
 	virtual void HandleKeyEvent(const KeyEvent_t &kevent)=0;
 };
 
-
 /*
 ===========================================
 Input Focus Manager
@@ -173,7 +174,12 @@ struct I_InputFocusManager
 								float fRepeatRate = IN_DEFAULTREPEATRATE)=0;
 	virtual void SetCursorListener(I_InCursorListener * plistener)=0;
 };
-extern I_InputFocusManager * GetInputFocusManager();
 
+//======================================================================================
+//Defined in SysMain where the Input System is actually created.
+namespace System
+{
+	I_InputFocusManager * GetInputFocusManager();
+}
 
 #endif
