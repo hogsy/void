@@ -172,6 +172,7 @@ void CModelManager::GetInfo(R_EntState &state)
 Purge
 =======================================
 */
+extern	I_Void		  *	g_pVoidExp;
 void CModelManager::Purge(void)
 {
 	if (!ready && drawmodels)
@@ -194,7 +195,8 @@ void CModelManager::Purge(void)
 
 		VectorInv2(walk->state->origin, trans);
 		g_pRast->MatrixTranslate(trans);
-		g_pRast->MatrixRotateY(-walk->state->angle.YAW   * 180/PI);
+
+		g_pRast->MatrixRotateY(-walk->state->angle.YAW   * 180/PI + g_pVoidExp->GetCurTime()*20);
 		g_pRast->MatrixRotateX( walk->state->angle.PITCH * 180/PI);
 		g_pRast->MatrixRotateZ(-walk->state->angle.ROLL  * 180/PI);
 

@@ -416,7 +416,7 @@ void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 	if (frac>=1) fframe = cframe;
 	if (frac<=0) cframe = fframe;
 
-	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames);
+	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames-1);
 	fframe = (int)floorf(frame);
 	cframe = (int)ceilf(frame);
 	frac = frame-fframe;
