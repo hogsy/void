@@ -58,12 +58,13 @@ struct CSoundManager::SndSource
 Constructor
 ==========================================
 */
-CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
+CSoundManager::CSoundManager() : /*m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cHighQuality("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
 								 m_cRollOffFactor("snd_rolloff", "0.3", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDistanceFactor("snd_distance", "30.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE),
+*/
 								 m_pPrimary(new CPrimaryBuffer)
 {
 	m_pDSound = 0;
@@ -84,7 +85,23 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 	m_bStereoSupport= false;
 	m_fLastFrame = 0.0f;
 
-	System::GetConsole()->RegisterCVar(&m_cSndFps, this);
+	I_Console * pConsole = I_Console::GetConsole();
+
+	m_cSndFps = pConsole->RegisterCVar("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE, this);
+	m_cVolume = pConsole->RegisterCVar("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	m_cHighQuality = pConsole->RegisterCVar("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE,this);
+	m_cRollOffFactor = pConsole->RegisterCVar("snd_rolloff", "0.3", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	m_cDopplerFactor = pConsole->RegisterCVar("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	m_cDistanceFactor = pConsole->RegisterCVar("snd_distance", "30.0", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	
+	pConsole->RegisterCommand("sndplay",CMD_PLAY,this);
+	pConsole->RegisterCommand("sndstop",CMD_STOP,this);
+	pConsole->RegisterCommand("sndinfo",CMD_INFO,this);
+	pConsole->RegisterCommand("sndlist",CMD_LIST,this);
+
+
+
+/*	System::GetConsole()->RegisterCVar(&m_cSndFps, this);
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
 	System::GetConsole()->RegisterCVar(&m_cHighQuality,this);
 	System::GetConsole()->RegisterCVar(&m_cRollOffFactor,this);
@@ -95,6 +112,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 	System::GetConsole()->RegisterCommand("sndstop",CMD_STOP,this);
 	System::GetConsole()->RegisterCommand("sndinfo",CMD_INFO,this);
 	System::GetConsole()->RegisterCommand("sndlist",CMD_LIST,this);
+*/
 }
 
 
@@ -279,7 +297,7 @@ bool CSoundManager::Init()
 	pcmwf.wFormatTag = WAVE_FORMAT_PCM;
 
 	//Get 3dListener Interface
-	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf, m_cVolume.fval);
+	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf, m_cVolume->fval);
 	if(!lpd3dlistener)
 	{
 		ComPrintf("CSound::Init Failed to create listener\n");
@@ -288,9 +306,9 @@ bool CSoundManager::Init()
 
 	//Create Listener object
 	m_pListener = new C3DListener(lpd3dlistener);
-	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor.fval,DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetRolloffFactor(m_cRollOffFactor.fval,DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetDopplerFactor(m_cDopplerFactor.fval,DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetDistanceFactor(m_cDistanceFactor->fval,DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetRolloffFactor(m_cRollOffFactor->fval,DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetDopplerFactor(m_cDopplerFactor->fval,DS3D_DEFERRED);
 	hr = m_pListener->m_pDS3dListener->CommitDeferredSettings();
 	
 	if(FAILED(hr))
@@ -357,7 +375,7 @@ void CSoundManager::RunFrame()
 {
 	if(m_fLastFrame > System::GetCurTime())
 		return;
-	m_fLastFrame = System::GetCurTime() + 1.0f/m_cSndFps.fval;
+	m_fLastFrame = System::GetCurTime() + 1.0f/m_cSndFps->fval;
 
 	//Go through all the sound sources to play the ones in range,
 	//and stop the ones out of range. out of range nonStatic sources are removed
@@ -946,17 +964,17 @@ bool CSoundManager::SetDopplerFactor(const CStringVal &strVal)
 Handle CVar changes
 ==========================================
 */
-bool CSoundManager::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CSoundManager::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 {
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cVolume))
+	if(cvar == m_cVolume)
 		return SetVolume(strVal);
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cRollOffFactor))
+	if(cvar == m_cRollOffFactor)
 		return SetRollOffFactor(strVal);
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cDopplerFactor))
+	if(cvar == m_cDopplerFactor)
 		return SetDopplerFactor(strVal);
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cDistanceFactor))
+	if(cvar == m_cDistanceFactor)
 		return SetDistanceFactor(strVal);
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cSndFps))
+	if(cvar == m_cSndFps)
 	{
 		int val = strVal.IntVal();
 		if(val >= 20)

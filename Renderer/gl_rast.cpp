@@ -2,7 +2,7 @@
 #include "gl_rast.h"
 #include <gl/glu.h>
 
-extern 	CVar g_varGLExtensions;
+extern 	CVar * g_varGLExtensions;
 
 /*
 =======================================
@@ -73,7 +73,7 @@ bool COpenGLRast::Init()
 
 
 	ComPrintf("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
-	ComPrintf("CGLUtil::Init:Pos: %d %d\n",m_cWndX.ival,m_cWndY.ival);
+	ComPrintf("CGLUtil::Init:Pos: %d %d\n",g_varWndX->ival,g_varWndY->ival);
 
 
 #ifdef DYNAMIC_GL
@@ -247,10 +247,10 @@ bool COpenGLRast::GoWindowed(void)
 //	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
 	RECT wrect;
-	wrect.left = m_cWndX.ival;
-	wrect.top = m_cWndY.ival;
-	wrect.right = m_cWndX.ival + g_rInfo.width;
-	wrect.bottom= m_cWndY.ival + g_rInfo.height;
+	wrect.left = g_varWndX->ival;
+	wrect.top = g_varWndY->ival;
+	wrect.right = g_varWndX->ival + g_rInfo.width;
+	wrect.bottom= g_varWndY->ival + g_rInfo.height;
 	
 	//Adjusts Client Size
 	::AdjustWindowRect(&wrect, 
@@ -402,8 +402,8 @@ void COpenGLRast::SetWindowCoords(int wndX, int wndY)
 	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
 		return;
 
-	m_cWndX.Set(wndX);
-	m_cWndY.Set(wndY);
+	g_varWndX->Set(wndX);
+	g_varWndY->Set(wndY);
 }
 
 /*
@@ -723,12 +723,12 @@ void COpenGLRast::TextureLoad(hTexture index, const TextureData &texdata)
 	if (texdata.format == IMG_RGB)
 	{
 		ext_format = GL_RGB;
-		int_format = g_var32BitTextures.bval ? GL_RGB8 : GL_RGB5;
+		int_format = g_var32BitTextures->bval ? GL_RGB8 : GL_RGB5;
 	}
 	else
 	{
 		ext_format = GL_RGBA;
-		int_format = g_var32BitTextures.bval ? GL_RGBA8 : GL_RGBA4;
+		int_format = g_var32BitTextures->bval ? GL_RGBA8 : GL_RGBA4;
 	}
 
 	int w = texdata.width;
@@ -876,7 +876,7 @@ void COpenGLRast::ProjectionMode(EProjectionMode mode)
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
-		x = (float) tan(g_varFov.ival*(PI/180) * 0.5f);
+		x = (float) tan(g_varFov->ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		glFrustum(-x, x, -z, z, 1, 10000);
 

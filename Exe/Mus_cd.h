@@ -20,7 +20,7 @@ public:
 	void HandleMCIMsg(uint &wParam, long &lParam);
 	
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal) { return false; } 
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal) { return false; } 
 	
 	
 private:

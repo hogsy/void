@@ -22,6 +22,7 @@ class	CClient;
 class	CSoundManager;
 class	CMusic;
 
+
 //========================================================================================
 
 class CVoid : public I_ConHandler
@@ -38,7 +39,7 @@ public:
 
 	//Console Handler
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal) 
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal) 
 	{ return false; 
 	}
 
@@ -72,7 +73,7 @@ private:
 	//Subsystems
 	//=========================================================
 	
-	CConsole	   m_Console;		//Console
+//	CConsole	   m_Console;		//Console
 	CTime		   m_Time;
 
 	VoidExports	 * m_pExport;		//Exported Stuff
@@ -89,8 +90,8 @@ private:
 	CClient		 * m_pClient;		//Client and UI
 
 	//=========================================================
-	CVar		   m_varTimeStamp;
-	CVar		   m_varVersion;
+	CVar *		   m_varTimeStamp;
+	CVar *		   m_varVersion;
 
 	eGameState	   m_gameState;
 

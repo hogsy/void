@@ -3,6 +3,9 @@
 
 #include "In_defs.h"
 
+struct I_ConsoleRenderer;
+class  CVarImpl;
+
 /*
 ==========================================
 Console Command
@@ -10,11 +13,11 @@ Console Command
 */
 struct CCommand
 {
-	CCommand(const char * iname, int iid, I_ConHandler * ihandler)
+	CCommand(const char * iname, int iid, I_ConHandler * pHandler)
 	{
 		name = new char[strlen(iname)+1];
 		strcpy(name,iname);
-		handler = ihandler;
+		handler = pHandler;
 		id = iid;
 	}
 
@@ -46,7 +49,6 @@ console input
 config files
 ==========================================
 */
-struct I_ConsoleRenderer;
 
 class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener,	//Key Event listener interface	
@@ -59,7 +61,12 @@ public:
 
 	//==============================================================
 	//I_Console Interface
-	void RegisterCVar(CVarBase * var,I_ConHandler * pHandler=0);
+	CVar * RegisterCVar(const char * varName,
+						const char *varval, 
+						CVarType vartype,	
+						int varflags,
+						I_ConHandler * pHandler);
+
 	void UnregisterHandler(I_ConHandler * pHandler);
 	void RegisterCommand(const char *cmdname, int id, I_ConHandler * pHandler);
 	void ComPrint(const char* text);
@@ -72,7 +79,7 @@ public:
 	//==============================================================
 	//Command Handler
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal) { return false; } 
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal) { return false; } 
 
 	//==============================================================
 
@@ -99,8 +106,8 @@ private:
 	{	MAX_CONSOLE_BUFFER = 1024
 	};
 
-	void UpdateCVarFromArchive(CVarBase * pCvar);
-	void WriteCVarToArchive(CVarBase * pCvar);
+	void UpdateCVarFromArchive(CVarImpl * pCvar);
+	void WriteCVarToArchive(CVarImpl * pCvar);
 
 	//Helper funcs
 	int  ReadConfigParm(char *buf, int bufsize, FILE * fp);
@@ -108,9 +115,9 @@ private:
 
 	//==============================================================
 	typedef std::list<CCommand>	 CmdList;
-	typedef std::list<CVarBase*> CVarList;
+	typedef std::list<CVarImpl*> CVarList;
 	typedef std::list<CCommand>::iterator  CmdListIt;
-	typedef std::list<CVarBase*>::iterator CVarListIt;
+	typedef std::list<CVarImpl*>::iterator CVarListIt;
 	
 	CmdList		m_lCmds;		//Currently registered commands
 	CVarList	m_lCVars;		//Currently registered cvars

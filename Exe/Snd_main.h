@@ -76,7 +76,7 @@ public:
 				 int chantype = CHAN_AUTO);
 
 	//Console handler
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms);
 
 private:
@@ -99,12 +99,12 @@ private:
 	float	 m_fLastFrame;
 	vector_t m_listenerPos;
 
-	CVar m_cVolume;			//Master Volume 
-	CVar m_cHighQuality;	//16bit buffer if on.
-	CVar m_cRollOffFactor;
-	CVar m_cDopplerFactor;
-	CVar m_cDistanceFactor;
-	CVar m_cSndFps;
+	CVar * m_cVolume;			//Master Volume 
+	CVar * m_cHighQuality;	//16bit buffer if on.
+	CVar * m_cRollOffFactor;
+	CVar * m_cDopplerFactor;
+	CVar * m_cDistanceFactor;
+	CVar * m_cSndFps;
 
 	void PlaySoundSource(SndSource &source);
 

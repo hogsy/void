@@ -31,7 +31,7 @@ public:
 
 	//Console Interface
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	
 private:
 	
@@ -48,8 +48,8 @@ private:
 
 	//==================================================
 	//Client CVars
-	CVar	m_cvPort;
-	CVar	m_cvNetStats;
+	CVar *	m_cvPort;
+	CVar *	m_cvNetStats;
 
 	bool	m_bInGame;
 	float	m_fFrameTime;

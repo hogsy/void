@@ -151,6 +151,10 @@ SOURCE=.\Sys_cons.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Sys_cvar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Sys_hdr.h
 # End Source File
 # Begin Source File
@@ -192,10 +196,6 @@ SOURCE=..\Shared\Com_buffer.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_camera.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File
 

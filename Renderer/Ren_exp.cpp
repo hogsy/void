@@ -23,7 +23,7 @@ CWorld			*	world=0;			//The World
 CClientRenderer *	g_pClient=0;
 CRasterizer		*	g_pRast=0;
 
-extern	CVar g_varFullbright;
+extern	CVar * g_varFullbright;
 
 /*
 =======================================
@@ -34,10 +34,7 @@ configs have been excuted to update the cvars with the
 saved rendering info
 =======================================
 */
-CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_BOOL,CVAR_ARCHIVE),
-					 m_cBpp("r_bpp", "16",CVAR_INT,CVAR_ARCHIVE),
-					 m_cRes("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE),
-					 m_cRast("r_rast", "gl",CVAR_STRING, CVAR_ARCHIVE)
+CRenExp::CRenExp()
 {
 	//Create different subsystems
 
@@ -48,15 +45,17 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_BOOL,CVAR_ARCHIVE),
 	g_pShaders = new CShaderManager();
 	g_pTex     = new CTextureManager();
 	g_pClient  = new CClientRenderer();
-	
-	I_Console::GetConsole()->RegisterCVar(&m_cRast, this);
-	I_Console::GetConsole()->RegisterCVar(&m_cFull,this);
-	I_Console::GetConsole()->RegisterCVar(&m_cBpp,this);
-	I_Console::GetConsole()->RegisterCVar(&m_cRes,this);
 
-	if (_stricmp(m_cRast.string, "gl")==0)
+	I_Console * pConsole = I_Console::GetConsole();
+
+	m_varRast= pConsole->RegisterCVar("r_rast", "gl",CVAR_STRING, CVAR_ARCHIVE, this);
+	m_varFull= pConsole->RegisterCVar("r_full","0", CVAR_BOOL,CVAR_ARCHIVE,this);
+	m_varBpp = pConsole->RegisterCVar("r_bpp", "16",CVAR_INT,CVAR_ARCHIVE,this);
+	m_varRes = pConsole->RegisterCVar("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE,this);
+
+	if (_stricmp(m_varRast->string, "gl")==0)
 		g_pRast = new COpenGLRast();
-	else if(_stricmp(m_cRast.string,"none")==0)
+	else if(_stricmp(m_varRast->string,"none")==0)
 		g_pRast = new CRastNone();
 	else
 		g_pRast = new CRastD3DX();
@@ -110,29 +109,29 @@ bool CRenExp::InitRenderer()
 	world	= NULL;
 
 	//Setup initial state
-	g_rInfo.bpp = m_cBpp.ival;
-	if(m_cFull.ival)
+	g_rInfo.bpp = m_varBpp->ival;
+	if(m_varFull->ival)
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 	else
 		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
 
 	//parse width and height out of string
-	char *c = strchr(m_cRes.string, ' ');
+	char *c = strchr(m_varRes->string, ' ');
 	if(!c)
-		ComPrintf("CRenExp::InitRenderer::Unable to read x-y resolution from %s\n", m_cRes.string);
+		ComPrintf("CRenExp::InitRenderer::Unable to read x-y resolution from %s\n", m_varRes->string);
 	else
 	{
 		char tmp[8];
 		
 		//Read Width
-		int i = c - m_cRes.string;
-		strncpy(tmp,m_cRes.string,i);
+		int i = c - m_varRes->string;
+		strncpy(tmp,m_varRes->string,i);
 		sscanf(tmp,"%d",&g_rInfo.width);
 
 		//Read Height
 		c++;
-		strcpy(tmp,m_cRes.string+i+1);
+		strcpy(tmp,m_varRes->string+i+1);
 		sscanf(tmp,"%d",&g_rInfo.height);
 	}
 
@@ -156,8 +155,8 @@ bool CRenExp::InitRenderer()
 	//Update the res/bpp cvars
 	char res[16];
 	sprintf(res,"%d %d", g_rInfo.width, g_rInfo.height);
-	m_cRes.ForceSet(res);
-	m_cBpp.ForceSet((int)g_rInfo.bpp);
+	m_varRes->ForceSet(res);
+	m_varBpp->ForceSet((int)g_rInfo.bpp);
 
 	//Start up the renderer
 	r_init();
@@ -219,7 +218,7 @@ void CRenExp::Draw(const CCamera * camera)
 	// decide whether or not to use lights before doing anything
 	if (!world)
 		g_pRast->UseLights(false);
-	else if (!g_varFullbright.bval  && world->light_size)
+	else if (!g_varFullbright->bval  && world->light_size)
 		g_pRast->UseLights(true);
 	else
 		g_pRast->UseLights(false);
@@ -392,18 +391,18 @@ bool CRenExp::Restart(void)
 CVar Handlers
 ==========================================
 */
-bool CRenExp::HandleCVar(const CVarBase *cvar,const CStringVal &strVal)
+bool CRenExp::HandleCVar(const CVar *cvar,const CStringVal &strVal)
 {
 	if(g_pRast)
 		g_pRast->SetFocus();
 
-	if(cvar == &m_cFull)
+	if(cvar == m_varFull)
 		return CVar_FullScreen(strVal);
-	else if(cvar == &m_cRes)
+	else if(cvar == m_varRes)
 		return CVar_Res(strVal);
-	else if(cvar == &m_cBpp)
+	else if(cvar == m_varBpp)
 		return CVar_Bpp(strVal);
-	else if(cvar == &m_cRast)
+	else if(cvar == m_varRast)
 		return CVar_Rast(strVal);
 	return false;
 }

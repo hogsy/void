@@ -36,8 +36,8 @@ Constructor
 CClient::CClient(I_Renderer * pRenderer,
 				 CSoundManager * pSound,
 				 CMusic	* pMusic) :
-					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
-					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
+//					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
+//					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(pRenderer),	
 					m_pSound(pSound),
 					m_pMusic(pMusic),
@@ -65,8 +65,8 @@ CClient::CClient(I_Renderer * pRenderer,
 	m_pWorld = 0;
 	m_bInGame = false;
 
-	System::GetConsole()->RegisterCVar(&m_cvPort,this);
-	System::GetConsole()->RegisterCVar(&m_cvNetStats);
+	m_cvPort = System::GetConsole()->RegisterCVar("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH,this);
+	m_cvNetStats = System::GetConsole()->RegisterCVar("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE,this);
 
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
@@ -124,7 +124,7 @@ void CClient::RunFrame()
 		m_fFrameTime = System::GetCurTime();
 
 		//Draw NetStats if flagged
-		if(m_cvNetStats.bval)
+		if(m_cvNetStats->bval)
 			ShowNetStats();
 
 		//Run Client Frame. All game related processing/drawing
@@ -358,9 +358,9 @@ ComPrintf("CL : Reconnecting\n");
 Validate/Handle any CVAR changes
 ==========================================
 */
-bool CClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
+bool CClient::HandleCVar(const CVar * cvar, const CStringVal &strval)
 {
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cvPort))
+	if(cvar == m_cvPort)
 	{
 		int port = strval.IntVal();
 		if(port < 1024 || port > 32767)

@@ -3,7 +3,6 @@
 
 #include "I_renderer.h"
 
-
 //Forward declarations
 struct I_ClientRenderer;
 class  CRHud;
@@ -39,7 +38,7 @@ public:
 	bool Restart(void);
 
 	//Console Handler
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms) { }
 
 private:
@@ -47,10 +46,10 @@ private:
 	CRHud		* m_pHud;
 	CRConsole	* m_pRConsole;
 
-	CVar   m_cFull;		//fullscreen
-	CVar   m_cRes;		//resolution
-	CVar   m_cBpp;		//bpp
-	CVar   m_cRast;		// rasterizer
+	CVar *  m_varFull;	//fullscreen
+	CVar *  m_varRes;	//resolution
+	CVar *  m_varBpp;	//bpp
+	CVar *  m_varRast;	//rasterizer
 
 	//CVar Handlers
 	bool CVar_FullScreen(const CStringVal &strVal);

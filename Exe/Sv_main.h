@@ -113,7 +113,7 @@ public:
 	int  RegisterImage(const char * sound);
 
 	//Console Handler Interface
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms);
 
 private:
@@ -177,10 +177,10 @@ private:
 
 	//=================================================
 	//CVars
-	CVar	m_cPort;		//Listen port
-	CVar 	m_cHostname;	//Hostname
-	CVar 	m_cMaxClients;	//Max Clients
-	CVar	m_cGame;		//Game Dir
+	CVar *	m_cPort;		//Listen port
+	CVar *	m_cHostname;	//Hostname
+	CVar *	m_cMaxClients;	//Max Clients
+	CVar *	m_cGame;		//Game Dir
 
 	//=================================================
 

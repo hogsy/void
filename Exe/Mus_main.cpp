@@ -41,7 +41,7 @@ using namespace VoidMusic;
 Constructor/Destructor
 ==========================================
 */
-CMusic::CMusic() : m_cVolume("mus_vol","8", CVAR_INT,CVAR_ARCHIVE)
+CMusic::CMusic()
 {
 	m_bFMod  = false;
 	m_pStream = 0;
@@ -49,7 +49,7 @@ CMusic::CMusic() : m_cVolume("mus_vol","8", CVAR_INT,CVAR_ARCHIVE)
 
 	m_pCDAudio = new CMusCDAudio();
 
-	System::GetConsole()->RegisterCVar(&m_cVolume,this);
+	m_cVolume = System::GetConsole()->RegisterCVar("mus_vol","8", CVAR_INT,CVAR_ARCHIVE,this);
 
 	System::GetConsole()->RegisterCommand("mus_play", MUS_PLAY, this);
 	System::GetConsole()->RegisterCommand("mus_pause", MUS_PAUSE, this);
@@ -187,7 +187,7 @@ void CMusic::HandleCommand(int cmdId, const CParms &parms)
 Handle Chantes to CVars
 ==========================================
 */
-bool CMusic::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CMusic::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 {
 //	if(cvar == &m_cVolume)
 //		return Volume(&m_cVolume,parms);

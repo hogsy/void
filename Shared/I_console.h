@@ -1,5 +1,5 @@
-#ifndef INC_CONSOLE_INTERFACE
-#define INC_CONSOLE_INTERFACE
+#ifndef VOID_CONSOLE_INTERFACE
+#define VOID_CONSOLE_INTERFACE
 
 /*
 ================================================
@@ -30,8 +30,14 @@ enum CVarType
 	CVAR_BOOL
 };
 
-struct CVarBase
+class CVar
 {
+protected:
+	CVar() {}
+	virtual ~CVar() {}
+
+public:
+
 	union
 	{
 		float fval;
@@ -42,10 +48,12 @@ struct CVarBase
 	//Public vars
 	char * name;
 	char * string;
-	int	   flags;
 	char * latched_string;
 	char * default_string;
-	CVarType	 type;
+	
+	int	     flags;
+	CVarType type;
+
 	I_ConHandler * handler;
 
 	virtual void ForceSet(const char *varval)=0;
@@ -73,7 +81,11 @@ struct I_Console
 	static  I_Console * GetConsole();
 
 	//Cvar Registration
-	virtual void RegisterCVar(CVarBase * pVar, I_ConHandler * pHandler=0)=0;
+	virtual CVar * RegisterCVar(const char * varName,
+								const char *varval, 
+								CVarType vartype,	
+								int varflags,
+								I_ConHandler * pHandler)=0;
 
 	//Con Command Registration
 	virtual void RegisterCommand(const char * cmdname, int id,	
@@ -99,17 +111,17 @@ Auto-unregisters itself on destruction
 */
 struct I_ConHandler
 {
+	//Auto unregisters variables
+	virtual ~I_ConHandler() { I_Console::GetConsole()->UnregisterHandler(this); }
+
+	//I can implement RegisterCVar and RegisterCommand here if adding "this" 
+	//as the last parameter in each call gets to be annoying
+
 	//Called everytime a the given command it entered
 	virtual void HandleCommand(int cmdId, const CParms &parms) = 0;
 
 	//Return true if proposed changes are accepted
-	virtual bool HandleCVar(const CVarBase * cvar,
-							const CStringVal &val) = 0;
+	virtual bool HandleCVar(const CVar * pVar, const CStringVal &val) = 0;
 };
 
 #endif
-
-
-
-
-

@@ -353,8 +353,8 @@ void CGameClient::ReadClientInfo(CBuffer &buffer)
 	//See if a skin name was given
 	if(!skin)
 	{
-		ComPrintf("CL: Unable to get skinname: %s: Defaulting to %s\n", szCharacter, m_cvDefaultChar.string);
-		strcpy(szCharacter,m_cvDefaultChar.string);
+		ComPrintf("CL: Unable to get skinname: %s: Defaulting to %s\n", szCharacter, m_cvDefaultChar->string);
+		strcpy(szCharacter,m_cvDefaultChar->string);
 		//reset to default character
 		skin = strchr(szCharacter,'/');
 	}
@@ -408,7 +408,7 @@ void CGameClient::Talk(const char * string)
 	if(!*msg || *msg == '\0')
 		return;
 
-	ComPrintf("%s: %s\n", m_cvName.string, msg);
+	ComPrintf("%s: %s\n", m_cvName->string, msg);
 	m_pClGame->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
@@ -513,7 +513,7 @@ bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 	else
 		sprintf(path,"%s/%s", modelName,pSkin);
 
-	m_cvCharacter.ForceSet(path);
+	m_cvCharacter->ForceSet(path);
 
 	//Now unload the current stuff, and load the new stuff
 	if(m_ingame)
@@ -535,7 +535,7 @@ bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 		CBuffer &buffer = m_pClGame->GetReliableSendBuffer();
 		buffer.WriteByte(CL_INFOCHANGE);
 		buffer.WriteChar('c');
-		buffer.WriteString(m_cvCharacter.string);
+		buffer.WriteString(m_cvCharacter->string);
 	}
 	return false;
 }
@@ -557,21 +557,21 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 //ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
 	
 	m_pGameClient->Reset();
-	strcpy(m_pGameClient->name, m_cvName.string);
+	strcpy(m_pGameClient->name, m_cvName->string);
 	
 	//Load model Resources
 	char path[COM_MAXPATH];
-	char * skin = strchr(m_cvCharacter.string,'/');
+	char * skin = strchr(m_cvCharacter->string,'/');
 	
 	if(skin)
 	{
-		strncpy(m_pGameClient->model, m_cvCharacter.string, skin - m_cvCharacter.string);
+		strncpy(m_pGameClient->model, m_cvCharacter->string, skin - m_cvCharacter->string);
 		skin++;
 		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,skin);
 	}
 	else
 	{
-		strcpy(m_pGameClient->model, m_cvCharacter.string);
+		strcpy(m_pGameClient->model, m_cvCharacter->string);
 		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,m_pGameClient->model);
 	}
 
@@ -639,7 +639,7 @@ Write UserInfo to buffer
 */
 void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
-	buffer.WriteString(m_cvName.string);
-	buffer.WriteString(m_cvCharacter.string);
-	buffer.WriteInt(m_cvInRate.ival);
+	buffer.WriteString(m_cvName->string);
+	buffer.WriteString(m_cvCharacter->string);
+	buffer.WriteInt(m_cvInRate->ival);
 }

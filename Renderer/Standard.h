@@ -6,7 +6,6 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
-#include "Com_cvar.h"
 #include "Com_vector.h"
 #include "Com_world.h"
 #include "Com_camera.h"

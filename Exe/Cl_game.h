@@ -55,7 +55,7 @@ public:
 
 	//Console Handler Implementation
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strval);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strval);
 
 private:
 
@@ -95,15 +95,15 @@ private:
 	bool ValidateRate(const CStringVal &strval);
 	bool ValidateCharacter(const CStringVal &strval);
 
-	CVar    m_cvKbSpeed;
-	CVar	m_cvName;
-	CVar	m_cvInRate;
-	CVar	m_cvOutRate;
-	CVar	m_cvCharacter;
-	CVar	m_cvClip;
-	CVar    m_cvDefaultChar;
-	CVar	m_cvViewTilt;
-	CVar	m_cvLocalMove;
+	CVar *    m_cvKbSpeed;
+	CVar *	m_cvName;
+	CVar *	m_cvInRate;
+	CVar *	m_cvOutRate;
+	CVar *	m_cvCharacter;
+	CVar *	m_cvClip;
+	CVar *  m_cvDefaultChar;
+	CVar *	m_cvViewTilt;
+	CVar *	m_cvLocalMove;
 
 	//==================================================
 

@@ -11,11 +11,15 @@ are dynamicallys modified throughout a session
 ==========================================
 */
 
-struct CVar : public CVarBase
+class CVarImpl : public CVar
 {
+public:
+
 	//Constructor
-	CVar(const char *varname,  const char *varval, 
-		 CVarType vartype,	int varflags)
+	CVarImpl(const char *varname,  
+			 const char *varval, 
+			 CVarType vartype,	
+			 int varflags)
 	{
 		name = new char[strlen(varname)+1];
 		strcpy(name,varname);
@@ -34,7 +38,7 @@ struct CVar : public CVarBase
 	}
 
 	//Destructor
-	~CVar()
+	~CVarImpl()
 	{	
 		handler = 0;
 		if(name)   delete [] name; name = 0;

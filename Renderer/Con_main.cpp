@@ -12,10 +12,7 @@
 Constructor
 =======================================
 */
-CRConsole::CRConsole(): m_seperatorchar('^'),
-						m_conSpeed("r_conspeed","500",CVAR_INT,CVAR_ARCHIVE),
-						m_conAlpha("r_conalpha","200", CVAR_INT,CVAR_ARCHIVE)
-						
+CRConsole::CRConsole(): m_seperatorchar('^')
 {
 	m_statuslen = 0;
 	m_statusline = 0;
@@ -32,8 +29,9 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 	for (int i = 0; i < CON_MAX_LINES; i++)
 		m_lines[i] = new Conline_t;
 	
-	I_Console::GetConsole()->RegisterCVar(&m_conSpeed);
-	I_Console::GetConsole()->RegisterCVar(&m_conAlpha);
+	I_Console * pConsole = I_Console::GetConsole();
+	m_varConSpeed = pConsole->RegisterCVar("r_conspeed","500",CVAR_INT,CVAR_ARCHIVE, this);
+	m_varConAlpha = pConsole->RegisterCVar("r_conalpha","200", CVAR_INT,CVAR_ARCHIVE, this);
 
 	RegisterConObjects();
 }
@@ -110,7 +108,7 @@ void CRConsole::Draw()
 		}
 	case CON_CLOSING:
 		{
-			m_alpha -= (GetFrameTime() * m_conSpeed.ival);
+			m_alpha -= (GetFrameTime() * m_varConSpeed->ival);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -132,7 +130,7 @@ void CRConsole::Draw()
 				break;
 			}
 
-			m_alpha += (GetFrameTime() * m_conSpeed.ival);
+			m_alpha += (GetFrameTime() * m_varConSpeed->ival);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{
@@ -153,16 +151,16 @@ void CRConsole::Draw()
 	}
 
 	DWORD top = (int) m_alpha;
-	if (m_alpha > m_conAlpha.ival)
-		top = m_conAlpha.ival;
+	if (m_alpha > m_varConAlpha->ival)
+		top = m_varConAlpha->ival;
 
 
 	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
 
-	if (bottom > m_conAlpha.ival)
-		bottom = m_conAlpha.ival;
+	if (bottom > m_varConAlpha->ival)
+		bottom = m_varConAlpha->ival;
 
 
 	if (top < 0)	top = 0;

@@ -34,7 +34,7 @@ public:
 	void UpdateRes();
 	void Draw(); 
 
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms);
 
 	enum
@@ -73,8 +73,8 @@ private:
 	void PrintBuffer();
 
 	//CVars
-	CVar 		m_conSpeed;
-	CVar 		m_conAlpha;
+	CVar *		m_varConSpeed;
+	CVar *		m_varConAlpha;
 
 	bool		m_condown;		// is the console down
 	bool		m_fullscreen;	// fullscreen console?

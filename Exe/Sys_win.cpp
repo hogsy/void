@@ -16,6 +16,8 @@ static bool RegisterWindow(HINSTANCE hInst);
 static void UnRegisterWindow(HINSTANCE hInst);
 static bool ChangeToVoidDir();
 
+
+CConsole *	 g_pConsole;		//Console
 //The game
 CVoid		* g_pVoid=0;		
 
@@ -79,6 +81,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 	}
 	
 	//Create the Void object
+	g_pConsole = new CConsole(m_exePath);
 	g_pVoid = new CVoid(m_exePath,cmdLine);
 	if(!g_pVoid->Init()) 
 	{
@@ -103,6 +106,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 
 	//Will never get executed
 	delete g_pVoid;  
+	delete g_pConsole;
 	UnRegisterWindow(m_hInst);
 	return -1;
 }
@@ -181,6 +185,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 		{
 			//Cleanup
 			delete g_pVoid;
+			delete g_pConsole;
 			UnRegisterWindow(m_hInst);
 			exit(0);
 			break; 
@@ -307,6 +312,7 @@ Handle out of memeoty
 int HandleOutOfMemory(size_t size)
 {
 	delete g_pVoid;
+	delete g_pConsole;
 	UnRegisterWindow(m_hInst);
 	exit(0);
 	return 0;

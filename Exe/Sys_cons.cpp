@@ -1,4 +1,5 @@
 #include "Sys_hdr.h"
+#include "Sys_cvar.h"
 #include "Sys_cons.h"
 #include "I_renderer.h"
 #include "Com_util.h"
@@ -275,7 +276,7 @@ bool CConsole::ExecString(const char *string)
 	{
 		if(strcmp((*it)->name,szfirstArg)==0)
 		{
-			CVarBase * pVar = *it;
+			CVarImpl * pVar = *it;
 
 			if(pVar->flags & CVAR_READONLY)
 			{
@@ -328,23 +329,42 @@ Register CVar
 Initialize CVar and alphabetically add to list
 ==========================================
 */
-void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
+//void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
+CVar * CConsole::RegisterCVar(const char * varName,
+					const char *varVal, 
+					CVarType varType,	
+					int varFlags,
+					I_ConHandler * pHandler)
 {
-	if(handler)
-		var->handler = handler;
-
+	int ret = 0;
+	
+	//Insert in the proper place alphabetically
 	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
-		if(strcmp((*it)->name, var->name) > 0)
+		ret = strcmp((*it)->name, varName);
+		if(ret > 0)
 			break;
+		
+		//found a cvar using the same name. just return that.
+		if(ret == 0)
+		{
+			ComPrintf("CConsole::RegisterCVar: WARNING, %s was re-registered\n", varName);
+			return *it;
+		}
+		
 	}
 
-	//Find archived keyval and set it to that.
-	if(!(var->flags & CVAR_READONLY))
-		UpdateCVarFromArchive(var);
+	CVarImpl * pVar = new CVarImpl(varName,varVal,varType,varFlags);
+	if(pHandler)
+		pVar->handler = pHandler;
+
+	//Find archived keyval and set it to that.if its not readonly
+	if(!(pVar->flags & CVAR_READONLY))
+		UpdateCVarFromArchive(pVar);
 	
 	//Insert into the list
-	m_lCVars.insert(it,var);
+	m_lCVars.insert(it,pVar);
+	return pVar;
 }
 
 
@@ -355,14 +375,16 @@ Unregister a handler func
 */
 void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 {
-	if(!pHandler)
+	if(!pHandler || pHandler == this)
 		return;
 
 	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end();)
 	{
 		if((*it)->handler == pHandler)
 		{
-			WriteCVarToArchive(*it);
+			CVarImpl * pVar = *it;
+			WriteCVarToArchive(pVar);
+			delete pVar;
 			m_lCVars.erase(it++);
 		}
 		else
@@ -545,7 +567,7 @@ will set parms to the matching token
 it finds LAST
 ======================================
 */
-void CConsole::UpdateCVarFromArchive(CVarBase * pVar)
+void CConsole::UpdateCVarFromArchive(CVarImpl * pVar)
 {
 	CParms archivedParms(CON_MAXARGSIZE);
 	const char * archivedString = 0;
@@ -574,7 +596,7 @@ void CConsole::UpdateCVarFromArchive(CVarBase * pVar)
 Makes sure that the cvars value has been archived
 ================================================
 */
-void CConsole::WriteCVarToArchive(CVarBase * pCvar)
+void CConsole::WriteCVarToArchive(CVarImpl * pCvar)
 {
 	CParms archivedParms(CON_MAXARGSIZE);
 	StrListIt itMatched = m_cvarStrings.begin();

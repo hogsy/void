@@ -40,10 +40,10 @@ bool CRastD3DX::Init()
 {
 
 	RECT wrect;
-	wrect.left = m_cWndX.ival;
-	wrect.top = m_cWndY.ival;
-	wrect.right = m_cWndX.ival + g_rInfo.width;
-	wrect.bottom= m_cWndY.ival + g_rInfo.height;
+	wrect.left = g_varWndX->ival;
+	wrect.top = g_varWndY->ival;
+	wrect.right = g_varWndX->ival + g_rInfo.width;
+	wrect.bottom= g_varWndY->ival + g_rInfo.height;
 	
 	//Adjusts Client Size
 	::AdjustWindowRect(&wrect, 
@@ -224,8 +224,8 @@ void CRastD3DX::SetWindowCoords(int wndX, int wndY)
 	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
 		return;
 
-	m_cWndX.Set(wndX);
-	m_cWndY.Set(wndY);
+	g_varWndX->Set(wndX);
+	g_varWndY->Set(wndY);
 }
 
 /*
@@ -474,12 +474,12 @@ void CRastD3DX::TextureLoad(hTexture index, const TextureData &texdata)
 	if (texdata.format == IMG_RGB)
 	{
 		ext_format = D3DX_SF_R8G8B8;
-		int_format = g_var32BitTextures.bval ? D3DX_SF_R8G8B8 : D3DX_SF_R5G6B5;
+		int_format = g_var32BitTextures->bval ? D3DX_SF_R8G8B8 : D3DX_SF_R5G6B5;
 	}
 	else
 	{
 		ext_format = D3DX_SF_A8R8G8B8;
-		int_format = g_var32BitTextures.bval ? D3DX_SF_A8R8G8B8 : D3DX_SF_A4R4G4B4;
+		int_format = g_var32BitTextures->bval ? D3DX_SF_A8R8G8B8 : D3DX_SF_A4R4G4B4;
 	}
 
 	DWORD mipmap = texdata.bMipMaps ? 0 : D3DX_TEXTURE_NOMIPMAP;
@@ -670,7 +670,7 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
-		x = (float) tan(g_varFov.ival*(PI/180) * 0.5f);
+		x = (float) tan(g_varFov->ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		D3DXMatrixPerspectiveOffCenter(&m_matProjection, -x, x, -z, z, 1, 10000);
 		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
@@ -691,14 +691,14 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 		return;
 
 	case VRAST_ORTHO:
-		if (g_varD3DXShift.ival == 0)
+		if (g_varD3DXShift->ival == 0)
 			D3DXMatrixOrthoOffCenter(&m_matProjection, 0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
 		else
 			D3DXMatrixOrthoOffCenter(&m_matProjection,	
-									 1.0f/g_varD3DXShift.ival, 
-									 g_rInfo.width + 1.0f/g_varD3DXShift.ival,
-									-1.0f/g_varD3DXShift.ival, 
-									 g_rInfo.height- 1.0f/g_varD3DXShift.ival, -1, 1);
+									 1.0f/g_varD3DXShift->ival, 
+									 g_rInfo.width + 1.0f/g_varD3DXShift->ival,
+									-1.0f/g_varD3DXShift->ival, 
+									 g_rInfo.height- 1.0f/g_varD3DXShift->ival, -1, 1);
 
 		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
 

@@ -65,10 +65,11 @@ void RunFrame()
 Constructor
 ======================================
 */
-CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
+CServer::CServer() : /*m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_cHostname("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
+*/
 					 m_chanWriter(m_net)
 {
 	m_numModels = 0;
@@ -85,10 +86,10 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 
 	memset(m_printBuffer,0,512);
 
-	System::GetConsole()->RegisterCVar(&m_cHostname);
-	System::GetConsole()->RegisterCVar(&m_cGame);
-	System::GetConsole()->RegisterCVar(&m_cPort,this);
-	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
+	m_cHostname = System::GetConsole()->RegisterCVar("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cGame = System::GetConsole()->RegisterCVar("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cPort = System::GetConsole()->RegisterCVar("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cMaxClients = System::GetConsole()->RegisterCVar("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE,this);
 
 	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
 	System::GetConsole()->RegisterCommand("changelevel",CMD_CHANGELEVEL, this);
@@ -239,15 +240,15 @@ Reset Server State Vars
 void CServer::UpdateServerState()
 {
 	//Unlatch Vars
-	m_cGame.Unlatch();
-	m_cHostname.Unlatch();
-	m_cPort.Unlatch();
+	m_cGame->Unlatch();
+	m_cHostname->Unlatch();
+	m_cPort->Unlatch();
 
 	//Reset State info
-	strcpy(m_svState.gameName, m_cGame.string);
-	strcpy(m_svState.hostName, m_cHostname.string);
-	m_svState.maxClients = m_cMaxClients.ival;
-	m_svState.port = m_cPort.ival;
+	strcpy(m_svState.gameName, m_cGame->string);
+	strcpy(m_svState.hostName, m_cHostname->string);
+	m_svState.maxClients = m_cMaxClients->ival;
+	m_svState.port = m_cPort->ival;
 	m_svState.numClients = 0;
 	m_svState.levelId ++;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
@@ -690,9 +691,9 @@ void CServer::PrintServerStatus()
 Handle CVars
 ==========================================
 */
-bool CServer::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CServer::HandleCVar(const CVar* cvar, const CStringVal &strVal)
 {	
-	if(cvar == reinterpret_cast<CVarBase *>(&m_cPort))
+	if(cvar == m_cPort)
 	{
 		int port = strVal.IntVal();
 		if(port > 32767 || port < 1024)
@@ -702,7 +703,7 @@ bool CServer::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase *>(&m_cMaxClients))
+	else if(cvar == m_cMaxClients)
 	{
 		int maxclients = strVal.IntVal();
 		if(maxclients < 1 || maxclients > GAME_MAXCLIENTS)

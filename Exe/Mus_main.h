@@ -46,7 +46,7 @@ public:
 	void HandleMCIMsg(uint &wParam, long &lParam);
 
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 
 private:
 
@@ -57,7 +57,7 @@ private:
 	FSOUND_STREAM * m_pStream;
 
 	//playback volume
-	CVar m_cVolume;		
+	CVar * m_cVolume;		
 	bool Volume(const CVar * var, const CParms &parms);
 
 	//Command Handling

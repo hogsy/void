@@ -47,7 +47,7 @@ public:
 	void Resize(int x, int y, int w, int h);
 
 	//Console Handler
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 	void HandleCommand(int cmdId, const CParms &parms){}
 
 	I_InputFocusManager * GetFocusManager();
@@ -60,16 +60,16 @@ private:
 
 	bool m_bCursorVisible;
 
-	CVar m_pVarExclusive;
+	CVar * m_pVarExclusive;
 	
-	CVar m_pVarXSens;
-	CVar m_pVarYSens;
-	CVar m_pVarSens;
-	CVar m_pVarInvert;
+	CVar * m_pVarXSens;
+	CVar * m_pVarYSens;
+	CVar * m_pVarSens;
+	CVar *  m_pVarInvert;
 	
-	CVar m_pVarMouseFilter;
-	CVar m_pVarMouseMode;
-	CVar m_pVarKbMode;
+	CVar * m_pVarMouseFilter;
+	CVar  * m_pVarMouseMode;
+	CVar  * m_pVarKbMode;
 	
 	bool SetExclusive(bool on);
 

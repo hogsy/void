@@ -17,14 +17,16 @@ enum
 };
 
 
-CVar g_varFullbright("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
-CVar g_varFov("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
-CVar g_varMultiTexture("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE);
-CVar g_varVidSynch("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
-CVar g_var32BitTextures("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
-CVar g_varBeamTolerance("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
-CVar g_varD3DXShift("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
-CVar g_varGLExtensions("r_glExts", "None", CVAR_STRING, CVAR_READONLY);
+CVar * g_varWndX;        //Windowed X pos
+CVar * g_varWndY;        //Windowed Y pos
+CVar * g_varFullbright;
+CVar * g_varFov;
+CVar * g_varMultiTexture;
+CVar * g_varVidSynch;
+CVar * g_var32BitTextures;
+CVar * g_varBeamTolerance;
+CVar * g_varD3DXShift;
+CVar * g_varGLExtensions;
 
 
 //======================================================================================
@@ -223,30 +225,30 @@ bool CVar_D3DXShift(int val)
 Handle Cvars
 ==========================================
 */
-bool CRConsole::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CRConsole::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 {
-	if(cvar == (CVarBase*)&g_varFullbright)
+	if(cvar == g_varFullbright)
 		return CVar_FullBright(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_varFov)
+	else if(cvar == g_varFov)
 		return CVar_Fov(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_varMultiTexture)
+	else if(cvar == g_varMultiTexture)
 		return CVar_MultiTexture(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_varVidSynch)
+	else if(cvar == g_varVidSynch)
 		return CVar_VidSynch(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_var32BitTextures)
+	else if(cvar == g_var32BitTextures)
 		return CVar_32BitTextures(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&m_conAlpha)
+	else if(cvar == m_varConAlpha)
 		return CVar_ConAlpha(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_varBeamTolerance)
+	else if(cvar == g_varBeamTolerance)
 		return CVar_BeamTolerance(strVal.IntVal());
 
-	else if(cvar == (CVarBase*)&g_varD3DXShift)
+	else if(cvar == g_varD3DXShift)
 		return CVar_D3DXShift(strVal.IntVal());
 
 	return false;
@@ -260,17 +262,22 @@ Console constructor
 */
 void CRConsole::RegisterConObjects()
 {
-	I_Console::GetConsole()->RegisterCommand("tga_shot",CMD_TGASHOT,this);
-	I_Console::GetConsole()->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
+	I_Console * pConsole = I_Console::GetConsole();
 
-	I_Console::GetConsole()->RegisterCVar(&g_varFullbright,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varFov,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varMultiTexture,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varVidSynch,this);
-	I_Console::GetConsole()->RegisterCVar(&g_var32BitTextures,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varBeamTolerance,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varD3DXShift,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varGLExtensions);
+	pConsole->RegisterCommand("tga_shot",CMD_TGASHOT,this);
+	pConsole->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
+
+	g_varWndX = pConsole->RegisterCVar("r_wndx","80",CVAR_INT,CVAR_ARCHIVE,this);
+	g_varWndY = pConsole->RegisterCVar("r_wndy","40",CVAR_INT,CVAR_ARCHIVE,this);
+
+	g_varFullbright = pConsole->RegisterCVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE,this);
+	g_varFov = pConsole->RegisterCVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE,this);
+	g_varMultiTexture = pConsole->RegisterCVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE,this);
+	g_varVidSynch = pConsole->RegisterCVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE,this);
+	g_var32BitTextures = pConsole->RegisterCVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE,this);
+	g_varBeamTolerance = pConsole->RegisterCVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE,this);
+	g_varD3DXShift = pConsole->RegisterCVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE,this);
+	g_varGLExtensions = pConsole->RegisterCVar("r_glExts", "None", CVAR_STRING, CVAR_READONLY, this);
 }
 
 

@@ -184,11 +184,6 @@ private:
 protected:
 	void Flush(void);
 
-
-	CVar    m_cWndX;        //Windowed X pos
-	CVar    m_cWndY;        //Windowed Y pos
-
-
 	// current rasterizer states
 	EDepthFunc		mCurDepthFunc;
 	bool			mCurDepthWrite;
@@ -234,11 +229,14 @@ protected:
 	bool			mUseLights;	// use any kind of light (light ents or lightmaps)
 };
 
-
 // cvars the rasterizers use
-extern CVar g_var32BitTextures;
-extern CVar g_varFov;
-extern CVar g_varD3DXShift;
+
+extern CVar * g_varWndX;        //Windowed X pos
+extern CVar * g_varWndY;        //Windowed Y pos
+
+extern CVar * g_var32BitTextures;
+extern CVar * g_varFov;
+extern CVar * g_varD3DXShift;
 
 #endif	// RENDERER
 #endif

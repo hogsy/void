@@ -100,15 +100,15 @@ void CGameClient::UpdateViewAngles()
 		if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
 		{
 			m_pGameClient->angles.ROLL += (CL_TILT_SPEED * m_fFrameTime);
-			if(m_pGameClient->angles.ROLL > m_cvViewTilt.fval)
-				m_pGameClient->angles.ROLL = m_cvViewTilt.fval;
+			if(m_pGameClient->angles.ROLL > m_cvViewTilt->fval)
+				m_pGameClient->angles.ROLL = m_cvViewTilt->fval;
 		}
 
 		if(m_cmd.moveFlags & ClCmd::MOVELEFT)
 		{
 			m_pGameClient->angles.ROLL -= (CL_TILT_SPEED * m_fFrameTime);
-			if(m_pGameClient->angles.ROLL < -m_cvViewTilt.fval)
-				m_pGameClient->angles.ROLL = -m_cvViewTilt.fval;
+			if(m_pGameClient->angles.ROLL < -m_cvViewTilt->fval)
+				m_pGameClient->angles.ROLL = -m_cvViewTilt->fval;
 		}
 	}
 	else

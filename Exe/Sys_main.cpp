@@ -16,6 +16,8 @@
 #include <objbase.h>
 #include <direct.h>
 
+extern CConsole *	   g_pConsole;		//Console
+
 /*
 ==========================================
 Memory stuff
@@ -49,7 +51,7 @@ Constructor
 ==========================================
 */
 CVoid::CVoid(const char * curDir, const char * cmdLine) : 
-						m_Console(curDir),
+//						m_Console(curDir),
 						m_pExport(0),
 						m_pRender(0),
 						m_pRParms(0),
@@ -57,9 +59,9 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 						m_pFileSystem(0),
 						m_pClient(0),
 						m_pSound(0),
-						m_pMusic(0),
-						m_varTimeStamp("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY),
-						m_varVersion("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY)
+						m_pMusic(0)
+//						m_varTimeStamp("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY),
+//						m_varVersion("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY)
 {
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
@@ -74,10 +76,10 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 		Util::ParseFileName(map,COM_MAXPATH,cmdLine);
 
 		sprintf(parm, "map %s", map);
-		m_Console.AddCmdLineParm(parm);
+		g_pConsole->AddCmdLineParm(parm);
 	}
 
-	m_Console.LoadConfig("vvars.cfg");
+	g_pConsole->LoadConfig("vvars.cfg");
 
 	//================================
 	//Create and initialize the file system
@@ -94,7 +96,7 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 	//================================
 	//Export structure
 	m_pExport = new VoidExports();
-	m_pExport->pConsole    = (I_Console*)&m_Console;
+	m_pExport->pConsole    = (I_Console*)g_pConsole;
 	m_pExport->pHunkManager= g_pHunkManager; 
 	m_pExport->pfnGetCurTime = System::GetCurTime;
 	m_pExport->pfnGetCurPath = System::GetCurGamePath;
@@ -130,8 +132,9 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 	System::GetConsole()->RegisterCommand("fs_path",CMD_LISTPATHS,this);
 	System::GetConsole()->RegisterCommand("fs_dir",CMD_DIRPATH,this);
 
-	System::GetConsole()->RegisterCVar(&m_varTimeStamp);
-	System::GetConsole()->RegisterCVar(&m_varVersion);
+
+	m_varTimeStamp = System::GetConsole()->RegisterCVar("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY,this);
+	m_varVersion = System::GetConsole()->RegisterCVar("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY,this);
 }
 
 /*
@@ -169,7 +172,7 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize Console
-	m_Console.SetConsoleRenderer(m_pRender->GetConsole());
+	g_pConsole->SetConsoleRenderer(m_pRender->GetConsole());
 
 
 	//================================
@@ -230,11 +233,11 @@ bool CVoid::Init()
 	m_Time.Reset();
 
 	//Set focus to console
-	System::GetInputFocusManager()->SetKeyListener(&m_Console,true);
+	System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
 	//Exec any autoexec files and the commandLine
-	m_Console.ExecCmdLine();
-	m_Console.ExecConfig("autoexec.cfg");
+	g_pConsole->ExecCmdLine();
+	g_pConsole->ExecConfig("autoexec.cfg");
 	return true;
 }
 
@@ -246,7 +249,7 @@ Destructor
 CVoid::~CVoid() 
 {
 	//console
-	m_Console.WriteCVars("vvars.cfg");
+	g_pConsole->WriteCVars("vvars.cfg");
 
 	if(m_pClient)
 		delete m_pClient;
@@ -263,7 +266,7 @@ CVoid::~CVoid()
 	//Shutdown, and free the Renderer Interface
 	if(m_pRender)
 		m_pRender->Shutdown();
-	m_Console.SetConsoleRenderer(0);
+	g_pConsole->SetConsoleRenderer(0);
 
 	if(m_pInput)
 	{
@@ -519,7 +522,7 @@ namespace System
 {
 	const char* GetCurGamePath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
-	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
+	I_Console * GetConsole()	{ return g_pConsole; }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
 	float GetCurTime()	{ return g_pVoid->m_Time.GetCurrentTime(); }
@@ -538,18 +541,18 @@ namespace System
 		g_pVoid->m_gameState = state; 
 		if(state == INCONSOLE)
 		{
-			g_pVoid->m_Console.SetFullscreen(true);
-			g_pVoid->m_Console.SetVisible(true);
+			g_pConsole->SetFullscreen(true);
+			g_pConsole->SetVisible(true);
 		}
 		else if(state == INGAMECONSOLE)
 		{
-			g_pVoid->m_Console.SetFullscreen(false);
-			g_pVoid->m_Console.SetVisible(true);
+			g_pConsole->SetFullscreen(false);
+			g_pConsole->SetVisible(true);
 		}
 		else if(state == INGAME)
 		{
-			g_pVoid->m_Console.SetFullscreen(false);
-			g_pVoid->m_Console.SetVisible(false);
+			g_pConsole->SetFullscreen(false);
+			g_pConsole->SetVisible(false);
 
 			g_pVoid->m_pClient->SetInputState(true);
 		}
@@ -578,5 +581,5 @@ void ComPrintf(const char* text, ...)
 	vsprintf(textBuffer, text, args);
 	va_end(args);
 		
-	g_pVoid->m_Console.ComPrint(textBuffer);
+	g_pConsole->ComPrint(textBuffer);
 }

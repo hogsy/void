@@ -14,7 +14,7 @@ LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 Constructor
 =====================================
 */
-CInput::CInput() : 
+CInput::CInput() /*: 
 				m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE),
 				m_pVarXSens("in_xsens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
 				m_pVarYSens("in_ysens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
@@ -23,6 +23,7 @@ CInput::CInput() :
 				m_pVarMouseMode("in_mousemode","1",CVAR_INT,CVAR_ARCHIVE),
 				m_pVarKbMode("in_kbmode","1",CVAR_INT, CVAR_ARCHIVE),
 				m_pVarMouseFilter("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
+*/
 {
 	m_bCursorVisible = true;
 
@@ -32,14 +33,17 @@ CInput::CInput() :
 	m_pKb = new CKeyboard(m_pStateManager);
 
 	//Register CVars
-	System::GetConsole()->RegisterCVar(&m_pVarExclusive,this);
-	System::GetConsole()->RegisterCVar(&m_pVarXSens,this);
-	System::GetConsole()->RegisterCVar(&m_pVarYSens,this);
-	System::GetConsole()->RegisterCVar(&m_pVarSens,this);
-	System::GetConsole()->RegisterCVar(&m_pVarInvert,this);
-	System::GetConsole()->RegisterCVar(&m_pVarMouseMode,this);
-	System::GetConsole()->RegisterCVar(&m_pVarKbMode,this);
-	System::GetConsole()->RegisterCVar(&m_pVarMouseFilter, this);
+	I_Console * pConsole = I_Console::GetConsole();
+
+	m_pVarExclusive = pConsole->RegisterCVar("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE,this);
+	m_pVarXSens= pConsole->RegisterCVar("in_xsens","0.2",CVAR_FLOAT,CVAR_ARCHIVE,this);
+	m_pVarYSens= pConsole->RegisterCVar("in_ysens","0.2",CVAR_FLOAT,CVAR_ARCHIVE,this);
+	m_pVarSens= pConsole->RegisterCVar("in_sens","5.0",CVAR_FLOAT,CVAR_ARCHIVE,this);
+	m_pVarInvert= pConsole->RegisterCVar("in_invert","0",CVAR_BOOL,CVAR_ARCHIVE,this);
+	m_pVarMouseMode = pConsole->RegisterCVar("in_mousemode","1",CVAR_INT,CVAR_ARCHIVE,this);
+	m_pVarKbMode = pConsole->RegisterCVar("in_kbmode","1",CVAR_INT, CVAR_ARCHIVE,this);
+	m_pVarMouseFilter = pConsole->RegisterCVar("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE, this);
+
 }
 
 /*
@@ -95,11 +99,11 @@ bool CInput::Init()
 	//Are Initialized without specifying any modes, so that they
 	//can default to what they read from config files
 
-	m_pMouse->SetFilter(m_pVarMouseFilter.bval);
-	m_pMouse->SetInvert(m_pVarInvert.bval);
-	m_pMouse->SetExclusive(m_pVarExclusive.bval);
+	m_pMouse->SetFilter(m_pVarMouseFilter->bval);
+	m_pMouse->SetInvert(m_pVarInvert->bval);
+	m_pMouse->SetExclusive(m_pVarExclusive->bval);
 
-	m_pMouse->SetMouseMode((CMouse::EMouseMode)m_pVarMouseMode.ival);
+	m_pMouse->SetMouseMode((CMouse::EMouseMode)m_pVarMouseMode->ival);
 	if(!m_pMouse->Init())
 	{
 		Shutdown();
@@ -107,8 +111,8 @@ bool CInput::Init()
 	}
 
 
-	m_pKb->SetExclusive(m_pVarExclusive.bval);
-	m_pKb->SetKeyboardMode((CKeyboard::EKbMode)m_pVarKbMode.ival);
+	m_pKb->SetExclusive(m_pVarExclusive->bval);
+	m_pKb->SetKeyboardMode((CKeyboard::EKbMode)m_pVarKbMode->ival);
 	if(!m_pKb->Init())
 	{
 		Shutdown();
@@ -496,21 +500,21 @@ bool CInput::CSens(const CStringVal &strVal)
 Handle Cvar change notifications
 ================================================
 */
-bool CInput::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CInput::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 {
-	if(cvar == &m_pVarExclusive)
+	if(cvar == m_pVarExclusive)
 		return CSetExclusive(strVal);
-	else if(cvar == &m_pVarXSens)
+	else if(cvar == m_pVarXSens)
 		return CXSens(strVal);
-	else if(cvar == &m_pVarYSens)
+	else if(cvar == m_pVarYSens)
 		return CYSens(strVal);
-	else if(cvar == &m_pVarSens)
+	else if(cvar == m_pVarSens)
 		return CSens(strVal);
-	else if(cvar == &m_pVarMouseMode)
+	else if(cvar == m_pVarMouseMode)
 		return CMouseMode(strVal);
-	else if(cvar == &m_pVarKbMode)
+	else if(cvar == m_pVarKbMode)
 		return CKBMode(strVal);
-	else if(cvar == &m_pVarMouseFilter)
+	else if(cvar == m_pVarMouseFilter)
 	{
 		if(strVal.IntVal())
 			m_pMouse->SetFilter(true);
@@ -518,7 +522,7 @@ bool CInput::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 			m_pMouse->SetFilter(false);
 		return true;
 	}
-	else if(cvar == &m_pVarInvert)
+	else if(cvar == m_pVarInvert)
 	{
 		if(strVal.IntVal())
 			m_pMouse->SetInvert(true);

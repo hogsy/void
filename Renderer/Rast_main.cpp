@@ -5,7 +5,6 @@
 // to evaluate console alphagen
 #include "Con_main.h"
 
-
 // for sky texgen
 extern const CCamera * camera;
 
@@ -14,12 +13,8 @@ extern const CCamera * camera;
 Constructor 
 =======================================
 */
-CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
-								m_cWndY("r_wndy","40",CVAR_INT,CVAR_ARCHIVE)
-{	
-	I_Console::GetConsole()->RegisterCVar(&m_cWndX);
-	I_Console::GetConsole()->RegisterCVar(&m_cWndY);
-
+CRasterizer::CRasterizer()
+{
 	mMaxElements = mNumElements = 0;
 	mMaxIndices = mNumIndices = 0;
 	mFirstIndex = mFirstElement = 0;

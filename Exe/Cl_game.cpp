@@ -18,8 +18,8 @@ Constructor
 ================================================
 */
 CGameClient::CGameClient(I_ClientGame * pClGame) : 
-				m_pClGame(pClGame),
-				m_cvKbSpeed("cl_kbspeed","5.0", CVAR_FLOAT, CVAR_ARCHIVE),
+				m_pClGame(pClGame)
+/*				m_cvKbSpeed("cl_kbspeed","5.0", CVAR_FLOAT, CVAR_ARCHIVE),
 				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
 				m_cvInRate("cl_inRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvOutRate("cl_outRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
@@ -28,6 +28,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE),
 				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_READONLY),
 				m_cvLocalMove("cl_localMove","0", CVAR_BOOL, CVAR_ARCHIVE)
+*/
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -44,27 +45,29 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	m_pCamera = 0;
 	m_pWorld = 0;
 
-	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
-	System::GetConsole()->RegisterCVar(&m_cvClip);
-	System::GetConsole()->RegisterCVar(&m_cvLocalMove);
-	System::GetConsole()->RegisterCVar(&m_cvViewTilt);
-	System::GetConsole()->RegisterCVar(&m_cvInRate,this);
-	System::GetConsole()->RegisterCVar(&m_cvOutRate,this);
-	System::GetConsole()->RegisterCVar(&m_cvName,this);
-	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
-	System::GetConsole()->RegisterCVar(&m_cvDefaultChar, this);
+	I_Console * pConsole = I_Console::GetConsole();
+
+	m_cvKbSpeed = pConsole->RegisterCVar("cl_kbspeed","5.0", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	m_cvClip = pConsole->RegisterCVar("cl_clip","1", CVAR_BOOL,0,this);
+	m_cvLocalMove = pConsole->RegisterCVar("cl_localMove","0", CVAR_BOOL, CVAR_ARCHIVE,this);
+	m_cvViewTilt = pConsole->RegisterCVar("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE,this);
+	m_cvInRate = pConsole->RegisterCVar("cl_inRate","2500",	CVAR_INT,	CVAR_ARCHIVE,this);
+	m_cvOutRate = pConsole->RegisterCVar("cl_outRate","2500",	CVAR_INT,	CVAR_ARCHIVE,this);
+	m_cvName = pConsole->RegisterCVar("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE,this);
+	m_cvCharacter = pConsole->RegisterCVar("cl_char", "Ratamahatta/Ratamahatta", CVAR_STRING, CVAR_ARCHIVE,this);
+	m_cvDefaultChar = pConsole->RegisterCVar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_READONLY,this);
 
 	//Register Commands
 	for(int i=0; g_clGameCmds[i].szCmd; i++)
-		System::GetConsole()->RegisterCommand(g_clGameCmds[i].szCmd,g_clGameCmds[i].id,this);	
+		pConsole->RegisterCommand(g_clGameCmds[i].szCmd,g_clGameCmds[i].id,this);	
 
-	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
-	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
-	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
-	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
-	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
-	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
-	System::GetConsole()->RegisterCommand("pos", CMD_DEBUG, this);
+	pConsole->RegisterCommand("say", CMD_TALK, this);
+	pConsole->RegisterCommand("bind",CMD_BIND,this);
+	pConsole->RegisterCommand("bindlist",CMD_BINDLIST,this);
+	pConsole->RegisterCommand("cam",CMD_CAM,this);
+	pConsole->RegisterCommand("unbind",CMD_UNBIND,this);
+	pConsole->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+	pConsole->RegisterCommand("pos", CMD_DEBUG, this);
 
 	m_hsTalk    = m_pClGame->RegisterSound("sounds/Interface/notify.wav", CACHE_LOCAL);
 	m_hsMessage = m_pClGame->RegisterSound("sounds/Interface/click one.wav", CACHE_LOCAL);
@@ -376,7 +379,7 @@ CCamera *	CGameClient::GetCamera()
 }
 
 int  CGameClient::GetOutgoingRate() const
-{	return m_cvOutRate.ival;
+{	return m_cvOutRate->ival;
 }
 
 
@@ -405,16 +408,16 @@ void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 		MoveRight();
 		break;
 	case CMD_ROTATE_LEFT:
-		RotateLeft(m_cvKbSpeed.fval);
+		RotateLeft(m_cvKbSpeed->fval);
 		break;
 	case CMD_ROTATE_RIGHT:
-		RotateRight(m_cvKbSpeed.fval);
+		RotateRight(m_cvKbSpeed->fval);
 		break;
 	case CMD_ROTATE_UP:
-		RotateUp(m_cvKbSpeed.fval);
+		RotateUp(m_cvKbSpeed->fval);
 		break;
 	case CMD_ROTATE_DOWN:
-		RotateDown(m_cvKbSpeed.fval);
+		RotateDown(m_cvKbSpeed->fval);
 		break;
 	case CMD_JUMP:
 		Jump();
@@ -449,9 +452,9 @@ void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 Validate/Handle any CVAR changes
 ==========================================
 */
-bool CGameClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
+bool CGameClient::HandleCVar(const CVar * cvar, const CStringVal &strval)
 {
-	if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
+	if(cvar == m_cvKbSpeed)
 	{
 		float val = strval.FloatVal();
 		if(val < 0.6 || val >= 10.0)
@@ -461,9 +464,9 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvInRate))
+	else if(cvar == m_cvInRate)
 		return ValidateRate(strval);
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvOutRate))
+	else if(cvar == m_cvOutRate)
 	{
 		int val = strval.IntVal();
 		if(val < 1000 || val > 10000)
@@ -474,11 +477,11 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 		m_pClGame->SetNetworkRate(val);
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
+	else if(cvar == m_cvName)
 		return ValidateName(strval);
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvCharacter))
+	else if(cvar == m_cvCharacter)
 		return ValidateCharacter(strval);
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvDefaultChar))
+	else if(cvar == m_cvDefaultChar)
 	{
 		return false;
 	}
