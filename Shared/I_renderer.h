@@ -93,6 +93,45 @@ struct I_ConsoleRenderer
 };
 
 
+/*
+==========================================
+Renderer Model Interface
+==========================================
+*/
+typedef int hMdl;
+typedef int hSnd;
+typedef int hImg;
+
+enum CacheType
+{
+	MODEL_CACHE_LOCAL	= 0,	//Always loaded. Client is reponsible for loading these.
+	MODEL_CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
+	MODEL_CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
+	MODEL_CACHE_NUM		= 3,
+};
+
+#define MODEL_CACHE_SIZE	256
+
+struct R_EntState 
+{
+	CacheType	cache;
+	int			index;
+	int			skinnum;
+
+	vector_t origin;
+	vector_t angle;
+};
+
+
+struct I_Model
+{
+	virtual hMdl LoadModel(const char *model, hMdl index, CacheType cache)=0;
+	virtual void DrawModel(hMdl index, CacheType cache, const R_EntState &state)=0;
+	virtual void UnloadModel(CacheType cache, int index)=0;
+	virtual void UnloadModelCache(CacheType cache)=0;
+	virtual void UnloadModelAll(void)=0;
+};
+
 
 /*
 ==========================================
@@ -112,6 +151,7 @@ struct I_Renderer
 	//Get other interfaces
 	virtual I_ConsoleRenderer * GetConsole()=0;
 	virtual I_RHud *			GetHud()=0;
+	virtual I_Model	*			GetModel()=0;
 
 	//Windowing
 	virtual void MoveWindow(int x, int y) = 0;
