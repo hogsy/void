@@ -1,5 +1,5 @@
-#ifndef VOID_MISC_UTILITY
-#define VOID_MISC_UTILITY
+#ifndef VOID_COM_UTILITY
+#define VOID_COM_UTILITY
 
 #include "Com_defs.h"
 

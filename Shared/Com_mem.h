@@ -1,5 +1,5 @@
-#ifndef VOID_SYS_MEMORYMANAGER
-#define VOID_SYS_MEMORYMANAGER
+#ifndef VOID_COM_MEMORYMANAGER
+#define VOID_COM_MEMORYMANAGER
 
 #include "Com_defs.h"
 
