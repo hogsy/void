@@ -24,8 +24,10 @@ public:
 	bool CanSend();
 	bool CanSendReliable();
 	
-	void Write(int length, byte *data);
-	bool Read();
+	void PrepareTransmit(); //int length, byte *data);
+	bool BeginRead();
+
+	void SetRate(int rate);
 
 	//The address the channel will send to
 	CNetAddr	m_addr;
@@ -33,16 +35,17 @@ public:
 	//This is what the client writes to send to the server
 	//and the server uses this to send/recv unreliable messages to the client
 	CNetBuffer	m_buffer;
-
-private:
-
+	
 	//the channel writes data to here for sending
-	CNetBuffer	m_sendBuffer;	
+	CNetBuffer	m_sendBuffer;
+
+	float m_lastReceived;
 
 	//ptr to receiving sockets buffer
 	CNetBuffer *m_pRecvBuffer;
-	CNetBuffer  m_reliableBuffer;
-
+	CNetBuffer  m_reliableBuffer;		//Internal, keep reliable messages for retransmit
+	
+	
 	int	m_inMsgId;				//Latest incoming messageId
 	int m_inAckedMsgId;			//Latest remotely acked message.
 	int m_outMsgId;				//Outgoing messageId
@@ -58,9 +61,8 @@ private:
 	int	m_goodCount;
 	int m_numChokes;
 
-	double	m_clearTime;
-	double  m_lastReceived;
-	double	m_rate;				//Seconds/Byte
+	double m_clearTime;
+	double m_rate;				//Byte/Sec
 
 	bool m_bFatalError;
 };

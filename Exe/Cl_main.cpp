@@ -22,7 +22,7 @@ CClient::CClient(I_Renderer * prenderer):
 					m_clport("cl_port","36667", CVar::CVAR_INT,0),
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
-					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE)
+					m_clrate("cl_rate","3000",	CVar::CVAR_INT,		CVar::CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientCmdHandler(this);
@@ -31,12 +31,16 @@ CClient::CClient(I_Renderer * prenderer):
 
 	m_ingame = false;
 	
-	m_state = VoidNet::CL_FREE; 
-	
 	m_szLastOOBMsg = 0;
-	m_fNextConReq = 0.0f;
+	m_fNextSendTime = 0.0f;
+	m_numResends = 0;
+
 	m_bLocalServer = false;
+	
+	m_state = VoidNet::CL_FREE; 
 	m_challenge= 0;
+	m_levelId = 0;
+	m_spawnState = 0;
 	
 	m_pHud = 0;
 	m_pRender = prenderer;
@@ -140,7 +144,6 @@ bool CClient::LoadWorld(const char *worldname)
 
 	m_hsTalk = System::GetSoundManager()->RegisterSound("sounds/talk.wav");
 
-//	g_pWorld = world;
 	m_ingame = true;
 
 	System::SetGameState(INGAME);
@@ -175,7 +178,6 @@ bool CClient::UnloadWorld()
 	g_pWorld = 0;
 	m_ingame = false;
 
-//	SetInputState(false);
 	System::SetGameState(INCONSOLE);
 	return true;
 }
@@ -235,6 +237,8 @@ void CClient::RunFrame()
 		//draw the console or menues etc
 		m_pRender->DrawFrame(0,0,0);
 	}
+
+	SendUpdates();
 }
 /*
 =====================================
@@ -363,9 +367,4 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
 }
-
-
-
-
-
 

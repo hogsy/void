@@ -5,7 +5,6 @@
 #include "World.h"
 #include "Com_buffer.h"
 #include "Sv_client.h"
-#include "Net_defs.h"
 
 /*
 ======================================
@@ -14,6 +13,8 @@ Expose to system
 */
 namespace VoidNet
 {
+	class CNetSocket;
+
 	bool InitNetwork();
 	void ShutdownNetwork();
 }
@@ -62,10 +63,11 @@ private:
 	bool	m_active;
 	int		m_numClients;
 
+	int		m_levelNum;		//to check for map changes when clients are connecting
+
 	//Stores Entity baselines etc
-	int		m_numSignOnBuffers;
-	int		m_signOnBufSize[MAX_SIGNONBUFFERS];
-	char	m_szSignOnBuf[MAX_SIGNONBUFFERS][VoidNet::MAX_DATAGRAM_SIZE];
+	int			m_numSignOnBuffers;
+	CNetBuffer	m_signOnBuf[MAX_SIGNONBUFFERS];
 
 	//=================================================
 	//These arent called by the Sysmain on startup
@@ -87,6 +89,8 @@ private:
 	//FRAME proceedures
 	void ProcessQueryPacket();
 	void ReadPackets();
+	void WritePackets();
+	void SendSpawnParms(SVClient &client);
 
 	//=================================================
 	//CVars

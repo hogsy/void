@@ -37,8 +37,12 @@ struct SVClient
 
 	//Flags and States
 	bool		m_bDropClient;	//drop client if this is true	
-	bool		m_bSentSpawn;	//done sending spawning/baselines etc.
 	bool		m_bSend;
+
+	//keep track of how many spawn messages have been sent
+	//when it equals SVC_SPAWN, then the client will be assumed to have spawned
+	int			m_spawnState;
+
 	int			m_state;
 
 //Private?

@@ -35,7 +35,7 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 					 m_sendBuf(MAX_BUFFER_SIZE),
 					 m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
-					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
+					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
@@ -43,11 +43,16 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 	
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 
+	m_numSignOnBuffers=0;
+	for(int i=0;i<MAX_SIGNONBUFFERS;i++)
+		m_signOnBuf[i].Create(MAX_DATAGRAM_SIZE);
+
 	m_worldName[0] = 0;
 	m_pWorld = 0;
 	
 	m_active = false;
 	m_numClients = 0;
+	m_levelNum = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
@@ -104,7 +109,7 @@ bool CServer::Init()
 		pAddrString = inet_ntoa(pAddrInet->sin_addr);
 		
 		if (pAddrString)
-			ComPrintf("IP: %s", pAddrString);
+			ComPrintf("IP: %s ", pAddrString);
 		
 		addrFlags = localAddr[i].iiFlags;
 		if (addrFlags & IFF_UP)
@@ -113,11 +118,11 @@ bool CServer::Init()
 			if(!(addrFlags & IFF_LOOPBACK) && pAddrString[0] != 0)
 			{
 				strcpy(boundAddr,pAddrString);
-				ComPrintf("  This interface is up");
+				ComPrintf(": Active\n");
 			}
 		}
 		if (addrFlags & IFF_LOOPBACK)
-			ComPrintf("  This is the loopback interface");
+			ComPrintf(": Loopback\n");
 //		if (addrFlags & IFF_POINTTOPOINT)
 //			ComPrintf(". this is a point-to-point link");
 	}
@@ -191,7 +196,10 @@ void CServer::Restart()
 			System::GetConsole()->ExecString("disconnect");
 
 		for(int i=0;i<m_cMaxClients.ival;i++)
-			m_clients[i].m_state = CL_INUSE;
+		{
+			if(m_clients[i].m_state == CL_SPAWNED)
+				m_clients[i].m_state = CL_CONNECTED;
+		}
 
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
@@ -248,12 +256,18 @@ void CServer::LoadWorld(const char * mapname)
 	//Set worldname
 	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
 
-	//Create Sigon-message. includes baselines
+	m_levelNum ++;
+
+	//Create Sigon-message. includes static entity baselines
 	//=======================
 	//all we need is the map name right now
 	m_numSignOnBuffers = 1;
-	strcpy(m_szSignOnBuf[0], m_worldName);
-	m_signOnBufSize[0]= strlen(m_szSignOnBuf[0]);
+	m_signOnBuf[0] += SVC_INITCONNECTION;
+	m_signOnBuf[0] += m_cGame.string;
+	m_signOnBuf[0] += m_worldName;
+
+//	strcpy(m_szSignOnBuf[0], m_worldName);
+//	m_signOnBufSize[0]= strlen(m_szSignOnBuf[0]);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!m_cDedicated.bval)
@@ -340,13 +354,13 @@ void CServer::HandleConnectReq()
 			//Is connected, ignore dup connected
 			if(m_clients[i].m_state == CL_CONNECTED)
 			{
-				ComPrintf("DupConnect from %s\n", m_pSock->GetSource().ToString());
+ComPrintf("SV:DupConnect from %s\n", m_pSock->GetSource().ToString());
 				return;
 			}
 			
 			//last connection never finished
 			m_clients[i].Reset();
-			ComPrintf("Reconnect: %s\n", m_pSock->GetSource().ToString());
+ComPrintf("SV:Reconnect from %s\n", m_pSock->GetSource().ToString());
 			break;
 		}
 	}
@@ -368,20 +382,25 @@ void CServer::HandleConnectReq()
 		}
 	}
 
+	//We now have a new client slot. create it
+	strcpy(m_clients[i].m_name, m_recvBuf.ReadString());
+	m_clients[i].m_state = CL_CONNECTED;
+	m_clients[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
+	m_clients[i].m_netChan.SetRate(m_recvBuf.ReadInt());
+	m_clients[i].m_netChan.m_outMsgId = 1;	//we send packet1 when we receive
+
+	//This is the last connectionless message
+	//Send the client an accept packet
+	//now the client needs to call us to get spawn parms etc
 	m_sendBuf.Reset();
 	m_sendBuf += -1;
 	m_sendBuf += S2C_ACCEPT;
-	m_sendBuf += m_worldName;
+	m_sendBuf += m_levelNum;
 	m_pSock->Send(m_sendBuf);
-
-	//We now have a new client slot. create it
-	m_clients[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
-	m_clients[i].m_state = CL_INUSE;
-
-	ComPrintf("%s connected\n", m_recvBuf.ReadString());
 
 	//update client counts
 	m_numClients ++;
+ComPrintf("SV: %s connected\n",m_clients[i].m_name) ;
 }
 
 /*
@@ -424,15 +443,12 @@ void CServer::HandleChallengeReq()
 		m_challenges[i].time = System::g_fcurTime;
 	}
 
+	//Send response packet
 	m_sendBuf.Reset();
 	m_sendBuf += -1;
 	m_sendBuf += S2C_CHALLENGE;
 	m_sendBuf += m_challenges[i].challenge;
-
-	//Send response packet
 	m_pSock->SendTo(m_sendBuf, m_challenges[i].addr); 
-
-	ComPrintf("Sent CHAL %d to %s\n", m_challenges[i].challenge, m_challenges[i].addr.ToString());
 }
 
 /*
@@ -454,7 +470,6 @@ void CServer::ProcessQueryPacket()
 	else if(strcmp(msg, C2S_GETCHALLENGE) == 0)
 		HandleChallengeReq();
 }
-
 
 /*
 ==========================================
@@ -479,19 +494,121 @@ void CServer::ReadPackets()
 		{
 			if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
 			{
-				m_clients[i].m_netChan.Read();
-				m_clients[i].m_bSend = true;
+				//client hasn't spawned yet. probably just asking for info
+				if(m_clients[i].m_state == CL_CONNECTED)
+				{
+					m_recvBuf.BeginRead();
+					m_clients[i].m_netChan.BeginRead();
+					
+					//Make sure the client is trying to connect to this map
+					int b = m_recvBuf.ReadInt();
+					if(b != m_levelNum)
+					{
+ComPrintf("SV: Client needs to reconnect, bad levelid %d != %d\n",b,m_levelNum);
+						//Tell the client to reconnect
+						m_clients[i].m_state = CL_INUSE;
+						return;
+					}
+
+					//Find out what spawn message the client is asking for
+					m_clients[i].m_spawnState = m_recvBuf.ReadInt();
+ComPrintf("SV: Client requesting spawn level %d\n", m_clients[i].m_spawnState);
+					
+					m_clients[i].m_bSend = true;
+				}
 				return;
 			}
 		}
-
 		//unknown packet
-		ComPrintf("unknown packet from %s\n", m_pSock->GetSource().ToString());
+ComPrintf("SV: unknown packet from %s\n", m_pSock->GetSource().ToString());
 	}
 }
 
 //======================================================================================
 //======================================================================================
+
+/*
+const int SVC_INITCONNECTION	= 1;	//Send the server vars, map info, game data
+const int SVC_MODELLIST			= 2;	//Sequenced list of all the models in use on the server
+const int SVC_SOUNDLIST			= 3;	//Sequenced list of all the sounds in use on the server
+const int SVC_IMAGELIST			= 4;	//Sequenced list of all the images in use on the server
+const int SVC_BASELINES			= 5;	//Entity baselines
+const int SVC_SPAWN				= 6;	//Spawning info. The client is assumed to be spawned after this
+*/
+
+void CServer::SendSpawnParms(SVClient &client)
+{
+	//What spawn level does the client want ?
+	client.m_netChan.m_buffer.Reset();
+	switch(client.m_spawnState)
+	{
+	case SVC_INITCONNECTION:
+		{
+			//Send 1st signon buffer
+			client.m_netChan.m_buffer += m_signOnBuf[0];
+/*
+			client.m_netChan.m_reliableBuffer += m_cGame.string;
+			client.m_netChan.m_reliableBuffer += m_cGame.string;
+*/
+			break;
+		}
+	case SVC_MODELLIST:
+			client.m_netChan.m_buffer += SVC_MODELLIST;
+		break;
+	case SVC_SOUNDLIST:
+			client.m_netChan.m_buffer += SVC_SOUNDLIST;
+		break;
+	case SVC_IMAGELIST:
+			client.m_netChan.m_buffer += SVC_IMAGELIST;
+		break;
+	case SVC_BASELINES:
+			client.m_netChan.m_buffer += SVC_BASELINES;
+		break;
+	case SVC_SPAWN:	
+			client.m_netChan.m_buffer += SVC_SPAWN;
+//			client.m_netChan.m
+		break;
+	}
+	client.m_netChan.PrepareTransmit();
+}
+
+/*
+======================================
+
+======================================
+*/
+void CServer::WritePackets()
+{
+	for(int i=0; i<m_cMaxClients.ival;i++)
+	{
+		if(m_clients[i].m_state == CL_FREE)
+			continue;
+
+		//Check timeouts here, and flag resends if we havent got any 
+		//response from this client for a while
+
+		//Will fail if we didnt receive a packet from 
+		//this client this frame, or if channels chokes
+		if(!m_clients[i].ReadyToSend())
+			continue;
+
+		//In game clients
+		if(m_clients[i].m_state == CL_SPAWNED)
+		{
+		}
+		//havent spawned yet
+		else if(m_clients[i].m_state == CL_CONNECTED)
+		{
+ComPrintf("CL: Need to send spawn parms\n");
+			SendSpawnParms(m_clients[i]);
+		}
+		
+		m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+		m_clients[i].m_bSend = false;
+	}
+}
+
+
 
 /*
 ==========================================
@@ -512,30 +629,18 @@ void CServer::RunFrame()
 	//Run game
 
 	//write to clients
-	for(int i=0; i<m_cMaxClients.ival;i++)
-	{
-		if(m_clients[i].m_state == CL_FREE)
-			continue;
-
-		//Send base lines
-		if(!m_clients[i].m_bSentSpawn)
-		{
-		}
-	}
+	WritePackets();
 }
 
 
 //======================================================================================
-//======================================================================================
-
 /*
 ==========================================
 Handle CVars
 ==========================================
 */
 bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
-{
-	return false;
+{	return false;
 }
 
 /*
@@ -555,5 +660,3 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	}
 }
-
-

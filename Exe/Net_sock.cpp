@@ -143,6 +143,7 @@ bool CNetSocket::Recv()
 		return false;
 	}
 
+//	ComPrintf("Recved %d from %s\n", ret,inet_ntoa (m_srcSockAddr.sin_addr));
 	m_srcAddr = m_srcSockAddr;
 	m_pBuffer->SetSize(ret);
 	return true;
@@ -178,8 +179,9 @@ void CNetSocket::SendTo(const CNetBuffer &buffer, const CNetAddr &addr)
 		PrintSockError(err,"CNetSocket::Send:");
 		return;
 	}
-	ComPrintf("Sent %d bytes to %s\n", buffer.GetSize(), addr.ToString());
-/*
+//	ComPrintf("Sent %d bytes to %s\n", buffer.GetSize(), addr.ToString());
+
+	/*
 // wouldblock is silent
         if (err == WSAEWOULDBLOCK)
 	        return;
@@ -217,8 +219,9 @@ void CNetSocket::SendTo(const byte * data, int length, const CNetAddr &addr)
 		PrintSockError(err,"CNetSocket::Send:");
 		return;
 	}
-	ComPrintf("Sent %d bytes to %s\n", length, addr.ToString());
-/*
+//	ComPrintf("Sent %d bytes to %s\n", length, addr.ToString());
+
+	/*
 // wouldblock is silent
         if (err == WSAEWOULDBLOCK)
 	        return;

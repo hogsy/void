@@ -16,6 +16,10 @@ namespace VoidClient
 //	class CClientNet;
 }
 
+namespace VoidNet
+{	class CNetSocket;
+}
+
 /*
 =====================================
 Client class
@@ -68,7 +72,6 @@ private:
 	void CamPath();
 	void Talk(const char * msg);
 
-//	bool LoadWorld(world_t * world);
 	bool LoadWorld(const char *worldname);
 	bool UnloadWorld();
 
@@ -77,11 +80,11 @@ private:
 
 	//Read any waiting packets
 	void ReadPackets();	
-//	void CheckResends();	
+	void SendUpdates();
 
 	//Send a connection request wtih a challenge number
+	void SendChallengeReq();
 	void SendConnectReq();
-	void SendConnectParms();
 
 	CNetBuffer   m_buffer;
 	CNetChan	 m_netChan;
@@ -89,10 +92,15 @@ private:
 	
 	char		m_svServerAddr[24];
 	bool		m_bLocalServer;
-	float		m_fNextConReq;	
+	
 	int			m_challenge;
-	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
 
+	//Flow Control for an Unspawned client
+	float		m_fNextSendTime;	//Next send time
+	int			m_numResends;		//Max number of resends
+	const char* m_szLastOOBMsg;		//Keep Track of the last OOB message sent
+	
+	int			m_spawnState;
 	int			m_state;
 
 	//==================================================
@@ -111,6 +119,7 @@ private:
 	I_RHud    *	m_pHud;
 
 	bool m_ingame;
+	int  m_levelId;
 
 	//==================================================
 	//the following should be accessible by the game dll

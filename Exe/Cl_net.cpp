@@ -6,11 +6,46 @@ using namespace VoidNet;
 /*
 ======================================
 Read spawn info
+map name, server parms
+modellist
+soundlist
+imagelist
+entity baselines
 ======================================
 */
 void CClient::HandleSpawnParms()
 {
+	m_netChan.BeginRead();
 
+	m_numResends = 0;
+
+	int id = m_buffer.ReadInt();
+
+ComPrintf("CL: Got spawn parms %d\n",id);
+
+	if(id == m_spawnState + 1)
+	{
+		m_spawnState = id;
+		m_fNextSendTime = 0.0f;
+
+		//got initial data, now ask for more
+		if(m_spawnState == SVC_INITCONNECTION)
+		{
+			char * game = m_buffer.ReadString();
+			ComPrintf("Game : %s\n", game);
+			char * map = m_buffer.ReadString();
+			ComPrintf("Map : %s\n", map);
+			
+			LoadWorld(map);
+
+		}
+		else if(m_spawnState == SVC_SPAWN)
+		{
+ComPrintf("CL: Client is ready to SPAWN\n");
+			m_state = CL_SPAWNED;
+			return;
+		}
+	}
 }
 
 
@@ -26,21 +61,35 @@ void CClient::HandleOOBMessage()
 	if(!strcmp(msg,S2C_CHALLENGE))
 	{
 		m_challenge = m_buffer.ReadInt();
-		ComPrintf("challenge %d\n", m_challenge);
+		
+		m_szLastOOBMsg = 0;
+		m_fNextSendTime = 0.0f;
+		m_numResends =0;
 
 		//Got challenge, now send connection request
-		SendConnectParms();
+		SendConnectReq();
+
+//ComPrintf("CL: challenge %d\n", m_challenge);
 		return;
 	}
 	
+	//We have been accepted. Now get ready to receive spawn parms
 	if(!strcmp(msg,S2C_ACCEPT))
 	{
-		m_netChan.Setup(m_pSock->GetSource(),&m_buffer);
-		char *map = m_buffer.ReadString();
-		ComPrintf("map %s\n", map);
-		LoadWorld(map);
-
 		m_state = CL_CONNECTED;
+		m_levelId = m_buffer.ReadInt();
+
+		m_szLastOOBMsg = 0;
+		m_fNextSendTime = 0.0f;
+		m_numResends =0;
+		
+		//Setup the network channel. 
+		//Only reliable messages are sent until spawned
+		m_netChan.Setup(m_pSock->GetSource(),&m_buffer);
+		m_netChan.SetRate(m_clrate.ival);
+		m_netChan.m_outMsgId = 1;
+
+ComPrintf("CL: Connected\n");
 		return;
 	}
 }
@@ -55,12 +104,12 @@ void CClient::ReadPackets()
 	if(m_state == CL_FREE)
 		return;
 
-
 	while(m_pSock->Recv())
 	{
 		//in game.
 		if(m_state == CL_SPAWNED)
 		{
+			return;
 		}
 		//in the connection phase, expecting spawn parms
 		else if(m_state == CL_CONNECTED)
@@ -76,7 +125,7 @@ void CClient::ReadPackets()
 				HandleOOBMessage();
 				continue;
 			}
-			ComPrintf("CClient::ReadPacket::Unknown packet from %s\n", m_pSock->GetSource().ToString());
+//ComPrintf("CClient::ReadPacket::Unknown packet from %s\n", m_pSock->GetSource().ToString());
 		}
 	}				
 }
@@ -86,7 +135,65 @@ void CClient::ReadPackets()
 
 ======================================
 */
-void CClient::SendConnectParms()
+void CClient::SendUpdates()
+{
+	if(!m_pSock->ValidSocket())
+		return;
+
+	if(m_state == CL_SPAWNED)
+	{
+		return;
+	}
+
+	//If the client has NOT spawned, then limit resends before we decide to fail
+	if(m_numResends >= 4)
+	{
+ComPrintf("CL: Timed out\n");
+			Disconnect();
+			return;
+	}
+
+	//We have connected. Need to ask server for baselines
+	if(m_state == CL_CONNECTED)
+	{
+		//Its been a while and our reliable packet hasn't been answered, try again
+		if(m_fNextSendTime < System::g_fcurTime)
+		{	m_netChan.m_reliableBuffer.Reset();
+		}
+
+		//Ask for next spawn parm if we have received a reply to the last
+		//otherwise, keep asking for the last one
+		if(m_netChan.CanSendReliable())
+		{
+			m_netChan.m_buffer.Reset();
+			m_netChan.m_buffer += m_levelId;
+			m_netChan.m_buffer += (m_spawnState + 1);
+			m_netChan.PrepareTransmit();
+
+			m_pSock->Send(m_netChan.m_sendBuffer);
+			m_fNextSendTime = System::g_fcurTime + 1.0f;
+			m_numResends ++;
+ComPrintf("Client sending spawnstate %d\n", m_spawnState+1);
+		}
+	}
+	//Unconnected socket. sends OOB queries
+	else if((m_state == CL_INUSE) && 
+			(m_fNextSendTime < System::g_fcurTime))
+	{
+		if(m_szLastOOBMsg == C2S_GETCHALLENGE)
+			SendChallengeReq();
+		else if(m_szLastOOBMsg == C2S_CONNECT)
+			SendConnectReq();
+		return;
+	}
+}
+
+/*
+======================================
+Send connection parms
+======================================
+*/
+void CClient::SendConnectReq()
 {
 	//Create Connection less packet
 	m_buffer.Reset();
@@ -100,16 +207,16 @@ void CClient::SendConnectParms()
 	
 	//User Info
 	m_buffer += m_clname.string;
+	m_buffer += m_clrate.ival;
 
 	m_pSock->Send(m_buffer);
 
 	m_szLastOOBMsg = C2S_CONNECT;
-	m_fNextConReq = System::g_fcurTime + 2.0f;
+	m_fNextSendTime = System::g_fcurTime + 2.0f;
+	m_numResends ++; 
 
-	ComPrintf("Sending Connection Parms %s\n", m_svServerAddr);
+ComPrintf("CL: Attempting to connect to %s\n", m_svServerAddr);
 }
-
-
 
 /*
 =======================================
@@ -118,7 +225,7 @@ initiates a new connection request
 to the specified address
 =======================================
 */
-void CClient::SendConnectReq()
+void CClient::SendChallengeReq()
 {
 	CNetAddr netAddr(m_svServerAddr);
 	if(!netAddr.IsValid())
@@ -129,7 +236,6 @@ void CClient::SendConnectReq()
 	}
 
 	//Now initiate a connection request
-
 	//Create Connection less packet
 	m_buffer.Reset();
 	m_buffer += -1;
@@ -138,11 +244,21 @@ void CClient::SendConnectReq()
 	m_pSock->SendTo(m_buffer, netAddr);
 
 	m_szLastOOBMsg = C2S_GETCHALLENGE;
-	m_fNextConReq = System::g_fcurTime + 2.0f;
+	m_fNextSendTime = System::g_fcurTime + 2.0f;
+	m_numResends ++;
 
-	ComPrintf("Requesting Challenge : %s\n", m_svServerAddr);
+ComPrintf("Requesting Challenge from %s\n", m_svServerAddr);
 }
 
+
+//======================================================================================
+//Console funcs
+//======================================================================================
+/*
+======================================
+Start Connecting to the given addr
+======================================
+*/
 void CClient::ConnectTo(const char * ipaddr)
 {
 	if(!ipaddr)
@@ -178,9 +294,8 @@ void CClient::ConnectTo(const char * ipaddr)
 
 	//Now initiate a connection request
 	m_state = CL_INUSE;
-	SendConnectReq();
+	SendChallengeReq();
 }
-
 
 /*
 =====================================
@@ -198,11 +313,15 @@ void CClient::Disconnect()
 	}
 
 	m_netChan.Reset();
+	
 	m_svServerAddr[0] = 0;
-	m_state = CL_FREE;
-	m_fNextConReq = 0.0f;
 	m_bLocalServer = false;
+	
+	m_state = CL_FREE;
+	m_spawnState = 0;
+
+	//Flow Control
+	m_fNextSendTime = 0.0f;
+	m_szLastOOBMsg = 0;
+	m_numResends = 0;
 }
-
-
-

@@ -31,12 +31,12 @@ Reset the client
 void SVClient::Reset()
 {
 	m_netChan.Reset();
-	m_bSentSpawn = false;
 	m_state = CL_FREE;
 	m_numBuf=0;
 	m_bBackbuf = false;
 	m_bDropClient = false;
 	m_bSend = false;
+	memset(m_name,0,sizeof(m_name));
 }
 
 /*
