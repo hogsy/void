@@ -168,7 +168,8 @@ world_t* world_read(char *filename)
 		return 0;
 	}
 
-	world_t *w = (world_t*)MALLOC(sizeof(world_t));
+	//world_t *w = (world_t*)MALLOC(sizeof(world_t));
+	world_t *w = new world_t;
 
 	// read in all the lumps
 	w->nnodes		= load_lump(LUMP_NODES,	        (void**)&w->nodes)	 / sizeof(bspf_node_t);
