@@ -459,7 +459,6 @@ TextureBinDestroy
 */
 void CRastD3DX::TextureBinDestroy(int bin)
 {
-
 	if ((bin < 0) || (bin > MAX_TEXTURE_BINS) || (mTexBins[bin].num == -1))
 	{
 		Error("destroying non-existant texture bin!");
@@ -467,10 +466,12 @@ void CRastD3DX::TextureBinDestroy(int bin)
 	}
 
 	for (int t=0; t<mTexBins[bin].num; t++)
+	{
 		if (mTexBins[bin].tex_surfs[t])
 			mTexBins[bin].tex_surfs[t]->Release();
+	}
 
-	delete mTexBins[bin].tex_surfs;
+	delete [] mTexBins[bin].tex_surfs;
 
 	mTexBins[bin].tex_surfs = NULL;
 	mTexBins[bin].num = -1;

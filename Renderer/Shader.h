@@ -16,15 +16,15 @@ public:
 	CShaderLayer();
 	~CShaderLayer();
 
-	Load(CFileBuffer *layer, int &texindex);
+	Parse(CFileBuffer *layer, int &texindex);
+	void Default(const char *name, int &texindex);
 
 
 
 	// info about textures for all layers
 	struct texname_t
 	{
-		int type;	// 0 = char texname, 1 = lightmap pointer
-		int index;	// either index to CShader::mTextureBin or CShaderManager::mLightmapBin depending on type
+		int index;	// either index to CShader::mTextureBin or -1 means lightmap
 		char filename[64];	// only relevant for non-lightmaps
 	};
 
@@ -51,14 +51,16 @@ public:
 	CShader(const char *name);
 	~CShader();
 
-	void Load(CFileBuffer *shader);
+	void Parse(CFileBuffer *shader);
+	void Default(void);
 
+	bool IsShader(const char *s) { return (stricmp(s, mName)==0); }
 
 	void AddRef(void);
 	void Release(void);
 
 	void LoadTextures(void);
-	void UnloadTextures(void);
+	void UnLoadTextures(void);
 
 private:
 

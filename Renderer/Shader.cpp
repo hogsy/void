@@ -24,17 +24,17 @@ CShaderLayer::~CShaderLayer()
 {
 	if (mTextureNames)
 	{
-		delete (mTextureNames);
+		delete [] mTextureNames;
 	}
 }
 
 
 /*
 ========
-Load
+Parse
 ========
 */
-CShaderLayer::Load(CFileBuffer *layer, int &texindex)
+CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 {
 	char token[1024];
 
@@ -55,14 +55,9 @@ CShaderLayer::Load(CFileBuffer *layer, int &texindex)
 				Error("error parsing shader file!!\n");
 
 			if (stricmp(token, "$lightmap") == 0)
-			{
-				// fixme - we should already know what the index is
 				mTextureNames[0].index = -1;
-				mTextureNames[0].type = 1;
-			}
 			else
 			{
-				mTextureNames[0].type = 0;
 				mTextureNames[0].index = texindex++;
 				strcpy(mTextureNames[0].filename, token);
 				// strip the extension off the filename
@@ -90,14 +85,9 @@ CShaderLayer::Load(CFileBuffer *layer, int &texindex)
 			for (layer->GetToken(token, false); token[0]!= '\0'; layer->GetToken(token, false))
 			{
 				if (stricmp(token, "$lightmap") == 0)
-				{
-					// fixme - we should already know what the index is
 					mTextureNames[mNumTextures].index = -1;
-					mTextureNames[mNumTextures].type = 1;
-				}
 				else
 				{
-					mTextureNames[mNumTextures].type = 0;
 					mTextureNames[mNumTextures].index = texindex++;
 					strcpy(mTextureNames[0].filename, token);
 					// strip the extension off the filename
@@ -201,6 +191,31 @@ CShaderLayer::Load(CFileBuffer *layer, int &texindex)
 }
 
 
+/*
+=========
+Default
+=========
+*/
+void CShaderLayer::Default(const char *name, int &texindex)
+{
+	mNumTextures = 1;
+	mTextureNames = new texname_t[1];
+	if (!mTextureNames) FError("mem for texture names");
+
+
+	if (stricmp(name, "$lightmap") == 0)
+	{
+		mTextureNames[0].index = -1;
+		mSrcBlend = VRAST_SRC_BLEND_ZERO;
+		mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
+	}
+	else
+	{
+		mTextureNames[0].index = texindex++;
+		strcpy(mTextureNames[0].filename, name);
+	}
+}
+
 
 /*
 ===================================================================================================
@@ -213,29 +228,25 @@ CShader::CShader(const char *name)
 	mTextureBin = -1;
 	mNumTextures = 0;
 	mNumLayers = 0;
-	mRefCount = 0;
 }
 
 
 CShader::~CShader()
 {
-	if (mRefCount != 0)
-		ComPrintf("*** deleting shader with refcounts ***\n");
-
 	for (int l=0; l<mNumLayers; l++)
-		delete (mLayers[l]);
+		delete mLayers[l];
 
-	UnloadTextures();
+	UnLoadTextures();
 }
 
 
 
 /*
 =========
-Load
+Parse
 =========
 */
-void CShader::Load(CFileBuffer *shader)
+void CShader::Parse(CFileBuffer *shader)
 {
 	char token[1024];
 
@@ -248,10 +259,11 @@ void CShader::Load(CFileBuffer *shader)
 		if (stricmp(token, "{") == 0)
 		{
 			mLayers[mNumLayers] = new CShaderLayer();
-			mLayers[mNumLayers]->Load(shader, mNumTextures);
+			mLayers[mNumLayers]->Parse(shader, mNumTextures);
+			mNumLayers++;
 		}
 
-		// end of layer def
+		// end of shader def
 		else if (stricmp(token, "}") == 0)
 			break;
 
@@ -286,22 +298,19 @@ void CShader::Release(void)
 {
 	mRefCount--;
 	if (mRefCount == 0)
-		UnloadTextures();
+		UnLoadTextures();
 }
 
 
 /*
 =========
-AddRef
+LoadTextures
 =========
 */
 void CShader::LoadTextures(void)
 {
-	if (mRefCount == 0)
-		return;
-
 	if (mTextureBin != -1)
-		ComPrintf("CShader::LoadTextures - textures already loaded\n");
+		return;
 
 	mTextureBin = g_pRast->TextureBinInit(mNumTextures);
 
@@ -313,7 +322,7 @@ void CShader::LoadTextures(void)
 	{
 		for (int tex=0; tex<mLayers[l]->mNumTextures; tex++)
 		{
-			if (mLayers[l]->mTextureNames[tex].type == 0)
+			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
 				if (!texReader->Read(mLayers[l]->mTextureNames[tex].filename))
 					texReader->DefaultTexture();
@@ -348,14 +357,30 @@ void CShader::LoadTextures(void)
 
 /*
 =========
-AddRef
+UnLoadTextures
 =========
 */
-void CShader::UnloadTextures(void)
+void CShader::UnLoadTextures(void)
 {
 	if (mTextureBin != -1)
 		g_pRast->TextureBinDestroy(mTextureBin);
 	mTextureBin = -1;
+}
+
+
+/*
+=========
+Default
+=========
+*/
+void CShader::Default(void)
+{
+	mNumLayers = 2;
+	mLayers[0] = new CShaderLayer();
+	mLayers[1] = new CShaderLayer();
+
+	mLayers[0]->Default(mName, mNumTextures);
+	mLayers[1]->Default("$lightmap", mNumTextures);
 }
 
 
