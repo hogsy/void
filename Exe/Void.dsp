@@ -337,6 +337,10 @@ SOURCE=.\Sv_main.cpp
 
 SOURCE=.\Sv_main.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Sv_net.cpp
+# End Source File
 # End Group
 # Begin Group "Input"
 
@@ -428,6 +432,10 @@ SOURCE=..\Shared\Net_client.h
 # Begin Source File
 
 SOURCE=..\Shared\Net_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Net_protocol.h
 # End Source File
 # Begin Source File
 

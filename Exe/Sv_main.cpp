@@ -1,19 +1,15 @@
 #include "Sv_main.h"
 #include "Com_util.h"
 #include "Net_defs.h"
+#include "Net_protocol.h"
 
-namespace
+//======================================================================================
+enum 
 {
-	enum 
-	{
-		CMD_MAP = 1,
-		CMD_KILLSERVER = 2,
-		CMD_STATUS	= 3
-	};
-}
-
-//======================================================================================
-//======================================================================================
+	CMD_MAP = 1,
+	CMD_KILLSERVER = 2,
+	CMD_STATUS	= 3
+};
 
 /*
 ======================================
@@ -26,6 +22,9 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
+	//Initialize Network Server
+	m_pNet = new CNetServer(*this, m_svState);
+
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
 	strcpy(m_svState.hostName,"Void Server");
@@ -49,7 +48,9 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 }	
 
 CServer::~CServer()
-{	Shutdown();
+{	
+	Shutdown();
+	delete m_pNet;
 }
 
 
@@ -60,9 +61,9 @@ Initialize the Server
 */
 bool CServer::Init()
 {
-	if(!NetInit())
+	if(!m_pNet->Init())
 		return false;
-	
+
 	//more initialization here ?
 	m_active = true;
 	return true;
@@ -78,7 +79,7 @@ void CServer::Shutdown()
 	if(!m_active)
 		return;
 
-	NetShutdown();
+	m_pNet->Shutdown();
 
 	m_active = false;
 
@@ -86,8 +87,7 @@ void CServer::Shutdown()
 	if(m_pWorld)
 		world_destroy(m_pWorld);
 	m_pWorld = 0;
-	m_svState.worldname[0] = 0;
-
+	
 	ComPrintf("CServer::Shutdown OK\n");
 }
 
@@ -104,7 +104,7 @@ void CServer::Restart()
 
 	m_active = false;
 
-	NetRestart();
+	m_pNet->Restart();
 
 	if(m_pWorld)
 	{
@@ -130,12 +130,12 @@ void CServer::RunFrame()
 	srand((uint)System::g_fcurTime);
 
 	//Get updates
-	ReadPackets();
+	m_pNet->ReadPackets();
 
 	//Run game
 
 	//write to clients
-	WritePackets();
+	m_pNet->SendPackets();
 }
 
 //======================================================================================
@@ -244,10 +244,10 @@ void CServer::LoadWorld(const char * mapname)
 	//Create Sigon-message. includes static entity baselines
 	//=======================
 	//all we need is the map name right now
-	m_numSignOnBuffers = 1;
-	m_signOnBuf[0].Write(SVC_INITCONNECTION);
-	m_signOnBuf[0].Write(m_svState.gameName);
-	m_signOnBuf[0].Write(m_svState.worldname);
+	m_pNet->m_numSignOnBuffers = 1;
+	m_pNet->m_signOnBuf[0].Write(SVC_INITCONNECTION);
+	m_pNet->m_signOnBuf[0].Write(m_svState.gameName);
+	m_pNet->m_signOnBuf[0].Write(m_svState.worldname);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)
@@ -270,13 +270,14 @@ void CServer::PrintServerStatus()
 	ComPrintf("Max clients : %d\n", m_svState.maxClients);
 	ComPrintf("Port        : %d\n", m_svState.port);
 
-	if(m_active)
-		NetPrintStatus();
+/*	if(m_active)
+		m_pNet->PrintStatus();
 	else
 	{
 		ComPrintf("Server is inactive\n");
 		return;
 	}
+*/
 }
 
 /*
@@ -310,4 +311,13 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	}
 }
 
+//======================================================================================
+//======================================================================================
 
+bool CServer::InitNetwork()
+{	return CNetServer::InitWinsock();
+}
+
+void CServer::ShutdownNetwork()
+{	CNetServer::ShutdownWinsock();
+}

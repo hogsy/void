@@ -9,179 +9,125 @@ namespace VoidNet
 {	
 	class CNetSocket;
 	class CNetChan;
+	class CNetClChan;
 }
 
 /*
 ======================================
-Server State Struct
+callback interface which should be 
+implemented by the main server class
 ======================================
 */
-struct ServerState
+struct I_Server
 {
-	ServerState()
-	{	port = 0;
-		maxClients = numClients = levelId = 0;
-		memset(hostName,0,sizeof(hostName));
-		memset(gameName,0,sizeof(gameName));
-		memset(worldname,0,sizeof(worldname));
-		memset(localAddr,0,sizeof(localAddr));
-	}
+	//process ingame client message
+	virtual void HandleClientMsg(int chanId, CBuffer &buffer)=0;		
 
-	int		maxClients;		//Max num of clients
-	int		numClients;		//Current num of clients
-	
-	char	worldname[32];	//Map name
-	int		levelId;		//Current map id
-	
-	char	localAddr[24];	//Server address
-	short	port;			//Server port num
-	
-	char	hostName[32];	//Server name
-	char	gameName[32];	//Game name
+	//Will return false, and reject reason in FAILED if rejected
+
+	virtual bool ValidateClConnection(int chanId, 
+							  bool reconnect,
+							  CBuffer &buffer, 
+							  char ** reason)=0;
+
+	//read clients userInfo vars upon connection
+//	virtual void OnClientConnect(int chanId, CBuffer &buffer)=0;
+
+	//client just finished getting prespawn info. spawn it now
+	virtual void OnClientSpawn(int chanId)=0;
+
+	virtual void OnLevelChange(int chanId)=0;
+
+	//client disconnected from game
+	//reason is given if it was network related
+	virtual void OnClientDrop(int chanId, int state,
+							  const char * reason=0)=0;
+
 };
 
 /*
+struct BroadcastSet
+{
+	BroadcaseSet(int exempt=0) { 
+	bool validDest[SV_MAX_CLIENTS];
+};
+*/
+
+/*
 ======================================
-The "Game" Server needs to be able
-to write directly to client channels.
+
 ======================================
 */
-class CClientChan
+struct ClChanWriter
 {
-public:
-	CClientChan();
-	virtual ~CClientChan();
+	void ChanBeginWrite(int chanId, byte msgid, int estSize);
+	void ChanWrite(byte b);
+	void ChanWrite(char c);
+	void ChanWrite(short s);
+	void ChanWrite(int i);
+	void ChanWrite(float f);
+	void ChanWrite(const char *string);
+	void ChanWriteCoord(float c);
+	void ChanWriteAngle(float a);
+	void ChanWriteData(byte * data, int len);
+	void ChanFinishWrite();
 
-	void BeginMessage(byte msgid, int estSize);
-	void WriteByte(byte b);
-	void WriteChar(char c);
-	void WriteShort(short s);
-	void WriteInt(int i);
-	void WriteFloat(float f);
-	void WriteCoord(float c);
-	void WriteAngle(float a);
-	void WriteString(const char *string);
-	void WriteData(byte * data, int len);
-
-	const NetChanState & GetChanState() const;
-
-private:
-	
-	friend class CNetServer;
-	enum
-	{	MAX_BACKBUFFERS = 4
-	};
-
-	void MakeSpace(int maxsize);
-	void ValidateBuffer();
-	void Reset();
-	bool ReadyToSend();
-
-	VoidNet::CNetChan *	m_pNetChan;
-
-	//Flags and States
-	bool	m_bDropClient;	//drop client if this is true
-	bool	m_bSend;
-
-	//keep track of how many spawn messages have been sent
-	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
-	byte	m_spawnState;
-	int		m_state;
-
-	//back buffers for client reliable data
-	bool	m_bBackbuf;
-	int		m_numBuf;
-	CBuffer	m_backBuffer[MAX_BACKBUFFERS];
-
-	//Game specifc
-	int		m_id;
-	char	m_name[32];
+	const NetChanState & ChanGetState(int chanId) const;
 };
-
-
-//callback interface for game server
-struct I_NetServerHandler
-{
-	//process client message
-	virtual void HandleClientMsg(int clientNum, CBuffer &buffer)=0;
-	
-	//notify client connection
-	//will return a clientId. -1 if connection failed for some reason
-	virtual int HandleClientConnect(CBuffer &buffer)=0;
-	
-	//notify client disconnection
-	virtual void HandleClientDrop(int clientNum)=0;
-
-	//validate connection
-	virtual void ValidateConnRequest(CBuffer &buffer)=0;
-};
-
-
 
 
 /*
 ======================================
-The Server class in the Exe code should
-subclass this
+The Network Server
 ======================================
 */
 class CNetServer
 {
 public:
-	CNetServer();
-	virtual ~CNetServer();
 
 	//Call these on Application Startup/Shutdown
-	static bool InitNetwork();
-	static void ShutdownNetwork();
+	static bool InitWinsock();
+	static void ShutdownWinsock();
 
-protected:
+	CNetServer(I_Server & server, ServerState & svstate);
+	~CNetServer();
+
+	bool Init();
+	void Shutdown();
+	void Restart();
+
+	void ReadPackets();
+	void SendPackets();
+
+	//Write to Network channels
+//THIS will be exposed to even the game DLLs
+	void ChanBegin(int chanId, byte msgid, int estSize);
+	void ChanWrite(int chanId, byte b);
+	void ChanWrite(int chanId, char c);
+	void ChanWrite(int chanId, short s);
+	void ChanWrite(int chanId, int i);
+	void ChanWrite(int chanId, float f);
+	void ChanWrite(int chanId, const char *string);
+	void ChanWriteCoord(int chanId, float c);
+	void ChanWriteAngle(int chanId, float a);
+	void ChanWriteData(int chanId, byte * data, int len);
+
+	void ChanSetRate(int chanId, int rate);
+
+	const NetChanState & ChanGetState(int chanId) const;
+
+	void ClientPrintf(int chanId, const char * message, ...);
+	void BroadcastPrintf(int chanId, const char* message, ...);
+	
+	void SendReconnect(int chanId);
+	void SendDisconnect(int chanId, const char * reason);
 
 	enum
 	{
 		MAX_SIGNONBUFFERS = 8,
-		MAX_CHALLENGES =  512,
-		MAX_CLIENTS = 16
+		MAX_CHALLENGES =  512
 	};
 
-	//Server Init/Shutdown/Restart
-	bool NetInit();
-	void NetShutdown();
-	void NetRestart();
-
-	//Called each server frame
-	void ReadPackets();
-	void WritePackets();
-
-	//Misc
-	void NetPrintStatus();
-
-	//Handle Connectionless requests
-	void HandleStatusReq();
-	void HandleConnectReq();
-	void HandleChallengeReq();
-
-	//Parse message received
-	void ProcessQueryPacket();						//Query packet
-	void ParseClientMessage(CClientChan &client);	//Client is in game
-	void ParseSpawnMessage(CClientChan &client);	//Client hasn't spawned yet
-
-	//Broadcast print message to all except
-	void ClientPrintf(CClientChan &client, const char * message, ...);
-	void BroadcastPrintf(const CClientChan * client, const char* message, ...);
-	
-	//Send Info to client
-	void SendRejectMsg(const char * reason);		//Only for unconnected clients
-	void SendSpawnParms(CClientChan &client);
-	void SendReconnect(CClientChan &client);
-	void SendDisconnect(CClientChan &client, const char * reason);
-
-	//===================================================
-	//Server Statue
-	ServerState m_svState;
-
-	//Game clients
-	CClientChan	m_clChan[MAX_CLIENTS];
 
 	//Used to stores Entity baselines etc which
 	//are transmitted to the client on connection
@@ -190,11 +136,30 @@ protected:
 
 private:
 
+	//Handle Connectionless requests
+	void HandleStatusReq();
+	void HandleConnectReq();
+	void HandleChallengeReq();
+
+	//Parse OOB query
+	void ProcessQueryPacket();				
+	//To current connecting client	
+	void SendRejectMsg(const char * reason);
+	
+	//Client hasn't spawned yet
+	void ParseSpawnMessage(int chanId);		
+	void SendSpawnParms(int chanId);
+
+	//===================================================
+
 	struct NetChallenge;
 	NetChallenge  * m_challenges;
 
-	//private data
-	VoidNet::CNetSocket* m_pSock;
+	VoidNet::CNetSocket * m_pSock;	//The Socket
+	VoidNet::CNetClChan * m_clChan;	//Client channels
+
+	ServerState & m_svState;	//Server Status
+	I_Server    & m_server;		//Main Server
 
 	CBuffer		m_recvBuf;
 	CBuffer		m_sendBuf;

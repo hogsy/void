@@ -17,6 +17,7 @@ CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
 {
 	Reset();
 	m_pRecvBuffer = 0;
+	m_rate = 0.0f;
 }
 
 CNetChan::~CNetChan()
@@ -60,7 +61,7 @@ void CNetChan::Reset()
 
 	m_lastReceived = 0.0f;
 	m_clearTime = 0.0f;
-	m_rate = 0.0f;
+//	m_rate = 0.0f;
 
 	m_bFatalError = false;
 }

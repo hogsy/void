@@ -117,6 +117,10 @@ SOURCE=.\Net_chan.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Net_clchan.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Net_hdr.h
 # End Source File
 # Begin Source File
@@ -175,6 +179,10 @@ SOURCE=..\Shared\Net_client.h
 # Begin Source File
 
 SOURCE=..\Shared\Net_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Net_protocol.h
 # End Source File
 # Begin Source File
 

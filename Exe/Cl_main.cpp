@@ -2,6 +2,7 @@
 #include "Cl_cmds.h"
 #include "Com_util.h"
 #include "Net_defs.h"
+#include "Net_protocol.h"
 
 //======================================================================================
 //======================================================================================
@@ -386,7 +387,7 @@ void CClient::Talk(const char * string)
 	if(!*msg || *msg == '\0')
 		return;
 
-	ComPrintf("%s: %s\n", m_clname.string, msg);
+	ComPrintf("CL: %s: %s\n", m_clname.string, msg);
 	System::GetSoundManager()->Play(m_hsTalk);
 
 	//Send this reliably ?

@@ -1,5 +1,6 @@
 #include "Net_sock.h"
 #include "Net_client.h"
+#include "Net_protocol.h"
 
 using namespace VoidNet;
 
@@ -194,6 +195,8 @@ void CNetClient::HandleSpawnParms()
 
 	m_pNetChan->BeginRead();
 	byte id = m_buffer.ReadByte();
+
+ComPrintf("CL: Got spawn level %d\n", (int)id);
 	
 	//Reconnect, the server probably changed maps 
 	//while we were getting spawn info. start again
