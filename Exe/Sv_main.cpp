@@ -275,7 +275,7 @@ void CServer::RunFrame()
 	if(m_fGameTime < System::GetCurTime())
 	{
 		m_fGameTime = System::GetCurTime() + GAME_FRAMETIME;
-		m_pGame->RunFrame(System::GetCurTime());
+		m_pGame->RunFrame(System::GetCurTime(), GAME_FRAMETIME);
 	}
 
 	//Write updates to all connected clients
