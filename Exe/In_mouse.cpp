@@ -505,7 +505,6 @@ void CMouse::Update_DIImmediate()
 		m_fXPos = m_fLastXPos = ((m_pDIState->lX * m_pVarXSens.fval * m_pVarSens.fval)+ m_fLastXPos)/2;
 		m_fYPos = m_fLastYPos = ((m_pDIState->lY * m_pVarYSens.fval * m_pVarSens.fval) + m_fLastYPos)/2;
 		m_fZPos = m_fLastZPos = ((m_pDIState->lZ * m_pVarSens.fval) + m_fLastZPos)/2;
-
 	}
 	else
 	{

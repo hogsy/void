@@ -37,6 +37,11 @@ public:
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
 
+
+	void LoadSkins(void);
+	void UnLoadSkins(void);
+
+
 private:
 
 	// struct to hold a list of models to be drawn
@@ -61,6 +66,7 @@ private:
 	drawmodel_t* drawmodelGet(void);
 	void drawmodelRelease(drawmodel_t *d);
 
+	bool ready;
 
 
 	CModelCacheEntry *caches[MODEL_CACHE_NUM][MODEL_CACHE_SIZE];

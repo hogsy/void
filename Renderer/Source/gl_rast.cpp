@@ -46,8 +46,6 @@ COpenGLRast::~COpenGLRast()
 	// unload the driver
 	OpenGLUnInit();
 
-	// why the hell does this crash when quitting from fullscreen ?
-	::ChangeDisplaySettings(NULL, 0);
 	ComPrintf("GL::Final Shutdown OK\n");
 }
 
@@ -149,6 +147,13 @@ Shutdown
 */
 bool COpenGLRast::Shutdown()
 {
+	if (!hRC || !hDC)
+		return true;
+
+	g_rInfo.ready = false;
+//	GoWindowed();
+	::ChangeDisplaySettings(NULL, 0);
+
 
 	//Update Win Pos
 	RECT rect;
@@ -164,6 +169,9 @@ bool COpenGLRast::Shutdown()
 	_wglDeleteContext(hRC);
 
 	::ReleaseDC(g_rInfo.hWnd, hDC);
+
+	hRC = NULL;
+	hDC = NULL;
 
 
 	g_rInfo.ready = false;
@@ -210,7 +218,7 @@ bool COpenGLRast::GoWindowed(void)
 	::ChangeDisplaySettings(NULL, 0);
 
 	//3dfx 3d only card. default to fullscreen mode
-	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+//	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
 	RECT wrect;
 	wrect.left = m_cWndX.ival;
@@ -321,8 +329,9 @@ bool COpenGLRast::GoFull(void)
 		return false;
 	}
 
+
 	//Record our changes
- 	g_rInfo.rflags|= RFLAG_FULLSCREEN;
+//	g_rInfo.rflags|= RFLAG_FULLSCREEN;
 	g_rInfo.width  = m_devmodes[best_mode].dmPelsWidth;
 	g_rInfo.height = m_devmodes[best_mode].dmPelsHeight;
 	g_rInfo.bpp    = m_devmodes[best_mode].dmBitsPerPel;
@@ -359,9 +368,14 @@ Update Default window coords
 */
 void COpenGLRast::SetWindowCoords(int wndX, int wndY)
 {
+	// dont store if it's at (0,0) - most likely from fullscreen
+//	if ((wndX>=0) && (wndX<=8) && (wndY>=0) && (wndY<=30))
+//		return;
+
 	//Dont bother with initial co-ords
 	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
 		return;
+
 	m_cWndX.Set(wndX);
 	m_cWndY.Set(wndY);
 }
@@ -373,6 +387,10 @@ Resize the Window
 */
 void COpenGLRast::Resize()
 {
+	if (!hDC || !hRC)
+		return;
+
+
 	RECT crect;
 	GetClientRect(g_rInfo.hWnd, &crect);
 	g_rInfo.width  = crect.right - crect.left;
@@ -380,6 +398,7 @@ void COpenGLRast::Resize()
 
 	_wglMakeCurrent(hDC, hRC);
 	glViewport(0, 0, g_rInfo.width, g_rInfo.height);
+
 }
 
 /*
@@ -389,10 +408,17 @@ Updates display settings
 */
 bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool fullscreen)
 {
+	if (!hDC || !hRC)
+		return false;
+
 	_wglMakeCurrent(hDC, hRC);
 
+	bool fast = false; //(bpp == g_rInfo.bpp);
+
+
 	//Shutdown openGL first
-	Shutdown();
+	if (!fast)
+		Shutdown();
 
 	// record old stats
 	bool oldfull = g_rInfo.rflags & RFLAG_FULLSCREEN;
@@ -409,22 +435,36 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 	else
 		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
-	if (!Init())
+	if (fast)
 	{
-		ComPrintf("GL::UpdateDisplaySettings: Unable to change to new settings\n");
+		g_rInfo.ready = false;
 
-		// switch everythign back;
-		if (oldfull)
-			g_rInfo.rflags |= RFLAG_FULLSCREEN;
+		if (fullscreen)
+			GoFull();
 		else
-			g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+			GoWindowed();
+		glViewport(0, 0, g_rInfo.width, g_rInfo.height);
+	}
 
-		g_rInfo.bpp	= oldbpp;
-		g_rInfo.width	= oldwidth;
-		g_rInfo.height	= oldheight;
+	else
+	{
+		if (!Init())
+		{
+			ComPrintf("GL::UpdateDisplaySettings: Unable to change to new settings\n");
 
-		Init();
-		return false;
+			// switch everythign back;
+			if (oldfull)
+				g_rInfo.rflags |= RFLAG_FULLSCREEN;
+			else
+				g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+
+			g_rInfo.bpp	= oldbpp;
+			g_rInfo.width	= oldwidth;
+			g_rInfo.height	= oldheight;
+
+			Init();
+			return false;
+		}
 	}
 	ComPrintf("GL::UpdateDisplaySettings::Display change successful\n");
 	return true;
@@ -484,6 +524,17 @@ bool COpenGLRast::SetupPixelFormat()
 
 
 
+/*
+==========================================
+SetFocus
+==========================================
+*/
+void COpenGLRast::SetFocus()
+{
+	if (!hDC || !hRC)
+		ComPrintf("setting current without hDC or hRC!!!\n");
+	_wglMakeCurrent(hDC, hRC);
+}
 
 
 
@@ -802,9 +853,6 @@ ClearBuffers
 */
 void COpenGLRast::ClearBuffers(int buffers)
 {
-	// should be first call of the frame - make current for all other calls
-	_wglMakeCurrent(hDC, hRC);
-
 	glClearColor(0, 0, 1, 1);
 	int b = 0;
 

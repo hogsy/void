@@ -73,7 +73,7 @@ public:
 	void ScreenShot(unsigned char *dest);
 	void SetVidSynch(int v);
 
-
+	void SetFocus(void);
 
 private:
 

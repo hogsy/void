@@ -152,10 +152,13 @@ Shutdown
 */
 bool CRenExp::Shutdown(void)
 {
+	g_pRast->SetFocus();
+
 	//Destroy Subsystems
 	cache_destroy();
 	beam_shutdown();
 
+	g_pModel->UnLoadSkins();
 	g_pTex->Shutdown();
 	g_pRast->Shutdown();
 	g_prCons->Shutdown();
@@ -199,6 +202,7 @@ DrawFrame
 
 void CRenExp::Draw(const CCamera * camera)
 {
+	g_pRast->SetFocus();
 	r_drawframe(camera);
 
 // make sure all was well
@@ -223,6 +227,7 @@ void CRenExp::Draw(vector_t *origin, vector_t *angles, vector_t *blend)
 
 void CRenExp::DrawConsole()
 {	
+	g_pRast->SetFocus();
 	r_drawcons();
 // make sure all was well
 #ifdef _DEBUG
@@ -239,6 +244,8 @@ On Move Window
 */
 void CRenExp::MoveWindow(int x, int y)
 {
+	g_pRast->SetFocus();
+
 	//Update new xy-coords if in windowed mode
 	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
 	{	
@@ -253,6 +260,8 @@ On Resize Window
 */
 void CRenExp::Resize()
 {
+	g_pRast->SetFocus();
+
 	if (g_rInfo.ready)
 	{
 		g_pRast->Resize();
@@ -268,6 +277,8 @@ Load a World
 */
 bool CRenExp::LoadWorld(world_t *level, int reload)
 {
+	g_pRast->SetFocus();
+
 	if(!world && level)
 	{
 		if(!g_pTex->UnloadWorldTextures())
@@ -299,6 +310,8 @@ Unload World
 */
 bool CRenExp::UnloadWorld()
 {
+	g_pRast->SetFocus();
+
 	// get rid of all the old textures, load the new ones
 	if(world)
 	{
@@ -322,8 +335,22 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 								 unsigned int bpp, 
 								 bool fullscreen)
 {
+	g_pRast->SetFocus();
+
+	// if we're not changing bpp, we can skip a lot of stuff
+	if (0)//bpp == g_rInfo.bpp)
+	{
+		g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
+		g_prCons->UpdateRes();
+		r_init();
+		return;
+	}
+
+
+
 	// shut the thing down
 	g_pTex->Shutdown();
+	g_pModel->UnLoadSkins();
 
 	g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
 
@@ -340,8 +367,9 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		FError("ChangeDispSettings::Error Reloading textures\n");
 		return;
 	}
-//	model_load_map();
-	
+
+	g_pModel->LoadSkins();
+
 	// make sure our console is up to date
 	g_prCons->UpdateRes();
 	r_init();
@@ -355,7 +383,10 @@ Restart the Renderer
 */
 bool CRenExp::Restart(void)
 {
+	g_pRast->SetFocus();
+
 	g_pTex->Shutdown();
+	g_pModel->UnLoadSkins();
 
 
 	// shut the thing down
@@ -375,8 +406,8 @@ bool CRenExp::Restart(void)
 		ComPrintf("Restart::Error Reloading textures\n");
 	}
 
-	//reload our models
-//	model_load_map();
+	//reload our model skins
+	g_pModel->LoadSkins();
 
 	//make sure our console is up to date
 	g_prCons->UpdateRes();
@@ -396,6 +427,8 @@ CVar Handlers
 */
 bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
 {
+	g_pRast->SetFocus();
+
 	if(cvar == &m_cFull)
 		return CVar_FullScreen((CVar*)cvar, parms);
 	else if(cvar == &m_cRes)

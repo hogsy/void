@@ -23,6 +23,7 @@ CModelManager::CModelManager()
 	num_drawmodel_allocs = 0;
 	free_drawmodels = NULL;
 	drawmodels = NULL;
+	ready = true;
 
 	// reset
 	for (int c=0; c<MODEL_CACHE_NUM; c++)
@@ -173,7 +174,17 @@ Purge
 */
 void CModelManager::Purge(void)
 {
+	if (!ready && drawmodels)
+	{
+		ComPrintf("drawing models when not ready!!!\n");
+		return;
+	}
+
 	drawmodel_t *next, *walk;
+
+	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+	g_pRast->PolyColor3f(1, 1, 1);
 
 	for (walk=drawmodels; walk; walk=next)
 	{
@@ -194,6 +205,46 @@ void CModelManager::Purge(void)
 	}
 
 	drawmodels = NULL;
+}
+
+
+/*
+=======================================
+LoadSkins
+=======================================
+*/
+void CModelManager::LoadSkins(void)
+{
+	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	{
+		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		{
+			if (caches[c][e])
+				caches[c][e]->LoadSkins();
+		}
+	}
+
+	ready = true;
+}
+
+
+/*
+=======================================
+UnLoadSkins
+=======================================
+*/
+void CModelManager::UnLoadSkins(void)
+{
+	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	{
+		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		{
+			if (caches[c][e])
+				caches[c][e]->UnLoadSkins();
+		}
+	}
+
+	ready = false;
 }
 
 
@@ -244,8 +295,6 @@ void CModelManager::drawmodelRelease(drawmodel_t *d)
 	d->next = free_drawmodels;
 	free_drawmodels = d;
 }
-
-
 
 
 

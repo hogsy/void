@@ -23,6 +23,8 @@ public:
 	void Draw(int skin, float frame);
 	bool IsFile(const char *file) { return (strcmp(file, modelfile)==0); }
 
+	void LoadSkins(void);
+	void UnLoadSkins(void);
 
 private:
 

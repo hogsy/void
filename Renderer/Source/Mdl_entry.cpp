@@ -58,7 +58,9 @@ CModelCacheEntry::~CModelCacheEntry()
 {
 	if (modelfile)
 		delete modelfile;
-	g_pRast->TextureBinDestroy(skin_bin);
+
+	if (skin_bin != -1)
+		g_pRast->TextureBinDestroy(skin_bin);
 
 	if (frames)
 	{
@@ -155,8 +157,55 @@ void CModelCacheEntry::LoadModel()
 
 
 	// skin names
+	skin_names = new char*[header.numSkins];
+	if (!skin_names) FError("mem for skin names");
 
+
+	fileReader.Seek(header.offsetSkins, SEEK_SET);
+	for (int s=0; s<header.numSkins; s++)
+	{
+		// md2 skin name list is 64 char strings
+		char tskin[64];
+		fileReader.Read(tskin, 64, 1);
+
+		skin_names[s] = new char[64];
+		if (!skin_names[s])	 FError("mem for skin names");
+
+		// strip path and extension
+		for (int c=strlen(tskin); c>=0; c--)
+		{
+			if (tskin[c] == '.')
+				tskin[c] = '\0';
+
+			else if ((tskin[c] == '/') || (tskin[c] == '/'))
+			{
+				strcpy(skin_names[s], &tskin[c+1]);
+				break;
+			}
+		}
+	}
+
+	fileReader.Close();
+	LoadSkins();
+}
+
+
+/*
+=======================================
+LoadSkins
+=======================================
+*/
+void CModelCacheEntry::LoadSkins(void)
+{
+	if (skin_bin != -1)
+	{
+		ComPrintf("CModelCacheEntry::LoadSkins() - skins already loaded\n");
+		return;
+	}
+
+	char texname[260];
 	char path[260];
+
 	strcpy(path, modelfile);
 	for (int c=strlen(path); c>=0; c--)
 	{
@@ -167,27 +216,16 @@ void CModelCacheEntry::LoadModel()
 		}
 	}
 
-	char texname[260];
-
-	skin_bin = g_pRast->TextureBinInit(header.numSkins);
-	skin_names = new char*[header.numSkins];
-	if (!skin_names) FError("mem for skin names");
-
+	skin_bin = g_pRast->TextureBinInit(num_skins);
 	CImageReader *texReader = new CImageReader();
 
-	fileReader.Seek(header.offsetSkins, SEEK_SET);
-	for (int s=0; s<header.numSkins; s++)
+	for (int s=0; s<num_skins; s++)
 	{
-		// md2 skin name list is 64 char strings
-		skin_names[s] = new char[64];
-		if (!skin_names[s])	 FError("mem for skin names");
-
-		fileReader.Read(skin_names[s], 64, 1);
-
 		strcpy(texname, path);
+		strcat(texname, "/");
 		strcat(texname, skin_names[s]);
 
-		if (!texReader->Read(texname))
+		if ((strcmp(skin_names[s], "none")==0) || !texReader->Read(texname))
 			texReader->DefaultTexture();
 
 		// create all mipmaps
@@ -213,8 +251,17 @@ void CModelCacheEntry::LoadModel()
 	}
 
 	delete texReader;
+}
 
-	fileReader.Close();
+/*
+=======================================
+UnLoadSkins
+=======================================
+*/
+void CModelCacheEntry::UnLoadSkins(void)
+{
+	g_pRast->TextureBinDestroy(skin_bin);
+	skin_bin = -1;
 }
 
 
@@ -337,52 +384,15 @@ void CModelCacheEntry::LoadFail()
 
 	// skin names
 
-	char path[260];
-	strcpy(path, modelfile);
-	for (int c=strlen(path); c>=0; c--)
-	{
-		if ((path[c] == '\\') || (path[c] == '/'))
-		{
-			path[c] = '\0';
-			break;
-		}
-	}
-
-
-
-	skin_bin = g_pRast->TextureBinInit(1);
 	skin_names = new char*[1];
 	if (!skin_names) FError("mem for skin names");
-
-	CImageReader *texReader = new CImageReader();
 
 	// md2 skin name list is 64 char strings
 	skin_names[0] = new char[64];
 	if (!skin_names[0])	 FError("mem for skin names");
 
 	strcpy(skin_names[0], "none");
-	texReader->DefaultTexture();
-
-	// create all mipmaps
-	tex_load_t tdata;
-	tdata.format = texReader->GetFormat();
-	tdata.height = texReader->GetHeight();
-	tdata.width  = texReader->GetWidth();
-	tdata.mipmaps= texReader->GetNumMips();
-	tdata.mipdata= texReader->GetMipData();
-	tdata.mipmap = true;
-	tdata.clamp  = false;
-
-	int mipcount = tdata.mipmaps - 1;
-	while (mipcount > 0)
-	{
-		texReader->ImageReduce(mipcount);
-		mipcount--;
-	}
-
-	g_pRast->TextureLoad(skin_bin, 0, &tdata);
-
-	delete texReader;
+	LoadSkins();
 }
 
 
@@ -392,7 +402,6 @@ void CModelCacheEntry::LoadFail()
 Draw
 =======================================
 */
-
 void CModelCacheEntry::Draw(int skin, float frame)
 {
 	g_pRast->TextureSet(skin_bin, skin);
@@ -467,3 +476,10 @@ void CModelCacheEntry::Draw(int skin, float frame)
 		num_cmds = *(int*)ptr;
 	}
 }
+
+
+
+
+
+
+

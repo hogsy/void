@@ -137,6 +137,7 @@ public:
 	virtual void ScreenShot(unsigned char *dest)=0;
 	virtual void SetVidSynch(int v)=0;
 
+	virtual void SetFocus(void)=0;
 
 protected:
 	CVar    m_cWndX;        //Windowed X pos
