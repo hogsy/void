@@ -107,10 +107,14 @@ enum CacheType
 	MODEL_CACHE_LOCAL	= 0,	//Always loaded. Client is reponsible for loading these.
 	MODEL_CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
 	MODEL_CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
-	MODEL_CACHE_NUM		= 3,
 };
 
-#define MODEL_CACHE_SIZE	256
+enum
+{
+	MODEL_CACHE_NUM	= 3,
+	MODEL_CACHE_SIZE =256
+}
+
 
 struct R_EntState 
 {
