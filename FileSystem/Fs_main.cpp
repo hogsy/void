@@ -30,7 +30,7 @@ FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp,
 	g_pVoid = vexp;
 	g_pHunkManager = vexp->hunkManager;
 	g_pConsole    = vexp->console;
-	
+
 	if(!g_pFileSystem)
 		g_pFileSystem = new CFileSystem(exeDir,baseDir);
 	return g_pFileSystem;

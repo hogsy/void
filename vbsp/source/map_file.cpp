@@ -16,6 +16,7 @@ implementation of .map file reading/parsing
 #include "std_lib.h"
 #include "map_file.h"
 #include "Com_Vector.h"
+#include "com_trace.h"
 
 //=======================================================
 

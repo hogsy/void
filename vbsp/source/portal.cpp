@@ -2,6 +2,7 @@
 #include "std_lib.h"
 #include "bsp.h"
 #include "portal.h"
+#include "com_trace.h"
 
 
 #include <memory.h>

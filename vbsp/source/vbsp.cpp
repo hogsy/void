@@ -15,6 +15,16 @@
 #include "portal.h"
 
 
+// OMFG FIXME - all this just to #include shaders
+#include "Com_defs.h"
+#include "Com_Vector.h"
+#include "../Renderer/Rast_main.h"
+#include "../vbsp/source/std_lib.h"
+#include "I_file.h"
+#include "../Renderer/ShaderManager.h"
+#include "I_filesystem.h"
+
+
 // fast mode doesn't remove any non-visible faces, and doesn't calculate portals
 bool fast = false;
 
@@ -50,6 +60,9 @@ main
 */
 int main (int argc, char **argv)
 {
+	FILESYSTEM_Create(NULL, "E:\\Void", "E:\\Void\\Game");
+	g_pShaders = new CShaderManager();
+
 	printf ("======== vbsp ========\n");
 
 	long start_time;
@@ -143,6 +156,10 @@ int main (int argc, char **argv)
 	// close up log file
 	if (flog)
 		fclose(flog);
+
+	delete g_pShaders;
+	FILESYSTEM_Free();
+
 
 	return 0;
 }

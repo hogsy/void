@@ -7,6 +7,19 @@
 #include "bsp_file.h"
 #include "bsp.h"
 #include "entity.h"
+#include "com_trace.h"
+
+
+// OMFG FIXME - all this just to #include shaders
+#include "Com_defs.h"
+#include "Com_Vector.h"
+#include "../Renderer/Rast_main.h"
+#include "../vbsp/source/std_lib.h"
+#include "I_file.h"
+#include "../Renderer/ShaderManager.h"
+
+
+
 
 #define MAX_MAP_VERTS		65536
 #define	MAX_MAP_LEAFS		65536
@@ -191,6 +204,17 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 
 	tdef->vecs[0][3] = (float)tinfo->shift[0];
 	tdef->vecs[1][3] = (float)tinfo->shift[1];
+
+	int w, h;
+	g_pShaders->GetDims(tinfo->name, w, h);
+	tdef->vecs[0][0] /= w;
+	tdef->vecs[0][1] /= w;
+	tdef->vecs[0][2] /= w;
+	tdef->vecs[0][3] /= w;
+	tdef->vecs[1][0] /= h;
+	tdef->vecs[1][1] /= h;
+	tdef->vecs[1][2] /= h;
+	tdef->vecs[1][3] /= h;
 }
 
 

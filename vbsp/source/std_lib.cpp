@@ -49,3 +49,50 @@ void Error(char *err, ...)
 	exit (1);
 }
 
+
+/*
+============
+FError - same as error
+============
+*/
+void FError(char *err, ...)
+{
+	char buff[1024];
+
+	va_list args;
+	va_start(args, err);
+	vsprintf(buff, err, args);
+	va_end(args);
+
+	verbose = true;
+
+	v_printf("\n************ ERROR ************\n");
+	v_printf("%s", buff);
+	v_printf("\n");
+
+	exit (1);
+}
+
+
+/*
+============
+ComPrintf - same as error
+============
+*/
+void ComPrintf(char *err, ...)
+{
+	char buff[1024];
+
+	va_list args;
+	va_start(args, err);
+	vsprintf(buff, err, args);
+	va_end(args);
+
+	verbose = true;
+
+	v_printf("\n************ ERROR ************\n");
+	v_printf("%s", buff);
+	v_printf("\n");
+
+	exit (1);
+}

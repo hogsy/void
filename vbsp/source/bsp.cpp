@@ -4,6 +4,7 @@
 #include "bsp.h"
 #include "map_file.h"
 #include "entity.h"
+#include "com_trace.h"
 
 
 //=======================================================

@@ -13,6 +13,8 @@
 
 
 void Error(char *err, ...);
+void FError(char *err, ...);
+void ComPrintf(char *err, ...);
 void v_printf(char *msg, ...);
 
 
