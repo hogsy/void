@@ -679,6 +679,7 @@ void build_bsp_brushes(entity_t *ent)
 	ent->root->parent = NULL;
 	ent->root->outside = false;
 	ent->root->volume = bsp_build_volume();
+	ent->root->plane = -1;
 
 // only copy over the most basic info
 	int eend = map_entities[ent->map_ent].first_brush + map_entities[ent->map_ent].num_brushes;
@@ -975,7 +976,7 @@ int bsp_select_plane(bsp_node_t *n)
 			if (bsp_test_brush(n->volume, s->plane, NULL) != 0)
 				continue;
 
-			if (bsp_test_to_parents(n, best_plane))
+			if (bsp_test_to_parents(n, s->plane))
 				continue;
 
 			splits = front = back = epsilon = 0;
@@ -1030,7 +1031,6 @@ bsp_partition
 ============
 */
 void brush_split(bsp_brush_t *b, bsp_brush_t **front, bsp_brush_t **back, int plane);
-
 void bsp_partition(bsp_node_t *n)
 {
 	n->children[0] = n->children[1] = NULL;
@@ -1048,6 +1048,7 @@ void bsp_partition(bsp_node_t *n)
 			n->contents |= n->brushes->contents;
 		return;
 	}
+	ComPrintf("split plane %d\n", best_plane);
 
 	// split all the brushes with the best plane
 	n->plane = best_plane;
@@ -1057,6 +1058,7 @@ void bsp_partition(bsp_node_t *n)
 	n->children[0]->brushes = n->children[1]->brushes = NULL;
 	n->children[0]->portals = n->children[1]->portals = NULL;
 	n->children[0]->parent  = n->children[1]->parent  = n;
+	n->children[0]->plane	= n->children[1]->plane	  = -1;
 
 	// split current volume into it's 2 child volumes
 	bsp_brush_split(n->volume, &n->children[0]->volume, &n->children[1]->volume, n->plane);
