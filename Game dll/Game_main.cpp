@@ -81,6 +81,21 @@ void CGame::ShutdownGame()
 
 void CGame::RunFrame(float curTime)
 {
+	//Run entities
+	for(int i=0; i<numEnts; i++)
+	{
+	}
+
+	vector_t desiredDir;
+	//Run through clients
+	for(i=0; i<numClients; i++)
+	{
+		if(clients[i]->inUse && clients[i]->spawned)
+		{
+			//clients[i]->clCmd;
+			//CMoveType::ClientMove(clients[clNum]
+		}
+	}
 }
 
 int  CGame::GetVersion()

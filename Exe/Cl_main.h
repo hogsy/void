@@ -3,8 +3,8 @@
 
 #include "Sys_hdr.h"
 #include "Net_client.h"
-#include "I_clientRenderer.h"
 #include "Cl_defs.h"
+#include "I_clientRenderer.h"
 
 //Pre-declarations
 class  CSoundManager;
@@ -130,10 +130,8 @@ private:
 	ClCmd		m_cmd;
 
 	void WriteUpdate();
-	void EntityMove(const vector_t &origin, 
-					const vector_t &mins, 
-					const vector_t &max,
-					vector_t &dir, float time);
+	void UpdateView();
+
 	
 	//This should hook up to the game client whne the client
 	//enters a game
@@ -145,7 +143,6 @@ private:
 	
 	int			m_campath;
 	float		m_camtime;
-	float		m_acceleration;
 	float		m_maxvelocity;
 
 	void Spawn(vector_t	*origin, vector_t *angles);

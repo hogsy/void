@@ -159,16 +159,16 @@ Enter game
 void CClient::BeginGame()
 {
 	m_campath = -1;
-	m_acceleration = 400.0f;
 	m_maxvelocity =  200.0f;
 	
-	VectorSet(&desired_movement, 0, 0, 0);
-
+	m_pClient->moveType = MOVETYPE_STEP;
 	VectorSet(&m_pClient->angles, 0.0f,0.0f,0.0f);
-	VectorSet(&m_pClient->origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
+	VectorSet(&m_pClient->origin, 0.0f,0.0f,48.0f);
 	VectorSet(&m_pClient->mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_pClient->maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
+
+	VectorSet(&desired_movement, 0, 0, 0);
 
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
@@ -209,7 +209,6 @@ void CClient::UnloadWorld()
 		return;
 	}
 
-ComPrintf("CL :UNLOADED MODELS\n");
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 
@@ -258,68 +257,64 @@ void CClient::RunFrame()
 
 	//draw the console or menues etc
 	if(!m_ingame)
-		m_pRender->DrawConsole();
-	else
 	{
-		m_pCmdHandler->RunCommands();
-
-		if (!((desired_movement.x==0) && (desired_movement.y==0) &&  (desired_movement.z==0)) || 
-			 (m_campath != -1))
-		{
-			VectorNormalize(&desired_movement);
-			Move(desired_movement, System::g_fframeTime * m_maxvelocity);
-			desired_movement.Set(0,0,0);
-		}
-
-		//Print Stats
-		m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
-				m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
-		m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
-				1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
-		m_fFrameTime = System::g_fcurTime;
-
-		vector_t forward, up, velocity;
-		VectorSet(&velocity, 0,0,0);
-		AngleToVector(&m_pClient->angles, &forward, 0, &up);
-		m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-		m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
-
-		if(m_cvNetStats.bval)
-			ShowNetStats();
-
-		// FIXME - put this in game dll
-		int contents = m_pWorld->PointContents(m_pClient->origin);
-		if(contents & CONTENTS_SOLID)
-			VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
-		else if(contents & CONTENTS_WATER)
-			VectorSet(&m_screenBlend, 0, 1, 1);
-		else if(contents & CONTENTS_LAVA)
-			VectorSet(&m_screenBlend, 1, 0, 0);
-		else
-			VectorSet(&m_screenBlend, 1, 1, 1);
-
-		m_pSound->UpdateListener(m_pClient->origin, velocity, up, forward);
-
-		//fix me. draw ents only in the pvs
-		for(int i=0; i< GAME_MAXENTITIES; i++)
-		{
-			if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
-			{
-				m_pClRen->DrawModel(m_entities[i]);	
-			}
-		}
+		m_pRender->DrawConsole();
 		
-		//Draw clients
-		for(i=0; i< GAME_MAXCLIENTS; i++)
-		{
-			if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
-				m_pClRen->DrawModel(m_clients[i]);
-		}
-
-		m_pRender->Draw(m_pCamera);
-
-		WriteUpdate();
 	}
+	else {
+
+	m_pCmdHandler->RunCommands();
+
+/*	if (!((desired_movement.x==0) && 
+		  (desired_movement.y==0) &&  
+		  (desired_movement.z==0)) || 
+		  (m_campath != -1))
+	{
+*/
+
+		VectorNormalize(&desired_movement);
+		Move(desired_movement, System::g_fframeTime * m_maxvelocity);
+		desired_movement.Set(0,0,0);
+//	}
+
+	//Print Stats
+	m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
+			m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
+	m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
+			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
+	m_fFrameTime = System::g_fcurTime;
+
+	vector_t forward, up, velocity;
+	VectorSet(&velocity, 0,0,0);
+	AngleToVector(&m_pClient->angles, &forward, 0, &up);
+	m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
+	m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
+
+	if(m_cvNetStats.bval)
+		ShowNetStats();
+
+	m_pSound->UpdateListener(m_pClient->origin, velocity, up, forward);
+
+	//fix me. draw ents only in the pvs
+	for(int i=0; i< GAME_MAXENTITIES; i++)
+	{
+		if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
+			m_pClRen->DrawModel(m_entities[i]);	
+	}
+	
+	//Draw clients
+	for(i=0; i< GAME_MAXCLIENTS; i++)
+	{
+		if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
+			m_pClRen->DrawModel(m_clients[i]);
+	}
+
+	UpdateView();
+	m_pRender->Draw(m_pCamera);
+	
+	WriteUpdate();
+	}
+	
 	//Write updates
 	m_pNetCl->SendUpdate();
 }
@@ -351,6 +346,30 @@ void CClient::WriteUpdate()
 		buf.WriteInt(m_cmd.angles[2]);
 	}
 }
+
+
+/*
+======================================
+
+======================================
+*/
+void CClient::UpdateView()
+{
+	// FIXME - put this in game dll
+	int contents = m_pWorld->PointContents(m_pClient->origin);
+	if(contents & CONTENTS_SOLID)
+		VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
+	else if(contents & CONTENTS_WATER)
+		VectorSet(&m_screenBlend, 0, 1, 1);
+	else if(contents & CONTENTS_LAVA)
+		VectorSet(&m_screenBlend, 1, 0, 0);
+	else
+		VectorSet(&m_screenBlend, 1, 1, 1);
+}
+
+
+
+
 
 
 

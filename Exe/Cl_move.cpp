@@ -10,8 +10,8 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 void CClient::Move(vector_t &dir, float time)
 {
 	// figure out what dir we want to go if we're folling a path
-	if (m_campath != -1)
-		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, &dir, time);
+//	if (m_campath != -1)
+//		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, &dir, time);
 
 	// can we clip through walls?  it's simple then
 	if (!m_cvClip.ival)
@@ -20,7 +20,7 @@ void CClient::Move(vector_t &dir, float time)
 		return;
 	}
 
-	CMoveType::ClientMove(*m_pClient, dir, time);
+	CMoveType::ClientMove(m_pClient, dir, time);
 }
 
 

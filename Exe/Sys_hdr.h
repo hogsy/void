@@ -5,8 +5,8 @@
 
 #define __VOIDALPHA	1
 
-#include "Com_mem.h"
 #include "Com_defs.h"
+#include "Com_mem.h"
 
 #include "I_hunkmem.h"
 #include "I_console.h"
@@ -15,7 +15,6 @@
 
 //======================================================================================
 //======================================================================================
-
 const char VOID_DEFAULTMAPEXT  []	= "wld";
 const char VOID_DEFAULTGAMEDIR []	= "Game";
 
@@ -48,5 +47,4 @@ namespace System
 	HINSTANCE	GetHInstance();
 	HWND		GetHwnd();
 }
-
 #endif
