@@ -52,7 +52,7 @@ public:
 	bool  BadRead()	const { return m_badRead; }
 	byte* GetData() const { return m_buffer;  }
 	int   GetSize() const { return m_curSize; }
-	
+	bool  OverFlowed() const { return m_overFlowed; }
 	int   GetMaxSize()  const { return m_maxSize; }
 	int   UnreadBytes() const { return m_curSize - m_readCount; }
 
@@ -67,6 +67,7 @@ private:
 	int		m_readCount;	//how much have we read
 
 	bool	m_badRead;
+	bool	m_overFlowed;
 
 	byte*	GetSpace(int size);
 };

@@ -17,6 +17,7 @@ CNetBuffer::CNetBuffer(int size)
 	m_readCount = 0;
 
 	m_badRead = false;
+	m_overFlowed = false;
 }
 
 CNetBuffer::~CNetBuffer()
@@ -37,6 +38,7 @@ byte* CNetBuffer::GetSpace(int size)
 	{
 		ComPrintf("CNetBuffer:: Buffer overflowed\n");
 		m_curSize = 0;
+		m_overFlowed = true;
 	}
 	byte * data = m_buffer + m_curSize;
 	m_curSize += size;
