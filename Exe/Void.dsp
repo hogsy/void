@@ -180,14 +180,6 @@ SOURCE=..\Shared\Bsp_file.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Clip.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\clip.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_3dstructs.h
 # End Source File
 # Begin Source File

@@ -1,7 +1,6 @@
 #ifndef CL_COLLISION
 #define CL_COLLISION
 
-#include "Clip.h"
 #include "World.h"
 
 
