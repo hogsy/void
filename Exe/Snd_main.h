@@ -97,7 +97,7 @@ private:
 	bool m_bStereoSupport;
 
 	float	 m_fLastFrame;
-	vector_t m_listenerPos;		//HACK ?
+	vector_t m_listenerPos;
 
 	CVar m_cVolume;			//Master Volume 
 	CVar m_cHighQuality;	//16bit buffer if on.

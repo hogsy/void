@@ -141,9 +141,49 @@ void CGameClient::UpdatePosition(const float &time)
 
 	//Clipping should be on by default
 //	if (m_cvClip.ival)
-	EntMove::ClientMove(m_pGameClient, time);
+//	EntMove::ClientMove(m_pGameClient, time);
 ///	else
 //		EntMove::NoClipMove(m_pGameClient, dir, time);
+
+	EntMove::ClientMove(m_pGameClient, time);
+
+/*	if(EntMove::ClientMove(m_pGameClient, time) == 2)
+	{
+ComPrintf("Hit step!");
+
+		bool stepped = false;
+
+		//move up a bit and try once more
+		vector_t vecOldPos(m_pGameClient->origin); 
+		vector_t vecOldVelocity(m_pGameClient->velocity);
+
+		//can we move up ?
+		m_pGameClient->velocity.x = 0;
+		m_pGameClient->velocity.y = 0;
+		m_pGameClient->velocity.z = 200 * time;
+
+		if(EntMove::ClientMove(m_pGameClient,time) == 1)
+		{
+ComPrintf("Moved up!");
+			m_pGameClient->velocity = vecOldVelocity;
+			m_pGameClient->velocity.z = 0;
+
+			//Can we move forward now ?
+			if(EntMove::ClientMove(m_pGameClient, time) == 1)
+			{
+ComPrintf("Stepped up !");
+				stepped = true;
+			}
+		}
+
+		//Go back to original pos
+		if(!stepped)
+		{
+			m_pGameClient->velocity = vecOldVelocity;
+			m_pGameClient->origin = vecOldPos;
+		}
+	}
+*/
 
 	TraceInfo traceInfo;
 	vector_t  end(m_pGameClient->origin);
@@ -153,11 +193,7 @@ void CGameClient::UpdatePosition(const float &time)
 	if(traceInfo.fraction != 1)
 		m_bOnGround = true;
 	else
-	{
 		m_bOnGround = false;
-//		m_pClGame->HudPrintf(0,160,0,"IN AIR");
-	}
-
 }
 
 /*

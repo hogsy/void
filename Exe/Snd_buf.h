@@ -70,13 +70,15 @@ public:
 
 	bool  InUse()	   const;
 	void  PrintStats() const;
-	IDirectSoundBuffer * GetDSBuffer() const;
+	
+	WAVEFORMATEX * GetWaveFormat();
+
 	const CWaveFile	   * GetWaveData() const;
 	const char         * GetFilename() const;
 	
 private:
 
-	IDirectSoundBuffer * m_pDSBuffer;
+	WAVEFORMATEX		 m_waveFormat;
 	CWaveFile		   * m_pWaveFile;	
 };
 

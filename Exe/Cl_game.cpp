@@ -187,7 +187,8 @@ void CGameClient::RunFrame(float frameTime)
 
 	//Print misc crap
 	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
-//	m_pClGame->HudPrintf(0,120,0,"MINS  : %.2f,%.2f,%.2f", m_pGameClient->mins.x,m_pGameClient->mins.y,m_pGameClient->mins.z);
+	m_pClGame->HudPrintf(0,120,0,"VELOCITY  : %.2f,%.2f,%.2f", 
+		m_pGameClient->velocity.x,m_pGameClient->velocity.y,m_pGameClient->velocity.z);
 //	m_pClGame->HudPrintf(0,140,0,"MAXS  : %.2f,%.2f,%.2f", m_pGameClient->maxs.x,m_pGameClient->maxs.y,m_pGameClient->maxs.z);
 //	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
 //	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	

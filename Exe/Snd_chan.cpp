@@ -48,18 +48,35 @@ void CSoundChannel::Destroy()
 Duplicate buffer info
 ======================================
 */
-bool CSoundChannel::CreateBuffer(const CSoundBuffer &buffer)
+bool CSoundChannel::CreateBuffer(CSoundBuffer &buffer)
 {
 	//Destry current buffer if active
 	if(m_bInUse)
 		Destroy();
 
-	HRESULT hr = GetDirectSound()->DuplicateSoundBuffer(buffer.GetDSBuffer(), &m_pDSBuffer);
-	if(FAILED(hr)) 
-	{
-		PrintDSErrorMessage(hr, "CSoundChannel::Create:Could not duplicate buffers:");
-		return false;
-	}
+	const CWaveFile * pWaveFile = buffer.GetWaveData();
+
+	//Set up DSBUFFERDESC structure. 
+	DSBUFFERDESC dsbdesc; 
+    memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
+	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
+	dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_STATIC | DSBCAPS_MUTE3DATMAXDISTANCE;
+/*					  DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
+					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
+					  DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
+*/
+//	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+    dsbdesc.dwBufferBytes = pWaveFile->m_size;
+    dsbdesc.lpwfxFormat = buffer.GetWaveFormat();
+    
+	// Create buffer. 
+	HRESULT hr = GetDirectSound()->CreateSoundBuffer(&dsbdesc,&m_pDSBuffer,0);
+    if(FAILED(hr))
+    { 
+		PrintDSErrorMessage(hr,"CSoundBuffer::Create:");
+		Destroy();
+        return false;
+    }
 
 	//Copy the wave file
 	void *lockPtr1=0; 
@@ -84,7 +101,7 @@ bool CSoundChannel::CreateBuffer(const CSoundBuffer &buffer)
 
 	// write the data
 	if (lockSize1)
-		memcpy(lockPtr1, buffer.GetWaveData()->GetData(), lockSize1);
+		memcpy(lockPtr1, pWaveFile->GetData(), lockSize1);
 	m_pDSBuffer->Unlock(lockPtr1, lockSize1, 0, 0);
 
 	hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer,(LPVOID *)&m_pDS3dBuffer);
@@ -102,16 +119,18 @@ ComPrintf("Unable to get 3d interface\n");
 Create a sound sourced from an entitiy
 ==========================================
 */
-bool CSoundChannel::Create3d(const CSoundBuffer &buffer,
-									 const vector_t &origin,
-									 float muteDist)
+bool CSoundChannel::Create3d(CSoundBuffer &buffer,
+							 const vector_t &origin,
+							 float muteDist)
 
 {
 
 	if(!CreateBuffer(buffer))
 		return false;
 
-	m_pDS3dBuffer->SetMinDistance(muteDist * 0.3, DS3D_DEFERRED);
+ComPrintf("SND: %s Mute Dist : %f\n", buffer.GetFilename(), muteDist);
+
+	m_pDS3dBuffer->SetMinDistance(muteDist * 0.25, DS3D_DEFERRED);
 	m_pDS3dBuffer->SetMaxDistance(muteDist, DS3D_DEFERRED);
 	m_pDS3dBuffer->SetPosition(origin.x,origin.y, origin.z, DS3D_DEFERRED);
 	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_DEFERRED);
@@ -125,7 +144,7 @@ bool CSoundChannel::Create3d(const CSoundBuffer &buffer,
 Create a 2d sound
 ======================================
 */
-bool CSoundChannel::Create2d(const CSoundBuffer &buffer,
+bool CSoundChannel::Create2d(CSoundBuffer &buffer,
 							int volume)
 {
 	if(!CreateBuffer(buffer))
@@ -138,6 +157,7 @@ ComPrintf("Unable to disable 3d interface\n");
 		Destroy();
 		return false;
 	}
+
 	m_bInUse = true;
 	return true;
 }

@@ -92,7 +92,7 @@ struct BaseEntity;
 namespace EntMove {
 
 void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
-void ClientMove(BaseEntity *ent, float time);
+int  ClientMove(BaseEntity *ent, float time);
 void SetWorld(I_World * pWorld);
 
 }

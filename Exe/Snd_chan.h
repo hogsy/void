@@ -15,10 +15,10 @@ public:
 	~CSoundChannel();
 
 	//Create a duplicate buffer. then get a 3dinterface from it
-	bool Create2d(const CSoundBuffer &buffer,
+	bool Create2d(CSoundBuffer &buffer,
 				  int volume);
 
-	bool Create3d(const CSoundBuffer &buffer,
+	bool Create3d(CSoundBuffer &buffer,
 				  const vector_t &origin, 
 				  float muteDist);	
 	void Destroy();
@@ -34,7 +34,7 @@ private:
 
 	bool m_bInUse;
 
-	bool CreateBuffer(const CSoundBuffer &buffer);
+	bool CreateBuffer(CSoundBuffer &buffer);
 
 	IDirectSound3DBuffer * m_pDS3dBuffer; 
 	IDirectSoundBuffer   * m_pDSBuffer;	

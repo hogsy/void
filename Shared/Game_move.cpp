@@ -21,7 +21,7 @@ void EntMove::NoClipMove(BaseEntity *ent, vector_t &dir, float time)
 	ent->origin.VectorMA(ent->origin, time, dir);
 }
 
-void EntMove::ClientMove(BaseEntity *ent, float time)
+int EntMove::ClientMove(BaseEntity *ent, float time)
 {
 	// all the normals of the planes we've hit
 	vector_t	hitplanes[MAX_CLIP_PLANES];	
@@ -40,7 +40,6 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
 		end = ent->origin + dir;
-//		VectorAdd(ent->origin, dir, end);
 
 		m_pWorld->Trace(tr, ent->origin, end, ent->mins, ent->maxs);
 		if (tr.fraction > 0)
@@ -53,21 +52,22 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
 			break;
 
-		//Void3d::VectorSet(hitplanes[hits],tr.plane->norm);
-		hitplanes[hits] =tr.plane->norm;
+		hitplanes[hits] = tr.plane->norm;
 		hits++;
 
 		// we're only touching 1 plane - project velocity onto it
 		if (hits==1)
 			MakeVectorPlanar(&dir, &dir, &hitplanes[0]);
 		// we have to set velocity along crease
+		else if((hits == 2) && (tr.plane->norm.z))
+		{	return 2;
+		}
 		else
 		{
 			vector_t tmp;
 			CrossProduct(hitplanes[0], hitplanes[1], tmp);
 			d = DotProduct(tmp,dir);
 			tmp.Scale(dir,d);
-			//Void3d::VectorScale(dir,tmp, d);
 		}
 
 		// make sure we're still going forward
@@ -81,5 +81,6 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 	// scale velocity back to per second
 	dir.Scale(1/time);
 	ent->velocity = dir;
+	return 1;
 }
 
