@@ -30,8 +30,6 @@
   2. Altered source versions must be plainly marked as such, and must not be
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
-
-
 */
 /* for more info about .ZIP format, see 
       ftp://ftp.cdrom.com/pub/infozip/doc/appnote-970311-iz.zip
@@ -46,7 +44,7 @@ extern "C" {
 #endif
 
 #ifndef _ZLIB_H
-#include "Info_zlib.h"
+#include "Iz_zlib.h"
 #endif
 
 #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
