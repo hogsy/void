@@ -290,7 +290,7 @@ void CServer::RunFrame()
 				if(!m_clients[j] || !m_clients[j]->spawned) //|| i==j)
 					continue;
 
-				m_net.ChanBeginWrite(i,SV_CLUPDATE, 0);
+				m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 0);
 				m_net.ChanWriteShort(m_clients[j]->num);
 /*				
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
@@ -346,7 +346,6 @@ void CServer::UnloadWorld()
 		CWorld::DestroyWorld(m_pWorld);
 		m_pWorld = 0;
 		ComPrintf("CServer : Unloaded World\n");
-//		m_active = false;
 	}
 }
 
@@ -406,7 +405,6 @@ bool CServer::LoadWorld(const char * mapname)
 
 	//update state
 	m_svState.levelId ++;
-//	m_active = true;
 
 	ComPrintf("CServer::LoadWorld: %s OK\n", m_svState.worldname);
 	return true;

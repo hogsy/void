@@ -16,9 +16,8 @@ struct BaseEntity
 	BaseEntity()
 	{
 		num = -1;
-		mdlIndex = -1;
+		mdlIndex = sndIndex = -1;
 		frameNum = nextFrame = skinNum = 0;
-		sndIndex = -1;
 		volume = attenuation = 0;
 		moveType = MOVETYPE_NOCLIP;
 	}
@@ -45,16 +44,27 @@ struct BaseEntity
 
 /*
 ======================================
-Client sends this to the server as frequently as possible
+Client sends this to the server as 
+frequently as possible
 ======================================
 */
 struct ClCmd
 {
+	ClCmd() { Reset(); }
+	void Reset()
+	{ 
+		flags = 0;
+		time = angles[0] = angles[1] = angles[2] = 0.0f;
+		forwardmove = rightmove = upmove = 0; 
+	}
+
 	float	time;			//Frame Time
 	float	angles[3];		//Current View angels
 	short	forwardmove, 
 			rightmove, 
 			upmove;
+	byte	flags;
+	
 	//add buttons and what not
 };
 

@@ -93,7 +93,7 @@ void CGame::RunFrame(float curTime)
 	//Run through clients
 	for(i=0; i<numClients; i++)
 	{
-		if(clients[i]->spawned && clients[i]->flags)
+		if(clients[i]->spawned && clients[i]->clCmd.flags)
 		{
 			clients[i]->angles.x = clients[i]->clCmd.angles[0];
 			clients[i]->angles.y = clients[i]->clCmd.angles[1];
@@ -115,7 +115,7 @@ void CGame::RunFrame(float curTime)
 			//Perform the actual move and update angles
 			EntMove::ClientMove(clients[i], desiredMove, clients[i]->clCmd.time);
 
-			clients[i]->flags = 0;
+			clients[i]->clCmd.flags = 0;
 		}
 	}
 }
@@ -143,12 +143,10 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 
 	clients[clNum]->inUse = true;
 	clients[clNum]->spawned = false;
+	clients[clNum]->clCmd.Reset();
+
 
 	clients[clNum]->num = numClients;
-
-	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
 
 	if(!reconnect)
 		numClients++;
@@ -163,6 +161,13 @@ void CGame::ClientUpdateUserInfo(int clNum, CBuffer &userInfo)
 
 void CGame::ClientBegin(int clNum)
 {
+//	clients[clNum]->flags = 0;
+	clients[clNum]->clCmd.Reset();
+	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
+	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&clients[clNum]->angles, 0.0f, 0.0f, 0.0f);
+
 	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
 	clients[clNum]->spawned = true;
 }

@@ -109,7 +109,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				m_clients[num].Reset();
 				break;
 			}
-		case SV_CLUPDATE:
+		case SV_CLFULLUPDATE:
 			{
 				int num = buffer.ReadShort();
 
@@ -411,13 +411,13 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	
 	m_pGameClient->moveType = MOVETYPE_STEP;
 
-	VectorSet(&m_pGameClient->angles, 0.0f,0.0f,0.0f);
-	VectorSet(&m_pGameClient->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&m_pGameClient->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&m_pGameClient->maxs, 10.0f, 10.0f, 10.0f);
+	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
+	m_pGameClient->origin.Set(0.0f,0.0f,48.0f);
+	m_pGameClient->mins.Set(-10.0f, -10.0f, -40.0f);
+	m_pGameClient->maxs.Set(10.0f, 10.0f, 10.0f);
 	
-	VectorSet(&m_vecBlend,0.0f,0.0f,0.0f);
-	VectorSet(&m_vecDesiredMove, 0, 0, 0);
+	m_vecBlend.Set(0.0f,0.0f,0.0f);
+	m_vecDesiredMove.Set(0, 0, 0);
 
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
@@ -430,7 +430,6 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}
-	
 	
 	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, m_vecBlend,
 							m_vecForward, m_vecRight, m_vecUp,	m_vecVelocity);

@@ -53,6 +53,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
 	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+	System::GetConsole()->RegisterCommand("pos", CMD_DEBUG, this);
 
 	m_hsTalk    = m_pClGame->RegisterSound("sounds/Interface/notify.wav", CACHE_LOCAL);
 	m_hsMessage = m_pClGame->RegisterSound("sounds/Interface/click one.wav", CACHE_LOCAL);
@@ -172,11 +173,6 @@ void CGameClient::WriteCmdUpdate(CBuffer &buf)
 	m_pClGame->HudPrintf(0,180,0,"CMD: %d,%d,%d, ANG: %.2f,%.2f,%.2f, %.2fms", 
 		m_cmd.forwardmove, m_cmd.rightmove, m_cmd.upmove, m_cmd.angles[0],m_cmd.angles[1],m_cmd.angles[2],
 		blahFrameTime);
-
-
-
-//	ComPrintf("CL: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
-//					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
 }
 
 /*
@@ -359,6 +355,12 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_TALK:
 		Talk(parms.String());
+		break;
+	case CMD_DEBUG:
+		ComPrintf("CL: Pos %.2f %.2f %.2f\n", 
+			m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
+		ComPrintf("CL: Angles %.2f %.2f %.2f\n", 
+			m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);
 		break;
 	}
 }

@@ -20,7 +20,8 @@ enum
 	CMD_UNBIND		  =	10,
 	CMD_UNBINDALL	  =	11,
 	CMD_CAM			  =	12,
-	CMD_TALK		  = 13
+	CMD_TALK		  = 13,
+	CMD_DEBUG		  = 14
 };
 
 /*

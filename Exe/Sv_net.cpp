@@ -116,7 +116,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 
 				if(buffer.BadRead())
 					return;
-				m_clients[clNum]->flags = 1;
+				m_clients[clNum]->clCmd.flags = 1;
 				break;
 			}
 		default:

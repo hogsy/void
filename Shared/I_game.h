@@ -6,7 +6,6 @@
 struct I_Console;
 class  CBuffer;
 
-
 const int ENT_MAXCLASSNAME = 32;
 const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;
@@ -24,7 +23,6 @@ struct Entity : public BaseEntity
 	}
 	
 	virtual ~Entity() {}
-
 	char	classname[ENT_MAXCLASSNAME];
 };
 
@@ -40,8 +38,7 @@ struct EntClient : public Entity
 		memset(name,0,ENT_MAXCLASSNAME); 
 		memset(modelName, 0, ENT_MAXRESNAME);
 		memset(skinName, 0, ENT_MAXRESNAME);
-		inUse = false; 
-		spawned = false;
+		inUse = spawned = false;
 	}
 
 	bool inUse;
@@ -49,7 +46,6 @@ struct EntClient : public Entity
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
-	int	  flags;
 
 	char name[ENT_MAXCLASSNAME];
 	char modelName[ENT_MAXRESNAME];
@@ -82,9 +78,6 @@ class to game dlls
 */
 struct I_GameHandler
 {
-	//Interface to World
-	virtual I_World * GetWorld()=0;
-
 	virtual void BroadcastPrintf(const char * msg,...)=0;
 	virtual void ClientPrintf(int clNum, const char * msg,...)=0;
 

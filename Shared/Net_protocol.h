@@ -46,19 +46,24 @@ const byte CL_DISCONNECT	= 15;	//client is disconnecting
 const byte SV_BAD			= 0;
 const byte SV_NOP			= 1;
 const byte SV_CONFIGSTRING  = 2;
-const byte SV_UPDATESTAT	= 3;	
+
 const byte SV_STUFFCMD		= 4;	// Client will execute this locally
 const byte SV_PRINT			= 5;    // Client will print this locally
-const byte SV_TALK			= 6;	// chat message
+const byte SV_TALK			= 6;	// Chat message
+const byte SV_UPDATE		= 7;	// Clients own update. sent as much as possible
 
-const byte SV_CLFULLINFO	= 7;    // complete info about a given client, might create a new client
+const byte SV_CLFULLINFO	= 7;    // complete info about a given client
 									// {num,name,modelindex,modelname,skinindex,skinname}
-const byte SV_CLINFOCHANGE  = 8;    // just something minor. n for name, m for model, s for skin etc
-const byte SV_CLDISCONNECT  = 9;	// A client disconnected, let everyone know
-const byte SV_CLUPDATE		= 10;	// update a clients position
+const byte SV_CLINFOCHANGE  = 8;    // clients info changed
+									// n for name, m for model, s for skin etc
 
-const byte SV_DISCONNECT	= 11;	// Server going down
-const byte SV_RECONNECT		= 12;	// Server is changing maps, tell all clients to reconnect
+const byte SV_CLFULLUPDATE  = 9;	// fully update a clients data
+const byte SV_CLDELTAUPDATE	= 10;	// delta update a clients data
+
+const byte SV_CLDISCONNECT  = 11;	// A client disconnected, let everyone know
+
+const byte SV_DISCONNECT	= 12;	// Server going down
+const byte SV_RECONNECT		= 13;	// Server is changing maps, tell all clients to reconnect
 
 
 /*

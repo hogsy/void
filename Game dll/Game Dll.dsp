@@ -178,6 +178,10 @@ SOURCE=..\Shared\Net_defs.h
 # End Group
 # Begin Source File
 
+SOURCE=..\Shared\Game_base.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Game_defs.h
 # End Source File
 # Begin Source File

@@ -175,11 +175,6 @@ void CServer::ClientPrintf(int clNum, const char * msg,...)
 Util funcs
 ======================================
 */
-//Return handler to World interface forpoint contents and traces etc
-I_World * CServer::GetWorld()
-{	return m_pWorld;
-}
-
 NetChanWriter & CServer::GetNetChanWriter()
 {	return m_net;
 }
