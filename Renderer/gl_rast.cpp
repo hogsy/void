@@ -933,8 +933,11 @@ void COpenGLRast::ReportErrors(void)
 {
 	int err = glGetError();
 
-	if (err != GL_NO_ERROR)
-		ComPrintf("gl error %d\n", err);
+	if (err == GL_NO_ERROR)
+		return;
+
+	ComPrintf("gl error %d\n", err);
+	ComPrintf("gl error %s\n", gluErrorString(err));
 }
 
 
@@ -952,6 +955,7 @@ void COpenGLRast::FrameEnd(void)
 
 void COpenGLRast::ScreenShot(unsigned char *dest)
 {
+	glReadPixels(0, 0, g_rInfo.width, g_rInfo.height, GL_RGB, GL_UNSIGNED_BYTE, dest);
 }
 
 

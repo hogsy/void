@@ -786,6 +786,15 @@ void CRastD3DX::FrameEnd(void)
 
 void CRastD3DX::ScreenShot(unsigned char *dest)
 {
+/*
+	LPDIRECTDRAWSURFACE7 primary = m_pD3DX->GetPrimary();
+	if (primary)
+	{
+		primary->GetPrivateData(NULL, dest, g_rInfo.width*g_rInfo.height*3);
+
+
+	}
+*/
 }
 
 

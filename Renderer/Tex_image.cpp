@@ -661,7 +661,7 @@ CImageWriter::~CImageWriter()
 
 /*
 ==========================================
-Write am Image to Disk
+Write am Image to Disk - only 24 bit rgb images work
 ==========================================
 */
 
@@ -737,21 +737,21 @@ void CImageWriter::Write_PCX( FILE *fp)
 	{
 		for (p = 0; p < pcx.num_planes; p++)
 		{
-			packdata = m_pData + (i*m_width*4) + p;
+			packdata = m_pData + (i*m_width*3) + p;
 
 			for (j = 0; j<m_width; j++)
 			{
 				if ( (*m_pData & 0xc0) != 0xc0)
 				{
 					*pack++ = *packdata;
-					packdata += 4;
+					packdata += 3;
 				}
 
 				else
 				{
 					*pack++ = 0xc1;
 					*pack++ = *packdata;
-					packdata += 4;
+					packdata += 3;
 				}
 			}
 		}
@@ -796,18 +796,11 @@ void CImageWriter::Write_TGA( FILE *fp)
 	fputc((char)((m_width & 0xff00) >> 8), fp);
 	fputc((char)(m_height & 0x00ff), fp);
 	fputc((char)((m_height & 0xff00) >> 8), fp);
-//	if(alpha)
-		fputc(32, fp);
-//	else
-//		fputc(24, fp);
+	fputc(24, fp);
 
-//	if(pic->alpha)
-		fputc(0x01, fp);
-//	else
-//		fputc(0x00, fp);
+	fputc(0x01, fp);
 
-	int w, h, components = 4;
-//	if (pic->alpha) components = 4;
+	int w, h, components = 3;
 
 	for (h = 0; h < m_height; h++)
 	{
@@ -816,8 +809,6 @@ void CImageWriter::Write_TGA( FILE *fp)
 			fwrite(&m_pData[h*m_width*components + w*components + 2], 1, 1, fp);	// blue
 			fwrite(&m_pData[h*m_width*components + w*components + 1], 1, 1, fp);	// green
 			fwrite(&m_pData[h*m_width*components + w*components    ], 1, 1, fp);	// red
-//			if (pic->alpha)
-				fwrite(&m_pData[h*m_width*components + w*components + 3], 1, 1, fp);	// alpha
 		}
 	}
 }
