@@ -158,7 +158,7 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	char filepath[COM_MAXPATH];
 	sprintf(filepath,"%s/%s",basepath,archivepath);
 
-	if((m_fp = ::fopen(filepath, "r+b")) == 0)
+	if((m_fp = ::fopen(filepath, "rb")) == 0)
 	{
 		ComPrintf("CZipFile::Init: Unable to open %s\n",filepath);
 		return false;

@@ -55,7 +55,7 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	char filepath[COM_MAXPATH];
 	sprintf(filepath,"%s/%s",basepath,archivepath);
 
-	m_fp = fopen(filepath,"r+b");
+	m_fp = fopen(filepath,"rb");
 	if(!m_fp)
 	{
 		ComPrintf("CPakFile::BuildList: couldnt open %s\n", filepath);

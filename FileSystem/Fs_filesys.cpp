@@ -250,7 +250,7 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 		{
 			char filepath[COM_MAXPATH];
 			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
-			FILE * fp = fopen(filepath,"r+b");
+			FILE * fp = fopen(filepath,"rb");
 			if(fp)
 			{
 				fseek(fp,0,SEEK_END);
@@ -318,7 +318,7 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 			char filepath[COM_MAXPATH];
 			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
 			
-			FILE * fp = fopen(filepath,"r+b");
+			FILE * fp = fopen(filepath,"rb");
 			if(fp)
 			{
 				fseek(fp ,0,SEEK_END);
