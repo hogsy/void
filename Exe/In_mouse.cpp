@@ -442,30 +442,42 @@ void CMouse::Update_DIBuffered()
 				break;
 			}
 		case DIMOFS_X:
-			m_fXPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarXSens.fval * m_pVarSens.fval;
+			m_fLastXPos = m_fXPos;
+			m_fXPos = ((int)m_aDIMouseBuf[i].dwData);
 			break;
 		case DIMOFS_Y:
-			m_fYPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarXSens.fval * m_pVarSens.fval;
+			m_fLastYPos = m_fYPos;
+			m_fYPos = ((int)m_aDIMouseBuf[i].dwData);
 			break;
 		case DIMOFS_Z:
-			m_fZPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarSens.fval;
+			m_fLastZPos = m_fZPos;
+			m_fZPos = ((int)m_aDIMouseBuf[i].dwData);
 			break;
 		}
 	}
 
-	//Apply filter if needed
-	if(m_pVarFilter.bval)
-	{
-		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
-		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
-		m_fLastZPos = m_fZPos = (m_fZPos + m_fLastZPos)/2;
-	}
-	
-	//Invery y-axis if needed
+
+	//Inverse Y-Axis if mouse is inverted
 	if(m_pVarInvert.bval)
 		m_fYPos = -(m_fYPos);
 
-	m_pStateManager->UpdateCursor(m_fXPos,m_fYPos,m_fZPos);
+	float x, y, z;
+
+	//Average out values if filtering is on
+	if(m_pVarFilter.bval)
+	{
+		x = (m_fLastXPos + m_fXPos) * m_pVarXSens.fval * m_pVarSens.fval / 2;
+		y = (m_fLastYPos + m_fYPos) * m_pVarYSens.fval * m_pVarSens.fval / 2;
+		z = (m_fLastZPos + m_fZPos) * m_pVarSens.fval / 2;
+	}
+	else
+	{
+		x = m_fXPos * m_pVarXSens.fval * m_pVarSens.fval;
+		y = m_fYPos * m_pVarYSens.fval * m_pVarSens.fval;
+		z = m_fZPos * m_pVarSens.fval;
+	}
+
+	m_pStateManager->UpdateCursor(x, y, z);
 }
 
 /*
@@ -499,26 +511,35 @@ void CMouse::Update_DIImmediate()
 			m_pDIState->rgbButtons[i] & 0x80 ? BUTTONDOWN : BUTTONUP);
 	}
 
-	//Average out values if filtering is on
-	if(m_pVarFilter.bval)
-	{
-		m_fXPos = m_fLastXPos = ((m_pDIState->lX * m_pVarXSens.fval * m_pVarSens.fval)+ m_fLastXPos)/2;
-		m_fYPos = m_fLastYPos = ((m_pDIState->lY * m_pVarYSens.fval * m_pVarSens.fval) + m_fLastYPos)/2;
-		m_fZPos = m_fLastZPos = ((m_pDIState->lZ * m_pVarSens.fval) + m_fLastZPos)/2;
+	m_fLastXPos = m_fXPos;
+	m_fLastYPos = m_fYPos;
+	m_fLastZPos = m_fZPos;
 
-	}
-	else
-	{
-		m_fXPos = m_pDIState->lX * m_pVarXSens.fval * m_pVarSens.fval;
-		m_fYPos = m_pDIState->lY * m_pVarYSens.fval * m_pVarSens.fval;
-		m_fZPos = m_pDIState->lZ * m_pVarSens.fval;
-	}
-	
+	m_fXPos = m_pDIState->lX;
+	m_fYPos = m_pDIState->lY;
+	m_fZPos = m_pDIState->lZ;
+
 	//Inverse Y-Axis if mouse is inverted
 	if(m_pVarInvert.bval)
 		m_fYPos = -(m_fYPos);
 
-	m_pStateManager->UpdateCursor(m_fXPos,m_fYPos,m_fZPos);
+	float x, y, z;
+
+	//Average out values if filtering is on
+	if(m_pVarFilter.bval)
+	{
+		x = (m_fLastXPos + m_fXPos) * m_pVarXSens.fval * m_pVarSens.fval / 2;
+		y = (m_fLastYPos + m_fYPos) * m_pVarYSens.fval * m_pVarSens.fval / 2;
+		z = (m_fLastZPos + m_fZPos) * m_pVarSens.fval / 2;
+	}
+	else
+	{
+		x = m_fXPos * m_pVarXSens.fval * m_pVarSens.fval;
+		y = m_fYPos * m_pVarYSens.fval * m_pVarSens.fval;
+		z = m_fZPos * m_pVarSens.fval;
+	}
+
+	m_pStateManager->UpdateCursor(x, y, z);
 }
 
 /*
@@ -532,16 +553,37 @@ void CMouse::Update_Win32()
 	::GetCursorPos(&m_w32Pos);
 
 	//Calc offsets
-	m_fXPos = (m_w32Pos.x - m_dCenterX) * m_pVarXSens.fval * m_pVarSens.fval;
-	m_fYPos = (m_dCenterY - m_w32Pos.y) * m_pVarYSens.fval * m_pVarSens.fval;
+	m_fLastXPos = m_fXPos;
+	m_fLastYPos = m_fYPos;
+	m_fXPos = (m_w32Pos.x - m_dCenterX);
+	m_fYPos = (m_dCenterY - m_w32Pos.y);
+
+	//Inverse Y-Axis if mouse is inverted
+	if(!m_pVarInvert.bval)
+		m_fYPos = -(m_fYPos);
+
+	//Average out values if filtering is on
+	float x, y, z;
+	if(m_pVarFilter.bval)
+	{
+		x = (m_fLastXPos + m_fXPos) * m_pVarXSens.fval * m_pVarSens.fval / 2;
+		y = (m_fLastYPos + m_fYPos) * m_pVarYSens.fval * m_pVarSens.fval / 2;
+		z = (m_fLastZPos + m_fZPos) * m_pVarSens.fval / 2;
+	}
+	else
+	{
+		x = m_fXPos * m_pVarXSens.fval * m_pVarSens.fval;
+		y = m_fYPos * m_pVarYSens.fval * m_pVarSens.fval;
+		z = m_fZPos * m_pVarSens.fval;
+	}
+
 
 	if(m_pVarFilter.bval)
 	{
 		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
 		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
 	}
-	if(m_pVarInvert.bval)
-		m_fYPos = -(m_fYPos);
+
 
 	/*	
 	If the most significant bit is set, the key is down, and if the least significant bit is set, 
@@ -561,7 +603,7 @@ void CMouse::Update_Win32()
 	//Lock cursor to center of screen
 	::SetCursorPos(m_dCenterX,m_dCenterY);
 
-	m_pStateManager->UpdateCursor(m_fXPos,m_fYPos,m_fZPos);
+	m_pStateManager->UpdateCursor(x, y, z);
 }
 
 /*
