@@ -11,6 +11,7 @@
 #include "Mdl_cache.h"
 #include "Hud_main.h"
 
+extern CRConsole * g_prCons;
 
 eyepoint_t	eye;			// where we're gonna draw from
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?

@@ -14,8 +14,6 @@
 //Global Vars
 RenderInfo_t  g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
-
-CRenExp		* g_pRenExp=0;
 CRConsole   * g_prCons=0;
 
 //======================================================================================
@@ -371,19 +369,22 @@ bool CRenExp::Restart(void)
 	return true;
 }
 
+//======================================================================================
+//======================================================================================
+
 /*
 ==========================================
 CVar Handlers
 ==========================================
 */
-bool CRenExp::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
+bool CRenExp::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
 {
 	if(cvar == &m_cFull)
-		return CVar_FullScreen(cvar,numArgs,szArgs);
+		return CVar_FullScreen((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_cRes)
-		return CVar_Res(cvar,numArgs,szArgs);
+		return CVar_Res((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_cBpp)
-		return CVar_Bpp(cvar,numArgs,szArgs);
+		return CVar_Bpp((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 
@@ -414,7 +415,7 @@ bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 				ConPrint("Switching to windowed mode\n");
 				
 				if(g_rInfo.ready)
-					g_pRenExp->ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
+					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
 			}
 			else if( temp > 0)
 			{
@@ -425,7 +426,7 @@ bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 				ConPrint("Switching to fullscreen mode\n");
 				
 				if(g_rInfo.ready)
-					g_pRenExp->ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
+					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
 			}
 			return true;
 		}
@@ -468,7 +469,7 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 		ConPrint("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
 
 		if(g_rInfo.ready)
-			g_pRenExp->ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
+			ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}
 	return false;
@@ -500,7 +501,7 @@ bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 		ConPrint("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
 
 		if(g_rInfo.ready)
-			g_pRenExp->ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
+			ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
 							(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}

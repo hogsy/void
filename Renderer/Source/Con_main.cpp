@@ -35,7 +35,10 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 			return;
 		}
 	}
-	RegisterFuncs();
+
+	g_pConsole->RegisterCVar(&m_conSpeed);
+
+	RegisterConObjects();
 }
 
 /*
@@ -52,6 +55,7 @@ CRConsole::~CRConsole()
 		if(m_lines[c])
 			delete m_lines[c];
 	}
+	DestroyConObjects();
 }
 
 /*

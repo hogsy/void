@@ -1,39 +1,48 @@
 #include "Con_main.h"
 #include "Tex_image.h"
 
-//======================================================================================
-//======================================================================================
+/*
+==========================================
+Hack
+Extension of the Renderer Console to manage
+initialization/registration of global commands/objects
+shouldnt be any global crap :\
+==========================================
+*/
 
-//CVar 	g_pDrawSils;
+CVar *	g_pFullbright=0;
+CVar *	g_pFov=0;
+CVar *	g_pMultiTexture=0;
+CVar *	g_pVidSynch=0;
 
-//CVar	g_pFullbright("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 /*CVar	g_pFov("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 CVar	g_pMultiTexture("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 CVar 	g_pVidSynch("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 */
 
+//======================================================================================
+//Command Handling routines
+//======================================================================================
+
 /*
 ======================================
-take a screen shot
+Take a screen shot, write it to disk
 ======================================
 */
-
-void ScreenShot(char *name,EImageFormat type)
+void ScreenShot(char *name, EImageFormat type)
 {
-//taking this out for a bit
-#if 0 
-
+	
 	char	checkname[260];
 
 	//find a file name to save it to 
-	sprintf(checkname, "%s\\%s\\", CFileSystem::GetCurrentPath(), "Shots");
-	ConfirmDir(checkname);
+	sprintf(checkname, "%s\\%s\\", GetCurPath(), "Shots");
+	Util::ConfirmDir(checkname);
 
 	if (!name)
 	{
-		int i;
-		FILE	*f;
-		char	shotname[80]; 
+		int	  i;
+		FILE *f;
+		char  shotname[80]; 
 
 		if(type== FORMAT_PCX)
 			strcpy(shotname,"void00.pcx");
@@ -44,7 +53,7 @@ void ScreenShot(char *name,EImageFormat type)
 		{
 			shotname[4] = i/10 + '0';
 			shotname[5] = i%10 + '0';
-			sprintf(checkname,"%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", shotname);
+			sprintf(checkname,"%s\\%s\\%s", GetCurPath(), "Shots", shotname);
 			f = fopen(checkname,"rb");
 			if (!f)
 				break;
@@ -59,15 +68,14 @@ void ScreenShot(char *name,EImageFormat type)
 	}
 	else
 	{
-		sprintf(checkname, "%s\\%s\\%s", CFileSystem::GetCurrentPath(), "Shots", name);
+		sprintf(checkname, "%s\\%s\\%s", GetCurPath(), "Shots", name);
 		if(type == FORMAT_PCX)
-			DefaultExtension(checkname, ".pcx");
+			Util::DefaultExtension(checkname, ".pcx");
 		else
-			DefaultExtension(checkname, ".tga");
+			Util::DefaultExtension(checkname, ".tga");
 	}
 
 	//Got file name, Now actually take the shot and write it
-
 	int  width  = g_rInfo.width;
 	int  height = g_rInfo.height;
 	byte * data = new byte[width * height * 4];
@@ -82,14 +90,7 @@ void ScreenShot(char *name,EImageFormat type)
 	CImageWriter imageWriter(width,height,data);
 	imageWriter.Write(checkname,type);
 	delete [] data;
-
-#endif
-
 }
-
-
-//======================================================================================
-//======================================================================================
 
 /*
 ==========================================
@@ -133,7 +134,9 @@ void CFunc_TGAShot(int argc, char** args)
 		ScreenShot(0,FORMAT_TGA);
 }
 
-
+//======================================================================================
+//CVar Handling funcs
+//======================================================================================
 
 /*
 =======================================
@@ -144,7 +147,6 @@ bool CVar_FullBright(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
 		ConPrint("r_fullbright = %d\n", var->value);
-
 	else
 	{
 		int temp=0;
@@ -158,8 +160,6 @@ bool CVar_FullBright(const CVar * var, int argc, char** argv)
 	}
 	return true;
 }
-
-#if 0
 
 /*
 =======================================
@@ -175,7 +175,6 @@ bool CVar_MultiTexture(const CVar * var, int argc, char** argv)
 		ConPrint("multitexturing is %d\n", (int)var->value);
 		return false;
 	}
-
 	return true;
 }
 
@@ -213,7 +212,6 @@ bool CVar_Fov(const CVar * var, int argc, char** argv)
 	return true;
 }
 
-
 /*
 =======================================
 toggle vid synch
@@ -226,7 +224,6 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 	else
 	{
 		int temp=0;
-
 		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
 			if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
@@ -243,41 +240,103 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 	return true;
 }
 
-#endif
-bool CRConsole::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
-{
-//	if(cvar == &g_pFullbright)
-//		return CVar_FullBright(cvar,numArgs,szArgs);
-/*	else if(cvar == &g_pFov)
-		return CVar_Fov(cvar,numArgs,szArgs);
-	else if(cvar == &g_pMultiTexture)
-		return CVar_MultiTexture(cvar,numArgs,szArgs);
-	else if(cvar == &g_pVidSynch)
-		return CVar_VidSynch(cvar,numArgs,szArgs);
+//======================================================================================
+//======================================================================================
+
+#define CMD_TGASHOT	0
+#define CMD_PCXSHOT	1
+
+/*
+==========================================
+Handle Global Commands
+==========================================
 */
+void CRConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_TGASHOT:
+		CFunc_TGAShot(numArgs,szArgs);
+		break;
+	case CMD_PCXSHOT:
+		CFunc_PCXShot(numArgs,szArgs);
+		break;
+	}
+}
+
+/*
+==========================================
+Handle Cvars
+==========================================
+*/
+bool CRConsole::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
+{
+	if(cvar == g_pFullbright)
+		return CVar_FullBright((CVar*)cvar,numArgs,szArgs);
+	else if(cvar == g_pFov)
+		return CVar_Fov((CVar*)cvar,numArgs,szArgs);
+	else if(cvar == g_pMultiTexture)
+		return CVar_MultiTexture((CVar*)cvar,numArgs,szArgs);
+	else if(cvar == g_pVidSynch)
+		return CVar_VidSynch((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 
 /*
 ==========================================
-Register Cvars and Commands
+Register Cvars and Commands, called from
+Console constructor
 ==========================================
 */
-void CRConsole::RegisterFuncs()
+void CRConsole::RegisterConObjects()
 {
-	g_pConsole->RegisterCVar(&m_conSpeed);
+	g_pConsole->RegisterCommand("tga_shot",CMD_TGASHOT,this);
+	g_pConsole->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
 
-//	g_pConsole->RegisterCVar(&g_pFov,this);
-//	g_pConsole->RegisterCVar(&g_pFullbright,this);
-/*	g_pConsole->RegisterCVar(&g_pMultiTexture,this);
-	g_pConsole->RegisterCVar(&g_pVidSynch,this);
-*/
-
-/*	g_pConsole->RegisterCVar(&g_pFov,"r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pConsole->RegisterCVar(&g_pFullbright,"r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pConsole->RegisterCVar(&g_pMultiTexture,"r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pConsole->RegisterCVar(&g_pVidSynch,"r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,this);
-*/
-//	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
-//	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);
+	g_pFullbright= new CVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	g_pFov		 = new CVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	g_pVidSynch  = new CVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
+	g_pMultiTexture = new CVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	
+	g_pConsole->RegisterCVar(g_pFullbright,this);
+	g_pConsole->RegisterCVar(g_pFov,this);
+	g_pConsole->RegisterCVar(g_pMultiTexture,this);
+	g_pConsole->RegisterCVar(g_pVidSynch,this);
 }
+
+/*
+==========================================
+Called from console Destructor
+==========================================
+*/
+void CRConsole::DestroyConObjects()
+{
+	delete g_pFullbright;
+	delete g_pFov;
+	delete g_pVidSynch;
+	delete g_pMultiTexture;
+
+	g_pFullbright = 0;
+	g_pFov = 0;
+	g_pVidSynch =0;
+	g_pMultiTexture = 0;
+}
+
+
+/*
+FIX ME !!
+why does this leave a leak ?
+the default runtime delete is called in the CVar destructor instead of ours
+WHY ??
+
+class CBlah
+{
+public:
+	CBlah() : g_pFullbright("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE) {}
+	~CBlah() {}
+
+	CVar	g_pFullbright;
+};
+CBlah bha;
+*/
+

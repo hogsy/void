@@ -1,17 +1,21 @@
-#ifndef CONSOLERENDERER_H
-#define CONSOLERENDERER_H
+#ifndef R_CONSOLERENDERER_H
+#define R_CONSOLERENDERER_H
 
 #include "I_console.h"
+#include "I_renderer.h"
+#include "Com_cvar.h"
 
-#define CON_MAX_LINES			200
-#define CON_MAX_CHARS_PER_LINE	200			// 8 pixels each at 1600
-
-//This is just the console renderer
-//Shouldnt need to worry about logging here.
-//Just display the data it accumulates 
+/*
+======================================================================================
+This is just the console renderer
+Shouldnt need to worry about logging here.
+Just display the data it accumulates 
+======================================================================================
+*/
 
 class CRConsole:public I_ConsoleRenderer,
-				public I_CVarHandler
+				public I_CVarHandler,
+				public I_CmdHandler
 {
 public:
 
@@ -32,11 +36,19 @@ public:
 	void UpdateRes();
 	void Draw(); 
 
-	bool HandleCVar(const CVar *cvar,int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs);
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
+	enum
+	{
+		CON_MAX_LINES		   = 200,
+		CON_MAX_CHARS_PER_LINE = 200			// 8 pixels each at 1600
+	};
 
 private:
 
-	void RegisterFuncs();
+	void RegisterConObjects();
+	void DestroyConObjects();
 
 	//struct to store a line in the console
 	struct Conline_t
@@ -79,7 +91,5 @@ private:
 
 	const char  m_seperatorchar;// constant seperator char using during scrolling
 };
-
-extern CRConsole * g_prCons;
 
 #endif

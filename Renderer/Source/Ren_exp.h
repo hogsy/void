@@ -18,7 +18,7 @@ public:
 	void DrawFrame(vector_t *origin,vector_t *angles);
 
 	I_ConsoleRenderer * GetConsole();
-	I_RHud *	 GetHud();
+	I_RHud *			GetHud();
 
 	//Windowing
 	void MoveWindow(int x, int y);
@@ -26,14 +26,13 @@ public:
 	void ChangeDispSettings(unsigned int width, unsigned int height, 
 							unsigned int bpp, bool fullscreen);
 
-
 	bool LoadWorld(world_t *level, int reload);
 	bool UnloadWorld();
 
 	bool Restart(void);
 
 	//CVar Handler
-	bool HandleCVar(const CVar *cvar,int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs);
 
 private:
 
@@ -47,7 +46,5 @@ private:
 	bool CVar_Bpp(const CVar * var, int argc, char** argv);
 
 };
-
-extern CRenExp * g_pRenExp;
 
 #endif

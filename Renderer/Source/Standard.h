@@ -15,10 +15,12 @@
 #include "I_renderer.h"
 #include "I_file.h"
 
+#include "Com_cvar.h"
+#include "Com_util.h"
+
 #include "gl.h"
 #include "3dMath.h"
 #include "World.h"
-#include "Com_util.h"
 
 #define ConPrint ComPrintf
 
