@@ -18,7 +18,7 @@ class CModelManager
 {
 public:
 	CModelManager();
-	~CModelManager();
+	virtual ~CModelManager();
 
 	/* Interface functions */
 

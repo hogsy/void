@@ -9,12 +9,12 @@ class CImageManager
 {
 public:
 	CImageManager();
-	~CImageManager();
+	virtual ~CImageManager();
 
 	/* Interface functions */
 
 	// load a model into memory
-	int LoadImage(const char *image, CacheType cache, int index=-1);
+	int LoadImage(const char *image, CacheType cache, int imgIndex=-1);
 
 	// unload images from memory
 	void UnloadImage(CacheType cache, int index);

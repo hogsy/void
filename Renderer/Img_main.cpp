@@ -28,7 +28,9 @@ Destructor
 */
 CImageManager::~CImageManager()
 {
-	int c, e;
+	UnloadImageAll();
+
+/*	int c, e;
 	for (c=0; c<CACHE_NUMCACHES; c++)
 	{
 		for (e=0; e<GAME_MAXIMAGES; e++)
@@ -41,6 +43,7 @@ CImageManager::~CImageManager()
 			}
 		}
 	}
+*/
 }
 
 void CImageManager::Set(CacheType cache, int index)
@@ -52,10 +55,55 @@ void CImageManager::Set(CacheType cache, int index)
 LoadModel 
 =======================================
 */
-int CImageManager::LoadImage(const char *image, CacheType cache, int index)
+int CImageManager::LoadImage(const char *image, CacheType cache, int imgIndex)
 {
+	if(imgIndex == -1)
+	{
+		for(int i=0; i<GAME_MAXMODELS; i++)
+		{
+			if (!caches[cache][i])
+			{
+				if(imgIndex == -1)
+					imgIndex = i;
+			}
+			else if(caches[cache][i]->IsFile(image))
+			{
+				caches[cache][i]->AddRef();
+				return i;
+			}
+		}
+
+		if(imgIndex == -1)
+		{
+			ComPrintf("CImageManager::LoadImage::No space to load %s\n", image);
+			return -1;
+		}
+	}
+
+	// make sure our spot is free
+	if (caches[cache][imgIndex])
+	{
+		ComPrintf("CImageManager::LoadImage:: Error loading %s. Slot occupied by %s\n", image,
+				caches[cache][imgIndex]->GetFileName());
+		return -1;
+	}
+
+	caches[cache][imgIndex] =  new CImageCacheEntry(image);
+	return imgIndex;
+
+
+/*	// else create a new one
+	if (_stricmp("md2", &model[strlen(model)-3])==0)
+		caches[mdlCache][mdlIndex] =  new CModelMd2();
+	else
+		caches[mdlCache][mdlIndex] =  new CModelSp2();
+
+	caches[mdlCache][mdlIndex]->LoadModel(model);
+	return mdlIndex;
+*/
+
 	// find the first available spot in this cache
-	if (index == -1)
+/*	if (index == -1)
 	{
 		for (int i=0; i<GAME_MAXIMAGES; i++)
 		{
@@ -96,11 +144,13 @@ int CImageManager::LoadImage(const char *image, CacheType cache, int index)
 	// else create a new one
 	caches[cache][index] =  new CImageCacheEntry(image);
 	return index;
+*/
 }
 
 /*
 =======================================
 UnloadImage 
+delete only if ref count is 0
 =======================================
 */
 void CImageManager::UnloadImage(CacheType cache, int index)
@@ -118,6 +168,7 @@ void CImageManager::UnloadImage(CacheType cache, int index)
 /*
 =======================================
 UnloadImageCache 
+Delete no matter waht
 =======================================
 */
 void CImageManager::UnloadImageCache(CacheType cache)
@@ -125,7 +176,11 @@ void CImageManager::UnloadImageCache(CacheType cache)
 	for (int i=0; i<GAME_MAXIMAGES; i++)
 	{
 		if (caches[cache][i])
-			UnloadImage(cache, i);
+		{
+			delete caches[cache][i];
+			caches[cache][i] = NULL;
+		}
+			//UnloadImage(cache, i);
 	}
 }
 
@@ -176,6 +231,3 @@ void CImageManager::UnLoadTextures(void)
 	}
 	ready = false;
 }
-
-
-

@@ -7,7 +7,8 @@ public:
 	CImageCacheEntry(const char *file);
 	~CImageCacheEntry();
 
-	bool IsFile(const char *file) { return (strcmp(file, imagefile)==0); }
+	bool IsFile(const char *file) const {	return (_stricmp(file, imagefile)==0); 	}
+	const char * GetFileName() const { return imagefile; }
 
 	void LoadTexture(void);
 	void UnLoadTexture(void);
