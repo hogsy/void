@@ -1,8 +1,7 @@
 
 
 
-//Implemented by the server
-
+//Implemented by the main server
 struct I_GameHandler
 {
 	virtual void BroadcastPrint(const char * msg)=0;
@@ -22,7 +21,8 @@ struct I_GameHandler
 };
 
 
-class CGameServer
+//implemented by the game dll
+struct I_GameServer
 {
 };
 

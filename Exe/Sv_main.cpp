@@ -30,6 +30,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 
 	m_clients= new EntClient[SV_MAX_CLIENTS];
 
+	InitGame();
+
 
 	//Game
 	m_entities = new Entity * [GAME_MAXENTITES];
@@ -174,7 +176,7 @@ void CServer::RunFrame()
 Parse and read entities
 ======================================
 */
-bool CServer::ParseEntities(NetSignOnBufs &signOnBuf)
+bool CServer::LoadEntities(NetSignOnBufs &signOnBuf)
 {
 	//create a spawnstring 
 	int i=0, j=0;
@@ -210,6 +212,11 @@ bool CServer::ParseEntities(NetSignOnBufs &signOnBuf)
 				entBuffer.Write(m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
 			}
 		}
+
+
+		//First spawn the entitiy, only add to signonBuffer, IF the entity parms are okay
+		if(!SpawnEntity(entBuffer))
+			continue;
 
 		//Check if the signOn buffer has space for this entity
 		if(!signOnBuf.entityList[signOnBuf.numEntityBufs].HasSpace(entBuffer.GetSize()))
@@ -287,16 +294,11 @@ void CServer::LoadWorld(const char * mapname)
 
 	NetSignOnBufs & buf = m_net.GetSignOnBufs();
 
-	if(!ParseEntities(buf))
+	if(!LoadEntities(buf))
 	{
 		ComPrintf("CServer::LoadWorld: Could not parse map entities for: %s\n", mappath);
 		Shutdown();
 		return;
-	}
-
-	//Spawn entities now
-	for(int i=0; i<= buf.numEntityBufs; i++)
-	{	SpawnEntities(buf.entityList[i]);
 	}
 
 	
@@ -404,31 +406,6 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 //======================================================================================
 //======================================================================================
 
-void CServer::SpawnEntities(CBuffer &buf)
-{
-	//parse buffer and load entities
-/*	buf.BeginRead();
-	
-	//get classname
-	char * classname = buf.ReadString();
-	if(buf.BadRead())
-		return;
-
-	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
-	if(ent)
-	{
-		m_entities[m_numEntities] = ent;
-		m_numEntities++;
-	}
-*/
-/*	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
-	if(ent)
-	{
-	}
-*/
-}
-
-
 /*
 ======================================
 Return an id for the given model
@@ -509,6 +486,34 @@ hImg CServer::RegisterImage(const char * image)
 	m_imageList[i].id = i;
 	return i;
 }
+
+
+
+//======================================================================================
+//======================================================================================
+
+
+/*
+======================================
+Check in an entity should be spawned
+this will be implemented by teh game dll
+======================================
+*/
+bool CServer::SpawnEntity(CBuffer &buf)
+{
+	buf.BeginRead();
+	char * classname = buf.ReadString();
+
+	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
+	if(ent)
+	{
+		m_entities[m_numEntities] = ent;
+		m_numEntities++;
+	}
+	return false;
+}
+
+
 
 
 

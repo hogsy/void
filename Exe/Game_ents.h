@@ -2,15 +2,18 @@
 #define VOID_GAME_ENTITIES
 
 #include "Com_defs.h"
-#include "Com_buffer.h"
+#include "Com_keys.h"
 #include "3dmath.h"
 
-
-//======================================================================================
-//SERVER ENTITIES
-//======================================================================================
+/*
+======================================
+SERVER ENTITIES
+======================================
+*/
 
 const int ENT_MAXCLASSNAME = 32;
+const int ENT_MAXSTRING = 128;
+const int ENT_MAXMESSAGE = 256;
 
 enum EntType
 {
@@ -28,23 +31,37 @@ can be subclasses for more specific stuff
 */
 struct Entity
 {
-	Entity(const char * ename) //, EntType etype) : type(etype)
+	Entity(const char * ename)
 	{	
 		strcpy(classname, ename);
 		origin.x = origin.y = origin.z = 0.0f;
 		angles.x = angles.y = angles.z = 0.0f;
 	}
 	
-	int	 num;
-	char classname[ENT_MAXCLASSNAME];
-	
-//	EntType		type;
-//	char *		name;	
-
+	int			num;
+	char		classname[ENT_MAXCLASSNAME];
 	vector_t	origin;
 	vector_t	angles;
 };
 
+/*
+======================================
+WorldSpawn
+======================================
+*/
+struct EntWorldSpawn : public Entity
+{
+	EntWorldSpawn() : Entity("worldspawn")
+	{
+		memset(message,0,ENT_MAXMESSAGE);
+		memset(music,0, ENT_MAXSTRING);
+		gravity = 800;
+	}
+
+	char	message[ENT_MAXMESSAGE];
+	char    music[ENT_MAXSTRING];
+	int		gravity;
+};
 
 /*
 ======================================
@@ -54,11 +71,10 @@ Speaker
 struct EntSpeaker : public Entity
 {
 	enum	//attenuation etc 
-	{	
-		MAX_SOUNDFILENAME = 64
+	{	MAX_SOUNDFILENAME = 64
 	};
 	
-	EntSpeaker(): Entity("ent_speaker") //, ENT_WORLD)
+	EntSpeaker(): Entity("ent_speaker")
 	{
 	}
 
@@ -75,7 +91,7 @@ Client Entity on the server
 */
 struct EntClient : public Entity
 {
-	EntClient() : Entity("client") //, ENT_CLIENT)
+	EntClient() : Entity("client")
 	{	
 		memset(name,0,32); 
 		inUse = false; 
@@ -88,59 +104,40 @@ struct EntClient : public Entity
 	vector_t maxs;
 };
 
+//======================================================================================
+//======================================================================================
 
-/*
-======================================================================================
-To support creation of a new entity type
-Derive class from CBaseEntityMaker
-create an object of that class
-======================================================================================
-*/
-class CEntityMaker;
-typedef std::map<std::string, CEntityMaker *> EntMakerMap;
+typedef std::vector<KeyField> EntFields;
 
 class CEntityMaker
 {
 public:
-	static Entity * CreateEnt(const char * classname, CBuffer &parms)
-	{
-		itRegistry = makerRegistry.find(std::string(classname));
-		if(itRegistry != makerRegistry.end())
-			return (*itRegistry).second->MakeEntity(parms);
-		
-		//just read default stuff
-		Entity * ent = new Entity(classname);
-//		strcpy(ent->classname,classname);
+	
+	//This is what the main spawning routine will use
+	static Entity * CreateEnt(const char * classname, CBuffer &parms);
 
-		char * key = 0;
-		
-		do
-		{
-			key = parms.ReadString();
-			if(strcmp(key,"origin") == 0)
-				parms.ReadVector(ent->origin);
-			else if(strcmp(key,"angles") == 0)
-				parms.ReadVector(ent->angles);
-
-		}while(key != 0);
-		
-		return ent; 
-	}
+	virtual ~CEntityMaker() {}
 	
 protected:
 
-	
-	CEntityMaker(std::string classname)
-	{	makerRegistry.insert( std::make_pair(classname,this));
-	}
+	//Derived classes should use this
+	CEntityMaker(std::string classname);
 
-	virtual ~CEntityMaker() {}
-	//Every subclass has to implement this
-	virtual Entity * MakeEntity(CBuffer &parms) const = 0;
+	//Every subclass should implement this
+	virtual Entity * MakeEntity(const char * classname, CBuffer &parms) const;
+
+	static void ParseKey(Entity * ent, const char * key, CBuffer &parms);
 
 private:
-	static EntMakerMap			 makerRegistry;
-	static EntMakerMap::iterator itRegistry;
+
+	//Constructor is private
+	CEntityMaker();
+
+	static CEntityMaker mainEntMaker;
+	static EntFields	entFields;
+
+	static std::map<std::string, CEntityMaker *> makerRegistry;
+	static std::map<std::string, CEntityMaker *>::iterator itRegistry;
 };
 
 #endif

@@ -216,6 +216,10 @@ SOURCE=..\Shared\Com_hunk.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_keys.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_mem.cpp
 # End Source File
 # Begin Source File

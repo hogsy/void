@@ -59,10 +59,13 @@ private:
 	void Shutdown();
 	void Restart();
 
+	void InitGame();
+
 	//Parse entity data from world file into 
 	//Entity spawn buffers
-	void SpawnEntities(CBuffer &buf);
-	bool ParseEntities(NetSignOnBufs &signOnBuf);
+	bool SpawnEntity(CBuffer &buf);
+
+	bool LoadEntities(NetSignOnBufs &signOnBuf);
 
 	void LoadWorld(const char * mapname);
 	void PrintServerStatus();
