@@ -96,6 +96,7 @@ private:
 	ServerState m_svState;
 	CNetServer	m_net;
 	NetChanWriter & m_chanWriter;
+	char		m_printBuffer[512];
 
 	//The Game Interface
 	HINSTANCE m_hGameDll;

@@ -3,16 +3,13 @@
 #include "Net_defs.h"
 #include "Net_protocol.h"
 #include "Com_util.h"
-#include "I_game.h"
 
-//======================================================================================
 enum 
 {
 	CMD_MAP = 1,
 	CMD_KILLSERVER = 2,
 	CMD_STATUS	= 3
 };
-
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
 
@@ -36,6 +33,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 
 	m_pWorld = 0;
 	m_active = false;
+
+	memset(m_printBuffer,0,512);
 
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
@@ -136,8 +135,6 @@ void CServer::Shutdown()
 	if(m_pGame)
 	{
 		m_pGame->ShutdownGame();
-//		GAME_Shutdown();
-
 		GAME_FREEFUNC pfnFreeFunc = (GAME_FREEFUNC)::GetProcAddress(m_hGameDll,"GAME_Shutdown");
 		if(pfnFreeFunc)
 			pfnFreeFunc();
@@ -173,7 +170,6 @@ void CServer::Shutdown()
 	ComPrintf("CServer::Shutdown OK\n");
 }
 
-
 /*
 ======================================
 Restart the server
@@ -186,14 +182,14 @@ void CServer::Restart()
 
 	m_pGame->ShutdownGame();
 	m_net.Restart();
-	
+
 	if(m_pWorld)
 	{
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
 		m_svState.worldname[0] = 0;
 	}
-
+	
 	m_pGame->InitGame();
 	ComPrintf("CServer::Restart OK\n");
 }
@@ -277,8 +273,7 @@ void CServer::LoadEntities()
 			}
 		}
 
-		//found classkey, see if we want info about this entity
-		//then copy over all the parms
+		//Were we able to find the classname of the given key
 		if(classkey == -1)
 			continue;
 
@@ -294,7 +289,6 @@ void CServer::LoadEntities()
 	}
 	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
 }
-
 
 /*
 ======================================
@@ -443,7 +437,6 @@ void CServer::LoadWorld(const char * mapname)
 		return;
 	}
 
-
 	bool bRestarting = false;
 	char mappath[COM_MAXPATH];
 	char worldname[64];
@@ -515,6 +508,115 @@ void CServer::LoadWorld(const char * mapname)
 
 //======================================================================================
 //======================================================================================
+
+
+
+
+/*
+======================================
+Print a broadcast message
+======================================
+*/
+void CServer::BroadcastPrintf(const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+
+	m_net.BroadcastPrintf(m_printBuffer);
+}
+
+/*
+======================================
+Print a message to a given client
+======================================
+*/
+void CServer::ClientPrintf(int clNum, const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+
+	m_net.ClientPrintf(clNum,msg);
+}
+
+
+/*
+======================================
+Game messed up. kill server
+======================================
+*/
+void CServer::FatalError(const char * msg)
+{
+
+}
+
+/*
+======================================
+Util funcs
+======================================
+*/
+void CServer::ExecCommand(const char * cmd)
+{	System::GetConsole()->ExecString(cmd);
+}
+
+void CServer::DebugPrint(const char * msg)
+{	System::GetConsole()->ComPrint(msg);
+}
+
+NetChanWriter & CServer::GetNetChanWriter()
+{	return (reinterpret_cast<NetChanWriter &>(m_net));
+}
+
+
+void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
+{
+}
+
+void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
+{
+}
+
+
+/*
+======================================
+Write baselines of entities
+======================================
+*/
+bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
+{
+	//we only write a baseline if the entity is using a model or soundIndex
+	if(ent->modelIndex >= 0 || ent->soundIndex >= 0)
+	{
+		buf.WriteShort(ent->num);
+		buf.WriteCoord(ent->origin.x);
+		buf.WriteCoord(ent->origin.y);
+		buf.WriteCoord(ent->origin.z);
+		buf.WriteAngle(ent->angles.x);
+		buf.WriteAngle(ent->angles.y);
+		buf.WriteAngle(ent->angles.z);
+
+		if(ent->modelIndex >=0)
+		{
+			buf.WriteChar('m');
+			buf.WriteShort(ent->modelIndex);
+			buf.WriteShort(ent->skinNum);
+			buf.WriteShort(ent->frameNum);
+		}
+		if(ent->soundIndex >=0)
+		{
+			buf.WriteChar('s');
+			buf.WriteShort(ent->soundIndex);
+			buf.WriteShort(ent->volume);
+			buf.WriteShort(ent->attenuation);
+		}
+//		buf.WriteChar(' ');
+		return true;
+	}
+	return false;
+}
 
 /*
 ======================================
@@ -693,86 +795,5 @@ int CServer::RegisterImage(const char * image)
 	return i;
 }
 
-
-
 //======================================================================================
 //======================================================================================
-
-void CServer::ExecCommand(const char * cmd)
-{	System::GetConsole()->ExecString(cmd);
-}
-
-void CServer::DebugPrint(const char * msg)
-{	System::GetConsole()->ComPrint(msg);
-}
-
-//kill server here ?
-void CServer::FatalError(const char * msg)
-{
-}
-
-void CServer::BroadcastPrintf(const char * msg,...)
-{	m_net.BroadcastPrintf(msg);
-}
-void CServer::ClientPrintf(int clNum, const char * msg,...)
-{	m_net.ClientPrintf(clNum,msg);
-}
-
-NetChanWriter & CServer::GetNetChanWriter()
-{	return (reinterpret_cast<NetChanWriter &>(m_net));
-}
-
-void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
-{
-}
-
-void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
-{
-}
-
-
-
-bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
-{
-	//we only write a baseline if the entity
-	//is using a model or soundIndex
-	if(ent->modelIndex >= 0 || ent->soundIndex >= 0)
-	{
-		buf.WriteShort(ent->num);
-		buf.WriteCoord(ent->origin.x);
-		buf.WriteCoord(ent->origin.y);
-		buf.WriteCoord(ent->origin.z);
-		buf.WriteAngle(ent->angles.x);
-		buf.WriteAngle(ent->angles.y);
-		buf.WriteAngle(ent->angles.z);
-
-		if(ent->modelIndex >=0)
-		{
-			buf.WriteChar('m');
-			buf.WriteShort(ent->modelIndex);
-			buf.WriteShort(ent->skinNum);
-			buf.WriteShort(ent->frameNum);
-		}
-		if(ent->soundIndex >=0)
-		{
-			buf.WriteChar('s');
-			buf.WriteShort(ent->soundIndex);
-			buf.WriteShort(ent->volume);
-			buf.WriteShort(ent->attenuation);
-		}
-		return true;
-	}
-	return false;
-}
-
-
-
-
-
-
-
-
-
-
-
-

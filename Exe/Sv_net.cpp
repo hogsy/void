@@ -44,61 +44,6 @@ bool CServer::ValidateClConnection(int clNum,
 		}
 	}
 	return true;
-
-
-/*
-	if(m_clients[clNum] && !reconnect)
-	{
-		m_net.SendRejectMsg("Couldn't find free client slot");
-		return false;
-	}
-
-	m_clients[clNum] = new EntClient();
-	
-	strcpy(m_clients[clNum]->name, buffer.ReadString());
-	
-	strcpy(m_clients[clNum]->modelName,buffer.ReadString());
-	m_clients[clNum]->modelIndex = RegisterModel(m_clients[clNum]->modelName);
-
-	strcpy(m_clients[clNum]->skinName,buffer.ReadString());
-	m_clients[clNum]->skinNum = RegisterImage(m_clients[clNum]->skinName);
-
-	m_net.ChanSetRate(clNum, buffer.ReadInt());
-	
-	m_clients[clNum]->inUse = true;
-	m_clients[clNum]->spawned = false;
-
-	if(!reconnect)
-		m_svState.numClients++;
-
-	m_clients[clNum]->num = m_svState.numClients;
-
-	m_net.BroadcastPrintf("%s connected", m_clients[clNum]->name);
-
-	int len = 10 + strlen(m_clients[clNum]->name) + 
-		strlen(m_clients[clNum]->modelName) + strlen(m_clients[clNum]->skinName);
-
-	//Add client info to all connected clients
-	for(int i=0;i<m_svState.maxClients;i++)
-	{
-		//dont send to source
-		if(i == clNum)
-			continue;
-
-		if(m_clients[i] && m_clients[i]->spawned)
-		{
-			m_net.ChanBeginWrite(i,SV_CLIENTINFO, len);
-			m_net.ChanWriteShort(m_clients[clNum]->num);
-			m_net.ChanWriteString(m_clients[clNum]->name);
-			m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
-			m_net.ChanWriteString(m_clients[clNum]->modelName);
-			m_net.ChanWriteShort(m_clients[clNum]->skinNum);
-			m_net.ChanWriteString(m_clients[clNum]->skinName);
-			m_net.ChanFinishWrite();
-		}
-	}
-	return true;
-*/
 }
 
 /*
@@ -149,7 +94,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(id == 'n')
 				{
 					const char * clname = buffer.ReadString();
-					m_net.BroadcastPrintf("%s renamed to %s", m_clients[clNum]->name, clname);
+					BroadcastPrintf("%s renamed to %s", m_clients[clNum]->name, clname);
 					strcpy(m_clients[clNum]->name, clname);
 				}
 				else if (id == 'r')
@@ -197,25 +142,20 @@ void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 	{
 	case CLIENT_QUIT:
 ComPrintf("%s Disconnected", m_clients[clNum]->name);
-		m_net.BroadcastPrintf("%s disconnected", m_clients[clNum]->name);
+		BroadcastPrintf("%s disconnected", m_clients[clNum]->name);
 		break;
 	case CLIENT_TIMEOUT:
 ComPrintf("%s Timed out", m_clients[clNum]->name);
-		m_net.BroadcastPrintf("%s timed out", m_clients[clNum]->name);
+		BroadcastPrintf("%s timed out", m_clients[clNum]->name);
 		break;
 	case CLIENT_OVERFLOW:
 ComPrintf("%s overflowed", m_clients[clNum]->name);
-		m_net.BroadcastPrintf("%s overflowed", m_clients[clNum]->name);
+		BroadcastPrintf("%s overflowed", m_clients[clNum]->name);
 		break;
 	}
 	
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
-
-/*	delete m_clients[clNum];
-	m_clients[clNum] = 0;
-	m_svState.numClients --;
-*/
 }
 
 /*
@@ -263,11 +203,6 @@ Handle Map change on client ?
 void CServer::OnLevelChange(int clNum)
 {
 }
-
-
-
-
-
 
 
 //======================================================================================
