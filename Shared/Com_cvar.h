@@ -80,11 +80,12 @@ public:
 			{
 				if(!sscanf(varval,"%f",&value))
 					value = 0;
-				string = new char[strlen("false") + 1];
-				if(!value)
-					strcpy(string,"false");
+				string = new char[2];
+				if(value)
+					string[0] = '1';
 				else
-					strcpy(string,"true");
+					string[0] = '0';
+				string[1] = '\0';
 				break;
 			}
 		case CVAR_STRING:

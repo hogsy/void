@@ -306,7 +306,7 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 			}
 		}
 	}
-	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
+//	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
 
@@ -359,7 +359,7 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 			}
 		}
 	}
-	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
+//	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
 
