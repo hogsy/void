@@ -255,12 +255,12 @@ void build_frust(void)
 /***********************
 build and draw the world
 ***********************/
-void r_draw_world(void)
+void r_draw_world(vector_t *blend)
 {
 	// turn on zbuffering for now
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glColor4f(1, 1, 1, 1);
+	glColor3fv(&blend->x);
 
 	build_frust();
 	beam_reset();
@@ -272,7 +272,7 @@ void r_draw_world(void)
 /***********************
 Draw the current frame
 ***********************/
-void r_drawframe(vector_t *origin, vector_t *angles)
+void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 {
 //FIXME !!!!!!!!!!!!!!!!!!!!!
 	eye.origin = *origin;
@@ -296,7 +296,7 @@ void r_drawframe(vector_t *origin, vector_t *angles)
 	glRotatef( eye.angles.YAW   * 180/PI, 0, 1, 0);
 	glTranslatef(-eye.origin.x, -eye.origin.z, eye.origin.y);
 
-	r_draw_world();
+	r_draw_world(blend);
 
 	glPopMatrix();
 

@@ -6,7 +6,7 @@
 #define MAX_PORTAL_DEPTH 100
 
 // renderer.cpp
-void r_drawframe(vector_t *origin, vector_t *angles);
+void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend);
 void r_drawcons();
 void r_shutdown();
 void r_init();
