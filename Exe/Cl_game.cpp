@@ -38,6 +38,9 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	
 	m_clNum = -1;
 	m_pGameClient = 0;
+
+	m_fLastUpdate = 0.0f;
+	m_fFrameTime = 0.0f;
 	
 	m_pCamera = 0;
 	m_pWorld = 0;

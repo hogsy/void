@@ -6,6 +6,9 @@
 Basic "game" definitions.
 ==========================================================================
 */
+const int	GAME_VERSION    = 1;
+const float	GAME_FRAMETIME  = 0.05f;
+
 const int	GAME_MAXMODELS	= 256;
 const int	GAME_MAXSOUNDS	= 256;
 const int	GAME_MAXIMAGES	= 256;

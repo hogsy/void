@@ -4,9 +4,6 @@
 #include "Game_defs.h"
 
 //Constants
-const int	GAME_VERSION   = 1;
-const float	GAME_FRAMETIME = 0.05f;
-
 const int	ENT_MAXCLASSNAME= 32;
 const int	ENT_MAXRESNAME  = 64;
 const int	ENT_MAXSTRING   = 128;

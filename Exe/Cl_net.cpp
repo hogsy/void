@@ -112,24 +112,35 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 				
 				if(!m_cvLocalMove.bval)
 				{
-					x -= m_pGameClient->origin.x;
+/*					x -= m_pGameClient->origin.x;
 					y -= m_pGameClient->origin.y;
 					z -= m_pGameClient->origin.z;
 
-					m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
-					m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
-					m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
-
+					if((m_pClGame->GetCurTime() - m_fLastUpdate) > (GAME_FRAMETIME * 20.0f))
+					{
+ComPrintf("Updated");
+						m_pGameClient->origin.x=x;
+						m_pGameClient->origin.y=y;
+						m_pGameClient->origin.z=z;
+						m_fLastUpdate = m_pClGame->GetCurTime();
+					}
+					else
+					{
+*/
+						m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
+						m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
+						m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
+//					}
 				}
 				break;
 			}
 
 		case SV_CLUPDATE:
 			{
-				int num = buffer.ReadShort();
+				int num = buffer.ReadByte();
 				if(m_clients[num].inUse && num != m_clNum)
 				{
-					byte  b = buffer.ReadByte();
+//					byte  b = buffer.ReadByte();
 
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
@@ -139,7 +150,7 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
 
-					if(b)
+/*					if(b)
 					{
 						//Order matters
 						if(b & SVU_GRAVITY)
@@ -149,6 +160,7 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 						if(b & SVU_MAXSPEED)
 							m_clients[num].maxSpeed = buffer.ReadFloat();
 					}
+*/
 
 				}
 				break;

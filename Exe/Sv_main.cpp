@@ -295,6 +295,7 @@ void CServer::RunFrame()
 					m_net.ChanWriteFloat(m_clients[i]->friction);
 				if(m_clients[i]->sendFlags & SVU_MAXSPEED)
 					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
+				m_clients[i]->sendFlags = 0;
 			}
 
 			m_net.ChanFinishWrite();
@@ -306,8 +307,8 @@ void CServer::RunFrame()
 					continue;
 
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
-				m_net.ChanWriteShort(m_clients[j]->num);
-				m_net.ChanWriteByte(m_clients[i]->sendFlags);
+				m_net.ChanWriteByte(m_clients[j]->num);
+//				m_net.ChanWriteByte(m_clients[i]->sendFlags);
 				
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
 				m_net.ChanWriteCoord(m_clients[j]->origin.y);
@@ -317,7 +318,7 @@ void CServer::RunFrame()
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
 				m_net.ChanWriteCoord(m_clients[j]->angles.z);
 
-				if(m_clients[j]->sendFlags)
+/*				if(m_clients[j]->sendFlags)
 				{
 					if(m_clients[j]->sendFlags & SVU_GRAVITY)
 						m_net.ChanWriteFloat(m_clients[j]->gravity);
@@ -326,14 +327,18 @@ void CServer::RunFrame()
 					if(m_clients[j]->sendFlags & SVU_MAXSPEED)
 						m_net.ChanWriteFloat(m_clients[j]->maxSpeed);
 				}
+*/
 				m_net.ChanFinishWrite();
 			}
 		}
 
 		//FIXME: Clean up
-		for(i=0;i<m_svState.maxClients;i++)
+/*		for(i=0;i<m_svState.maxClients;i++)
+		{
 			if(m_clients[i])
 				m_clients[i]->sendFlags = 0;
+		}
+*/
 
 	}
 
