@@ -128,6 +128,9 @@ private:
 	int			m_numEnts;
 	ClEntity 	m_entities[GAME_MAXENTITIES];
 	ClClient 	m_clients[GAME_MAXCLIENTS];
+
+	void EntityMove(const vector_t &origin, const vector_t &mins, const vector_t &max,
+				vector_t &dir, float time);
 	
 	//This should hook up to the game client whne the client
 	//enters a game

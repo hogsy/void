@@ -7,6 +7,190 @@
 const float CL_ROTATION_SENS = 0.05f;
 
 
+void CClient::EntityMove(const vector_t &origin, 
+						 const vector_t &mins, 
+						 const vector_t &maxs,
+						 vector_t &dir, 
+						 float time)
+{
+	
+	// all the normals of the planes we've hit
+	vector_t	hitplanes[MAX_CLIP_PLANES];	
+	int			hits=0;				// number of planes we've hit, and number we're touching
+	vector_t	end;				// where we want to end up
+	vector_t	primal_dir;			// dir we originally wanted
+	TraceInfo	tr;
+	float d;
+
+	Void3d::VectorScale(dir,dir, time);
+	Void3d::VectorSet(primal_dir, dir);
+	
+	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
+	{
+		VectorAdd(origin, dir, end);
+
+		m_pWorld->Trace(tr, origin, end, mins, maxs);
+		if (tr.fraction > 0)
+		{
+			Void3d::VectorSet(m_pClient->origin, tr.endpos);
+			hits = 0;
+		}
+
+		// we're done moving
+		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
+			break;
+
+		Void3d::VectorSet(hitplanes[hits],tr.plane->norm);
+		hits++;
+
+		// we're only touching 1 plane - project velocity onto it
+		if (hits==1)
+			MakeVectorPlanar(&dir, &dir, &hitplanes[0]);
+		// we have to set velocity along crease
+		else
+		{
+			vector_t tmp;
+			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
+			d = Void3d::DotProduct(tmp,dir);
+			Void3d::VectorScale(dir,tmp, d);
+		}
+
+		// make sure we're still going forward
+		if (Void3d::DotProduct(dir,primal_dir) <= 0)
+		{
+			Void3d::VectorSet(dir, 0, 0, 0);
+			break;
+		}
+	}
+
+}
+
+
+void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
+
+// FIXME - this should be an entitiy move, not a client move
+void CClient::Move(vector_t *dir, float time)
+{
+	// not in a sector, so just fly through everything
+// fake gravity
+//	velocity->z -= MAXVELOCITY;
+
+
+	// figure out what dir we want to go if we're folling a path
+	if (m_campath != -1)
+		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, dir, time);
+
+	// can we clip through walls?  it's simple then
+	if (!m_cvClip.ival)
+	{
+		VectorMA(&m_pClient->origin, time, dir, &m_pClient->origin);
+		return;
+	}
+	EntityMove(m_pClient->origin, m_pClient->mins, m_pClient->maxs,	*dir, time);
+}
+
+
+
+
+
+void CClient::MoveForward()
+{
+	static vector_t forward;
+	AngleToVector (&m_pClient->angle, &forward, NULL, NULL);
+	VectorNormalize(&forward);
+	VectorAdd2(desired_movement,forward);
+}
+
+void CClient::MoveBackward()
+{
+	static vector_t backword;
+	AngleToVector (&m_pClient->angle, &backword, NULL, NULL);
+	VectorNormalize(&backword);
+	VectorMA(&desired_movement, -1, &backword, &desired_movement);
+}
+
+void CClient::MoveRight()
+{
+	static vector_t right;
+	AngleToVector (&m_pClient->angle, NULL, &right, NULL);
+	VectorNormalize(&right);
+	VectorAdd2(desired_movement,right);
+}
+
+void CClient::MoveLeft()
+{
+	static vector_t left;
+	AngleToVector (&m_pClient->angle, NULL, &left, NULL);
+	VectorNormalize(&left);
+	VectorMA(&desired_movement, -1, &left, &desired_movement);
+}
+
+void CClient::RotateRight(const float &val)
+{
+	m_pClient->angle.YAW += (val * CL_ROTATION_SENS);  
+	if (m_pClient->angle.YAW > PI)
+		m_pClient->angle.YAW -= 2*PI;
+}
+
+void CClient:: RotateLeft(const float &val)
+{
+	m_pClient->angle.YAW -= (val * CL_ROTATION_SENS); 
+	if (m_pClient->angle.YAW < -PI)
+		m_pClient->angle.YAW += 2*PI;
+}
+
+void CClient::RotateUp(const float &val)
+{
+	m_pClient->angle.PITCH +=  (val * CL_ROTATION_SENS);
+	if (m_pClient->angle.PITCH < -PI/2)
+		m_pClient->angle.PITCH = -PI/2;
+	if (m_pClient->angle.PITCH > PI/2)
+		m_pClient->angle.PITCH = PI/2;
+}
+
+void CClient:: RotateDown(const float &val)
+{
+	m_pClient->angle.PITCH -=  (val * CL_ROTATION_SENS); 
+	if (m_pClient->angle.PITCH < -PI/2)
+		m_pClient->angle.PITCH = -PI/2;
+	if (m_pClient->angle.PITCH > PI/2)
+		m_pClient->angle.PITCH = PI/2;
+}
+
+
+
+
+/*
+===========
+follow a camera path
+===========
+*/
+void CClient::CamPath()
+{
+	// find the head path node
+	for (int ent=0; ent<m_pWorld->nentities; ent++)
+	{
+		if (strcmp(m_pWorld->GetKeyString(ent, "classname"), "misc_camera_path_head") == 0)
+		{
+			m_campath = ent;
+			m_camtime = System::g_fcurTime;
+
+			vector_t origin;
+			m_pWorld->GetKeyVector(ent, "origin", origin);
+			VectorCopy(origin, m_pClient->origin); // move to first point of path
+			return;
+		}
+	}
+}
+
+
+
+
+//======================================================================================
+//======================================================================================
+
+
+
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
 {
 /*
@@ -47,89 +231,6 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 	time = VectorNormalize(dir);
 */
 }
-
-
-// FIXME - this should be an entitiy move, not a client move
-void CClient::Move(vector_t *dir, float time)
-{
-	// not in a sector, so just fly through everything
-// fake gravity
-//	velocity->z -= MAXVELOCITY;
-
-
-	// figure out what dir we want to go if we're folling a path
-	if (m_campath != -1)
-		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, dir, time);
-
-	// can we clip through walls?  it's simple then
-	if (!m_cvClip.ival)
-	{
-		VectorMA(&m_pClient->origin, time, dir, &m_pClient->origin);
-		return;
-	}
-
-/*	if (PointContents(eye.origin) & CONTENTS_SOLID)
-		m_pHud->HudPrintf(0, 30, 0, "SOLID");
-	else if (PointContents(eye.origin) & CONTENTS_WATER)
-		m_pHud->HudPrintf(0, 30, 0, "WATER");
-*/
-
-
-	// regular collision
-	vector_t	hitplanes[MAX_CLIP_PLANES];	// all the normals of the planes we've hit
-	int			bumps, hits=0;				// number of planes we've hit, and number we're touching
-//	trace_t		tr;							// the current trace
-	TraceInfo	tr;
-
-	vector_t	end;						// where we want to end up
-	vector_t	primal_dir;			// dir we originally wanted
-	float d;
-
-	VectorScale(dir, time, dir);
-	VectorCopy((*dir), primal_dir);
-
-	for (bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
-	{
-		VectorAdd(m_pClient->origin, (*dir), end);
-		//tr = trace(m_pClient->origin, end, &m_pClient->mins, &m_pClient->maxs);
-
-		m_pWorld->Trace(tr,m_pClient->origin, end, m_pClient->mins, m_pClient->maxs);
-
-		if (tr.fraction > 0)
-		{
-			VectorCopy(tr.endpos, m_pClient->origin);
-			hits = 0;
-		}
-
-
-		// we're done moving
-		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
-			break;
-
-		VectorCopy(tr.plane->norm, hitplanes[hits]);
-		hits++;
-
-
-		// we're only touching 1 plane - project velocity onto it
-		if (hits==1)
-			MakeVectorPlanar(dir, dir, &hitplanes[0]);
-
-		// we have to set velocity along crease
-		else
-		{
-			vector_t tmp;
-			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
-			d = dot(tmp, (*dir));
-			VectorScale (&tmp, d, dir);
-		}
-
-		// make sure we're still going forward
-		if (dot((*dir), primal_dir) <= 0)
-		{
-			VectorSet(dir, 0, 0, 0);
-			break;
-		}
-	}
 
 
 
@@ -229,127 +330,5 @@ void CClient::Move(vector_t *dir, float time)
 		}
 	}
 */
-}
 
 
-
-
-
-void CClient::MoveForward()
-{
-	static vector_t forward;
-	AngleToVector (&m_pClient->angle, &forward, NULL, NULL);
-	VectorNormalize(&forward);
-	VectorAdd2(desired_movement,forward);
-}
-
-void CClient::MoveBackward()
-{
-	static vector_t backword;
-	AngleToVector (&m_pClient->angle, &backword, NULL, NULL);
-	VectorNormalize(&backword);
-	VectorMA(&desired_movement, -1, &backword, &desired_movement);
-}
-
-void CClient::MoveRight()
-{
-	static vector_t right;
-	AngleToVector (&m_pClient->angle, NULL, &right, NULL);
-	VectorNormalize(&right);
-	VectorAdd2(desired_movement,right);
-}
-
-void CClient::MoveLeft()
-{
-	static vector_t left;
-	AngleToVector (&m_pClient->angle, NULL, &left, NULL);
-	VectorNormalize(&left);
-	VectorMA(&desired_movement, -1, &left, &desired_movement);
-}
-
-void CClient::RotateRight(const float &val)
-{
-	m_pClient->angle.YAW += (val * CL_ROTATION_SENS);  
-	if (m_pClient->angle.YAW > PI)
-		m_pClient->angle.YAW -= 2*PI;
-}
-
-void CClient:: RotateLeft(const float &val)
-{
-	m_pClient->angle.YAW -= (val * CL_ROTATION_SENS); 
-	if (m_pClient->angle.YAW < -PI)
-		m_pClient->angle.YAW += 2*PI;
-}
-
-void CClient::RotateUp(const float &val)
-{
-	m_pClient->angle.PITCH +=  (val * CL_ROTATION_SENS);
-	if (m_pClient->angle.PITCH < -PI/2)
-		m_pClient->angle.PITCH = -PI/2;
-	if (m_pClient->angle.PITCH > PI/2)
-		m_pClient->angle.PITCH = PI/2;
-}
-
-void CClient:: RotateDown(const float &val)
-{
-	m_pClient->angle.PITCH -=  (val * CL_ROTATION_SENS); 
-	if (m_pClient->angle.PITCH < -PI/2)
-		m_pClient->angle.PITCH = -PI/2;
-	if (m_pClient->angle.PITCH > PI/2)
-		m_pClient->angle.PITCH = PI/2;
-}
-
-
-
-/*
-===========
-follow a camera path
-===========
-*/
-void CClient::CamPath()
-{
-	// find the head path node
-	for (int ent=0; ent<m_pWorld->nentities; ent++)
-	{
-		if (strcmp(m_pWorld->GetKeyString(ent, "classname"), "misc_camera_path_head") == 0)
-		{
-			m_campath = ent;
-			m_camtime = System::g_fcurTime;
-
-			vector_t origin;
-			m_pWorld->GetKeyVector(ent, "origin", origin);
-			VectorCopy(origin, m_pClient->origin); // move to first point of path
-			return;
-		}
-	}
-}
-
-
-
-
-
-/*
-int PointContents(vector_t &v)
-{
-	int n=0;
-	float d;
-
-	do
-	{
-		// test to this nodes plane
-		d = dot(m_pWorld->planes[m_pWorld->nodes[n].plane].norm, v) - m_pWorld->planes[m_pWorld->nodes[n].plane].d;
-
-		if (d>=0)
-			n = m_pWorld->nodes[n].children[0];
-		else
-			n = m_pWorld->nodes[n].children[1];
-
-		// if we found a leaf, it's what we want
-		if (n<=0)
-			return m_pWorld->leafs[-n].contents;
-
-	} while (1);
-
-	return 0;
-}
-*/
