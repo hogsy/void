@@ -7,9 +7,9 @@ enum
 	CMD_CLIENTDEBUG
 };
 
-CVar	g_varGravity("g_gravity", "800", CVAR_FLOAT, 0);
-CVar	g_varMaxSpeed("g_maxspeed", "200", CVAR_FLOAT, 0);
-CVar	g_varFriction("g_friction", "0.9", CVAR_FLOAT, 0);
+CVar *	g_varGravity=0;
+CVar *	g_varMaxSpeed=0;
+CVar *	g_varFriction=0;
 
 //==========================================================================
 //==========================================================================
@@ -21,11 +21,13 @@ Register all the Game CVars
 */
 void CGame::InitializeVars()
 {
-	I_Console::GetConsole()->RegisterCVar(&g_varGravity,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varMaxSpeed,this);
-	I_Console::GetConsole()->RegisterCVar(&g_varFriction,this);
+	I_Console * pConsole = I_Console::GetConsole();
 
-	I_Console::GetConsole()->RegisterCommand("gclientInfo",CMD_CLIENTDEBUG,this);
+	g_varGravity = pConsole->RegisterCVar("g_gravity", "800", CVAR_FLOAT, 0,this);
+	g_varMaxSpeed = pConsole->RegisterCVar("g_maxspeed", "200", CVAR_FLOAT, 0,this);
+	g_varFriction = pConsole->RegisterCVar("g_friction", "0.9", CVAR_FLOAT, 0,this);
+	
+	pConsole->RegisterCommand("gclientInfo",CMD_CLIENTDEBUG,this);
 }
 
 /*
@@ -33,9 +35,9 @@ void CGame::InitializeVars()
 Validate and handle changes in CVars.
 ================================================
 */
-bool CGame::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
+bool CGame::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 {
-	if(cvar == reinterpret_cast<CVarBase *>(&g_varGravity))
+	if(cvar == g_varGravity)
 	{
 		float val = strVal.FloatVal();
 
@@ -48,7 +50,7 @@ ComPrintf("GAME: Grav changing to %f\n", val);
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase *>(&g_varMaxSpeed))
+	else if(cvar == g_varMaxSpeed)
 	{
 		float val = strVal.FloatVal();
 		for(int i=0; i<numClients; i++)
@@ -58,7 +60,7 @@ ComPrintf("GAME: Grav changing to %f\n", val);
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase *>(&g_varFriction))
+	else if(cvar == g_varFriction)
 	{
 		float val = strVal.FloatVal();
 		for(int i=0; i<numClients; i++)

@@ -347,9 +347,9 @@ void CGame::ClientBegin(int clNum)
 	//Set any custom speed/gravity/friction here
 	
 	//First time spawn
-	clients[clNum]->maxSpeed = g_varMaxSpeed.fval;
-	clients[clNum]->gravity = g_varGravity.fval;
-	clients[clNum]->friction = g_varFriction.fval;
+	clients[clNum]->maxSpeed = g_varMaxSpeed->fval;
+	clients[clNum]->gravity = g_varGravity->fval;
+	clients[clNum]->friction = g_varFriction->fval;
 	clients[clNum]->sendFlags |= (SVU_GRAVITY|SVU_FRICTION|SVU_MAXSPEED);
 
 	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);

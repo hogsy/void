@@ -145,10 +145,6 @@ SOURCE=..\Shared\Com_buffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_cvar.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File

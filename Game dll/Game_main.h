@@ -1,8 +1,6 @@
 #ifndef VOID_GAME_MAIN
 #define VOID_GAME_MAIN
 
-#include "I_console.h"
-
 class CBuffer;
 struct I_World;
 
@@ -39,7 +37,7 @@ public:
 
 	//Console Handler
 	void HandleCommand(int cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CStringVal &strVal);
+	bool HandleCVar(const CVar * cvar, const CStringVal &strVal);
 
 
 private:
