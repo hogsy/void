@@ -21,6 +21,7 @@ bsp_node_t			bsp_nodes[MAX_MAP_NODES];
 int					num_bsp_brush_sides=0;
 bsp_brush_side_t	bsp_brush_sides[MAX_MAP_BRUSH_SIDES];
 
+bsp_brush_t			sky_brush;
 
 //=======================================================
 
@@ -398,6 +399,32 @@ void clip_brush(bsp_brush_t *b, int plane)
 
 /*
 ============
+bsp_add_sky_brush
+============
+*/
+void bsp_add_sky_brush(bsp_brush_t *b)
+{
+	bsp_brush_side_t *next;
+	for (bsp_brush_side_t *s = b->sides; s; s=next)
+	{
+		next = s->next;
+
+		if (planes[s->plane].d < 0)
+		{
+			s->next = sky_brush.sides;
+			sky_brush.sides = s;
+		}
+		else
+			free_bsp_brush_side(s);
+	}
+	
+	free_bsp_brush(b);
+	calc_brush_bounds(&sky_brush);
+}
+
+
+/*
+============
 bsp_build_volume
 ============
 */
@@ -500,6 +527,7 @@ void build_bsp_brushes(entity_t *ent)
 
 			ent->root->brushes->sides->plane = map_brush_sides[s].plane;
 			ent->root->brushes->sides->texinfo = map_brush_sides[s].texinfo;
+			ent->root->brushes->sides->flags = map_brush_sides[s].flags;
 			ent->root->brushes->sides->num_verts = 0;
 		}
 	}
@@ -522,6 +550,31 @@ void build_bsp_brushes(entity_t *ent)
 		}
 
 		calc_brush_bounds(tbrush);
+	}
+
+	// separate out all of the sky brushes
+	sky_brush.contents = CONTENTS_SKY | CONTENTS_SOLID;
+	sky_brush.next = NULL;
+	sky_brush.sides = NULL;
+	bsp_brush_t *prev = NULL;
+	bsp_brush_t *next;
+	for (tbrush = ent->root->brushes; tbrush; tbrush = next)
+	{
+		next = tbrush->next;
+
+		if (tbrush->contents & CONTENTS_SKY)
+		{
+			// take it out of the list
+			if (prev)
+				prev->next = next;
+			else
+				ent->root->brushes = next;
+
+			bsp_add_sky_brush(tbrush);
+		}
+		else
+			prev = tbrush;
+
 	}
 }
 

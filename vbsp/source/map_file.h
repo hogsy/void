@@ -31,6 +31,7 @@ typedef struct
 {
 	int 		plane;
 	int			texinfo;
+	int			flags;
 } map_brush_side_t;
 
 

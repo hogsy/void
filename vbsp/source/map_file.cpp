@@ -317,11 +317,10 @@ int parse_brush_side(void)
 
 
 	// find contents of this side
-	int contents = 0;
 	get_token(false);
-	contents |= atoi(token);
+	int contents = atoi(token);
 	get_token(false);
-	contents |= atoi(token) << 16;
+	map_brush_sides[num_map_brush_sides].flags = atoi(token);
 	get_token(false);
 
 

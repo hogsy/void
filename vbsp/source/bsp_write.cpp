@@ -48,6 +48,8 @@ bspf_texdef_t	ftexdefs[MAX_MAP_TEXINFOS];
 int				num_edges;
 bspf_edge_t		fedges[MAX_MAP_EDGES];
 
+extern bsp_brush_t sky_brush;
+
 //=======================================================
 
 /*
@@ -285,6 +287,7 @@ int fill_sides(bsp_brush_side_t *si)
 		fsides[thisside].lightdef = -1;
 		fsides[thisside].plane = s->plane;
 		fsides[thisside].first_vert = num_vert_indices;
+		fsides[thisside].flags = s->flags;
 		fsides[thisside].num_verts  = s->num_verts;
 		fsides[thisside].texdef = get_texdef(&map_texinfos[s->texinfo], s->plane);
 		fsides[thisside].area = side_area(si);
@@ -677,6 +680,11 @@ void write_bsp(entity_t *ents, char *file)
 	fleafs[0].maxs[2] = -99999;
 	fleafs[0].contents= CONTENTS_SOLID;
 	fleafs[0].vis	  = 0;
+
+	// brush 0 is always the sky faces
+	sky_brush.mins[0] = sky_brush.mins[1] = sky_brush.mins[2] = 0;
+	sky_brush.maxs[0] = sky_brush.maxs[1] = sky_brush.maxs[2] = 0;
+	fill_brushes(&sky_brush);
 
 
 	for (entity_t *e=ents; e; e=e->next)
