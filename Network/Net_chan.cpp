@@ -56,7 +56,7 @@ void CNetChan::Reset()
 	
 	m_rate = 0.0;
 
-	m_lastReceived = System::g_fcurTime;
+	m_lastReceived = System::GetCurTime();
 	m_clearTime = 0.0f;
 	
 	m_bOutReliableMsg = 0;
@@ -74,7 +74,7 @@ True if the bandwidth choke isn't active
 */
 bool CNetChan::CanSend() 
 {
-	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
+	if (m_clearTime < System::GetCurTime() + MAX_BACKUP * m_rate)
 		return true;
 	m_state.numChokes ++;
 	return false;
@@ -164,11 +164,11 @@ void CNetChan::PrepareTransmit()
 	//increment outgoing sequence
 	m_state.outMsgId++;
 
-	if (m_clearTime < System::g_fcurTime)
-		m_clearTime = System::g_fcurTime + (m_sendBuffer.GetSize() * m_rate);
+	if (m_clearTime < System::GetCurTime())
+		m_clearTime = System::GetCurTime() + (m_sendBuffer.GetSize() * m_rate);
 	else
 		m_clearTime += (m_sendBuffer.GetSize() * m_rate);
-	m_sendTime = System::g_fcurTime;
+	m_sendTime = System::GetCurTime();
 }
 
 
@@ -190,7 +190,7 @@ bool CNetChan::BeginRead()
 	seqacked &= ~(1<<31);	
 
 	if(seqacked == m_state.outMsgId -1)
-		m_state.latency = System::g_fcurTime - m_sendTime;
+		m_state.latency = System::GetCurTime() - m_sendTime;
 
 	//Message is a duplicate or old, ignore it
 	if (seq <= m_state.inMsgId)
@@ -223,7 +223,7 @@ bool CNetChan::BeginRead()
 
 	//Update stats
 	m_state.goodCount ++;
-	m_lastReceived = System::g_fcurTime;
+	m_lastReceived = System::GetCurTime();
 	return true;
 }
 

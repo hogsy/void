@@ -85,7 +85,7 @@ void CNetClient::ReadPackets()
 		if((m_netState == CL_INUSE) &&
 		   (m_buffer.ReadInt() == -1))
 		{
-			m_pNetChan->m_lastReceived = System::g_fcurTime;
+			m_pNetChan->m_lastReceived = System::GetCurTime();
 			HandleOOBMessage();
 			continue;
 		}
@@ -104,7 +104,7 @@ void CNetClient::SendUpdate()
 		return;
 
 	//Check for timeouts
-	if(m_pNetChan->m_lastReceived + NET_TIMEOUT_INTERVAL < System::g_fcurTime)
+	if((m_pNetChan->m_lastReceived + NET_TIMEOUT_INTERVAL) < System::GetCurTime())
 	{
 		m_pClient->Print("CL: Connection timed out\n");
 		Disconnect(false);
@@ -167,7 +167,7 @@ void CNetClient::SendUpdate()
 		//Resent OOB queries
 		else if((m_netState == CL_INUSE) && 
 				(m_szLastOOBMsg != 0)  &&
-				(m_fNextSendTime < System::g_fcurTime))
+				(m_fNextSendTime < System::GetCurTime()))
 		{
 
 			if(m_szLastOOBMsg == C2S_GETCHALLENGE)
@@ -327,7 +327,7 @@ void CNetClient::SendConnectReq()
 	m_pSock->Send(m_buffer);
 
 	m_szLastOOBMsg = C2S_CONNECT;
-	m_fNextSendTime = System::g_fcurTime + 2.0f;
+	m_fNextSendTime = System::GetCurTime() + 2.0f;
 
 	m_pClient->Print("CL: Attempting to connect to %s\n", m_szServerAddr);
 }
@@ -358,7 +358,7 @@ void CNetClient::SendChallengeReq()
 	m_pSock->SendTo(m_buffer,netAddr);
 
 	m_szLastOOBMsg = C2S_GETCHALLENGE;
-	m_fNextSendTime = System::g_fcurTime + 2.0f;
+	m_fNextSendTime = System::GetCurTime() + 2.0f;
 
 	m_pClient->Print("CL: Requesting Challenge from %s\n", m_szServerAddr);
 }
@@ -408,7 +408,7 @@ void CNetClient::ConnectTo(const char * ipaddr)
 		m_bLocalServer = true;
 	}
 
-	m_pNetChan->m_lastReceived = System::g_fcurTime;
+	m_pNetChan->m_lastReceived = System::GetCurTime();
 
 	//Now initiate a connection request
 	m_netState = CL_INUSE;

@@ -267,7 +267,7 @@ void CNetServer::HandleChallengeReq()
 		i = oldestchallenge;
 		m_challenges[i].challenge = (rand() << 16) ^ rand();
 		m_challenges[i].addr = m_pSock->GetSource();
-		m_challenges[i].time = System::g_fcurTime;
+		m_challenges[i].time = System::GetCurTime();
 	}
 
 	//Send response packet
@@ -769,7 +769,7 @@ void CNetServer::SendPackets()
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
 			//Check timeout
-			if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::g_fcurTime)
+			if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::GetCurTime())
 			{
 				SendDisconnect(i,CLIENT_TIMEOUT);
 				continue;

@@ -159,14 +159,4 @@ struct NetChanWriter
 	virtual const NetChanState & ChanGetState(int chanId) const=0;
 };
 
-/*
-======================================
-The Network library needs access to
-game/frame time variables
-======================================
-*/
-namespace System
-{	extern float	g_fcurTime;			//Current Timer
-}
-
 #endif
