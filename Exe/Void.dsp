@@ -483,6 +483,10 @@ SOURCE=..\Shared\Cl_base.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Game_anims.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Game_base.h
 # End Source File
 # Begin Source File
@@ -501,10 +505,6 @@ SOURCE=..\Shared\I_game.h
 # Begin Source File
 
 SOURCE=.\todo
-# End Source File
-# Begin Source File
-
-SOURCE=.\worklog
 # End Source File
 # End Target
 # End Project
