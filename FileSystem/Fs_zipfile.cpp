@@ -312,9 +312,6 @@ typedef struct ZIP_end_central_dir_record_s {
 
 
 
-
-
-
 #define FILE_ONDISK  0xfffe
 
 static const char hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
@@ -323,6 +320,65 @@ static const char hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
 static const char hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
 
 /*--------------------------------------------------------------------------*/
+
+/*
+short   ShortSwap (short l)
+{
+	byte    b1,b2;
+
+	b1 = l&255;
+	b2 = (l>>8)&255;
+
+	return (b1<<8) + b2;
+}
+
+short	ShortNoSwap (short l)
+{
+	return l;
+}
+
+int    LongSwap (int l)
+{
+	byte    b1,b2,b3,b4;
+
+	b1 = l&255;
+	b2 = (l>>8)&255;
+	b3 = (l>>16)&255;
+	b4 = (l>>24)&255;
+
+	return ((int)b1<<24) + ((int)b2<<16) + ((int)b3<<8) + b4;
+}
+
+int	LongNoSwap (int l)
+{
+	return l;
+}
+
+float FloatSwap (float f)
+{
+	union
+	{
+		float	f;
+		byte	b[4];
+	} dat1, dat2;
+	
+	
+	dat1.f = f;
+	dat2.b[0] = dat1.b[3];
+	dat2.b[1] = dat1.b[2];
+	dat2.b[2] = dat1.b[1];
+	dat2.b[3] = dat1.b[0];
+	return dat2.f;
+}
+
+float FloatNoSwap (float f)
+{
+	return f;
+}
+*/
+
+
+
 
 /* *INDENT-OFF* */
 
@@ -341,7 +397,9 @@ static gboolean read_cdfh(ZIP_central_directory_file_header * cdfh, file_t infil
 {
 	byte buff[ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE];
 
-	if (FileRead(buff, ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE, infile) < ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE) return (gfalse);
+	if (FileRead(buff, ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE, infile) < 
+		ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE) 
+		return (gfalse);
 
 	cdfh->version_made_by[0]			= buff[C_VERSION_MADE_BY_0];
 	cdfh->version_made_by[1]			= buff[C_VERSION_MADE_BY_1];
@@ -369,7 +427,8 @@ static gboolean read_lfh(ZIP_local_file_header * lfh, file_t infile)
 {
 	byte buff[ZIP_LOCAL_FILE_HEADER_SIZE];
 
-	if (FileRead(buff, ZIP_LOCAL_FILE_HEADER_SIZE, infile) < ZIP_LOCAL_FILE_HEADER_SIZE) return (gfalse);
+	if (FileRead(buff, ZIP_LOCAL_FILE_HEADER_SIZE, infile) < 
+		ZIP_LOCAL_FILE_HEADER_SIZE) return (gfalse);
 
 	lfh->version_needed_to_extract[0]	= buff[L_VERSION_NEEDED_TO_EXTRACT_0];
 	lfh->version_needed_to_extract[1]	= buff[L_VERSION_NEEDED_TO_EXTRACT_1];
@@ -450,12 +509,18 @@ static int Archive_read_zip_entries( archive_t * ar )
 	archive_entry_t						*curentry;
 
 	cur_offs = 0;
-	while ((FileRead(buff, sizeof(hdr_local), ar->file) >= sizeof(hdr_local)) && (!memcmp(buff, hdr_local, sizeof(hdr_local))) && (read_lfh(&lfh, ar->file))) {
+	while ((FileRead(buff, sizeof(hdr_local), ar->file) >= sizeof(hdr_local)) && 
+			(!memcmp(buff, hdr_local, sizeof(hdr_local))) && (read_lfh(&lfh, ar->file))) 
+	{
 		new_offs = cur_offs + sizeof(hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE + lfh.filename_length + lfh.extra_field_length + lfh.csize;
-		if ((lfh.filename_length > sizeof(buff)) || (FileRead(buff, lfh.filename_length, ar->file) < lfh.filename_length)) return (0);	/* Broken zipfile? */
+		if ((lfh.filename_length > sizeof(buff)) || 
+			(FileRead(buff, lfh.filename_length, ar->file) < lfh.filename_length)) 
+			return (0);	/* Broken zipfile? */
+		
 		buff[lfh.filename_length] = 0;
 
-		if ((buff[lfh.filename_length - 1] != '/') && (buff[lfh.filename_length - 1] != PATH_SEPARATOR)) {
+		if ((buff[lfh.filename_length - 1] != '/') && (buff[lfh.filename_length - 1] != PATH_SEPARATOR)) 
+		{
 			/* partially convert lfh to cdfh */
 			zeromem(&cdfh, sizeof(cdfh));
 			cdfh.version_needed_to_extract[0] = lfh.version_needed_to_extract[0];
@@ -478,7 +543,8 @@ static int Archive_read_zip_entries( archive_t * ar )
 			return( 0 );	/* broken zipfile */
 	}
 
-	if( !cur_offs ) {	/* no headers found */
+	if( !cur_offs ) 
+	{	/* no headers found */
 		/* treat this file as a plain uncompressed file */
 
 		zeromem(&cdfh, sizeof(cdfh));
@@ -494,7 +560,6 @@ static int Archive_read_zip_entries( archive_t * ar )
 		cdfh.relative_offset_local_header = 0;
 		Archive_insert_entry( ar, buff, &cdfh );
 	}
-
 	return (1);
 }
 
@@ -520,54 +585,76 @@ static gboolean Archive_read_zip_directory(archive_t * ar)
 	if( (long)cur_offs == -1 )
 		return( gfalse );
 
-	if( cur_offs >= (65535 + ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral)) ) {
+	if( cur_offs >= (65535 + ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral)) ) 
+	{
 		min_offs = cur_offs - (65535 + ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral));
-	} else {
+	}
+	else 
+	{
 		min_offs = 0;
 	}
 
 	/* Try to find ZIPfile central directory structure */
 	/* For this we have to search from end of file the signature "PK" */
 	/* after which follows a two-byte END_CENTRAL_SIG */
-	while (cur_offs > min_offs) {
+	while (cur_offs > min_offs) 
+	{
 
-		if (cur_offs >= sizeof(buff) - step) {
+		if (cur_offs >= sizeof(buff) - step) 
+		{
 			cur_offs -= sizeof(buff) - step;
-		} else {
+		}
+		else 
+		{
 			cur_offs = 0;
 		}
 
 		FileSeek( ar->file, cur_offs, FS_BEGIN );
 		search_pos = FileRead( buff, sizeof(buff), ar->file );
 
-		if( search_pos >= step ) {
+		if( search_pos >= step ) 
+		{
 			for( search_ptr = &buff[search_pos - step]; search_ptr > buff; search_ptr--)
-				if ((*search_ptr == 'P') && (!memcmp(search_ptr, hdr_endcentral, sizeof(hdr_endcentral)))) {
+				if ((*search_ptr == 'P') && (!memcmp(search_ptr, hdr_endcentral, sizeof(hdr_endcentral)))) 
+				{
 					/* central directory structure found */
 					central_directory_offset = cur_offs + (unsigned long) search_ptr - (unsigned long) buff;
 					load_ecdr( &ecdr, &search_ptr[sizeof(hdr_endcentral)] );
 					if (FS_FAILED(FileSeek(ar->file, central_directory_offset + sizeof(hdr_endcentral) + ZIP_END_CENTRAL_DIR_RECORD_SIZE, FS_BEGIN))
 					    || FS_FAILED(FileSeek(ar->file, ecdr.zipfile_comment_length, FS_CURRENT))
-					    || FS_FAILED(FileSeek(ar->file, ecdr.offset_start_central_directory, FS_BEGIN))) goto rebuild_cdr;	/* broken central directory */
+					    || FS_FAILED(FileSeek(ar->file, ecdr.offset_start_central_directory, FS_BEGIN))) 
+							goto rebuild_cdr;	/* broken central directory */
 
 					/* now read central directory structure */
-					for (;;) {
-						if( (FileRead(buff, sizeof(hdr_central), ar->file) < sizeof(hdr_central)) || (memcmp(buff, hdr_central, sizeof(hdr_central))) ) {
-							if( ar->first ) {
+					for (;;) 
+					{
+						if( (FileRead(buff, sizeof(hdr_central), ar->file) < sizeof(hdr_central)) || (memcmp(buff, hdr_central, sizeof(hdr_central))) ) 
+						{
+							if( ar->first ) 
+							{
 								return( gtrue );		/* finished reading central directory */
-							} else {
+							}
+							else 
+							{
 								goto rebuild_cdr;	/* broken central directory */
 							}
 						}
-						if( (!read_cdfh(&cdfh, ar->file)) || (cdfh.filename_length > sizeof(buff)) || (FileRead(buff, cdfh.filename_length, ar->file) < cdfh.filename_length) ) {
+						
+						if( (!read_cdfh(&cdfh, ar->file)) || 
+							(cdfh.filename_length > sizeof(buff)) || 
+							(FileRead(buff, cdfh.filename_length, ar->file) < cdfh.filename_length) ) 
+						{
 							return (gfalse);	/* broken zipfile? */
 						}
 						buff[cdfh.filename_length] = 0;
 
-						if( (buff[cdfh.filename_length - 1] != '/') && (buff[cdfh.filename_length - 1] != PATH_SEPARATOR) ) {
+						if( (buff[cdfh.filename_length - 1] != '/') && (buff[cdfh.filename_length - 1] != PATH_SEPARATOR) ) 
+						{
 							curentry = Archive_insert_entry( ar, (char *)buff, &cdfh );
 						}
-						if( FS_FAILED(FileSeek(ar->file, cdfh.extra_field_length + cdfh.file_comment_length, FS_CURRENT)) ) {
+						
+						if( FS_FAILED(FileSeek(ar->file, cdfh.extra_field_length + cdfh.file_comment_length, FS_CURRENT)) ) 
+						{
 							return( gfalse );	/* broken zipfile? */
 						}
 					}

@@ -92,6 +92,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE="..\..\Source\zlib113\contrib\minizip\Copy of unzip.c"
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_filebuf.cpp
 # End Source File
 # Begin Source File
