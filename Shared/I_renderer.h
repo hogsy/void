@@ -85,7 +85,7 @@ struct I_Renderer
 	virtual void ChangeDispSettings(uint width, uint height, uint bpp, 
 									bool fullscreen)=0;
 	//World
-	virtual bool LoadWorld(CWorld *level, int reload) =0;
+	virtual bool LoadWorld(CWorld *level) =0;
 	virtual bool UnloadWorld() = 0;
 };
 

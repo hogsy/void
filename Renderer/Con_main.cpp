@@ -52,7 +52,6 @@ CRConsole::~CRConsole()
 		if(m_lines[c])
 			delete m_lines[c];
 	}
-	DestroyConObjects();
 }
 
 /*

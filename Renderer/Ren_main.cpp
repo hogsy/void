@@ -470,15 +470,3 @@ void r_drawframe(const CCamera * pcamera)
 }
 
 
-/*
-======================================
-Just draw the console
-======================================
-*/
-
-void r_drawcons()
-{
-	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
-//	g_prCons->Draw();
-//	g_pRast->FrameEnd();
-}

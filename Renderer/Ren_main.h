@@ -3,10 +3,9 @@
 
 #define MAX_PORTAL_DEPTH 100
 
-void r_drawframe(const CCamera * pcamera);
-
-void r_drawcons();
-void r_shutdown();
 void r_init();
+void r_shutdown();
+
+void r_drawframe(const CCamera * pcamera);
 
 #endif

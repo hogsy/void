@@ -46,7 +46,6 @@ public:
 private:
 
 	void RegisterConObjects();
-	void DestroyConObjects();
 
 	//struct to store a line in the console
 	struct Conline_t

@@ -301,12 +301,4 @@ void CRConsole::RegisterConObjects()
 	I_Console::GetConsole()->RegisterCVar(&g_varGLExtensions);
 }
 
-/*
-==========================================
-Called from console Destructor
-==========================================
-*/
-void CRConsole::DestroyConObjects()
-{
-}
 

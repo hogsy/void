@@ -236,7 +236,7 @@ void CRenExp::Draw(const CCamera * camera)
 	{
 		r_drawframe(camera);
 		if (world)
-			m_pHud->Printf(0, 160, 0, "tris: %d", g_pRast->GetNumTris());
+			m_pHud->Printf(0, 160, 0, "Tris: %d", g_pRast->GetNumTris());
 		m_pHud->DrawHud();
 	}
 	m_pRConsole->Draw();
@@ -285,7 +285,7 @@ void CRenExp::Resize()
 Load a World
 ==========================================
 */
-bool CRenExp::LoadWorld(CWorld *level, int reload)
+bool CRenExp::LoadWorld(CWorld *level)
 {
 	g_pRast->SetFocus();
 
