@@ -282,8 +282,7 @@ Draw the current frame
 void r_drawframe(const CCamera * pcamera)
 {
 	camera = pcamera;
-
-	AngleToVector (&camera->angles, &forward, &right, &up);
+	camera->angles.AngleToVector(&forward, &right, &up);
 	
 	fullblend  =  &camera->blend;
 
@@ -301,16 +300,16 @@ void r_drawframe(const CCamera * pcamera)
 
 	g_pRast->MatrixReset();
 
-	g_pRast->MatrixRotateZ( camera->angles.ROLL  * 180/PI);
+	// switch to +y = north, +z = up coordinate system
+	g_pRast->MatrixRotateX(-90);
+	g_pRast->MatrixRotateY(-camera->angles.ROLL * 180/PI);
 	g_pRast->MatrixRotateX(-camera->angles.PITCH * 180/PI);
-	g_pRast->MatrixRotateY( camera->angles.YAW   * 180/PI);
-
-	g_pRast->MatrixTranslate(camera->origin);
-
+	g_pRast->MatrixRotateZ(-(camera->angles.YAW - PI/2)  * 180/PI);
+	g_pRast->MatrixTranslate(-camera->origin.x, -camera->origin.y, -camera->origin.z);
 
 	r_draw_world();
 
-	// display any messages
+	// display any messageseee
 //	g_pClient->DrawHud();
 
 // draw the console if we need to

@@ -111,13 +111,13 @@ void CRasterizer::PolyEnd(void)
 		for (int i=0; i<mNumElements; i++)
 		{
 			mTexCoords[i][0] =	 mVerts[i].pos[0] * mTexDef->vecs[0][0] +
-								-mVerts[i].pos[2] * mTexDef->vecs[0][1] +
-								 mVerts[i].pos[1] * mTexDef->vecs[0][2] +
+								 mVerts[i].pos[1] * mTexDef->vecs[0][1] +
+								 mVerts[i].pos[2] * mTexDef->vecs[0][2] +
 								 mTexDef->vecs[0][3];
 
 			mTexCoords[i][1] =	 mVerts[i].pos[0] * mTexDef->vecs[1][0] +
-								-mVerts[i].pos[2] * mTexDef->vecs[1][1] +
-								 mVerts[i].pos[1] * mTexDef->vecs[1][2] +
+								 mVerts[i].pos[1] * mTexDef->vecs[1][1] +
+								 mVerts[i].pos[2] * mTexDef->vecs[1][2] +
 								 mTexDef->vecs[1][3];
 		}
 	}
@@ -127,13 +127,13 @@ void CRasterizer::PolyEnd(void)
 		for (int i=0; i<mNumElements; i++)
 		{
 			mLightCoords[i][0] =	 mVerts[i].pos[0] * mLightDef->vecs[0][0] +
-									-mVerts[i].pos[2] * mLightDef->vecs[0][1] +
-									 mVerts[i].pos[1] * mLightDef->vecs[0][2] +
+									 mVerts[i].pos[1] * mLightDef->vecs[0][1] +
+									 mVerts[i].pos[2] * mLightDef->vecs[0][2] +
 									 mLightDef->vecs[0][3];
 
 			mLightCoords[i][1] =	 mVerts[i].pos[0] * mLightDef->vecs[1][0] +
-									-mVerts[i].pos[2] * mLightDef->vecs[1][1] +
-									 mVerts[i].pos[1] * mLightDef->vecs[1][2] +
+									 mVerts[i].pos[1] * mLightDef->vecs[1][1] +
+									 mVerts[i].pos[2] * mLightDef->vecs[1][2] +
 									 mLightDef->vecs[1][3];
 		}
 	}
@@ -227,12 +227,12 @@ void CRasterizer::DrawLayer(int l)
 		for (i=0; i<mNumElements; i++)
 		{
 			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[0].x +
-								mVerts[i].pos[1] * layer->mTexVector[0].z +
-								mVerts[i].pos[2] *-layer->mTexVector[0].y;
+								mVerts[i].pos[1] * layer->mTexVector[0].y +
+								mVerts[i].pos[2] * layer->mTexVector[0].z;
 
 			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[1].x +
-								mVerts[i].pos[1] * layer->mTexVector[1].z +
-								mVerts[i].pos[2] *-layer->mTexVector[1].y;
+								mVerts[i].pos[1] * layer->mTexVector[1].y +
+								mVerts[i].pos[2] * layer->mTexVector[1].z;
 		}
 		break;
 	}
@@ -269,8 +269,8 @@ void CRasterizer::DrawLayer(int l)
 void CRasterizer::PolyVertexf(vector_t &vert)
 {
 	mVerts[mNumElements].pos[0] = vert.x;
-	mVerts[mNumElements].pos[1] = vert.z;
-	mVerts[mNumElements].pos[2] =-vert.y;
+	mVerts[mNumElements].pos[1] = vert.y;
+	mVerts[mNumElements].pos[2] = vert.z;
 	mVerts[mNumElements].color = mColor;
 	mNumElements++;
 };

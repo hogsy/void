@@ -139,7 +139,7 @@ public:
 	virtual void MatrixRotateX(float degrees)=0;
 	virtual void MatrixRotateY(float degrees)=0;
 	virtual void MatrixRotateZ(float degrees)=0;
-	virtual void MatrixTranslate(vector_t &dir)=0;
+	virtual void MatrixTranslate(float x, float y, float z)=0;
 	virtual void MatrixScale(vector_t &factors)=0;
 	virtual void MatrixPush(void)=0;
 	virtual void MatrixPop(void)=0;

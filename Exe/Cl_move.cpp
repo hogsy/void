@@ -56,11 +56,11 @@ Rotate camera in the appropriate dir
 ================================================
 */
 void CGameClient::RotateRight(const float &val)
-{	m_vecDesiredAngles.y += val;
+{	m_vecDesiredAngles.y -= val;
 }
 
 void CGameClient:: RotateLeft(const float &val)
-{	m_vecDesiredAngles.y -= val;
+{	m_vecDesiredAngles.y += val;
 }
 
 void CGameClient::RotateUp(const float &val)

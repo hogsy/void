@@ -617,10 +617,10 @@ void CRastD3DX::MatrixRotateZ(float degrees)
 }
 
 
-void CRastD3DX::MatrixTranslate(vector_t &dir)
+void CRastD3DX::MatrixTranslate(float x, float y, float z)
 {
 	D3DXMATRIX mat;
-	D3DXMatrixTranslation(&mat, -dir.x, -dir.z, dir.y);
+	D3DXMatrixTranslation(&mat, x, y, z);
 	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
 	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }

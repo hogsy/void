@@ -239,7 +239,7 @@ void CModelManager::Purge(void)
 	}
 
 	drawmodel_t *next, *walk;
-	vector_t trans;
+//	vector_t trans;
 
 	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
@@ -250,14 +250,14 @@ void CModelManager::Purge(void)
 		next = walk->next;
 		g_pRast->MatrixPush();
 
-		VectorInv2(walk->state->origin, trans);
-		g_pRast->MatrixTranslate(trans);
+		// add this model transform to the stack
+//		VectorInv2(walk->state->origin, trans);
+		g_pRast->MatrixTranslate(walk->state->origin.x, walk->state->origin.y, walk->state->origin.z);
 
-//		g_pRast->MatrixRotateY(-walk->state->angles.YAW   * 180/PI);
-		g_pRast->MatrixRotateY(walk->state->angles.YAW   * 180/PI);
-		g_pRast->MatrixRotateX( walk->state->angles.PITCH * 180/PI);
-//		g_pRast->MatrixRotateZ(-walk->state->angles.ROLL  * 180/PI);
-		g_pRast->MatrixRotateZ(walk->state->angles.ROLL  * 180/PI);
+		g_pRast->MatrixRotateZ(walk->state->angles.YAW   * 180/PI);
+		g_pRast->MatrixRotateY(-walk->state->angles.PITCH  * 180/PI);
+		g_pRast->MatrixRotateX(walk->state->angles.ROLL * 180/PI);
+
 
 		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
 																   walk->state->frameNum,

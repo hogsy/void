@@ -153,7 +153,7 @@ void CRastNone::MatrixRotateZ(float degrees)
 }
 
 
-void CRastNone::MatrixTranslate(vector_t &dir)
+void CRastNone::MatrixTranslate(float x, float y, float z)
 {
 }
 

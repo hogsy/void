@@ -26,18 +26,19 @@ float vector_t::Normalize(vector_t &out)
 	return length;
 }
 
+// Credit to John Carmack for this
 void  vector_t::AngleToVector(vector_t * forward, vector_t * right, vector_t *up)
 {
 	float			angle;
 	static float	sr, sp, sy, cr, cp, cy;
-	
-	angle = -YAW + PI/2;
+
+	angle = YAW;
 	sy = (float)sin(angle);
 	cy = (float)cos(angle);
 	angle = -PITCH;
 	sp = (float)sin(angle);
 	cp = (float)cos(angle);
-	angle = -ROLL;
+	angle = ROLL;
 	sr = (float)sin(angle);
 	cr = (float)cos(angle);
 
@@ -204,7 +205,7 @@ void VectorScale (const vector_t *in, float scale, vector_t *out)
 	out->z = in->z*scale;
 }
 
-
+/*
 void AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, vector_t *up)
 {
 
@@ -241,7 +242,7 @@ void AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, 
 		up->z = cr*cp;
 	}
 }
-
+*/
 
 
 // doesn't keep the length the same! - just projects it onto the plane

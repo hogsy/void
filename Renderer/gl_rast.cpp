@@ -823,9 +823,9 @@ void COpenGLRast::MatrixRotateZ(float degrees)
 }
 
 
-void COpenGLRast::MatrixTranslate(vector_t &dir)
+void COpenGLRast::MatrixTranslate(float x, float y, float z)
 {
-	glTranslatef(-dir.x, -dir.z, dir.y);
+	glTranslatef(x, y, z);
 }
 
 

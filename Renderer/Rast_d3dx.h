@@ -42,7 +42,7 @@ public:
 	void MatrixRotateX(float degrees);
 	void MatrixRotateY(float degrees);
 	void MatrixRotateZ(float degrees);
-	void MatrixTranslate(vector_t &dir);
+	void MatrixTranslate(float x, float y, float z);
 	void MatrixScale(vector_t &factors);
 	void MatrixPush(void);
 	void MatrixPop(void);
