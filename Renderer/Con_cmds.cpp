@@ -101,7 +101,7 @@ void ScreenShot(const char *name, EImageFileFormat type)
 Handle Global Commands
 ==========================================
 */
-void CRConsole::HandleCommand(HCMD cmdId, const CParms &parms)
+void CRConsole::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
@@ -142,7 +142,7 @@ switch fullbright (light) rendering
 bool CVar_FullBright(const CVar * var, int val)
 {
 	//There was no second parm 
-	if(val == CParms::INVALID_VALUE)
+	if(val == COM_INVALID_VALUE)
 		return false;
 
 	if (val)
@@ -159,7 +159,7 @@ toggle multitexture/multipass rendering
 */
 bool CVar_MultiTexture(const CVar * var, int val)
 {
-	if(val == CParms::INVALID_VALUE)
+	if(val == COM_INVALID_VALUE)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ComPrintf("Your video card does not support ARB multitexturing.\n");
@@ -175,7 +175,7 @@ switch fullbright (light) rendering
 */
 bool CVar_Fov(const CVar * var, int val)
 {
-	if(val == CParms::INVALID_VALUE)
+	if(val == COM_INVALID_VALUE)
 		return false;
 
 	if (val>=10 && val<= 170)
@@ -193,7 +193,7 @@ toggle vid synch
 */
 bool CVar_VidSynch(const CVar * var, int val)
 {
-	if(val == CParms::INVALID_VALUE)
+	if(val == COM_INVALID_VALUE)
 		return false;
 
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
@@ -216,7 +216,7 @@ bool CVar_VidSynch(const CVar * var, int val)
 */
 bool CVar_32BitTextures(const CVar * var, int val)
 {
-	if(val == CParms::INVALID_VALUE) 
+	if(val == COM_INVALID_VALUE) 
 		return false;
 
 	ComPrintf("Change will take effect on next level load.\n");
