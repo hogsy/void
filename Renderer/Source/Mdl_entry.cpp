@@ -402,22 +402,18 @@ void CModelCacheEntry::LoadFail()
 Draw
 =======================================
 */
-void CModelCacheEntry::Draw(int skin, float frame)
+void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 {
 	g_pRast->TextureSet(skin_bin, skin);
 
-	// make sure frame is in our range
-	frame = fmodf(frame, num_frames);
+	if (frac>=1) fframe = cframe;
+	if (frac<=0) cframe = fframe;
 
 	vector_t v;
 
-	int cframe, fframe;	// frame ceiling and floor
-	cframe = (int)ceilf(frame);
-	fframe = (int)floorf(frame);
-
 	float w1, w2;	// vertex weights
-	w1 = cframe - frame;
-	w2 = frame - fframe;
+	w1 = frac;
+	w2 = 1 - frac;
 
 
 	int *ptr = (int*)cmds;
@@ -443,7 +439,7 @@ void CModelCacheEntry::Draw(int skin, float frame)
 
 
 			// if we're exactly on a frame, dont do any interpolation
-			if (frame == fframe)
+			if (cframe == fframe)
 			{
 				v.x = frames[fframe][cmd->vertex_index].x;
 				v.y = frames[fframe][cmd->vertex_index].y;

@@ -49,13 +49,7 @@ private:
 	// struct to hold a list of models to be drawn
 	typedef struct drawmodel_s
 	{
-		vector_t	origin;
-		vector_t	angles;
-		CacheType	cache;
-		hMdl		index;
-		int			skin;
-		float		frame;
-
+		const R_EntState *state;
 		drawmodel_s *next;
 	} drawmodel_t;
 

@@ -20,7 +20,7 @@ public:
 	~CModelCacheEntry();
 
 
-	void Draw(int skin, float frame);
+	void Draw(int skin, int fframe, int cframe, float frac);
 	bool IsFile(const char *file) { return (strcmp(file, modelfile)==0); }
 
 	void LoadSkins(void);

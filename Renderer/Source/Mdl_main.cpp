@@ -108,13 +108,7 @@ void CModelManager::DrawModel(const R_EntState &state)
 {
 	// add model to list to be drawn
 	drawmodel_t *ndm = drawmodelGet();
-	ndm->angles	= state.angle;
-	ndm->cache	= state.cache;
-	ndm->frame	= state.frame;
-	ndm->index	= state.index;
-	ndm->origin = state.origin;
-	ndm->skin	= state.skinnum;
-
+	ndm->state = &state;
 	ndm->next	= drawmodels;
 	drawmodels	= ndm;
 }
@@ -206,13 +200,14 @@ void CModelManager::Purge(void)
 		next = walk->next;
 		g_pRast->MatrixPush();
 
-		VectorInv2(walk->origin, trans);
+		VectorInv2(walk->state->origin, trans);
 		g_pRast->MatrixTranslate(trans);
-		g_pRast->MatrixRotateY(-walk->angles.YAW   * 180/PI);
-		g_pRast->MatrixRotateX( walk->angles.PITCH * 180/PI);
-		g_pRast->MatrixRotateZ(-walk->angles.ROLL  * 180/PI);
+		g_pRast->MatrixRotateY(-walk->state->angle.YAW   * 180/PI);
+		g_pRast->MatrixRotateX( walk->state->angle.PITCH * 180/PI);
+		g_pRast->MatrixRotateZ(-walk->state->angle.ROLL  * 180/PI);
 
-		caches[walk->cache][walk->index]->Draw(walk->skin, walk->frame);
+		caches[walk->state->cache][walk->state->index]->Draw(walk->state->skinnum, walk->state->frame,
+					walk->state->nextframe, walk->state->frac);
 
 		g_pRast->MatrixPop();
 
