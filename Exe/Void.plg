@@ -1,0 +1,120 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: Void - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP30.tmp" with contents
+[
+/nologo /MDd /W3 /WX /Gm /GX /ZI /Od /I "..\Shared" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_VOID_EXE" /Fp"..\Debug\Exe/Void.pch" /YX /Fo"..\Debug\Exe/" /Fd"..\Debug\Exe/" /FD /c 
+"E:\Void\Exe\Snd_buf.cpp"
+"E:\Void\Exe\Snd_chan.cpp"
+"E:\Void\Exe\Snd_main.cpp"
+"E:\Void\Exe\Snd_wave.cpp"
+"E:\Void\Exe\Sys_cons.cpp"
+"E:\Void\Exe\Sys_main.cpp"
+"E:\Void\Exe\Sys_time.cpp"
+"E:\Void\Exe\Sys_win.cpp"
+"E:\Void\Shared\Com_buffer.cpp"
+"E:\Void\Shared\Com_hunk.cpp"
+"E:\Void\Shared\Com_mem.cpp"
+"E:\Void\Shared\Com_parms.cpp"
+"E:\Void\Shared\Com_util.cpp"
+"E:\Void\Shared\Com_vector.cpp"
+"E:\Void\Shared\Com_world.cpp"
+"E:\Void\Exe\Cl_cmds.cpp"
+"E:\Void\Exe\Cl_main.cpp"
+"E:\Void\Exe\Cl_move.cpp"
+"E:\Void\Exe\Cl_net.cpp"
+"E:\Void\Exe\Mus_cd.cpp"
+"E:\Void\Exe\Mus_dm.cpp"
+"E:\Void\Exe\Mus_main.cpp"
+"E:\Void\Exe\Sv_main.cpp"
+"E:\Void\Exe\Sv_net.cpp"
+"E:\Void\Exe\In_kb.cpp"
+"E:\Void\Exe\In_main.cpp"
+"E:\Void\Exe\In_mouse.cpp"
+"E:\Void\Exe\In_state.cpp"
+"E:\Void\Shared\Game_move.cpp"
+]
+Creating command line "cl.exe @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP30.tmp" 
+Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP31.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib /nologo /subsystem:windows /incremental:yes /pdb:"..\Debug\Void.pdb" /debug /machine:I386 /out:"..\Void.exe" 
+\Void\Debug\Exe\Snd_buf.obj
+\Void\Debug\Exe\Snd_chan.obj
+\Void\Debug\Exe\Snd_main.obj
+\Void\Debug\Exe\Snd_wave.obj
+\Void\Debug\Exe\Sys_cons.obj
+\Void\Debug\Exe\Sys_main.obj
+\Void\Debug\Exe\Sys_time.obj
+\Void\Debug\Exe\Sys_win.obj
+\Void\Debug\Exe\Com_buffer.obj
+\Void\Debug\Exe\Com_hunk.obj
+\Void\Debug\Exe\Com_mem.obj
+\Void\Debug\Exe\Com_parms.obj
+\Void\Debug\Exe\Com_util.obj
+\Void\Debug\Exe\Com_vector.obj
+\Void\Debug\Exe\Com_world.obj
+\Void\Debug\Exe\Cl_cmds.obj
+\Void\Debug\Exe\Cl_main.obj
+\Void\Debug\Exe\Cl_move.obj
+\Void\Debug\Exe\Cl_net.obj
+\Void\Debug\Exe\Mus_cd.obj
+\Void\Debug\Exe\Mus_dm.obj
+\Void\Debug\Exe\Mus_main.obj
+\Void\Debug\Exe\Sv_main.obj
+\Void\Debug\Exe\Sv_net.obj
+\Void\Debug\Exe\In_kb.obj
+\Void\Debug\Exe\In_main.obj
+\Void\Debug\Exe\In_mouse.obj
+\Void\Debug\Exe\In_state.obj
+\Void\Debug\Exe\Game_move.obj
+\Void\Debug\Exe\resources.res
+\Void\Debug\vnet.lib
+\Void\Debug\vrender.lib
+\Void\Debug\vfs.lib
+]
+Creating command line "link.exe @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP31.tmp"
+<h3>Output Window</h3>
+Compiling...
+Snd_buf.cpp
+Snd_chan.cpp
+Snd_main.cpp
+Snd_wave.cpp
+Sys_cons.cpp
+Sys_main.cpp
+Sys_time.cpp
+Sys_win.cpp
+Com_buffer.cpp
+Com_hunk.cpp
+Com_mem.cpp
+Com_parms.cpp
+Com_util.cpp
+Com_vector.cpp
+Com_world.cpp
+Cl_cmds.cpp
+Cl_main.cpp
+Cl_move.cpp
+Cl_net.cpp
+Mus_cd.cpp
+Mus_dm.cpp
+Mus_main.cpp
+Sv_main.cpp
+Sv_net.cpp
+In_kb.cpp
+In_main.cpp
+In_mouse.cpp
+In_state.cpp
+Game_move.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+Void.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

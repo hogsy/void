@@ -109,6 +109,7 @@ private:
 		bool  bStatic;
 		VoidSound::CSoundChannel * channel;
 	};
+	
 	SndSource m_sndSources[MAX_SOUNDSOURCES];
 
 	void PlaySoundSource(SndSource &source);

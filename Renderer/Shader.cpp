@@ -45,7 +45,7 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 
 
 		// only 1 texture for this layer
-		if (stricmp(token, "map") == 0)
+		if (_stricmp(token, "map") == 0)
 		{
 			mNumTextures = 1;
 			mTextureNames = new texname_t[1];
@@ -55,7 +55,7 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 			if (token[0] == '\0')
 				Error("error parsing shader file!!\n");
 
-			if (stricmp(token, "$lightmap") == 0)
+			if (_stricmp(token, "$lightmap") == 0)
 				mTextureNames[0].index = -1;
 			else
 			{
@@ -74,7 +74,7 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		}
 
 		// animation
-		else if (stricmp(token, "animmap") == 0)
+		else if (_stricmp(token, "animmap") == 0)
 		{
 			mNumTextures = 0;
 			mTextureNames = new texname_t[8];
@@ -85,7 +85,7 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 
 			for (layer->GetToken(token, false); token[0]!= '\0'; layer->GetToken(token, false))
 			{
-				if (stricmp(token, "$lightmap") == 0)
+				if (_stricmp(token, "$lightmap") == 0)
 					mTextureNames[mNumTextures].index = -1;
 				else
 				{
@@ -106,24 +106,24 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		}
 
 		// blend funcs
-		else if (stricmp(token, "blendfunc") == 0)
+		else if (_stricmp(token, "blendfunc") == 0)
 		{
 			mDepthWrite = false;	// blended layers dont write
 
 			layer->GetToken(token, false);
-			if (stricmp(token, "add") == 0)
+			if (_stricmp(token, "add") == 0)
 			{
 				mSrcBlend = VRAST_SRC_BLEND_ONE;
 				mDstBlend = VRAST_DST_BLEND_ONE;
 			}
 
-			else if (stricmp(token, "filter") == 0)
+			else if (_stricmp(token, "filter") == 0)
 			{
 				mSrcBlend = VRAST_SRC_BLEND_ONE;
 				mDstBlend = VRAST_DST_BLEND_ONE;
 			}
 
-			else if (stricmp(token, "blend") == 0)
+			else if (_stricmp(token, "blend") == 0)
 			{
 				mSrcBlend = VRAST_SRC_BLEND_SRC_ALPHA;
 				mDstBlend = VRAST_DST_BLEND_INV_SRC_ALPHA;
@@ -132,33 +132,33 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 			else
 			{
 				// an explicit blend func
-				if ((stricmp(token, "gl_one") == 0) || (stricmp(token, "one") == 0))
+				if ((_stricmp(token, "gl_one") == 0) || (_stricmp(token, "one") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_ONE;
-				else if ((stricmp(token, "gl_zero") == 0) || (stricmp(token, "zero") == 0))
+				else if ((_stricmp(token, "gl_zero") == 0) || (_stricmp(token, "zero") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_ZERO;
-				else if ((stricmp(token, "gl_dst_color") == 0) || (stricmp(token, "dst_color") == 0))
+				else if ((_stricmp(token, "gl_dst_color") == 0) || (_stricmp(token, "dst_color") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_DST_COLOR;
-				else if ((stricmp(token, "gl_one_minus_dst_color") == 0) || (stricmp(token, "one_minus_dst_color") == 0))
+				else if ((_stricmp(token, "gl_one_minus_dst_color") == 0) || (_stricmp(token, "one_minus_dst_color") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_INV_DST_COLOR;
-				else if ((stricmp(token, "gl_src_alpha") == 0) || (stricmp(token, "src_alpha") == 0))
+				else if ((_stricmp(token, "gl_src_alpha") == 0) || (_stricmp(token, "src_alpha") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_SRC_ALPHA;
-				else if ((stricmp(token, "gl_one_minus_src_alpha") == 0) || (stricmp(token, "one_minus_src_alpha") == 0))
+				else if ((_stricmp(token, "gl_one_minus_src_alpha") == 0) || (_stricmp(token, "one_minus_src_alpha") == 0))
 					mSrcBlend = VRAST_SRC_BLEND_INV_SRC_ALPHA;
 				else
 					mSrcBlend = VRAST_SRC_BLEND_NONE;
 
 				layer->GetToken(token, false);
-				if ((stricmp(token, "gl_one") == 0) || (stricmp(token, "one") == 0))
+				if ((_stricmp(token, "gl_one") == 0) || (_stricmp(token, "one") == 0))
 					mDstBlend = VRAST_DST_BLEND_ONE;
-				else if ((stricmp(token, "gl_zero") == 0) || (stricmp(token, "zero") == 0))
+				else if ((_stricmp(token, "gl_zero") == 0) || (_stricmp(token, "zero") == 0))
 					mDstBlend = VRAST_DST_BLEND_ZERO;
-				else if ((stricmp(token, "gl_src_color") == 0) || (stricmp(token, "src_color") == 0))
+				else if ((_stricmp(token, "gl_src_color") == 0) || (_stricmp(token, "src_color") == 0))
 					mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
-				else if ((stricmp(token, "gl_one_minus_src_color") == 0) || (stricmp(token, "one_minus_src_color") == 0))
+				else if ((_stricmp(token, "gl_one_minus_src_color") == 0) || (_stricmp(token, "one_minus_src_color") == 0))
 					mDstBlend = VRAST_DST_BLEND_INV_SRC_COLOR;
-				else if ((stricmp(token, "gl_src_alpha") == 0) || (stricmp(token, "src_alpha") == 0))
+				else if ((_stricmp(token, "gl_src_alpha") == 0) || (_stricmp(token, "src_alpha") == 0))
 					mDstBlend = VRAST_DST_BLEND_SRC_ALPHA;
-				else if ((stricmp(token, "gl_one_minus_src_alpha") == 0) || (stricmp(token, "one_minus_src_alpha") == 0))
+				else if ((_stricmp(token, "gl_one_minus_src_alpha") == 0) || (_stricmp(token, "one_minus_src_alpha") == 0))
 					mDstBlend = VRAST_DST_BLEND_INV_SRC_ALPHA;
 				else
 					mDstBlend = VRAST_DST_BLEND_NONE;
@@ -166,21 +166,21 @@ CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		}
 
 		// depth funcs
-		else if (stricmp(token, "depthfunc") == 0)
+		else if (_stricmp(token, "depthfunc") == 0)
 		{
 			layer->GetToken(token, false);
-			if (stricmp(token, "lequal") == 0)
+			if (_stricmp(token, "lequal") == 0)
 				mDepthFunc = VRAST_DEPTH_LEQUAL;
-			else if (stricmp(token, "equal") == 0)
+			else if (_stricmp(token, "equal") == 0)
 				mDepthFunc = VRAST_DEPTH_EQUAL;
 		}
 
 		// depth write	- must be after the blend func or it will be overriden
-		else if (stricmp(token, "depthwrite") == 0)
+		else if (_stricmp(token, "depthwrite") == 0)
 			mDepthWrite = true;
 
 		// end of layer def
-		else if (stricmp(token, "}") == 0)
+		else if (_stricmp(token, "}") == 0)
 			break;
 
 		// unknown
@@ -204,7 +204,7 @@ void CShaderLayer::Default(const char *name, int &texindex)
 	if (!mTextureNames) FError("mem for texture names");
 
 
-	if (stricmp(name, "$lightmap") == 0)
+	if (_stricmp(name, "$lightmap") == 0)
 	{
 		mTextureNames[0].index = -1;
 		mSrcBlend = VRAST_SRC_BLEND_ZERO;
@@ -257,7 +257,7 @@ void CShader::Parse(CFileBuffer *shader)
 
 
 		// new layer
-		if (stricmp(token, "{") == 0)
+		if (_stricmp(token, "{") == 0)
 		{
 			mLayers[mNumLayers] = new CShaderLayer();
 			mLayers[mNumLayers]->Parse(shader, mNumTextures);
@@ -265,7 +265,7 @@ void CShader::Parse(CFileBuffer *shader)
 		}
 
 		// end of shader def
-		else if (stricmp(token, "}") == 0)
+		else if (_stricmp(token, "}") == 0)
 			break;
 
 		// unknown

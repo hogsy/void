@@ -54,7 +54,7 @@ public:
 	void Parse(CFileBuffer *shader);
 	void Default(void);
 
-	bool IsShader(const char *s) { return (stricmp(s, mName)==0); }
+	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }
 
 	void AddRef(void);
 	void Release(void);

@@ -349,8 +349,8 @@ void OpenGLFindDriver(char *openglLib)
 
   	if (!*openglLib) 
 	{
-		if((stricmp(regkeyval,"3dfx") == 0) ||
-		   (stricmp((char *)szdata,"3dfxvgl.dll")==0))
+		if((_stricmp(regkeyval,"3dfx") == 0) ||
+		   (_stricmp((char *)szdata,"3dfxvgl.dll")==0))
 			strcpy(openglLib, "3dfxvgl.dll");
 		else
 			strcpy(openglLib, "opengl32.dll");		//default
@@ -385,7 +385,7 @@ int OpenGLInit(char *lib)
 		return -1; 
 	}
 
-	if (stricmp(lib, "opengl32.dll")) 
+	if (_stricmp(lib, "opengl32.dll")) 
 		bypassGDI = true;
 
 // gl* funcs

@@ -98,7 +98,7 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 	}
 
 	// else create a new one
-	if (stricmp("md2", &model[strlen(model)-3])==0)
+	if (_stricmp("md2", &model[strlen(model)-3])==0)
 		caches[mdlCache][mdlIndex] =  new CModelMd2();
 	else
 		caches[mdlCache][mdlIndex] =  new CModelSp2();

@@ -126,7 +126,7 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 		//Find Keyname in table if its bigger than a char
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,keyName))
+			if(!_stricmp(keytable[x].key,keyName))
 			{
 				keynum = keytable[x].val;
 				break;
@@ -234,7 +234,7 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 	{
 		for(int x=0;keytable[x].key;x++)
 		{
-			if(!stricmp(keytable[x].key,keyName))
+			if(!_stricmp(keytable[x].key,keyName))
 			{
 				keynum = keytable[x].val;
 				break;

@@ -227,7 +227,7 @@ bool CSoundBuffer::Create(const char * path)
 	dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
 					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
 					  DSBCAPS_CTRL3D; // | DSBCAPS_MUTE3DATMAXDISTANCE;
-	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+//	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     dsbdesc.dwBufferBytes = m_pWaveFile->m_size;
     dsbdesc.lpwfxFormat = &waveFormat; 
     
