@@ -244,6 +244,6 @@ void CRConsole::RegisterFuncs()
 	g_pMultiTexture = g_pConsole->RegisterCVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_MultiTexture);
 	g_pVidSynch		= g_pConsole->RegisterCVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,&CVar_VidSynch);
 
-	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
-	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);
+//	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
+//	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);
 }
