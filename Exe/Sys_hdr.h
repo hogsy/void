@@ -36,7 +36,7 @@ namespace System
 	
 	I_Console  *	GetConsole();
 	const char *	GetExePath();
-	const char *	GetCurrentPath();
+	const char *	GetCurGamePath();
 	eGameState		GetGameState();
 
 	void  FatalError(const char *error);

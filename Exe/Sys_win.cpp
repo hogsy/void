@@ -2,29 +2,33 @@
 #include "Sys_main.h"
 #include "resources.h"
 #include "Com_util.h"
+#include "Com_registry.h"
 #include <direct.h>
 #include <mmsystem.h>
 
-//======================================================================================
-//======================================================================================
 
 //Private Info
 static HWND			m_hWnd;
 static HINSTANCE	m_hInst;
+static char		    m_exePath[COM_MAXPATH];
+
 static bool RegisterWindow(HINSTANCE hInst);
 static void UnRegisterWindow(HINSTANCE hInst);
+static bool ChangeToVoidDir();
 
 CVoid		* g_pVoid=0;		//The game
 
+/*
+================================================
+Global Access funcs
+================================================
+*/
 namespace System
 {
-
+	const char* GetExePath()  { return m_exePath; } 
 	HINSTANCE	GetHInstance(){ return m_hInst; }
 	HWND		GetHwnd()	  { return m_hWnd;  }
 }
-
-//======================================================================================
-//======================================================================================
 
 /*
 ==========================================
@@ -39,12 +43,15 @@ int WINAPI WinMain(HINSTANCE hInst,
 	m_hInst = hInst;
 	if(!RegisterWindow(hInst))
 	{
-		MessageBox(NULL,"Error Registering Window\n","Error",MB_OK);
+		MessageBox(0,"Error Registering Window\n","Error",MB_OK);
 		return -1;
 	}
 
-	//Check if CmdLine contains a map, if so, then go down the directory
-	//tree until we find a void binary to load it with and change to that dir
+	//Find Void key in registry and get path info 
+	if(!ChangeToVoidDir())
+		return -1;
+
+	//Strip quotes off the commandline
 	char cmdLine[COM_MAXPATH];
 	memset(cmdLine,0,COM_MAXPATH);
 	if(lpCmdLine)
@@ -58,50 +65,8 @@ int WINAPI WinMain(HINSTANCE hInst,
 		}
 	}
 
-	if(Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
-	{
-		WIN32_FIND_DATA finddata;
-		HANDLE hFind = INVALID_HANDLE_VALUE;
-		char nextPath[COM_MAXPATH];
-		char curPath[COM_MAXPATH];
-		bool foundPath = false;
-	
-		strcpy(curPath,cmdLine);
-		do
-		{
-			memset(&finddata,0, sizeof(WIN32_FIND_DATA));
-			memset(nextPath,0,COM_MAXPATH);
-
-			Util::ParseFilePath(nextPath,COM_MAXPATH,curPath);
-			if(!strlen(nextPath))
-				break;
-
-			hFind = ::FindFirstFile(VOID_DEFAULTBINARYNAME,&finddata);
-			if(hFind != INVALID_HANDLE_VALUE)
-			{
-				foundPath = true;
-				break;
-			}
-
-			if(_chdir(nextPath) == -1)
-				break;
-			strcpy(curPath,nextPath);
-
-		}while(!foundPath);
-
-		if(hFind != INVALID_HANDLE_VALUE)
-			::FindClose(hFind);
-
-		if(!foundPath)
-		{
-			Util::ShowMessageBox("Unable to find Void executable in the current directory tree",
-								 "Void Error");
-			return -1;
-		}
-	}
-
 	//Create the Void object
-	g_pVoid = new CVoid(cmdLine);
+	g_pVoid = new CVoid(m_exePath,cmdLine);
 	if(!g_pVoid->Init()) 
 	{
 		System::FatalError("Error Initializing Subsystems\n");
@@ -265,12 +230,79 @@ static bool RegisterWindow(HINSTANCE hInst)
 Unregister the window class
 ==========================================
 */
-static  void UnRegisterWindow(HINSTANCE hInst)
+static void UnRegisterWindow(HINSTANCE hInst)
 {
 	UnregisterClass(VOID_MAINWINDOWCLASS,
 					hInst);
 }
 
+
+/*
+================================================
+Change to the proper directory
+================================================
+*/
+static bool ChangeToVoidDir()
+{
+	char bufPath[COM_MAXPATH];
+	char message[512];
+
+	if(!VoidReg::DoesKeyExist("Software\\Devvoid\\Void"))
+	{
+		int ret = MessageBox(0,"Void has not been installed properly."
+						"Would you like to install it at the current path ?",
+						"Void", MB_YESNO);
+		if(ret == IDNO)
+			return false;
+		else
+		{
+			if(!::GetCurrentDirectory(COM_MAXPATH,bufPath))
+			{
+				MessageBox(0,"Fatal Error : Unable to get current directory", "Void", MB_OK);
+				return false;
+			}
+
+			sprintf(message,"Install Void to : %s", bufPath);
+			int ret = MessageBox(0,message,"Void", MB_YESNO);
+			if(ret == IDNO)
+				return false;
+
+			if(!VoidReg::AddKeyValuePair("Software\\Devvoid\\Void","Path",bufPath))
+			{
+				MessageBox(0,"Error writing registry data", "Void", MB_OK);
+				return false;
+			}
+		}
+	}
+
+	if(!VoidReg::GetKeyValue("Software\\Devvoid\\Void","Path", bufPath, MAX_PATH))
+	{
+		MessageBox(0,"Error reading registry info, please reinstall Void", "Void", MB_OK);
+		return false;
+	}
+
+	if(bufPath[0] == '\"')
+	{
+		strcpy(m_exePath,bufPath+1);
+		m_exePath[strlen(m_exePath)-1] = 0;
+	}
+	else
+		strcpy(m_exePath,bufPath);
+
+	//Read path info, and change to proper dir
+	if(!SetCurrentDirectory(m_exePath))
+	{
+		char errMsg[256];
+
+		if(Util::GetWin32ErrorMessage(GetLastError(),errMsg,256))
+			sprintf(message,"Can't change directory to %s \n\rError: %s", m_exePath, errMsg);
+		else
+			sprintf(message,"Unknown error while changing directory to %s", m_exePath);
+		MessageBox(0,message,"Void", MB_OK);
+		return false;
+	}
+	return true;
+}
 
 /*
 ==========================================
@@ -308,3 +340,64 @@ int HandleOutOfMemory(size_t size)
 	exit(0);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//Check if CmdLine contains a map, if so, then go down the directory
+	//tree until we find a void binary to load it with and change to that dir
+
+/*	
+	if(Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
+	{
+		WIN32_FIND_DATA finddata;
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+		char nextPath[COM_MAXPATH];
+		char curPath[COM_MAXPATH];
+		bool foundPath = false;
+	
+		strcpy(curPath,cmdLine);
+		do
+		{
+			memset(&finddata,0, sizeof(WIN32_FIND_DATA));
+			memset(nextPath,0,COM_MAXPATH);
+
+			Util::ParseFilePath(nextPath,COM_MAXPATH,curPath);
+			if(!strlen(nextPath))
+				break;
+
+			hFind = ::FindFirstFile(VOID_DEFAULTBINARYNAME,&finddata);
+			if(hFind != INVALID_HANDLE_VALUE)
+			{
+				foundPath = true;
+				break;
+			}
+
+			if(_chdir(nextPath) == -1)
+				break;
+			strcpy(curPath,nextPath);
+
+		}while(!foundPath);
+
+		if(hFind != INVALID_HANDLE_VALUE)
+			::FindClose(hFind);
+
+		if(!foundPath)
+		{
+			Util::ShowMessageBox("Unable to find Void executable in the current directory tree",
+								 "Void Error");
+			return -1;
+		}
+	}
+*/

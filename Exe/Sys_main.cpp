@@ -50,7 +50,7 @@ extern CVoid*	g_pVoid;
 Constructor
 ==========================================
 */
-CVoid::CVoid(const char * cmdLine)
+CVoid::CVoid(const char * curDir, const char * cmdLine)
 {
 	//Zero out everything so only created stuff gets deleted
 
@@ -65,7 +65,7 @@ CVoid::CVoid(const char * cmdLine)
 
 
 	//Current Working directory
-	_getcwd(m_exePath,COM_MAXPATH);
+//	_getcwd(m_exePath,COM_MAXPATH);
 
 	//Hack. 
 	//Some constructors need to access the System:: funcs, and those depends on the 
@@ -94,7 +94,7 @@ CVoid::CVoid(const char * cmdLine)
 	//Create and initialize the file system
 	m_pFileSystem = FILESYSTEM_Create(ComPrintf,
 									  System::FatalError,
-									  m_exePath,
+									  curDir,
 									  VOID_DEFAULTGAMEDIR);
 	//Create the input system
 	m_pInput= new CInput();					
@@ -547,8 +547,8 @@ Global Access funcs
 */
 namespace System
 {
-	const char* GetExePath()    { return g_pVoid->m_exePath; } 
-	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
+//	const char* GetExePath()    { return g_pVoid->m_exePath; } 
+	const char* GetCurGamePath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }

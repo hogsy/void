@@ -157,10 +157,11 @@ void CGameClient::UpdateViewBlends()
 	int contents = m_pWorld->PointContents(m_pGameClient->origin);
 	if(contents & CONTENTS_SOLID)
 		VectorSet(&m_vecBlend, 0.4f, 0.4f, 0.4f);
-	else if(contents & CONTENTS_WATER)
+/*	else if(contents & CONTENTS_WATER)
 		VectorSet(&m_vecBlend, 0, 1, 1);
 	else if(contents & CONTENTS_LAVA)
 		VectorSet(&m_vecBlend, 1, 0, 0);
+*/
 	else
 		VectorSet(&m_vecBlend, 1, 1, 1);
 }

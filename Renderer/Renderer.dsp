@@ -275,14 +275,6 @@ SOURCE=..\Shared\Com_parms.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_registry.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_registry.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_trace.h
 # End Source File
 # Begin Source File

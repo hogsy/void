@@ -8,7 +8,7 @@ struct VoidExport : public I_Void
 {
 	float GetCurTime()	 { return System::GetCurTime();		}
 	float GetFrameTime() { return System::GetFrameTime();		}
-	const char * GetCurPath(){ return System::GetCurrentPath();	}
+	const char * GetCurPath(){ return System::GetCurGamePath();	}
 
 	void SystemError(const char *message) { System::FatalError(message); };
 };

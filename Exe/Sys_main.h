@@ -30,7 +30,9 @@ class CVoid : public I_ConHandler
 {
 public:
 		
-	CVoid(const char * cmdLine);			//Constructor
+	//Constructor
+	CVoid(const char * curDir, 
+		  const char * cmdLine);			
 	~CVoid();								//Destructor
 	
 	bool Init();							//Init subsystems
@@ -56,7 +58,7 @@ private:
 	friend const float& System::GetCurTime();
 	friend const float& System::GetFrameTime();
 	friend const char * System::GetExePath();
-	friend const char * System::GetCurrentPath();
+	friend const char * System::GetCurGamePath();
 	friend I_Console  *	System::GetConsole();
 	friend eGameState   System::GetGameState();
 	
@@ -88,7 +90,7 @@ private:
 
 	//=========================================================
 
-	char		   m_exePath[COM_MAXPATH];
+//	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
 
 	bool CreateVoidWindow();
