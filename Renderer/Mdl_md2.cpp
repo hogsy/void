@@ -112,7 +112,6 @@ void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 		}
 	}
 
-
 	// skin names
 	skin_names = new char* [header.numSkins];
 
@@ -284,7 +283,6 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	else if (skin & MODEL_SKIN_UNBOUND_LOCAL)
 		g_pClient->Set(CACHE_LOCAL, skin & ~MODEL_SKIN_UNBOUND_LOCAL);
 	else
-//		g_pRast->TextureSet(skin_bin, skin);
 		g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, skin));
 
 
@@ -342,10 +340,6 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 					  frames[cframe][cmd->vertex_index].y * w2;
 				v.z = frames[fframe][cmd->vertex_index].z * w1 +
 					  frames[cframe][cmd->vertex_index].z * w2;
-
-				v.x /= 2;
-				v.y /= 2;
-				v.z /= 2;
 			}
 
 			g_pRast->PolyTexCoord(cmd->s, cmd->t);
