@@ -113,8 +113,7 @@ enum
 {
 	MODEL_CACHE_NUM	= 3,
 	MODEL_CACHE_SIZE =256
-}
-
+};
 
 struct R_EntState 
 {
