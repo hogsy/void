@@ -1,4 +1,3 @@
-//#include "Cl_net.h"
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 #include "Com_util.h"
@@ -9,7 +8,6 @@
 world_t	*g_pWorld;
 int PointContents(vector_t &v);
 
-//using namespace VoidNet;
 
 /*
 ======================================
