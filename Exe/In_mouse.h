@@ -10,7 +10,7 @@ Inherits from listener interface so we can have
 a default handler implementation
 ================================
 */
-class CMouse : public I_ConHandler
+class CMouse
 {
 public:
 	
@@ -26,24 +26,35 @@ public:
 	CMouse(CInputState * pStateManager);
 	~CMouse();
 
-	HRESULT Init(int exclusive, EMouseMode mode);
-	void	Shutdown();
-	HRESULT	SetExclusive(bool exclusive);	//Toggle Exclusive mode
-	HRESULT	Acquire();						//Acquire the Mouse
-	bool	UnAcquire();					//Unacquire
-	void	Update();						//Update
+	bool Init();
+	void Shutdown();
+	bool Acquire();
+	bool UnAcquire();
+	void Update();
 
 	//Needed by the Win32 handler to calc center co-drds
-	void	Resize(int x, int y, int w, int h);
+	void Resize(int x, int y, int w, int h);
 	
-	//Console Handler
-	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
-	void	HandleCommand(HCMD cmdId, const CParms &parms){}
-	
-	EDeviceState GetDeviceState() const; 
+	//Modifiers
+	bool SetExclusive(bool exclusive);
+	bool SetMouseMode(EMouseMode mode);
+	void SetXSensitivity(float val){ m_fXSens = val; }
+	void SetYSensitivity(float val){ m_fYSens = val; }
+	void SetSensitivity(float val) { m_fSens = val; }
+	void SetFilter(bool on) { m_bFilter = on; }
+	void SetInvert(bool on) { m_bInvert = on; }
+
+	//Accessors
+	float GetXSens()  const { return m_fXSens; }
+	float GetYSens()  const { return m_fYSens; }
+	float GetSens()   const { return m_fXSens; }
+	bool  GetFilter() const { return m_bFilter; }
+	bool  GetInvert() const { return m_bInvert; }
+	EDeviceState GetDeviceState() const { return m_eMouseState;}
+	EMouseMode   GetMouseMode() const { return m_eMouseMode; }
+
 private:
 
-	//=============================================
 	enum
 	{	
 		M_DIBUFFER_SIZE	  =	8,
@@ -52,7 +63,7 @@ private:
 	};
 	//=============================================
 
-	CInputState  * m_pStateManager;
+	CInputState     *	m_pStateManager;
 
 	//Mouse State and Mode
 	EDeviceState		m_eMouseState;
@@ -73,24 +84,14 @@ private:
 	float	m_fXPos, m_fYPos, m_fZPos;		
 	//Last mouse co-ords		
 	float	m_fLastXPos, m_fLastYPos, m_fLastZPos;	
+	//Sens
+	float	m_fXSens, m_fYSens, m_fSens;		
 	//Center of the screen, Win32 mouse routines need these
 	int		m_dCenterX, m_dCenterY;
 	//Other flags
-	bool	m_bExclusive;
-
-	CVar	m_pVarXSens;
-	CVar	m_pVarYSens;
-	CVar	m_pVarSens;
-	CVar	m_pVarInvert;
-	CVar	m_pVarMode;
-	CVar	m_pVarFilter;
+	bool	m_bExclusive, m_bFilter, m_bInvert;
 
 	//=============================================
-	
-	bool	CXSens(const CVar * var, const CParms &parms);
-	bool	CYSens(const CVar * var, const CParms &parms);
-	bool	CSens(const CVar *var, const CParms &parms);
-	bool	CMouseMode(const CVar *var, const CParms &parms);
 
 	void	Update_DIBuffered();
 	void	Update_DIImmediate();	

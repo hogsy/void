@@ -9,15 +9,21 @@ using namespace VoidInput;
 
 LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 
-//========================================================================================
-//========================================================================================
+
 
 /*
 =====================================
 Constructor
 =====================================
 */
-CInput::CInput() : m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE)
+CInput::CInput() : 
+				m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE),
+				m_pVarXSens("in_xsens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
+				m_pVarYSens("in_ysens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
+				m_pVarSens ("in_sens","5.0",CVAR_FLOAT,CVAR_ARCHIVE),
+				m_pVarInvert("in_invert","0",CVAR_BOOL,CVAR_ARCHIVE),
+				m_pVarMouseMode("in_mousemode","1",CVAR_INT,CVAR_ARCHIVE),
+				m_pVarMouseFilter("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
 {
 	m_pStateManager = new CInputState();
 
@@ -26,6 +32,12 @@ CInput::CInput() : m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE)
 
 	//Register CVars
 	System::GetConsole()->RegisterCVar(&m_pVarExclusive,this);
+	System::GetConsole()->RegisterCVar(&m_pVarXSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarYSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarInvert,this);
+	System::GetConsole()->RegisterCVar(&m_pVarMouseMode,this);
+	System::GetConsole()->RegisterCVar(&m_pVarMouseFilter, this);
 }
 
 /*
@@ -76,14 +88,16 @@ bool CInput::Init()
 	//Are Initialized without specifying any modes, so that they
 	//can default to what they read from config files
 
-	hr = m_pMouse->Init(m_pVarExclusive.ival, CMouse::M_NONE); 
-	if(FAILED(hr))
+	m_pMouse->SetExclusive(m_pVarExclusive.bval);
+	m_pMouse->SetMouseMode((CMouse::EMouseMode)m_pVarMouseMode.ival);
+	
+	if(!m_pMouse->Init())
 	{
 		Shutdown();
-		DIErrorMessageBox(hr,"CInput::Init:Mouse Intialization failed\n");
 		return false;
 	}
-	
+
+
 	hr =m_pKb->Init(m_pVarExclusive.ival, CKeyboard::KB_NONE); 
 	if(FAILED(hr))
 	{
@@ -126,7 +140,7 @@ bool CInput::AcquireMouse()
 		return false;
 	
 	//Already acquired, or acquring was successful
-	if((m_pMouse->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(m_pMouse->Acquire())))
+	if((m_pMouse->GetDeviceState() == DEVACQUIRED) || m_pMouse->Acquire())
 		return true;
 
 	ComPrintf("CInput::Acquire::Couldn't acquire Mouse\n");
@@ -224,7 +238,7 @@ void CInput::Resize(int x, int y, int w, int h)
 
 bool CInput::SetExclusive(bool on)
 {
-	if(FAILED(m_pMouse->SetExclusive(on)) ||
+	if(!m_pMouse->SetExclusive(on) ||
 	   FAILED(m_pKb->SetExclusive(on)))
 	{
 		if(on)
@@ -260,21 +274,10 @@ void CInput::UpdateDevices()
 	m_pKb->Update();
 }
 
-/*
-=====================================
-=====================================
-*/
 I_InputFocusManager * CInput::GetFocusManager() { return m_pStateManager; }
 
 //========================================================================================
 //========================================================================================
-
-bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
-{
-	if(cvar == &m_pVarExclusive)
-		return CSetExclusive((CVar*)cvar,parms);
-	return false;
-}
 
 /*
 ================================
@@ -293,25 +296,6 @@ bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 				return SetExclusive(true);
 			else
 				return SetExclusive(false);
-/*			{
-				if(FAILED(m_pMouse->SetExclusive(true)) ||
-				   FAILED(m_pKb->SetExclusive(true)))
-				{
-					ComPrintf("Failed to change Input mode to Exclusive\n");
-					return false;
-				}
-			}
-			else 
-			{
-				if(FAILED(m_pMouse->SetExclusive(false)) ||
-				   FAILED(m_pKb->SetExclusive(false)))
-				{
-					ComPrintf("Failed to change Input mode to NonExclusive\n");
-					return false;
-				}
-			}
-			return true;
-*/
 		}
 	}
 	if(m_pVarExclusive.ival)
@@ -321,13 +305,181 @@ bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 	return false;
 }
 
-//======================================================================================
-//======================================================================================
-
-namespace VoidInput
+/*
+=====================================
+Change mouse mode
+DI_Buffered
+DI_Immediate
+Win32 update
+=====================================
+*/
+bool CInput::CMouseMode(const CVar * var, const CParms &parms)
 {
+	if(parms.NumTokens() > 1)
+	{
+		int mode= parms.IntTok(1);
+		
+		if(mode < CMouse::M_DIIMMEDIATE || mode > CMouse::M_WIN32)
+		{
+			ComPrintf("Invalid Mouse Mode specified\n");
+			return false;
+		}
+			
+		if(!m_pMouse->SetMouseMode((CMouse::EMouseMode)mode))
+		{
+			ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",mode);
+			return false;
+		}
+		return true;
+	}
 
-LPDIRECTINPUT7  GetDirectInput() {	return m_pDInput;  }
+	//Show current info
+	ComPrintf("MouseMode is %d\n", m_pMouse->GetMouseMode());
+
+	switch(m_pMouse->GetMouseMode())
+	{
+	case CMouse::M_NONE:
+		ComPrintf("CMouse mode::Not intialized\n");
+	case CMouse::M_DIIMMEDIATE:
+		ComPrintf("CMouse mode::DirectInput Immediate mode\n");
+		break;
+	case CMouse::M_DIBUFFERED:
+		ComPrintf("CMouse mode::DirectInput Buffered mode\n");
+		break;
+	case CMouse::M_WIN32:
+		ComPrintf("CMouse mode::Win32 Mouse polling\n");
+		break;
+	}
+	return false;
+}
+
+/*
+======================================
+Console Func - Sets X-axis Sensitivity
+======================================
+*/
+bool CInput::CXSens(const CVar * var, const CParms &parms)
+{
+	if(parms.NumTokens() > 1)
+	{
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
+		{
+			m_pMouse->SetXSensitivity(sens);
+			return true;
+		}
+		ComPrintf("CMouse::CXSens:Invalid Value entered");
+	}
+	ComPrintf("X-axis Sensitivity: %.2f\n", m_pMouse->GetXSens());
+	return false;
+}
+
+/*
+======================================
+Console Func - Sets Y-axis Sensitivity
+======================================
+*/
+bool CInput::CYSens(const CVar * var, const CParms &parms)
+{
+	if(parms.NumTokens() > 1)
+	{
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
+		{
+			m_pMouse->SetYSensitivity(sens);
+			return true;
+		}
+		ComPrintf("CMouse::CYSens:Invalid Value entered");
+	}
+	ComPrintf("Y-axis Sensitivity: %.2f\n", m_pMouse->GetYSens());
+	return false;
+}
+
+/*
+======================================
+Console Func - Sets master Sensitivity
+======================================
+*/
+bool CInput::CSens(const CVar * var, const CParms &parms)
+{
+	if(parms.NumTokens() > 1)
+	{
+		float sens = parms.FloatTok(1);
+		if(sens > 0.0 && sens < 30.0)
+		{
+			m_pMouse->SetSensitivity(sens);
+			return true;
+		}
+		ComPrintf("CMouse::CSens:Invalid Value entered");
+	}
+	ComPrintf("Mouse Sensitivity: %.2f\n", m_pMouse->GetSens());
+	return false;
+}
+
+
+/*
+================================================
+Handle Cvar change notifications
+================================================
+*/
+bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
+{
+	if(cvar == &m_pVarExclusive)
+		return CSetExclusive((CVar*)cvar,parms);
+	else if(cvar == &m_pVarXSens)
+		return CXSens((CVar*)cvar,parms);
+	else if(cvar == &m_pVarYSens)
+		return CYSens((CVar*)cvar,parms);
+	else if(cvar == &m_pVarSens)
+		return CSens((CVar*)cvar,parms);
+	else if(cvar == &m_pVarMouseMode)
+		return CMouseMode((CVar*)cvar,parms);
+	else if(cvar == &m_pVarMouseFilter)
+	{
+		if(parms.NumTokens() > 1)
+		{
+			if(parms.IntTok(1))
+				m_pMouse->SetFilter(true);
+			else
+				m_pMouse->SetFilter(false);
+			return true;
+		}
+		if(m_pMouse->GetFilter())
+			ComPrintf("Mouse input is filtered\n");
+		else
+			ComPrintf("Mouse input is not filtered\n");
+	}
+	else if(cvar == &m_pVarInvert)
+	{
+		if(parms.NumTokens() > 1)
+		{
+			if(parms.IntTok(1))
+				m_pMouse->SetInvert(true);
+			else
+				m_pMouse->SetInvert(false);
+			return true;
+		}
+		if(m_pMouse->GetInvert())
+			ComPrintf("Mouse is inverted\n");
+		else
+			ComPrintf("Mouse is not inverted\n");
+	}
+	return false;
+}
+
+
+
+
+//======================================================================================
+//======================================================================================
+
+
+
+namespace VoidInput {
+
+LPDIRECTINPUT7  GetDirectInput() 
+{	return m_pDInput;  
+}
 
 /*
 =====================================
@@ -340,7 +492,7 @@ void DIErrorMessageBox(HRESULT err, const char * msg)
 	if(msg)
 	{
 		strcpy(error,msg);
-		strcat(error,"Error:\n");
+		strcat(error," Error:\n");
 	}
 	else
 		strcpy(error,"Error:\n");

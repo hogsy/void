@@ -50,6 +50,18 @@ Constructor
 */
 CVoid::CVoid(const char * cmdLine)
 {
+	//Zero out everything so only created stuff gets deleted
+
+	m_pExport=0;		//Exported Stuff
+	m_pRender=0;		//Renderer
+	m_pRParms=0;		//Current Renderering info
+	m_pInput=0;			//Input 
+	m_pFileSystem=0;	//FileSystem
+	m_pClient=0;		//Client and UI
+	m_pSound=0;			//Sound subsystem
+	m_pMusic=0;			//Music subsystem
+
+
 	//Current Working directory
 	_getcwd(m_exePath,COM_MAXPATH);
 
@@ -57,7 +69,6 @@ CVoid::CVoid(const char * cmdLine)
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
-
 
 	//Add CommandLine
 	if(cmdLine && Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
@@ -97,10 +108,8 @@ CVoid::CVoid(const char * cmdLine)
 	//Sound
 	m_pSound = new CSoundManager();
 
-#ifdef INCLUDE_MUSIC
 	//Music
 	m_pMusic = new CMusic();
-#endif
 
 	//Network Sys
 //	m_pServer = new CServer();
@@ -200,14 +209,12 @@ bool CVoid::Init()
 
 	//================================
 	//Music
-#ifdef INCLUDE_MUSIC
 	if(!m_pMusic->Init())
 	{
 		ComPrintf("CVoid::Init: couldnt init music system\n");
 		delete m_pMusic;
 		m_pMusic = 0;
 	}
-#endif
 
 /*	//================================
 	//Client, create the client last
@@ -256,13 +263,11 @@ CVoid::~CVoid()
 	if(m_pSound)	
 		delete m_pSound;
 
-#ifdef INCLUDE_MUSIC
 	if(m_pMusic)
 	{
 		m_pMusic->Shutdown();
 		delete m_pMusic;
 	}
-#endif
 	
 	//Shutdown, and free the Renderer Interface
 	if(m_pRender)
@@ -429,10 +434,8 @@ void CVoid::LostFocus()
 */
 void CVoid::HandleMM(WPARAM wParam, LPARAM lParam)
 {
-#ifdef INCLUDE_MUSIC
 	if(m_pMusic)
 		m_pMusic->HandleMCIMsg(wParam,lParam);
-#endif
 }
 
 //======================================================================================

@@ -6,6 +6,11 @@
 
 namespace VoidInput {
 
+const float MOUSE_MAX_SENS = 30.0f;
+const float MOUSE_MIN_SENS = 0.0f;
+const float MOUSE_DEFAULT_SENS = 5.0f;
+const float MOUSE_DEFAULT_AXIS_SENS = 0.2f;
+
 /*
 ==========================================
 Device states used by the Input Devices

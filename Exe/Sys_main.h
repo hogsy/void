@@ -80,14 +80,11 @@ private:
 	CInput		 * m_pInput;		//Input 
 	CFileSystem  * m_pFileSystem;	//FileSystem
 
-//	CServer		 * m_pServer;		//Server
 	CClient		 * m_pClient;		//Client and UI
 
 	CSoundManager* m_pSound;		//Sound subsystem
-
-#ifdef INCLUDE_MUSIC
 	CMusic		 * m_pMusic;		//Music subsystem
-#endif
+
 	//=========================================================
 
 	char		   m_exePath[COM_MAXPATH];

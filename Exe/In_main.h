@@ -60,7 +60,20 @@ private:
 	VoidInput::CKeyboard	* m_pKb;
 
 	CVar m_pVarExclusive;
+	
+	CVar m_pVarXSens;
+	CVar m_pVarYSens;
+	CVar m_pVarSens;
+	CVar m_pVarInvert;
+	
+	CVar m_pVarMouseMode;
+	CVar m_pVarMouseFilter;
+
 	bool CSetExclusive(const CVar * var, const CParms &parms);
+	bool CXSens(const CVar * var, const CParms &parms);
+	bool CYSens(const CVar * var, const CParms &parms);
+	bool CSens(const CVar *var, const CParms &parms);
+	bool CMouseMode(const CVar *var, const CParms &parms);
 };
 
 #endif
