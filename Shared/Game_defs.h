@@ -65,12 +65,6 @@ struct BaseEntity
 		sndIndex = -1;
 		volume = attenuation = 0;
 		moveType = MOVETYPE_NOCLIP;
-
-		Void3d::VectorSet(origin,0,0,0);
-		Void3d::VectorSet(angles,0,0,0);
-		Void3d::VectorSet(velocity,0,0,0);
-		Void3d::VectorSet(mins,0,0,0);
-		Void3d::VectorSet(maxs,0,0,0);
 	}
 
 	virtual ~BaseEntity() =0 {}

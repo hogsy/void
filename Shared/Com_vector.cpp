@@ -2,12 +2,112 @@
 #include "Com_vector.h"
 
 
-// doesn't keep the length the same! - just projects it onto the plane
-void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm)
+float vector_t::Normalize()
 {
-	float d = dot((*in), (*norm));
-	VectorMA(in, -d, norm, out);
+	float mag = Length();
+	x /= mag;
+	y /= mag;
+	z /= mag;
+	return mag;
 }
+
+float vector_t::Normalize(vector_t &out)
+{
+	float	length, ilength;
+
+	length = Length();
+	if (length)
+	{
+		ilength = 1/length;
+		out.x = x * ilength;
+		out.y = y * ilength;
+		out.z = z * ilength;
+	}
+	return length;
+}
+
+void  vector_t::AngleToVector(vector_t * forward, vector_t * right, vector_t *up)
+{
+	float			angle;
+	static float	sr, sp, sy, cr, cp, cy;
+	
+	angle = -YAW + PI/2;
+	sy = (float)sin(angle);
+	cy = (float)cos(angle);
+	angle = -PITCH;
+	sp = (float)sin(angle);
+	cp = (float)cos(angle);
+	angle = -ROLL;
+	sr = (float)sin(angle);
+	cr = (float)cos(angle);
+
+	if (forward)
+	{
+		forward->x = cp*cy;
+		forward->y = cp*sy;
+		forward->z = -sp;
+	}
+	if (right)
+	{
+		right->x = (-1*sr*sp*cy+-1*cr*-sy);
+		right->y = (-1*sr*sp*sy+-1*cr*cy);
+		right->z = -1*sr*cp;
+	}
+
+	if (up)
+	{
+		up->x = (cr*sp*cy+-sr*-sy);
+		up->y = (cr*sp*sy+-sr*cy);
+		up->z = cr*cp;
+	}
+}
+
+void vector_t::VectorMA (const vector_t &veca, float scale, const vector_t &vecb)
+{
+	x = veca.x + scale * vecb.x;
+	y = veca.y + scale * vecb.y;
+	z = veca.z + scale * vecb.z;
+}
+
+//======================================================================================
+//Freidn funcs
+//======================================================================================
+
+int operator == (const vector_t &v1, const vector_t &v2)
+{
+	if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z)
+			return 0;
+	return 1;
+}
+
+int VectorCompare (const vector_t &v1, const vector_t &v2, float thresh)
+{
+	if ((v1.x - v2.x < -thresh) || (v1.x - v2.x > thresh) ||
+		(v1.y - v2.y < -thresh) || (v1.y - v2.y > thresh) ||
+		(v1.z - v2.z < -thresh) || (v1.z - v2.z > thresh))
+		return 0;
+	return 1;
+}
+
+
+void CrossProduct(const vector_t &a, const vector_t &b, vector_t &normal)
+{
+	normal.x = (a.y * b.z - a.z * b.y);
+	normal.y = (a.z * b.x - a.x * b.z);
+	normal.z = (a.x * b.y - a.y * b.x);
+}
+
+
+
+
+
+//======================================================================================
+//======================================================================================
+//======================================================================================
+//======================================================================================
+
+
+
 
 void VectorSet(vector_t *a, float x, float y, float z)
 { 
@@ -143,6 +243,15 @@ void AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, 
 }
 
 
+
+// doesn't keep the length the same! - just projects it onto the plane
+void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm)
+{
+	float d = dot((*in), (*norm));
+	VectorMA(in, -d, norm, out);
+}
+
+
 /*
 ================
 R_ConcatRotations
@@ -273,4 +382,6 @@ void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, floa
 #ifdef _WIN32
 #pragma optimize( "", on )
 #endif
+
+
 

@@ -30,8 +30,10 @@ void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
 	TraceInfo	tr;
 	float d;
 
-	Void3d::VectorScale(dir,dir, time);
-	Void3d::VectorSet(primal_dir, dir);
+	dir.Scale(time);
+	primal_dir = dir;
+//	Void3d::VectorScale(dir,dir, time);
+//	Void3d::VectorSet(primal_dir, dir);
 	
 	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
@@ -40,7 +42,8 @@ void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
 		m_pWorld->Trace(tr, ent.origin, end, ent.mins, ent.maxs);
 		if (tr.fraction > 0)
 		{
-			Void3d::VectorSet(ent.origin, tr.endpos);
+			//Void3d::VectorSet(ent.origin, tr.endpos);
+			ent.origin = tr.endpos;
 			hits = 0;
 		}
 
@@ -48,7 +51,8 @@ void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
 		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
 			break;
 
-		Void3d::VectorSet(hitplanes[hits],tr.plane->norm);
+		//Void3d::VectorSet(hitplanes[hits],tr.plane->norm);
+		hitplanes[hits] =tr.plane->norm;
 		hits++;
 
 		// we're only touching 1 plane - project velocity onto it
@@ -59,14 +63,15 @@ void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
 		{
 			vector_t tmp;
 			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
-			d = Void3d::DotProduct(tmp,dir);
-			Void3d::VectorScale(dir,tmp, d);
+			d = DotProduct(tmp,dir);
+			dir.Scale(tmp,d);
+			//Void3d::VectorScale(dir,tmp, d);
 		}
 
 		// make sure we're still going forward
-		if (Void3d::DotProduct(dir,primal_dir) <= 0)
+		if (DotProduct(dir,primal_dir) <= 0)
 		{
-			Void3d::VectorSet(dir, 0, 0, 0);
+			dir.Set(0, 0, 0);
 			break;
 		}
 	}

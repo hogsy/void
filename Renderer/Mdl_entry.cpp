@@ -40,8 +40,8 @@ CModelCacheEntry::~CModelCacheEntry()
 	if (skin_names)
 	{
 		for (int s=0; s<num_skins; s++)
-			delete skin_names[s];
-		delete skin_names;
+			delete [] skin_names[s];
+		delete [] skin_names;
 	}
 }
 

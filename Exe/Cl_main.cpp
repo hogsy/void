@@ -268,7 +268,7 @@ void CClient::RunFrame()
 		{
 			VectorNormalize(&desired_movement);
 			Move(desired_movement, System::g_fframeTime * m_maxvelocity);
-			Void3d::VectorSet(desired_movement,0,0,0);
+			desired_movement.Set(0,0,0);
 		}
 
 		//Print Stats

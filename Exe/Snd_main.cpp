@@ -254,7 +254,8 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &forward,
 								   const vector_t &up)
 {	
-	Void3d::VectorSet(m_listenerPos,pos);
+	//Void3d::VectorSet(,pos);
+	m_listenerPos = pos;
 	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
 //	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
@@ -286,7 +287,8 @@ void CSoundManager::RunFrame()
 		//Play sounds now in Range
 		if(m_sndSources[i].ent)
 		{
-			listenerDist = Void3d::VectorDistance(m_listenerPos, m_sndSources[i].ent->origin);
+//			listenerDist = Void3d::VectorDistance(m_listenerPos, m_sndSources[i].ent->origin);
+			listenerDist = VectorDistance(m_listenerPos, m_sndSources[i].ent->origin);
 			
 			//is it/ was it being played by a channel, and
 			//is out of range now, then stop it

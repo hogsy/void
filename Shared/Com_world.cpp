@@ -48,6 +48,7 @@ Destructor
 */
 CWorld::~CWorld()
 {
+	byte * data=0;
 	if(edges)
 		delete [] edges;
 	if (textures)
@@ -63,11 +64,17 @@ CWorld::~CWorld()
 	if (leafs)
 		delete [] leafs;
 	if (planes)
-		delete [] planes;
+	{
+		data = (byte*)planes;
+		delete [] data;
+	}
 	if (sides)
 		delete [] sides;
 	if (verts)
-		delete [] verts;
+	{
+		data = (byte*)verts;
+		delete [] data;
+	}
 	if (entities)
 		delete [] entities;
 	if (keys)
@@ -158,7 +165,7 @@ int CWorld::PointContents(const vector_t &v)
 	while(1)
 	{
 		// test to this nodes plane
-		d = Void3d::DotProduct(planes[nodes[n].plane].norm, v) - planes[nodes[n].plane].d;
+		d = DotProduct(planes[nodes[n].plane].norm, v) - planes[nodes[n].plane].d;
 		if (d>=0)
 			n = nodes[n].children[0];
 		else
@@ -183,7 +190,7 @@ plane_t * CWorld::Ray(int node, const vector_t &start, const vector_t &end,
 	plane_t *plane;
 	int n, nnode;
 
-	if(Void3d::DotProduct(start, planes[nodes[node].plane].norm) - planes[nodes[node].plane].d >= 0)
+	if(DotProduct(start, planes[nodes[node].plane].norm) - planes[nodes[node].plane].d >= 0)
 	{
 		n = 0;
 		plane = &planes[nodes[node].plane];
@@ -194,8 +201,8 @@ plane_t * CWorld::Ray(int node, const vector_t &start, const vector_t &end,
 		plane = &planes[nodes[node].plane^1];
 	}
 
-	dstart = Void3d::DotProduct(start, plane->norm) - plane->d;
-	dend   = Void3d::DotProduct(end  , plane->norm) - plane->d;
+	dstart = DotProduct(start, plane->norm) - plane->d;
+	dend   = DotProduct(end  , plane->norm) - plane->d;
 
 	float frac = (dstart)/(dstart-dend);
 
@@ -451,6 +458,21 @@ void CWorld::DestroyWorld(CWorld * pWorld)
 	}
 	delete pWorld;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

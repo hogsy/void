@@ -54,12 +54,12 @@ struct ClEntity : public BaseEntity
 		numSkins = numFrames = 0;
 		inUse = false;
 
-		Void3d::VectorSet(origin,0,0,0);
-		Void3d::VectorSet(angles,0,0,0);
-		Void3d::VectorSet(velocity,0,0,0);
-		Void3d::VectorSet(mins,0,0,0);
-		Void3d::VectorSet(maxs,0,0,0);
-
+		origin.Set(0,0,0);
+		angles.Set(0,0,0);
+		velocity.Set(0,0,0);
+		mins.Set(0,0,0);
+		maxs.Set(0,0,0);
+	
 		mdlIndex = sndIndex = -1;
 		num = -1;
 		frameNum = nextFrame = skinNum = 0;

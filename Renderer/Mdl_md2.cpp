@@ -50,8 +50,8 @@ CModelMd2::~CModelMd2()
 	if (frames)
 	{
 		for (int f=0; f<num_frames; f++)
-			delete frames[f];
-		delete frames;
+			delete [] frames[f];
+		delete [] frames;
 	}
 
 	if (cmds)
