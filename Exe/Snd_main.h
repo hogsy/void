@@ -19,6 +19,7 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
+
 /*
 ======================================
 Main Sound manager
@@ -53,12 +54,12 @@ public:
 	//If volume and attenuation are 0 then it uses the ones set to the entitiy
 	void PlaySnd(const ClEntity * ent,
 				 int index, CacheType cache,
-				 int volume =0, int attenuation =0,
+				 int volume = 10, int attenuation =0,
 				 int channel = CHAN_AUTO);
 	
 	//Play a 2d-UI sound at given volume
 	void PlaySnd(int index, CacheType cache,
-				 int volume = 0,
+				 int volume = 10,
 				 int channel = CHAN_AUTO);
 
 	//Console handler

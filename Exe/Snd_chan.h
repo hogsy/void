@@ -24,8 +24,8 @@ public:
 
 	bool Create(const CSoundBuffer &buffer,
 				const ClEntity * ent, 
-				int volume=0,
-				int attenuation = 0);	
+				int volume,
+				int attenuation);	
 	
 	void Destroy();
 	
@@ -33,9 +33,11 @@ public:
 	void Stop();
 	bool IsPlaying() const;
 
-	long  GetVolume();
-	void  SetVolume(long vol);
+	float GetVolume();
+	void  SetVolume(float vol);
 
+//	hSnd		soundIndex;
+//	CacheType	soundCache;
 	const ClEntity * m_pEntity;
 
 private:

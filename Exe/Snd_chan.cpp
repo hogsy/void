@@ -101,6 +101,12 @@ ComPrintf("Unable to get 3d interface\n");
 }
 
 /*
+attenuation, 0 to 10
+min =  attention * 50
+max =  min * volume;
+*/
+
+/*
 ==========================================
 Create a sound sourced from an entitiy
 ==========================================
@@ -119,7 +125,7 @@ bool CSoundChannel::Create(const CSoundBuffer &buffer,
 	//Get a 3d Interface if its a 3d sound
 	m_pEntity = ent;
 
-	m_pDS3dBuffer->SetMinDistance(150, DS3D_DEFERRED);
+	m_pDS3dBuffer->SetMinDistance(500, DS3D_DEFERRED);
 //		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
 	m_pDS3dBuffer->SetPosition(m_pEntity->origin.x, 
 							   m_pEntity->origin.y, 
@@ -224,7 +230,7 @@ bool CSoundChannel::IsPlaying() const
 
 
 
-long CSoundChannel::GetVolume()
+float CSoundChannel::GetVolume()
 {
 	if(!m_pDSBuffer)
 		return 0;
@@ -235,18 +241,20 @@ long CSoundChannel::GetVolume()
 		ComPrintf("CSoundChannel:GetVolume: Failed to get volume\n");
 		return 0;
 	}
-	return lvol;
+	return ((5000.0 - lvol)/500.0);
 }
 
-void CSoundChannel::SetVolume(long vol)
+void CSoundChannel::SetVolume(float vol)
 {
 	if(!m_pDSBuffer)
 		return;
 
-	HRESULT hr = m_pDSBuffer->SetVolume(vol);
+	long lvol = -(5000 - vol*500);
+
+	HRESULT hr = m_pDSBuffer->SetVolume(lvol);
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CSoundChannel::SetVolume:");
-		ComPrintf("Unable to set to %d db\n",vol);
+		ComPrintf("Unable to set to %d(%f) db\n",lvol, vol);
 	}
 }

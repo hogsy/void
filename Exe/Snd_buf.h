@@ -42,18 +42,17 @@ public:
 	CPrimaryBuffer();
 	~CPrimaryBuffer();
 
-	IDirectSound3DListener  * Create(WAVEFORMATEX &pcmwf);
+	IDirectSound3DListener  * Create(WAVEFORMATEX &pcmwf, float vol);
 	void Destroy();
 
-	//Master Volume,	range 0 (max) to 5000 (min)
-	long GetVolume();
-	bool SetVolume(long vol);
+	float GetVolume();
+	bool  SetVolume(float vol);
 
 	void PrintStats() const;
 
 private:
 
-	long m_volume;
+//	float m_volume;
 	IDirectSoundBuffer * m_pDSBuffer;	//DirectSoundBuffer
 };
 

@@ -211,7 +211,7 @@ bool CSoundManager::Init()
 	pcmwf.wFormatTag = WAVE_FORMAT_PCM;
 
 	//Get 3dListener Interface
-	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf);
+	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf, m_cVolume.fval);
 	if(!lpd3dlistener)
 	{
 		ComPrintf("CSound::Init Failed to create listener\n");
@@ -239,6 +239,9 @@ bool CSoundManager::Init()
 
 //======================================================================================
 //======================================================================================
+
+static vector_t listPos;
+
 /*
 ==========================================
 check for streameable data ?
@@ -247,7 +250,20 @@ of range now, and silence them
 ==========================================
 */
 void CSoundManager::RunFrame()
-{	m_pListener->m_pDS3dListener->CommitDeferredSettings();
+{	
+	for(int i=0; i<MAX_CHANNELS; i++)
+	{
+		if(m_Channels[i].IsPlaying() &&
+		   m_Channels[i].m_pEntity)
+		{
+			if(Void3d::VectorDistance(listPos, m_Channels[i].m_pEntity->origin) > 500.0f)
+			{
+				m_Channels[i].Stop();
+				m_Channels[i].Destroy();
+			}
+		}
+	}
+	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 }
 
 /*
@@ -260,6 +276,7 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &forward,
 								   const vector_t &up)
 {	
+	Void3d::VectorSet(listPos,pos);
 
 	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
@@ -276,8 +293,6 @@ void CSoundManager::PlaySnd(const ClEntity * ent,
 							int index, CacheType cache,
 							int volume, int attenuation,
 							int channel)
-//void CSoundManager::PlaySnd(int index, CacheType cache,
-//							int channel, const ClEntity * ent)
 {
 	if(!m_bufferCache[cache][index].InUse())
 	{
@@ -286,8 +301,10 @@ void CSoundManager::PlaySnd(const ClEntity * ent,
 	}
 
 	for(int i=0; i<MAX_CHANNELS; i++)
+	{
 		if(!m_Channels[i].IsPlaying())
 			break;
+	}
 	if(i== MAX_CHANNELS)
 	{
 		ComPrintf("CSoundManager::Play: Unable to play %s, max sounds reached\n", 
@@ -300,8 +317,11 @@ void CSoundManager::PlaySnd(const ClEntity * ent,
 	bool loop = false;
 	channel & CHAN_LOOPING ? loop = true : loop = false;
 	if(!m_Channels[i].Play(loop))
+	{
 		ComPrintf("Error playing sound %s at index %d\n", 
 				index, m_bufferCache[cache][index].GetFilename());
+		return;
+	}
 }
 
 /*
@@ -576,29 +596,20 @@ Set volume
 */
 bool CSoundManager::SetVolume(const CParms &parms)
 {
-	long lvol = 0;
-	float fvol = 0.0f;
-
 	if(parms.NumTokens() < 2)
 	{
-		lvol = m_pPrimary->GetVolume();
-		fvol = (5000.0 - lvol)/500.0;
-		ComPrintf("Volume : %.2f (%d)\n", fvol,lvol);
+		ComPrintf("Volume : %.2f\n", m_pPrimary->GetVolume());
 		return false;
 	}
 
-	fvol = parms.FloatTok(1);
+	float fvol = parms.FloatTok(1);
 	if(fvol < 0.0f || fvol > 10.0f)
 	{
 		ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
 		return false;
 	}
-	lvol = -(5000 - fvol*500);
-	if(m_pPrimary->SetVolume(lvol))
-	{
-		ComPrintf("Volume changed to %.2f (%d)\n", fvol, lvol);
+	if(m_pPrimary->SetVolume(fvol))
 		return true;
-	}
 	return false;
 }
 

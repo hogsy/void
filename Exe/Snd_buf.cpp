@@ -9,7 +9,7 @@ using namespace VoidSound;
 CPrimaryBuffer::CPrimaryBuffer()
 {
 	m_pDSBuffer = 0;
-	m_volume = 0;
+//	m_volume = 0;
 }
 
 CPrimaryBuffer::~CPrimaryBuffer()
@@ -21,7 +21,7 @@ CPrimaryBuffer::~CPrimaryBuffer()
 Initialize, set format and start mixing
 ==========================================
 */
-IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
+IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf, float vol)
 {
 	//Set up DSBUFFERDESC structure. 
 	DSBUFFERDESC dsbdesc; 
@@ -55,7 +55,7 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	}
 
 #if 1
-	if(!SetVolume(m_volume))
+	if(!SetVolume(vol))
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
 		Destroy();
@@ -131,7 +131,7 @@ void CPrimaryBuffer::PrintStats() const
 Master Volume
 ==========================================
 */
-long CPrimaryBuffer::GetVolume()
+float CPrimaryBuffer::GetVolume()
 {
 	if(!m_pDSBuffer)
 		return 0;
@@ -142,25 +142,25 @@ long CPrimaryBuffer::GetVolume()
 		ComPrintf("CPrimaryBuffer:GetVolume: Failed to get volume\n");
 		return 0;
 	}
-	return lvol;
+	ComPrintf("CPrimaryBuffer::GetVolume: %ddB\n", lvol);
+	return ((5000.0 - lvol)/500.0);
 }
 
-bool CPrimaryBuffer::SetVolume(long vol)
+bool CPrimaryBuffer::SetVolume(float fvol)
 {
-	if(!m_pDSBuffer)
+	if(m_pDSBuffer)
 	{
-		m_volume = vol;
-		return true;
+		long lvol = -(5000 - fvol*500);
+		HRESULT hr = m_pDSBuffer->SetVolume(lvol);
+		if(FAILED(hr))
+		{
+			PrintDSErrorMessage(hr,"CPrimaryBuffer::SetVolume:");
+			ComPrintf("Unable to set to %d(%f) db\n", lvol, fvol);
+			return false;
+		}
+		ComPrintf("CPrimaryBuffer::SetVolume: Set to %ddB. %f\n", lvol, fvol);
 	}
-
-	HRESULT hr = m_pDSBuffer->SetVolume(vol);
-	if(FAILED(hr))
-	{
-		PrintDSErrorMessage(hr,"CPrimaryBuffer::SetVolume:");
-		ComPrintf("Unable to set to %d db\n",vol);
-		return false;
-	}
-	m_volume = vol;
+//	m_volume = fvol;
 	return true;
 }
 

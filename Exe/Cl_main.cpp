@@ -252,7 +252,7 @@ void CClient::RunFrame()
 													   m_gameClient.origin.y,
 													   m_gameClient.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f : %f", 
+		m_pHud->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
 			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
 		m_fFrameTime = System::g_fcurTime;
 
@@ -290,9 +290,18 @@ void CClient::RunFrame()
 		//fix me. draw ents only in the pvs
 		for(int i=0; i< GAME_MAXENTITIES; i++)
 		{
-			if(m_entities[i].inUse && m_entities[i].index >= 0)
+			if(m_entities[i].inUse)
 			{
-				m_pModel->DrawModel(m_entities[i]);	
+				if(m_entities[i].index >= 0)
+				{
+					m_pModel->DrawModel(m_entities[i]);	
+				}
+				//Play sounds in RANGE
+/*				else if(m_entities[i].soundIndex >= 0)
+				{
+					m_pSound->PlaySnd(&m_entities[i],m_entities[i].soundIndex, CACHE_GAME);
+				}
+*/
 			}
 		}
 
@@ -300,9 +309,7 @@ void CClient::RunFrame()
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].index >=0)
-			{
 				m_pModel->DrawModel(m_clients[i]);
-			}
 		}
 
 		m_pRender->Draw(m_pCamera);
