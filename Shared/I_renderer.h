@@ -84,7 +84,7 @@ struct I_Renderer
 	virtual void MoveWindow(int x, int y) = 0;
 	virtual void Resize() =0;
 	virtual void ChangeDispSettings(unsigned int width, unsigned int height, 
-										unsigned int bpp, unsigned int fullscreen)=0;
+									unsigned int bpp, bool fullscreen)=0;
 	
 	//World
 	virtual bool LoadWorld(world_t *level, int reload) =0;
