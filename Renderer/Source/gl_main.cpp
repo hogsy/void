@@ -157,7 +157,7 @@ bool CGLUtil::Init()
 
 	const char *ext = (const char*)glGetString(GL_EXTENSIONS);
 	int l = strlen(ext);
-	char *ext2 = (char*)MALLOC(l);
+	char *ext2 = new char[l];
 	memcpy(ext2, ext, l);
 	char *start = ext2;
 
@@ -179,7 +179,7 @@ bool CGLUtil::Init()
 			start = &ext2[i+1];
 		}
 	}
-	free(ext2);
+	delete [] ext2;
 
 	return true;
 }

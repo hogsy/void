@@ -13,14 +13,6 @@
 #include <stdarg.h>
 #include <windows.h>
 
-#ifdef _DEBUG
-#include <crtdbg.h>
-#define MALLOC(size) _malloc_dbg(size, _NORMAL_BLOCK, __FILE__, __LINE__);
-#else
-#define MALLOC(size) malloc(size)
-#endif
-
-
 #include "gl.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"

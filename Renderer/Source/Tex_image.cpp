@@ -104,7 +104,7 @@ Reset the image data
 void CImage::Reset()
 {
 	if(data)
-		free(data);
+		delete [] data;
 
 	data = 0;
 	type = 0;
@@ -126,7 +126,7 @@ bool CImage::DefaultTexture()
 	height = 64;
 
 	// all raw pic data is 32 bits
-	data = (byte *) MALLOC(width * height * 4);
+	data = new byte[width * height * 4];
 	if (data == NULL) 
 	{
 		FError("CImage::DefaultTexture: No mem for pic data");
@@ -161,7 +161,7 @@ bool CImage::SnapShot()
 	width  = rInfo->width;
 	height = rInfo->height;
 	type   = 0;
-	data = (byte *) MALLOC(width * height * 4);
+	data = new byte[width * height * 4];
 
 	if (data == NULL) 
 	{
@@ -191,7 +191,7 @@ bool CImage::Read(unsigned char **stream)
 		return false;
 
 	// all raw pic data is 32 bits
-	data = (byte *) MALLOC(width * height * 4);
+	data = new byte[width * height * 4];
 
 
 	if (data == NULL) 
@@ -273,7 +273,7 @@ bool CImage::Read_PCX()
 	height = header.height - header.y + 1;
 
 	// always store the pic in 32 bit rgba
-	data = (byte *) MALLOC(width * height * 4);
+	data = new byte[width * height * 4];
 	if(data == NULL)
 	{
 		FError("CPCX_Texture::Read:Not enough memory for texture");
@@ -366,7 +366,7 @@ bool CImage::Read_TGA()
 	m_fileReader.GetChar();	
 
 	// always store the pic in 32 bit rgba
-	data = (byte *) MALLOC(width * height * 4);
+	data = new byte[width * height * 4];
 	if (!data)
 	{	
 		Error("CImage::Read_TGA:Not enough memory for texture");
@@ -458,7 +458,7 @@ void CImage::Write_PCX( FILE *fp)
 	memset (pcx.junk, 0, sizeof(pcx.junk));
 
 	//pack the image
-	pack = (byte*) MALLOC(width * height * 4);
+	pack = new byte[width * height * 4];
 
 	if (pack == NULL) 
 		FError("CImage:Write_PCX::mem for writing pcx");
@@ -498,7 +498,7 @@ void CImage::Write_PCX( FILE *fp)
 	// write the rest
 	fwrite(pack2, length, 1, fp);
 	
-	free(pack2);
+	delete [] pack2;
 }
 
 
@@ -588,13 +588,8 @@ void CImage::ImageReduce()
 
 	int size = (width)*(height)*4;
 
-	byte * temp = (byte *) MALLOC(size);
-
-	if(!temp)
-	{
-		ConPrint("OUT OF MEMORY !!!!!\n");
-		return;
-	}
+	byte * temp = new byte[size];
+	if(!temp)	FError("Mem for texture reduction");
 
 	for (r = 0; r < height; r++)
 	{
@@ -612,8 +607,8 @@ void CImage::ImageReduce()
 			}
 		}
 	}
-//	delete [] data;
-	free(data);
+
+	delete [] data;
 	data = temp;
 }
 
@@ -695,7 +690,7 @@ convert a tex format from 8888 to something else
 **********************************************************/
 byte* ImageConvert(byte *src, int format, int width, int height)
 {
-	byte *dest = (byte*)MALLOC(width * height * 2);
+	byte *dest = new byte[width * height * 2];
 	if (dest == NULL) FError("mem for pic format conversion");
 
 // convert from 8888 to 565

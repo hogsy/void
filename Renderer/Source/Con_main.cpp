@@ -69,7 +69,7 @@ bool CRConsole::Init(bool fullscreen, bool down)
 	//allocate all mem that will be needed
 	for (int i = 0; i < CON_MAX_LINES; i++)
 	{
-		m_lines[i] = (Conline_t*) MALLOC(sizeof(Conline_t));
+		m_lines[i] = new Conline_t;
 		if (m_lines[i] == NULL) 
 		{
 			FError("Con_Init::Couldnt allocate space for Console line %d\n",i);
@@ -96,7 +96,7 @@ bool CRConsole::Shutdown()
 	for (c = 0; c < CON_MAX_LINES; c++)
 	{
 		if(m_lines[c])
-		free(m_lines[c]);
+			delete m_lines[c];
 	}
 
 	return true;

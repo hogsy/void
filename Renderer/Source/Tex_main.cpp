@@ -46,7 +46,7 @@ bool CTextureManager::Init(char *basepath)
 		return false;
 
 	//allocate all mem
-	tex = (tex_t*)MALLOC(sizeof(tex_t));
+	tex = new tex_t;
 	if (tex == NULL) 
 		FError("CTextureManager::Init:No mem for tex struct");
 	memset (tex, 0, sizeof(tex_t));
@@ -60,7 +60,7 @@ bool CTextureManager::Init(char *basepath)
 		m_numBaseTextures = count+1;
 
 	//Alloc space for base textures
-	tex->base_names = (GLuint*)MALLOC(sizeof(GLuint) * m_numBaseTextures);
+	tex->base_names = new GLuint[m_numBaseTextures];
 	if (tex->base_names == NULL) 
 		FError("CTextureManager::Init:No mem for base texture names");
 
@@ -109,9 +109,9 @@ bool CTextureManager::Shutdown()
 	ConPrint("CTextureManager::Shutdown:Destroying base textures :");
 
 	glDeleteTextures(m_numBaseTextures, tex->base_names);
-	free (tex->base_names);
+	delete [] tex->base_names;	//free (tex->base_names);
 
-	free (tex);
+	delete tex;	//free (tex);
 	tex = NULL;
 
 	m_loaded = NO_TEXTURES;
@@ -145,16 +145,16 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	while (map->textures[tex->num_textures][0] != '\0')
 		tex->num_textures++;
 
-	tex->tex_names = (GLuint*)MALLOC(sizeof(GLuint) * tex->num_textures);
+	tex->tex_names = new GLuint[tex->num_textures];
 	if (tex->tex_names == NULL) 
 		FError("mem for texture names");
 
-	tex->polycaches = (cpoly_t**)MALLOC(sizeof(cpoly_t*) * tex->num_textures);
+	tex->polycaches = new cpoly_t*[tex->num_textures];
 	if (!tex->polycaches) 
 		FError("mem for map tex cache");
 	memset(tex->polycaches, 0, sizeof(cpoly_t**) * tex->num_textures);
 
-	tex->dims = (dimension_t*)MALLOC(sizeof(dimension_t) * tex->num_textures);
+	tex->dims = new dimension_t[tex->num_textures];
 	if (!tex->dims) 
 		FError("mem for map tex dims");
 
@@ -207,7 +207,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 	tex->num_lightmaps = map->nlightdefs;
 
-	tex->light_names = (GLuint*)MALLOC(sizeof(GLuint) * tex->num_lightmaps);
+	tex->light_names = new GLuint[tex->num_lightmaps];
 	if (tex->light_names == NULL) 
 		FError("mem for lightmap names");
 
@@ -264,7 +264,7 @@ bool CTextureManager::UnloadWorldTextures()
 	ConPrint("Destroying map textures: ");
 
 	glDeleteTextures(tex->num_textures, tex->tex_names);
-	free (tex->tex_names);
+	delete [] tex->tex_names;	//free (tex->tex_names);
 	tex->num_textures = 0;
 
 //	free (tex->cache);
@@ -276,13 +276,13 @@ bool CTextureManager::UnloadWorldTextures()
 	if (tex->num_lightmaps)
 	{
 		glDeleteTextures(tex->num_lightmaps, tex->light_names);
-		free (tex->light_names);
+		delete [] tex->light_names;	//free (tex->light_names);
 		tex->num_lightmaps = 0;
 	}
 
 	if(tex->dims)
 	{
-		free(tex->dims);
+		delete [] tex->dims;
 		tex->dims = 0;
 	}
 
