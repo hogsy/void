@@ -3,7 +3,7 @@
 #include "Tex_main.h"
 #include "Tex_image.h"
 
-//FIX ME, all the base textures are uploaded as RGBA right now
+
 const char * BaseTextureList[] =
 {
 	"base/_ascii",
@@ -24,9 +24,7 @@ Constructor
 CTextureManager::CTextureManager()
 {
 	strcpy(m_textureDir,"textures");
-
-	m_texReader = new CImageReader();
-
+	
 	m_loaded = NO_TEXTURES;
 	m_numBaseTextures = 0;
 	m_numWorldTextures = 0;
@@ -38,7 +36,7 @@ Destructor
 ==========================================
 */
 CTextureManager::~CTextureManager()
-{	delete m_texReader;
+{	CImageReader::GetReader().FreeMipData();
 }
 
 
@@ -68,29 +66,19 @@ bool CTextureManager::Init()
 	ComPrintf("CTextureManager::Init:Creating base textures");
 
 	TextureData tData;
-
 	// load base textures
 	for(count=0;count<m_numBaseTextures;count++)
 	{
 		LoadTexture(BaseTextureList[count], tData);
 
-		// create all mipmaps
-/*		tex_load_t tdata;
-		tdata.format = m_texReader->GetFormat();
-		tdata.height = m_texReader->GetHeight();
-		tdata.width  = m_texReader->GetWidth();
-		tdata.mipmaps= m_texReader->GetNumMips();
-		tdata.mipdata= m_texReader->GetMipData();
-		tdata.mipmap = false;
-		tdata.clamp  = true;
-*/
 		tData.bClamped = true;
 		tData.bMipMaps = false;
 
 		g_pRast->TextureLoad(tex->bin_base, count, tData);
 	}
 	m_loaded = BASE_TEXTURES;
-	m_texReader->FreeMipData();
+	
+	CImageReader::GetReader().FreeMipData();
 	return true;
 }
 
@@ -126,7 +114,7 @@ bool CTextureManager::Shutdown()
 LoadWorld Textures
 ==========================================
 */
-bool CTextureManager::LoadWorldTextures(CWorld * map)
+bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 {
 	if(m_loaded != BASE_TEXTURES)
 		return false;
@@ -134,7 +122,7 @@ bool CTextureManager::LoadWorldTextures(CWorld * map)
 	if (!tex)
 		return false;
 
-	if (!map)
+	if (!pWorld)
 		return false;
 
 	uint   mipcount = 0,
@@ -143,7 +131,7 @@ bool CTextureManager::LoadWorldTextures(CWorld * map)
 	m_numWorldTextures = 0;
 
 	//Count number of textures
-	while (map->textures[m_numWorldTextures][0] != '\0')
+	while (pWorld->textures[m_numWorldTextures][0] != '\0')
 		m_numWorldTextures++;
 
 	tex->bin_world = g_pRast->TextureBinInit(m_numWorldTextures);
@@ -172,7 +160,7 @@ bool CTextureManager::LoadWorldTextures(CWorld * map)
 
 	for (t=0; t<m_numWorldTextures; t++)
 	{
-		LoadTexture(map->textures[t], tData);
+		LoadTexture(pWorld->textures[t], tData);
 
 		tex->dims[t][0] = tData.width;
 		tex->dims[t][1] = tData.height;
@@ -184,51 +172,27 @@ bool CTextureManager::LoadWorldTextures(CWorld * map)
 		int mipcount = tData.numMipMaps - 1;
 		while (mipcount > 0)
 		{
-			m_texReader->ImageReduce(mipcount);
+			CImageReader::GetReader().ImageReduce(mipcount);
 			mipcount--;
 		}
 		g_pRast->TextureLoad(tex->bin_world, t, tData);
-
-
-		//Set initial dimensions
-/*		tex->dims[t][0] = m_texReader->GetWidth();
-		tex->dims[t][1] = m_texReader->GetHeight();
-
-		// create all mipmaps
-		tex_load_t tdata;
-		tdata.format = m_texReader->GetFormat();
-		tdata.height = m_texReader->GetHeight();
-		tdata.width  = m_texReader->GetWidth();
-		tdata.mipmaps= m_texReader->GetNumMips();
-		tdata.mipdata= m_texReader->GetMipData();
-		tdata.mipmap = true;
-		tdata.clamp  = false;
-
-		int mipcount = tdata.mipmaps - 1;
-		while (mipcount > 0)
-		{
-			m_texReader->ImageReduce(mipcount);
-			mipcount--;
-		}
-		g_pRast->TextureLoad(tex->bin_world, t, &tdata);
-*/
 	}
 
 // FIXME - temp hack to get lightmapping working
-	if (!map->nlightdefs || !map->light_size)
+	if (!pWorld->nlightdefs || !pWorld->light_size)
 	{
 		m_loaded = ALL_TEXTURES;
-		m_texReader->FreeMipData();
+		CImageReader::GetReader().FreeMipData();
 		return true;
 	}
 
-	tex->bin_light = g_pRast->TextureBinInit(map->nlightdefs);	// each lightdef has a unique lightmap
+	tex->bin_light = g_pRast->TextureBinInit(pWorld->nlightdefs);	// each lightdef has a unique lightmap
 
-	unsigned char *ptr = map->lightdata;
+	byte *ptr = pWorld->lightdata;
 	for (t = 0; t < g_pRast->TextureCount(tex->bin_light); t++)
 	{
 
-		m_texReader->ReadLightMap(&ptr, tData);
+		CImageReader::GetReader().ReadLightMap(&ptr, tData);
 
 		tData.bMipMaps = true;
 		tData.bClamped = true;
@@ -236,34 +200,14 @@ bool CTextureManager::LoadWorldTextures(CWorld * map)
 		int mipcount = tData.numMipMaps - 1;
 		while (mipcount > 0)
 		{
-			m_texReader->ImageReduce(mipcount);
+			CImageReader::GetReader().ImageReduce(mipcount);
 			mipcount--;
 		}
 
 		g_pRast->TextureLoad(tex->bin_light, t, tData);
-
-
-		// create all mipmaps
-/*		tex_load_t tdata;
-		tdata.format = m_texReader->GetFormat();
-		tdata.height = m_texReader->GetHeight();
-		tdata.width  = m_texReader->GetWidth();
-		tdata.mipmaps= m_texReader->GetNumMips();
-		tdata.mipdata= m_texReader->GetMipData();
-		tdata.mipmap = true;
-		tdata.clamp  = true;
-
-		int mipcount = tdata.mipmaps - 1;
-		while (mipcount > 0)
-		{
-			m_texReader->ImageReduce(mipcount);
-			mipcount--;
-		}
-		g_pRast->TextureLoad(tex->bin_light, t, &tdata);
-*/
 	}
 
-	m_texReader->FreeMipData();
+	CImageReader::GetReader().FreeMipData();
 	m_loaded = ALL_TEXTURES;
 	return true;
 }
@@ -290,7 +234,7 @@ bool CTextureManager::UnloadWorldTextures()
 	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
 		delete [] tex->polycaches[i];
-		tex->polycaches[i] = NULL;
+		tex->polycaches[i] = 0;
 	}
 
 	// free lightmaps
@@ -322,6 +266,6 @@ void CTextureManager::LoadTexture(const char *filename, TextureData &tData)
 	static char texname[COM_MAXPATH];
 	sprintf(texname,"%s/%s",m_textureDir,filename);
 
-	if(!m_texReader->Read(texname, tData))
-		m_texReader->DefaultTexture(tData);
+	if(!CImageReader::GetReader().Read(texname, tData))
+		CImageReader::GetReader().DefaultTexture(tData);
 }

@@ -8,8 +8,6 @@ Loads/Unloads lightmaps and textures
 ==========================================
 */
 
-class CImageReader;
-
 class CTextureManager
 {
 public:
@@ -37,8 +35,6 @@ private:
 	ETextures		m_loaded;
 
 	char			m_textureDir[10];
-
-	CImageReader *	m_texReader;
 
 	void LoadTexture(const char *filename, TextureData &tData);
 };

@@ -9,8 +9,6 @@ CRenExp		  * g_pRenExp=0;
 
 const char MEM_SZLOGFILE[] = "mem_ren.log";
 
-//CMemManager		g_memManager("mem_ren.log");
-
 /*
 ==========================================
 Create the renderer interface, and

@@ -63,46 +63,18 @@ void CImageCacheEntry::LoadTexture(void)
 	tex_bin = g_pRast->TextureBinInit(1);
 
 	TextureData  tData;
-	CImageReader texReader;
 	
-	texReader.Read(imagefile, tData);
+	CImageReader::GetReader().Read(imagefile, tData);
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
 	int mipCount = tData.numMipMaps - 1;
 	while (mipCount > 0)
 	{
-		texReader.ImageReduce(mipCount);
+		CImageReader::GetReader().ImageReduce(mipCount);
 		mipCount--;
 	}
 	g_pRast->TextureLoad(tex_bin, 0, tData);
-
-
-/*	
-	CImageReader *texReader = new CImageReader();
-
-	texReader->Read(imagefile);
-
-	// create all mipmaps
-
-	tex_load_t tdata;
-	tdata.format = texReader->GetFormat();
-	tdata.height = texReader->GetHeight();
-	tdata.width  = texReader->GetWidth();
-	tdata.mipmaps= texReader->GetNumMips();
-	tdata.mipdata= texReader->GetMipData();
-	tdata.mipmap = true;
-	tdata.clamp  = false;
-
-	int mipcount = tdata.mipmaps - 1;
-	while (mipcount > 0)
-	{
-		texReader->ImageReduce(mipcount);
-		mipcount--;
-	}
-	g_pRast->TextureLoad(tex_bin, 0, &tdata);
-	delete texReader;
-*/
 }
 
 /*

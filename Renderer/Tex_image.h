@@ -3,7 +3,8 @@
 
 #include "I_file.h"
 
-//======================================================================================
+//==========================================================================
+//==========================================================================
 
 enum EImageFileFormat
 {
@@ -12,7 +13,6 @@ enum EImageFileFormat
 	FORMAT_PCX,
 	FORMAT_JPG
 };
-
 
 const int mipdatasizes[MAX_MIPMAPS] = 
 {
@@ -30,35 +30,43 @@ const int mipdatasizes[MAX_MIPMAPS] =
 };
 
 
-//======================================================================================
+//==========================================================================
+//==========================================================================
 
 /*
 ==========================================
-ImageReader Class
+Singleton ImageReader Class
 ==========================================
 */
 class CImageReader
 {
 public:
 
-	CImageReader();
-	virtual ~CImageReader();
-/*
-	const int & GetHeight() const { return height;}		//Height
-	const int & GetWidth()  const { return width; }		//Width
-	const int & GetNumMips()const { return miplevels; }
-	byte ** GetMipData()   { return &mipmapdata[0]; }
-	const EImageFormat & GetFormat()  const { return format; }	//BYTES per pixel
-*/
+	static CImageReader & GetReader();
+	~CImageReader();
 
 	bool Read(const char * file, TextureData &imgData);
-	bool ReadLightMap(unsigned char **stream, TextureData &imgData);	
-	bool DefaultTexture(TextureData &imgData);
+	bool ReadLightMap(byte **stream, TextureData &imgData);	
+	void DefaultTexture(TextureData &imgData);
 
-	void ImageReduce(int m);			//Reduce image data by 2x. used to create mipmaps
+	//Reduce image data by 2x. used to create mipmaps
+	void ImageReduce(int m);	
 	void FreeMipData();
 
-protected:
+private:
+
+	//Hide constructor
+	CImageReader();
+
+	//Util functions
+	void GetMipCount();
+	void ConfirmMipData();		//allocate mem if we need to
+	void ColorKey(byte *data);	//Only works for RGBA images
+
+	//Supported formats
+	bool Read_PCX(TextureData &imgData);
+	bool Read_TGA(TextureData &imgData);
+	bool Read_JPG(TextureData &imgData);
 
 	byte *	mipmapdata[MAX_MIPMAPS];
 	int		width,
@@ -66,20 +74,8 @@ protected:
 	int		h, w;	// for mipmap creation
 	int		miplevels;
 
-	EImageFormat format;
-	CFileBuffer	 m_fileReader;
-
-	// util functions
-	void GetMipCount();
-	void ConfirmMipData();		//allocate mem if we need to
-	void ColorKey(unsigned char *data);			//Only works for RGBA images
-
-	//==========================================
-	//Supported formats
-
-	bool Read_PCX(TextureData &imgData);
-	bool Read_TGA(TextureData &imgData);
-	bool Read_JPG(TextureData &imgData);
+	EImageFormat  format;
+	CFileBuffer	  m_fileReader;
 };
 
 /*
@@ -101,8 +97,9 @@ public:
 
 protected:
 
-	int		m_width, m_height;
-	const   byte * m_pData;
+	int		m_width, 
+			m_height;
+	const   byte *   m_pData;
 
 	void	Write_TGA( FILE *fp);
 	void	Write_PCX( FILE *fp);

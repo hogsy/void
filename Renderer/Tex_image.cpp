@@ -33,7 +33,9 @@ namespace
 
 /*
 ==========================================
-Image Reader COnstructor/Destructor
+Constructor/Destructor
+Construct is private so that only one
+ImageReader object will ever exits
 ==========================================
 */
 CImageReader::CImageReader()
@@ -46,10 +48,20 @@ CImageReader::CImageReader()
 }
 
 CImageReader::~CImageReader()		
-{
-	FreeMipData();
+{	FreeMipData();
 }
 
+
+/*
+================================================
+Static Access func
+================================================
+*/
+CImageReader & ::CImageReader::GetReader()
+{
+	static CImageReader imgReader;
+	return imgReader;
+}
 
 /*
 ==========================================
@@ -62,17 +74,16 @@ void CImageReader::FreeMipData(void)
 	{
 		if (mipmapdata[i])
 			g_pHunkManager->HunkFree(mipmapdata[i]);
-		mipmapdata[i] = NULL;
+		mipmapdata[i] = 0;
 	}
 }
-
 
 /*
 ==========================================
 Key the transparent color
 ==========================================
 */
-void CImageReader::ColorKey(unsigned char *data)
+void CImageReader::ColorKey(byte *data)
 {
 	if(!data || format != IMG_RGBA)
 		return;
@@ -93,7 +104,7 @@ Load a default image
 used as a replacement when we can't find a texture
 ==========================================
 */
-bool CImageReader::DefaultTexture(TextureData &imgData)
+void CImageReader::DefaultTexture(TextureData &imgData)
 {
 	width = DEFAULT_TEXTURE_WIDTH;
 	height = DEFAULT_TEXTURE_HEIGHT;
@@ -110,7 +121,6 @@ bool CImageReader::DefaultTexture(TextureData &imgData)
 	imgData.data = &mipmapdata[0];
 	imgData.format = format;
 	imgData.numMipMaps = miplevels;
-	return true;
 }
 
 /*
@@ -541,24 +551,6 @@ bool CImageReader::ReadLightMap(unsigned char **stream, TextureData &imgData)
 	imgData.data = &mipmapdata[0];
 	imgData.numMipMaps = miplevels;
 
-/*
-	w = width = **stream;
-	(*stream)++;
-	h = height = **stream;
-	(*stream)++;
-
-	if (!width || !height)
-		return false;
-
-	ConfirmMipData();
-
-	for (int p = 0; p < width * height * 3; p++)
-	{
-		mipmapdata[miplevels-1][p] = **stream;
-		(*stream)++;
-	}
-	format = IMG_RGB;
-*/
 	return true;
 }
 

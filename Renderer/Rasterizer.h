@@ -59,7 +59,11 @@ enum EImageFormat
 	IMG_RGBA  =4
 };
 
+/*
+================================================
 
+================================================
+*/
 struct TextureData
 {
 	TextureData() : bMipMaps(false), bClamped(false), numMipMaps(1),
@@ -76,19 +80,6 @@ struct TextureData
 
 	EImageFormat  format;
 };
-
-/*
-typedef struct
-{
-	unsigned char **mipdata;
-	int mipmaps;	// number of mipmaps
-	EImageFormat format;
-	bool mipmap;
-	bool clamp;
-	int height;
-	int width;
-} tex_load_t;
-*/
 
 // buffers that may be cleared
 #define VRAST_COLOR_BUFFER		1

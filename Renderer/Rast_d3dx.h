@@ -94,7 +94,6 @@ private:
 	int					mNumVerts;
 	D3DLVERTEX			mVerts[16000];
 
-
 	vector_t	mColor;
 	float		mAlpha;
 	EPolyType	mType;
@@ -102,7 +101,7 @@ private:
 	bool		mVidSynch;
 
 	HRESULT		mhError;
-	bool	m_bInitialized;
+	bool		m_bInitialized;
 };
 
 

@@ -131,13 +131,12 @@ void CShaderManager::LoadWorld(CWorld *map)
 		mNumLightmaps = map->nlightdefs;
 		mLightmapBin = g_pRast->TextureBinInit(mNumLightmaps);
 
-		CImageReader texReader;
 		TextureData	 tData;
 
 		unsigned char *ptr = map->lightdata;
 		for (int t=0; t<mNumLightmaps; t++)
 		{
-			texReader.ReadLightMap(&ptr, tData);
+			CImageReader::GetReader().ReadLightMap(&ptr, tData);
 
 			tData.bClamped = true;
 			tData.bMipMaps = true;
@@ -145,31 +144,11 @@ void CShaderManager::LoadWorld(CWorld *map)
 			int mipCount = tData.numMipMaps - 1;
 			while (mipCount > 0)
 			{
-				texReader.ImageReduce(mipCount);
+				CImageReader::GetReader().ImageReduce(mipCount);
 				mipCount--;
 			}
 
 			g_pRast->TextureLoad(mLightmapBin, t, tData);
-
-			// create all mipmaps
-/*			tex_load_t tdata;
-			tdata.format = texReader.GetFormat();
-			tdata.height = texReader.GetHeight();
-			tdata.width  = texReader.GetWidth();
-			tdata.mipmaps= texReader.GetNumMips();
-			tdata.mipdata= texReader.GetMipData();
-			tdata.mipmap = true;
-			tdata.clamp  = true;
-
-			int mipcount = tdata.mipmaps - 1;
-			while (mipcount > 0)
-			{
-				texReader.ImageReduce(mipcount);
-				mipcount--;
-			}
-			g_pRast->TextureLoad(mLightmapBin, t, &tdata);
-*/
-
 		}
 	}
 

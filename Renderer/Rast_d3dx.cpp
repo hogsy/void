@@ -172,9 +172,9 @@ bool CRastD3DX::Shutdown()
 		m_pD3DX->Release();
 	m_pD3DX = NULL;
 
-    D3DXUninitialize();
+	D3DXUninitialize();
 
-	g_rInfo.ready = false;
+ 	g_rInfo.ready = false;
 	return true;
 }
 
@@ -415,6 +415,7 @@ int CRastD3DX::TextureBinInit(int num)
 		{
 			mTexBins[i].num = num;
 			mTexBins[i].tex_surfs = new LPDIRECTDRAWSURFACE7[num];
+			
 			if (!mTexBins[i].tex_surfs)
 				FError("d3dx - not enough mem for texture surf pointers");
 
