@@ -61,19 +61,19 @@ Rotate camera in the appropriate dir
 ================================================
 */
 void CGameClient::RotateRight(const float &val)
-{	m_vecDesiredAngles.y -= val;
+{	m_vecDesiredAngles.y -= (val*m_fFrameTime);
 }
 
 void CGameClient:: RotateLeft(const float &val)
-{	m_vecDesiredAngles.y += val;
+{	m_vecDesiredAngles.y += (val*m_fFrameTime);
 }
 
 void CGameClient::RotateUp(const float &val)
-{	m_vecDesiredAngles.x += val;
+{	m_vecDesiredAngles.x += (val*m_fFrameTime);
 }
 
 void CGameClient:: RotateDown(const float &val)
-{	m_vecDesiredAngles.x -= val;
+{	m_vecDesiredAngles.x -= (val*m_fFrameTime);
 }
 
 /*
@@ -83,11 +83,17 @@ Update angles. called onces per frame
 */
 void CGameClient::UpdateViewAngles()
 {
-	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * m_fFrameTime);  
+//	m_vecDesiredAngles.YAW *= ;  
+//	m_vecDesiredAngles.PITCH *= m_fFrameTime;  
+
+
+//	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * m_fFrameTime);  
+	m_pGameClient->angles.YAW += m_vecDesiredAngles.YAW;
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
 
-	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
+//	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
+	m_pGameClient->angles.PITCH +=  m_vecDesiredAngles.PITCH;
 	if (m_pGameClient->angles.PITCH <= (-PI * 0.4f))
 		m_pGameClient->angles.PITCH = (-PI * 0.4f);
 	if (m_pGameClient->angles.PITCH > PI/2)

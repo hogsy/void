@@ -54,22 +54,23 @@ class CConsole: public I_Console,		//Console interface exported to other modules
 {
 public:
 
-	CConsole(const char * curPath);
+	CConsole(const char * szCurPath);
 	~CConsole();
 
 	//==============================================================
 	//I_Console Interface
-	CVar * RegisterCVar(const char * varName,
-						const char *varval, 
+	CVar * RegisterCVar(const char * szName,
+						const char *szVal, 
 						CVarType vartype,	
 						int varflags,
 						I_ConHandler * pHandler);
 
 	void UnregisterHandler(I_ConHandler * pHandler);
-	void RegisterCommand(const char *cmdname, int id, I_ConHandler * pHandler);
-	void ComPrint(const char* text);
-	bool ExecString(const char *string);
-
+	void RegisterCommand(const char * szCmdname, int id, I_ConHandler * pHandler);
+	void ComPrint(const char* szText);
+	void AddToCmdBuffer(const char * szCmd);
+	bool ExecString(const char * szCmd);
+	
 	//==============================================================
 	//Key Listener interface
 	void HandleKeyEvent(const KeyEvent &kevent);
@@ -81,7 +82,7 @@ public:
 
 	//==============================================================
 
-	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
+	void ExecCommands();
 
 	//Configs, commandline Parms etc
 	void AddCmdLineParm(const char * cmdLine);
@@ -91,12 +92,11 @@ public:
 	void ExecConfig(const char * szFilename);
 	void WriteCVars(const char * szFilename);
 
-	//Client comand binding
-	CCommand * GetCommandByName(const char * cmdString);
-	
 	//Console viewing
     void SetFullscreen(bool full);
     void SetVisible(bool down);
+
+	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
 
 private:
 
@@ -122,8 +122,10 @@ private:
 
 	std::string	m_conString;	//Current String in Console
 
-	StrList		m_cmdBuffer;	//Commands entered in the console
-	StrListIt	m_itCmd;		//iterator to keep track of the Commands buffer
+	StrList		m_conStrBuf;	//Commands entered in the console
+	StrListIt	m_itCurStr;		//iterator to keep track of the Commands buffer
+
+	StrList		m_cmdBuf;		//Keeps commands to be executed at the end of the frame
 
 	//Parsed parms of string enterered
 	CParms		m_parms;

@@ -123,7 +123,6 @@ private:
 	
 	void PrintServerStatus();
 	void UpdateServerState();
-	void ExecServerCommands();
 
 	void SendReconnects();
 
@@ -152,8 +151,6 @@ private:
 	ResInfo m_soundList[GAME_MAXSOUNDS];
 	int		m_numSounds;
 
-	StrList m_svCmds;
-	
 	//=================================================
 	//World and Entities
 	CWorld	*	m_pWorld;

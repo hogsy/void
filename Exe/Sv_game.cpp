@@ -178,7 +178,7 @@ NetChanWriter & CServer::GetNetChanWriter()
 
 //Add a command which will be executed at the end of the frame
 void CServer::AddServerCmd(const char * cmd)
-{	m_svCmds.push_back(std::string(cmd));
+{	I_Console::GetConsole()->AddToCmdBuffer(cmd);
 }
 
 void CServer::DebugPrint(const char * msg)

@@ -460,6 +460,12 @@ Disconnect and reconnect
 */
 void CNetClient::Reconnect(bool serverPrompted)
 {
+	if(m_netState == CL_FREE)
+	{
+		ComPrintf("Can't reconnect. Connect first.\n");
+		return;
+	}
+
 	char svaddr[NET_IPADDRLEN];
 	strcpy(svaddr,m_szServerAddr);
 	
@@ -479,8 +485,7 @@ Update local net vars
 ======================================
 */
 void CNetClient::SetRate(int rate)
-{
-	m_pNetChan->SetRate(rate);
+{	m_pNetChan->SetRate(rate);
 }
 void CNetClient::SetPort(short port)
 {	

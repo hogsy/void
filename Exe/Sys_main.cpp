@@ -303,6 +303,9 @@ void CVoid::RunFrame()
 	//Client will handle drawing as well.
 	//Can be in the console , in the UI, or in the game.
 	m_pClient->RunFrame();
+
+	//Commands are run at the end of the frame
+	m_pConsole->ExecCommands();
 }
 
 //======================================================================================

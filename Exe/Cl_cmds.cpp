@@ -1,5 +1,4 @@
 #include "Sys_hdr.h"
-#include "Sys_cons.h"
 #include "Cl_cmds.h"
 
 /*
@@ -7,18 +6,25 @@
 Constructor/Destructor
 ==========================================
 */
-CClientGameInput::CClientGameInput() : m_Parms(80) , 
-							   m_fXpos(0.0f), m_fYpos (0.0f), m_fZpos(0.0f),
-							   m_bCursorChanged(false)
+CClientGameInput::CClientGameInput() 
+		: m_fXpos(0.0f), m_fYpos (0.0f), m_fZpos(0.0f),
+		  m_bCursorChanged(false)
 {
-	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
-		m_cmdBuffer[i] = 0;
+	memset(m_cmdKeys,  0,sizeof(char*)*IN_NUMKEYS);
+	memset(m_cmdBuffer,0,sizeof(char*)*CL_CMDBUFFERSIZE);
 }
 
 CClientGameInput::~CClientGameInput()
 {
-	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
-		m_cmdBuffer[i] = 0;
+	for(int i=0;i<IN_NUMKEYS;i++)
+	{
+		if(m_cmdKeys[i])
+		{
+			delete [] m_cmdKeys[i];
+			m_cmdKeys[i] = 0;
+		}
+	}
+	memset(m_cmdBuffer,0,sizeof(char*)*CL_CMDBUFFERSIZE);
 }
 
 
@@ -45,18 +51,10 @@ void CClientGameInput::RunCommands()
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
 		if(m_cmdBuffer[i])
-		{
-			if(m_cmdBuffer[i]->szCommand[0] == '+')
-				m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
-			else
-			{
-				m_Parms = m_cmdBuffer[i]->szCommand;
-				m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
-				m_cmdBuffer[i] = 0;
-			}
-		}
+			I_Console::GetConsole()->AddToCmdBuffer(m_cmdBuffer[i]);
 	}
 }
+
 
 /*
 ==========================================
@@ -66,18 +64,21 @@ Handle Key Event
 void CClientGameInput::HandleKeyEvent(const KeyEvent &kevent)
 {
 	//check if there is a command bound to that key
-	if(m_cmdKeys[(kevent.id)].szCommand[0])
+	if(m_cmdKeys[(kevent.id)])
 	{
 		//if its a keydown event
 		if(kevent.state == BUTTONDOWN)
 		{
-			//add to command buffer
-			AddToCmdBuffer(&m_cmdKeys[(kevent.id)]);
+			if(m_cmdKeys[(kevent.id)][0] == '+')
+				AddToCmdBuffer(m_cmdKeys[(kevent.id)]);
+			else
+				I_Console::GetConsole()->AddToCmdBuffer(m_cmdKeys[(kevent.id)]);
 		}
-		else if((kevent.state == BUTTONUP) && (m_cmdKeys[(kevent.id)].szCommand[0] == '+'))
+		else if(kevent.state == BUTTONUP)
 		{
 			//otherwise remove from buffer
-			RemoveFromCmdBuffer(&m_cmdKeys[(kevent.id)]);
+			if(m_cmdKeys[(kevent.id)][0] == '+')
+				RemoveFromCmdBuffer(m_cmdKeys[(kevent.id)]);
 		}
 	}
 }
@@ -143,24 +144,24 @@ void CClientGameInput::BindFuncToKey(const CParms &parms, bool bPrint)
 	//Only two args, just show binding for the key and return
 	if(argc == 2)
 	{
-		ComPrintf("\"%s\" = \"%s\"\n", keyName, m_cmdKeys[keynum].szCommand);
+		if(m_cmdKeys[keynum])
+			ComPrintf("\"%s\" = \"%s\"\n", keyName, m_cmdKeys[keynum]);
+		else
+			ComPrintf("\"%s\" = \" \"\n", keyName);
 		return;
 	}
 
-	char cmdName[32];
-	parms.StringTok(2, cmdName, 32);
+	char cmdName[80];
+	parms.StringTok(2, cmdName, 80);
 
-	m_cmdKeys[keynum].pCmd = ((CConsole*)I_Console::GetConsole())->GetCommandByName(cmdName);
-	if(m_cmdKeys[keynum].pCmd == 0)
-	{
-		ComPrintf("Bind : %s is not a valid command\n",cmdName);
-		return;
-	}
+	if(m_cmdKeys[keynum])
+		delete [] m_cmdKeys[keynum];
 
-	strcpy(m_cmdKeys[keynum].szCommand, cmdName);
-
+	m_cmdKeys[keynum] = new char[strlen(cmdName)+1];
+	strcpy(m_cmdKeys[keynum], cmdName);
+	
 	if(bPrint)
-		ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum].szCommand);
+		ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum]);
 }
 
 
@@ -248,12 +249,13 @@ void CClientGameInput::Unbind(const CParms &parms)
 			return;
 		}
 	}
-		
-	if(m_cmdKeys[keynum].szCommand && m_cmdKeys[keynum].pCmd)
+
+	if(m_cmdKeys[keynum])
 	{
-		m_cmdKeys[keynum].pCmd = 0;
-		m_cmdKeys[keynum].szCommand[0] = 0;
+		delete [] m_cmdKeys[keynum];
+		m_cmdKeys[keynum] = 0;
 	}
+		
 	ComPrintf("\"%s\" = \"\"\n",keyName);
 }
 
@@ -264,12 +266,12 @@ Print out a list of current binds
 */
 void CClientGameInput::BindList() const
 {
-	ComPrintf(" Client Bindings \n");
+	ComPrintf("Client Bindings\n");
 	ComPrintf("=================\n");
 	
 	for(unsigned int i=0;i<256;i++)
 	{
-		if(m_cmdKeys[i].szCommand && m_cmdKeys[i].pCmd)
+		if(m_cmdKeys[i])
 		{
 			char keyname[16];
 			bool hit=false;
@@ -288,7 +290,7 @@ void CClientGameInput::BindList() const
 				keyname[0] = i;
 				keyname[1] = '\0';
 			}
-			ComPrintf("\"%s\" = \"%s\"\n",keyname, m_cmdKeys[i].szCommand);
+			ComPrintf("\"%s\" = \"%s\"\n",keyname, m_cmdKeys[i]);
 		}
 	}
 }
@@ -302,10 +304,10 @@ void CClientGameInput::Unbindall()
 {
 	for(int i=0;i<256;i++)
 	{
-		if(m_cmdKeys[i].szCommand && m_cmdKeys[i].pCmd)
+		if(m_cmdKeys[i])
 		{
-			m_cmdKeys[i].szCommand[0]=0;
-			m_cmdKeys[i].pCmd = 0;
+			delete [] m_cmdKeys[i];
+			m_cmdKeys[i] = 0;
 		}
 	}
 	ComPrintf("Unbound all keys.\n");
@@ -316,7 +318,7 @@ void CClientGameInput::Unbindall()
 Add command to execute buffer
 ==========================================
 */
-void CClientGameInput::AddToCmdBuffer(ClientKey * const pcommand)
+void CClientGameInput::AddToCmdBuffer(const char * pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -337,7 +339,7 @@ void CClientGameInput::AddToCmdBuffer(ClientKey * const pcommand)
 Remove from execute buffer
 ==========================================
 */
-void CClientGameInput::RemoveFromCmdBuffer(const ClientKey * pcommand)
+void CClientGameInput::RemoveFromCmdBuffer(const char * pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -369,7 +371,7 @@ void CClientGameInput::WriteBinds(const char * szBindsfile)
 	for(int i=0;i<256;i++)
 	{
 		//there is a binding for this key
-		if(m_cmdKeys[i].szCommand && m_cmdKeys[i].pCmd)
+		if(m_cmdKeys[i])
 		{
 			char line[80];
 			bool hit=false;
@@ -393,7 +395,7 @@ void CClientGameInput::WriteBinds(const char * szBindsfile)
 			}
 			
 			strcat(line," ");
-			strcat(line, m_cmdKeys[i].szCommand);
+			strcat(line, m_cmdKeys[i]);
 			strcat(line,"\n");
 			fputs(line,fp);
 		}
@@ -459,5 +461,4 @@ void CClientGameInput::ExecBindsFile(const char * szBindsfile)
 
 	fclose(fpcfg);
 	ComPrintf("CConsole::Exec'ed %s\n",file);
-
 }

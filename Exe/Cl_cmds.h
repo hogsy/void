@@ -54,23 +54,6 @@ const ClientGameCmd g_clGameCmds[] =
 
 /*
 =========================================
-List of all the Keys and a pointer to 
-the function they are bound to
-=========================================
-*/
-struct CCommand;
-
-struct ClientKey
-{
-	ClientKey()	{ pCmd = 0;	szCommand[0] = 0;}
-	~ClientKey(){ pCmd = 0; } 
-	
-	char 	   szCommand[80];
-	CCommand * pCmd;
-};
-
-/*
-=========================================
 A Constant list of Special keys "names"
 and their corresponding values only 
 =========================================
@@ -161,16 +144,14 @@ public:
 
 private:
 
-	void AddToCmdBuffer(ClientKey * const pcommand);
-	void RemoveFromCmdBuffer(const ClientKey * pcommand);
+	void AddToCmdBuffer(const char * pcommand);
+	void RemoveFromCmdBuffer(const char * pcommand);
 
 	float	m_fXpos, m_fYpos, m_fZpos;
 	bool	m_bCursorChanged;
 
-	CParms	m_Parms;
-
-	ClientKey	m_cmdKeys[IN_NUMKEYS];
-	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
+	char * 	m_cmdKeys[IN_NUMKEYS];
+	const char *  m_cmdBuffer[CL_CMDBUFFERSIZE];
 };
 
 

@@ -123,12 +123,12 @@ void CClient::RunFrame()
 		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
 		m_fFrameTime = System::GetCurTime();
 
+		//Run Client Frame. All game related processing/drawing
+		m_pClState->RunFrame(System::GetFrameTime());
+
 		//Draw NetStats if flagged
 		if(m_cvNetStats->bval)
 			ShowNetStats();
-
-		//Run Client Frame. All game related processing/drawing
-		m_pClState->RunFrame(System::GetFrameTime());
 		
 		//Update Sound engine with client new pos
 		m_pSound->UpdateListener(m_pClState->GetCamera());

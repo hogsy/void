@@ -98,6 +98,8 @@ struct I_Console
 	//Print Functions
 	virtual void ComPrint(const char* text)=0;
 
+	virtual void AddToCmdBuffer(const char * string)=0;
+
 	//pass a string to be exec'ed
 	virtual bool ExecString(const char *string)=0;
 };

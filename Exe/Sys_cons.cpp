@@ -27,15 +27,15 @@ I_Console * I_Console::GetConsole()
 Constructor
 ======================================
 */ 
-CConsole::CConsole(const char * curPath) : m_parms(CON_MAXARGSIZE)
+CConsole::CConsole(const char * szCurPath) : m_parms(CON_MAXARGSIZE)
 {
-	m_itCmd = 0;
+	m_itCurStr = 0;
 	m_prCons = 0;
 
 	//open logfile
 	char debugfilename[COM_MAXPATH];
-	strcpy(debugfilename,curPath);
-	strcat(debugfilename,"debug.log");
+	strcpy(debugfilename,szCurPath);
+	strcat(debugfilename,"/debug.log");
 
 	m_hLogFile = ::CreateFile(debugfilename,GENERIC_WRITE, FILE_SHARE_READ, 0,
 				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
@@ -133,10 +133,10 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					ComPrintf("]\n");
 				else
 				{
-					if(m_cmdBuffer.size() == CON_MAXBUFFEREDCMDS)
-						m_cmdBuffer.pop_front();
-					m_cmdBuffer.push_back(std::string(m_conString));
-					m_itCmd = m_cmdBuffer.end();
+					if(m_conStrBuf.size() == CON_MAXBUFFEREDCMDS)
+						m_conStrBuf.pop_front();
+					m_conStrBuf.push_back(std::string(m_conString));
+					m_itCurStr = m_conStrBuf.end();
 
 					ComPrintf("]%s\n",m_conString.c_str());
 
@@ -200,21 +200,21 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			}
 			case INKEY_UPARROW:					
 			{
-				if((m_itCmd != 0) && (m_itCmd != m_cmdBuffer.begin()))
+				if((m_itCurStr != 0) && (m_itCurStr != m_conStrBuf.begin()))
 				{
-					m_itCmd--;
-					m_conString.assign(*m_itCmd);
+					m_itCurStr--;
+					m_conString.assign(*m_itCurStr);
 				}
 				break;
 			}
 			case INKEY_DOWNARROW:				
 			{
-				if(m_itCmd != 0)
+				if(m_itCurStr != 0)
 				{
-					if(++m_itCmd != m_cmdBuffer.end())
-						m_conString.assign(*m_itCmd);
+					if(++m_itCurStr != m_conStrBuf.end())
+						m_conString.assign(*m_itCurStr);
 					else
-						m_itCmd--;
+						m_itCurStr--;
 				}
 				break;
 			}
@@ -255,9 +255,9 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 Try to execute a string in the console
 =======================================
 */
-bool CConsole::ExecString(const char *string)
+bool CConsole::ExecString(const char * szCmd)
 {
-	m_parms = string;
+	m_parms = szCmd;
 	const char * szfirstArg = m_parms.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 
 	//Try matching with registered commands
@@ -328,9 +328,8 @@ Register CVar
 Initialize CVar and alphabetically add to list
 ==========================================
 */
-//void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
-CVar * CConsole::RegisterCVar(const char * varName,
-					const char *varVal, 
+CVar * CConsole::RegisterCVar(const char * szName,
+					const char * szVal, 
 					CVarType varType,	
 					int varFlags,
 					I_ConHandler * pHandler)
@@ -340,20 +339,20 @@ CVar * CConsole::RegisterCVar(const char * varName,
 	//Insert in the proper place alphabetically
 	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
-		ret = strcmp((*it)->name, varName);
+		ret = strcmp((*it)->name, szName);
 		if(ret > 0)
 			break;
 		
 		//found a cvar using the same name. just return that.
 		if(ret == 0)
 		{
-			ComPrintf("CConsole::RegisterCVar: WARNING, %s was re-registered\n", varName);
+			ComPrintf("CConsole::RegisterCVar: WARNING, %s was re-registered\n", szName);
 			return *it;
 		}
 		
 	}
 
-	CVarImpl * pVar = new CVarImpl(varName,varVal,varType,varFlags);
+	CVarImpl * pVar = new CVarImpl(szName,szVal,varType,varFlags);
 	if(pHandler)
 		pVar->handler = pHandler;
 
@@ -404,31 +403,39 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 Register CFunc
 ==========================================
 */
-void CConsole::RegisterCommand(const char *cmdname,   int id,   I_ConHandler * pHandler)
+void CConsole::RegisterCommand(const char * szCmdName,   int id,   I_ConHandler * pHandler)
 {
 	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it++)
 	{
-		if(strcmp(it->name, cmdname) > 0)
+		if(strcmp(it->name, szCmdName) > 0)
 			break;
 	}
 	
-	m_lCmds.insert(it,CCommand(cmdname,id,pHandler));
+	m_lCmds.insert(it,CCommand(szCmdName,id,pHandler));
 }
 
 /*
-======================================
-Only needed by the client
-======================================
+================================================
+Command Buffer management
+================================================
 */
-CCommand * CConsole::GetCommandByName(const char * cmdString)
+void CConsole::AddToCmdBuffer(const char * szCmd)
 {
-	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
-	{
-		if(!strcmp(cmdString,it->name))
-			return &(*it);
-	}
-	return 0;
+	//Hmmm, Check for max size here ?
+	m_cmdBuf.push_back(std::string(szCmd));
 }
+
+//Exec all commands in buffer
+void CConsole::ExecCommands()
+{
+	if(m_cmdBuf.size())
+	{
+		for(StrListIt it = m_cmdBuf.begin(); it != m_cmdBuf.end(); it++)
+			ExecString(it->c_str());
+		m_cmdBuf.clear();
+	}		
+}
+
 
 //======================================================================================
 //Console Commands
@@ -763,3 +770,20 @@ void CConsole::WriteCVars(const char * szFilename)
 	fclose(fp);
 }
 
+
+#if 0
+/*
+======================================
+Only needed by the client
+======================================
+*/
+CCommand * CConsole::GetCommandByName(const char * szCmdString)
+{
+	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
+	{
+		if(!strcmp(szCmdString,it->name))
+			return &(*it);
+	}
+	return 0;
+}
+#endif

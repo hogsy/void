@@ -130,10 +130,7 @@ bool CServer::Init()
 	//Copy old state
 	m_svOldState = m_svState;
 	
-	//Clear Cmd buffer
-	m_svCmds.clear();
-
-	ComPrintf("CServer::Init OK: %d commands in buffer\n", m_svCmds.size());
+	ComPrintf("CServer::Init OK\n");
 
 	m_active = true;
 
@@ -325,25 +322,6 @@ void CServer::RunFrame()
 
 	//write to clients
 	m_net.SendPackets();
-
-	//Exec these last thing so changes don't screw up the current frame
-	ExecServerCommands();
-}
-
-
-/*
-================================================
-Execute the buffer server commands
-================================================
-*/
-void CServer::ExecServerCommands()
-{
-	if(m_svCmds.size())
-	{
-		for(StrListIt it = m_svCmds.begin(); it != m_svCmds.end(); it++)
-			System::GetConsole()->ExecString(it->c_str());
-		m_svCmds.clear();
-	}		
 }
 
 //======================================================================================

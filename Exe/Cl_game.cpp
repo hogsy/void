@@ -90,19 +90,20 @@ void CGameClient::RunFrame(float frameTime)
 	m_fFrameTime = frameTime;
 
 	//Reset move and angles stuff from the old frame
-	m_vecDesiredAngles.Set(0,0,0);
-	m_cmd.Reset();
+//	m_vecDesiredAngles.Set(0,0,0);
+//	m_cmd.Reset();
 	
 	//Run Input
 	if(m_pCmdHandler->CursorChanged())
 	{
 		vector_t vecMouseAngles;
-
 		m_pCmdHandler->UpdateCursorPos(vecMouseAngles.x, vecMouseAngles.y, vecMouseAngles.z);
 		RotateRight(vecMouseAngles.x);
 		RotateUp(vecMouseAngles.y);
 	}
-	m_pCmdHandler->RunCommands();
+//	m_pCmdHandler->RunCommands();
+
+//	m_pClGame->HudPrintf(0,100,0,"Angle changes: %s", m_vecDesiredAngles.ToString());
 
 	//Process Movement
 	
@@ -188,6 +189,9 @@ void CGameClient::RunFrame(float frameTime)
 	if(m_cmd.time > 255.0f)
 		m_cmd.time = 255.0f;
 
+	m_cmd.Reset();
+	m_vecDesiredAngles.Set(0,0,0);
+
 	//Print misc crap
 //	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %s", m_pGameClient->origin.ToString());
 //	m_pClGame->HudPrintf(0,120,0,"VELOCITY: %s",m_pGameClient->velocity.ToString());
@@ -213,6 +217,8 @@ void CGameClient::RunFrame(float frameTime)
 			m_pClGame->DrawModel(m_clients[i]);
 		}
 	}
+
+	m_pCmdHandler->RunCommands();
 }
 
 /*
@@ -236,6 +242,8 @@ void CGameClient::WriteCmdUpdate(CBuffer &buf)
 	buf.WriteFloat(m_cmd.angles.x);
 	buf.WriteFloat(m_cmd.angles.y);
 	buf.WriteFloat(m_cmd.angles.z);
+
+//	m_cmd.Reset();
 }
 
 /*
@@ -446,12 +454,13 @@ bool CGameClient::HandleCVar(const CVar * cvar, const CStringVal &strval)
 {
 	if(cvar == m_cvKbSpeed)
 	{
-		float val = strval.FloatVal();
-		if(val < 0.6 || val >= 10.0)
+/*		float val = strval.FloatVal();
+		if(val < 0.6 || val > 10.0)
 		{
 			ComPrintf("Out of range. Should be between 0.6 and 10.0\n");
 			return false;
 		}
+*/
 		return true;
 	}
 	else if(cvar == m_cvInRate)
