@@ -10,6 +10,7 @@
 #include "Img_main.h"
 
 #include "gl_rast.h"
+#include "Rast_none.h"
 
 //======================================================================================
 //======================================================================================
@@ -32,7 +33,8 @@ saved rendering info
 */
 CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 					 m_cBpp("r_bpp", "16",CVAR_INT,CVAR_ARCHIVE),
-					 m_cRes("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE)
+					 m_cRes("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE),
+					 m_cRast("r_rast", "gl",CVAR_STRING, CVAR_ARCHIVE)
 {
 	//Create different subsystems
 
@@ -42,7 +44,14 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	g_pModel= new CModelManager();
 	g_pImage= new CImageManager();
 	g_prHud = new CRHud();
-	g_pRast = new COpenGLRast();
+
+	// m_cRast has to be registered before rasterizer is started
+	g_pConsole->RegisterCVar(&m_cRast, this);
+
+//	if (stricmp(m_cRast.string, "gl")==0)
+//		g_pRast = new COpenGLRast();
+//	else
+		g_pRast = new CRastNone();
 
 	g_pConsole->RegisterCVar(&m_cFull,this);
 	g_pConsole->RegisterCVar(&m_cBpp,this);
@@ -456,6 +465,8 @@ bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
 		return CVar_Res((CVar*)cvar, parms);
 	else if(cvar == &m_cBpp)
 		return CVar_Bpp((CVar*)cvar, parms);
+	else if(cvar == &m_cRast)
+		return CVar_Rast((CVar*)cvar, parms);
 	return false;
 }
 
@@ -591,6 +602,26 @@ bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 		if(g_rInfo.ready)
 			ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
 							(g_rInfo.rflags & RFLAG_FULLSCREEN));
+		return true;
+	}
+	return false;
+}
+
+
+/*
+==========================================
+Handle rasterizer changes
+==========================================
+*/
+bool CRenExp::CVar_Rast(const CVar * var, const CParms &parms)
+{
+	int argc = parms.NumTokens();
+	if(argc==1)
+	{	ComPrintf("using %s rasterizer\n", var->string);
+	}
+	else if(argc > 1)
+	{
+		ComPrintf("rasterizer change will take effect next time you run void.\n");
 		return true;
 	}
 	return false;
