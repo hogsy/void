@@ -1,7 +1,7 @@
 #ifndef VOID_GAME_INTERFACE
 #define VOID_GAME_INTERFACE
 
-#include "3dmath.h"
+//#include "3dmath.h"
 #include "Com_defs.h"
 #include "Com_buffer.h"
 
