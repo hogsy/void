@@ -126,19 +126,6 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
-	//Create local ent
-/*	Void3d::VectorSet(m_entQuad.angle,0,0,0);
-	Void3d::VectorSet(m_entQuad.origin,0,0, 32);
-	
-	m_entQuad.frame = 0;
-	m_entQuad.skinnum= 0;
-	m_entQuad.cache = MODEL_CACHE_LOCAL;
-	
-//	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
-	m_entQuad.index = m_pModel->LoadModel("models/players/Hueteotl/tris.md2", 1, MODEL_CACHE_LOCAL);
-*/	
-
-
 	char mappath[COM_MAXPATH];
 	
 	strcpy(mappath,szWORLDDIR);
@@ -299,7 +286,6 @@ void CClient::RunFrame()
 			}
 		}
 
-//		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
 
 		m_pRender->Draw(m_pCamera);
 	}
@@ -414,12 +400,11 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
-/*	static int hHowl = 0;
+	static int hHowl = 0;
 	if(!hHowl)
-		hHowl = m_pSound->RegisterSound("sounds/wind.wav");
+		hHowl = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
 
 	static vector_t horigin;
 	VectorSet(&horigin,0,0,48);
-	m_pSound->PlaySnd(hHowl, VoidSound::CHAN_WORLD, &horigin, 0, true);
-*/
+	m_pSound->PlaySnd(hHowl, CACHE_LOCAL, CHAN_WORLD, &horigin, 0, true);
 }

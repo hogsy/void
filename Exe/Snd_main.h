@@ -5,19 +5,11 @@
 #include "3dmath.h"
 #include "Res_defs.h"
 
-//What channel to play a sound in
-enum SndChannelType
-{
-	CHAN_AUTO   = 0,		//first free
-	CHAN_WORLD  = 1,		//ambient, world sounds etc
-	CHAN_ITEM   = 2,		//item noises, pickups etc
-	CHAN_WEAPON	= 3,		//weapon noises
-	CHAN_PLAYER = 4			//player sounds
-};
-
-//======================================================================================
-//Private stuff
-//======================================================================================
+/*
+======================================
+Private stuff
+======================================
+*/
 namespace VoidSound
 {
 	class CPrimaryBuffer;	//The primary sound buffer, there can be only one
@@ -27,34 +19,14 @@ namespace VoidSound
 }
 
 /*
-//finds id, or creates new one, if index = -1, otherwise loads sound at give index
-virtual hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1)=0;
-
-virtual void PlaySnd(hSnd index, CacheType cache,
-					 int channel = CHAN_AUTO,
-					 const vector_t * origin=0, const vector_t * velocity=0,
-					 bool looping = false)=0;
-
- virtual void UnregisterSound(hSnd index, CacheType cache)=0;
-virtual void UnregisterCache(CacheType cache)=0;
-virtual void UnregisterAll()=0;
-*/
-
-/*
-======================================================================================
+======================================
 Main Sound manager
-play a sound at a given channel and pos, looping or not looping
-======================================================================================
+======================================
 */
+
 class CSoundManager : public I_ConHandler 
 {
 public:
-
-	enum
-	{
-		MAX_SOUNDS   = 256,
-		MAX_CHANNELS = 16
-	};
 
 	CSoundManager();
 	~CSoundManager();
@@ -64,6 +36,7 @@ public:
 
 	void RunFrame();
 
+	//finds id, or creates new one, if index = -1, otherwise loads sound at give index
 	hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1);
 	void UnregisterSound(hSnd index, CacheType cache);
 	void UnregisterCache(CacheType cache);
@@ -78,9 +51,9 @@ public:
 	//hook this up with an entity, for speed and origin
 	void PlaySnd(int index, CacheType cache,
 				 int channel= CHAN_AUTO,
-				  const vector_t * origin=0,
-				   const vector_t * velocity=0,
-				   bool looping = false);
+				 const vector_t * origin=0,
+				 const vector_t * velocity=0,
+				 bool looping = false);
 
 	//Update Sound position
 	//The SoundManager needs to automatically stop sounds out of range
@@ -95,10 +68,12 @@ private:
 	VoidSound::CPrimaryBuffer*  m_pPrimary;
 	VoidSound::C3DListener   *  m_pListener;
 	
-	VoidSound::CSoundBuffer  *	m_bufferCache[3];	//All sounds are buffered when registered
-	VoidSound::CSoundChannel *	m_Channels;		//Channels which are actually played
+	//All sounds are buffered when registered
+	VoidSound::CSoundBuffer  *	m_bufferCache[RES_NUMCACHES];	
 	
-//	int	 m_numBuffers;
+	//Channels which are actually played
+	VoidSound::CSoundChannel *	m_Channels;			
+	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
 	
@@ -114,12 +89,11 @@ private:
 	bool SetDopplerFactor(const CParms &parms);
 
 	//==========================================
-	//Temp debug funcs
+	//console funcs
 	void SPlay(const char * arg);
 	void SStop(int channel);
 	void SListSounds();
-	bool SPrintInfo();
-
+	void SPrintInfo();
 };
 
 #endif

@@ -1,8 +1,5 @@
 #include "Snd_buf.h"
 
-//======================================================================================
-//======================================================================================
-
 using namespace VoidSound;
 
 //======================================================================================
@@ -73,7 +70,6 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 		Destroy();
 		return 0;
 	}
-
 	ComPrintf("CPrimaryBuffer::Create: OK\n");
 	return p3dlistener;
 }
@@ -168,7 +164,6 @@ bool CPrimaryBuffer::SetVolume(long vol)
 	return true;
 }
 
-
 //======================================================================================
 //A Generic Sound buffer with wave data
 //======================================================================================
@@ -187,8 +182,6 @@ CSoundBuffer::~CSoundBuffer()
 {
 	if(InUse())
 		Destroy();
-//	if(m_pWaveData)
-//		delete m_pWaveData;
 }
 
 /*
@@ -202,7 +195,6 @@ bool CSoundBuffer::Create(const char * path)
 		Destroy();
 
 	m_pWaveData = new CWaveFile(path);
-	
 	if(m_pWaveData->IsEmpty())
 	{
 		delete m_pWaveData;
@@ -226,14 +218,10 @@ bool CSoundBuffer::Create(const char * path)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-	//Need default controls (pan, volume, frequency). 
-    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | 
-					DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC
-						| DSBCAPS_CTRL3D; //| DSBCAPS_MUTE3DATMAXDISTANCE;
-
-	//DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME |
-
-	// 5-second buffer. 
+	dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
+					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
+					  DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
+	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     dsbdesc.dwBufferBytes = m_pWaveData->m_size;
     dsbdesc.lpwfxFormat = &waveFormat; 
     
@@ -242,19 +230,11 @@ bool CSoundBuffer::Create(const char * path)
     if(FAILED(hr))
     { 
 		PrintDSErrorMessage(hr,"CSoundBuffer::Create:");
-		delete m_pWaveData;
-		m_pWaveData = 0;
-		m_pDSBuffer = 0;
+		Destroy();
         return false;
     } 
 	return true;
 }
-
-/*
-==========================================
-has the buffer been created
-==========================================
-*/
 
 /*
 ==========================================
@@ -265,7 +245,7 @@ void CSoundBuffer::PrintStats() const
 {
 	if(m_pWaveData)
 		ComPrintf("(%2d): %s : (%5d) %d bytes\n", m_pWaveData->m_bitsPerSample, m_pWaveData->m_filename,
-												m_pWaveData->m_samplesPerSecond, m_pWaveData->m_size);
+					m_pWaveData->m_samplesPerSecond, m_pWaveData->m_size);
 }
 
 /*
@@ -286,26 +266,31 @@ void CSoundBuffer::Destroy()
 
 /*
 ==========================================
-Access funcs
+Util funcs 
 ==========================================
 */
 bool CSoundBuffer::InUse() const 
-{ if(m_pDSBuffer)  return true ;	
+{ 
+	if(m_pDSBuffer)  
+		return true;	
 	return false; 
 }
-IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
-CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveData; }
-const char         * CSoundBuffer::GetFilename() const 
-{ if(m_pWaveData) 
+
+const char * CSoundBuffer::GetFilename() const 
+{ 
+	if(m_pWaveData) 
 	return m_pWaveData->m_filename; 
   return 0; 
 }
 
+IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
+CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveData; }
 
-//======================================================================================
-//Channel
-//======================================================================================
-
+/*
+======================================================================================
+Sound channel
+======================================================================================
+*/
 /*
 ==========================================
 Constructor/Destructor
@@ -388,9 +373,6 @@ bool CSoundChannel::Create(CSoundBuffer &buffer,       //Create a duplicate buff
 		memcpy(lockPtr1, buffer.GetWaveData()->m_data, lockSize1);
 	m_pDSBuffer->Unlock(lockPtr1, lockSize1, 0, 0);
 
-	//Get a 3d Interface if its a 3d sound
-	if(porigin || pvelocity)
-	{
 		hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer,(LPVOID *)&m_pDS3dBuffer);
 		if(FAILED(hr))
 		{
@@ -399,8 +381,11 @@ ComPrintf("Unable to get 3d interface\n");
 			return false;
 		}
 
+	//Get a 3d Interface if its a 3d sound
+	if(porigin || pvelocity)
+	{
 		m_pDS3dBuffer->SetMinDistance(150, DS3D_IMMEDIATE);
-		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
+//		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
 
 		if(porigin) 
 			m_pDS3dBuffer->SetPosition(porigin->x, porigin->y, porigin->z, DS3D_IMMEDIATE); //DS3D_DEFERRED);
@@ -409,6 +394,19 @@ ComPrintf("Unable to get 3d interface\n");
 		origin = porigin;
 		velocity = pvelocity;
 	}
+	else
+	{
+		//hr = m_pDS3dBuffer->SetMode(DS3DMODE_DISABLE,DS3D_IMMEDIATE);
+		hr = m_pDS3dBuffer->SetMode(DS3DMODE_DISABLE,DS3D_DEFERRED);
+		if(FAILED(hr))
+		{
+ComPrintf("Unable to  3d interface\n");
+			Destroy();
+			return false;
+		}
+
+	}
+
 	return true;
 }
 

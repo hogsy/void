@@ -4,15 +4,12 @@
 #include "Sys_hdr.h"
 #include "Net_server.h"
 #include "Game_ents.h"
+#include "Res_defs.h"
 
 //Predeclarations
 struct world_t;
 struct EntClient;
 
-
-const int GAME_MAXMODELS = 256;
-const int GAME_MAXSOUNDS = 256;
-const int GAME_MAXIMAGES = 256;
 const int GAME_MAXENTITES= 1024;
 
 
@@ -46,7 +43,6 @@ public:
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
-//	int  RegisterEntity(const char * ent);
 	int  RegisterModel(const char * model);
 	int  RegisterSound(const char * image);
 	int  RegisterImage(const char * sound);
@@ -77,19 +73,18 @@ private:
 	//List of currenly loaded Resources
 	struct ResInfo
 	{
-		ResInfo()  { name = 0; }  //id =0; 
+		ResInfo()  { name = 0; } 
 		~ResInfo() { if(name) delete[] name; }
-//		int    id;
 		char * name; 
 	};
 
-	ResInfo	m_modelList[GAME_MAXMODELS];
+	ResInfo	m_modelList[RES_MAXMODELS];
 	int		m_numModels;
 
-	ResInfo m_imageList[GAME_MAXIMAGES];
+	ResInfo m_imageList[RES_MAXIMAGES];
 	int     m_numImages;
 
-	ResInfo m_soundList[GAME_MAXSOUNDS];
+	ResInfo m_soundList[RES_MAXSOUNDS];
 	int		m_numSounds;
 	
 	//=================================================

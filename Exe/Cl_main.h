@@ -21,7 +21,6 @@ struct R_EntState
 };
 */
 /*
-
   Type of client side ents
  
   drawable
@@ -45,7 +44,6 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
-
 class CClient :	public I_ConHandler,
 				public I_NetClientHandler
 {
@@ -146,8 +144,6 @@ private:
 
 	R_EntState  m_gameEnts[MAX_CLIENTENTS];
 	int			m_numEnts;
-
-//	R_EntState  m_entQuad; //bah
 
 	//This should hook up to the game client whne the client
 	//enters a game

@@ -517,11 +517,11 @@ Return an id for the given model
 */
 int CServer::RegisterModel(const char * model)
 {
-	if(m_numModels == GAME_MAXMODELS)
+	if(m_numModels == RES_MAXMODELS)
 		return -1;
 
 	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXMODELS; i++)
+	for(int i=0; i<RES_MAXMODELS; i++)
 	{
 		//we reached the end, no more models after this
 		if(!m_modelList[i].name)
@@ -533,7 +533,6 @@ int CServer::RegisterModel(const char * model)
 	m_numModels ++;
 	m_modelList[i].name = new char[strlen(model)+1];
 	strcpy(m_modelList[i].name,model);
-//	m_modelList[i].id = i;
 	return i;
 }
 
@@ -544,11 +543,11 @@ Return an id for the given sound
 */
 int CServer::RegisterSound(const char * sound)
 {
-	if(m_numSounds == GAME_MAXMODELS)
+	if(m_numSounds == RES_MAXSOUNDS)
 		return -1;
 
 	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXMODELS; i++)
+	for(int i=0; i<RES_MAXSOUNDS; i++)
 	{
 		//we reached the end, no more models after this
 		if(!m_soundList[i].name)
@@ -560,7 +559,6 @@ int CServer::RegisterSound(const char * sound)
 	m_numSounds ++;
 	m_soundList[i].name = new char[strlen(sound)+1];
 	strcpy(m_soundList[i].name,sound);
-//	m_soundList[i].id = i;
 	return i;
 }
 
@@ -571,11 +569,11 @@ Return an id for the given image
 */
 int CServer::RegisterImage(const char * image)
 {
-	if(m_numImages == GAME_MAXMODELS)
+	if(m_numImages == RES_MAXIMAGES)
 		return -1;
 
 	//Check to see whether we already have a model Id by that name
-	for(int i=0; i<GAME_MAXMODELS; i++)
+	for(int i=0; i<RES_MAXIMAGES; i++)
 	{
 		//we reached the end, no more models after this
 		if(!m_imageList[i].name)
@@ -587,7 +585,6 @@ int CServer::RegisterImage(const char * image)
 	m_numImages ++;
 	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
-//	m_imageList[i].id = i;
 	return i;
 }
 

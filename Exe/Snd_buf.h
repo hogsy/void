@@ -7,10 +7,8 @@
 
 //======================================================================================
 //======================================================================================
-//Use all static buffers for now
 
 namespace VoidSound {
-
 /*
 ======================================
 3d listener
@@ -19,7 +17,6 @@ namespace VoidSound {
 class C3DListener
 {
 public:
-
 	IDirectSound3DListener * m_pDS3dListener;
 
 	C3DListener(IDirectSound3DListener * listener) : 
@@ -59,7 +56,6 @@ public:
 private:
 
 	long m_volume;
-
 	IDirectSoundBuffer * m_pDSBuffer;	//DirectSoundBuffer
 };
 
@@ -87,8 +83,8 @@ public:
 	const char         * GetFilename() const;
 	
 private:
-	IDirectSoundBuffer * m_pDSBuffer;	//DirectSoundBuffer
-	CWaveFile		   * m_pWaveData;	//Wave Data, will be 0 if duplicate buffer
+	IDirectSoundBuffer * m_pDSBuffer;
+	CWaveFile		   * m_pWaveData;	
 };
 
 
@@ -123,7 +119,7 @@ public:
 //	hSnd	  sourcId;
 
 	IDirectSound3DBuffer * m_pDS3dBuffer; 
-	IDirectSoundBuffer   * m_pDSBuffer;	//DirectSoundBuffer
+	IDirectSoundBuffer   * m_pDSBuffer;	
 };
 
 

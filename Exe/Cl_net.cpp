@@ -91,7 +91,24 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		}
 	case SVC_SOUNDLIST:
 		{
-			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
+			char soundName[32];
+			int  soundId=0;
+
+			int numSounds = buffer.ReadInt();
+			ComPrintf("CL: SoundList :%d models\n", numSounds);
+
+			for(int i=0; i<numSounds;i++)
+			{
+				soundId = buffer.ReadShort();
+				buffer.ReadString(soundName,32);
+
+				if(soundId == -1 || !soundName[0])
+				{
+					continue;
+				}
+				m_pSound->RegisterSound(soundName,CACHE_GAME, soundId);
+			}
+//			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
 			break;
 		}
 	case SVC_IMAGELIST:
