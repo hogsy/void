@@ -467,6 +467,10 @@ SOURCE=.\Client.h
 # End Group
 # Begin Source File
 
+SOURCE=..\plan\js.plan
+# End Source File
+# Begin Source File
+
 SOURCE=.\Standard.h
 # End Source File
 # End Target

@@ -121,7 +121,7 @@ int main (int argc, char **argv)
 
 
 	// write the bsp file
-	strcpy(&(argv[i])[strlen(argv[i])-3], "bsp");
+	strcpy(&(argv[i])[strlen(argv[i])-3], "wld");
 	write_bsp(ents, argv[i]);
 
 	// write the portal file
