@@ -20,7 +20,10 @@ public:
 
 	CParms(int len);	
 	CParms(const CParms &parms);
+	CParms(const char * buf);
 	~CParms();
+
+	void Set(const char * buf);
 
 	CParms & operator = (const char * istr);
 

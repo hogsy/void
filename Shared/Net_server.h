@@ -142,12 +142,12 @@ public:
 	//NetChanWriter Implementation
 	bool ChanCanSend(int chanId);
 	void ChanBeginWrite(int chanId, byte msgid, int estSize);
-	void ChanWrite(byte b);
-	void ChanWrite(char c);
-	void ChanWrite(short s);
-	void ChanWrite(int i);
-	void ChanWrite(float f);
-	void ChanWrite(const char *string);
+	void ChanWriteByte(byte b);
+	void ChanWriteChar(char c);
+	void ChanWriteShort(short s);
+	void ChanWriteInt(int i);
+	void ChanWriteFloat(float f);
+	void ChanWriteString(const char *string);
 	void ChanWriteCoord(float c);
 	void ChanWriteAngle(float a);
 	void ChanWriteData(byte * data, int len);

@@ -10,16 +10,33 @@ Constructor/Destructor
 CParms::CParms(int len) : length(len)
 {	string = new char[length];
 }
+
+CParms::CParms(const char * buf)
+{
+	length = 0;
+	Set(buf);
+}
 	
 CParms::CParms(const CParms &parms)
 {
-	length = strlen(parms.string) + 1;
-	string = new char[length];
-	strcpy(string,parms.string);
+	length = 0;
+	Set(parms.string);
 }
 
 CParms::~CParms() 
 { 	if(string) 	delete [] string; 
+}
+
+void CParms::Set(const char * buf)
+{
+	int len = strlen(buf) + 1;
+	if(len > length)
+	{
+		delete [] string;
+		length = len;
+		string = new char [length];
+	}
+	strcpy(string,buf);
 }
 
 /*
@@ -29,14 +46,7 @@ Assigment
 */
 CParms & CParms::operator = (const char * istr)
 {
-	int len = strlen(istr) + 1;
-	if(len > length)
-	{
-		delete [] string;
-		length = len;
-		string = new char [length];
-	}
-	strcpy(string,istr);
+	Set(istr);
 	return *this;
 }
 

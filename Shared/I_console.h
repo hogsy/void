@@ -103,6 +103,10 @@ struct I_Console
 
 	//pass a string to be exec'ed
 	virtual void ExecString(const char *string)=0;
+
+	//looks through config file to see if any parms match the given token
+	//set parm to that token if found
+	virtual bool GetTokenParms(const char * token, CParms * parms)=0;
 };
 
 #endif

@@ -18,8 +18,7 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		return false;
 	}
 
-
-
+	
 	m_clients[clNum] = new EntClient();
 	
 	strcpy(m_clients[clNum]->name, buffer.ReadString());
@@ -57,12 +56,12 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		if(m_clients[i] && m_clients[i]->spawned)
 		{
 			m_net.ChanBeginWrite(i,SV_CLIENTINFO, len);
-			m_net.ChanWrite((short)m_clients[clNum]->num);
-			m_net.ChanWrite(m_clients[clNum]->name);
-			m_net.ChanWrite((short)m_clients[clNum]->modelIndex);
-			m_net.ChanWrite(m_clients[clNum]->modelName);
-			m_net.ChanWrite((short)m_clients[clNum]->skinNum);
-			m_net.ChanWrite(m_clients[clNum]->skinName);
+			m_net.ChanWriteShort(m_clients[clNum]->num);
+			m_net.ChanWriteString(m_clients[clNum]->name);
+			m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
+			m_net.ChanWriteString(m_clients[clNum]->modelName);
+			m_net.ChanWriteShort(m_clients[clNum]->skinNum);
+			m_net.ChanWriteString(m_clients[clNum]->skinName);
 			m_net.ChanFinishWrite();
 		}
 	}
@@ -78,71 +77,80 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
-//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
-	switch(packetId)
+	while(packetId != 255)
 	{
-	//Talk message
-	case CL_TALK:
+		switch(packetId)
 		{
-			char msg[256];
-			strcpy(msg,buffer.ReadString());
-
-			int len = strlen(msg);
-			msg[len] = 0;
-			len += 4;
-			len += strlen(m_clients[clNum]->name);
-			
-			//Add this to all other connected clients outgoing buffers
-			for(int i=0;i<m_svState.maxClients;i++)
+		//Talk message
+		case CL_TALK:
 			{
-				//dont send to source
-//				if(i == clNum)
-//					continue;
+				char msg[256];
+				strcpy(msg,buffer.ReadString());
 
-				if(m_clients[i])
+				int len = strlen(msg);
+				msg[len] = 0;
+				len += 4;
+				len += strlen(m_clients[clNum]->name);
+				
+				//Add this to all other connected clients outgoing buffers
+				for(int i=0;i<m_svState.maxClients;i++)
 				{
-					m_net.ChanBeginWrite(i,SV_TALK, len);
-					m_net.ChanWrite(m_clients[clNum]->name);
-					m_net.ChanWrite(msg);
-					m_net.ChanFinishWrite();
+					//dont send to source
+					if(i == clNum)
+						continue;
+					if(m_clients[i])
+					{
+						m_net.ChanBeginWrite(i,SV_TALK, len);
+						m_net.ChanWriteString(m_clients[clNum]->name);
+						m_net.ChanWriteString(msg);
+						m_net.ChanFinishWrite();
+					}
 				}
+				break;	
 			}
-			break;	
-		}
-	//client updating its local info
-	case CL_UPDATEINFO:
-		{
-			char id = buffer.ReadChar();
-			if(id == 'n')
+		//client updating its local info
+		case CL_UPDATEINFO:
 			{
-				const char * clname = buffer.ReadString();
-				m_net.BroadcastPrintf("%s renamed to %s", m_clients[clNum]->name, clname);
-				strcpy(m_clients[clNum]->name, clname);
+				char id = buffer.ReadChar();
+				if(id == 'n')
+				{
+					const char * clname = buffer.ReadString();
+					m_net.BroadcastPrintf("%s renamed to %s", m_clients[clNum]->name, clname);
+					strcpy(m_clients[clNum]->name, clname);
+				}
+				else if (id == 'r')
+				{
+					int rate = buffer.ReadInt();
+	ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
+					m_net.ChanSetRate(clNum,rate);
+				}
+				break;
 			}
-			else if (id == 'r')
+		case CL_DISCONNECT:
 			{
-				int rate = buffer.ReadInt();
-ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
-				m_net.ChanSetRate(clNum,rate);
+				m_net.SendDisconnect(clNum,CLIENT_QUIT);
+				break;
 			}
-			break;
+		case CL_MOVE:
+			{
+				m_clients[clNum]->origin.x = buffer.ReadCoord();
+				m_clients[clNum]->origin.y = buffer.ReadCoord();
+				m_clients[clNum]->origin.z = buffer.ReadCoord();
+				m_clients[clNum]->angles.x = buffer.ReadAngle();
+				m_clients[clNum]->angles.y = buffer.ReadAngle();
+				m_clients[clNum]->angles.z = buffer.ReadAngle();
+				break;
+			}
+		default:
+			{
+				m_net.SendDisconnect(clNum,CLIENT_BADMSG);
+				break;
+			}
 		}
-	case CL_DISCONNECT:
-		{
-			m_net.SendDisconnect(clNum,CLIENT_QUIT);
-			break;
-		}
-	case CL_MOVE:
-		{
-			m_clients[clNum]->origin.x = buffer.ReadCoord();
-			m_clients[clNum]->origin.y = buffer.ReadCoord();
-			m_clients[clNum]->origin.z = buffer.ReadCoord();
-			m_clients[clNum]->angles.x = buffer.ReadAngle();
-			m_clients[clNum]->angles.y = buffer.ReadAngle();
-			m_clients[clNum]->angles.z = buffer.ReadAngle();
-			break;
-		}
+
+		//Check for more messages in the buffer
+		packetId = buffer.ReadByte();
 	}
 }
 
@@ -153,8 +161,6 @@ Handle Client disconnection
 */
 void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 {
-//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
-
 	switch(reason)
 	{
 	case CLIENT_QUIT:
@@ -172,7 +178,6 @@ ComPrintf("%s overflowed", m_clients[clNum]->name);
 	}
 
 	//Run through resources to see if we can free anything ?
-
 	delete m_clients[clNum];
 	m_clients[clNum] = 0;
 	m_svState.numClients --;
@@ -206,26 +211,14 @@ void CServer::OnClientSpawn(int clNum)
 			continue;
 		
 		m_net.ChanBeginWrite(clNum,SV_CLIENTINFO, 0);
-		m_net.ChanWrite((short)m_clients[i]->num);
-		m_net.ChanWrite(m_clients[i]->name);
-		m_net.ChanWrite((short)m_clients[i]->modelIndex);
-		m_net.ChanWrite(m_clients[i]->modelName);
-		m_net.ChanWrite((short)m_clients[i]->skinNum);
-		m_net.ChanWrite(m_clients[i]->skinName);
+		m_net.ChanWriteShort(m_clients[i]->num);
+		m_net.ChanWriteString(m_clients[i]->name);
+		m_net.ChanWriteShort(m_clients[i]->modelIndex);
+		m_net.ChanWriteString(m_clients[i]->modelName);
+		m_net.ChanWriteShort(m_clients[i]->skinNum);
+		m_net.ChanWriteString(m_clients[i]->skinName);
 		m_net.ChanFinishWrite();
 	}
-
-
-/*
-	m_net.ChanBeginWrite(clNum,SV_CLIENTINFO, len);
-	m_net.ChanWrite((short)m_clients[clNum]->num);
-	m_net.ChanWrite(m_clients[clNum]->name);
-	m_net.ChanWrite((short)m_clients[clNum]->modelIndex);
-	m_net.ChanWrite(m_clients[clNum]->modelName);
-	m_net.ChanWrite((short)m_clients[clNum]->skinNum);
-	m_net.ChanWrite(m_clients[clNum]->skinName);
-	m_net.ChanFinishWrite();
-*/
 }
 
 /*

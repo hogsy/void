@@ -127,7 +127,7 @@ void CNetClient::SendUpdate()
 			//Try to write reliable data if needed to
 			if(m_reliableBuf.GetSize() && m_pNetChan->CanSendReliable())
 			{
-				m_pNetChan->m_buffer.Write(m_reliableBuf);
+				m_pNetChan->m_buffer.WriteBuffer(m_reliableBuf);
 				m_reliableBuf.Reset();
 			}
 			
@@ -141,9 +141,9 @@ void CNetClient::SendUpdate()
 			if(m_pNetChan->CanSendReliable())
 			{
 				m_pNetChan->m_buffer.Reset();
-				m_pNetChan->m_buffer.Write(m_levelId);
-				m_pNetChan->m_buffer.Write(m_spawnLevel);
-				m_pNetChan->m_buffer.Write(m_spawnNextPacket);
+				m_pNetChan->m_buffer.WriteInt(m_levelId);
+				m_pNetChan->m_buffer.WriteByte(m_spawnLevel);
+				m_pNetChan->m_buffer.WriteInt(m_spawnNextPacket);
 
 //m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
 
@@ -312,12 +312,12 @@ void CNetClient::SendConnectReq()
 {
 	//Create Connection less packet
 	m_buffer.Reset();
-	m_buffer.Write(-1);
+	m_buffer.WriteInt(-1);
 
 	//Write Connection Parms
-	m_buffer.Write(C2S_CONNECT);			//Header
-	m_buffer.Write(VOID_PROTOCOL_VERSION);	//Protocol Version
-	m_buffer.Write(m_challenge);			//Challenge Req
+	m_buffer.WriteString(C2S_CONNECT);			//Header
+	m_buffer.WriteInt(VOID_PROTOCOL_VERSION);	//Protocol Version
+	m_buffer.WriteInt(m_challenge);				//Challenge Req
 	
 	//User Info
 	m_pClient->WriteUserInfo(m_buffer);
@@ -350,8 +350,8 @@ void CNetClient::SendChallengeReq()
 	//Now initiate a connection request
 	//Create Connection less packet
 	m_buffer.Reset();
-	m_buffer.Write(-1);
-	m_buffer.Write(C2S_GETCHALLENGE);
+	m_buffer.WriteInt(-1);
+	m_buffer.WriteString(C2S_GETCHALLENGE);
 
 	m_pSock->SendTo(m_buffer,netAddr);
 
@@ -427,7 +427,7 @@ void CNetClient::Disconnect(bool serverPrompted)
 		{
 			//send disconnect message if remote
 			m_pNetChan->m_buffer.Reset();
-			m_pNetChan->m_buffer.Write(CL_DISCONNECT);
+			m_pNetChan->m_buffer.WriteByte(CL_DISCONNECT);
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
 		}

@@ -2,7 +2,6 @@
 #define VOID_SYS_MAIN
 
 #define INCLUDE_MUSIC
-#define INCLUDE_SOUND
 
 #include "Sys_hdr.h"
 #include "Sys_time.h"
@@ -79,13 +78,11 @@ private:
 	CServer		 * m_pServer;		//Server
 	CClient		 * m_pClient;		//Client and UI
 
+	CSoundManager* m_pSound;		//Sound subsystem
+
 #ifdef INCLUDE_MUSIC
 	CMusic		 * m_pMusic;		//Music subsystem
 #endif
-#ifdef INCLUDE_SOUND
-	CSoundManager* m_pSound;		//Sound subsystem
-#endif
-
 	//=========================================================
 
 	char		   m_exePath[COM_MAXPATH];

@@ -194,9 +194,9 @@ Send a rejection message to the client
 void CNetServer::SendRejectMsg(const char * reason)
 {
 	m_sendBuf.Reset();
-	m_sendBuf.Write(-1);
-	m_sendBuf.Write(S2C_REJECT);
-	m_sendBuf.Write(reason);
+	m_sendBuf.WriteInt(-1);
+	m_sendBuf.WriteString(S2C_REJECT);
+	m_sendBuf.WriteString(reason);
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -209,20 +209,20 @@ void CNetServer::HandleStatusReq(bool full)
 {
 	//Header
 	m_sendBuf.Reset();
-	m_sendBuf.Write(-1);
+	m_sendBuf.WriteInt(-1);
 
 	if(!full)
-		m_sendBuf.Write(S2C_STATUS);
+		m_sendBuf.WriteString(S2C_STATUS);
 	else
-		m_sendBuf.Write(S2C_FULLSTATUS);
+		m_sendBuf.WriteString(S2C_FULLSTATUS);
 
 	//Status info
-	m_sendBuf.Write(VOID_PROTOCOL_VERSION);	//Protocol
-	m_sendBuf.Write(m_pSvState->gameName);	//Game
-	m_sendBuf.Write(m_pSvState->hostName);	//Hostname
-	m_sendBuf.Write(m_pSvState->worldname);	//Map name
-	m_sendBuf.Write(m_pSvState->maxClients);//max clients
-	m_sendBuf.Write(m_pSvState->numClients);//cur clients
+	m_sendBuf.WriteInt(VOID_PROTOCOL_VERSION);	//Protocol
+	m_sendBuf.WriteString(m_pSvState->gameName);		//Game
+	m_sendBuf.WriteString(m_pSvState->hostName);	//Hostname
+	m_sendBuf.WriteString(m_pSvState->worldname);	//Map name
+	m_sendBuf.WriteInt(m_pSvState->maxClients);//max clients
+	m_sendBuf.WriteInt(m_pSvState->numClients);//cur clients
 	
 	if(full)
 		m_pServer->WriteGameStatus(m_sendBuf);
@@ -272,9 +272,9 @@ void CNetServer::HandleChallengeReq()
 
 	//Send response packet
 	m_sendBuf.Reset();
-	m_sendBuf.Write(-1);
-	m_sendBuf.Write(S2C_CHALLENGE);
-	m_sendBuf.Write(m_challenges[i].challenge);
+	m_sendBuf.WriteInt(-1);
+	m_sendBuf.WriteString(S2C_CHALLENGE);
+	m_sendBuf.WriteInt(m_challenges[i].challenge);
 	m_pSock->SendTo(m_sendBuf, m_challenges[i].addr); 
 }
 
@@ -361,9 +361,9 @@ void CNetServer::HandleConnectReq()
 	//last OOB message, send the client an accept packet
 	//now the client needs to request spawn parms from use
 	m_sendBuf.Reset();
-	m_sendBuf.Write(-1);
-	m_sendBuf.Write(S2C_ACCEPT);
-	m_sendBuf.Write(m_pSvState->levelId);
+	m_sendBuf.WriteInt(-1);
+	m_sendBuf.WriteString(S2C_ACCEPT);
+	m_sendBuf.WriteInt(m_pSvState->levelId);
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -427,9 +427,9 @@ void CNetServer::SendSpawnParms(int chanId)
 			}
 
 			lastInSeq = 1;
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_GAMEINFO);
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.gameInfo);
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_GAMEINFO);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.gameInfo);
 			break;
 		}
 	case SVC_MODELLIST:
@@ -440,14 +440,14 @@ void CNetServer::SendSpawnParms(int chanId)
 				break;
 			}
 
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_MODELLIST);
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_MODELLIST);
 			
 			//Will this be the last packet in the sequence, then let the client known
 			//so it doesnt ask for anymore
 			if((reqNum + 1) == m_signOnBufs.numModelBufs)
 				lastInSeq = 1;
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.modelList[reqNum]);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.modelList[reqNum]);
 			break;
 		}
 	case SVC_SOUNDLIST:
@@ -458,13 +458,13 @@ void CNetServer::SendSpawnParms(int chanId)
 				break;
 			}
 
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_SOUNDLIST);
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_SOUNDLIST);
 
 			if((reqNum + 1) >= m_signOnBufs.numSoundBufs)
 				lastInSeq = 1;
 			
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.soundList[reqNum]);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.soundList[reqNum]);
 			break;
 		}
 	case SVC_IMAGELIST:
@@ -475,13 +475,13 @@ void CNetServer::SendSpawnParms(int chanId)
 				break;
 			}
 
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_IMAGELIST);
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_IMAGELIST);
 
 			if((reqNum + 1) >= m_signOnBufs.numImageBufs)
 				lastInSeq = 1;
 			
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.imageList[reqNum]);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.imageList[reqNum]);
 			break;
 		}
 	case SVC_BASELINES:
@@ -492,13 +492,13 @@ void CNetServer::SendSpawnParms(int chanId)
 				break;
 			}
 
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BASELINES);
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BASELINES);
 
 			if((reqNum + 1) >= m_signOnBufs.numEntityBufs)
 				lastInSeq = 1;
 
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
-			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.entityList[reqNum]);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.entityList[reqNum]);
 			break;
 		}
 	case SVC_BEGIN:
@@ -511,8 +511,8 @@ void CNetServer::SendSpawnParms(int chanId)
 
 			lastInSeq = 1;
 
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BEGIN);
-			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
+			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BEGIN);
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
 
 			//Begin client
 			m_clChan[chanId].m_spawnLevel = 0;
@@ -624,7 +624,7 @@ void CNetServer::ClientPrintf(int chanId, const char * message, ...)
 	if(m_clChan[chanId].m_state == CL_INGAME)
 	{
 		ChanBeginWrite(chanId,SV_PRINT,strlen(m_printBuffer));
-		ChanWrite(m_printBuffer);
+		ChanWriteString(m_printBuffer);
 		ChanFinishWrite();
 	}
 }
@@ -646,7 +646,7 @@ void CNetServer::BroadcastPrintf(const char* message, ...)
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
 			ChanBeginWrite(i,SV_PRINT,strlen(m_printBuffer));
-			ChanWrite(m_printBuffer);
+			ChanWriteString(m_printBuffer);
 			ChanFinishWrite();
 		}
 	}
@@ -660,7 +660,7 @@ Ask client to reconnect
 void CNetServer::SendReconnect(int chanId)
 {
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
-	m_clChan[chanId].m_netChan.m_buffer.Write(SV_RECONNECT);
+	m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_RECONNECT);
 	m_clChan[chanId].m_netChan.PrepareTransmit();
 	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
 
@@ -677,21 +677,21 @@ Tell the client to disconnect
 void CNetServer::SendDisconnect(int chanId, EDisconnectReason reason) 
 {
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
-	m_clChan[chanId].m_netChan.m_buffer.Write(SV_DISCONNECT);
+	m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_DISCONNECT);
 
 	switch(reason)
 	{
 	case SERVER_QUIT:
-		m_clChan[chanId].m_netChan.m_buffer.Write("Server quit");
+		m_clChan[chanId].m_netChan.m_buffer.WriteString("Server quit");
 		break;
 	case CLIENT_TIMEOUT:
-		m_clChan[chanId].m_netChan.m_buffer.Write("Timed out");
+		m_clChan[chanId].m_netChan.m_buffer.WriteString("Timed out");
 		break;
 	case CLIENT_OVERFLOW:
-		m_clChan[chanId].m_netChan.m_buffer.Write("Overflowed");
+		m_clChan[chanId].m_netChan.m_buffer.WriteString("Overflowed");
 		break;
 	case CLIENT_BADMSG:
-		m_clChan[chanId].m_netChan.m_buffer.Write("Bad Message");
+		m_clChan[chanId].m_netChan.m_buffer.WriteString("Bad Message");
 		break;
 	}
 	

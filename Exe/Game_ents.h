@@ -67,7 +67,7 @@ struct Entity
 		//is using a model or soundIndex
 		if(modelIndex >= 0 || soundIndex >= 0)
 		{
-			buf.Write((short)num);
+			buf.WriteShort(num);
 			buf.WriteCoord(origin.x);
 			buf.WriteCoord(origin.y);
 			buf.WriteCoord(origin.z);
@@ -78,17 +78,17 @@ struct Entity
 			if(modelIndex >=0)
 			{
 				//set the highbit if its a modelindex
-				buf.Write('m');
-				buf.Write((short)modelIndex);
-				buf.Write((short)skinNum);
-				buf.Write((short)frameNum);
+				buf.WriteChar('m');
+				buf.WriteShort(modelIndex);
+				buf.WriteShort(skinNum);
+				buf.WriteShort(frameNum);
 			}
 			else
 			{
-				buf.Write('s');
-				buf.Write((short)soundIndex);
-				buf.Write((short)volume);
-				buf.Write((short)attenuation);
+				buf.WriteByte('s');
+				buf.WriteShort(soundIndex);
+				buf.WriteShort(volume);
+				buf.WriteShort(attenuation);
 			}
 			return true;
 		}

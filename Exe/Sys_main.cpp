@@ -23,8 +23,7 @@ namespace
 	enum
 	{
 		CMD_QUIT = 0,
-		CMD_TOGGLECONS = 1,
-		CMD_WRITECONFIG = 2,
+		CMD_TOGGLECONS = 1
 	};
 }
 
@@ -40,13 +39,15 @@ Constructor
 */
 CVoid::CVoid(const char * cmdLine)
 {
+	//Current Working directory
+	_getcwd(m_exePath,COM_MAXPATH);		
+
 	//Hack. 
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
 
-	//Current Working directory
-	_getcwd(m_exePath,COM_MAXPATH);		
+	m_Console.LoadConfig("vvars.cfg");
 
 	//Create timer
 	m_pTime = new CTime();						
@@ -70,12 +71,10 @@ CVoid::CVoid(const char * cmdLine)
 	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
-	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
+//	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
 
-#ifdef INCLUDE_SOUND
 	//Sound
 	m_pSound = new CSoundManager();
-#endif
 
 #ifdef INCLUDE_MUSIC
 	//Music
@@ -105,10 +104,6 @@ bool CVoid::Init()
 
 	//parse Command line
 //	ParseCmdLine(lpCmdLine);
-
-//	m_Console.ExecConfig("default.cfg");
-	m_Console.ExecConfig("void.cfg");
-
 
 	//================================
 	//Create the window
@@ -177,13 +172,11 @@ bool CVoid::Init()
 
 	//================================
 	//Sound 
-#ifdef INCLUDE_SOUND
 	if(!m_pSound->Init())
 	{
 		System::FatalError("CVoid::Init: Could not initalize Sound System");
 		return false;
 	}
-#endif
 
 	//================================
 	//Music
@@ -225,9 +218,7 @@ Destructor
 CVoid::~CVoid() 
 {
 	//console
-	char configname[128];
-	sprintf(configname,"%s\\void.cfg",m_exePath);
-	WriteConfig(configname);
+	m_Console.WriteCVars("vvars.cfg");
 
 	if(m_pClient)
 		delete m_pClient;
@@ -237,10 +228,8 @@ CVoid::~CVoid()
 
 	CServer::ShutdownNetwork();
 	
-#ifdef INCLUDE_SOUND
 	if(m_pSound)	
 		delete m_pSound;
-#endif
 
 #ifdef INCLUDE_MUSIC
 	if(m_pMusic)
@@ -288,10 +277,7 @@ void CVoid::RunFrame()
 	m_pInput->UpdateCursor();
 	m_pInput->UpdateKeys();
 
-
-#ifdef INCLUDE_SOUND
 	m_pSound->RunFrame();
-#endif
 
 	m_pServer->RunFrame();
 	
@@ -427,30 +413,6 @@ void CVoid::ParseCmdLine(const char * lpCmdLine)
 }
 
 
-/*
-==========================================
-Fatal Error
-==========================================
-*/
-/*
-void CVoid::Error(char *error, ...)
-{
-	char textBuffer[1024];
-	va_list args;
-	va_start(args, error);
-	vsprintf(textBuffer, error, args);
-	va_end(args);
-	Util::ShowMessageBox(textBuffer);
-
-	//Win32
-	PostMessage(System::GetHwnd(),	// handle of destination window 
-				WM_QUIT,			// message to post 
-				0,					// first message parameter 
-				0);
-
-}
-*/
-
 //======================================================================================
 //Console loopback functions
 //======================================================================================
@@ -492,18 +454,6 @@ Write the configuration file
 */
 void CVoid::WriteConfig(const char *config)
 {
-	//Write the Config file
-	if(config)
-	{
-		FILE * fp = fopen(config,"w");
-		if(fp != NULL)
-		{
-			m_Console.WriteCVars(fp);
-			if(m_pClient)
-				m_pClient->WriteBindTable(fp);
-			fclose(fp);
-		}
-	}
 }
 
 /*
@@ -523,11 +473,6 @@ void CVoid::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_TOGGLECONS:
 		{
 			ToggleConsole();
-			break;
-		}
-	case CMD_WRITECONFIG:
-		{
-			WriteConfig(parms.UnsafeStringTok(1));
 			break;
 		}
 	}
@@ -583,14 +528,6 @@ namespace System
 }
 
 
-
-
-
-
-
-
-
-
 /*
 ===============================================
 print a string to debugging window 
@@ -607,6 +544,3 @@ void ComPrintf(const char* text, ...)
 		
 	g_pVoid->m_Console.ComPrint(textBuffer);
 }
-
-
-

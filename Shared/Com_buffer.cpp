@@ -17,7 +17,6 @@ CBuffer::CBuffer(int size)
 	m_overFlowed = false;
 }
 
-
 CBuffer::~CBuffer()
 {
 	if(m_buffer)
@@ -50,25 +49,25 @@ byte* CBuffer::GetSpace(int size)
 Writing funcs
 ==========================================
 */
-void CBuffer::Write(char c)
+void CBuffer::WriteChar(char c)
 { 
 	char * buf = (char *)GetSpace(SIZE_CHAR);
-	buf[0] = (char)c;	
+	buf[0] = c;	
 }
 
-void CBuffer::Write(byte b) 
+void CBuffer::WriteByte(byte b) 
 { 
 	byte  * buf = GetSpace(SIZE_CHAR);
 	buf[0] = b;	
 }
 
-void CBuffer::Write(short s)
+void CBuffer::WriteShort(short s)
 { 
 	byte * buf = GetSpace(SIZE_SHORT);
 	buf[0] = s & 0xff;	//gives the lower byte
 	buf[1] = s >> 8;	//shift right to get the high byte	
 }
-void CBuffer::Write(int i)
+void CBuffer::WriteInt(int i)
 { 
 	byte * buf = GetSpace(SIZE_INT);
 	buf[0] = i & 0xff;			
@@ -76,7 +75,7 @@ void CBuffer::Write(int i)
 	buf[2] = (i >> 16) & 0xff;	
 	buf[3] = i >> 24;	
 } 
-void CBuffer::Write(float f) 
+void CBuffer::WriteFloat(float f) 
 {	
 	union
 	{
@@ -89,7 +88,7 @@ void CBuffer::Write(float f)
 	memcpy(buf,&floatdata.l,SIZE_INT);
 }
 
-void CBuffer::Write(const char * string) 
+void CBuffer::WriteString(const char * string) 
 { 
 	int len = strlen(string) + 1;
 	byte * buf = GetSpace(len);
@@ -97,21 +96,18 @@ void CBuffer::Write(const char * string)
 	buf[len-1] = 0;	
 }
 
-void CBuffer::Write(const CBuffer & buffer)
+void CBuffer::WriteBuffer(const CBuffer & buffer)
 {
 	byte * buf = GetSpace(buffer.GetSize());
 	memcpy(buf,buffer.GetData(),buffer.GetSize());
 }
 
 void CBuffer::WriteAngle(float f)
-{	Write((byte) ((int)(f*256/360) & 255));
+{	WriteByte((int)(f*256/360) & 255);
 }
 void CBuffer::WriteCoord(float f)
-{	Write((short) ((int)(f*8)));
+{	WriteShort((int)(f*8));
 }
-
-
-
 
 void CBuffer::WriteData(byte * data, int len)
 {
@@ -200,7 +196,6 @@ float CBuffer::ReadAngle()
 }
 float CBuffer::ReadCoord()
 {	return ReadShort() * 1.0f / 8;
-	
 }
 
 char* CBuffer::ReadString(char delim)
@@ -222,11 +217,11 @@ char* CBuffer::ReadString(char delim)
 	return string;
 }
 
-
 void  CBuffer::ReadString(char * buf, int bufsize, char delim)
 {
 	int len = 0;
 	char c = 0;
+//	char * p = *buf;
 
 	while(len < bufsize)
 	{
@@ -238,41 +233,3 @@ void  CBuffer::ReadString(char * buf, int bufsize, char delim)
 	}
 	buf[len] = 0;
 }
-
-/*
-void CBuffer::ReadVector(vector_t &vec)
-{
-	vec.x = vec.y = vec.z = 0.0f;
-
-	int  comp = 0, i=0;
-	char coord[12];
-	memset(coord,0,12);
-	m_badRead = true;
-
-	do
-	{
-		coord[i] = ReadChar();
-		if(coord[i] == 0 || coord[i] == -1)
-			break;
-
-		if(coord[i] == ' ')
-		{
-			if(comp == 0)
-				vec.x = atof(coord);
-			else if(comp == 1)
-				vec.y = atof(coord);
-			memset(coord,0,12);
-			i = 0;
-			comp++;
-		}
-
-	}while(comp < 3);
-
-	//read the final comp
-	if(comp == 2)
-	{
-		m_badRead = false;
-		vec.z = atof(coord);
-	}
-}
-*/

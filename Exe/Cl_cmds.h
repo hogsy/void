@@ -118,7 +118,7 @@ public:
 	CClientCmdHandler(CClient &owner);
 	~CClientCmdHandler();
 
-	void SetDefaultBinds();
+	void IntializeBinds();
 
 	void SetListenerState(bool on);
 	void RunCommands();
@@ -133,7 +133,7 @@ public:
 	void Unbindall();
 	void BindList() const;
 
-	void WriteBindTable(FILE *fp);
+	void WriteBinds(const char * szBindsfile);
 
 private:
 

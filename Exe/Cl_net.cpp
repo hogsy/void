@@ -13,6 +13,7 @@ Process game message
 void CClient::HandleGameMsg(CBuffer &buffer)
 {
 	byte msgId = 0;
+	
 	while(msgId != 255)
 	{
 		msgId= buffer.ReadByte();
@@ -78,9 +79,7 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_CLUPDATE:
 			{
-				//buffer.Reset();
 				int num = buffer.ReadShort();
-
 				if(m_clients[num].inUse)
 				{
 					m_clients[num].origin.x = buffer.ReadCoord();
@@ -125,7 +124,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 			char modelName[32];
 			int  modelId=0;
 
-			int numModels = buffer.ReadInt();
+			int numModels = buffer.ReadShort();
 			ComPrintf("CL: ModelList :%d models\n", numModels);
 
 			for(int i=0; i<numModels;i++)
@@ -137,7 +136,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 				{
 					continue;
 				}
-//				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
+				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
 			}
 			break;
 		}
@@ -146,7 +145,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 			char soundName[32];
 			int  soundId=0;
 
-			int numSounds = buffer.ReadInt();
+			int numSounds = buffer.ReadShort();
 			ComPrintf("CL: SoundList :%d models\n", numSounds);
 
 			for(int i=0; i<numSounds;i++)
@@ -188,7 +187,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 							
 				if(type == 'm')
 				{
-//					m_entities[id].index = buffer.ReadShort();
+					m_entities[id].index = buffer.ReadShort();
 					m_entities[id].skinnum = buffer.ReadShort();
 					m_entities[id].frame = buffer.ReadShort();
 					m_entities[id].nextframe = m_entities[id].frame;
@@ -209,7 +208,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 					break;
 				}
 
-//				m_entities[id].inUse = true;
+				m_entities[id].inUse = true;
 				m_numEnts ++;
 				id = buffer.ReadShort();
 			}
@@ -251,10 +250,10 @@ Write UserInfo to buffer
 */
 void CClient::WriteUserInfo(CBuffer &buffer)
 {
-	buffer.Write(m_clname.string);
-	buffer.Write(m_clmodel.string);
-	buffer.Write(m_clskin.string);
-	buffer.Write(m_clrate.ival);
+	buffer.WriteString(m_clname.string);
+	buffer.WriteString(m_clmodel.string);
+	buffer.WriteString(m_clskin.string);
+	buffer.WriteInt(m_clrate.ival);
 }
 
 
@@ -295,8 +294,8 @@ void CClient::Talk(const char * string)
 	m_pSound->PlaySnd(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
-	m_pNetCl->GetReliableBuffer().Write(CL_TALK);
-	m_pNetCl->GetReliableBuffer().Write(msg);
+	m_pNetCl->GetReliableBuffer().WriteByte(CL_TALK);
+	m_pNetCl->GetReliableBuffer().WriteString(msg);
 }
 
 /*
@@ -318,9 +317,9 @@ bool CClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
-	m_pNetCl->GetReliableBuffer().Write('n');
-	m_pNetCl->GetReliableBuffer().Write(name);
+	m_pNetCl->GetReliableBuffer().WriteByte(CL_UPDATEINFO);
+	m_pNetCl->GetReliableBuffer().WriteChar('n');
+	m_pNetCl->GetReliableBuffer().WriteString(name);
 	return true;
 }
 
@@ -350,8 +349,8 @@ bool CClient::ValidateRate(const CParms &parms)
 		return true;
 
 	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
-	buffer.Write(CL_UPDATEINFO);
-	buffer.Write('r');
-	buffer.Write(rate);
+	buffer.WriteByte(CL_UPDATEINFO);
+	buffer.WriteChar('r');
+	buffer.WriteInt(rate);
 	return true;
 }

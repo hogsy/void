@@ -40,7 +40,6 @@ CClient::CClient(I_Renderer * prenderer,
 	m_ingame = false;
 	m_fFrameTime = 0.0f;
 
-//	m_pClient = 0;
 	m_numEnts = 0;
 	
 	m_pHud = 0;
@@ -79,7 +78,7 @@ CClient::CClient(I_Renderer * prenderer,
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 
-	m_pCmdHandler->SetDefaultBinds();
+	m_pCmdHandler->IntializeBinds();
 }
 
 /*
@@ -89,6 +88,8 @@ Destroy the client
 */
 CClient::~CClient()
 {
+	m_pCmdHandler->WriteBinds("vbinds.cfg");
+
 	m_pNetCl->Disconnect(false);
 
 	if(m_pCamera)
@@ -334,7 +335,7 @@ void CClient::RunFrame()
 			CBuffer &buf = m_pNetCl->GetSendBuffer();
 			
 			buf.Reset();
-			buf.Write(CL_MOVE);
+			buf.WriteByte(CL_MOVE);
 			buf.WriteCoord(m_gameClient.origin.x);
 			buf.WriteCoord(m_gameClient.origin.y);
 			buf.WriteCoord(m_gameClient.origin.z);
@@ -361,7 +362,7 @@ void CClient::RunFrame()
 //======================================================================================
 
 void CClient::SetInputState(bool on)  {	m_pCmdHandler->SetListenerState(on); }
-void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
+//void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
 
 /*
 ==========================================

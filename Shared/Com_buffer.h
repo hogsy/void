@@ -2,7 +2,7 @@
 #define VOID_COM_BUFFER
 
 #include "Com_defs.h"
-//#include "3dmath.h"
+
 
 /*
 ==========================================
@@ -12,20 +12,24 @@ Network buffer utility class
 class CBuffer
 {
 public:
+	
+	enum
+	{
+		DEFAULT_BUFFER_SIZE = 1450
+	};
 
 	//Default size goes to 1450
-	CBuffer(int size=1450);
+	explicit CBuffer(int size=DEFAULT_BUFFER_SIZE);
 	~CBuffer();
 
 	//Writing funcs
-	void Write(char c);
-	void Write(byte b);
-	void Write(short s);
-	void Write(int i);
-	void Write(float f);
-	void Write(const char * string);
-	void Write(const CBuffer &buffer);
-
+	void WriteChar(char c);
+	void WriteByte(byte b);
+	void WriteShort(short s);
+	void WriteInt(int i);
+	void WriteFloat(float f);
+	void WriteString(const char * string);
+	void WriteBuffer(const CBuffer &buffer);
 	void WriteAngle(float f);
 	void WriteCoord(float f);
 	void WriteData(byte * data, int len);
@@ -41,21 +45,22 @@ public:
 	char* ReadString(char delim=0);
 	void  ReadString(char * buf, int bufsize, char delim = 0);
 
-//	void  ReadVector(vector_t &vec);
-
 	//Other util
-	const byte* GetData() const { return m_buffer;  }
-	bool  BadRead()	const { return m_badRead; }
-	int   GetSize() const { return m_curSize; }
-	int   GetMaxSize()  const { return m_maxSize; }
-	bool  OverFlowed()  const { return m_overFlowed; }
-	int   UnreadBytes() const { return m_curSize - m_readCount; }
-	bool  HasSpace(int space) const { return (m_maxSize - m_curSize >= space); }
-	
-	void  BeginRead() { m_badRead = false; m_readCount = 0; }
-	void  Reset();
+	byte* GetData() const { return m_buffer;  }
 	void  SetSize(int size){ m_curSize = size; }
 
+	void  BeginRead() { m_badRead = false; m_readCount = 0; }
+	void  Reset();
+	
+	bool  BadRead()	const { return m_badRead; }
+	bool  OverFlowed()  const { return m_overFlowed; }
+	
+	int   GetSize() const { return m_curSize; }
+	int   GetMaxSize()  const { return m_maxSize; }
+	int   GetUnreadBytes() const { return m_curSize - m_readCount; }
+	
+	bool  HasSpace(int space) const { return (m_maxSize - m_curSize >= space); }
+	
 private:
 	enum
 	{

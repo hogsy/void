@@ -112,13 +112,15 @@ enum
 
 struct NetChanWriter
 {
+	virtual bool ChanCanSend(int chanId)=0;
+
 	virtual void ChanBeginWrite(int chanId, byte msgid, int estSize)=0;
-	virtual void ChanWrite(byte b)=0;
-	virtual void ChanWrite(char c)=0;
-	virtual void ChanWrite(short s)=0;
-	virtual void ChanWrite(int i)=0;
-	virtual void ChanWrite(float f)=0;
-	virtual void ChanWrite(const char *string)=0;
+	virtual void ChanWriteByte(byte b)=0;
+	virtual void ChanWriteChar(char c)=0;
+	virtual void ChanWriteShort(short s)=0;
+	virtual void ChanWriteInt(int i)=0;
+	virtual void ChanWriteFloat(float f)=0;
+	virtual void ChanWriteString(const char *string)=0;
 	virtual void ChanWriteCoord(float c)=0;
 	virtual void ChanWriteAngle(float a)=0;
 	virtual void ChanWriteData(byte * data, int len)=0;

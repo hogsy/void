@@ -1,10 +1,10 @@
 #include "Sys_hdr.h"
 #include "Sys_cons.h"
+#include "I_renderer.h"
 #include "Com_util.h"
 #include <direct.h>
 
 //Private stuff
-//======================================================================================
 namespace
 {
 	enum
@@ -14,8 +14,9 @@ namespace
 		CMD_TEST	 = 3
 	};
 	const int  CON_MAXARGSIZE  = 80;
+	const int  CON_MAXCONFIGLINES = 256;
+	const int  CON_MAXBUFFEREDCMDS = 32;
 }
-//======================================================================================
 
 /*
 ======================================
@@ -25,8 +26,7 @@ Constructor
 CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
 {
 	m_itCmd = 0;
-
-	m_prCons = NULL;
+	m_prCons = 0;
 
 	//open logfile
 	char debugfilename[COM_MAXPATH];
@@ -34,7 +34,7 @@ CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
 	strcat(debugfilename,"/debug.log");
 
 	m_hLogFile = ::CreateFile(debugfilename,GENERIC_WRITE, FILE_SHARE_READ, 0,
-							  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
+				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
 
 #ifdef DOSCONS
 	AllocConsole();
@@ -125,14 +125,14 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			}
 			case INKEY_ENTER:
 			{
-				int nargc =0;
-
 				//if it wasnt a blank line, enter it into the command buffer
-				if(m_conString.length())
+				if(!m_conString.length())
+					ComPrintf("]\n");
+				else
 				{
-					if(m_cmdBuffer.size() == MAX_OLDCMDS)
+					if(m_cmdBuffer.size() == CON_MAXBUFFEREDCMDS)
 						m_cmdBuffer.pop_front();
-					m_cmdBuffer.push_back(string(m_conString));
+					m_cmdBuffer.push_back(std::string(m_conString));
 					m_itCmd = m_cmdBuffer.end();
 
 					ComPrintf("]%s\n",m_conString.c_str());
@@ -143,9 +143,6 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					//reset the buffer
 					m_conString.erase();
 				}
-				else
-					ComPrintf("]\n");
-
 				break;
 			}
 			case INKEY_TAB:
@@ -160,20 +157,19 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				for(CVarList::iterator itVar= m_lCVars.begin(); itVar != m_lCVars.end(); itVar++)
 				{
 					if(strncmp(m_conString.c_str(),(*itVar)->name,len) == 0)
-						matchingNames.push_back(string((*itVar)->name));
+						matchingNames.push_back(std::string((*itVar)->name));
 				}
 
 				for(CmdList::iterator itCmd = m_lCmds.begin(); itCmd != m_lCmds.end(); itCmd ++)
 				{
 					if(strncmp(m_conString.c_str(),itCmd->name,len) == 0)
-						matchingNames.push_back(string(itCmd->name));
+						matchingNames.push_back(std::string(itCmd->name));
 				}
 				
+				//Sort and print all the matched entries
 				if(matchingNames.size())
 				{
 					matchingNames.sort();
-					
-					//Print all the matched entries
 					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
 						ComPrintf("%s\n", it->c_str());
 					ComPrintf("==========================\n");
@@ -229,7 +225,8 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			}
 			default:	
 			{
-				if(kevent.id >= 0 && kevent.id <= 127)	//ascii char entered, add to line
+				//ascii char entered, add to line
+				if(kevent.id >= 0 && kevent.id <= 127)	
 					m_conString.append(1,kevent.id);
 				break;
 			}
@@ -289,64 +286,111 @@ void CConsole::ExecString(const char *string)
 						(*it)->Set(newstr);
 					}
 				}
-				ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
 			}
+			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
 			return;
 		}
 	}
+	
 	//Couldn't exec
 	ComPrintf("Unknown command \"%s\"\n",string);
 }
 
 /*
-======================================
-Runs a Config file
-======================================
+==========================================
+Proxy functions 
+==========================================
 */
-void CConsole::ExecConfig(const char *filename)
-{
-	char file[128];
-	sprintf(file,"%s/%s",System::GetExePath(),filename);
-
-	FILE * fpcfg=fopen(file,"r");
-	if(fpcfg == NULL)
-	{
-		ComPrintf("CConsole::ExecConfig:Error opening %s\n",file);
-		return;
-	}
-
-	char c, lastc;
-	int  lines=0;
-	int  chars=0;
-	char line[80];
-	
-	//Configs files are linited to 256 lines, 80 chars each
-	memset(line,0,80);
-	while((c=fgetc(fpcfg)) != EOF)
-	{
-		if(lines > 256)
-			break;
-
-		if((c == '\n') || !(chars < 80)	//Line finished, parse the line and process it
-			|| (c == '/' && lastc == '/'))		//Comments
-		{
-			if(chars > 3)
-				ExecString(line);
-			lines++;
-			chars=0;
-			memset(line,'\0',80);
-		}
-		else
-		{
-			line[chars] = c;
-			lastc = c;
-			chars++;
-		}
-	}
-	fclose(fpcfg);
-	ComPrintf("CConsole::Exec'ed %s\n",file);
+void CConsole::SetFullscreen(bool full)
+{	m_prCons->ToggleFullscreen(full);
 }
 
+void CConsole::SetVisible(bool down)
+{	
+	System::GetInputFocusManager()->SetCursorListener(0);
+	System::GetInputFocusManager()->SetKeyListener(this,true);
+	m_prCons->Toggle(down);
+}
+
+/*
+==========================================
+Register CVar
+Initialize CVar and alphabetically add to list
+==========================================
+*/
+void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
+{
+	if(handler)
+		var->handler = handler;
+
+	for(CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	{
+		if(strcmp((*it)->name, var->name) > 0)
+			break;
+	}
+
+	//Find archived keyval and set it to that.
+	CParms parms(CON_MAXARGSIZE);
+	if(GetTokenParms(var->name, &parms))
+	{
+		if(parms.NumTokens() > 1)
+			var->ForceSet(parms.UnsafeStringTok(1));
+	}
+	m_lCVars.insert(it,var);
+}
+
+/*
+==========================================
+Register CFunc
+==========================================
+*/
+void CConsole::RegisterCommand(const char *cmdname,
+							   HCMD id,
+							   I_ConHandler * handler)
+{
+	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
+	{
+		if(strcmp(it->name, cmdname) > 0)
+			break;
+	}
+
+	//Find archived command in config, and exec that as well
+	CParms parms(CON_MAXARGSIZE);
+	if(GetTokenParms(cmdname, &parms))
+		handler->HandleCommand(id,parms);
+	
+	m_lCmds.insert(it,CCommand(cmdname,id,handler));
+}
+
+/*
+======================================
+Unlatch the cvars of the given handler
+======================================
+*/
+void CConsole::UnlatchCVars(I_ConHandler * handler)
+{
+}
+
+/*
+======================================
+Only needed by the client
+======================================
+*/
+CCommand * CConsole::GetCommandByName(const char * cmdString)
+{
+	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
+	{
+		if(!strcmp(cmdString,it->name))
+			return &(*it);
+	}
+	return 0;
+}
+
+
+
+//======================================================================================
+//Console Commands
+//======================================================================================
 /*
 ==========================================
 Handle Console command
@@ -366,45 +410,6 @@ void CConsole::HandleCommand(HCMD cmdId, const CParms &parms)
 		CFunctest(parms);
 		break;
 	}
-}
-
-/*
-=====================================
-Write CVars to given file
-=====================================
-*/
-void CConsole::WriteCVars(FILE * fp)
-{
-	//write all the archive flaged vars in the config file
-	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
-	{
-		if((*it)->flags & CVAR_ARCHIVE)
-		{
-			char line[80];
-			strcpy(line,(*it)->name);
-			strcat(line," ");
-			strcat(line,(*it)->string);
-			strcat(line,"\n");
-			fputs(line,fp);
-		}
-	}
-}
-
-/*
-==========================================
-Proxy functions 
-==========================================
-*/
-void CConsole::SetFullscreen(bool full)
-{	
-	m_prCons->ToggleFullscreen(full);
-}
-
-void CConsole::SetVisible(bool down)
-{	
-	System::GetInputFocusManager()->SetCursorListener(0);
-	System::GetInputFocusManager()->SetKeyListener(this,true);
-	m_prCons->Toggle(down);
 }
 
 /*
@@ -478,63 +483,160 @@ void CConsole::CFunctest(const CParms &parms)
 }
 
 
-/*
-==========================================
-Register CVar
-Initialize CVar and alphabetically add to list
-==========================================
-*/
-void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
-{
-	if(handler)
-		var->handler = handler;
 
-	for(CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+//======================================================================================
+//Config files
+//======================================================================================
+
+/*
+======================================
+Archived Token Access
+======================================
+*/
+bool CConsole::GetTokenParms(const char * token, CParms * parms)
+{
+	int len = strlen(token);
+	const char * archivedString=0;
+
+	for(StringList::iterator itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
 	{
-		if(strcmp((*it)->name, var->name) > 0)
+		archivedString = itVal->c_str();
+		if(strncmp(token, archivedString, len ) == 0)
+		{
+			parms->Set(itVal->c_str());
+			return true;
+		}
+	}
+	return false;
+}
+
+/*
+======================================
+Fill buffer with a parm from the config file
+======================================
+*/
+bool CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
+{
+	int len = 0;
+	char c = fgetc(fp);
+
+	if(c == EOF)
+		return false;
+
+	while(c && (c != '\n') && (c != EOF) && (len < CON_MAXARGSIZE))
+	{
+		buf[len++] = c;
+		c = fgetc(fp);
+	}
+	buf[len] = '\0';
+	return true;
+}
+
+/*
+======================================
+Load cvar data from a config file
+======================================
+*/
+void CConsole::LoadConfig(const char * szFilename)
+{
+	char file[COM_MAXPATH];
+	sprintf(file,"%s/%s",System::GetExePath(),szFilename);
+
+	FILE * fpcfg = fopen(file,"r");
+	if(fpcfg == NULL)
+	{
+		ComPrintf("CConsole::ExecConfig:Error opening %s\n",file);
+		return;
+	}
+
+	m_configFileParms.empty();
+
+	int  lines=0;
+	char line[CON_MAXARGSIZE];
+	
+	//Configs files are linited to 256 lines, 80 chars each
+	do
+	{
+		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
-	}
-	m_lCVars.insert(it,var);
+		
+		m_configFileParms.push_back(std::string(line));
+		memset(line,0,CON_MAXARGSIZE);
+		lines ++;
+
+	}while(lines < CON_MAXCONFIGLINES);
+
+	fclose(fpcfg);
+	ComPrintf("CConsole::Loaded %s\n",file);
 }
 
 /*
-==========================================
-Register CFunc
-==========================================
+======================================
+Runs a Config file
+======================================
 */
-void CConsole::RegisterCommand(const char *cmdname,
-							   HCMD id,
-							   I_ConHandler * handler)
+void CConsole::ExecConfig(const char *szFilename)
 {
-	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
+	char file[128];
+	sprintf(file,"%s/%s",System::GetExePath(),szFilename);
+
+	FILE * fpcfg=fopen(file,"r");
+	if(fpcfg == NULL)
 	{
-		if(strcmp(it->name, cmdname) > 0)
+		ComPrintf("CConsole::ExecConfig:Error opening %s\n",file);
+		return;
+	}
+
+	//Configs files are linited to 256 lines, 80 chars each
+	int  lines=0;
+	char line[CON_MAXARGSIZE];
+	memset(line,0,CON_MAXARGSIZE);
+	
+	do
+	{
+		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
-	}
-	m_lCmds.insert(it,CCommand(cmdname,id,handler));
+		
+		ExecString(line);
+		memset(line,0,CON_MAXARGSIZE);
+		lines ++;
+
+	}while(lines < CON_MAXCONFIGLINES);
+
+	fclose(fpcfg);
+	ComPrintf("CConsole::Exec'ed %s\n",file);
 }
 
 /*
-======================================
-Unlatch the cvars of the given handler
-======================================
+=====================================
+Write CVars to given file
+=====================================
 */
-void CConsole::UnlatchCVars(I_ConHandler * handler)
+void CConsole::WriteCVars(const char * szFilename)
 {
-}
+	char file[COM_MAXPATH];
+	sprintf(file,"%s/%s",System::GetExePath(),szFilename);
 
-
-/*
-======================================
-Only needed by the client
-======================================
-*/
-CCommand * CConsole::GetCommandByName(const char * cmdString)
-{
-	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
+	FILE * fp = fopen(file,"w");
+	if(!fp)
 	{
-		if(!strcmp(cmdString,it->name))
-			return &(*it);
+		ComPrintf("CConsole::WriteCVars: Error writing config file\n");
+		return;
 	}
-	return 0;
+
+	//write all the archive flaged vars in the config file
+	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
+	{
+		if((*it)->flags & CVAR_ARCHIVE)
+		{
+			char line[80];
+			strcpy(line,(*it)->name);
+			strcat(line," ");
+			strcat(line,(*it)->string);
+			strcat(line,"\n");
+			fputs(line,fp);
+		}
+	}
+	fclose(fp);
 }
+

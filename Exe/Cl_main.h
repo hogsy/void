@@ -42,7 +42,7 @@ public:
 	void RunFrame();
 	
 	void SetInputState(bool on);
-	void WriteBindTable(FILE *fp);
+//	void WriteBindTable(FILE *fp);
 
 	//Client Interface
 	

@@ -95,8 +95,6 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 										  const float &iy,
 										  const float &iz)
 {
-//	if(ix || iy)
-//		ComPrintf("%.2f %.2f\n",ix,iy);
 	m_refClient.RotateRight(ix);
 	m_refClient.RotateUp(iy);
 }
@@ -181,7 +179,7 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 Default key bindings
 ======================================
 */
-void CClientCmdHandler::SetDefaultBinds()
+void CClientCmdHandler::IntializeBinds()
 {
 	CParms parms(80);
 
@@ -209,6 +207,9 @@ void CClientCmdHandler::SetDefaultBinds()
 	BindFuncToKey(parms);
 	parms = "bind RIGHTARROW +right";
 	BindFuncToKey(parms);
+
+	//Exec binds file
+	((CConsole*)System::GetConsole())->ExecConfig("vbinds.cfg");
 }
 
 /*
@@ -356,9 +357,19 @@ void CClientCmdHandler::RemoveFromCmdBuffer(const ClientKey * pcommand)
 Write all the bound commands to file
 ==========================================
 */
-void CClientCmdHandler::WriteBindTable(FILE *fp)
+void CClientCmdHandler::WriteBinds(const char * szBindsfile)
 {
-	for(unsigned int i=0;i<256;i++)
+	char file[COM_MAXPATH];
+	sprintf(file,"%s/%s",System::GetExePath(),szBindsfile);
+
+	FILE * fp = fopen(file,"w");
+	if(!fp)
+	{
+		ComPrintf("CClientCmdHandler::WriteBinds\n");
+		return;
+	}
+
+	for(int i=0;i<256;i++)
 	{
 		//there is a binding for this key
 		if(m_cmdKeys[i].szCommand && m_cmdKeys[i].pCmd)
@@ -390,4 +401,13 @@ void CClientCmdHandler::WriteBindTable(FILE *fp)
 			fputs(line,fp);
 		}
 	}
+	fclose(fp);
 }
+
+
+/*
+======================================
+Exec binds file
+======================================
+*/
+

@@ -2,13 +2,9 @@
 #define VOID_CONSOLE_CLASS
 
 #include "I_console.h"
-#include "I_renderer.h"
 #include "In_defs.h"
 
-using namespace std;
-
 //#define VOID_DOS_CONSOLE	1
-
 /*
 ==========================================
 Console Command
@@ -52,6 +48,7 @@ console input
 config files
 ==========================================
 */
+struct I_ConsoleRenderer;
 
 class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener,	//Key Event listener interface	
@@ -65,18 +62,15 @@ public:
 	//==============================================================
 	//I_Console Interface
 
-	void RegisterCVar(	CVarBase * var,
-						I_ConHandler * handler=0);
-	void RegisterCommand(const char *cmdname,
-						HCMD id,
-						I_ConHandler * handler);
-
+	void RegisterCVar(CVarBase * var,I_ConHandler * handler=0);
+	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
 	void UnlatchCVars(I_ConHandler * handler);
-
 	void ComPrint(char* text);
-
-	//just pass a string to be parsed and exec'ed
 	void ExecString(const char *string);
+
+	//looks through config file to see if any parms match the given token
+	//set parm to that token if found
+	bool GetTokenParms(const char * token, CParms * parms);
 
 	//==============================================================
 	//Key Listener interface
@@ -91,37 +85,45 @@ public:
 
 	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
 
-	void ExecConfig(const char *filename);
-	void WriteCVars(FILE *fp);
+	//Configs
+	void LoadConfig(const char * szFilename);
+	void ExecConfig(const char * szFilename);
+	void WriteCVars(const char * szFilename);
 
 	//Client comand binding
 	CCommand * GetCommandByName(const char * cmdString);
 	
-	//Console funcs
+	//Console viewing
     void SetFullscreen(bool full);
     void SetVisible(bool down);
 
 private:
-
-	enum
-	{	MAX_OLDCMDS = 32
-	};
+	
+	bool ReadConfigParm(char *buf, int bufsize, FILE * fp);
 
 	//==============================================================
-	typedef list<CCommand>	 CmdList;
-	typedef list<CVarBase*> CVarList;
+	typedef std::list<CCommand>	 CmdList;
+	typedef std::list<CVarBase*> CVarList;
 	
-	CmdList		m_lCmds;		//List of registered commands
-	CVarList	m_lCVars;
+	//List of registered commands
+	CmdList		m_lCmds;		
+	
+	//List of registered cvars
+	CVarList	m_lCVars;		
 
-	CParms		m_parms;
+	//Hold parsed parms of commandString enterered
+	CParms		m_parms;		
 	
-	string		m_conString;	//Current String in Console
-	StringList	m_cmdBuffer;	//Fixed List of previously entered strings
-	
+	//Current String in Console
+	std::string	m_conString;	
+
+	//Fixed List of previously entered strings
+	StringList	m_cmdBuffer;	
 	//iterator to keep track of the Command buffer
-	StringList::iterator	m_itCmd;		
+	StringList::iterator	m_itCmd;
 
+	StringList  m_configFileParms;
+	
 	//The Console Renderer
 	I_ConsoleRenderer	*	m_prCons;
 
@@ -136,7 +138,6 @@ private:
 	void CVarlist (const CParms &parms);
 	void CCmdList (const CParms &parms);
 	void CFunctest(const CParms &parms);
-
 };
 
 #endif

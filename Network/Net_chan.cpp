@@ -131,7 +131,7 @@ void CNetChan::PrepareTransmit()
 	if (!m_reliableBuffer.GetSize() && m_buffer.GetSize())
 	{
 		m_reliableBuffer.Reset();
-		m_reliableBuffer.Write(m_buffer);
+		m_reliableBuffer.WriteBuffer(m_buffer);
 		m_buffer.Reset();
 		send_reliable = 1;
 	}
@@ -143,14 +143,14 @@ void CNetChan::PrepareTransmit()
 	int h2 = m_state.inMsgId  | (m_bInReliableMsg << 31); 
 
 	m_sendBuffer.Reset();
-	m_sendBuffer.Write(h1);
-	m_sendBuffer.Write(h2);
+	m_sendBuffer.WriteInt(h1);
+	m_sendBuffer.WriteInt(h2);
 
 	// copy the reliable message to the packet first
 	if(send_reliable)
 	{
 //ComPrintf("CNetChan: Sending reliably\n");
-		m_sendBuffer.Write(m_reliableBuffer);
+		m_sendBuffer.WriteBuffer(m_reliableBuffer);
 		m_state.lastOutReliableId = m_state.outMsgId;
 		m_bOutReliableMsg = 1;
 		//m_bInReliableMsg = 1;
@@ -159,7 +159,7 @@ void CNetChan::PrepareTransmit()
 	//Add unreliable message if it has space
 	if(m_buffer.GetSize() &&
 	  (m_sendBuffer.GetSize() + m_buffer.GetSize() > m_sendBuffer.GetMaxSize()))
-		m_sendBuffer.Write(m_buffer);
+		m_sendBuffer.WriteBuffer(m_buffer);
 
 	//increment outgoing sequence
 	m_state.outMsgId++;
