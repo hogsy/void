@@ -294,10 +294,6 @@ SOURCE=..\Shared\Com_vector.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Game_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\world.h
 # End Source File
 # End Group
@@ -460,6 +456,10 @@ SOURCE=.\Mdl_sp2.cpp
 SOURCE=.\Mdl_sp2.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\Shared\Cl_defs.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Client.h
