@@ -73,12 +73,23 @@ struct I_ConsoleRenderer
 		TOP,
 		BOTTOM
 	};
+
+	enum LineColor
+	{
+		DEFAULT,
+		WHITE,
+		BLACK,
+		RED,
+		BLUE,
+		GREEN,
+		YELLOW
+	};
 	
 	virtual void Toggle(bool down) = 0;
 	virtual void ToggleFullscreen(bool full) = 0;
 	virtual void MoveCurrentLine(LineOffset offset) = 0;
 	virtual void SetStatusline(const char  *status_line, const int &len) = 0;
-	virtual void AddLine(char *line, int color=0, int size=0) = 0;
+	virtual void AddLine(const char *line, LineColor color=DEFAULT, int size=0) = 0;
 };
 
 
@@ -94,8 +105,9 @@ struct I_Renderer
 	virtual bool InitRenderer()=0;
 	virtual bool Shutdown()=0;
 
-	virtual void DrawFrame(vector_t *origin,vector_t *angles, vector_t *blend) =0;
-
+	virtual void Draw(vector_t *origin,vector_t *angles, vector_t *blend) =0;
+	virtual void DrawConsole()= 0;
+	
 	//Get other interfaces
 	virtual I_ConsoleRenderer * GetConsole()=0;
 	virtual I_RHud *			GetHud()=0;

@@ -15,7 +15,8 @@ public:
 	bool InitRenderer();
 	bool Shutdown();
 
-	void DrawFrame(vector_t *origin,vector_t *angles, vector_t *blend);
+	void Draw(vector_t *origin,vector_t *angles, vector_t *blend);
+	void DrawConsole();
 
 	I_ConsoleRenderer * GetConsole();
 	I_RHud *			GetHud();

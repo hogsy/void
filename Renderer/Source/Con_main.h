@@ -32,7 +32,7 @@ public:
 	void MoveCurrentLine(LineOffset offset);
 	
 	void SetStatusline(const char  *status_line, const int &len);
-	void AddLine(char *line, int color=0, int size=0);
+	void AddLine(const char *line, LineColor color=DEFAULT, int size=0);
 
 	void UpdateRes();
 	void Draw(); 
@@ -54,9 +54,10 @@ private:
 	//struct to store a line in the console
 	struct Conline_t
 	{
-		Conline_t() { length = 0; line[0] = '\0'; }
-		int		length;
-		char 	line[CON_MAX_CHARS_PER_LINE];
+		Conline_t() { color = DEFAULT; length = 0; line[0] = '\0'; }
+		int			length;
+		LineColor	color;
+		char 		line[CON_MAX_CHARS_PER_LINE];
 	};
 	Conline_t * m_lines[CON_MAX_LINES];
 
@@ -71,8 +72,8 @@ private:
 	EConStatus	m_status;
 
 	//Private methods
-	void AddMessage(char *buff, bool first);
-	void PrintRecursive(bool first, char *msg);
+	void AddMessage(const char *buff, bool first, LineColor color);
+	void PrintRecursive(bool first, char *msg, LineColor color);
 	void PrintBuffer();
 
 	//CVars
