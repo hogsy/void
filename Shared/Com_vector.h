@@ -1,10 +1,8 @@
-
-#ifndef MATH_H
-#define MATH_H
+#ifndef VOID_VECTOR_H
+#define VOID_VECTOR_H
 
 #include <math.h>
 
-/*
 #ifndef PI
 #define PI    3.14159265358979323846f
 #endif
@@ -21,41 +19,14 @@ typedef struct
 {
 	float x, y, z;
 }vector_t;
-*/
-/*
-typedef float matrix_t[4][4];
-
-// rvertex_t - what the renderer thinks in
-typedef struct
-{
-	float x, y, z;		// location
-	float s, t;			// tex coords
-	float ls, lt;		// lightmap coords
-
-} rvertex_t;
 
 
-typedef struct poly_t
-{
-
-	int			num_vertices;
-	vector_t	vertices[32];
-
-	int			texdef;
-	int			lightdef;
-
-} poly_t;
-*/
-
-/*
 typedef struct
 {
 	vector_t	norm;	// normal to plane
 	float		d;		// distance from origin
 } plane_t;
-*/
 
-#if 0
 
 //new replacement 3d funcs
 namespace Void3d
@@ -160,4 +131,4 @@ void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, floa
 
 #endif
 
-#endif
+

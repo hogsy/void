@@ -1,15 +1,68 @@
+#ifndef VOID_WORLD_H
+#define VOID_WORLD_H
 
-#ifndef WORLD_H
-#define WORLD_H
-
-#include "3dmath.h"
+//#include "3dmath.h"
+#include "Com_vector.h"
 #include "Bsp_file.h"
-
 
 typedef struct
 {
 	float s, t;
 } tvert_t;
+
+
+struct world_t
+{
+	vector_t		*verts;
+	int				*iverts;
+	plane_t			*planes;
+	bspf_entity_t	*entities;
+	bspf_node_t		*nodes;
+	bspf_leaf_t		*leafs;
+	bspf_brush_t	*brushes;
+	bspf_side_t		*sides;
+	bspf_edge_t		*edges;
+	bspf_texdef_t	*texdefs;
+	bspf_texdef_t	*lightdefs;
+	texname_t		*textures;
+	key_t			*keys;
+	unsigned char	*leafvis;
+	unsigned char	*lightdata;
+
+	int	nverts;
+	int niverts;
+	int nplanes;
+	int nentities;
+	int nnodes;
+	int	nleafs;
+	int nbrushes;
+	int nsides;
+	int nedges;
+	int nlightdefs;
+	int ntexdefs;
+	int ntextures;
+	int nkeys;
+	int leafvis_size;	// size of vis info for one leaf
+	int light_size;		// size of all light data
+};
+
+
+void world_destroy(world_t *world);
+world_t* world_create(char *filename);
+void world_write(world_t *world, char *filename);
+void world_print(world_t *world);
+
+char* key_get_value(world_t *w, int ent, char *name);
+int key_get_int(world_t *w, int ent, char *name);
+float key_get_float(world_t *w, int ent, char *name);
+void key_get_vector(world_t *w, int ent, char *name, vector_t &v);
+
+#endif
+
+
+
+
+
 
 /*
 #define WORLD_VERSION			7
@@ -113,89 +166,4 @@ typedef struct
 
 */
 
-
-struct world_t
-{
-	vector_t		*verts;
-	int				*iverts;
-	plane_t			*planes;
-	bspf_entity_t	*entities;
-	bspf_node_t		*nodes;
-	bspf_leaf_t		*leafs;
-	bspf_brush_t	*brushes;
-	bspf_side_t		*sides;
-	bspf_edge_t		*edges;
-	bspf_texdef_t	*texdefs;
-	bspf_texdef_t	*lightdefs;
-	texname_t		*textures;
-	key_t			*keys;
-	unsigned char	*leafvis;
-	unsigned char	*lightdata;
-
-	int	nverts;
-	int niverts;
-	int nplanes;
-	int nentities;
-	int nnodes;
-	int	nleafs;
-	int nbrushes;
-	int nsides;
-	int nedges;
-	int nlightdefs;
-	int ntexdefs;
-	int ntextures;
-	int nkeys;
-	int leafvis_size;	// size of vis info for one leaf
-	int light_size;		// size of all light data
-};
-
-
-
-/*
-======================================
-The camera class.
-keeps pointers to client angle/position data. 
-Client creates this locally when starting into a game
-======================================
-*/
-class CCamera
-{
-public:
-
-	CCamera(vector_t & rorigin,
-			vector_t & rangles,
-			vector_t & rblend
-//			,vector_t & rforward,
-//			vector_t & rright,
-			//vector_t & rup
-			): origin(rorigin), angles(rangles), blend(rblend)
-							 //,forward(rforward), right(rright), up(rup)
-	{}
-	
-	~CCamera() {} 
-
-	vector_t & origin;
-	vector_t & angles;
-	vector_t & blend;
-	
-/*	vector_t & forward;
-	vector_t & right;
-	vector_t & up;
-*/
-};
-
-
-
-
-void world_destroy(world_t *world);
-world_t* world_create(char *filename);
-void world_write(world_t *world, char *filename);
-void world_print(world_t *world);
-
-char* key_get_value(world_t *w, int ent, char *name);
-int key_get_int(world_t *w, int ent, char *name);
-float key_get_float(world_t *w, int ent, char *name);
-void key_get_vector(world_t *w, int ent, char *name, vector_t &v);
-
-#endif
 

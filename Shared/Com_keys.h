@@ -2,7 +2,8 @@
 #define VOID_COM_KEYFIELDS
 
 #include "Com_buffer.h"
-#include "3dmath.h"
+#include "Com_vector.h"
+//#include "3dmath.h"
 
 /*
 ======================================================================================

@@ -3,10 +3,11 @@
 
 /*
 ======================================
-Common definitions shared by the resource managers
+Basic definitions shared by the resource managers
 Header will also be included by the game dlls
 ======================================
 */
+#include "Com_vector.h"
 
 typedef int hSnd;
 typedef int hMdl;
@@ -44,6 +45,41 @@ enum CacheType
 	CACHE_LOCAL = 0,	//Persistant through out the game, Client is reponsible for loading these.
 	CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
 	CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
+};
+
+
+
+/*
+======================================
+Entity info the renderer needs to know to
+renderer it in the game.
+Visibility determination should be done client side ?
+======================================
+*/
+struct EntState 
+{
+	EntState()
+	{
+		mdlCache = CACHE_LOCAL;
+		mdlIndex = -1;
+		numSkins = skinNum = 0;
+		numFrames = frame = nextFrame = 0;
+		frac = 0.0f;
+	}
+
+	CacheType	mdlCache;
+	hMdl		mdlIndex;
+	
+	int			numSkins;
+	int			skinNum;
+	
+	int			numFrames;
+	int			frame;
+	int			nextFrame;
+	float		frac;
+
+	vector_t	origin;
+	vector_t	angle;
 };
 
 

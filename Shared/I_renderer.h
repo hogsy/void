@@ -1,10 +1,8 @@
 #ifndef INC_RENDERER_INTERFACE
 #define INC_RENDERER_INTERFACE
 
-#include "I_hud.h"
 #include "I_void.h"
-#include "Game_defs.h"
-#include "World.h"
+#include "Com_vector.h"
 
 #ifdef RENDERER_EXPORTS
 #define RENDERER_API __declspec(dllexport)
@@ -12,6 +10,11 @@
 #define RENDERER_API __declspec(dllimport)
 #endif
 
+/*
+======================================
+Renderer flags
+======================================
+*/
 #define RFLAG_FULLSCREEN	0x00000001
 #define RFLAG_FULLBRIGHT	0x00000002
 #define RFLAG_MULTITEXTURE	0x00000004
@@ -93,81 +96,39 @@ struct I_ConsoleRenderer
 
 
 /*
-==========================================
-Renderer Model Interface
-==========================================
+======================================
+The camera class.
+keeps refs to client angle/position data. 
+Client creates this locally when starting into a game
+
+TODO, change this to subclass EntityState ?
+======================================
 */
-enum
+class CCamera
 {
-	MODEL_CACHE_NUM	= 3,
-	MODEL_CACHE_SIZE =256
-};
+public:
 
-enum
-{
-	MODEL_SKIN_BOUND = 0,
-	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
-	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
-};
+	CCamera(vector_t & rorigin,
+			vector_t & rangles,
+			vector_t & rblend
+//			,vector_t & rforward,
+//			vector_t & rright,
+			//vector_t & rup
+			): origin(rorigin), angles(rangles), blend(rblend)
+							 //,forward(rforward), right(rright), up(rup)
+	{}
+	
+	~CCamera() {} 
 
-struct R_EntState 
-{
-	int			num_skins;
-	int			num_frames;
-
-	CacheType	cache;
-	hMdl		index;
-	int			skinnum;
-
-	int			frame;
-	int			nextframe;
-	float		frac;
-
-	vector_t origin;
-	vector_t angle;
-};
-
-
-/*
-==========================================
-Renderer Image Interface
-==========================================
+	vector_t & origin;
+	vector_t & angles;
+	vector_t & blend;
+	
+/*	vector_t & forward;
+	vector_t & right;
+	vector_t & up;
 */
-enum
-{
-	IMAGE_CACHE_NUM	= 2,
-	IMAGE_CACHE_SIZE =256
 };
-
-
-/*
-==========================================
-Renderer Model/Image/Hud Interface
-==========================================
-*/
-struct I_ClientRenderer
-{
-	/* Model Interface */
-	virtual hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1)=0;
-	virtual void DrawModel(const R_EntState &state)=0;
-	virtual void UnloadModel(CacheType cache, hMdl index)=0;
-	virtual void UnloadModelCache(CacheType cache)=0;
-	virtual void UnloadModelAll(void)=0;
-	virtual void GetInfo(R_EntState &state)=0;
-
-	/* Image Interface */
-	virtual hImg LoadImage(const char *image, CacheType cache, hImg index=-1)=0;
-	virtual void UnloadImage(CacheType cache, hImg index)=0;
-	virtual void UnloadImageCache(CacheType cache)=0;
-	virtual void UnloadImageAll(void)=0;
-
-	/* Hud Interface */
-	virtual void  HudPrintf(int x, int y, float time,char *msg,...) =0;
-	virtual void  HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
-	virtual void  PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
-};
-
-
 
 
 /*
@@ -175,6 +136,9 @@ struct I_ClientRenderer
 Renderer Interface
 ==========================================
 */
+struct I_ClientRenderer;
+struct world_t;
+
 struct I_Renderer
 {
 	//Startup/Shutdown

@@ -1,13 +1,6 @@
-/**************************************************************************
+#include "Com_defs.h"
+#include "Com_vector.h"
 
-				used by renderer and collision detection
-
-***************************************************************************/
-
-//#include "3dmath.h"
-#include <memory.h>
-
-#if 0
 
 // doesn't keep the length the same! - just projects it onto the plane
 void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm)
@@ -279,8 +272,5 @@ void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, floa
 
 #ifdef _WIN32
 #pragma optimize( "", on )
-#endif
-
-
 #endif
 

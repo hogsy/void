@@ -356,7 +356,7 @@ SOURCE=.\Game_ents.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\I_game.h
+SOURCE=..\Shared\I_game.h
 # End Source File
 # Begin Source File
 

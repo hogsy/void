@@ -1,11 +1,13 @@
 #ifndef VOID_CLGAME_DEFS
 #define VOID_CLGAME_DEFS
 
-#include "3dmath.h"
-#include "I_renderer.h"
+//#include "3dmath.h"
+//#include "I_renderer.h"
+//#include "I_clientRenderer.h"
+#include "Game_defs.h"
 
 //A client side entitiy
-struct ClEntity : public R_EntState
+struct ClEntity : public EntState
 {
 	ClEntity()
 	{	Reset();
@@ -14,10 +16,10 @@ struct ClEntity : public R_EntState
 	virtual void Reset()
 	{
 		num = -1;
-		num_skins = num_frames = 0;
-		index = -1;
-		skinnum = 0;
-		frame = nextframe = 0;
+		numSkins = numFrames = 0;
+		mdlIndex = -1;
+		skinNum = 0;
+		frame = nextFrame = 0;
 		
 		inUse = false;
 
