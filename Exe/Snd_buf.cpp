@@ -187,8 +187,8 @@ CSoundBuffer::~CSoundBuffer()
 {
 	if(InUse())
 		Destroy();
-	if(m_pWaveData)
-		delete m_pWaveData;
+//	if(m_pWaveData)
+//		delete m_pWaveData;
 }
 
 /*
@@ -198,6 +198,9 @@ Create the DSound Buffer from a wave file
 */
 bool CSoundBuffer::Create(const char * path)
 {
+	if(InUse())
+		Destroy();
+
 	m_pWaveData = new CWaveFile(path);
 	
 	if(m_pWaveData->IsEmpty())
@@ -239,6 +242,8 @@ bool CSoundBuffer::Create(const char * path)
     if(FAILED(hr))
     { 
 		PrintDSErrorMessage(hr,"CSoundBuffer::Create:");
+		delete m_pWaveData;
+		m_pWaveData = 0;
 		m_pDSBuffer = 0;
         return false;
     } 
@@ -250,12 +255,6 @@ bool CSoundBuffer::Create(const char * path)
 has the buffer been created
 ==========================================
 */
-bool CSoundBuffer::InUse() const
-{
-	if(m_pDSBuffer) return true;
-	return false;
-}
-
 
 /*
 ==========================================
@@ -280,6 +279,8 @@ void CSoundBuffer::Destroy()
 	{
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
+		delete m_pWaveData;
+		m_pWaveData = 0;
 	}
 }
 
@@ -288,6 +289,10 @@ void CSoundBuffer::Destroy()
 Access funcs
 ==========================================
 */
+bool CSoundBuffer::InUse() const 
+{ if(m_pDSBuffer)  return true ;	
+	return false; 
+}
 IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
 CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveData; }
 const char         * CSoundBuffer::GetFilename() const 

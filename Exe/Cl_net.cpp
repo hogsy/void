@@ -23,20 +23,20 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			{
 				char name[32];
 				strcpy(name,buffer.ReadString());
-				m_pSound->PlaySnd(m_hsTalk);
+				m_pSound->PlaySnd(m_hsTalk, CACHE_LOCAL);
 				ComPrintf("%s: %s\n",name,buffer.ReadString());
 				break;
 			}
 		case SV_DISCONNECT:
 			{
-				m_pSound->PlaySnd(m_hsMessage);
+				m_pSound->PlaySnd(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
 				m_pNetCl->Disconnect(true);
 				break;
 			}
 		case SV_PRINT:	//just a print message
 			{
-				m_pSound->PlaySnd(m_hsMessage);
+				m_pSound->PlaySnd(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s\n",buffer.ReadString());
 				break;
 			}
@@ -121,7 +121,9 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 				{
 					m_gameEnts[id].index = buffer.ReadShort();
 					m_gameEnts[id].skinnum = buffer.ReadShort();
-					m_gameEnts[id].frame = (float)buffer.ReadShort();
+					m_gameEnts[id].frame = buffer.ReadShort();
+					m_gameEnts[id].nextframe = m_gameEnts[id].frame;
+					m_gameEnts[id].frac = 0;
 				}
 				else
 				{
@@ -213,7 +215,7 @@ void CClient::Talk(const char * string)
 		return;
 
 	ComPrintf("%s: %s\n", m_clname.string, msg);
-	m_pSound->PlaySnd(m_hsTalk);
+	m_pSound->PlaySnd(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
 	m_pNetCl->GetReliableBuffer().Write(CL_TALK);

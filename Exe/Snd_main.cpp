@@ -33,10 +33,14 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVAR_FLOAT, CVAR_ARCHIV
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
-	m_Buffers =  new CSoundBuffer[MAX_SOUNDS];
+	
+	m_bufferCache[0] =  new CSoundBuffer[MAX_SOUNDS];
+	m_bufferCache[1] =  new CSoundBuffer[MAX_SOUNDS];
+	m_bufferCache[2] =  new CSoundBuffer[MAX_SOUNDS];
+	
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
 	
-	m_numBuffers = 0;
+//	m_numBuffers = 0;
 
 	m_bHQSupport=false;
 	m_bStereoSupport= false;
@@ -177,17 +181,23 @@ void CSoundManager::Shutdown()
 		m_pListener=0;
 	}
 
-	if(m_Buffers)
-	{
-		delete [] m_Buffers;
-		m_Buffers= 0;
-	}
-	
 	if(m_Channels)
 	{
 		delete [] m_Channels;
 		m_Channels = 0;
 	}
+
+	delete [] m_bufferCache[0];
+	delete [] m_bufferCache[1];
+	delete [] m_bufferCache[2];
+
+/*	if(m_Buffers)
+	{
+		delete [] m_Buffers;
+		m_Buffers= 0;
+	}
+*/
+	
 	
 	if(m_pPrimary)
 	{
@@ -237,10 +247,12 @@ Update Sound position
 The SoundManager needs to automatically stop sounds out of range
 ======================================
 */
-void CSoundManager::UpdateSnd(int index, vector_t * pos, vector_t * velocity)
+//void CSoundManager::UpdateSnd(int index, vector_t * pos, vector_t * velocity)
+void CSoundManager::UpdateGameSound(int index, vector_t * pos, vector_t * velocity)
 {
 }
 
+#if 0
 /*
 ==========================================
 Play sound at index blah, at this channel
@@ -276,7 +288,6 @@ void CSoundManager::PlaySnd(int index, int channel,
 	}
 }
 
-
 /*
 ==========================================
 Register a sound
@@ -302,6 +313,130 @@ void CSoundManager::UnregisterAll()
 	for(i=0;i<MAX_SOUNDS;i++)
 		m_Buffers[i].Destroy();
 }
+#endif
+
+/*
+======================================
+
+======================================
+*/
+void CSoundManager::PlaySnd(int index, CacheType cache, int channel, 
+							const vector_t * origin,  const vector_t * velocity,
+							bool looping)
+{
+	if(!m_bufferCache[cache][index].InUse())
+	{
+		ComPrintf("CSoundManager::Play: no sound at index %d, cache %d\n", index, cache);
+		return;
+	}
+
+
+	for(int i=0; i<MAX_CHANNELS; i++)
+		if(!m_Channels[i].IsPlaying())
+			break;
+	if(i== MAX_CHANNELS)
+	{
+		ComPrintf("CSoundManager::Play: Unable to play %s, max sounds reached\n", 
+			m_bufferCache[cache][index].GetFilename());
+		return;
+	}
+
+	m_Channels[i].Create(m_bufferCache[cache][index],origin,velocity);
+	bool ret = false;
+	if(looping == true)
+		ret = m_Channels[i].Play(true);
+	else
+		ret = m_Channels[i].Play(false);
+	
+	if(ret)
+	{
+//TEMP, dont really need this info during gameplay
+//		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
+	}
+}
+
+
+/*
+======================================
+
+======================================
+*/
+hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
+{
+	//we have to register a new sound, at the given index
+	if(index != -1)
+	{
+		if(m_bufferCache[cache][index].InUse())
+		{
+			m_bufferCache[cache][index].Destroy();
+			if(m_bufferCache[cache][index].Create(path))
+				return index;
+			return -1;
+		}
+	}
+
+//FIX ME, duplicate buffers if sound is found in a different cache ?
+
+	//Load at first avaiable slot, or just return index if its already loaded
+	int unusedSlot= -1;
+	for(int i=0; i<MAX_SOUNDS; i++)
+	{
+		if(m_bufferCache[cache][i].InUse())
+		{
+		//if we found an index to the loaded sound, then just return
+		   if(strcmp(path, m_bufferCache[cache][i].GetFilename()) == 0)
+				return i;
+		}
+		else if(unusedSlot == -1)
+			unusedSlot = i;
+
+	}
+
+	//Didnt find any space to load the wav
+	if(unusedSlot == -1)
+	{
+		ComPrintf("CSoundManager::RegisterSound:: No slot for sound \"%s\" in cache %d\n", path, cache);
+		return -1;
+	}
+
+	//found an empty space, load sound here and return index
+	if(m_bufferCache[cache][unusedSlot].Create(path))
+		return unusedSlot;
+	return -1;
+}
+
+
+
+void CSoundManager::UnregisterSound(hSnd index, CacheType cache)
+{
+	if(m_bufferCache[cache][index].InUse())
+		m_bufferCache[cache][index].Destroy();
+}
+
+/*
+======================================
+Unregister all sounds in the given cache
+======================================
+*/
+void CSoundManager::UnregisterCache(CacheType cache)
+{
+	for(int i=0; i< MAX_SOUNDS; i++)
+		UnregisterSound(i, cache);
+}
+
+void CSoundManager::UnregisterAll()
+{
+	for(int i=0; i< 3; i++)
+		UnregisterCache((CacheType)i);
+}
+
+
+
+
+
+
+
+
 
 //======================================================================================
 //Console commands and CVars
@@ -313,7 +448,7 @@ Play a sound
 */
 void CSoundManager::SPlay(const char * arg)
 {
-	if(arg)
+/*	if(arg)
 	{
 		char wavfile[COM_MAXPATH];
 
@@ -339,6 +474,7 @@ void CSoundManager::SPlay(const char * arg)
 		return;
 	}
 	ComPrintf("Usage : splay <wavepath>\n");
+*/
 }
 
 /*
@@ -367,8 +503,8 @@ List all the loaded sounds
 */
 void CSoundManager::SListSounds()
 {
-	for(int i=0;i<m_numBuffers;i++)
-		m_Buffers[i].PrintStats();
+//	for(int i=0;i<m_numBuffers;i++)
+//		m_Buffers[i].PrintStats();
 
 	//Currently playing
 //	ComPrintf("Currently playing %d channels\n", m_channelsInUse);

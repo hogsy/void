@@ -107,10 +107,16 @@ enum
 
 struct R_EntState 
 {
+	int			num_skins;
+	int			num_frames;
+
 	CacheType	cache;
 	hMdl		index;
 	int			skinnum;
-	float		frame;	// fixme - make 2 ints - last frame and next frame
+
+	int			frame;
+	int			nextframe;
+	float		frac;
 
 	vector_t origin;
 	vector_t angle;
@@ -119,10 +125,11 @@ struct R_EntState
 struct I_Model
 {
 	virtual hMdl LoadModel(const char *model, hMdl index, CacheType cache)=0;
-	virtual void DrawModel(hMdl index, CacheType cache, const R_EntState &state)=0;
+	virtual void DrawModel(const R_EntState &state)=0;
 	virtual void UnloadModel(CacheType cache, int index)=0;
 	virtual void UnloadModelCache(CacheType cache)=0;
 	virtual void UnloadModelAll(void)=0;
+	virtual void GetInfo(R_EntState &state)=0;
 };
 
 

@@ -104,14 +104,14 @@ DrawModel
 =======================================
 */
 extern I_Void		  *	g_pVoidExp;
-void CModelManager::DrawModel(hMdl index, CacheType cache, const R_EntState &state)
+void CModelManager::DrawModel(const R_EntState &state)
 {
 	// add model to list to be drawn
 	drawmodel_t *ndm = drawmodelGet();
 	ndm->angles	= state.angle;
-	ndm->cache	= cache;
+	ndm->cache	= state.cache;
 	ndm->frame	= state.frame;
-	ndm->index	= index;
+	ndm->index	= state.index;
 	ndm->origin = state.origin;
 	ndm->skin	= state.skinnum;
 
@@ -165,6 +165,19 @@ void CModelManager::UnloadModelAll(void)
 {
 	for (int c=0; c<MODEL_CACHE_NUM; c++)
 		UnloadModelCache((CacheType)c);
+}
+
+
+/*
+=======================================
+GetInfo 
+=======================================
+*/
+void CModelManager::GetInfo(R_EntState &state)
+{
+	state.num_frames = caches[state.cache][state.index]->GetNumFrames();
+	state.num_skins  = caches[state.cache][state.index]->GetNumSkins();
+
 }
 
 

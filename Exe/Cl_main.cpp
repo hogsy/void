@@ -159,8 +159,8 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
-	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
-	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
+	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
+	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
 
 	
 	ComPrintf("CClient::Load World: OK\n");
@@ -255,7 +255,7 @@ void CClient::RunFrame()
 													   m_gameClient.origin.y,
 													   m_gameClient.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
+		m_pHud->HudPrintf(0, 70,0, " %3.2f : %2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
 		m_fFrameTime = System::g_fcurTime;
 
 
@@ -288,11 +288,15 @@ void CClient::RunFrame()
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 
 		//draw the ents in pvs
-		for(int i=0; i< m_numEnts; i++)
+		for(int i=0; i< MAX_CLIENTENTS; i++)
 		{
-			m_gameEnts[i].frame = 0;
-			m_gameEnts[i].skinnum= 0;
-			m_pModel->DrawModel(m_gameEnts[i].index, CACHE_GAME, m_gameEnts[i]);
+//			m_gameEnts[i].frame = 0;
+//			m_gameEnts[i].skinnum= 0;
+			if(m_gameEnts[i].index == 0)
+			{
+				m_gameEnts[i].cache = CACHE_GAME;
+				m_pModel->DrawModel(m_gameEnts[i]);	
+			}
 		}
 
 //		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);

@@ -119,6 +119,9 @@ public:
 	const vector_t * origin;
 	const vector_t * velocity;
 
+//	CacheType sourceCache;
+//	hSnd	  sourcId;
+
 	IDirectSound3DBuffer * m_pDS3dBuffer; 
 	IDirectSoundBuffer   * m_pDSBuffer;	//DirectSoundBuffer
 };

@@ -27,6 +27,20 @@ namespace VoidSound
 }
 
 /*
+//finds id, or creates new one, if index = -1, otherwise loads sound at give index
+virtual hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1)=0;
+
+virtual void PlaySnd(hSnd index, CacheType cache,
+					 int channel = CHAN_AUTO,
+					 const vector_t * origin=0, const vector_t * velocity=0,
+					 bool looping = false)=0;
+
+ virtual void UnregisterSound(hSnd index, CacheType cache)=0;
+virtual void UnregisterCache(CacheType cache)=0;
+virtual void UnregisterAll()=0;
+*/
+
+/*
 ======================================================================================
 Main Sound manager
 play a sound at a given channel and pos, looping or not looping
@@ -50,9 +64,11 @@ public:
 
 	void RunFrame();
 
-	int RegisterSound(const char * path);
+	hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1);
+	void UnregisterSound(hSnd index, CacheType cache);
+	void UnregisterCache(CacheType cache);
 	void UnregisterAll();
-
+	
 	//update pos
 	void UpdateListener(const vector_t &pos,
 						const vector_t &velocity,
@@ -60,13 +76,15 @@ public:
 						const vector_t &up);
 
 	//hook this up with an entity, for speed and origin
-	void PlaySnd(int index, int channel= CHAN_AUTO,
-							   const vector_t * origin=0,
-							   const vector_t * velocity=0,
-							   bool looping = false);
+	void PlaySnd(int index, CacheType cache,
+				 int channel= CHAN_AUTO,
+				  const vector_t * origin=0,
+				   const vector_t * velocity=0,
+				   bool looping = false);
+
 	//Update Sound position
 	//The SoundManager needs to automatically stop sounds out of range
-	void UpdateSnd(int index, vector_t * pos, vector_t * velocity);
+	void UpdateGameSound(int index, vector_t * pos, vector_t * velocity);
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
@@ -77,10 +95,10 @@ private:
 	VoidSound::CPrimaryBuffer*  m_pPrimary;
 	VoidSound::C3DListener   *  m_pListener;
 	
-	VoidSound::CSoundBuffer  *	m_Buffers;	//All sounds are buffered when registered
-	VoidSound::CSoundChannel *	m_Channels;	//Channels which are actually played
+	VoidSound::CSoundBuffer  *	m_bufferCache[3];	//All sounds are buffered when registered
+	VoidSound::CSoundChannel *	m_Channels;		//Channels which are actually played
 	
-	int	 m_numBuffers;
+//	int	 m_numBuffers;
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
 	

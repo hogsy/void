@@ -69,7 +69,7 @@ struct Entity
 			if(modelIndex >=0)
 			{
 				//set the highbit if its a modelindex
-				buf.Write('b');
+				buf.Write('m');
 				buf.Write((short)modelIndex);
 				buf.Write((short)skinNum);
 				buf.Write((short)frameNum);

@@ -29,13 +29,15 @@ public:
 	hMdl LoadModel(const char *model, hMdl index, CacheType cache);
 
 	// add the model to the render cache
-	void DrawModel(hMdl index, CacheType cache, const R_EntState &state);
+	void DrawModel(const R_EntState &state);
 	void Purge(void);
 
 	// unload models from memory
 	void UnloadModel(CacheType cache, int index);
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
+
+	void GetInfo(R_EntState &state);
 
 
 	void LoadSkins(void);

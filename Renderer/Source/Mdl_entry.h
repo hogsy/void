@@ -26,6 +26,10 @@ public:
 	void LoadSkins(void);
 	void UnLoadSkins(void);
 
+
+	int GetNumSkins(void)	{ return num_skins;		}
+	int	GetNumFrames(void)	{ return num_frames;	}
+
 private:
 
 	void LoadModel(void);	// load a md2
