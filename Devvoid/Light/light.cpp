@@ -450,7 +450,6 @@ void light_do(int map, int l)
 	sw = tw / (g_dSamples+1);
 	sh = th / (g_dSamples+1);
 
-	float intensity = light->intensity * light->intensity;
 
 	vector_t tl;	// top-left of current texel
 	vector_t test;	// where we're tracing to
@@ -481,13 +480,9 @@ void light_do(int map, int l)
 				if (len > light->intensity)
 					continue;
 
-//				if (!point_in_side(test, lmap->side))
-//					continue;
-
 				TraceInfo tr;
 				world->Trace(tr, light->origin, test);
-//				trace_t tr = trace(light->origin, test);
-				if (tr.fraction < 0.99f)
+				if (tr.fraction < 0.9f)
 					continue;
 
 				// add this trace to the lumel
