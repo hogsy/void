@@ -223,14 +223,14 @@ void sil_get_sky_polys(sil_t *s)
 	for (int side=world->brushes[0].first_side; side<endside; side++)
 	{
 		cpoly_t *poly = get_poly();
-		poly->poly.num_vertices = world->sides[side].num_verts;
-		poly->poly.texdef		= world->sides[side].texdef;
-		poly->poly.lightdef		= world->sides[side].lightdef;
+		poly->num_vertices = world->sides[side].num_verts;
+		poly->texdef		= world->sides[side].texdef;
+		poly->lightdef		= world->sides[side].lightdef;
 
-		for (int v=0; v<poly->poly.num_vertices; v++)
+		for (int v=0; v<poly->num_vertices; v++)
 		{
-//			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
-			VectorAdd(camera->origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
+//			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->vertices[v]);
+			VectorAdd(camera->origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->vertices[v]);
 		}
 
 		// clip to each sil edge
@@ -257,9 +257,9 @@ void sil_get_sky_polys(sil_t *s)
 			bool allfront = true;
 			bool allback = true;
 
-			for (int i=0; i<poly->poly.num_vertices; i++)
+			for (int i=0; i<poly->num_vertices; i++)
 			{
-				dists[i] = dot(plane.norm, poly->poly.vertices[i]) - plane.d;
+				dists[i] = dot(plane.norm, poly->vertices[i]) - plane.d;
 				
 				if (dists[i] > 0.01f)
 				{
@@ -289,37 +289,37 @@ void sil_get_sky_polys(sil_t *s)
 			dists[i] = dists[0];
 			sides[i] = sides[0];
 
-			for (i=0; i<poly->poly.num_vertices; i++)
+			for (i=0; i<poly->num_vertices; i++)
 			{
 				if (sides[i] == 0)
 				{
-					VectorCopy(poly->poly.vertices[i], clipverts[num_clipverts]);
+					VectorCopy(poly->vertices[i], clipverts[num_clipverts]);
 					num_clipverts++;
 					continue;
 				}
 
 				if (sides[i] == 1)
 				{
-					VectorCopy(poly->poly.vertices[i], clipverts[num_clipverts]);
+					VectorCopy(poly->vertices[i], clipverts[num_clipverts]);
 					num_clipverts++;
 				}
 
 				if ((sides[i+1] == 0) || (sides[i] == sides[i+1]))
 					continue;
 
-				vector_t *nextvert = &poly->poly.vertices[(i+1)%poly->poly.num_vertices];
+				vector_t *nextvert = &poly->vertices[(i+1)%poly->num_vertices];
 				double frac = dists[i] / (dists[i]-dists[i+1]);
-				clipverts[num_clipverts].x = (float)(poly->poly.vertices[i].x + frac*(nextvert->x - poly->poly.vertices[i].x));
-				clipverts[num_clipverts].y = (float)(poly->poly.vertices[i].y + frac*(nextvert->y - poly->poly.vertices[i].y));
-				clipverts[num_clipverts].z = (float)(poly->poly.vertices[i].z + frac*(nextvert->z - poly->poly.vertices[i].z));
+				clipverts[num_clipverts].x = (float)(poly->vertices[i].x + frac*(nextvert->x - poly->vertices[i].x));
+				clipverts[num_clipverts].y = (float)(poly->vertices[i].y + frac*(nextvert->y - poly->vertices[i].y));
+				clipverts[num_clipverts].z = (float)(poly->vertices[i].z + frac*(nextvert->z - poly->vertices[i].z));
 				num_clipverts++;
 			}
 
 			// copy everything back
 			if (num_clipverts > 32)
 				num_clipverts = 32;
-			memcpy(poly->poly.vertices, clipverts, sizeof(vector_t) * num_clipverts);
-			poly->poly.num_vertices = num_clipverts;
+			memcpy(poly->vertices, clipverts, sizeof(vector_t) * num_clipverts);
+			poly->num_vertices = num_clipverts;
 		}
 
 		if (edge == s->nedges)
@@ -376,13 +376,13 @@ sil_t* sil_build(bspf_brush_t *b)
 			{
 				// add facing polys to the list
 				poly = get_poly();
-				poly->poly.num_vertices = world->sides[s+b->first_side].num_verts;
-				poly->poly.texdef		= world->sides[s+b->first_side].texdef;
-				poly->poly.lightdef		= world->sides[s+b->first_side].lightdef;
+				poly->num_vertices = world->sides[s+b->first_side].num_verts;
+				poly->texdef		= world->sides[s+b->first_side].texdef;
+				poly->lightdef		= world->sides[s+b->first_side].lightdef;
 
-				for (int v=0; v<poly->poly.num_vertices; v++)
+				for (int v=0; v<poly->num_vertices; v++)
 				{
-					VectorCopy(world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]], poly->poly.vertices[v]);
+					VectorCopy(world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]], poly->vertices[v]);
 				}
 				poly->next = sil->polys;
 				sil->polys = poly;
@@ -482,9 +482,9 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 	int		sides[33];
 
 	int v;
-	for (v=0; v<base->poly.num_vertices; v++)
+	for (v=0; v<base->num_vertices; v++)
 	{
-		dists[v] = dot(base->poly.vertices[v], p->norm) - p->d;
+		dists[v] = dot(base->vertices[v], p->norm) - p->d;
 
 		if (dists[v] > 0.01f)
 		{
@@ -526,31 +526,31 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 	tmp->next = *back;
 	*back = tmp;
 
-	(*front)->poly.num_vertices = (*back)->poly.num_vertices = 0;
-	(*front)->poly.lightdef		= (*back)->poly.lightdef	 = base->poly.lightdef;
-	(*front)->poly.texdef		= (*back)->poly.texdef		 = base->poly.texdef;
+	(*front)->num_vertices = (*back)->num_vertices = 0;
+	(*front)->lightdef		= (*back)->lightdef	 = base->lightdef;
+	(*front)->texdef		= (*back)->texdef		 = base->texdef;
 
-	for (v=0; v<base->poly.num_vertices; v++)
+	for (v=0; v<base->num_vertices; v++)
 	{
 		if (sides[v] == 0)
 		{
-			VectorCopy(base->poly.vertices[v], (*front)->poly.vertices[(*front)->poly.num_vertices]);
-			VectorCopy(base->poly.vertices[v], (*back )->poly.vertices[(*back )->poly.num_vertices]);
-			(*front)->poly.num_vertices++;
-			(*back )->poly.num_vertices++;
+			VectorCopy(base->vertices[v], (*front)->vertices[(*front)->num_vertices]);
+			VectorCopy(base->vertices[v], (*back )->vertices[(*back )->num_vertices]);
+			(*front)->num_vertices++;
+			(*back )->num_vertices++;
 			continue;
 		}
 
 		if (sides[v] == 1)
 		{
-			VectorCopy(base->poly.vertices[v], (*front)->poly.vertices[(*front)->poly.num_vertices]);
-			(*front)->poly.num_vertices++;
+			VectorCopy(base->vertices[v], (*front)->vertices[(*front)->num_vertices]);
+			(*front)->num_vertices++;
 		}
 
 		else if (sides[v] == -1)
 		{
-			VectorCopy(base->poly.vertices[v], (*back )->poly.vertices[(*back )->poly.num_vertices]);
-			(*back )->poly.num_vertices++;
+			VectorCopy(base->vertices[v], (*back )->vertices[(*back )->num_vertices]);
+			(*back )->num_vertices++;
 		}
 
 		if ((sides[v+1] == 0) || (sides[v] == sides[v+1]))
@@ -558,21 +558,21 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 
 		// generate a split point
 		vector_t inter;
-		int nv = (v+1) % base->poly.num_vertices;
+		int nv = (v+1) % base->num_vertices;
 		float frac = dists[v] / (dists[v]-dists[v+1]);
 
-		inter.x = base->poly.vertices[v].x + frac*(base->poly.vertices[nv].x - base->poly.vertices[v].x);
-		inter.y = base->poly.vertices[v].y + frac*(base->poly.vertices[nv].y - base->poly.vertices[v].y);
-		inter.z = base->poly.vertices[v].z + frac*(base->poly.vertices[nv].z - base->poly.vertices[v].z);
+		inter.x = base->vertices[v].x + frac*(base->vertices[nv].x - base->vertices[v].x);
+		inter.y = base->vertices[v].y + frac*(base->vertices[nv].y - base->vertices[v].y);
+		inter.z = base->vertices[v].z + frac*(base->vertices[nv].z - base->vertices[v].z);
 
-		VectorCopy(inter, (*front)->poly.vertices[(*front)->poly.num_vertices]);
-		VectorCopy(inter, (*back )->poly.vertices[(*back )->poly.num_vertices]);
-		(*front)->poly.num_vertices++;
-		(*back )->poly.num_vertices++;
+		VectorCopy(inter, (*front)->vertices[(*front)->num_vertices]);
+		VectorCopy(inter, (*back )->vertices[(*back )->num_vertices]);
+		(*front)->num_vertices++;
+		(*back )->num_vertices++;
 	}
 
 	// these should never happen
-	if ((*front)->poly.num_vertices < 3)
+	if ((*front)->num_vertices < 3)
 	{
 		tmp = *front;
 		*front = tmp->next;
@@ -580,7 +580,7 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 		return_poly(tmp);
 	}
 
-	if ((*back)->poly.num_vertices < 3)
+	if ((*back)->num_vertices < 3)
 	{
 		tmp = *back;
 		*back = tmp->next;
@@ -926,13 +926,13 @@ void beam_insert(bspf_brush_t *br, int contents)
 		for (int s=0; s<br->num_sides; s++)
 		{
 			cpoly_t *poly = get_poly();
-			poly->poly.num_vertices = world->sides[s+br->first_side].num_verts;
-			poly->poly.texdef		= world->sides[s+br->first_side].texdef;
-			poly->poly.lightdef		= world->sides[s+br->first_side].lightdef;
+			poly->num_vertices = world->sides[s+br->first_side].num_verts;
+			poly->texdef		= world->sides[s+br->first_side].texdef;
+			poly->lightdef		= world->sides[s+br->first_side].lightdef;
 
-			for (int v=0; v<poly->poly.num_vertices; v++)
+			for (int v=0; v<poly->num_vertices; v++)
 			{
-				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->poly.vertices[v]);
+				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->vertices[v]);
 			}
 
 			cache_add_poly(poly, cpass);

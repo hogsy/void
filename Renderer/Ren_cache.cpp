@@ -5,8 +5,6 @@
 
 
 
-poly_t *cache_polys;
-extern poly_t *tpoly;
 int used_polys;
 extern bool			lights_available;
 
@@ -97,7 +95,7 @@ void return_poly(cpoly_t *p)
 /******************************************************************************
 draw a poly
 ******************************************************************************/
-void r_draw_world_poly(poly_t *p, dimension_t dim, bool shift)
+void r_draw_world_poly(cpoly_t *p, dimension_t dim, bool shift)
 {
 	float s, t;
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
@@ -139,7 +137,7 @@ void r_draw_world_poly(poly_t *p, dimension_t dim, bool shift)
 	g_pRast->PolyEnd();
 }
 
-void r_draw_light_poly(poly_t *p)
+void r_draw_light_poly(cpoly_t *p)
 {
 
 	if (p->lightdef == -1)
@@ -167,7 +165,7 @@ void r_draw_light_poly(poly_t *p)
 }
 
 
-void r_draw_multi_poly(poly_t *p, dimension_t dim)
+void r_draw_multi_poly(cpoly_t *p, dimension_t dim)
 {
 /*
 	// skip polys without a lightmap
@@ -321,9 +319,9 @@ void cache_purge_single()
 			for (cpoly_t *p=tex->polycaches[pass/2][t]; p; p=p->next)
 			{
 				if (pass%2 == 0)
-					r_draw_world_poly(&p->poly, tex->dims[t], pass!=0);
+					r_draw_world_poly(p, tex->dims[t], pass!=0);
 				else
-					r_draw_light_poly(&p->poly);
+					r_draw_light_poly(p);
 			}
 		}
 	}
@@ -451,8 +449,8 @@ add a poly to be drawn
 ******************************************************************************/
 void cache_add_poly(cpoly_t *poly, int pass)
 {
-	poly->next = tex->polycaches[pass][world->texdefs[poly->poly.texdef].texture];
-	tex->polycaches[pass][world->texdefs[poly->poly.texdef].texture] = poly;
+	poly->next = tex->polycaches[pass][world->texdefs[poly->texdef].texture];
+	tex->polycaches[pass][world->texdefs[poly->texdef].texture] = poly;
 }
 
 

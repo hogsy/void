@@ -3,7 +3,6 @@
 
 //#include "3dmath.h"
 #include "Com_vector.h"
-#include "Com_3dstructs.h"
 
 #define CACHE_PASS_SKY			0
 #define	CACHE_PASS_ZFILL		1
@@ -14,7 +13,12 @@
 
 struct cpoly_t
 {
-	poly_t	poly;
+	int			num_vertices;
+	vector_t	vertices[32];
+
+	int			texdef;
+	int			lightdef;
+
 	cpoly_t *next;
 };
 

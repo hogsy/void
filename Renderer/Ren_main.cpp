@@ -5,7 +5,6 @@
 #include "Ren_beam.h"
 
 #include "Tex_hdr.h"
-#include "Clip.h"
 #include "Con_main.h"
 #include "Mdl_main.h"
 #include "Hud_main.h"
@@ -185,6 +184,19 @@ void r_draw_node(int n)
 /*************************************************
 build initial view frustrum
 *************************************************/
+// build a plane using 3 arbitrary points
+void build_plane3(vector_t &a, vector_t &b, vector_t &c, plane_t &p)
+{
+	vector_t u, v;
+	VectorSub(c, a, u);
+	VectorSub(b, a, v);
+
+	_CrossProduct(&u, &v, &p.norm);
+	VectorNormalize (&p.norm);
+	p.d = dot(p.norm, a);
+}
+
+
 void build_frust(void)
 {
 	vector_t a, b, c, d, center;
@@ -208,10 +220,10 @@ void build_frust(void)
 	VectorMA(&d, -z, &up, &d);
 
 // 4 sides
-	clip_build_plane3(&camera->origin, &b, &a, &frust[0]);
-	clip_build_plane3(&camera->origin, &c, &b, &frust[1]);
-	clip_build_plane3(&camera->origin, &d, &c, &frust[2]);
-	clip_build_plane3(&camera->origin, &a, &d, &frust[3]);
+	build_plane3(camera->origin, b, a, frust[0]);
+	build_plane3(camera->origin, c, b, frust[1]);
+	build_plane3(camera->origin, d, c, frust[2]);
+	build_plane3(camera->origin, a, d, frust[3]);
 
 // near-z
 	VectorCopy(forward, frust[4].norm);

@@ -246,18 +246,6 @@ SOURCE=..\Shared\Bsp_file.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Clip.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\clip.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_3dstructs.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File
@@ -441,19 +429,19 @@ SOURCE=.\Hud_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Mdl_cache.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Mdl_cache.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Mdl_entry.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\Mdl_entry.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Mdl_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Mdl_main.h
 # End Source File
 # Begin Source File
 
@@ -475,14 +463,6 @@ SOURCE=.\Mdl_sp2.h
 # Begin Source File
 
 SOURCE=.\Client.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Mdl_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Mdl_main.h
 # End Source File
 # End Group
 # Begin Source File
