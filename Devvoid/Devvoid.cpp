@@ -59,6 +59,19 @@ CDevvoidApp theApp;
 
 BOOL CDevvoidApp::InitInstance()
 {
+	DWORD pMask = 0, sysMask = 0;
+	if(::GetProcessAffinityMask(::GetCurrentProcess(),&pMask,&sysMask))
+	{
+		char msg[256];
+		sprintf(msg,"proc: %d , sys : %d\n", pMask, sysMask);
+		AfxMessageBox(msg);
+
+		if(!::SetProcessAffinityMask(::GetCurrentProcess(), 1))
+		{	AfxMessageBox("Failed to set processor affinity");
+		}
+	}
+
+
 	AfxEnableControlContainer();
 
 	// Standard initialization
