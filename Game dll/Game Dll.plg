@@ -6,21 +6,9 @@
 --------------------Configuration: Game Dll - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1BC.tmp" with contents
+Creating temporary file "H:\WinTmp\RSP5A.tmp" with contents
 [
-/nologo /MTd /W3 /WX /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GAMEDLL_EXPORTS" /Fp"..\Debug\GameDll/Game Dll.pch" /YX /Fo"..\Debug\GameDll/" /Fd"..\Debug\GameDll/" /FD /GZ /c 
-"E:\Void\Game Dll\Game_ents.cpp"
-"E:\Void\Game Dll\Game_main.cpp"
-"E:\Void\Shared\Com_buffer.cpp"
-"E:\Void\Shared\Com_mem.cpp"
-"E:\Void\Shared\Com_parms.cpp"
-"E:\Void\Shared\Com_util.cpp"
-"E:\Void\Shared\Com_vector.cpp"
-]
-Creating command line "cl.exe @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1BC.tmp" 
-Creating temporary file "D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1BD.tmp" with contents
-[
-kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /incremental:yes /pdb:"..\Debug/vgame.pdb" /debug /machine:I386 /def:"..\Void Game\Game.def" /out:"..\vgame.dll" /implib:"..\Debug/vgame.lib" /pdbtype:sept 
+kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /incremental:yes /pdb:"..\Debug/vgame.pdb" /debug /machine:I386 /def:".\Game.def" /out:"..\vgame.dll" /implib:"..\Debug/vgame.lib" /pdbtype:sept 
 "\Void\Debug\GameDll\Game_ents.obj"
 "\Void\Debug\GameDll\Game_main.obj"
 "\Void\Debug\GameDll\Com_buffer.obj"
@@ -29,16 +17,8 @@ kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /increme
 "\Void\Debug\GameDll\Com_util.obj"
 "\Void\Debug\GameDll\Com_vector.obj"
 ]
-Creating command line "link.exe @D:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP1BD.tmp"
+Creating command line "link.exe @H:\WinTmp\RSP5A.tmp"
 <h3>Output Window</h3>
-Compiling...
-Game_ents.cpp
-Game_main.cpp
-Com_buffer.cpp
-Com_mem.cpp
-Com_parms.cpp
-Com_util.cpp
-Com_vector.cpp
 Linking...
    Creating library ..\Debug/vgame.lib and object ..\Debug/vgame.exp
 

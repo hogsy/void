@@ -104,7 +104,7 @@ SOURCE=.\Game_main.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE="..\Void Game\Game.def"
+SOURCE=.\Game.def
 # End Source File
 # Begin Source File
 

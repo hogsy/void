@@ -6,48 +6,6 @@
 --------------------Configuration: Renderer - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "H:\WinTmp\RSP171.tmp" with contents
-[
-/nologo /G5 /MTd /W3 /WX /GX /ZI /Od /D "DYNAMIC_GL" /D "_DEBUG" /D "RENDERER" /D "_WIN32" /D "WIN32" /D "_WINDOWS_RENDERER" /D "RENDERER_EXPORTS" /Fr"..\Debug\Renderer/" /Fp"..\Debug\Renderer/Renderer.pch" /YX /Fo"..\Debug\Renderer/" /Fd"..\Debug\Renderer/" /FD /c 
-"E:\Void\Renderer\Shader.cpp"
-]
-Creating command line "cl.exe @H:\WinTmp\RSP171.tmp" 
-Creating temporary file "H:\WinTmp\RSP172.tmp" with contents
-[
-d3dxd.lib d3dim.lib ddraw.lib kernel32.lib user32.lib gdi32.lib shell32.lib winmm.lib ole32.lib advapi32.lib ijl11.lib ..\Debug\vfs.lib /nologo /subsystem:windows /dll /incremental:yes /pdb:"..\Debug/vrender.pdb" /debug /machine:I386 /out:"..\vrender.dll" /implib:"..\Debug/vrender.lib" 
-\Void\Debug\Renderer\Ren_beam.obj
-\Void\Debug\Renderer\Ren_cache.obj
-\Void\Debug\Renderer\Ren_exp.obj
-\Void\Debug\Renderer\Ren_main.obj
-\Void\Debug\Renderer\Con_cmds.obj
-\Void\Debug\Renderer\Con_main.obj
-\Void\Debug\Renderer\Tex_image.obj
-\Void\Debug\Renderer\Tex_main.obj
-\Void\Debug\Renderer\Com_mem.obj
-\Void\Debug\Renderer\Com_parms.obj
-\Void\Debug\Renderer\Com_registry.obj
-\Void\Debug\Renderer\Com_util.obj
-\Void\Debug\Renderer\Com_vector.obj
-\Void\Debug\Renderer\Dll_main.obj
-\Void\Debug\Renderer\gl_driver.obj
-\Void\Debug\Renderer\gl_rast.obj
-\Void\Debug\Renderer\Rast_none.obj
-\Void\Debug\Renderer\Rast_d3dx.obj
-\Void\Debug\Renderer\Img_entry.obj
-\Void\Debug\Renderer\Img_main.obj
-\Void\Debug\Renderer\Hud_main.obj
-\Void\Debug\Renderer\Mdl_entry.obj
-\Void\Debug\Renderer\Mdl_main.obj
-\Void\Debug\Renderer\Mdl_md2.obj
-\Void\Debug\Renderer\Mdl_sp2.obj
-\Void\Debug\Renderer\Shader.obj
-\Void\Debug\Renderer\ShaderManager.obj
-]
-Creating command line "link.exe @H:\WinTmp\RSP172.tmp"
-<h3>Output Window</h3>
-Compiling...
-Shader.cpp
-Linking...
 
 
 
