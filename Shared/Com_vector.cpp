@@ -7,7 +7,7 @@ float vector_t::Normalize()
 	float mag = Length();
 	float imag;
 
-	FP_INV2(imag, mag);
+	FP_INV(imag, mag);
 
 	x *= imag;
 	y *= imag;
@@ -20,7 +20,7 @@ float vector_t::Normalize(vector_t &out)
 	float mag = Length();
 	float imag;
 
-	FP_INV2(imag, mag);
+	FP_INV(imag, mag);
 
 	out.x = x * imag;
 	out.y = y * imag;
