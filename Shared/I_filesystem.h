@@ -100,7 +100,7 @@ private:
 	char *  m_filename;
 
 	FILE *  m_fp;			//if its a real file, then use a filestream
-	uint    m_filehandle;	//handle to filestream in an archive
+	int     m_filehandle;	//handle to filestream in an archive
 	CArchive * m_archive;   //Arhive containing the given file
 };
 
@@ -152,7 +152,7 @@ private:
 	friend class CFileStream;
 	friend class CFileBuffer;
 
-	uint OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarchive, 
+	uint OpenFileStream(FILE * ifp, int &ifileHandle, CArchive * iarchive, 
 						const char *ifilename);
 
 	//Loads data from file into given buffer. return size of buffer
