@@ -1,6 +1,8 @@
 #ifndef VOID_COMMON_DEFINATIONS
 #define VOID_COMMON_DEFINATIONS
 
+#undef  STRICT
+#define STRICT
 #define WIN32_LEAN_AND_MEAN
 
 //disable horrible vc problem of identifiers 
@@ -17,15 +19,20 @@
 #include <list>
 #include <string>
 #include <vector>
-#include <map>
 
 const int COM_MAXPATH	  = 256;
 const int COM_MAXFILENAME = 128;
 
-typedef std::list<std::string>   StringList;
-typedef std::vector<std::string> StringVector;
+typedef std::list<std::string>   StrList;
+typedef std::list<std::string>::iterator StrListIt;
+
+typedef std::vector<std::string> StrVec;
+typedef std::vector<std::string>::iterator StrVecIt;
 
 #ifndef byte
+typedef unsigned char byte;
+#else
+#undef byte
 typedef unsigned char byte;
 #endif
 

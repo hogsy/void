@@ -1,18 +1,13 @@
-BUGS:
 
-Client info doesnt propagate across levels
-Problems when reconnecting sometimes.
-Client Socket should be the same
+major issues
+=====================================
+add animation cycle flags for clients
+add proper animation sequences depending on movement
+add crouch mode (bbox.z/2 and viewheight=0)
+remove fmod and add mp3 playback using directShow
 
-
-
-GAME
-========
-add animation cycle flags
-
-entities
-========
-
+game entities
+=====================================
 add delay var to sound sources
 add renderering flags to model entities
 add frame range to model entities

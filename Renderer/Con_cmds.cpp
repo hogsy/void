@@ -24,6 +24,7 @@ CVar g_varVidSynch("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
 CVar g_var32BitTextures("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
 CVar g_varBeamTolerance("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
 CVar g_varD3DXShift("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
+CVar g_varGLExtensions("r_glExts", "None", CVAR_STRING, CVAR_READONLY);
 
 
 //======================================================================================
@@ -238,10 +239,8 @@ bool CVar_BeamTolerance(int val)
 }
 
 bool CVar_D3DXShift(int val)
-{
-	return true;
+{	return true;
 }
-
 
 
 //======================================================================================
@@ -292,16 +291,6 @@ void CRConsole::RegisterConObjects()
 	I_Console::GetConsole()->RegisterCommand("tga_shot",CMD_TGASHOT,this);
 	I_Console::GetConsole()->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
 
-/*
-	g_pFullbright= new CVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
-	g_pFov		 = new CVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
-	g_pVidSynch  = new CVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
-	g_pMultiTexture = new CVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE);
-	g_p32BitTextures = new CVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
-	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
-	g_pD3DXShift = new CVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
-*/
-
 	I_Console::GetConsole()->RegisterCVar(&g_varFullbright,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varFov,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varMultiTexture,this);
@@ -309,6 +298,7 @@ void CRConsole::RegisterConObjects()
 	I_Console::GetConsole()->RegisterCVar(&g_var32BitTextures,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varBeamTolerance,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varD3DXShift,this);
+	I_Console::GetConsole()->RegisterCVar(&g_varGLExtensions);
 }
 
 /*
@@ -318,21 +308,5 @@ Called from console Destructor
 */
 void CRConsole::DestroyConObjects()
 {
-/*	delete g_pFullbright;
-	delete g_pFov;
-	delete g_pVidSynch;
-	delete g_pMultiTexture;
-	delete g_p32BitTextures;
-	delete g_pBeamTolerance;
-	delete g_pD3DXShift;
-
-	g_pFullbright = 0;
-	g_pFov = 0;
-	g_pVidSynch =0;
-	g_pMultiTexture = 0;
-	g_p32BitTextures = 0;
-	g_pBeamTolerance = 0;
-	g_pD3DXShift = 0;
-*/
 }
 

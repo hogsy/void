@@ -147,8 +147,8 @@ bool CFileSystem::AddGameDir(const char *dir)
 	AddSearchPath(gamedir);
 
 	//Add any archive files into the search path as well
-	char		archivepath[COM_MAXPATH];
-	StringList	archivelist;
+	char	archivepath[COM_MAXPATH];
+	StrList	archivelist;
 
 	for(int i=0; archive_exts[i]; i++)
 		GetFilesInPath(archivelist,gamedir,archive_exts[i]);
@@ -401,8 +401,8 @@ void CFileSystem::ListFiles(const char *path, const char *ext)
 	}
 
 	int pathlen = 0;
-	StringList		strlist;
-	std::list<std::string>::iterator itor;
+	StrList	strlist;
+	StrListIt itor;
 
 	char			searchPath[COM_MAXPATH];
 	SearchPath_t *	iterator = m_lastpath;
@@ -526,7 +526,7 @@ bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
 Scan a directory for supported archive types
 ===========================================
 */
-bool CFileSystem::GetFilesInPath(StringList &strlist, const char *path, const char *ext)
+bool CFileSystem::GetFilesInPath(StrList &strlist, const char *path, const char *ext)
 {
 	WIN32_FIND_DATA	finddata;
 	char	searchpath[COM_MAXPATH];

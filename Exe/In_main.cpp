@@ -49,34 +49,6 @@ Destructor
 */
 CInput::~CInput()
 {
-/*	if(m_pMouse)
-	{
-		m_pMouse->Shutdown();
-		delete m_pMouse;
-		m_pMouse  = 0;
-	}
-	
-	if(m_pKb)
-	{
-		m_pKb->Shutdown();
-		delete m_pKb;
-		m_pKb = 0;
-	}
-
-	if(m_pStateManager)
-	{
-		delete m_pStateManager;
-		m_pStateManager=0;
-	}
-	
-	if(m_pDInput) 
-	{
-		m_pDInput->Release();
-		m_pDInput = 0;
-		ComPrintf("CInput::Release :DirectInput Released\n");
-	}
-	ComPrintf("CInput::Shutdown: OK\n");
-*/
 	Shutdown();
 
 	if(m_pMouse)
@@ -153,9 +125,10 @@ Shuts down the Input System
 void CInput::Shutdown()
 {
 	//Release all Devices here
-/*
-	m_pMouse->Shutdown();
-	m_pKb->Shutdown();
+	if(m_pMouse)
+		m_pMouse->Shutdown();
+	if(m_pKb)
+		m_pKb->Shutdown();
 	
 	if(m_pDInput) 
 	{
@@ -164,7 +137,6 @@ void CInput::Shutdown()
 		ComPrintf("CInput::Release :DirectInput Released\n");
 	}
 	ComPrintf("CInput::Shutdown: OK\n");
-*/
 }
 
 

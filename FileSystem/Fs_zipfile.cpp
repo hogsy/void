@@ -412,7 +412,7 @@ void  CZipFile::ListFiles()
 Get a list of files
 ==========================================
 */
-int  CZipFile::GetFileList (StringList &strlst, 
+int  CZipFile::GetFileList (StrList &strlst, 
 							const char * path,
 							const char *ext)
 {

@@ -194,7 +194,7 @@ uint CPakFile::LoadFile(byte ** ibuffer,
 Build a StringList and return
 ===========================================
 */
-int  CPakFile::GetFileList (StringList &strlst, 
+int  CPakFile::GetFileList (StrList &strlst, 
 							const char * path,
 							const char *ext)
 {

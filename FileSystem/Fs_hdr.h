@@ -48,7 +48,7 @@ public:
 	virtual void ListFiles()=0;
 
 	//append any files matching the criteria to the given list
-	virtual int  GetFileList (StringList &list, 
+	virtual int  GetFileList (StrList &list, 
 							  const char * path,
 							  const char *ext)=0;
 

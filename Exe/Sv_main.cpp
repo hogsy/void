@@ -339,7 +339,7 @@ void CServer::ExecServerCommands()
 {
 	if(m_svCmds.size())
 	{
-		for(StringList::iterator it = m_svCmds.begin(); it != m_svCmds.end(); it++)
+		for(StrListIt it = m_svCmds.begin(); it != m_svCmds.end(); it++)
 			System::GetConsole()->ExecString(it->c_str());
 		m_svCmds.clear();
 	}		

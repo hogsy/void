@@ -1,6 +1,8 @@
 #include "Standard.h"
 #include "gl_rast.h"
 
+extern 	CVar g_varGLExtensions;
+
 /*
 =======================================
 Constructor 
@@ -74,7 +76,7 @@ bool COpenGLRast::Init()
 
 #ifdef DYNAMIC_GL
 	//3dfx 3d only card. default to fullscreen mode and 16 bit
-	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
+	if(_stricmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
 	{
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 		g_rInfo.bpp = 16;
@@ -114,6 +116,9 @@ bool COpenGLRast::Init()
 	if(!ext)
 		return true;
 
+//This is causing weird problems after you enter it into the console
+//	g_varGLExtensions.ForceSet(ext);
+
 	ComPrintf("GL_EXTENSIONS:\n");
 	int l = strlen(ext) + 1;
 	char *ext2 = new char[l];
@@ -140,7 +145,6 @@ bool COpenGLRast::Init()
 	}
 	delete [] ext2;
 
-
 	// enable arrays
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -149,7 +153,6 @@ bool COpenGLRast::Init()
 	glVertexPointer(3, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].pos[0]);
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rast_vertex_t), &mVerts[0].color);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].tex1[0]);
-
 
 	return true;
 }

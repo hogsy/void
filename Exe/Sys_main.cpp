@@ -178,15 +178,16 @@ bool CVoid::Init()
 	}
 
 	//================================
-	//Update and Show window
-	ShowWindow(System::GetHwnd(), SW_NORMAL); 
-	UpdateWindow(System::GetHwnd());
-
-	//================================
 	//Timer
 	m_Time.Init();
 
 	//================================
+	//Update and Show window
+	::ShowWindow(System::GetHwnd(), SW_SHOW); 
+	::UpdateWindow(System::GetHwnd());
+	::SetForegroundWindow(System::GetHwnd());
+
+ 	//================================
 	//Input
 	if(!m_pInput->Init()) 
 	{

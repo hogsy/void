@@ -68,7 +68,7 @@ private:
 	void RemoveSearchPath(const char *path);
 
 	//Scans directory for supported archives, returns list
-	bool GetFilesInPath(StringList &strlist, const char *path, const char *ext);
+	bool GetFilesInPath(StrList &strlist, const char *path, const char *ext);
 };
 
 #endif

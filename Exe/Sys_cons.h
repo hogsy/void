@@ -97,6 +97,11 @@ public:
 
 private:
 
+	enum
+	{
+		MAX_CONSOLE_BUFFER = 1024
+	};
+
 	//looks through config file to see if any parms match the given token
 	//set parm to that token if found
 	bool GetTokenParms(const char * token, CParms * parms);
@@ -118,18 +123,18 @@ private:
 
 	//Hold parsed parms of commandString enterered
 	CParms		m_parms;
-	char		m_szParmBuffer[1024];
+	char		m_szParmBuffer[MAX_CONSOLE_BUFFER];
 	
 	//Current String in Console
 	std::string	m_conString;	
 
 	//Fixed List of previously entered strings
-	StringList	m_cmdBuffer;	
+	StrList	m_cmdBuffer;	
 	//iterator to keep track of the Command buffer
-	StringList::iterator	m_itCmd;
+	StrListIt	m_itCmd;
 
-	StringList  m_configFileParms;
-	StringList  m_cmdLineParms;
+	StrList  m_configFileParms;
+	StrList  m_cmdLineParms;
 	
 	//The Console Renderer
 	I_ConsoleRenderer	*	m_prCons;

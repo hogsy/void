@@ -163,8 +163,8 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				if(!m_conString.length())
 					return;
 
-				StringList	matchingNames;
-				int	len	  = m_conString.size();
+				StrList	matchingNames;
+				int	len	= m_conString.size();
 
 				for(CVarListIt itVar= m_lCVars.begin(); itVar != m_lCVars.end(); itVar++)
 				{
@@ -187,7 +187,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				else
 				{
 					matchingNames.sort();
-					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
+					for(StrListIt it = matchingNames.begin(); it != matchingNames.end(); it++)
 						ComPrintf("%s\n", it->c_str());
 				}
 				ComPrintf("==========================\n");
@@ -259,7 +259,7 @@ Try to execute a string in the console
 bool CConsole::ExecString(const char *string)
 {
 	m_parms = string;
-	const char * szfirstArg = m_parms.StringTok(0,m_szParmBuffer,1024);
+	const char * szfirstArg = m_parms.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 
 	//Try matching with registered commands
 	for(CmdListIt itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
@@ -274,13 +274,13 @@ bool CConsole::ExecString(const char *string)
 	//Try matching with registered cvars
 	for (CVarListIt it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
-		if(!strcmp((*it)->name,szfirstArg))
+		if(strcmp((*it)->name,szfirstArg)==0)
 		{
 			CVarBase * pVar = *it;
 
 			if(m_parms.NumTokens() > 1)
 			{
-				const char * argVal = m_parms.StringTok(1,m_szParmBuffer,1024);
+				const char * argVal = m_parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 
 				if(pVar->flags & CVAR_READONLY)
 				{
@@ -337,22 +337,24 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 	}
 
 	//Find archived keyval and set it to that.
-	CParms parms(CON_MAXARGSIZE);
-	if(GetTokenParms(var->name, &parms))
+	if(!(var->flags & CVAR_READONLY))
 	{
-		if(parms.NumTokens() > 1)
+		CParms parms(CON_MAXARGSIZE);
+		if(GetTokenParms(var->name, &parms))
 		{
-//FIXME: validate stuff from configs ??
-//			if(!handler || handler->HandleCVar(var,parms))
-				var->ForceSet(parms.StringTok(1,m_szParmBuffer,1024));
+			if(parms.NumTokens() > 1)
+				var->ForceSet(parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER));
 		}
 	}
+	
+	//Insert into the list
 	m_lCVars.insert(it,var);
 }
 
+
 /*
 ================================================
-
+Unregister a handler func
 ================================================
 */
 void CConsole::UnregisterHandler(I_ConHandler * pHandler)
@@ -360,6 +362,7 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 	if(!pHandler)
 		return;
 
+	//FIXME: Write archived CVars to a Temp file ?
 
 	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end();)
 	{
@@ -375,8 +378,7 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 Register CFunc
 ==========================================
 */
-void CConsole::RegisterCommand(const char *cmdname,
-							   int id,
+void CConsole::RegisterCommand(const char *cmdname,   int id,
 							   I_ConHandler * pHandler)
 {
 	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
@@ -408,11 +410,10 @@ CCommand * CConsole::GetCommandByName(const char * cmdString)
 	return 0;
 }
 
-
-
 //======================================================================================
 //Console Commands
 //======================================================================================
+
 /*
 ==========================================
 Handle Console command
@@ -448,7 +449,7 @@ void CConsole::CVarlist(const CParms &parms)
 	
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.StringTok(1,m_szParmBuffer,1024);
+		const char * arg = parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 		int len= strlen(arg);
 		for(it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 		{
@@ -478,7 +479,7 @@ void CConsole::CCmdList(const CParms &parms)
 
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.StringTok(1,m_szParmBuffer,1024);
+		const char * arg = parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 		int len= strlen(arg);
 		for(it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
 		{
@@ -516,7 +517,7 @@ void CConsole::AddCmdLineParm(const char * cmdLine)
 
 bool CConsole::IsCmdLineParm(const char * token, int tokenLen)
 {
-	for(StringList::iterator it = m_cmdLineParms.begin(); it != m_cmdLineParms.end(); it++)
+	for(StrListIt it = m_cmdLineParms.begin(); it != m_cmdLineParms.end(); it++)
 	{
 		if(strncmp(it->c_str(), token, tokenLen)==0)
 			return true;
@@ -526,7 +527,7 @@ bool CConsole::IsCmdLineParm(const char * token, int tokenLen)
 
 void CConsole::ExecCmdLine()
 {
-	for(StringList::iterator itVal = m_cmdLineParms.begin(); itVal != m_cmdLineParms.end(); itVal++)
+	for(StrListIt itVal = m_cmdLineParms.begin(); itVal != m_cmdLineParms.end(); itVal++)
 	{
 		if(!ExecString(itVal->c_str()))
 			ComPrintf("Unknown command \"%s\"\n",itVal->c_str());
@@ -547,7 +548,7 @@ bool CConsole::GetTokenParms(const char * token, CParms * parms)
 	int len = strlen(token);
 	const char * archivedString=0;
 
-	for(StringList::iterator itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
+	for(StrListIt itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
 	{
 		archivedString = itVal->c_str();
 		if(strncmp(token, archivedString, len ) == 0)
@@ -651,7 +652,7 @@ void CConsole::ExecConfig(const char *szFilename)
 			break;
 		
 		parm = line;
-		firstParm = parm.StringTok(0,m_szParmBuffer,1024);
+		firstParm = parm.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 		firstParmLen = strlen(firstParm);
 
 		//Ignore if the parm was specified in the commandline as that takes

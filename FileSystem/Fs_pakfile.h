@@ -28,7 +28,7 @@ public:
 	uint LoadFile(byte ** ibuffer,  uint buffersize,   const char *ifilename);
 	
 	bool FindFile(char * buf, int buflen,const char * filename);
-	int  GetFileList (StringList &strlst, const char * path, const char *ext);
+	int  GetFileList (StrList &strlst, const char * path, const char *ext);
 	void ListFiles();
 
 private:

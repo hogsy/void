@@ -152,7 +152,7 @@ private:
 	ResInfo m_soundList[GAME_MAXSOUNDS];
 	int		m_numSounds;
 
-	StringList m_svCmds;
+	StrList m_svCmds;
 	
 	//=================================================
 	//World and Entities
