@@ -132,22 +132,62 @@ void r_draw_leaf(int l)
 
 
 
-void r_draw_node(int n)
+void r_draw_node(int n, bool testfrust)
 {
 	//
 	//frustum cull - check this nodes bounding box to the frustum
 	//
-	vector_t point;
-	for (int p=0; p<5; p++)
+	if (testfrust)
 	{
-		// we really only need to test 1 corner
-		// find that corner
-		point.x = (float)((frust[p].norm.x > 0) ? (world->nodes[n].maxs[0]) : (world->nodes[n].mins[0]));
-		point.y = (float)((frust[p].norm.y > 0) ? (world->nodes[n].maxs[1]) : (world->nodes[n].mins[1]));
-		point.z = (float)((frust[p].norm.z > 0) ? (world->nodes[n].maxs[2]) : (world->nodes[n].mins[2]));
+		// only have to be outside one plane to require testing
+		testfrust = false;
 
-		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
-			return;
+
+		vector_t in, out;
+		for (int p=0; p<5; p++)
+		{
+			// we really only need to test 2 corners the 2 farthest from the plane
+			if (frust[p].norm.x > 0)
+			{
+				in.x = world->nodes[n].maxs[0];
+				out.x= world->nodes[n].mins[0];
+			}
+			else
+			{
+				in.x = world->nodes[n].mins[0];
+				out.x= world->nodes[n].maxs[0];
+			}
+
+			if (frust[p].norm.y > 0)
+			{
+				in.y = world->nodes[n].maxs[1];
+				out.y= world->nodes[n].mins[1];
+			}
+			else
+			{
+				in.y = world->nodes[n].mins[1];
+				out.y= world->nodes[n].maxs[1];
+			}
+
+			if (frust[p].norm.z > 0)
+			{
+				in.z = world->nodes[n].maxs[2];
+				out.z= world->nodes[n].mins[2];
+			}
+			else
+			{
+				in.z = world->nodes[n].mins[2];
+				out.z= world->nodes[n].maxs[2];
+			}
+
+
+			// if the one closest to the inside is outside, the box is completely out
+			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
+				return;
+
+			if ((dot(out, frust[p].norm) - frust[p].d) < 0)
+				testfrust = true;
+		}
 	}
 
 	int nn;
@@ -157,18 +197,18 @@ void r_draw_node(int n)
 	if (d>=0)
 	{
 		nn = world->nodes[n].children[0];
-		(nn>0) ? r_draw_node(nn) : r_draw_leaf(-nn);
+		(nn>0) ? r_draw_node(nn, testfrust) : r_draw_leaf(-nn);
 
 		nn = world->nodes[n].children[1];
-		(nn>0) ? r_draw_node(nn) : r_draw_leaf(-nn);
+		(nn>0) ? r_draw_node(nn, testfrust) : r_draw_leaf(-nn);
 	}
 	else
 	{
 		nn = world->nodes[n].children[1];
-		(nn>0) ? r_draw_node(nn) : r_draw_leaf(-nn);
+		(nn>0) ? r_draw_node(nn, testfrust) : r_draw_leaf(-nn);
 
 		nn = world->nodes[n].children[0];
-		(nn>0) ? r_draw_node(nn) : r_draw_leaf(-nn);
+		(nn>0) ? r_draw_node(nn, testfrust) : r_draw_leaf(-nn);
 	}
 }
 
@@ -230,7 +270,7 @@ void r_draw_world()
 {
 	build_frust();
 	beam_reset();
-	r_draw_node(0);
+	r_draw_node(0, true);
 	g_pShaders->CachePurge();
 	g_pClient->Purge();
 }

@@ -158,6 +158,9 @@ void CRasterizer::DrawLayer(int l)
 	if (layer->mIsLight)	//  && g_pFullbright->bval)
 		return;
 
+	if (!layer->mNumTextures)
+		return;
+
 	// generate alpha component
 	switch (mShader->mLayers[l]->mAlphaGen.func)
 	{
