@@ -193,6 +193,7 @@ void CClient::BeginGame()
 
 	
 	m_clients[0].inUse = true;
+	m_clients[0].cache = CACHE_GAME;
 	m_clients[0].skinnum = m_pImage->LoadImage("Players/Ratamahatta/Ratamahatta", -1, CACHE_GAME);
 	m_clients[0].skinnum |= MODEL_SKIN_UNBOUND_GAME;
 	m_clients[0].index = m_pModel->LoadModel("Players/Ratamahatta/tris.md2", -1, CACHE_GAME);
