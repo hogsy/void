@@ -97,8 +97,8 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
 				//dont send to source
-				if(i == clNum)
-					continue;
+//				if(i == clNum)
+//					continue;
 
 				if(m_clients[i])
 				{
