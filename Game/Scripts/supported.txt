@@ -1,0 +1,108 @@
+
+-nothing is case sensitive
+-if you write new shader files, make sure they don't start on the first line.  The first line is always skipped.
+
+
+=============================
+All supported shader keywords
+=============================
+
+
+sky or skybrush
+----------
+Changes a brush to a sky brush (always rendered as if viewed from (0,0,0)).
+
+
+skyview
+----------
+Changes a brush to a skyview brush.  When rendered, skybrushes are drawn instead.  Use these on windows.
+
+
+invisible
+----------
+The side is not drawn.
+
+
+nonsolid
+----------
+All brushes are solid by default.  This keyword makes any brush it is on nonsolid.
+
+
+qer_editorimage
+----------
+Does nothing in Void.
+
+
+
+============================
+All supported layer keywords
+============================
+
+
+tcgen <source>
+----------
+Determins how texture coordinates are generated.
+base
+	same as q3
+lightmap
+	same as q3
+sky
+	use base coords as if viewed from the origin - use with sky/skybrush 	shader keyword
+vector ( <sx> <sy> <sz> ) ( <tx> <ty> <tz> )
+	Same as q3.  Must be spaces on both sides of ('s and )'s or there will be errors parsing this keyword.
+
+
+tcmod <func> <...>
+----------
+Modify texture coordinates.
+scroll <sSpeed> <tSpeed>
+	same as q3
+scale <sScale> <tScale>
+	same as q3
+
+
+map <texture>
+----------
+Same as q3.  $lightmap = unique lightmap for each side.  Repeats texture.
+
+
+clampmap <texture>
+----------
+Not sure if this is the same as q3.  Same as map <texture> but clamps texture coordinates to 0..1.
+
+
+animmap <freq> <texture1> ... <texture8>
+----------
+Same as q3.  Only use up to 7 textures right now though.
+
+
+blendfunc <func>
+blendfunc <source> <dest>
+----------
+Same as q3.
+func = add, filter, blend
+sources and dests same as q3.  Also accepted without gl_ prefix.
+
+
+depthfunc <func>
+----------
+Set the depthtest function.  lequal by default.
+func = lequal, equal
+
+
+alphagen <source>
+----------
+Where alpha component comes from.
+Source = identity (default), console
+
+
+depthwrite
+----------
+Force writing to depthbuffer.  Must be after the blend func or it will be overriden.
+
+
+nomipmap
+----------
+Don't create mipmaps for this texture.
+
+
