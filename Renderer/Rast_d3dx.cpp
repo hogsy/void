@@ -628,6 +628,10 @@ void CRastD3DX::MatrixTranslate(float x, float y, float z)
 
 void CRastD3DX::MatrixScale(vector_t &factors)
 {
+	D3DXMATRIX mat;
+	D3DXMatrixScaling(&mat, factors.x, factors.y, factors.z);
+	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 

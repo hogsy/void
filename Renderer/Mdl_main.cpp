@@ -188,9 +188,13 @@ void CModelManager::Purge(void)
 
 		// add this model transform to the stack
 		g_pRast->MatrixTranslate(walk->state->origin.x, walk->state->origin.y, walk->state->origin.z);
-		g_pRast->MatrixRotateZ((walk->state->angles.YAW - PI/2)   * 180/PI);
-		g_pRast->MatrixRotateX(-walk->state->angles.PITCH  * 180/PI);
-		g_pRast->MatrixRotateY(walk->state->angles.ROLL * 180/PI);
+		g_pRast->MatrixRotateZ(walk->state->angles.YAW    * 180/PI);
+//
+// FIXME - hack so we dont have horizontal player models when looking straight up/down
+//
+		g_pRast->MatrixRotateY(-walk->state->angles.PITCH / 3.5f  * 180/PI);
+		g_pRast->MatrixRotateX(walk->state->angles.ROLL   * 180/PI);
+
 
 		// do we need to move to the next frame?
 		walk->state->animInfo.frac += GetFrameTime()*10.0f;

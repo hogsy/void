@@ -835,6 +835,7 @@ void COpenGLRast::MatrixTranslate(float x, float y, float z)
 
 void COpenGLRast::MatrixScale(vector_t &factors)
 {
+	glScalef(factors.x, factors.y, factors.z);
 }
 
 

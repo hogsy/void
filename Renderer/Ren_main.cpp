@@ -220,7 +220,7 @@ void r_draw_leaf(int l)
 		if (!(*(world->leafvis + world->leafs[eye_leaf].vis + (l>>3)) & (1<<(l&7))))
 			return;
 	}
-
+/*
 	//
 	//frustum cull - check this nodes bounding box to the frustum
 	//
@@ -236,7 +236,7 @@ void r_draw_leaf(int l)
 		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
 			return;
 	}
-
+*/
 // just push everything right through to the cache
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
 	for (int b=world->leafs[l].first_brush; b < endb; b++)
@@ -332,8 +332,8 @@ void r_draw_node(int n, bool testfrust)
 
 
 			// if the one closest to the inside is outside, the box is completely out
-			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
-				return;
+//			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
+//				return;
 
 			if ((dot(out, frust[p].norm) - frust[p].d) < 0)
 				testfrust = true;
@@ -444,7 +444,6 @@ void r_drawframe(const CCamera * pcamera)
 	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(camera->origin);
 
-//	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
 
 // set up the view transformation
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
@@ -453,20 +452,14 @@ void r_drawframe(const CCamera * pcamera)
 
 	// switch to +y = north, +z = up coordinate system
 	g_pRast->MatrixRotateX(-90);
-	g_pRast->MatrixRotateY(-camera->angles.ROLL * 180/PI);
-	g_pRast->MatrixRotateX(-camera->angles.PITCH * 180/PI);
-	g_pRast->MatrixRotateZ(-(camera->angles.YAW - PI/2)  * 180/PI);
+	g_pRast->MatrixRotateZ(90);
+
+	g_pRast->MatrixRotateX(-camera->angles.ROLL * 180/PI);
+	g_pRast->MatrixRotateY(camera->angles.PITCH * 180/PI);
+	g_pRast->MatrixRotateZ(-camera->angles.YAW  * 180/PI);
 	g_pRast->MatrixTranslate(-camera->origin.x, -camera->origin.y, -camera->origin.z);
 
 	r_draw_world();
-
-	// display any messageseee
-//	g_pClient->DrawHud();
-
-// draw the console if we need to
-//	g_prCons->Draw();
-
-//	g_pRast->FrameEnd();
 }
 
 
