@@ -30,7 +30,7 @@ enum EKeyEventFlags
 	NONE = 0,
 	SHIFTDOWN = 1,
 	ALTDOWN = 2,
-	CTRLDOWN = 3
+	CTRLDOWN = 4
 };
 
 /*

@@ -3,7 +3,7 @@
 
 namespace
 {
-	const float KB_REPEATWAIT = 0.3f;
+	const float KB_REPEATWAIT = 0.5f;
 }
 using namespace VoidInput;
 
@@ -78,24 +78,24 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 		{
 		case INKEY_LEFTSHIFT:
 		case INKEY_RIGHTSHIFT:
-			if(keyState == BUTTONUP)
-				m_keyEvent.flags &= ~SHIFTDOWN;
-			else
+			if(keyState == BUTTONDOWN)
 				m_keyEvent.flags |= SHIFTDOWN;
+			else if(m_aHeldKeys[keyid].state != BUTTONUP)
+				m_keyEvent.flags &= ~SHIFTDOWN;
 			break;
 		case INKEY_LEFTCTRL:
 		case INKEY_RIGHTCTRL:
-			if(keyState == BUTTONUP)
-				m_keyEvent.flags &= ~CTRLDOWN;
-			else
+			if(keyState == BUTTONDOWN)
 				m_keyEvent.flags |= CTRLDOWN;
+			else if(m_aHeldKeys[keyid].state != BUTTONUP)
+				m_keyEvent.flags &= ~CTRLDOWN;
 			break;
 		case INKEY_LEFTALT:
 		case INKEY_RIGHTALT:
 			if(keyState == BUTTONUP)
-				m_keyEvent.flags &= ~ALTDOWN;
-			else
 				m_keyEvent.flags |= ALTDOWN;
+			else if(m_aHeldKeys[keyid].state != BUTTONUP)
+				m_keyEvent.flags &= ~ALTDOWN;
 			break;
 		}
 	}
@@ -103,9 +103,6 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 	if((keyState == BUTTONDOWN) &&
 	   (m_aHeldKeys[keyid].state == BUTTONUP))
 	{
-		m_aHeldKeys[keyid].id = keyid;
-		m_aHeldKeys[keyid].state = BUTTONDOWN;
-		
 		m_keyEvent.id = keyid;
 		m_keyEvent.time = System::g_fcurTime;
 		m_keyEvent.state = BUTTONDOWN;
@@ -116,15 +113,14 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 			
 		//Dispatch event
 		m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+
+		m_aHeldKeys[keyid].id = keyid;
+		m_aHeldKeys[keyid].state = BUTTONHELD;
+		m_aHeldKeys[keyid].time = System::g_fcurTime + (m_fRepeatRate + 0.4);
 	}
 	else if((keyState == BUTTONUP) &&
 			(m_aHeldKeys[keyid].state != BUTTONUP))
 	{
-		//Reset old keystate
-		m_aHeldKeys[keyid].id = keyid;
-		m_aHeldKeys[keyid].time = 0.0f;
-		m_aHeldKeys[keyid].state = BUTTONUP;
-
 		//Send new Keystate
 		m_keyEvent.id = keyid;
 		m_keyEvent.time = System::g_fcurTime;
@@ -136,9 +132,13 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 		
 		//Dispatch event
 		m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+
+		//Reset old keystate
+		m_aHeldKeys[keyid].id = keyid;
+		m_aHeldKeys[keyid].time = 0.0f;
+		m_aHeldKeys[keyid].state = BUTTONUP;
 	}
 }
-
 
 /*
 ==========================================
@@ -155,25 +155,20 @@ void CInputState::DispatchKeys()
 		//Check for any keys that qualify to send out another repeat event
 		for(int i=0;i<IN_NUMKEYS;i++)
 		{
-			//Set all the BUTTONDOWN events to BUTTONHELD
-			if(m_aHeldKeys[i].state == BUTTONDOWN)
+			if((m_aHeldKeys[i].state == BUTTONHELD) &&
+			   (System::g_fcurTime > m_aHeldKeys[i].time))
 			{
-				m_aHeldKeys[i].state = BUTTONHELD;
-				m_aHeldKeys[i].time = System::g_fcurTime + KB_REPEATWAIT;
-			}
-			//Dispatch HELD mouse events, if time passed since last dispatch
-			//is bigger than the repeat rate
-			else if((m_aHeldKeys[i].state == BUTTONHELD) &&
-					(System::g_fcurTime > (m_aHeldKeys[i].time + m_fRepeatRate)))
-			{
-				m_keyEvent.id = m_aHeldKeys[i].id; 
-				m_keyEvent.time = m_aHeldKeys[i].time = System::g_fcurTime;
-				m_keyEvent.state = BUTTONHELD;
+				m_keyEvent.id   = m_aHeldKeys[i].id; 
+				m_keyEvent.time = System::g_fcurTime;
+				m_keyEvent.state= BUTTONHELD;
 
 				if(m_keyEvent.flags & SHIFTDOWN)
 					ShiftCharacter(m_keyEvent.id);
 
 				m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+
+				//Update time
+				m_aHeldKeys[i].time = System::g_fcurTime + m_fRepeatRate;
 			}
 		}
 	}
@@ -187,6 +182,8 @@ A device messed up. release all the keys
 void CInputState::FlushKeys()
 {
 	//Send key up events for all keys currently down, to reset them
+	ComPrintf("CInputState::Flushing keys\n");
+
 	for(int i=0;i<IN_NUMKEYS;i++)
 	{
 		m_keyEvent.flags = 0;

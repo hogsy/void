@@ -283,10 +283,6 @@ SOURCE=.\Source\resources.rc
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\Fmod\fmod.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Mus_cd.cpp
 # End Source File
 # Begin Source File
