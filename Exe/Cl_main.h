@@ -78,10 +78,10 @@ private:
 	void MoveBackward();
 	void MoveRight();
 	void MoveLeft();
-	void RotateRight(float val=5.0);
-	void RotateLeft(float val=5.0);
-	void RotateUp(float val=5.0);
-	void RotateDown(float val=5.0);
+	void RotateRight(float val=1.0);
+	void RotateLeft(float val=1.0);
+	void RotateUp(float val=1.0);
+	void RotateDown(float val=1.0);
 
 	//==================================================
 	//Console commands

@@ -250,7 +250,8 @@ void CClient::RunFrame()
 													   m_gameClient.origin.y,
 													   m_gameClient.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
+		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f : %f", 
+			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
 		m_fFrameTime = System::g_fcurTime;
 
 

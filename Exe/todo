@@ -2,6 +2,12 @@
 EXE
 ==============================================================
 
+-Finish 3d sounds
+-Seperate client / client game code
+-Seperate server/ server game code
+-Fix input at low framerates
+-Move client movement to server
+
 headers
 Client/ClGame header
 rbaseentitiy

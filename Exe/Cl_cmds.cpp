@@ -97,6 +97,17 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 {
 	m_refClient.RotateRight(ix);
 	m_refClient.RotateUp(iy);
+
+/*	m_refClient.m_gameClient.angle.YAW += (ix/20);  //System::g_fframeTime * 
+	if (m_refClient.m_gameClient.angle.YAW > PI)
+		m_refClient.m_gameClient.angle.YAW -= 2*PI;
+
+	m_refClient.m_gameClient.angle.PITCH += (iy/20);  //System::g_fframeTime *
+	if (m_refClient.m_gameClient.angle.PITCH < -PI/2)
+		m_refClient.m_gameClient.angle.PITCH = -PI/2;
+	if (m_refClient.m_gameClient.angle.PITCH > PI/2)
+		m_refClient.m_gameClient.angle.PITCH = PI/2;
+*/
 }
 
 

@@ -292,21 +292,21 @@ void CClient::MoveLeft()
 
 void CClient::RotateRight(float val)
 {
-	m_gameClient.angle.YAW += System::g_fframeTime * val;
+	m_gameClient.angle.YAW += (val/20);  //System::g_fframeTime * 
 	if (m_gameClient.angle.YAW > PI)
 		m_gameClient.angle.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(float val)
 {
-	m_gameClient.angle.YAW -= System::g_fframeTime * val;
+	m_gameClient.angle.YAW -= (val/20);  //System::g_fframeTime *
 	if (m_gameClient.angle.YAW < -PI)
 		m_gameClient.angle.YAW += 2*PI;
 }
 
 void CClient::RotateUp(float val)
 {
-	m_gameClient.angle.PITCH += System::g_fframeTime * val;
+	m_gameClient.angle.PITCH +=  (val/20);  //System::g_fframeTime *
 	if (m_gameClient.angle.PITCH < -PI/2)
 		m_gameClient.angle.PITCH = -PI/2;
 	if (m_gameClient.angle.PITCH > PI/2)
@@ -315,7 +315,7 @@ void CClient::RotateUp(float val)
 
 void CClient:: RotateDown(float val)
 {
-	m_gameClient.angle.PITCH -= System::g_fframeTime * val;
+	m_gameClient.angle.PITCH -=  (val/20);  //System::g_fframeTime *
 	if (m_gameClient.angle.PITCH < -PI/2)
 		m_gameClient.angle.PITCH = -PI/2;
 	if (m_gameClient.angle.PITCH > PI/2)
