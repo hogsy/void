@@ -41,6 +41,7 @@ public:
 	bool IsValid() const;
 
 	static void SetLocalAddress(const char * localaddy);
+	static const char * GetLocalAddress();
 
 private:
 

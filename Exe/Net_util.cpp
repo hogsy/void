@@ -12,6 +12,9 @@ char CNetAddr::m_szLocalAddress[24];
 void CNetAddr::SetLocalAddress(const char * localaddy)
 {	strcpy(m_szLocalAddress, localaddy);
 }
+const char * CNetAddr::GetLocalAddress()
+{	return m_szLocalAddress;
+}
 
 /*
 ==========================================

@@ -2,7 +2,7 @@
 
 
 
-#include "Cl_main.h"
+//#include "Cl_main.h"
 #include "Cl_collision.h"
 
 extern world_t	 *g_pWorld;
@@ -95,7 +95,7 @@ plane_t* ray(int node, const vector_t &start, const vector_t &end, float *endfra
 
 		// if we're here, we didn't hit anything
 		*endfrac = 1;
-		return NULL;
+		return 0;
 	}
 
 	// else we're entirely in the near node
@@ -111,7 +111,7 @@ plane_t* ray(int node, const vector_t &start, const vector_t &end, float *endfra
 
 
 	*endfrac = 1;
-	return NULL;
+	return 0;
 }
 
 
@@ -122,7 +122,7 @@ trace_t trace(vector_t &start, vector_t &end, vector_t *mins, vector_t *maxs)
 {
 	trace_t trace;
 	trace.fraction = 1;
-	trace.plane = NULL;
+	trace.plane = 0;
 	VectorCopy(end, trace.endpos);
 
 	// find the length/direction of a full trace
@@ -153,7 +153,7 @@ trace_t trace(vector_t &start, vector_t &end, vector_t *mins, vector_t *maxs)
 			VectorAdd(bbox[i], dir, bend);
 
 			frac = 0;
-			hitplane = ray(0, bbox[i], bend, &frac, NULL);
+			hitplane = ray(0, bbox[i], bend, &frac, 0);
 
 			// find the length this corner went
 			if ((trace.fraction > frac) && hitplane)
@@ -171,7 +171,7 @@ trace_t trace(vector_t &start, vector_t &end, vector_t *mins, vector_t *maxs)
 	else
 	{
 		trace.fraction = 0;
-		trace.plane = ray(0, start, end, &trace.fraction, NULL);
+		trace.plane = ray(0, start, end, &trace.fraction, 0);
 	}
 
 	VectorMA(&start, trace.fraction, &dir, &trace.endpos);

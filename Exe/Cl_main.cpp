@@ -19,10 +19,10 @@ Constructor
 */
 CClient::CClient(I_Renderer * prenderer):
 					m_buffer(VoidNet::MAX_BUFFER_SIZE),	
-					m_clport("cl_port","36667", CVar::CVAR_INT,0),
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
-					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
-					m_clrate("cl_rate","3000",	CVar::CVAR_INT,		CVar::CVAR_ARCHIVE)
+					m_clport("cl_port","20011", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE| CVar::CVAR_LATCH),
+					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
+					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientCmdHandler(this);
@@ -48,11 +48,11 @@ CClient::CClient(I_Renderer * prenderer):
 
 	g_pWorld = 0;
 
-	System::GetConsole()->RegisterCVar(&m_clport);
-	System::GetConsole()->RegisterCVar(&m_clrate);
-	System::GetConsole()->RegisterCVar(&m_clname);
 	System::GetConsole()->RegisterCVar(&m_noclip);
-
+	System::GetConsole()->RegisterCVar(&m_clport,this);
+	System::GetConsole()->RegisterCVar(&m_clrate,this);
+	System::GetConsole()->RegisterCVar(&m_clname,this);
+	
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
 	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
@@ -216,13 +216,19 @@ void CClient::RunFrame()
 		}
 
 		//Print Stats
-		if(m_pHud)
-		{
-			m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - frametime));
-			frametime = System::g_fcurTime;
-			m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, eye.origin.y, eye.origin.z);
-		}
+		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, eye.origin.y, eye.origin.z);
 
+		m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - frametime));
+		frametime = System::g_fcurTime;
+
+		//Networking
+		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", m_netChan.m_dropCount, 
+							m_netChan.m_dropCount + m_netChan.m_goodCount, m_netChan.m_numChokes);
+		m_pHud->HudPrintf(0,410,0, "In      %d", m_netChan.m_inMsgId);
+		m_pHud->HudPrintf(0,420,0, "In  Ack %d", m_netChan.m_inAckedMsgId);
+		m_pHud->HudPrintf(0,430,0, "Out     %d", m_netChan.m_outMsgId);
+		m_pHud->HudPrintf(0,440,0, "Out Ack %d", m_netChan.m_lastOutReliableMsgId);
+			
 		// FIXME - put this in game dll
 		vector_t screenblend;
 		if (PointContents(eye.origin) & CONTENTS_SOLID)
@@ -317,6 +323,20 @@ Validate/Handle any CVAR changes
 */
 bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
+	if(cvar == dynamic_cast<CVarBase*>(&m_clport))
+	{
+		int port = parms.IntTok(1);
+		if(port < 1024 || port > 32767)
+		{
+			ComPrintf("Port is out of range, select another\n");
+			return false;
+		}
+		return true;
+	}
+	else if(cvar == dynamic_cast<CVarBase*>(&m_clrate))
+		return UpdateRate(parms);
+	else if(cvar == dynamic_cast<CVarBase*>(&m_clname))
+		return UpdateName(parms);
 	return false;
 }
 

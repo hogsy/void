@@ -13,6 +13,7 @@ enum
 const char szWORLDDIR[]     = "Worlds/";
 
 const int  SV_DEFAULT_PORT = 20010;
+const int  CL_DEFAULT_PORT = 20011;
 
 const int  PACKET_HEADER	  =	8;
 const int  MAX_DATAGRAM_SIZE  =	1450;
@@ -63,6 +64,7 @@ const int CL_STRING			= 3;	//Command string
 const int CL_DELTA			= 4;	//update a specific field only ?
 const int CL_TALK			= 5;	//client said something
 const int CL_DISCONNECT		= 6;	//client is disconnecting
+const int CL_UPDATEINFO		= 7;	//client wants to update its info. name/rate/skin/model etc
 
 //===============================
 //Server to Client

@@ -343,11 +343,23 @@ void CClient::ConnectTo(const char * ipaddr)
 	if(m_ingame)
 		Disconnect();
 
+	//Create Socket
 	if(!m_pSock->ValidSocket())
 	{
 		if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
 		{
 			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt create socket");
+			return;
+		}
+
+		//Bind to local addr
+		char localAddr[32];
+		sprintf(localAddr,"127.0.0.1:%d",CL_DEFAULT_PORT);
+
+		CNetAddr naddr(localAddr);
+		if(!m_pSock->Bind(naddr))
+		{
+			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt bind socked\n");
 			return;
 		}
 	}
@@ -437,4 +449,15 @@ void CClient::Talk(const char *string)
 	m_netChan.m_buffer += CL_TALK;
 	m_netChan.m_buffer += msg;
 	m_canSend = true;
+}
+
+
+bool CClient::UpdateName(const CParms &parms)
+{
+	return true;
+}
+
+bool CClient::UpdateRate(const CParms &parms)
+{
+	return true;
 }

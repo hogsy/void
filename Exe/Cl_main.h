@@ -58,6 +58,9 @@ private:
 	void ConnectTo(const char * ipaddr);
 	void Disconnect(bool serverControlled = false);
 
+	bool UpdateName(const CParms &parms);
+	bool UpdateRate(const CParms &parms);
+
 	//Movement
 	void Move(vector_t *dir, float time);
 	void MoveForward();

@@ -335,10 +335,6 @@ SOURCE=.\Net_chan.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Net_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Net_hdr.h
 # End Source File
 # Begin Source File
@@ -480,7 +476,7 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\q3netinfo
+SOURCE=.\Net_defs.h
 # End Source File
 # Begin Source File
 
