@@ -1,6 +1,7 @@
 #include "Standard.h"
 #include "Tex_hdr.h"
 #include "Tex_main.h"
+#include "Tex_image.h"
 
 const char * BaseTextureList[] =
 {
@@ -20,11 +21,13 @@ Constructor
 
 CTextureManager::CTextureManager()
 {
+	strcpy(m_textureDir,"textures");
+
+	m_texReader = new CImageReader();
+
 	m_loaded = NO_TEXTURES;
 	m_numBaseTextures = 0;
 	m_numWorldTextures = 0;
-
-	CImageReader::SetTextureDir("textures");
 }
 
 /*
@@ -33,7 +36,7 @@ Destructor
 ==========================================
 */
 CTextureManager::~CTextureManager()
-{	m_texReader.Reset();
+{	delete m_texReader;
 }
 
 
@@ -54,8 +57,8 @@ bool CTextureManager::Init()
 	}
 
 	//Get count of base textures
-	for(int count=0;BaseTextureList[count];count++);
-		m_numBaseTextures = count+1;
+	for(int count=0; BaseTextureList[count] != 0; count++)
+		m_numBaseTextures =  count +1;
 
 	//Alloc space for base textures
 	tex->base_names = new GLuint[m_numBaseTextures];
@@ -67,14 +70,14 @@ bool CTextureManager::Init()
 
 	ConPrint("CTextureManager::Init:Creating base textures");
 
-	m_texReader.LockBuffer(TEX_MAXTEXTURESIZE);
+	m_texReader->LockBuffer(TEX_MAXTEXTURESIZE);
 
 	//Generate and load base textures
 	glGenTextures(m_numBaseTextures, tex->base_names);
 	for(count=0;count<m_numBaseTextures;count++)
 	{
 		LoadTexture(BaseTextureList[count]);
-		m_texReader.ColorKey();
+		m_texReader->ColorKey();
 
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
 
@@ -83,20 +86,57 @@ bool CTextureManager::Init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+/*		//FIX ME, use something like this ?
+
+		switch(m_texReader->GetBpp())
+		{
+			case 3:
+				format=GL_RGB;
+				switch(g_rInfo.bpp)
+				{
+					case 16:
+						outformat=GL_RGB5;
+						break;
+					case 32:
+						outformat=GL_RGB8;
+						break;
+					default:
+						outformat=GL_RGB;
+				};
+				break;
+			case 4:
+				format=GL_RGBA;
+				switch(g_rInfo.bpp)
+				{				
+					case 16:
+						outformat=GL_RGBA4;
+						break;
+					case 32:
+						outformat=GL_RGBA8;
+						break;
+					default:
+						outformat=GL_RGBA;
+				};
+				break;
+			default:
+				format = GL_RGB;
+				outformat = GL_RGB;
+		}
+*/
 		glTexImage2D(GL_TEXTURE_2D,
 				 0,
 				 GL_RGBA,
-				 m_texReader.GetWidth(),
-				 m_texReader.GetHeight(),
+				 m_texReader->GetWidth(),
+				 m_texReader->GetHeight(),
 				 0,
 				 GL_RGBA,
 				 GL_UNSIGNED_BYTE,
-				 m_texReader.GetData());
+				 m_texReader->GetData());
 		
-		m_texReader.Reset();
+		m_texReader->Reset();
 	}
 
-	m_texReader.UnlockBuffer();
+	m_texReader->UnlockBuffer();
 
 	m_loaded = BASE_TEXTURES;
 	return true;
@@ -119,9 +159,9 @@ bool CTextureManager::Shutdown()
 	ConPrint("CTextureManager::Shutdown:Destroying base textures :");
 
 	glDeleteTextures(m_numBaseTextures, tex->base_names);
-	delete [] tex->base_names;	//free (tex->base_names);
-
-	delete tex;	//free (tex);
+	delete [] tex->base_names;
+	
+	delete tex;	
 	tex = 0;
 
 	m_loaded = NO_TEXTURES;
@@ -147,15 +187,16 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	if (!map)
 		return false;
 
-	uint	   mipcount = 0,
+	uint   mipcount = 0,
 		   t=0,m=0;
 
 	tex->num_lightmaps= 0;
 	tex->num_textures = 0;
 	
+	//Count number of textures
 	while (map->textures[tex->num_textures][0] != '\0')
 		tex->num_textures++;
-
+	
 	tex->tex_names = new GLuint[tex->num_textures];
 	if (tex->tex_names == NULL) 
 	{
@@ -182,17 +223,17 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	
 	glGenTextures(tex->num_textures, tex->tex_names);
 
-	m_texReader.LockBuffer(TEX_MAXTEXTURESIZE);
-	m_texReader.LockMipMapBuffer(TEX_MAXMIPMAPSIZE);
+	m_texReader->LockBuffer(TEX_MAXTEXTURESIZE);
+	m_texReader->LockMipMapBuffer(TEX_MAXMIPMAPSIZE);
 
 	for (t = 0; t < tex->num_textures; t++)
 	{
 		LoadTexture(map->textures[t]);
-		mipcount = m_texReader.GetMipCount();
+		mipcount = m_texReader->GetMipCount();
 			
 		//Set initial dimensions
-		tex->dims[t][0] = m_texReader.GetWidth();
-		tex->dims[t][1] = m_texReader.GetHeight();
+		tex->dims[t][0] = m_texReader->GetWidth();
+		tex->dims[t][1] = m_texReader->GetHeight();
 
 		glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
 
@@ -205,19 +246,19 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
-				m_texReader.ImageReduce();
+				m_texReader->ImageReduce();
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
 						 GL_RGBA,
-						 m_texReader.GetWidth(),
-						 m_texReader.GetHeight(),
+						 m_texReader->GetWidth(),
+						 m_texReader->GetHeight(),
 						 0,
 						 GL_RGBA,
 						 GL_UNSIGNED_BYTE,
-						 m_texReader.GetData());
+						 m_texReader->GetData());
 		}
-		m_texReader.Reset();
+		m_texReader->Reset();
 	}
 
 // FIXME - temp hack to get lightmapping working
@@ -236,8 +277,8 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	unsigned char *ptr = map->lightdata;
 	for (t = 0; t < tex->num_lightmaps; t++)
 	{
-		m_texReader.ReadLightMap(&ptr);
-		mipcount = m_texReader.GetMipCount();
+		m_texReader->ReadLightMap(&ptr);
+		mipcount = m_texReader->GetMipCount();
 
 		//Set initial dimensions
 		glBindTexture(GL_TEXTURE_2D, tex->light_names[t]);
@@ -251,23 +292,23 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
-				m_texReader.ImageReduce();
+				m_texReader->ImageReduce();
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
 						 GL_RGBA,
-						 m_texReader.GetWidth(),
-						 m_texReader.GetHeight(),
+						 m_texReader->GetWidth(),
+						 m_texReader->GetHeight(),
 						 0,
 						 GL_RGBA,
 						 GL_UNSIGNED_BYTE,
-						 m_texReader.GetData());
+						 m_texReader->GetData());
 		}
-		m_texReader.Reset();
+		m_texReader->Reset();
 	}
 
-	m_texReader.UnlockBuffer();
-	m_texReader.UnlockMipMapBuffer();
+	m_texReader->UnlockBuffer();
+	m_texReader->UnlockMipMapBuffer();
 
 	m_loaded = ALL_TEXTURES;
 	return true;
@@ -290,7 +331,7 @@ bool CTextureManager::UnloadWorldTextures()
 	ConPrint("Destroying map textures: ");
 
 	glDeleteTextures(tex->num_textures, tex->tex_names);
-	delete [] tex->tex_names;	//free (tex->tex_names);
+	delete [] tex->tex_names;
 	tex->num_textures = 0;
 
 //	free (tex->cache);
@@ -302,7 +343,7 @@ bool CTextureManager::UnloadWorldTextures()
 	if (tex->num_lightmaps)
 	{
 		glDeleteTextures(tex->num_lightmaps, tex->light_names);
-		delete [] tex->light_names;	//free (tex->light_names);
+		delete [] tex->light_names;
 		tex->num_lightmaps = 0;
 	}
 
@@ -325,9 +366,12 @@ Load a map texture
 */
 void CTextureManager::LoadTexture(const char *filename)
 {
-	if (!filename || !m_texReader.Read(filename))
+	static char texname[COM_MAXPATH];
+	sprintf(texname,"%s/%s",m_textureDir,filename);
+
+	if(!m_texReader->Read(texname))
 	{
-		m_texReader.Reset();
-		m_texReader.DefaultTexture();
+		m_texReader->Reset();
+		m_texReader->DefaultTexture();
 	}
 }

@@ -1,14 +1,19 @@
 #ifndef TEXTUREMANAGER_H
 #define TEXTUREMANAGER_H
 
-#include "Tex_image.h"
+/*
+==========================================
+The Texture Manager
+Loads/Unloads lightmaps and textures
+==========================================
+*/
 
-#define TEX_MAXTEXTURESIZE	1048832
-#define TEX_MAXMIPMAPSIZE	262400	
+class CImageReader;
 
 class CTextureManager
 {
 public:
+
 	CTextureManager();
 	~CTextureManager();
 
@@ -19,6 +24,12 @@ public:
 	bool UnloadWorldTextures();
 
 private:
+
+	enum
+	{
+		TEX_MAXTEXTURESIZE = 1048832,
+		TEX_MAXMIPMAPSIZE  = 262400	
+	};
 
 	enum ETextures
 	{
@@ -31,7 +42,9 @@ private:
 	int				m_numWorldTextures;
 	ETextures		m_loaded;
 
-	CImageReader	m_texReader;
+	char			m_textureDir[10];
+
+	CImageReader *	m_texReader;
 
 	void LoadTexture(const char *filename);
 };

@@ -1,44 +1,35 @@
 #include "Tex_image.h"
+#include "Ijl/ijl.h"
 
 //======================================================================================
 //======================================================================================
 
-#define IMAGE_565	0
-#define IMAGE_1555	1
-#define IMAGE_4444	2
-
-#define MAX_TEXTURESIZE		4195328
-
-typedef struct PCX_header
+namespace 
 {
-	byte manufacturer;
-	byte version;
-	byte encoding;
-	byte bits_per_pixel;
-	WORD x, y;
-	WORD width, height;
-	WORD x_res, y_res;
-	byte ega_palette[48];
-	byte reserved;
-	byte num_planes;
-	WORD bytes_per_line;
-	WORD palette_type;
-	byte junk[58];
-} PCX_header;
-
-
-//======================================================================================
-//======================================================================================
-
-char  CImageReader::m_texturepath[MAX_PATH];
-
-void CImageReader::SetTextureDir(const char * dir)
-{	 strcpy(m_texturepath,dir);
+	typedef struct PCX_header
+	{
+		byte manufacturer;
+		byte version;
+		byte encoding;
+		byte bits_per_pixel;
+		WORD x, y;
+		WORD width, height;
+		WORD x_res, y_res;
+		byte ega_palette[48];
+		byte reserved;
+		byte num_planes;
+		WORD bytes_per_line;
+		WORD palette_type;
+		byte junk[58];
+	} PCX_header;
 }
+
+//======================================================================================
+//======================================================================================
 
 /*
 ==========================================
-Base Texture class
+Image Reader COnstructor/Destructor
 ==========================================
 */
 CImageReader::CImageReader()
@@ -46,11 +37,11 @@ CImageReader::CImageReader()
 	buffersize = 0;
 	data = 0;
 	width = height = 0;
-	type = 0;
 	format = FORMAT_NONE;
 
 	mipbuffersize = 0;
 	mipmapdata = 0;
+
 }
 
 CImageReader::~CImageReader()		
@@ -70,7 +61,9 @@ void CImageReader::LockBuffer(int size)
 {
 	UnlockBuffer();
 
-	data = new byte[size];
+	data = (byte*)::HeapAlloc(::GetProcessHeap(),
+								  HEAP_GENERATE_EXCEPTIONS,
+								  size);
 	if(!data)
 	{
 		FError("CImageReader::LockBuffer: Failed to alloc %d\n", size);
@@ -84,7 +77,7 @@ void CImageReader::UnlockBuffer()
 	buffersize = 0;
 	if(data)
 	{
-		delete [] data;
+		::HeapFree(::GetProcessHeap(),0, data);
 		data = 0;
 	}
 }
@@ -93,7 +86,9 @@ void CImageReader::LockMipMapBuffer(int size)
 {
 	UnlockMipMapBuffer();
 
-	mipmapdata = new byte[size];
+	mipmapdata = (byte*)::HeapAlloc(::GetProcessHeap(),
+								  HEAP_GENERATE_EXCEPTIONS,
+								  size);
 	if(!mipmapdata)
 	{
 		FError("CImageReader::LockMipMapBuffer: Failed to alloc %d\n", size);
@@ -107,7 +102,7 @@ void CImageReader::UnlockMipMapBuffer()
 	mipbuffersize = 0;
 	if(mipmapdata)
 	{
-		delete [] mipmapdata;
+		::HeapFree(::GetProcessHeap(),0, mipmapdata);
 		mipmapdata = 0;
 	}
 }
@@ -119,7 +114,7 @@ Key the transparent color
 */
 void CImageReader::ColorKey()
 {
-	if(!data)
+	if(!data || bpp != 4)
 		return;
 
 	for (int p = 0; p < width * height * 4; p+=4)
@@ -129,7 +124,6 @@ void CImageReader::ColorKey()
 			(data[p+2] == 226))
 			data[p+3] = 0;
 	}
-	type = IMAGE_1555;
 }
 
 /*
@@ -145,7 +139,6 @@ void CImageReader::Reset()
 		delete [] data;
 		data = 0;
 	}
-	type = 0;
 	height = 0;
 	width = 0;
 	format = FORMAT_NONE;
@@ -168,20 +161,13 @@ bool CImageReader::DefaultTexture()
 		buffersize = width * height * 4;
 		LockBuffer(buffersize);
 	}
-/*	data = new byte[width * height * 4];
-	if (data == NULL) 
-	{
-		FError("CImageReader::DefaultTexture: No mem for pic data");
-		return false;
-	}
-*/
+
 	for (int p = 0; p < width * height * 4; p++)
 	{
 		data[p] = rand();
 		if (p%4 == 3)
 			data[p] = 255;	// make sure it's full alpha
 	}
-	type = IMAGE_565;
 	format = FORMAT_TGA;
 	return true;
 }
@@ -249,13 +235,7 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 		buffersize = width * height * 4;
 		LockBuffer(buffersize);
 	}
-/*	data = new byte[width * height * 4];
-	if (data == NULL) 
-	{
-		FError("CImageReader::DefaultTexture: No mem for pic data");
-		return false;
-	}
-*/
+
 	for (int p = 0; p < width * height * 4; p++)
 	{
 		if (p%4 == 3)
@@ -266,7 +246,6 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 			(*stream)++;
 		}
 	}
-	type = IMAGE_565;
 	format = FORMAT_TGA;
 	return true;
 }
@@ -284,8 +263,17 @@ bool CImageReader::Read(const char *file)
 
 	char  filename[MAX_PATH];
 
-	//default to a pcx
-	sprintf(filename,"%s/%s.tga",m_texturepath,file);
+/*	sprintf(filename,"%s.jpg",file);
+	if(m_fileReader.Open(filename) == true)
+	{
+		ComPrintf("Read JPEG!\n");
+		bool err = Read_JPG();
+		m_fileReader.Close();
+		return err;
+	}
+*/
+	//default to a tga
+	sprintf(filename,"%s.tga",file);
 	if(m_fileReader.Open(filename) == true)
 	{
 		bool err = Read_TGA();
@@ -293,17 +281,17 @@ bool CImageReader::Read(const char *file)
 		return err;
 	}
 
-	sprintf(filename,"%s/%s.pcx",m_texturepath,file);
+	sprintf(filename,"%s.pcx",file);
 	if(m_fileReader.Open(filename) == true)
 	{
 		bool err = Read_PCX();
 		m_fileReader.Close();
 		return err;
 	}
+
 	ConPrint("CImageReader::Read: Couldnt open %s\n",filename);
 	return false;
 }
-
 
 
 /*
@@ -326,27 +314,22 @@ bool CImageReader::Read_PCX()
 	}
 
 	width = header.width - header.x + 1;
-	height = header.height - header.y + 1;
+	height= header.height - header.y + 1;
+	bpp = 4;
 
-	// always store the pic in 32 bit rgba
+	// always store the pic in 32 bit rgba WHY ?
 	if(buffersize < width * height * 4)
 	{
 		buffersize = width * height * 4;
 		LockBuffer(buffersize);
 	}
-	
-/*	data = new byte[width * height * 4];
-	if(data == NULL)
-	{
-		FError("CPCX_Texture::Read:Not enough memory for texture");
-		return false;
-	}
-*/
 	memset(data, 0xFF, width * height * 4);
+
+	ComPrintf("pcx numplanes %d\n", header.num_planes);
 
 	byte ch;
 	int number, color;
-	int countx, county, i;
+	int countx, county, index;
 
 	//for every line
 	for (county = 0; county < height; county++)
@@ -367,7 +350,7 @@ bool CImageReader::Read_PCX()
 				else
 					number = 1;
 
-				for (i = 0; i < number; i++)
+				for (index = 0; index < number; index++)
 				{
 					data[(county * 4 * (width)) + (4 * countx) + color] = ch;
 					countx++;
@@ -380,7 +363,7 @@ bool CImageReader::Read_PCX()
 	if (header.num_planes == 1)
 	{
 		byte palette[768]; // r,g,b 256 times
-		int index;
+		//int index;
 
 		m_fileReader.Read(palette,1,1);
 
@@ -403,7 +386,6 @@ bool CImageReader::Read_PCX()
 			}
 		}
 	}
-	type = IMAGE_565;
 	format=FORMAT_PCX;
 	return true;
 }
@@ -422,8 +404,7 @@ bool CImageReader::Read_TGA()
 	width  |= m_fileReader.GetChar() << 8;
 	height  = m_fileReader.GetChar();
 	height |= m_fileReader.GetChar() << 8;
-
-	int comp = m_fileReader.GetChar() / 8;
+	bpp     = m_fileReader.GetChar() / 8;
 
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();	
@@ -433,15 +414,6 @@ bool CImageReader::Read_TGA()
 		buffersize = width * height * 4;
 		LockBuffer(buffersize);
 	}
-
-	// always store the pic in 32 bit rgba
-/*	data = new byte[width * height * 4];
-	if (!data)
-	{	
-		Error("CImageReader::Read_TGA:Not enough memory for texture");
-		return false;
-	}
-*/
 	memset(data, 0xFF, width * height * 4);
 	
 	for (int h= height-1; h>=0; h--)
@@ -451,14 +423,91 @@ bool CImageReader::Read_TGA()
 			data[h*width*4 + w*4 + 2] = m_fileReader.GetChar(); 
 			data[h*width*4 + w*4 + 1] = m_fileReader.GetChar();
 			data[h*width*4 + w*4    ] = m_fileReader.GetChar(); 
-			if (comp == 4)
+			if (bpp == 4)
 				data[h*width*4 + w*4 + 3] = m_fileReader.GetChar(); 
 		}
 	}
-	type = IMAGE_565;
+
 	format=FORMAT_TGA;
 	return true;
 }
+
+
+/*
+==========================================
+Read a jpeg
+==========================================
+*/
+bool CImageReader::Read_JPG()
+{
+	JPEG_CORE_PROPERTIES jcprop;
+	
+	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
+	
+	if(ijlInit( &jcprop ) != IJL_OK ) 
+	{
+		ComPrintf("CImageReader::Read_JPG: Unable to initialize the Intel JPEG library\n");
+		return false;
+	}
+
+	jcprop.JPGBytes = m_fileReader.GetData();
+	jcprop.JPGSizeBytes = m_fileReader.GetSize();
+
+	if(ijlRead( &jcprop, IJL_JBUFF_READPARAMS ) != IJL_OK )
+	{
+		ComPrintf("CImageReader::Read_JPG: Unable to read jpeg header\n");
+		return false;
+	}
+
+	width=jcprop.JPGWidth;
+	height=jcprop.JPGHeight;
+	bpp= jcprop.JPGChannels;
+
+	if(buffersize < jcprop.JPGWidth * jcprop.JPGHeight * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+	memset(data, 0, width * height * 4);
+
+	jcprop.DIBWidth    = jcprop.JPGWidth;
+	jcprop.DIBHeight   = jcprop.JPGHeight;
+	jcprop.DIBChannels = 3; //jcprop.JPGChannels;
+	jcprop.DIBBytes    = data; //tex->mem;
+	
+	switch(jcprop.JPGChannels)
+	{
+		case 1:
+			jcprop.DIBColor	   = IJL_G;
+		break;
+		
+		default:
+		case 3:
+			jcprop.DIBColor	   = IJL_RGB;
+			//jcprop.DIBColor = IJL_RGBA_FPX;
+		break;
+	}
+	
+
+	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
+	{
+		ComPrintf("CImageReader::Read_JPG: Can't read jpeg file\n");
+		height = 0;
+		width = 0;
+//		free(tex->mem);
+//		tex->mem=NULL;
+		return false;
+	}
+
+	if( ijlFree( &jcprop ) != IJL_OK ) 
+	{
+		ComPrintf("CImageReader::Read_JPG: Can't free intel jpeg library!\n");
+		return false;
+	}
+	format=FORMAT_JPG;
+	return true;
+}
+
 
 /*
 ==========================================
@@ -710,6 +759,8 @@ void CImageWriter::Write_TGA( FILE *fp)
 	}
 }
 
+//======================================================================================
+//======================================================================================
 
 
 /*
@@ -743,9 +794,26 @@ Image Type           Description
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //======================================================================================================
 //	FUNCTIONS TO MANIPULATE IMAGES
 //======================================================================================================
+#if 0
 
 /**********************************************************
 reduce dimensions of an 8888 tex by 2.  !!assumes dimensions allow it!!
@@ -860,3 +928,134 @@ byte* ImageConvert(byte *src, int format, uint width, uint height)
 	}
 	return dest;
 }
+
+
+#endif
+
+
+#if 0
+//
+// Load a jpeg using jpeglib
+//
+
+// This procedure is called by the IJPEG library when an error
+// occurs.
+static void error_exit (j_common_ptr pcinfo){
+	// Create the message string
+	char sz[256];
+	(pcinfo->err->format_message) (pcinfo, sz);
+
+	err->CriticalError(ERROR_FORMAT_NOT_SUPPORTED, "%s\n",sz);
+}
+
+
+static void init_source (j_decompress_ptr cinfo){
+}
+
+
+static boolean fill_input_buffer (j_decompress_ptr cinfo){
+	struct jpeg_source_mgr * src = cinfo->src;
+	static JOCTET FakeEOI[] = { 0xFF, JPEG_EOI };
+
+	/* Generate warning */
+	err->Log(UNKNOWN_ERROR, "Premature end of file\n");
+  
+	/* Insert a fake EOI marker */
+	src->next_input_byte = FakeEOI;
+	src->bytes_in_buffer = 2;
+
+	return TRUE;
+}
+
+
+static void skip_input_data (j_decompress_ptr cinfo, long num_bytes) {
+	struct jpeg_source_mgr * src = cinfo->src;
+  
+	if(num_bytes >= (long)src->bytes_in_buffer) {
+		fill_input_buffer(cinfo);
+		return;
+	}
+
+	src->bytes_in_buffer -= num_bytes;
+	src->next_input_byte += num_bytes;
+}
+
+
+void term_source (j_decompress_ptr cinfo){
+  /* no work necessary here */
+}
+
+
+void TexMng::JPG_Decode(VFile *vf, texinfo *tex){
+	
+	jpeg_decompress_struct cinfo;	// IJPEG decoder state.
+	jpeg_error_mgr         jerr;	// Custom error manager.
+
+	cinfo.err = jpeg_std_error (&jerr);
+	jerr.error_exit = error_exit;	// Register custom error manager.
+
+	jpeg_create_decompress (&cinfo);
+
+	
+	struct jpeg_source_mgr * src;
+	//jpeg_stdio_src(&cinfo, fp);
+	
+	cinfo.src= (struct jpeg_source_mgr *) (*cinfo.mem->alloc_small) 
+		((j_common_ptr) &cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_source_mgr));
+
+	
+	src = cinfo.src;
+
+	src->init_source = init_source;
+	src->fill_input_buffer = fill_input_buffer;
+	src->skip_input_data = skip_input_data;
+	src->resync_to_restart = jpeg_resync_to_restart;	// use default method
+	src->term_source = term_source;
+
+	// Set up data pointer
+	src->bytes_in_buffer = vf->size;
+	src->next_input_byte = vf->mem;
+
+	jpeg_read_header (&cinfo, TRUE);
+
+	cinfo.do_fancy_upsampling = FALSE;		// fast decompression
+
+    cinfo.dct_method = JDCT_FLOAT;			// Choose floating point DCT method.
+
+
+
+	jpeg_start_decompress(&cinfo);
+
+    tex->width = cinfo.output_width;
+    tex->height = cinfo.output_height;
+
+	if (cinfo.out_color_space == JCS_GRAYSCALE){
+		/*tex->bpp=1;
+		tex->mem = (byte *) malloc(1*tex->width*tex->height);
+		if (!tex->mem) {
+			tex->mem=NULL;
+			return;
+		}*/
+		err->CriticalError(UNKNOWN_ERROR,"grayscale not supported!!!");
+	}
+	else{
+		tex->bpp=3;
+		tex->mem = (byte *) malloc(3*tex->width*tex->height);
+		if (!tex->mem) {
+			return;
+		}
+		
+		byte *pDst=tex->mem;
+		byte **ppDst=&pDst;
+		int num_scanlines=0;
+		while (cinfo.output_scanline < cinfo.output_height){
+			num_scanlines=jpeg_read_scanlines (&cinfo, ppDst, 1);
+			*ppDst += num_scanlines * 3 * cinfo.output_width;
+		}
+	}
+	
+	jpeg_finish_decompress(&cinfo);
+
+	jpeg_destroy_decompress (&cinfo);
+}
+#endif

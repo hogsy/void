@@ -10,15 +10,6 @@ Constructor/Destructor
 */
 CGLUtil::CGLUtil()
 {
-	//These "should" be always safe.
-	//Will change during the course of a game as user changes res successfully
-	m_safeX= 640;
-	m_safeY= 480;
-
-	//Windowed Screen Co-ordinates
-	m_wndXpos= 0;
-	m_wndYpos= 0;
-
 	m_nummodes = 0;
 	m_devmodes = 0;
 
@@ -103,6 +94,7 @@ bool CGLUtil::Init()
 
 	//Get Pixel Format
 	g_rInfo.hDC = ::GetDC(g_rInfo.hWnd);
+	
 	if (!SetupPixelFormat())
 	{
 		ConPrint("GL::Init: Failed to set PixelFormat\n");
@@ -118,8 +110,8 @@ bool CGLUtil::Init()
 	OpenGLGetExtensions();
 
 	//Check for GL flags
-	ConPrint("\nGL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	ConPrint("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+	ConPrint("\nGL_VENDOR: %s\n",glGetString(GL_VENDOR));
+	ConPrint("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
 	ConPrint("GL_VERSION: %s\n", glGetString(GL_VERSION));
 	ConPrint("GL_EXTENSIONS:\n");
 
@@ -208,8 +200,8 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOP,
-				   m_wndXpos,
-			       m_wndYpos,
+				   (int)m_cWndX->value,
+				   (int)m_cWndY->value,
 			       width,
 			       height,
 				   0);
@@ -259,7 +251,6 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
     if ((rv = ::ChangeDisplaySettings(&m_devmodes[best_mode], CDS_TEST)) != DISP_CHANGE_SUCCESSFUL)
 	{
 		ConPrint("GL:GoFull::Change to Fullscreen mode failed: ");
-
 		switch(rv)
 		{
 		case DISP_CHANGE_RESTART:
@@ -335,8 +326,8 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-	wndX < 80 ? m_wndXpos = 80: m_wndXpos = wndX;
-	wndY < 40 ? m_wndYpos = 40: m_wndYpos = wndY;
+	wndX < 80 ? g_pConsole->CVarSet(&m_cWndX,80.0) : g_pConsole->CVarSet(&m_cWndX,wndX);
+	wndY < 80 ? g_pConsole->CVarSet(&m_cWndY,40.0) : g_pConsole->CVarSet(&m_cWndY,wndY);
 }
 
 /*
@@ -412,9 +403,6 @@ bool CGLUtil::UpdateDisplaySettings(unsigned int width,
 		Init();
 		return false;
 	}
-
-	m_safeX = g_rInfo.width;
-	m_safeY = g_rInfo.height;
 	ConPrint("GL::UpdateDisplaySettings::Display change successful\n");
 	return true;
 }

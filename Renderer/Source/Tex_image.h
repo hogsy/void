@@ -3,12 +3,17 @@
 
 #include "Standard.h"
 
+//======================================================================================
+
 enum EImageFormat
 {
 	FORMAT_NONE,
 	FORMAT_TGA,
-	FORMAT_PCX
+	FORMAT_PCX,
+	FORMAT_JPG
 };
+
+//======================================================================================
 
 /*
 ==========================================
@@ -22,17 +27,12 @@ public:
 	CImageReader();
 	virtual ~CImageReader();
 
-	int GetHeight() { return height;}
-	int GetWidth()  { return width; }
+	const int & GetHeight() const { return height;}		//Height
+	const int & GetWidth()  const { return width; }		//Width
+	const int & GetBpp()    const { return bpp; }		//BYTES per pixel
 	
-	EImageFormat GetFormat(){ return format; }
-	byte *		 GetData()  { return data; }
-
-	void LockBuffer(int size);
-	void UnlockBuffer();
-
-	void LockMipMapBuffer(int size);
-	void UnlockMipMapBuffer();
+	EImageFormat GetFormat() const { return format; }
+	const byte * GetData()   const { return data; }
 
 	bool Read(const char *file);				//Read texture from path
 	bool ReadLightMap(unsigned char **stream);	//Read lightmap textures from world file
@@ -44,7 +44,12 @@ public:
 	bool DefaultTexture();
 	void ColorKey();
 
-	static void SetTextureDir(const char * dir);
+	//Hack until a full featured memory manager is done
+	//static buffer is locked for all i/o when loading map textures for speed
+	void LockBuffer(int size);
+	void LockMipMapBuffer(int size);
+	void UnlockBuffer();
+	void UnlockMipMapBuffer();
 
 protected:
 
@@ -53,18 +58,20 @@ protected:
 	
 	byte *	mipmapdata;
 	byte *	data;
+	
 	int		width,
 			height;
-	int		type;
+	int		bpp;
 
-	EImageFormat	format;
+	EImageFormat format;
+	CFileBuffer	 m_fileReader;
 
-	bool	Read_PCX();
-	bool	Read_TGA();
+	//==========================================
+	//Supported formats
 
-	CFileBuffer m_fileReader;
-
-	static  char m_texturepath[MAX_PATH];
+	bool Read_PCX();
+	bool Read_TGA();
+	bool Read_JPG();
 };
 
 /*
@@ -97,9 +104,5 @@ protected:
 
 //======================================================================================
 //======================================================================================
-
-void	ImageReduce32(byte *dest, byte *src, int nwidth, int nheight);
-void	ImageReduce24(byte *dest, byte *src, int nwidth, int nheight);
-byte*   ImageConvert(byte *src, int format, uint width, uint height);
 
 #endif
