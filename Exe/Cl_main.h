@@ -2,21 +2,20 @@
 #define VOID_CLIENT_MAIN
 
 #include "Sys_hdr.h"
-#include "Com_buffer.h"
-#include "Net_defs.h"
-#include "Net_client.h"
 #include "Com_vector.h"
 #include "Cl_defs.h"
-#include "I_clientRenderer.h"
+
 
 //Pre-declarations
 class  CSoundManager;
 class  CMusic;
-class  CCamera;
 class  CWorld;
+class  CNetClient;
+class  CBuffer;
+
 struct I_Renderer;
 struct I_HudRenderer;
-
+struct I_ClientRenderer;
 
 /*
 =====================================
@@ -30,7 +29,6 @@ Client class
 =====================================
 */
 class CClient :	public I_ConHandler
-//				public I_NetClientHandler
 {
 public:
 	CClient(I_Renderer * prenderer,
@@ -51,23 +49,19 @@ public:
 
 	void SetInputState(bool on);
 
-	void SetState(int state);
-
-/*
-
-	//Client Interface
-	//Parse and handle a game message
-	void HandleGameMsg(CBuffer &buffer); 
+	//Console Interface
+	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
-	//Parse and handle spawm parms
-	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
+private:
 
-	//Put Client in game. The clNum is the clients num on the server
-	void BeginGame(int clNum, CBuffer &buffer);
-*/
+	//Hacks 
+	void SetState(int state);
+	void SetNetworkRate(int rate);
 
+	CBuffer & GetSendBuffer();
+	CBuffer & GetOutgoingSendBuffer();
 
-//	void BeginGame();
 
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
@@ -75,15 +69,6 @@ public:
 	//Write userInfo to the given buffer
 	void WriteUserInfo(CBuffer &buffer);
 
-	//Util Print
-	void Print(const char * msg, ...);
-
-	
-	//Console Interface
-	void HandleCommand(HCMD cmdId, const CParms &parms);
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-	
-private:
 
 	bool LoadWorld(const char *worldname);
 	void UnloadWorld();
@@ -111,10 +96,7 @@ private:
 
 	//==================================================
 	//Subsystems
-//	friend class CClientInput;
 	friend class CGameClient;
-
-//	CClientInput    * m_pCmdHandler;
 	CGameClient      *	m_pClState;
 
 	I_Renderer		  * m_pRender;
@@ -125,13 +107,7 @@ private:
 	CMusic		      * m_pMusic;
 	CNetClient		  * m_pNetCl;
 
-	
-
 	CWorld	 *  m_pWorld;
-
-//	int			m_hsTalk;		//handle to talk sound
-//	int			m_hsMessage;	//handle to server message sound
-
 	float		m_fFrameTime;
 
 };

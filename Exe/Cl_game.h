@@ -1,13 +1,21 @@
 #ifndef VOID_CLIENT_STATE
 #define VOID_CLIENT_STATE
 
-class CWorld;
-class CBuffer;
-class CCamera;
+#include "Sys_hdr.h"
+#include "Com_buffer.h"
+#include "Com_vector.h"
+#include "Cl_defs.h"
+#include "Net_client.h"
 
+
+class  CWorld;
+
+class  CCamera;
+
+class  CClient;
 class  CSoundManager;
 class  CMusic;
-class CClient;
+class  CCamera;
 struct I_HudRenderer;
 struct I_ClientRenderer;
 

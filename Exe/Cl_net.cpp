@@ -6,6 +6,157 @@
 #include "Net_protocol.h"
 #include "Cl_game.h"
 
+
+
+/*
+======================================
+Write UserInfo to buffer
+======================================
+*/
+void CClient::WriteUserInfo(CBuffer &buffer)
+{
+	buffer.WriteString(m_cvName.string);
+	buffer.WriteString(m_cvModel.string);
+	buffer.WriteString(m_cvSkin.string);
+	buffer.WriteInt(m_cvRate.ival);
+}
+
+/*
+======================================
+Handle disconnect from server
+======================================
+*/
+void CClient::HandleDisconnect(bool listenserver)
+{
+
+	//	ComPrintf("CL: KILLING LOCAL SERVER\n");
+
+	//Kill server if local
+	if(listenserver)
+	{
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
+		System::GetConsole()->ExecString("killserver");
+	}
+	UnloadWorld();
+}
+
+
+
+
+
+/*
+======================================
+Say something
+======================================
+*/
+void CClient::Talk(const char * string)
+{
+	if(!m_pClState->m_ingame)
+		return;
+
+	//parse to right after "say"
+	const char * msg = string + 4;
+	while(*msg && *msg == ' ')
+		msg++;
+
+	if(!*msg || *msg == '\0')
+		return;
+
+	ComPrintf("%s: %s\n", m_cvName.string, msg);
+//	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+
+	//Send this reliably ?
+	m_pNetCl->GetReliableBuffer().WriteByte(CL_TALK);
+	m_pNetCl->GetReliableBuffer().WriteString(msg);
+}
+
+/*
+======================================
+Validate name locally before asking 
+the server to update it
+======================================
+*/
+bool CClient::ValidateName(const CParms &parms)
+{
+	char name[24];
+	parms.StringTok(1,name,24);
+
+	if(!name[0])
+	{
+		ComPrintf("Name = \"%s\"\n", m_cvName.string);
+		return false;
+	}
+	if(!m_pClState->m_ingame)
+		return true;
+
+	m_pNetCl->GetReliableBuffer().WriteByte(CL_INFOCHANGE);
+	m_pNetCl->GetReliableBuffer().WriteChar('n');
+	m_pNetCl->GetReliableBuffer().WriteString(name);
+	return true;
+}
+
+/*
+======================================
+Validate Rate before updating it 
+on the server
+======================================
+*/
+bool CClient::ValidateRate(const CParms &parms)
+{
+	int rate = parms.IntTok(1);
+	if(rate == -1)
+	{
+		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
+		return false;
+	}
+
+	if(rate < 1000 || rate > 10000)
+	{
+		ComPrintf("Rate is out of range\n");
+		return false;
+	}
+
+	m_pNetCl->SetRate(rate);
+	if(!m_pClState->m_ingame)
+		return true;
+
+	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
+	buffer.WriteByte(CL_INFOCHANGE);
+	buffer.WriteChar('r');
+	buffer.WriteInt(rate);
+	return true;
+}
+
+
+/*
+======================================
+
+======================================
+*/
+void CClient::ShowNetStats()
+{
+	//Print Networking stats
+	const NetChanState & chanState = m_pNetCl->GetChanState();
+
+	m_pHud->Printf(0,390,0, "Latency %.2f ms", chanState.latency * 1000);
+	m_pHud->Printf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
+						chanState.dropCount + chanState.goodCount, chanState.numChokes);
+	m_pHud->Printf(0,410,0, "In      %d", chanState.inMsgId);
+	m_pHud->Printf(0,420,0, "In  Ack %d", chanState.inAckedId);
+	m_pHud->Printf(0,430,0, "Out     %d", chanState.outMsgId);
+	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+
+}
+
+
+
+
+
+
+
+
+
+
 #if 0
 
 /*
@@ -272,152 +423,3 @@ void CClient::BeginGame(int clNum, CBuffer &buffer)
 }
 
 #endif
-
-
-
-
-
-/*
-======================================
-Write UserInfo to buffer
-======================================
-*/
-void CClient::WriteUserInfo(CBuffer &buffer)
-{
-	buffer.WriteString(m_cvName.string);
-	buffer.WriteString(m_cvModel.string);
-	buffer.WriteString(m_cvSkin.string);
-	buffer.WriteInt(m_cvRate.ival);
-}
-
-
-
-
-
-
-/*
-======================================
-Handle disconnect from server
-======================================
-*/
-void CClient::HandleDisconnect(bool listenserver)
-{
-
-	//	ComPrintf("CL: KILLING LOCAL SERVER\n");
-
-	//Kill server if local
-	if(listenserver)
-	{
-//		ComPrintf("CL: KILLING LOCAL SERVER\n");
-		System::GetConsole()->ExecString("killserver");
-	}
-	UnloadWorld();
-}
-
-
-
-
-
-/*
-======================================
-Say something
-======================================
-*/
-void CClient::Talk(const char * string)
-{
-	if(!m_pClState->m_ingame)
-		return;
-
-	//parse to right after "say"
-	const char * msg = string + 4;
-	while(*msg && *msg == ' ')
-		msg++;
-
-	if(!*msg || *msg == '\0')
-		return;
-
-	ComPrintf("%s: %s\n", m_cvName.string, msg);
-//	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
-
-	//Send this reliably ?
-	m_pNetCl->GetReliableBuffer().WriteByte(CL_TALK);
-	m_pNetCl->GetReliableBuffer().WriteString(msg);
-}
-
-/*
-======================================
-Validate name locally before asking 
-the server to update it
-======================================
-*/
-bool CClient::ValidateName(const CParms &parms)
-{
-	char name[24];
-	parms.StringTok(1,name,24);
-
-	if(!name[0])
-	{
-		ComPrintf("Name = \"%s\"\n", m_cvName.string);
-		return false;
-	}
-	if(!m_pClState->m_ingame)
-		return true;
-
-	m_pNetCl->GetReliableBuffer().WriteByte(CL_INFOCHANGE);
-	m_pNetCl->GetReliableBuffer().WriteChar('n');
-	m_pNetCl->GetReliableBuffer().WriteString(name);
-	return true;
-}
-
-/*
-======================================
-Validate Rate before updating it 
-on the server
-======================================
-*/
-bool CClient::ValidateRate(const CParms &parms)
-{
-	int rate = parms.IntTok(1);
-	if(rate == -1)
-	{
-		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
-		return false;
-	}
-
-	if(rate < 1000 || rate > 10000)
-	{
-		ComPrintf("Rate is out of range\n");
-		return false;
-	}
-
-	m_pNetCl->SetRate(rate);
-	if(!m_pClState->m_ingame)
-		return true;
-
-	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
-	buffer.WriteByte(CL_INFOCHANGE);
-	buffer.WriteChar('r');
-	buffer.WriteInt(rate);
-	return true;
-}
-
-
-/*
-======================================
-
-======================================
-*/
-void CClient::ShowNetStats()
-{
-	//Print Networking stats
-	const NetChanState & chanState = m_pNetCl->GetChanState();
-
-	m_pHud->Printf(0,390,0, "Latency %.2f ms", chanState.latency * 1000);
-	m_pHud->Printf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
-						chanState.dropCount + chanState.goodCount, chanState.numChokes);
-	m_pHud->Printf(0,410,0, "In      %d", chanState.inMsgId);
-	m_pHud->Printf(0,420,0, "In  Ack %d", chanState.inAckedId);
-	m_pHud->Printf(0,430,0, "Out     %d", chanState.outMsgId);
-	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
-
-}

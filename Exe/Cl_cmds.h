@@ -137,11 +137,11 @@ Client Command Handler
 */
 
 class CClientGameInput : public I_InKeyListener,	
-					 public I_InCursorListener
+						 public I_InCursorListener
 {
 public:
 
-	CClientGameInput(CGameClient &rGameClient);
+	CClientGameInput();
 	~CClientGameInput();
 
 	void IntializeBinds();
@@ -150,7 +150,8 @@ public:
 	void RunCommands();
 	
 	//Will update cursor pos if it had changed and return true
-	bool UpdateCursorPos(float &ix, float &iy, float &iz);
+	bool CursorChanged() const { return m_bCursorChanged; }
+	void UpdateCursorPos(float &ix, float &iy, float &iz) const;
 
 	void HandleKeyEvent	  (const KeyEvent &kevent);
 	void HandleCursorEvent(const float &ix,
@@ -169,10 +170,8 @@ private:
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
-	CGameClient & m_refClient;
-
 	float		m_fXpos, m_fYpos, m_fZpos;
-	bool		m_bCursorChanged;
+	mutable bool	m_bCursorChanged;
 
 	CParms		m_Parms;
 

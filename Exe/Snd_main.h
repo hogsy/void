@@ -14,6 +14,8 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
+struct ClEntity;
+
 /*
 ======================================
 Main Sound manager

@@ -1,17 +1,17 @@
-#include "Cl_main.h"
-#include "Cl_cmds.h"
+//#include "Cl_game.h"
+#include "Sys_hdr.h"
 #include "Sys_cons.h"
-#include "Cl_game.h"
+#include "Cl_cmds.h"
+
 
 /*
 ==========================================
 Constructor/Destructor
 ==========================================
 */
-CClientGameInput::CClientGameInput(CGameClient & rGameClient) : m_Parms(80) , 
+CClientGameInput::CClientGameInput() : m_Parms(80) , 
 							   m_fXpos(0.0f), m_fYpos (0.0f), m_fZpos(0.0f),
-							   m_bCursorChanged(false),
-							   m_refClient(rGameClient)
+							   m_bCursorChanged(false)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
@@ -24,17 +24,12 @@ CClientGameInput::~CClientGameInput()
 }
 
 
-bool CClientGameInput::UpdateCursorPos(float &ix, float &iy, float &iz)
+void CClientGameInput::UpdateCursorPos(float &ix, float &iy, float &iz) const
 {
-	if(m_bCursorChanged)
-	{
-		m_bCursorChanged = false;
-		ix = m_fXpos;
-		iy = m_fYpos;
-		iz = m_fZpos;
-		return true;
-	}
-	return false;
+	m_bCursorChanged = false;
+	ix = m_fXpos;
+	iy = m_fYpos;
+	iz = m_fZpos;
 }
 
 
@@ -90,17 +85,13 @@ void CClientGameInput::HandleCursorEvent(const float &ix,
 									 const float &iy,
 									 const float &iz)
 {
-/*
 	m_bCursorChanged = true;
 	m_fXpos = ix;
 	m_fYpos = iy;
 	m_fZpos = iz;
 
-	m_refClient.R
-*/
-
-	m_refClient.RotateRight(ix);
-	m_refClient.RotateUp(iy);
+//	m_refClient.RotateRight(ix);
+//	m_refClient.RotateUp(iy);
 }
 
 

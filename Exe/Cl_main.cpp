@@ -1,14 +1,24 @@
+#include "Sys_hdr.h"
+
+#include "Com_buffer.h"
+#include "Com_vector.h"
+#include "Com_util.h"
+#include "Com_World.h"
+
 #include "Cl_main.h"
+
+#include "I_clientRenderer.h"
 #include "I_renderer.h"
 #include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
-#include "Cl_cmds.h"
-#include "Com_util.h"
+
 #include "Net_defs.h"
 #include "Net_protocol.h"
-#include "Com_camera.h"
-#include "Com_World.h"
+#include "Net_client.h"
+
+
+#include "Cl_cmds.h"
 #include "Cl_game.h"
 
 
@@ -26,7 +36,6 @@ CClient::CClient(I_Renderer * prenderer,
 					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-//					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
 					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
@@ -35,50 +44,26 @@ CClient::CClient(I_Renderer * prenderer,
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
 
-//	m_pCmdHandler = new CClientInput();
-
 	//Setup network listener
 	m_pClState = new CGameClient(*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
 	m_pNetCl= new CNetClient(m_pClState);
 	
 
-	
 	m_pWorld = 0;
-
-//	m_hsTalk = 0;
-//	m_hsMessage = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvClip);
 	System::GetConsole()->RegisterCVar(&m_cvNetStats);
-//	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
 	
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvModel,this);
 	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
-/*	
-	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
-	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
-	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
-	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
 
-	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
-	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
-	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
-	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
-	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
-*/
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
-
-//	m_pCmdHandler->IntializeBinds();
 
 	m_pNetCl->SetRate(m_cvRate.ival);
 }
@@ -90,8 +75,6 @@ Destroy the client
 */
 CClient::~CClient()
 {
-//	m_pCmdHandler->WriteBinds("vbinds.cfg");
-
 	m_pNetCl->Disconnect(false);
 
 	if(m_pClRen)
@@ -110,7 +93,6 @@ CClient::~CClient()
 	delete m_pClState;
 
 	delete m_pNetCl;
-//	delete m_pCmdHandler;
 }
 
 /*
@@ -196,12 +178,6 @@ void CClient::RunFrame()
 	}
 	else 
 	{
-/*		m_pCmdHandler->UpdateCursorPos(m_pClState->m_moveAngles.x,
-										m_pClState->m_moveAngles.y,
-										m_pClState->m_moveAngles.z);
-
-		m_pCmdHandler->RunCommands();
-*/
 		m_pClState->RunFrame(System::GetFrameTime());
 
 		m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
@@ -275,8 +251,6 @@ void CClient::WriteUpdate()
 
 void CClient::SetInputState(bool on)  
 {	
-//	m_pCmdHandler->SetListenerState(on); 
-
 	if(on == true)
 	{
 		System::GetInputFocusManager()->SetCursorListener(m_pClState->m_pCmdHandler);
