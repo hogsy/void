@@ -1,33 +1,10 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "Cl_main.h"
 #include "I_renderer.h"
 #include "I_hud.h"
 #include "Snd_main.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
+#include "Cl_game.h"
 
 /*
 ======================================
@@ -51,7 +28,7 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			{
 				int clNum = buffer.ReadByte();
 				m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
-				ComPrintf("%s: %s\n",m_clients[clNum].name ,buffer.ReadString());
+				ComPrintf("%s: %s\n",m_pClState->m_clients[clNum].name ,buffer.ReadString());
 				break;
 			}
 		case SV_DISCONNECT:
@@ -75,8 +52,8 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLFULLINFO:
 			{
 				int num = buffer.ReadByte();
-				m_clients[num].Reset();
-				strcpy(m_clients[num].name, buffer.ReadString());
+				m_pClState->m_clients[num].Reset();
+				strcpy(m_pClState->m_clients[num].name, buffer.ReadString());
 
 				int mindex = buffer.ReadShort();
 				char model[64];
@@ -87,16 +64,16 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 
 				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
 
-				m_clients[num].mdlCache = CACHE_GAME;
-				m_clients[num].skinNum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
+				m_pClState->m_clients[num].mdlCache = CACHE_GAME;
+				m_pClState->m_clients[num].skinNum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
 				m_pClRen->LoadImage(path, CACHE_GAME, sindex);
-				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
+				m_pClState->m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
-				m_clients[num].mdlIndex = m_pClRen->LoadModel(path, CACHE_GAME,mindex);
-				m_clients[num].mdlCache = CACHE_GAME;
+				m_pClState->m_clients[num].mdlIndex = m_pClRen->LoadModel(path, CACHE_GAME,mindex);
+				m_pClState->m_clients[num].mdlCache = CACHE_GAME;
 
-				m_clients[num].inUse = true;
+				m_pClState->m_clients[num].inUse = true;
 
 				break;
 			}
@@ -108,8 +85,8 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				{
 					char * newName = buffer.ReadString();
 					m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
-					ComPrintf("%s renamed to %s\n", m_clients[num].name, newName);
-					strcpy(m_clients[num].name, newName);
+					ComPrintf("%s renamed to %s\n", m_pClState->m_clients[num].name, newName);
+					strcpy(m_pClState->m_clients[num].name, newName);
 				}
 				break;
 			}
@@ -117,21 +94,21 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			{
 				int  num = buffer.ReadByte();
 				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
-				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
-				m_clients[num].Reset();
+				ComPrintf("%s %s\n", m_pClState->m_clients[num].name, buffer.ReadString());
+				m_pClState->m_clients[num].Reset();
 				break;
 			}
 		case SV_CLUPDATE:
 			{
 				int num = buffer.ReadShort();
-				if(m_clients[num].inUse)
+				if(m_pClState->m_clients[num].inUse)
 				{
-					m_clients[num].origin.x = buffer.ReadCoord();
-					m_clients[num].origin.y = buffer.ReadCoord();
-					m_clients[num].origin.z = buffer.ReadCoord();
-					m_clients[num].angles.x = buffer.ReadAngle();
-					m_clients[num].angles.y = buffer.ReadAngle();
-					m_clients[num].angles.z = buffer.ReadAngle();
+					m_pClState->m_clients[num].origin.x = buffer.ReadCoord();
+					m_pClState->m_clients[num].origin.y = buffer.ReadCoord();
+					m_pClState->m_clients[num].origin.z = buffer.ReadCoord();
+					m_pClState->m_clients[num].angles.x = buffer.ReadAngle();
+					m_pClState->m_clients[num].angles.y = buffer.ReadAngle();
+					m_pClState->m_clients[num].angles.z = buffer.ReadAngle();
 				}
 				break;
 			}
@@ -212,22 +189,22 @@ ComPrintf("CL: Map: %s\n", map);
 	case SVC_BASELINES:
 		{
 			char  type = 0;
-			m_numEnts = 0;
+			m_pClState->m_numEnts = 0;
 			int id = buffer.ReadShort();
 
 			while(id != -1)
 			{
-				m_entities[id].Reset();
+				m_pClState->m_entities[id].Reset();
 
-				m_entities[id].moveType = (EMoveType)buffer.ReadByte();
+				m_pClState->m_entities[id].moveType = (EMoveType)buffer.ReadByte();
 
-				m_entities[id].origin.x = buffer.ReadCoord();
-				m_entities[id].origin.y = buffer.ReadCoord();
-				m_entities[id].origin.z = buffer.ReadCoord();
+				m_pClState->m_entities[id].origin.x = buffer.ReadCoord();
+				m_pClState->m_entities[id].origin.y = buffer.ReadCoord();
+				m_pClState->m_entities[id].origin.z = buffer.ReadCoord();
 
-				m_entities[id].angles.x = buffer.ReadAngle();
-				m_entities[id].angles.y = buffer.ReadAngle();
-				m_entities[id].angles.z = buffer.ReadAngle();
+				m_pClState->m_entities[id].angles.x = buffer.ReadAngle();
+				m_pClState->m_entities[id].angles.y = buffer.ReadAngle();
+				m_pClState->m_entities[id].angles.z = buffer.ReadAngle();
 
 				type = buffer.ReadChar();
 				while(type != 0)
@@ -236,20 +213,20 @@ ComPrintf("CL: Map: %s\n", map);
 					{
 					case 'm':
 						{
-							m_entities[id].mdlIndex = buffer.ReadShort();
-							m_entities[id].skinNum = buffer.ReadShort();
-							m_entities[id].frameNum = buffer.ReadShort();
-							m_entities[id].nextFrame = m_entities[id].frameNum;
-							m_entities[id].frac = 0;
-							m_entities[id].mdlCache = CACHE_GAME;
+							m_pClState->m_entities[id].mdlIndex = buffer.ReadShort();
+							m_pClState->m_entities[id].skinNum = buffer.ReadShort();
+							m_pClState->m_entities[id].frameNum = buffer.ReadShort();
+							m_pClState->m_entities[id].nextFrame = m_pClState->m_entities[id].frameNum;
+							m_pClState->m_entities[id].frac = 0;
+							m_pClState->m_entities[id].mdlCache = CACHE_GAME;
 							break;
 						}
 					case 's':
 						{
-							m_entities[id].sndCache = CACHE_GAME;
-							m_entities[id].sndIndex = buffer.ReadShort();
-							m_entities[id].volume = buffer.ReadShort();
-							m_entities[id].attenuation = buffer.ReadShort();
+							m_pClState->m_entities[id].sndCache = CACHE_GAME;
+							m_pClState->m_entities[id].sndIndex = buffer.ReadShort();
+							m_pClState->m_entities[id].volume = buffer.ReadShort();
+							m_pClState->m_entities[id].attenuation = buffer.ReadShort();
 							break;
 						}
 					}
@@ -259,14 +236,14 @@ ComPrintf("CL: Map: %s\n", map);
 				if(buffer.BadRead())
 				{
 					ComPrintf("Error reading Ent %d\n", id);
-					m_entities[id].Reset();
+					m_pClState->m_entities[id].Reset();
 					break;
 				}
-				m_entities[id].inUse = true;
-				m_numEnts ++;
+				m_pClState->m_entities[id].inUse = true;
+				m_pClState->m_numEnts ++;
 				id = buffer.ReadShort();
 			}
-			ComPrintf("CL: Parsed %d entities\n", m_numEnts);
+			ComPrintf("CL: Parsed %d entities\n", m_pClState->m_numEnts);
 			break;
 		}
 	case SVC_CLIENTINFO:
@@ -280,13 +257,16 @@ ComPrintf("CL: Map: %s\n", map);
 void CClient::BeginGame(int clNum, CBuffer &buffer)
 {
 	//Initialize local Client
-	m_pClient = &m_clients[clNum];
-	m_pClient->Reset();
-	strcpy(m_pClient->name, m_cvName.string);
-	m_pClient->inUse = true;
+	m_pClState->m_pGameClient = &m_pClState->m_clients[clNum];
+	m_pClState->m_pGameClient->Reset();
+	strcpy(m_pClState->m_pGameClient->name, m_cvName.string);
+	m_pClState->m_pGameClient->inUse = true;
 
 	HandleGameMsg(buffer);
-	BeginGame();
+	m_pClState->BeginGame();
+
+	System::SetGameState(INGAME);
+	SetInputState(true);
 }
 
 /*
@@ -343,7 +323,7 @@ Say something
 */
 void CClient::Talk(const char * string)
 {
-	if(!m_ingame)
+	if(!m_pClState->m_ingame)
 		return;
 
 	//parse to right after "say"
@@ -378,7 +358,7 @@ bool CClient::ValidateName(const CParms &parms)
 		ComPrintf("Name = \"%s\"\n", m_cvName.string);
 		return false;
 	}
-	if(!m_ingame)
+	if(!m_pClState->m_ingame)
 		return true;
 
 	m_pNetCl->GetReliableBuffer().WriteByte(CL_INFOCHANGE);
@@ -409,7 +389,7 @@ bool CClient::ValidateRate(const CParms &parms)
 	}
 
 	m_pNetCl->SetRate(rate);
-	if(!m_ingame)
+	if(!m_pClState->m_ingame)
 		return true;
 
 	CBuffer &buffer = m_pNetCl->GetReliableBuffer();
@@ -439,4 +419,3 @@ void CClient::ShowNetStats()
 	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
 }
-

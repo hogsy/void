@@ -1,7 +1,16 @@
 EXE
 ==============================================================
+
+-Clean up the client code
+-Clean up client input system. Commands can be routed to either the
+ clientside hud/menu system, or the game.
+ game ccommands can be bound directly instead of using input buffering ?
+-include forward/right/up angles in camera ?
+
+
 -Move client movement to server
--Add free/in use SoundSource lists in 3dsound manager
+-Add free/inuse SoundSource lists in 3dsound manager
+-Add free/inuse Wave lists in wavemanager
 
 
 

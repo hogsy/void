@@ -17,6 +17,7 @@ class  CWorld;
 struct I_Renderer;
 struct I_HudRenderer;
 
+
 /*
 =====================================
 Client class
@@ -66,29 +67,14 @@ public:
 	
 private:
 
-	//spawn for the first time.
-	void BeginGame();
 	bool LoadWorld(const char *worldname);
 	void UnloadWorld();
-
-	//==================================================
-	//Movement
-	void Move(vector_t &dir, float time);
-	void MoveForward();
-	void MoveBackward();
-	void MoveRight();
-	void MoveLeft();
-	void RotateRight(const float &val);
-	void RotateLeft(const float &val);
-	void RotateUp(const float &val);
-	void RotateDown(const float &val);
 
 	//==================================================
 	//Console commands
 	void Talk(const char * string);
 	bool ValidateName(const CParms &parms);
 	bool ValidateRate(const CParms &parms);
-	void CamPath();
 	void ShowNetStats();
 
 	//==================================================
@@ -102,22 +88,25 @@ private:
 	CVar	m_cvClip;
 	CVar	m_cvNetStats;
 
+	void WriteUpdate();
+
 	//==================================================
 	//Subsystems
-
 	friend class CClientGameCmd;
-	
+	friend class CClientState;
+
+	CClientGameCmd    * m_pCmdHandler;
+	CClientState      *	m_pClState;
+
 	I_Renderer		  * m_pRender;
 	I_ClientRenderer  * m_pClRen;
 	I_HudRenderer	  * m_pHud;
 
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;
-	CClientGameCmd    * m_pCmdHandler;
 	CNetClient		  * m_pNetCl;
 
-	//==================================================
-	//Client side stuff
+	
 
 	CWorld	 *  m_pWorld;
 
@@ -125,34 +114,7 @@ private:
 	int			m_hsMessage;	//handle to server message sound
 
 	float		m_fFrameTime;
-	bool		m_ingame;
 
-	int			m_numEnts;
-	ClEntity 	m_entities[GAME_MAXENTITIES];
-	ClClient 	m_clients[GAME_MAXCLIENTS];
-
-	ClClient *	m_pClient;
-	
-	ClCmd		m_cmd;
-	ClCmd		m_oldCmd;
-
-	void WriteUpdate();
-	void UpdateView();
-
-	
-	//This should hook up to the game client whne the client
-	//enters a game
-	CCamera	*	m_pCamera;
-
-	vector_t	m_screenBlend;
-
-	vector_t	desired_movement;
-	
-	int			m_campath;
-	float		m_camtime;
-	float		m_maxvelocity;
-
-	void Spawn(vector_t	*origin, vector_t *angles);
 };
 
 #endif

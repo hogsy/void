@@ -1,5 +1,5 @@
-#ifndef VOID_SOUND_INTERFACE
-#define VOID_SOUND_INTERFACE
+#ifndef VOID_SOUND_SYSTEM
+#define VOID_SOUND_SYSTEM
 
 /*
 ======================================

@@ -110,7 +110,7 @@ Client Command Handler
 */
 
 class CClientGameCmd : public I_InKeyListener,
-									 I_InCursorListener
+							  I_InCursorListener
 {
 public:
 

@@ -1,6 +1,7 @@
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 #include "Sys_cons.h"
+#include "Cl_game.h"
 
 //======================================================================================
 //======================================================================================
@@ -92,11 +93,11 @@ Handle Cursor Move Event
 ==========================================
 */
 void CClientGameCmd::HandleCursorEvent(const float &ix,
-										  const float &iy,
-										  const float &iz)
+									   const float &iy,
+									   const float &iz)
 {
-	m_refClient.RotateRight(ix);
-	m_refClient.RotateUp(iy);
+	m_refClient.m_pClState->RotateRight(ix);
+	m_refClient.m_pClState->RotateUp(iy);
 }
 
 

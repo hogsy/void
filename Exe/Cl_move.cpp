@@ -1,89 +1,95 @@
-#include "Cl_main.h"
+#include "Sys_hdr.h"
+#include "Com_vector.h"
 #include "Com_world.h"
+#include "Cl_defs.h"
+#include "Cl_main.h"
+#include "Cl_game.h"
+
 
 const float CL_ROTATION_SENS = 0.05f;
 
 
-void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
+//void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
+
 
 // FIXME - this should be an entitiy move, not a client move
-void CClient::Move(vector_t &dir, float time)
+void CClientState::Move(vector_t &dir, float time)
 {
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)
-//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pClient->origin, &dir, time);
+//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pGameClient->origin, &dir, time);
 
 	//Clipping should be on by default
-	if (m_cvClip.ival)
-		EntMove::ClientMove(m_pClient, dir, time);
-	else
-		EntMove::NoClipMove(m_pClient, dir, time);
+//	if (m_cvClip.ival)
+		EntMove::ClientMove(m_pGameClient, dir, time);
+///	else
+//		EntMove::NoClipMove(m_pGameClient, dir, time);
 }
 
 
 
-void CClient::MoveForward()
+void CClientState::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&m_pClient->angles, &forward, NULL, NULL);
+	AngleToVector (&m_pGameClient->angles, &forward, NULL, NULL);
 	VectorNormalize(&forward);
 	VectorAdd2(desired_movement,forward);
 }
 
-void CClient::MoveBackward()
+void CClientState::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&m_pClient->angles, &backword, NULL, NULL);
+	AngleToVector (&m_pGameClient->angles, &backword, NULL, NULL);
 	VectorNormalize(&backword);
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
 
-void CClient::MoveRight()
+void CClientState::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&m_pClient->angles, NULL, &right, NULL);
+	AngleToVector (&m_pGameClient->angles, NULL, &right, NULL);
 	VectorNormalize(&right);
 	VectorAdd2(desired_movement,right);
 }
 
-void CClient::MoveLeft()
+void CClientState::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&m_pClient->angles, NULL, &left, NULL);
+	AngleToVector (&m_pGameClient->angles, NULL, &left, NULL);
 	VectorNormalize(&left);
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
-void CClient::RotateRight(const float &val)
+void CClientState::RotateRight(const float &val)
 {
-	m_pClient->angles.YAW += (val * CL_ROTATION_SENS);  
-	if (m_pClient->angles.YAW > PI)
-		m_pClient->angles.YAW -= 2*PI;
+	m_pGameClient->angles.YAW += (val * CL_ROTATION_SENS);  
+	if (m_pGameClient->angles.YAW > PI)
+		m_pGameClient->angles.YAW -= 2*PI;
 }
 
-void CClient:: RotateLeft(const float &val)
+void CClientState:: RotateLeft(const float &val)
 {
-	m_pClient->angles.YAW -= (val * CL_ROTATION_SENS); 
-	if (m_pClient->angles.YAW < -PI)
-		m_pClient->angles.YAW += 2*PI;
+	m_pGameClient->angles.YAW -= (val * CL_ROTATION_SENS); 
+	if (m_pGameClient->angles.YAW < -PI)
+		m_pGameClient->angles.YAW += 2*PI;
 }
 
-void CClient::RotateUp(const float &val)
+void CClientState::RotateUp(const float &val)
 {
-	m_pClient->angles.PITCH +=  (val * CL_ROTATION_SENS);
-	if (m_pClient->angles.PITCH < -PI/2)
-		m_pClient->angles.PITCH = -PI/2;
-	if (m_pClient->angles.PITCH > PI/2)
-		m_pClient->angles.PITCH = PI/2;
+	m_pGameClient->angles.PITCH +=  (val * CL_ROTATION_SENS);
+	if (m_pGameClient->angles.PITCH < -PI/2)
+		m_pGameClient->angles.PITCH = -PI/2;
+	if (m_pGameClient->angles.PITCH > PI/2)
+		m_pGameClient->angles.PITCH = PI/2;
 }
 
-void CClient:: RotateDown(const float &val)
+void CClientState:: RotateDown(const float &val)
 {
-	m_pClient->angles.PITCH -=  (val * CL_ROTATION_SENS); 
-	if (m_pClient->angles.PITCH < -PI/2)
-		m_pClient->angles.PITCH = -PI/2;
-	if (m_pClient->angles.PITCH > PI/2)
-		m_pClient->angles.PITCH = PI/2;
+	m_pGameClient->angles.PITCH -=  (val * CL_ROTATION_SENS); 
+	if (m_pGameClient->angles.PITCH < -PI/2)
+		m_pGameClient->angles.PITCH = -PI/2;
+	if (m_pGameClient->angles.PITCH > PI/2)
+		m_pGameClient->angles.PITCH = PI/2;
 }
 
 
@@ -94,9 +100,9 @@ void CClient:: RotateDown(const float &val)
 follow a camera path
 ===========
 */
-void CClient::CamPath()
+void CClientState::CamPath()
 {
-	// find the head path node
+/*	// find the head path node
 	for (int ent=0; ent<m_pWorld->nentities; ent++)
 	{
 		if (strcmp(m_pWorld->GetKeyString(ent, "classname"), "misc_camera_path_head") == 0)
@@ -106,23 +112,23 @@ void CClient::CamPath()
 
 			vector_t origin;
 			m_pWorld->GetKeyVector(ent, "origin", origin);
-			VectorCopy(origin, m_pClient->origin); // move to first point of path
+			VectorCopy(origin, m_pGameClient->origin); // move to first point of path
 			return;
 		}
 	}
+*/
 }
 
 
 
-
 //======================================================================================
 //======================================================================================
 
 
-
+/*
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
 {
-/*
+
 	t /= 2.0f;
 
 	int eq = (int)t;
@@ -158,6 +164,6 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 
 	VectorSub(p, (*origin), (*dir));
 	time = VectorNormalize(dir);
-*/
-}
 
+}
+*/

@@ -267,6 +267,18 @@ SOURCE=..\Shared\Cl_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Cl_game.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cl_game.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cl_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Cl_main.cpp
 # End Source File
 # Begin Source File
@@ -280,10 +292,6 @@ SOURCE=.\Cl_move.cpp
 # Begin Source File
 
 SOURCE=.\Cl_net.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Cl_net.h
 # End Source File
 # End Group
 # Begin Group "Resources"
@@ -424,6 +432,10 @@ SOURCE=..\Shared\I_netclient.h
 # Begin Source File
 
 SOURCE=..\Shared\I_renderer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_sound.h
 # End Source File
 # Begin Source File
 

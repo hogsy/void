@@ -9,9 +9,8 @@
 #include "Net_protocol.h"
 #include "Com_camera.h"
 #include "Com_World.h"
+#include "Cl_game.h"
 
-//======================================================================================
-//======================================================================================
 
 /*
 ======================================
@@ -29,7 +28,6 @@ CClient::CClient(I_Renderer * prenderer,
 					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
 					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
-					m_pClient(0),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -41,13 +39,8 @@ CClient::CClient(I_Renderer * prenderer,
 
 	//Setup network listener
 	m_pNetCl= new CNetClient(this);
+	m_pClState = new CClientState(*this, m_pHud, m_pSound, m_pMusic);
 
-	m_ingame = false;
-	m_fFrameTime = 0.0f;
-
-	m_numEnts = 0;
-	
-	m_pCamera = 0;
 	
 	m_pWorld = 0;
 
@@ -71,6 +64,7 @@ CClient::CClient(I_Renderer * prenderer,
 	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
 	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
 	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
+
 	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
 	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
 	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
@@ -97,9 +91,6 @@ CClient::~CClient()
 
 	m_pNetCl->Disconnect(false);
 
-	if(m_pCamera)
-		delete m_pCamera;
-
 	if(m_pClRen)
 	{
 		m_pClRen->UnloadModelAll();
@@ -112,7 +103,8 @@ CClient::~CClient()
 	m_pSound = 0;
 	m_pMusic = 0;
 
-	m_pWorld = 0;
+
+	delete m_pClState;
 
 	delete m_pNetCl;
 	delete m_pCmdHandler;
@@ -132,6 +124,7 @@ bool CClient::LoadWorld(const char *worldname)
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
 	m_pWorld = CWorld::CreateWorld(mappath);
+
 	if(!m_pWorld)
 	{
 		ComPrintf("CClient::LoadWorld: World not found\n");
@@ -145,8 +138,7 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
-	//setup
-	EntMove::SetWorld(m_pWorld);
+	m_pClState->LoadWorld(m_pWorld);
 
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
@@ -156,55 +148,13 @@ bool CClient::LoadWorld(const char *worldname)
 }
 
 /*
-======================================
-Enter game
-======================================
-*/
-void CClient::BeginGame()
-{
-	m_campath = -1;
-	m_maxvelocity =  200.0f;
-	
-	m_pClient->moveType = MOVETYPE_STEP;
-	VectorSet(&m_pClient->angles, 0.0f,0.0f,0.0f);
-	VectorSet(&m_pClient->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&m_pClient->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&m_pClient->maxs, 10.0f, 10.0f, 10.0f);
-	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
-
-	VectorSet(&desired_movement, 0, 0, 0);
-
-	//Register static sound sources with SoundManager
-	for(int i=0; i< GAME_MAXENTITIES; i++)
-	{
-		if(m_entities[i].inUse && m_entities[i].sndIndex > -1)
-		{
-			m_entities[i].sndCache = CACHE_GAME;
-			m_entities[i].volume = 10;
-			m_entities[i].attenuation = 5;
-			m_pSound->AddStaticSource(&m_entities[i]);
-		}
-	}
-	
-	
-	m_pCamera = new CCamera(m_pClient->origin, m_pClient->angles, m_screenBlend);
-
-	m_ingame = true;
-
-	System::SetGameState(INGAME);
-	SetInputState(true);
-
-	Spawn(0,0);
-}
-
-/*
 =====================================
 Unload the world
 =====================================
 */
 void CClient::UnloadWorld()
 {
-	if(!m_ingame)
+	if(!m_pWorld)
 		return;
 
 	if(!m_pRender->UnloadWorld())
@@ -216,26 +166,7 @@ void CClient::UnloadWorld()
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 
-	EntMove::SetWorld(0);
-
-	delete m_pCamera;
-	m_pCamera = 0;
-
-	m_pClient = 0;
-
-	int i;
-	for(i=0; i< GAME_MAXCLIENTS; i++)
-		if(m_clients[i].inUse) 
-			m_clients[i].Reset();
-
-	for(i=0; i< GAME_MAXENTITIES; i++)
-		if(m_entities[i].inUse)
-		{
-			if(m_entities[i].sndIndex > -1)
-				m_pSound->RemoveStaticSource(&m_entities[i]);
-			m_entities[i].Reset();
-		}
-
+	m_pClState->UnloadWorld();
 
 	CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
@@ -243,11 +174,7 @@ void CClient::UnloadWorld()
 	m_pSound->UnregisterAll();
 	System::SetGameState(INCONSOLE);
 
-	m_ingame = false;
-}
-
-void CClient::Spawn(vector_t * origin, vector_t *angles)
-{
+	m_pClState->m_ingame = false;
 }
 
 /*
@@ -260,66 +187,70 @@ void CClient::RunFrame()
 	m_pNetCl->ReadPackets();
 
 	//draw the console or menues etc
-	if(!m_ingame)
+	if(!m_pClState->m_ingame)
 	{
 		m_pRender->Draw();
 		
 	}
-	else {
-
-	m_pCmdHandler->RunCommands();
-
-/*	if (!((desired_movement.x==0) && 
-		  (desired_movement.y==0) &&  
-		  (desired_movement.z==0)) || 
-		  (m_campath != -1))
+	else 
 	{
+
+		m_pCmdHandler->RunCommands();
+
+		m_pClState->RunFrame(System::GetFrameTime());
+
+	/*	if (!((desired_movement.x==0) && 
+			  (desired_movement.y==0) &&  
+			  (desired_movement.z==0)) || 
+			  (m_campath != -1))
+		{
+	*/
+/*
+			VectorNormalize(&desired_movement);
+			Move(desired_movement, System::GetFrameTime() * m_maxvelocity);
+			desired_movement.Set(0,0,0);
 */
+	//	}
 
-		VectorNormalize(&desired_movement);
-		Move(desired_movement, System::GetFrameTime() * m_maxvelocity);
-		desired_movement.Set(0,0,0);
-//	}
+		//Print Stats
+//		m_pHud->Printf(0, 50,0, "%.2f, %.2f, %.2f", 
+//				m_pGameClient->origin.x,  m_pGameClient->origin.y, m_pGameClient->origin.z);
+		m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
+			1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
+		
+		m_pHud->Printf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
 
-	//Print Stats
-	m_pHud->Printf(0, 50,0, "%.2f, %.2f, %.2f", 
-			m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
-	m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
-		1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
-	
-	m_pHud->Printf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
+		m_fFrameTime = System::GetCurTime();
 
-	m_fFrameTime = System::GetCurTime();
+		vector_t forward, up, velocity;
+		VectorSet(&velocity, 0,0,0);
+		AngleToVector(&m_pClState->m_pGameClient->angles, &forward, 0, &up);
+		m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
+		m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
-	vector_t forward, up, velocity;
-	VectorSet(&velocity, 0,0,0);
-	AngleToVector(&m_pClient->angles, &forward, 0, &up);
-	m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-	m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
+		if(m_cvNetStats.bval)
+			ShowNetStats();
 
-	if(m_cvNetStats.bval)
-		ShowNetStats();
+		m_pSound->UpdateListener(m_pClState->m_pGameClient->origin, velocity, up, forward);
 
-	m_pSound->UpdateListener(m_pClient->origin, velocity, up, forward);
+		//fix me. draw ents only in the pvs
+		for(int i=0; i< GAME_MAXENTITIES; i++)
+		{
+			if(m_pClState->m_entities[i].inUse && (m_pClState->m_entities[i].mdlIndex >= 0))
+				m_pClRen->DrawModel(m_pClState->m_entities[i]);	
+		}
+		
+		//Draw clients
+		for(i=0; i< GAME_MAXCLIENTS; i++)
+		{
+			if(m_pClState->m_clients[i].inUse && m_pClState->m_clients[i].mdlIndex >=0)
+				m_pClRen->DrawModel(m_pClState->m_clients[i]);
+		}
 
-	//fix me. draw ents only in the pvs
-	for(int i=0; i< GAME_MAXENTITIES; i++)
-	{
-		if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
-			m_pClRen->DrawModel(m_entities[i]);	
-	}
-	
-	//Draw clients
-	for(i=0; i< GAME_MAXCLIENTS; i++)
-	{
-		if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
-			m_pClRen->DrawModel(m_clients[i]);
-	}
-
-	UpdateView();
-	m_pRender->Draw(m_pCamera);
-	
-	WriteUpdate();
+		m_pClState->UpdateView();
+		m_pRender->Draw(m_pClState->m_pCamera);
+		
+		WriteUpdate();
 	}
 	
 	//Write updates
@@ -342,41 +273,11 @@ void CClient::WriteUpdate()
 		
 		buf.Reset();
 		buf.WriteByte(CL_MOVE);
-		buf.WriteFloat(m_cmd.time);
-		
-		buf.WriteShort(m_cmd.forwardmove);
-		buf.WriteShort(m_cmd.rightmove);
-		buf.WriteShort(m_cmd.upmove);
+		buf.WriteFloat(m_fFrameTime);
 
-		buf.WriteInt(m_cmd.angles[0]);
-		buf.WriteInt(m_cmd.angles[1]);
-		buf.WriteInt(m_cmd.angles[2]);
+		m_pClState->WriteCmdUpdate(buf);
 	}
 }
-
-
-/*
-======================================
-
-======================================
-*/
-void CClient::UpdateView()
-{
-	// FIXME - put this in game dll
-	int contents = m_pWorld->PointContents(m_pClient->origin);
-	if(contents & CONTENTS_SOLID)
-		VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
-	else if(contents & CONTENTS_WATER)
-		VectorSet(&m_screenBlend, 0, 1, 1);
-	else if(contents & CONTENTS_LAVA)
-		VectorSet(&m_screenBlend, 1, 0, 0);
-	else
-		VectorSet(&m_screenBlend, 1, 1, 1);
-}
-
-
-
-
 
 
 
@@ -395,28 +296,28 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 	switch(cmdId)
 	{
 	case CMD_MOVE_FORWARD:
-		MoveForward();
+		m_pClState->MoveForward();
 		break;
 	case CMD_MOVE_BACKWARD:
-		MoveBackward();
+		m_pClState->MoveBackward();
 		break;
 	case CMD_MOVE_LEFT:
-		MoveLeft();
+		m_pClState->MoveLeft();
 		break;
 	case CMD_MOVE_RIGHT:
-		MoveRight();
+		m_pClState->MoveRight();
 		break;
 	case CMD_ROTATE_LEFT:
-		RotateLeft(m_cvKbSpeed.fval);
+		m_pClState->RotateLeft(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_RIGHT:
-		RotateRight(m_cvKbSpeed.fval);
+		m_pClState->RotateRight(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_UP:
-		RotateUp(m_cvKbSpeed.fval);
+		m_pClState->RotateUp(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_DOWN:
-		RotateDown(m_cvKbSpeed.fval);
+		m_pClState->RotateDown(m_cvKbSpeed.fval);
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);
@@ -431,7 +332,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		m_pCmdHandler->Unbindall();
 		break;
 	case CMD_CAM:
-		CamPath();
+//		CamPath();
 		break;
 	case CMD_CONNECT:
 		{
