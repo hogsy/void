@@ -220,6 +220,7 @@ void CServer::UnloadGame()
 			ComPrintf("CServer::Shutdown: Failed to get Load Func\n");
 		::FreeLibrary(m_hGameDll);
 		m_hGameDll = 0;
+		m_pGame = 0;
 	}
 }
 
@@ -327,9 +328,12 @@ void CServer::UnloadWorld()
 {
 	//destroy world data
 	if(m_pWorld)
+	{
 		CWorld::DestroyWorld(m_pWorld);
-	m_pWorld = 0;
-	m_active = false;
+		m_pWorld = 0;
+		ComPrintf("CServer : Unloaded World\n");
+//		m_active = false;
+	}
 }
 
 /*
@@ -351,8 +355,6 @@ bool CServer::LoadWorld(const char * mapname)
 		return false;
 	}
 
-
-//	bool bRestarting = false;
 	char mappath[COM_MAXPATH];
 	char worldName[64];
 
@@ -361,46 +363,35 @@ bool CServer::LoadWorld(const char * mapname)
 	strcat(mappath, mapname);
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
-	//Restart if already active
-/*	if(m_active)
-	{	
-		Restart();
-		bRestarting = true;
-	}
-	else
-	{
-		if(!Init())
-		{	
-			ComPrintf("CServer::LoadWorld: Error initializing server\n");
-			return;
-		}
-	}
-*/
-
 	//Load World
 	m_pWorld = CWorld::CreateWorld(mappath);
 	if(!m_pWorld)
 	{
 		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
-//		Shutdown();
 		return false;
 	}
-	//Load Entitiys in the world
 	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
+
+	m_numModels=0;
+	m_numImages=0;
+	m_numSounds=0;
+	memset(m_modelList,0,sizeof(ResInfo)*GAME_MAXMODELS);
+	memset(m_imageList,0,sizeof(ResInfo)*GAME_MAXIMAGES);
+	memset(m_soundList,0,sizeof(ResInfo)*GAME_MAXSOUNDS);
+
+	//Load Entities in the world
 	LoadEntities();
 
-	//Write SignON data
+	//Write SignOn data
 	WriteSignOnBuffer();
+
+	//Write Client data
 
 	//update state
 	m_svState.levelId ++;
 	m_active = true;
 
-	//if its not a dedicated server, then push "connect loopback" into the console
-//	if(!bRestarting)
-//		System::GetConsole()->ExecString("connect localhost");
-
-	ComPrintf("CServer::LoadWorld : OK\n");
+	ComPrintf("CServer::LoadWorld: %s OK\n", m_svState.worldname);
 	return true;
 }
 
@@ -446,7 +437,7 @@ void CServer::LoadEntities()
 		}
 		m_pGame->SpawnEntity(entBuffer);
 	}
-	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
+	ComPrintf("SV: spawned %d entities, by %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
 }
 
 /*
@@ -491,9 +482,6 @@ void CServer::WriteSignOnBuffer()
 		m_signOnBufs.imageList[numBufs].WriteBuffer(buffer);
 	}
 	m_signOnBufs.numImageBufs = numBufs+1;
-	for(i=0;i<m_signOnBufs.numImageBufs; i++)
-		ComPrintf("SignOn ImageBuf %d : %d bytes\n", i, m_signOnBufs.imageList[i].GetSize()); 
-
 	
 	//==================================
 	//Write	modellist
@@ -520,8 +508,6 @@ void CServer::WriteSignOnBuffer()
 		m_signOnBufs.modelList[numBufs].WriteBuffer(buffer);
 	}
 	m_signOnBufs.numModelBufs= numBufs+1;
-	for(i=0;i<m_signOnBufs.numModelBufs; i++)
-		ComPrintf("SignOn ModelBuf %d : %d bytes\n", i, m_signOnBufs.modelList[i].GetSize()); 
 
 	//==================================
 	//Write Soundlist
@@ -548,8 +534,7 @@ void CServer::WriteSignOnBuffer()
 		m_signOnBufs.soundList[numBufs].WriteBuffer(buffer);
 	}
 	m_signOnBufs.numSoundBufs= numBufs+1;
-	for(i=0;i<m_signOnBufs.numSoundBufs; i++)
-		ComPrintf("SignOn SoundBuf %d : %d bytes\n", i, m_signOnBufs.soundList[i].GetSize()); 
+
 
 	
 	//==================================
@@ -577,8 +562,16 @@ void CServer::WriteSignOnBuffer()
 	}
 
 	m_signOnBufs.numEntityBufs= numBufs+1;
+
+	//Debug info
+	for(i=0;i<m_signOnBufs.numModelBufs; i++)
+		ComPrintf("SignOn ModelBuf %d  : %d bytes\n", i, m_signOnBufs.modelList[i].GetSize()); 
+	for(i=0;i<m_signOnBufs.numImageBufs; i++)
+		ComPrintf("SignOn ImageBuf %d  : %d bytes\n", i, m_signOnBufs.imageList[i].GetSize()); 
+	for(i=0;i<m_signOnBufs.numSoundBufs; i++)
+		ComPrintf("SignOn SoundBuf %d  : %d bytes\n", i, m_signOnBufs.soundList[i].GetSize()); 
 	for(i=0;i<m_signOnBufs.numEntityBufs; i++)
-		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, m_signOnBufs.entityList[i].GetSize()); 
+		ComPrintf("SignOn EntityBuf %d : %d bytes\n", i, m_signOnBufs.entityList[i].GetSize()); 
 }
 
 /*
@@ -635,7 +628,6 @@ void CServer::PrintServerStatus()
 	ComPrintf("Game Path  : %s\n", m_svState.gameName);
 	ComPrintf("Hostname	  : %s\n", m_svState.hostName);
 	ComPrintf("Max clients: %d\n", m_svState.maxClients);
-	ComPrintf("Port       : %d\n", m_svState.port);
 
 	if(!m_active)
 	{
@@ -644,6 +636,7 @@ void CServer::PrintServerStatus()
 	}
 
 	ComPrintf("Local Addr : %s\n", m_svState.localAddr);
+	ComPrintf("Port       : %d\n", m_svState.port);
 	ComPrintf("Map name   : %s\n", m_svState.worldname);
 	ComPrintf("Map id     : %d\n", m_svState.levelId);
 
@@ -710,24 +703,33 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_MAP:
 		{
 			bool bRestarting = m_active;
+			char mapname[64];
+			parms.StringTok(1,(char*)mapname,64);
+
 			if(m_active)
 			{
 				//Send Reconnects if active right now
-				m_net.Restart();
+				m_net.SendReconnectToAll();
+
+				//FIXME. check for dedicated
+				System::GetConsole()->ExecString("reconnect");
+
 				Shutdown();
 			}
 
 			if(Init())
 			{
-				char mapname[64];
-				parms.StringTok(1,(char*)mapname,64);
-				LoadWorld(mapname);
+				if(!LoadWorld(mapname))
+				{
+					ComPrintf("CServer:: Error changing map. Shutting down\n");
+					Shutdown();
+					return;
+				}
 
 				//FIXME, check for dedicated
 				if(!bRestarting)
-					AddServerCmd("connect localhost");
+					System::GetConsole()->ExecString("connect localhost");
 			}
-
 			break;
 		}
 	case CMD_CHANGELEVEL:
@@ -747,9 +749,17 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 				return;
 			}
 
-			m_net.Restart();
+			m_net.SendReconnectToAll();
+			//FIXME. check for dedicated
+			System::GetConsole()->ExecString("reconnect");
+
 			UnloadWorld();
-			LoadWorld(mapname);
+			if(!LoadWorld(mapname))
+			{
+				ComPrintf("CServer:: Error changing map. Shutting down\n");
+				Shutdown();
+				return;
+			}
 			break;
 		}
 	case CMD_KILLSERVER:

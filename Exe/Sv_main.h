@@ -138,12 +138,13 @@ private:
 	void WriteSignOnBuffer();
 	
 	//=================================================
-	//List of currenly loaded Resources
+	//List of loaded Resources. Gets reset on every map change
 	struct ResInfo
 	{
-		ResInfo()  { name = 0; } 
-		~ResInfo() { if(name) delete[] name; }
-		char * name; 
+		ResInfo()  { name[0] = 0; } 
+//		~ResInfo() { if(name) delete[] name; }
+//		void Reset() { memset(name,0,ENT_MAXSTRING); }
+		char name[ENT_MAXSTRING]; 
 	};
 
 	ResInfo	m_modelList[GAME_MAXMODELS];

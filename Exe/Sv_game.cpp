@@ -76,13 +76,13 @@ int CServer::RegisterModel(const char * model)
 	for(int i=0; i<GAME_MAXMODELS; i++)
 	{
 		//we reached the end, no more models after this
-		if(!m_modelList[i].name)
+		if(!m_modelList[i].name[0])
 			break;
 		if(strcmp(m_modelList[i].name, model) == 0)
 		    return i;
 	}
 	m_numModels ++;
-	m_modelList[i].name = new char[strlen(model)+1];
+//	m_modelList[i].name = new char[strlen(model)+1];
 	strcpy(m_modelList[i].name,model);
 	return i;
 }
@@ -101,13 +101,13 @@ int CServer::RegisterSound(const char * sound)
 	for(int i=0; i<GAME_MAXSOUNDS; i++)
 	{
 		//we reached the end, no more models after this
-		if(!m_soundList[i].name)
+		if(!m_soundList[i].name[0])
 			break;
 		if(strcmp(m_soundList[i].name, sound) == 0)
 		    return i;
 	}
 	m_numSounds ++;
-	m_soundList[i].name = new char[strlen(sound)+1];
+//	m_soundList[i].name = new char[strlen(sound)+1];
 	strcpy(m_soundList[i].name,sound);
 	return i;
 }
@@ -126,13 +126,13 @@ int CServer::RegisterImage(const char * image)
 	for(int i=0; i<GAME_MAXIMAGES; i++)
 	{
 		//we reached the end, no more models after this
-		if(!m_imageList[i].name)
+		if(!m_imageList[i].name[0])
 			break;
 		if(strcmp(m_imageList[i].name, image) == 0)
 		    return i;
 	}
 	m_numImages ++;
-	m_imageList[i].name = new char[strlen(image)+1];
+//	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
 	return i;
 }

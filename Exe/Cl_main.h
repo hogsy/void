@@ -38,7 +38,8 @@ private:
 	friend class CClientExports;
 
 	//Hacks 
-	void SetClientState(int state);
+//	void SetClientState(int state);
+	void HandleNetEvent(int event);
 	void SetNetworkRate(int rate);
 
 	CWorld * LoadWorld(const char *worldname);
@@ -52,7 +53,8 @@ private:
 	CVar		m_cvPort;
 	CVar		m_cvNetStats;
 
-	int			m_clientState;
+//	int			m_clientState;
+	bool	m_bInGame;
 	float		m_fFrameTime;
 	CWorld *	m_pWorld;
 	

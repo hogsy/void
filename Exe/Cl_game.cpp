@@ -67,13 +67,17 @@ Destructor
 */
 CGameClient::~CGameClient()
 {
+//	HandleDisconnect();
+
 	m_pCmdHandler->WriteBinds("vbinds.cfg");
 
-	if(m_pCamera)
+/*	if(m_pCamera)
 		delete m_pCamera;
 	
 	m_pGameClient = 0;
 	m_pWorld = 0;
+*/
+	UnloadWorld();
 
 	delete m_pCmdHandler;
 }

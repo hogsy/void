@@ -23,11 +23,14 @@ struct ClEntity;
 class  CBuffer;
 
 
-enum EClState
+//Have the main client handle network events
+enum EClEvent
 {
-	CLIENT_DISCONNECTED =0,
-	CLIENT_RECONNECTING =1,
-	CLIENT_INGAME =2
+	CLIENT_SV_DISCONNECTED =0,	//Server prompted
+	CLIENT_DISCONNECTED = 1,	
+	CLIENT_SV_RECONNECTING =2,	//Server prompted
+	CLIENT_RECONNECTING = 3,
+	CLIENT_BEGINGAME =4
 };
 
 
@@ -64,7 +67,7 @@ struct I_ClientGame
 				   int chantype = CHAN_AUTO)=0;
 
 	//Client
-	virtual void SetClientState(EClState state)=0;
+	virtual void HandleNetEvent(EClEvent event)=0;
 	virtual void SetNetworkRate(int rate)=0;
 	
 	virtual CWorld * LoadWorld(const char * worldName)=0;

@@ -76,8 +76,9 @@ public:
 	}
 
 	//Client
-	inline void SetClientState(EClState state)
-	{	m_refClient.SetClientState(static_cast<int>(state));
+	//inline void SetClientState(EClState state)
+	inline void HandleNetEvent(EClEvent event)
+	{	m_refClient.HandleNetEvent(static_cast<int>(event));
 	}
 	
 	inline void SetNetworkRate(int rate)

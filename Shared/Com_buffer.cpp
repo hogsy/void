@@ -6,10 +6,9 @@
 Constructor/Destructor
 ==========================================
 */
-CBuffer::CBuffer(int size)
+CBuffer::CBuffer(int size): m_maxSize(size)
 {
 	m_buffer = new byte[size];
-	m_maxSize = size;
 	m_curSize = 0;
 
 	m_readCount = 0;
@@ -30,13 +29,15 @@ void  CBuffer::Reset()
 	m_overFlowed = false;
 	m_curSize = 0;
 	m_readCount = 0;
+
+	memset(m_buffer,0, m_maxSize);
 }
 
 byte* CBuffer::GetSpace(int size)
 {
 	if(m_curSize + size >= m_maxSize)
 	{
-//		ComPrintf("CBuffer:: Buffer overflowed\n");
+		ComPrintf("CBuffer:: Buffer overflowed\n");
 		m_curSize = 0;
 		m_overFlowed = true;
 	}

@@ -53,9 +53,10 @@ CClient::CClient(I_Renderer * pRenderer,
 	//Setup network listener
 	m_pNetCl= new CNetClient(m_pClState);
 	
-	m_clientState = CLIENT_DISCONNECTED;
+//	m_clientState = CLIENT_DISCONNECTED;
 	m_fFrameTime  = 0.0f;
 	m_pWorld = 0;
+	m_bInGame = false;
 
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
 	System::GetConsole()->RegisterCVar(&m_cvNetStats);
@@ -72,7 +73,8 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	m_pNetCl->Disconnect(false);
+//	m_pNetCl->Disconnect(false);
+	HandleNetEvent(CLIENT_DISCONNECTED);
 
 	delete m_pClState;
 	delete m_pNetCl;
@@ -122,7 +124,8 @@ CWorld * CClient::LoadWorld(const char *worldname)
 		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
 	}
 
-	m_pNetCl->Disconnect(false);
+	HandleNetEvent(CLIENT_DISCONNECTED);
+//	m_pNetCl->Disconnect(false);
 	return 0;
 
 
@@ -172,8 +175,12 @@ void CClient::UnloadWorld()
 		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
 
-	m_clientState = CLIENT_DISCONNECTED;
+	m_bInGame = false;
+
+//	m_clientState = CLIENT_DISCONNECTED;
 	System::SetGameState(INCONSOLE);
+
+	ComPrintf("CL: Unloaded world\n");
 }
 
 /*
@@ -185,7 +192,8 @@ void CClient::RunFrame()
 {
 	m_pNetCl->ReadPackets();
 
-	if(m_clientState == CLIENT_INGAME)
+//if(m_clientState == CLIENT_INGAME)
+	if(m_bInGame)
 	{
 		//Print FPS, Update frame time
 		m_pHud->Printf(0,50,0, "%3.2f : %4.2f", 1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
@@ -247,23 +255,46 @@ void CClient::WriteUpdate()
 Update Client state
 ================================================
 */
-void CClient::SetClientState(int state)
+//void CClient::SetClientState(int state)
+void CClient::HandleNetEvent(int event)
 {
-	switch(state)
+//	m_bInGame = false;
+
+	switch(event)
 	{
 	case CLIENT_DISCONNECTED:
-		m_pNetCl->Disconnect(true);
-		break;
+		{
+			if(m_pNetCl->IsLocalServer())
+			{
+ComPrintf("CL: KILLING local server\n");
+				System::GetConsole()->ExecString("killserver");
+			}
+			m_pNetCl->Disconnect(false);
+			break;
+		}
+	case CLIENT_SV_DISCONNECTED:
+		{
+			m_pNetCl->Disconnect(true);
+			break;
+		}
 	case CLIENT_RECONNECTING:
-		m_pNetCl->Reconnect(true);
-		break;
-	case CLIENT_INGAME:
-		System::SetGameState(::INGAME);
-		break;
-	default:
-		return;
+		{
+			m_pNetCl->Reconnect(false);
+			break;
+		}
+	case CLIENT_SV_RECONNECTING:
+		{
+			m_pNetCl->Reconnect(true);
+			break;
+		}
+	case CLIENT_BEGINGAME:
+		{
+			m_bInGame = true;
+			System::SetGameState(::INGAME);
+			break;
+		}
 	};
-	m_clientState = state;
+//	m_clientState = state;
 }
 
 /*
@@ -312,10 +343,6 @@ void CClient::SetNetworkRate(int rate)
 {	m_pNetCl->SetRate(rate);
 }
 
-
-
-
-
 //==========================================================================
 //==========================================================================
 
@@ -336,12 +363,20 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 			break;
 		}
 	case CMD_DISCONNECT:
-		m_clientState = CLIENT_DISCONNECTED;
-		m_pNetCl->Disconnect(false);
-		break;
+		{
+ComPrintf("CL : Disconnecting\n");
+//			m_clientState = CLIENT_DISCONNECTED;
+			HandleNetEvent(CLIENT_DISCONNECTED);
+//			m_pNetCl->Disconnect(false);
+			break;
+		}
 	case CMD_RECONNECT:
-		m_clientState = CLIENT_RECONNECTING;
-		m_pNetCl->Reconnect(false);
+	//	m_clientState = CLIENT_RECONNECTING;
+		{
+ComPrintf("CL : Reconnecting\n");
+			HandleNetEvent(CLIENT_RECONNECTING);
+		}
+//		m_pNetCl->Reconnect(false);
 		break;
 	}
 }

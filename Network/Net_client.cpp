@@ -165,8 +165,6 @@ void CNetClient::SendUpdate()
 	}
 }
 
-
-
 /*
 ============================================================================
 Handle reading of all the Config Strings
@@ -507,4 +505,9 @@ bool CNetClient::CanSend()
 
 bool CNetClient::CanSendReliable()
 {	return m_reliableBuf.HasSpace(1);
+}
+
+bool CNetClient::IsLocalServer() const
+{
+	return m_bLocalServer;
 }

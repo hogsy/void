@@ -162,11 +162,12 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 	m_svState.numClients = m_pGame->numClients;
 
 	//TODO: Only if the server isn't dedicated
-	if(m_svState.numClients == 0)
+/*	if(m_svState.numClients == 0)
 	{
-ComPrintf("No Clients left. Disconnecting\n");
+ComPrintf("SV: No Clients left. Shutting down\n");
 		AddServerCmd("killserver");
 	}
+*/
 }
 
 

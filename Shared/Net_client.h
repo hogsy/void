@@ -71,6 +71,7 @@ public:
 	void SetPort(short port);
 	void SetRate(int rate);
 	
+	bool IsLocalServer() const;
 	const NetChanState & GetChanState() const;
 
 private:

@@ -38,7 +38,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			{
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
-				m_pClGame->SetClientState(CLIENT_DISCONNECTED);
+				m_pClGame->HandleNetEvent(CLIENT_SV_DISCONNECTED);
 				break;
 			}
 		case SV_PRINT:	//just a print message
@@ -49,7 +49,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_RECONNECT:
 			{
-				m_pClGame->SetClientState(CLIENT_RECONNECTING);
+				m_pClGame->HandleNetEvent(CLIENT_SV_RECONNECTING);
 				break;
 			}
 		case SV_CLFULLINFO:
@@ -151,7 +151,7 @@ ComPrintf("CL: Map: %s\n", map);
 			int  modelId=0;
 
 			int numModels = buffer.ReadShort();
-			ComPrintf("CL: ModelList :%d models\n", numModels);
+			ComPrintf("CL: ModelList :%d models: %d bytes\n", numModels, buffer.GetSize());
 
 			for(int i=0; i<numModels;i++)
 			{
@@ -171,7 +171,7 @@ ComPrintf("CL: Map: %s\n", map);
 			int  soundId=0;
 
 			int numSounds = buffer.ReadShort();
-			ComPrintf("CL: SoundList :%d models\n", numSounds);
+			ComPrintf("CL: SoundList :%d sounds: %d bytes\n", numSounds, buffer.GetSize());
 
 			for(int i=0; i<numSounds;i++)
 			{
@@ -183,18 +183,21 @@ ComPrintf("CL: Map: %s\n", map);
 				}
 				m_pClGame->RegisterSound(soundName,CACHE_GAME, soundId);
 			}
-			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
 			break;
 		}
 	case SVC_IMAGELIST:
 		{
-			ComPrintf("CL: ImageList :%d\n", buffer.GetSize());
+			int numImages = buffer.ReadShort();
+			ComPrintf("CL: ImageList :%d images: %d bytes\n", numImages, buffer.GetSize());
 			break;
 		}
 	case SVC_BASELINES:
 		{
 			char  type = 0;
 			m_numEnts = 0;
+
+			ComPrintf("CL: Ent Baselines :%d bytes\n", buffer.GetSize());
+
 			int id = buffer.ReadShort();
 
 			while(id != -1)
@@ -397,7 +400,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 							m_vecForward, m_vecRight, m_vecUp,	m_vecVelocity);
 
 	m_ingame = true;
-	m_pClGame->SetClientState(CLIENT_INGAME);
+	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
 	Spawn(0,0);
 }
 

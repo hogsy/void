@@ -104,8 +104,7 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 		if(addrFlags & IFF_UP)
 		{
 			//If we need to bind to a specific address
-			if(m_pSvState->localAddr[0] &&
-			   (strcmp(m_pSvState->localAddr,pAddrString) ==0))
+			if(m_pSvState->localAddr[0] &&  (strcmp(m_pSvState->localAddr,pAddrString) ==0))
 			{
 			   bFoundAddr = true;
 			   break;
@@ -135,28 +134,34 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 			strcpy(szBestAddr,"127.0.0.1");
 	}
 
-	sprintf(m_szLocalAddr,"%s:%d",szBestAddr,m_pSvState->port);
+
+	
+	char ipAddr[NET_IPADDRLEN];
+	sprintf(ipAddr,"%s:%d",szBestAddr,m_pSvState->port);
 
 	//Validate address
-	CNetAddr netaddr(m_szLocalAddr);
+	CNetAddr netaddr(ipAddr);
 	if(!netaddr.IsValid())
 	{
-		ComPrintf("CNetServer::Init: Unable to resolve ip address: %s\n", m_szLocalAddr);
-//		memset(m_szLocalAddr,0,sizeof(m_szLocalAddr));
+		ComPrintf("CNetServer::Init: Unable to resolve ip address: %s\n", ipAddr);
 		Shutdown();
 		return false;
 	}
-
-	//Save Local Address
-	CNetAddr::SetLocalServerAddr(m_szLocalAddr);
 
 	//Bind Socket
 	if(!m_pSock->Bind(netaddr))
 	{
-		ComPrintf("CNetServer::Init:Unable to bind socket to  %s\n", m_szLocalAddr );
+		ComPrintf("CNetServer::Init:Unable to bind socket to  %s\n", ipAddr );
 		Shutdown();
 		return false;
 	}
+
+	//Save IP Addr
+	strcpy(m_szIPAddr,szBestAddr);
+
+	//Save Local Address
+	CNetAddr::SetLocalServerAddr(ipAddr);
+
 	return true;
 }
 
@@ -182,8 +187,8 @@ void CNetServer::Shutdown()
 		m_clChan = 0;
 	}
 
-	memset(m_szLocalAddr,0,sizeof(m_szLocalAddr));
-	CNetAddr::SetLocalServerAddr(m_szLocalAddr);
+	memset(m_szIPAddr,0,sizeof(m_szIPAddr));
+	CNetAddr::SetLocalServerAddr(m_szIPAddr);
 
 	m_pMultiCast = 0;
 	m_pSock->Close();
@@ -195,7 +200,7 @@ Server will be restarting. Ask all
 clients to reconnect
 ======================================
 */
-void CNetServer::Restart()
+void CNetServer::SendReconnectToAll()
 {
 	for(int i=0;i<m_pSvState->maxClients;i++)
 	{

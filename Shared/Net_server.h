@@ -165,7 +165,6 @@ public:
 	//Management
 	bool Init(I_Server * server, const ServerState * state);
 	void Shutdown();
-	void Restart();
 
 	//ReadPacket should be called at the beginning of the
 	//server frame, and SendPackets at the end
@@ -198,6 +197,7 @@ public:
 	
 	//Have the given Client reconnect
 	void SendReconnect(int chanId);
+	void SendReconnectToAll();
 
 	//Have the client disconnect. Give reason
 	void SendDisconnect(int chanId, const DisconnectReason &reason);
@@ -208,7 +208,7 @@ public:
 
 	//Access functions
 	bool IsActive() const;
-	const char * GetLocalAddr() const { return m_szLocalAddr; }
+	const char * GetLocalAddr() const { return m_szIPAddr; }
 
 private:
 
@@ -228,7 +228,7 @@ private:
 	CBuffer	m_recvBuf;
 	CBuffer	m_sendBuf;
 
-	char	m_szLocalAddr[NET_IPADDRLEN];
+	char    m_szIPAddr[NET_IPADDRLEN];
 
 	struct NetChallenge;
 	NetChallenge		* m_challenges;
