@@ -29,8 +29,8 @@ extern I_Rasterizer  * g_pRast;
 //The World
 extern CWorld	*world;
 
-float & GetCurTime();
-float & GetFrameTime();
+float GetCurTime();
+float GetFrameTime();
 const char * GetCurPath();
 
 void FError(char *error, ...);		//Fatal Error, shutdown and exit

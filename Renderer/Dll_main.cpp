@@ -90,11 +90,11 @@ void ComPrintf(const char* text, ...)
 	g_pConsole->ComPrint(buff);
 }
 
-float & GetCurTime()
+float GetCurTime()
 {	return g_pVoidExp->GetCurTime();
 }
 
-float & GetFrameTime()
+float GetFrameTime()
 {	return g_pVoidExp->GetFrameTime();
 }
 
