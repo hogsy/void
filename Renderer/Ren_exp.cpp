@@ -46,8 +46,10 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	g_pTex     = new CTextureManager();
 	g_pClient  = new CClientRenderer();
 	
-	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
+	g_pConsole->RegisterCVar(&m_cFull,this);
+	g_pConsole->RegisterCVar(&m_cBpp,this);
+	g_pConsole->RegisterCVar(&m_cRes,this);
 
 	if (_stricmp(m_cRast.string, "gl")==0)
 		g_pRast = new COpenGLRast();
@@ -55,10 +57,6 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 		g_pRast = new CRastNone();
 	else
 		g_pRast = new CRastD3DX();
-
-	g_pConsole->RegisterCVar(&m_cFull,this);
-	g_pConsole->RegisterCVar(&m_cBpp,this);
-	g_pConsole->RegisterCVar(&m_cRes,this);
 }
 
 /*
@@ -116,7 +114,9 @@ bool CRenExp::InitRenderer()
 
 	//parse width and height out of string
 	char *c = strchr(m_cRes.string, ' ');
-	if(c)
+	if(!c)
+		ComPrintf("CRenExp::InitRenderer::Unable to read x-y resolution from %s\n", m_cRes.string);
+	else
 	{
 		char tmp[8];
 		
@@ -154,6 +154,12 @@ bool CRenExp::InitRenderer()
 		Shutdown();
 		return false;
 	}
+
+	//Update the res/bpp cvars
+	char res[16];
+	sprintf(res,"%d %d", g_rInfo.width, g_rInfo.height);
+	m_cRes.ForceSet(res);
+	m_cBpp.ForceSet((int)g_rInfo.bpp);
 
 	//Start up the renderer
 	r_init();
@@ -229,22 +235,6 @@ void CRenExp::Draw(const CCamera * camera)
 	g_pRast->ReportErrors();
 #endif
 }
-
-/*
-void CRenExp::DrawConsole()
-{	
-	g_pRast->SetFocus();
-//	r_drawcons();
-
-	m_pRConsole->Draw();
-	g_pRast->FrameEnd();
-
-// make sure all was well
-#ifdef _DEBUG
-	g_pRast->ReportErrors();
-#endif
-}
-*/
 
 /*
 ==========================================
@@ -352,7 +342,6 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		return;
 	}
 */
-
 
 	// shut the thing down
 
@@ -479,32 +468,30 @@ bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 	else if(argc > 1)
 	{
 		int temp= parms.IntTok(1);
-//		if((argv[1]) && (sscanf(argv[1],"%d",&temp)))
-//		{
-			if(temp <= 0)
-			{
-				if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
-				{	ComPrintf("Already in windowed mode\n");
-					return false;
-				}
-				ComPrintf("Switching to windowed mode\n");
-				
-				if(g_rInfo.ready)
-					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
+
+		if(temp <= 0)
+		{
+			if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
+			{	ComPrintf("Already in windowed mode\n");
+				return false;
 			}
-			else if( temp > 0)
-			{
-				if(g_rInfo.rflags & RFLAG_FULLSCREEN)
-				{	ComPrintf("Already in fullscreen mode\n");
-					return false;
-				}
-				ComPrintf("Switching to fullscreen mode\n");
-				
-				if(g_rInfo.ready)
-					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
+			ComPrintf("Switching to windowed mode\n");
+			
+			if(g_rInfo.ready)
+				ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
+		}
+		else if( temp > 0)
+		{
+			if(g_rInfo.rflags & RFLAG_FULLSCREEN)
+			{	ComPrintf("Already in fullscreen mode\n");
+				return false;
 			}
-			return true;
-//		}
+			ComPrintf("Switching to fullscreen mode\n");
+			
+			if(g_rInfo.ready)
+				ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
+		}
+		return true;
 	}
 	return false;
 }
@@ -517,32 +504,46 @@ Handle Resolution changes
 bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 {
 	int argc = parms.NumTokens();
-	if(argc ==1)
+	if(argc == 1)
 		ComPrintf("Running in %s resolution\n", var->string);
-	else if(argc >2)
+	else if(argc > 2)
 	{
-		uint x=0, y=0;
 
-		x = parms.IntTok(1);
-		y = parms.IntTok(2);
+		char resString[16];
+		parms.StringTok(1,resString,16);
 
-		if(!x || !y)
+		char *c = strchr(resString, ' ');
+		if(!c)
 		{
-			ComPrintf("CVar_Res::Bad entries\n");
+			ComPrintf("Unable to read resolution in \"%s\". Format is \"x y\"\n", resString);
+			return false;
+		}
+		
+		char tmp[8];
+		uint x=0, y=0;
+		
+		//Read Width
+		int i = c - resString;
+		strncpy(tmp,resString,i);
+		sscanf(tmp,"%d",&x);
+
+		//Read Height
+		c++;
+		strcpy(tmp,resString+i+1);
+		sscanf(tmp,"%d",&y);
+
+		if(x <= 0)
+		{
+			ComPrintf("CVar_Res::Bad entry for Horizontal Resolution\n");
 			return false;
 		}
 
-/*		if(!sscanf(argv[1],"%d",&x))
+		if(y <= 0)
 		{
-			ComPrintf("CVar_Res::Bad entry for Horizontal Resolution, Defaulting\n");
-			x = g_rInfo.width;
+			ComPrintf("CVar_Res::Bad entry for Vertical Resolution\n");
+			return false;
 		}
-		if(!sscanf(argv[2],"%d",&y))
-		{
-			ComPrintf("CVar_Res::Bad entry for Vertical Resolution, Defaulting\n");
-			y = g_rInfo.height;
-		}
-*/
+
 		// no go if we're not changing
 		if ((g_rInfo.width == x) && (g_rInfo.height == y))
 		{
@@ -556,8 +557,6 @@ bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 			ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}
-	else
-		ComPrintf("Invalid number of parameters\n");
 	return false;
 }
 

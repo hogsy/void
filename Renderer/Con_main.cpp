@@ -25,6 +25,9 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 	
 	m_status = CON_OPEN;
 	m_fullscreen = true;
+	m_condown = true;
+	
+	UpdateRes();
 
 	//Allocate space for Lines
 	for (int i = 0; i < CON_MAX_LINES; i++)
