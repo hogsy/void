@@ -1,3 +1,6 @@
+#include "Sys_hdr.h"
+#include "Com_vector.h"
+#include "Cl_game.h"
 #include "Snd_main.h"
 #include "Snd_hdr.h"
 #include "Snd_buf.h"

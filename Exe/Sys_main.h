@@ -6,13 +6,13 @@
 #include "Sys_hdr.h"
 #include "Sys_time.h"
 #include "In_main.h"
-#include "Snd_main.h"
 #include "Mus_main.h"
 #include "Sv_main.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
 #include "Sys_exp.h"
 #include "Cl_main.h"
+#include "Snd_main.h"
 #include "Sys_cons.h"
 
 //========================================================================================

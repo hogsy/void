@@ -1,4 +1,6 @@
 #include "Sys_hdr.h"
+#include "I_console.h"
+#include "In_defs.h"
 #include "Sys_cons.h"
 #include "I_renderer.h"
 #include "Com_util.h"

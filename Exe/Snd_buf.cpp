@@ -1,3 +1,4 @@
+#include "Snd_hdr.h"
 #include "Snd_buf.h"
 
 using namespace VoidSound;

@@ -1,10 +1,6 @@
 #ifndef VOID_SOUND_INTERFACE
 #define VOID_SOUND_INTERFACE
 
-#include "Sys_hdr.h"
-#include "Com_vector.h"
-#include "Cl_game.h"
-
 /*
 ======================================
 Private stuff
@@ -17,6 +13,7 @@ namespace VoidSound
 	class CSoundChannel;	//A sound buffer which actually gets played
 	class C3DListener;		//The 3d Sound listener
 }
+
 
 /*
 ======================================

@@ -1,3 +1,5 @@
+#include "Sys_hdr.h"
+#include <mmsystem.h>
 #include "Sys_time.h"
 
 namespace System

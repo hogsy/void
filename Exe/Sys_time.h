@@ -1,9 +1,6 @@
 #ifndef VOID_SYS_TIME
 #define VOID_SYS_TIME
 
-#include "Sys_hdr.h"
-#include <mmsystem.h>
-
 class CTime
 {
 public:

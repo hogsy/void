@@ -9,9 +9,6 @@
 
 namespace VoidSound {
 
-//class CWaveFile;		//A Wave file
-//class CWaveManager;
-
 LPDIRECTSOUND  GetDirectSound();
 CWaveManager * GetWaveManager();
 

@@ -1,9 +1,6 @@
 #ifndef VOID_CONSOLE_CLASS
 #define VOID_CONSOLE_CLASS
 
-#include "I_console.h"
-#include "In_defs.h"
-
 //#define VOID_DOS_CONSOLE	1
 /*
 ==========================================

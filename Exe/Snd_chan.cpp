@@ -1,3 +1,6 @@
+#include "Snd_hdr.h"
+#include "Com_vector.h"
+#include "Snd_buf.h"
 #include "Snd_chan.h"
 
 using namespace VoidSound;

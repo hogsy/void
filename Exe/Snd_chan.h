@@ -1,9 +1,6 @@
 #ifndef VOID_SOUND_CHANNEL
 #define VOID_SOUND_CHANNEL
 
-#include "Snd_buf.h"
-#include "Com_vector.h"
-
 namespace VoidSound {
 
 /*
