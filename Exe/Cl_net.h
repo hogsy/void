@@ -50,7 +50,7 @@ private:
 	void SendChallengeReq();
 	void SendConnectReq();
 
-	CBuffer  m_buffer;
+	CBuffer		m_buffer;
 	CNetChan	m_netChan;
 	CNetSocket  m_sock;
 	
@@ -66,7 +66,7 @@ private:
 	const char* m_szLastOOBMsg;		//Keep Track of the last OOB message sent
 	
 	bool		m_bCanSend;
-	int			m_spawnState;
+	byte		m_spawnState;
 	int			m_netState;
 
 	bool		m_bInitialized;

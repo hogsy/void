@@ -65,7 +65,8 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	UnloadWorld();
+	m_pClNet->Disconnect();
+//	UnloadWorld();
 
 	m_pRender = 0;
 	m_pHud = 0;
@@ -326,9 +327,10 @@ bool CClient::ValidateRate(const CParms &parms)
 }
 
 //======================================================================================
+//======================================================================================
+
 void CClient::SetInputState(bool on)  {	m_pCmdHandler->SetListenerState(on); }
 void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
-//======================================================================================
 
 /*
 ==========================================

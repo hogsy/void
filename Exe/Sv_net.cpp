@@ -339,7 +339,7 @@ ComPrintf("Query from: %s\n", m_pSock->GetSource().ToString());
 					}
 
 					//Find out what spawn message the client is asking for
-					int spawnstate = m_recvBuf.ReadInt();
+					byte spawnstate = m_recvBuf.ReadByte();
 					if(spawnstate == SVC_BEGIN+1)
 					{
 						m_clients[i].m_state = CL_SPAWNED;

@@ -46,12 +46,6 @@ bool CNetSocket::Create(int addrFamily, int type, int protocol, bool blocking)
 	return true;
 }
 
-void CNetSocket::Disconnect()
-{
-	if(m_socket != INVALID_SOCKET)
-		shutdown(m_socket,SD_BOTH);
-}
-
 /*
 ==========================================
 Close the socket
@@ -61,7 +55,6 @@ void CNetSocket::Close()
 {
 	if(m_socket != INVALID_SOCKET)
 	{
-		Disconnect();	
 		closesocket(m_socket);
 		m_socket = INVALID_SOCKET;
 	}
@@ -86,7 +79,6 @@ bool CNetSocket::Bind(const CNetAddr &addr)
 	}
 	return true;
 }
-
 
 /*
 ==========================================
@@ -160,21 +152,60 @@ bool CNetSocket::Recv()
 }
 
 
-void CNetSocket::Send(const byte * data, int length)
-{	SendTo(data,length,m_srcAddr);
+/*
+======================================
+recv from only the source now. 
+used by client to only listen to message
+from the server once its connected
+======================================
+*/
+bool CNetSocket::RecvFromServer()
+{
+	int srcLen=  sizeof(SOCKADDR_IN);
+	
+	m_pBuffer->Reset();
+	int ret = recv(m_socket,
+				   (char*)m_pBuffer->GetData(), 
+				   m_pBuffer->GetMaxSize(), 
+				   0);
+	
+	if(ret == SOCKET_ERROR)
+	{
+		int err = WSAGetLastError();
+		if(err == WSAEWOULDBLOCK)
+			return false;
+		
+		//Socket has been shutdown
+		if(err == WSAECONNRESET)
+		{	return false;
+		}
+		if(err == WSAEMSGSIZE)
+		{
+			ComPrintf("CNetSocket::Recv: Oversize packet from %s\n", inet_ntoa (m_srcSockAddr.sin_addr));
+			return false;
+		}
+		PrintSockError(err,"CNetSocket::Recv:");
+		return false;
+	}
+
+	if(ret == m_pBuffer->GetMaxSize())
+	{
+		ComPrintf("CNetSocket::Recv: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
+		return false;
+	}
+
+//	ComPrintf("Recved %d from %s\n", ret,inet_ntoa (m_srcSockAddr.sin_addr));
+//	m_srcAddr = m_srcSockAddr;
+	m_pBuffer->SetSize(ret);
+	return true;
 }
 
 
-void CNetSocket::Send(const CBuffer &buffer)
-{	SendTo(buffer,m_srcAddr);
-}
-
-
-void CNetSocket::Send(const CNetChan &netchan)
-{	SendTo(netchan.m_sendBuffer,netchan.m_addr);
-}
-
-
+/*
+======================================
+Send to the given destination
+======================================
+*/
 void CNetSocket::SendTo(const CBuffer &buffer, const CNetAddr &addr)
 {
 	addr.ToSockAddr(m_destSockAddr);
@@ -252,6 +283,17 @@ void CNetSocket::SendTo(const byte * data, int length, const CNetAddr &addr)
 
 
 
+void CNetSocket::Send(const byte * data, int length)
+{	SendTo(data,length,m_srcAddr);
+}
+
+void CNetSocket::Send(const CBuffer &buffer)
+{	SendTo(buffer,m_srcAddr);
+}
+
+void CNetSocket::Send(const CNetChan &netchan)
+{	SendTo(netchan.m_sendBuffer,netchan.m_addr);
+}
 
 
 

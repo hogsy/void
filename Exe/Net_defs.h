@@ -47,12 +47,12 @@ When the server sends client the S2C_ACCEPT message, it follows up
 with the following messages in order, until all the spawn data is send
 the client just echos the messages which prompt the server to keep sending data
 */
-const int SVC_INITCONNECTION= 1;	//Send the server vars, map info
-const int SVC_MODELLIST		= 2;	//Sequenced list of models in use
-const int SVC_SOUNDLIST		= 3;	//Sequenced list of sounds in use 
-const int SVC_IMAGELIST		= 4;	//Sequenced list of images in use 
-const int SVC_BASELINES		= 5;	//Static entity baselines data
-const int SVC_BEGIN			= 6;	//ready to spawnDynamic Spawning info. client is assumed to be spawned after this
+const byte SVC_INITCONNECTION= 1;	//Send the server vars, map info
+const byte SVC_MODELLIST	 = 2;	//Sequenced list of models in use
+const byte SVC_SOUNDLIST	 = 3;	//Sequenced list of sounds in use 
+const byte SVC_IMAGELIST	 = 4;	//Sequenced list of images in use 
+const byte SVC_BASELINES	 = 5;	//Static entity baselines data
+const byte SVC_BEGIN		 = 6;	//ready to spawnDynamic Spawning info. client is assumed to be spawned after this
 
 //======================================================================================
 //Game Protocol

@@ -230,11 +230,11 @@ CVoid::~CVoid()
 	sprintf(configname,"%s\\void.cfg",m_exePath);
 	WriteConfig(configname);
 
-	if(m_pServer)	
-		delete m_pServer;	
-
 	if(m_pClient)
 		delete m_pClient;
+	
+	if(m_pServer)	
+		delete m_pServer;	
 
 	VoidNet::ShutdownNetwork();
 	

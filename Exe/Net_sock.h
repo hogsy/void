@@ -14,7 +14,7 @@ public:
 	bool Create(int addrFamily, int type, int protocol, bool blocking = false);
 	void Close();
 
-	void Disconnect();
+//	void Disconnect();
 	
 	bool Bind(const CNetAddr &addr);
 
@@ -30,6 +30,10 @@ public:
 	
 	//Try to receive until there is no more data
 	bool Recv();
+
+	//recv from only the source now. used by client to only listen to message
+	//from the server once its connected
+	bool RecvFromServer();
 
 	const CNetAddr & GetSource() const { return m_srcAddr; }
  

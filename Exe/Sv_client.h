@@ -42,7 +42,7 @@ struct SVClient
 
 	//keep track of how many spawn messages have been sent
 	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
-	int			m_spawnState;
+	byte		m_spawnState;
 
 	int			m_state;
 
