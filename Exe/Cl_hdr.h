@@ -30,7 +30,7 @@ enum EClState
 };
 
 
-struct I_ClientGameInterface
+struct I_ClientGame
 {
 	//Models
 	virtual int  RegisterModel(const char *model, CacheType cache, int index=-1)=0;

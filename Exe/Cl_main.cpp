@@ -41,7 +41,7 @@ CClient::CClient(I_Renderer * prenderer,
 	m_pExports = new CClientExports(*this);
 
 	//Setup network listener
-	m_pClState = new CGameClient(*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
+	m_pClState = new CGameClient(m_pExports);//*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
 	m_pNetCl= new CNetClient(m_pClState);
 	
 

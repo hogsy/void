@@ -8,20 +8,14 @@
 #include "Net_client.h"
 
 
-class  CWorld;
-
-class  CCamera;
-
-class  CClient;
-class  CSoundManager;
-class  CMusic;
-class  CCamera;
-struct I_HudRenderer;
-struct I_ClientRenderer;
-
-
 //This will need Resource loading interfaces
 //And simple sound/music interfaces from the main client
+
+class  CWorld;
+class  CCamera;
+class  CClientGameInput;
+
+struct I_ClientGame;
 
 
 /*
@@ -34,12 +28,8 @@ class CGameClient : public I_ConHandler,
 				    public I_NetClientHandler
 {
 public:
-	CGameClient(CClient	   & rClient,
-				 I_ClientRenderer	   * pRenderer,
-				 I_HudRenderer * pHud,
-				 CSoundManager * pSound,
-				 CMusic		   * pMusic);
-
+	
+	CGameClient(I_ClientGame * pClGame);
 	~CGameClient();
 
 
@@ -68,6 +58,8 @@ public:
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 	vector_t m_moveAngles;
+
+	I_ClientGame * m_pClGame;
 	
 	CVar    m_cvKbSpeed;
 	CVar	m_cvName;
@@ -110,17 +102,12 @@ public:
 
 	//==================================================
 	//Client side stuff
-	I_ClientRenderer	  * m_pRenderer;
-	I_HudRenderer * m_pHud;
-	CSoundManager * m_pSound;
-	CMusic		  * m_pMusic;
 
-	friend class CClientGameInput;
 	CClientGameInput * m_pCmdHandler;
 
 
 	CWorld	 *  m_pWorld;
-	CClient	 &	m_refClient;
+
 
 //	float		m_fFrameTime;
 	bool		m_ingame;

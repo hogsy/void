@@ -4,7 +4,7 @@
 #include "Cl_hdr.h"
 
 
-class CClientExports : public I_ClientGameInterface
+class CClientExports : public I_ClientGame
 {
 public:
 

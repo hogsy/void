@@ -21,17 +21,15 @@
 
 
 
-CGameClient::	CGameClient(CClient & rClient, I_ClientRenderer	   * pRenderer, I_HudRenderer * pHud,
-				 CSoundManager * pSound,
-				CMusic		   * pMusic) : 
-			m_refClient(rClient), m_pRenderer(pRenderer), m_pHud(pHud), m_pSound(pSound), m_pMusic(pMusic),
-			m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
-							m_cvClip("cl_clip","1",     CVAR_BOOL,0),
-					m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
-					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE)
+CGameClient::CGameClient(I_ClientGame * pClGame) : 
+				m_pClGame(pClGame),
+				m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
+				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
+				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
+				m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+				m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+				m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -89,11 +87,6 @@ CGameClient::~CGameClient()
 		delete m_pCamera;
 	m_pWorld = 0;
 
-	m_pHud=0;
-	m_pSound=0;
-	m_pMusic=0;
-	m_pRenderer = 0;
-
 	delete m_pCmdHandler;
 
 	m_pGameClient = 0;
@@ -119,8 +112,8 @@ void CGameClient::RunFrame(float frameTime)
 	Move(desired_movement, frameTime * m_maxvelocity);
 	desired_movement.Set(0,0,0);
 
-	m_pHud->Printf(0, 50,0, "%.2f, %.2f, %.2f", 
-				m_pGameClient->origin.x,  m_pGameClient->origin.y, m_pGameClient->origin.z);
+//	m_pClGame->HudPrint(0, 50,0, "%.2f, %.2f, %.2f", 
+//				m_pGameClient->origin.x,  m_pGameClient->origin.y, m_pGameClient->origin.z);
 }
 
 
@@ -168,6 +161,7 @@ void CGameClient::BeginGame()
 	m_maxvelocity =  200.0f;
 	
 	m_pGameClient->moveType = MOVETYPE_STEP;
+
 	VectorSet(&m_pGameClient->angles, 0.0f,0.0f,0.0f);
 	VectorSet(&m_pGameClient->origin, 0.0f,0.0f,48.0f);
 	VectorSet(&m_pGameClient->mins, -10.0f, -10.0f, -40.0f);
@@ -184,7 +178,8 @@ void CGameClient::BeginGame()
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;
-			m_pSound->AddStaticSource(&m_entities[i]);
+//			m_pSound->AddStaticSource(&m_entities[i]);
+			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}
 	
@@ -203,8 +198,11 @@ bool CGameClient::LoadWorld(CWorld * pWorld)
 	m_pWorld = pWorld;
 	EntMove::SetWorld(m_pWorld);
 
-	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
-	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
+	m_hsTalk    = m_pClGame->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
+	m_hsMessage = m_pClGame->RegisterSound("sounds/message.wav", CACHE_LOCAL);
+
+//	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
+//	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
 
 	ComPrintf("CGameClient::Load World: OK\n");
 	return true;
@@ -233,7 +231,8 @@ void CGameClient::UnloadWorld()
 		if(m_entities[i].inUse)
 		{
 			if(m_entities[i].sndIndex > -1)
-				m_pSound->RemoveStaticSource(&m_entities[i]);
+				//m_pSound->RemoveStaticSource(&m_entities[i]);
+				m_pClGame->RemoveSoundSource(&m_entities[i]);
 			m_entities[i].Reset();
 		}
 	}
@@ -344,11 +343,12 @@ void CGameClient::Talk(const char * string)
 		return;
 
 	ComPrintf("%s: %s\n", m_cvName.string, msg);
-	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+//	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+	m_pClGame->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
-	m_refClient.GetReliableSendBuffer().WriteByte(CL_TALK);
-	m_refClient.GetReliableSendBuffer().WriteString(msg);
+	m_pClGame->GetReliableSendBuffer().WriteByte(CL_TALK);
+	m_pClGame->GetReliableSendBuffer().WriteString(msg);
 }
 
 /*
@@ -370,9 +370,9 @@ bool CGameClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-	m_refClient.GetReliableSendBuffer().WriteByte(CL_INFOCHANGE);
-	m_refClient.GetReliableSendBuffer().WriteChar('n');
-	m_refClient.GetReliableSendBuffer().WriteString(name);
+	m_pClGame->GetReliableSendBuffer().WriteByte(CL_INFOCHANGE);
+	m_pClGame->GetReliableSendBuffer().WriteChar('n');
+	m_pClGame->GetReliableSendBuffer().WriteString(name);
 	return true;
 }
 
@@ -397,12 +397,12 @@ bool CGameClient::ValidateRate(const CParms &parms)
 		return false;
 	}
 
-	m_refClient.SetNetworkRate(rate);
+	m_pClGame->SetNetworkRate(rate);
 
 	if(!m_ingame)
 		return true;
 
-	CBuffer &buffer = m_refClient.GetReliableSendBuffer();
+	CBuffer &buffer = m_pClGame->GetReliableSendBuffer();
 	buffer.WriteByte(CL_INFOCHANGE);
 	buffer.WriteChar('r');
 	buffer.WriteInt(rate);
@@ -441,28 +441,28 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_TALK:
 			{
 				int clNum = buffer.ReadByte();
-				m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+				m_pClGame->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 				ComPrintf("%s: %s\n", m_clients[clNum].name ,buffer.ReadString());
 				break;
 			}
 		case SV_DISCONNECT:
 			{
-				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
 				//m_pNetCl->Disconnect(true);
-				m_refClient.SetClientState(CLIENT_DISCONNECTED);
+				m_pClGame->SetClientState(CLIENT_DISCONNECTED);
 				break;
 			}
 		case SV_PRINT:	//just a print message
 			{
-				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s\n",buffer.ReadString());
 				break;
 			}
 		case SV_RECONNECT:
 			{
 				//m_pNetCl->Reconnect(true);
-				m_refClient.SetClientState(CLIENT_RECONNECTING);
+				m_pClGame->SetClientState(CLIENT_RECONNECTING);
 				break;
 			}
 		case SV_CLFULLINFO:
@@ -481,12 +481,12 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
 
 				m_clients[num].mdlCache = CACHE_GAME;
-				m_clients[num].skinNum = m_pRenderer->LoadImage(path, CACHE_GAME, sindex);
-				m_pRenderer->LoadImage(path, CACHE_GAME, sindex);
+				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_GAME, sindex);
+//				m_pClGame->LoadImage(path, CACHE_GAME, sindex);
 				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
-				m_clients[num].mdlIndex = m_pRenderer->LoadModel(path, CACHE_GAME,mindex);
+				m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_GAME,mindex);
 				m_clients[num].mdlCache = CACHE_GAME;
 
 				m_clients[num].inUse = true;
@@ -500,7 +500,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				if(field == 'n')
 				{
 					char * newName = buffer.ReadString();
-					m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+					m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 					ComPrintf("%s renamed to %s\n", m_clients[num].name, newName);
 					strcpy(m_clients[num].name, newName);
 				}
@@ -509,7 +509,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLDISCONNECT:
 			{
 				int  num = buffer.ReadByte();
-				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
+				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
 				m_clients[num].Reset();
 				break;
@@ -554,7 +554,7 @@ ComPrintf("CL: Game: %s\n", game);
 			char * map = buffer.ReadString();
 ComPrintf("CL: Map: %s\n", map);
 
-			m_refClient.LoadWorld(map);
+			m_pClGame->LoadWorld(map);
 
 //			if(!LoadWorld(map))
 //				m_pNetCl->Disconnect(false);
@@ -577,7 +577,7 @@ ComPrintf("CL: Map: %s\n", map);
 				if(modelId == -1 || !modelName[0])
 				{	continue;
 				}
-				m_pRenderer->LoadModel(modelName,CACHE_GAME,modelId);
+				m_pClGame->RegisterModel(modelName,CACHE_GAME,modelId);
 			}
 			break;
 		}
@@ -597,7 +597,7 @@ ComPrintf("CL: Map: %s\n", map);
 				if(soundId == -1 || !soundName[0])
 				{		continue;
 				}
-				m_pSound->RegisterSound(soundName,CACHE_GAME, soundId);
+				m_pClGame->RegisterSound(soundName,CACHE_GAME, soundId);
 			}
 //			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
 			break;
@@ -692,7 +692,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	HandleGameMsg(buffer);
 	BeginGame();
 
-	m_refClient.SetClientState(CLIENT_INGAME);
+	m_pClGame->SetClientState(CLIENT_INGAME);
 }
 
 
@@ -732,7 +732,7 @@ void CGameClient::HandleDisconnect(bool listenserver)
 //		ComPrintf("CL: KILLING LOCAL SERVER\n");
 		System::GetConsole()->ExecString("killserver");
 	}
-	m_refClient.UnloadWorld();
+	m_pClGame->UnloadWorld();
 
 	/*
 //	ComPrintf("CL: KILLING LOCAL SERVER\n");
