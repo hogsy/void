@@ -2,20 +2,17 @@
 #define VOID_GAME_SERVER
 
 #include "Sys_hdr.h"
-#include "World.h"
 #include "Net_server.h"
 
-//Temp client entities
-class CEntClient
-{
-public:
-	CEntClient(){ inUse = false; memset(name,0,32); }
-	
-	bool inUse;
-	char name[32];
-};
+//Predeclarations
+struct world_t;
+class  CEntClient;
 
-
+/*
+======================================
+The Main Server class
+======================================
+*/
 class CServer : public I_Server,
 				public I_ConHandler
 {
@@ -30,11 +27,11 @@ public:
 	void RunFrame();
 
 	//Network Handler
-	bool ValidateClConnection(int chanId, bool reconnect,CBuffer &buffer);
-	void HandleClientMsg(int chanId, CBuffer &buffer);
-	void OnClientSpawn(int chanId);
-	void OnLevelChange(int chanId);
-	void OnClientDrop(int chanId, EDisconnectReason reason);
+	bool ValidateClConnection(int clNum, bool reconnect,CBuffer &buffer);
+	void HandleClientMsg(int clNum, CBuffer &buffer);
+	void OnClientSpawn(int clNum);
+	void OnLevelChange(int clNum);
+	void OnClientDrop(int clNum, EDisconnectReason reason);
 	void WriteGameStatus(CBuffer &buffer);
 
 	//Console Handler Interface
@@ -57,7 +54,7 @@ private:
 	CNetServer	m_net;
 	ServerState m_svState;
 
-	CEntClient  m_client[SV_MAX_CLIENTS];
+	CEntClient *m_client;
 
 	NetChanWriter & m_chanWriter;
 

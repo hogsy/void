@@ -1,4 +1,6 @@
 #include "Sv_main.h"
+#include "World.h"
+#include "Sv_ents.h"
 #include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
@@ -26,6 +28,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
+	m_client= new CEntClient[SV_MAX_CLIENTS];
+
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
 	strcpy(m_svState.hostName,"Void Server");
@@ -49,7 +53,9 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 }	
 
 CServer::~CServer()
-{	Shutdown();
+{	
+	Shutdown();
+	delete [] m_client;
 }
 
 
@@ -255,14 +261,6 @@ void CServer::LoadWorld(const char * mapname)
 	buf.gameInfo.Write(m_svState.gameName);
 	buf.gameInfo.Write(m_svState.worldname);
 
-//	buf.gameInfo.push_back(new CBuffer());
-
-/*	m_net.m_numSignOnBuffers = 1;
-	m_net.m_signOnBuf[0].Write(SVC_INITCONNECTION);
-	m_net.m_signOnBuf[0].Write(m_svState.gameName);
-	m_net.m_signOnBuf[0].Write(m_svState.worldname);
-*/
-
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)
 		System::GetConsole()->ExecString("connect localhost");
@@ -318,7 +316,6 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 			char mapname[64];
 			parms.StringTok(1,(char*)mapname,64);
 			LoadWorld(mapname);
-			//LoadWorld(parms.StringTok(1));
 			break;
 		}
 	case CMD_KILLSERVER:
@@ -330,13 +327,3 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	}
 }
 
-//======================================================================================
-//======================================================================================
-
-bool CServer::InitNetwork()
-{	return CNetServer::InitWinsock();
-}
-
-void CServer::ShutdownNetwork()
-{	CNetServer::ShutdownWinsock();
-}

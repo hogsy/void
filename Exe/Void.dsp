@@ -277,6 +277,10 @@ SOURCE=.\Cl_main.h
 
 SOURCE=.\Cl_move.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\Cl_net.cpp
+# End Source File
 # End Group
 # Begin Group "Resources"
 

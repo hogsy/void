@@ -1,44 +1,49 @@
 #include "Sv_main.h"
-#include "Com_util.h"
+#include "World.h"
+#include "Sv_ents.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
 
 
-//Network Handler
-bool CServer::ValidateClConnection(int chanId, bool reconnect,
-							  CBuffer &buffer)
+/*
+======================================
+Validate connection request from a client
+======================================
+*/
+bool CServer::ValidateClConnection(int clNum, bool reconnect,
+									CBuffer &buffer)
 {	
-
-	if(m_client[chanId].inUse)
+	if(m_client[clNum].inUse)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
 
-	strcpy(m_client[chanId].name, buffer.ReadString());
-	m_net.SetChanRate(chanId, buffer.ReadInt());
+	strcpy(m_client[clNum].name, buffer.ReadString());
+	m_net.SetChanRate(clNum, buffer.ReadInt());
 	
-	m_client[chanId].inUse = true;
+	m_client[clNum].inUse = true;
 
 	m_svState.numClients++;
 
-	m_net.BroadcastPrintf("%s connected", m_client[chanId].name);
+	m_net.BroadcastPrintf("%s connected", m_client[clNum].name);
 	return true;
 }
 
-
+/*
+======================================
+Handle Network Message from a client
+======================================
+*/
 void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
-
 	byte packetId = buffer.ReadByte();
 	switch(packetId)
 	{
 	//Talk message
 	case CL_TALK:
 		{
-//ComPrintf("SV:%s : %s\n", client.m_name, msg);
-
 			char msg[256];
 			strcpy(msg,buffer.ReadString());
 
@@ -48,12 +53,12 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			len += strlen(m_client[clNum].name);
 			
 			//Add this to all other connected clients outgoing buffers
-			//for(int i=0; i<m_cMaxClients.ival;i++)
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
 				//dont send to source
 				if(i == clNum)
 					continue;
+
 				if(m_client[i].inUse)
 				{
 					m_net.BeginWrite(i,SV_TALK, len);
@@ -62,7 +67,6 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 					m_net.FinishWrite();
 				}
 			}
-
 			break;	
 		}
 	//client updating its local info
@@ -91,31 +95,67 @@ ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
 	}
 }
 
-
-
-
-void CServer::OnClientDrop(int chanId, EDisconnectReason reason)
+/*
+======================================
+Handle Client disconnection
+======================================
+*/
+void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 {
-//	m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
+	switch(reason)
+	{
+	case CLIENT_QUIT:
+		m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
+		break;
+	case CLIENT_TIMEOUT:
+		m_net.BroadcastPrintf("%s timed out", m_client[clNum].name);
+		break;
+	case CLIENT_OVERFLOW:
+		m_net.BroadcastPrintf("%s overflowed", m_client[clNum].name);
+		break;
+	}
 
-	m_client[chanId].inUse = false;
+	m_client[clNum].inUse = false;
 	m_svState.numClients --;
 }
 
+/*
+======================================
+Write Game Status to buffer
+======================================
+*/
 void CServer::WriteGameStatus(CBuffer &buffer)
 {
 }
 
-
+/*
+======================================
+Handle Client spawning
+======================================
+*/
 void CServer::OnClientSpawn(int clNum)
 {
 	//Check chanIds to see what client spawned
 	m_net.BroadcastPrintf("%s entered the game", m_client[clNum].name);
-//	m_client[clNum].name
 }
 
-
+/*
+======================================
+Handle Map change on client ?
+======================================
+*/
 void CServer::OnLevelChange(int clNum)
 {
 }
 
+
+//======================================================================================
+//======================================================================================
+
+bool CServer::InitNetwork()
+{	return CNetServer::InitWinsock();
+}
+
+void CServer::ShutdownNetwork()
+{	CNetServer::ShutdownWinsock();
+}

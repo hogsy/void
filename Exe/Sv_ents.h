@@ -4,12 +4,14 @@
 #include "Com_defs.h"
 #include "3dmath.h"
 
-//======================================================================================
-//======================================================================================
-
+/*
+======================================
+The base game entitiy. 
+can be subclasses for more specific stuff
+======================================
+*/
 const int SV_MAXCLASSNAME = 32;
-
-enum EntityType
+enum SVEntType
 {
 	ENT_ITEM,
 	ENT_WEAPON,
@@ -18,49 +20,44 @@ enum EntityType
 	ENT_CLIENT
 };
 
-//======================================================================================
-//======================================================================================
-/*
-======================================
-The base game entitiy. 
-can be subclasses for more specific stuff
-======================================
-*/
 class CEntity
 {
 public:
-
-	int			num;
-	EntityType	type;
-	char		classname[SV_MAXCLASSNAME];
+	CEntity(const char * ename, SVEntType etype) : type(etype)
+	{	
+		strcpy(classname, ename);
+		origin.x = origin.y = origin.z = 0.0f;
+	}
 	
+	int	 num;
+	char classname[SV_MAXCLASSNAME];
+	
+	SVEntType	type;
 	vector_t	origin;
-
-	virtual void Run()=0;
 };
 
-
-//======================================================================================
-//======================================================================================
-
-struct EntCreationFuncs
-{
-	CEntity * (Create)();
-	const char * classname;
-};
 
 /*
 ======================================
-Entity creator. Reads world data
-and creates entities with correct parms
+Client Entity on the server
 ======================================
 */
-class CEntityMaker
+enum SVClientState
 {
-public:
-	static CEntity * CreateEntity();
 };
 
+class CEntClient : public CEntity
+{
+public:
+	CEntClient() : CEntity("client", ENT_CLIENT)
+	{	
+		memset(name,0,32); 
+		inUse = false; 
+	}
+	
+	bool inUse;
+	char name[32];
+};
 
 #endif
 

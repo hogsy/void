@@ -114,7 +114,7 @@ typedef struct
 */
 
 
-typedef struct
+struct world_t
 {
 	vector_t		*verts;
 	int				*iverts;
@@ -147,7 +147,7 @@ typedef struct
 	int nkeys;
 	int leafvis_size;	// size of vis info for one leaf
 	int light_size;		// size of all light data
-} world_t;
+};
 
 
 
