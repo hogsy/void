@@ -308,12 +308,14 @@ void CServer::RunFrame()
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
 				m_net.ChanWriteShort(m_clients[j]->num);
 				m_net.ChanWriteByte(m_clients[i]->sendFlags);
+				
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
 				m_net.ChanWriteCoord(m_clients[j]->origin.y);
 				m_net.ChanWriteCoord(m_clients[j]->origin.z);
-				m_net.ChanWriteAngle(m_clients[j]->angles.x);
-				m_net.ChanWriteAngle(m_clients[j]->angles.y);
-				m_net.ChanWriteAngle(m_clients[j]->angles.z);
+				
+				m_net.ChanWriteCoord(m_clients[j]->angles.x);
+				m_net.ChanWriteCoord(m_clients[j]->angles.y);
+				m_net.ChanWriteCoord(m_clients[j]->angles.z);
 
 				if(m_clients[j]->sendFlags)
 				{

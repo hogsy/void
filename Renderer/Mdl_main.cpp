@@ -260,9 +260,11 @@ void CModelManager::Purge(void)
 		VectorInv2(walk->state->origin, trans);
 		g_pRast->MatrixTranslate(trans);
 
-		g_pRast->MatrixRotateY(-walk->state->angles.YAW   * 180/PI);
+//		g_pRast->MatrixRotateY(-walk->state->angles.YAW   * 180/PI);
+		g_pRast->MatrixRotateY(walk->state->angles.YAW   * 180/PI);
 		g_pRast->MatrixRotateX( walk->state->angles.PITCH * 180/PI);
-		g_pRast->MatrixRotateZ(-walk->state->angles.ROLL  * 180/PI);
+//		g_pRast->MatrixRotateZ(-walk->state->angles.ROLL  * 180/PI);
+		g_pRast->MatrixRotateZ(walk->state->angles.ROLL  * 180/PI);
 
 		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
 																   walk->state->frameNum,

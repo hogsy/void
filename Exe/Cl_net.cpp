@@ -67,13 +67,13 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 
 				sprintf(path,"Models/Player/%s/%s", model, buffer.ReadString());
 
-				m_clients[num].mdlCache = CACHE_GAME;
-				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_GAME, sindex);
-				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
+				m_clients[num].mdlCache = CACHE_LOCAL;
+				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL, sindex);
+				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
 				sprintf(path,"Models/Player/%s/tris.md2", model);
-				m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_GAME,mindex);
-				m_clients[num].mdlCache = CACHE_GAME;
+				m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL,mindex);
+				m_clients[num].mdlCache = CACHE_LOCAL;
 
 				m_clients[num].inUse = true;
 
@@ -146,9 +146,10 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
 					m_clients[num].origin.z = buffer.ReadCoord();
-					m_clients[num].angles.x = buffer.ReadAngle();
-					m_clients[num].angles.y = buffer.ReadAngle();
-					m_clients[num].angles.z = buffer.ReadAngle();
+					
+					m_clients[num].angles.x = buffer.ReadCoord();
+					m_clients[num].angles.y = buffer.ReadCoord();
+					m_clients[num].angles.z = buffer.ReadCoord();
 
 					if(b)
 					{
@@ -494,9 +495,13 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_pGameClient->moveType = MOVETYPE_STEP;
 
 	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
-	m_pGameClient->origin.Set(0.0f,0.0f,48.0f);
-	m_pGameClient->mins.Set(-10.0f, -10.0f, -40.0f);
-	m_pGameClient->maxs.Set(10.0f, 10.0f, 10.0f);
+	
+	m_pGameClient->origin.Set(0.0f,0.0f,30.0f);
+	m_pGameClient->mins.Set(-16, -16, -24);
+	m_pGameClient->maxs.Set(16, 16, 32);
+
+//	vec3_t	mins = {-16, -16, -24};
+//	vec3_t	maxs = {16, 16, 32};
 	
 	m_vecBlend.Set(0.0f,0.0f,0.0f);
 //	m_vecDesiredMove.Set(0, 0, 0);
@@ -545,7 +550,7 @@ void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.WriteString(m_cvName.string);
 //FIXME
-	buffer.WriteString("amber");
-	buffer.WriteString("amber");
+	buffer.WriteString("hayden");
+	buffer.WriteString("hayden");
 	buffer.WriteInt(m_cvRate.ival);
 }
