@@ -135,6 +135,52 @@ int CFileBuffer::GetChar()
 	return (m_buffer[m_curpos++]);
 }
 
+	
+/*
+===========================================
+Get current character
+===========================================
+*/
+void CFileBuffer::GetToken(char *buff, bool newline)
+{
+	char tmp;
+
+	// if we want a new line, find the first '/n'
+	if (newline)
+		while (GetChar() != '/n');
+
+	// advance until we find characters
+	while (1)
+	{
+		tmp = GetChar();
+
+		// dont want a new line but we found one
+		if ((tmp == '/n' && !newline) || (tmp == EOF) || (tmp == -1))
+		{
+			(*buff) = 0;
+			return;
+		}
+
+		if (tmp > ' ')
+			break;
+	}
+
+	// copy over the token we are at
+	while (1)
+	{
+		tmp = GetChar();
+		if ((tmp <= ' ') || (tmp == EOF) || (tmp == -1))
+			break;
+
+		(*buff) = tmp;
+		buff++;
+	}
+
+	// null terminate
+	(*buff) = 0;
+}
+
+
 /*
 ===========================================
 Seek to end/start, certain offset

@@ -146,7 +146,7 @@ uint CFileStream::Read(void *buf,uint size, uint count)
 Get current character
 ===========================================
 */
-int CFileStream::GetChar()
+int  CFileStream::GetChar()
 {
 	if(m_fp)
 		return ::fgetc(m_fp);
@@ -154,6 +154,52 @@ int CFileStream::GetChar()
 		return m_archive->GetChar(m_filehandle);
 	return 0;
 }
+
+	
+/*
+===========================================
+Get current character
+===========================================
+*/
+void CFileStream::GetToken(char *buff, bool newline)
+{
+	char tmp;
+
+	// if we want a new line, find the first '/n'
+	if (newline)
+		while (GetChar() != '/n');
+
+	// advance until we find characters
+	while (1)
+	{
+		tmp = GetChar();
+
+		// dont want a new line but we found one
+		if ((tmp == '/n' && !newline) || (tmp == EOF) || (tmp == -1))
+		{
+			(*buff) = 0;
+			return;
+		}
+
+		if (tmp > ' ')
+			break;
+	}
+
+	// copy over the token we are at
+	while (1)
+	{
+		tmp = GetChar();
+		if ((tmp <= ' ') || (tmp == EOF) || (tmp == -1))
+			break;
+
+		(*buff) = tmp;
+		buff++;
+	}
+
+	// null terminate
+	(*buff) = 0;
+}
+
 
 /*
 ===========================================

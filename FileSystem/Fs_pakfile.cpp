@@ -386,6 +386,7 @@ int CPakFile::GetChar(HFS handle)
 	return EOF;
 }
 
+
 /*
 ==========================================
 Update file Handle's current position with

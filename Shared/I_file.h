@@ -18,6 +18,7 @@ struct I_FileReader
 	virtual bool isOpen()const =0;
 	virtual uint Read(void * buf, uint size, uint count)=0;
 	virtual int  GetChar()=0;
+	virtual void GetToken(char *buff, bool newline) =0;
 	virtual bool Seek(int offset, int origin)=0;
 	virtual uint GetPos() const =0;
 	virtual uint GetSize() const =0;
@@ -59,6 +60,7 @@ public:
 	uint Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
 	int GetChar();
+	void GetToken(char *buff, bool newline);
 	//Seek to given offset starting from given origin
 	bool Seek(int offset, int origin);
 
@@ -107,6 +109,7 @@ public:
 	uint Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
 	int GetChar();
+	void GetToken(char *buff, bool newline);
 	//Seek to given offset starting from given origin
 	bool Seek(int offset,  int origin);
 

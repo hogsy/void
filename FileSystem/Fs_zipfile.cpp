@@ -674,6 +674,7 @@ int  CZipFile::GetChar(HFS handle)
 	return EOF;
 }
 
+
 /*
 ==========================================
 Seek to given pos within the file data
