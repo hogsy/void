@@ -705,12 +705,12 @@ void COpenGLRast::TextureSet(int bin, int texnum)
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
 }
 
-void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
+void COpenGLRast::TextureLoad(int bin, int num, const TextureData &texdata)
 {
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[num]);
 
 	// clamping
-	if (texdata->clamp)
+	if (texdata.bClamped)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -722,7 +722,7 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 	}
 
 	// mipmapping
-	if (texdata->mipmap)
+	if (texdata.bMipMaps)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
@@ -735,7 +735,7 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 
 
 	int ext_format, int_format;
-	if (texdata->format == IMG_RGB)
+	if (texdata.format == IMG_RGB)
 	{
 		ext_format = GL_RGB;
 		int_format = g_p32BitTextures->bval ? GL_RGB8 : GL_RGB5;
@@ -746,22 +746,22 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		int_format = g_p32BitTextures->bval ? GL_RGBA8 : GL_RGBA4;
 	}
 
-	int w = texdata->width;
-	int h = texdata->height;
+	int w = texdata.width;
+	int h = texdata.height;
 
-	if (texdata->mipmap)
+	if (texdata.bMipMaps)
 	{
-		for (int m=texdata->mipmaps-1; m>=0; m--)
+		for (int m=texdata.numMipMaps-1; m>=0; m--)
 		{
 			glTexImage2D(GL_TEXTURE_2D,
-					 texdata->mipmaps - m - 1,
+					 texdata.numMipMaps - m - 1,
 					 int_format,
 					 w,
 					 h,
 					 0,
 					 ext_format,
 					 GL_UNSIGNED_BYTE,
-					 texdata->mipdata[m]);
+					 texdata.data[m]);
 
 			w /= 2;
 			h /= 2;
@@ -780,7 +780,7 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 					 0,
 					 ext_format,
 					 GL_UNSIGNED_BYTE,
-					 texdata->mipdata[texdata->mipmaps - 1]);
+					 texdata.data[texdata.numMipMaps - 1]);
 	}
 }
 

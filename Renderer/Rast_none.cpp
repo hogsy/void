@@ -129,7 +129,7 @@ void CRastNone::TextureSet(int bin, int texnum)
 {
 }
 
-void CRastNone::TextureLoad(int bin, int num, const tex_load_t *texdata)
+void CRastNone::TextureLoad(int bin, int num, const TextureData &texdata)
 {
 }
 

@@ -59,6 +59,25 @@ enum EImageFormat
 	IMG_RGBA  =4
 };
 
+
+struct TextureData
+{
+	TextureData() : bMipMaps(false), bClamped(false), numMipMaps(1),
+					height (0), width(0), data(0) 	{}
+	~TextureData(){ data = 0; }
+
+	bool	bMipMaps;
+	bool	bClamped;
+	int		numMipMaps;
+
+	int		height;
+	int		width;
+	byte ** data;
+
+	EImageFormat  format;
+};
+
+/*
 typedef struct
 {
 	unsigned char **mipdata;
@@ -69,7 +88,7 @@ typedef struct
 	int height;
 	int width;
 } tex_load_t;
-
+*/
 
 // buffers that may be cleared
 #define VRAST_COLOR_BUFFER		1
@@ -121,7 +140,7 @@ public:
 	virtual int  TextureCount(int bin)=0;
 	virtual void TextureBinDestroy(int bin)=0;
 	virtual void TextureSet(int bin, int texnum)=0;
-	virtual void TextureLoad(int bin, int num, const tex_load_t *texdata)=0;
+	virtual void TextureLoad(int bin, int num, const TextureData &texdata)=0;
 
 	virtual void MatrixReset(void)=0;
 	virtual void MatrixRotateX(float degrees)=0;

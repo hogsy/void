@@ -1,5 +1,3 @@
-
-
 #include "Shader.h"
 #include "Tex_image.h"
 
@@ -316,7 +314,8 @@ void CShader::LoadTextures(void)
 	mTextureBin = g_pRast->TextureBinInit(mNumTextures);
 
 
-	CImageReader *texReader = new CImageReader();
+	CImageReader texReader; //= new CImageReader();
+	TextureData	 tData;
 
 	int t=0;
 	for (int l=0; l<mNumLayers; l++)
@@ -325,7 +324,24 @@ void CShader::LoadTextures(void)
 		{
 			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
-				if (!texReader->Read(mLayers[l]->mTextureNames[tex].filename))
+				if (!texReader.Read(mLayers[l]->mTextureNames[tex].filename, tData))
+					texReader.DefaultTexture(tData);
+
+				// create all mipmaps
+				tData.bMipMaps = true;
+				tData.bClamped = false;
+
+				int mipCount = tData.numMipMaps - 1;
+				while (mipCount > 0)
+				{
+					texReader.ImageReduce(mipCount);
+					mipCount--;
+				}
+
+				g_pRast->TextureLoad(mTextureBin, t, tData);
+				t++;
+
+/*				if (!texReader->Read(mLayers[l]->mTextureNames[tex].filename))
 					texReader->DefaultTexture();
 
 				// create all mipmaps
@@ -344,15 +360,14 @@ void CShader::LoadTextures(void)
 					texReader->ImageReduce(mipcount);
 					mipcount--;
 				}
-
-		
 				g_pRast->TextureLoad(mTextureBin, t, &tdata);
 				t++;
+*/
 			}
 		}
 	}
 
-	delete texReader;
+//	delete texReader;
 }
 
 

@@ -89,40 +89,27 @@ void CImageReader::ColorKey(unsigned char *data)
 
 /*
 ==========================================
-Reset the image data
-==========================================
-
-void CImageReader::Reset()
-{
-	//Dont release data buffer if its statically alloced
-	if(data && !buffersize)
-	{
-		delete [] data;
-		data = 0;
-	}
-	height = 0;
-	width = 0;
-	format = IMG_NONE;
-}
-*/
-/*
-==========================================
 Load a default image 
 used as a replacement when we can't find a texture
 ==========================================
 */
-bool CImageReader::DefaultTexture()
+bool CImageReader::DefaultTexture(TextureData &imgData)
 {
 	width = DEFAULT_TEXTURE_WIDTH;
 	height = DEFAULT_TEXTURE_HEIGHT;
 
 	ConfirmMipData();
 
-
 	for (int p = 0; p < width * height * 3; p++)
 		mipmapdata[miplevels-1][p] = rand();
 
 	format = IMG_RGB;
+
+	imgData.height = height;
+	imgData.width = width;
+	imgData.data = &mipmapdata[0];
+	imgData.format = format;
+	imgData.numMipMaps = miplevels;
 	return true;
 }
 
@@ -131,7 +118,7 @@ bool CImageReader::DefaultTexture()
 Read a texture from the given path
 ==========================================
 */
-bool CImageReader::Read(const char * file)
+bool CImageReader::Read(const char * file, TextureData &imgData)
 {
 	char filename[MAX_PATH];
 	bool err = false;
@@ -149,7 +136,7 @@ bool CImageReader::Read(const char * file)
 	sprintf(filename,"%s.tga",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		err = Read_TGA();
+		err = Read_TGA(imgData);
 		m_fileReader.Close();
 		return err;
 	}
@@ -157,7 +144,7 @@ bool CImageReader::Read(const char * file)
 	sprintf(filename,"%s.pcx",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		err = Read_PCX();
+		err = Read_PCX(imgData);
 		m_fileReader.Close();
 		return err;
 	}
@@ -175,7 +162,7 @@ bool CImageReader::Read(const char * file)
 Read a PCX file from current filereader
 ==========================================
 */
-bool CImageReader::Read_PCX()
+bool CImageReader::Read_PCX(TextureData &imgData)
 {
 	PCX_header header;
 	int bpp;
@@ -264,6 +251,11 @@ bool CImageReader::Read_PCX()
 	if (colorkey)
 		ColorKey(mipmapdata[miplevels-1]);
 
+	imgData.height = height;
+	imgData.width = width;
+	imgData.data = &mipmapdata[0];
+	imgData.format = format;
+	imgData.numMipMaps = miplevels;
 	return true;
 }
 
@@ -272,7 +264,7 @@ bool CImageReader::Read_PCX()
 Read a TGA file from the given file
 ==========================================
 */
-bool CImageReader::Read_TGA()
+bool CImageReader::Read_TGA(TextureData &imgData)
 {
 	m_fileReader.Seek(12,SEEK_SET);
 
@@ -323,10 +315,14 @@ bool CImageReader::Read_TGA()
 		}
 	}
 
-
 	if (colorkey)
 		ColorKey(mipmapdata[miplevels-1]);
 
+	imgData.height = height;
+	imgData.width = width;
+	imgData.data = &mipmapdata[0];
+	imgData.format = format;
+	imgData.numMipMaps = miplevels;
 	return true;
 }
 
@@ -335,9 +331,9 @@ bool CImageReader::Read_TGA()
 Read a jpeg
 ==========================================
 */
-bool CImageReader::Read_JPG()
+bool CImageReader::Read_JPG(TextureData &imgData)
 {
-	JPEG_CORE_PROPERTIES jcprop;
+/*	JPEG_CORE_PROPERTIES jcprop;
 
 	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
 
@@ -391,6 +387,8 @@ bool CImageReader::Read_JPG()
 
 	format=IMG_RGB;
 	return true;
+*/
+	return false;
 }
 
 
@@ -518,9 +516,32 @@ Read Image data from a stream
 used for reading Lightmaps from the world file
 ==========================================
 */
-bool CImageReader::ReadLightMap(unsigned char **stream)
+bool CImageReader::ReadLightMap(unsigned char **stream, TextureData &imgData)
 {
 	// read the data from the stream
+	w = width = **stream;
+	(*stream)++;
+	h = height= **stream;
+	(*stream)++;
+
+	if(!width || !height)
+		return false;
+
+	ConfirmMipData();
+
+	for (int p = 0; p < (width * height * 3); p++)
+	{
+		mipmapdata[miplevels-1][p] = **stream;
+		(*stream)++;
+	}
+	
+	imgData.height = height;
+	imgData.width = width;
+	imgData.format = IMG_RGB;
+	imgData.data = &mipmapdata[0];
+	imgData.numMipMaps = miplevels;
+
+/*
 	w = width = **stream;
 	(*stream)++;
 	h = height = **stream;
@@ -537,6 +558,7 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 		(*stream)++;
 	}
 	format = IMG_RGB;
+*/
 	return true;
 }
 

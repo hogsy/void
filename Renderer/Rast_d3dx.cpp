@@ -481,26 +481,26 @@ void CRastD3DX::TextureSet(int bin, int texnum)
 	m_pD3DDevice->SetTexture(0, mTexBins[bin].tex_surfs[texnum]);
 }
 
-void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
+void CRastD3DX::TextureLoad(int bin, int num, const TextureData &texdata)
 {
 	D3DX_SURFACEFORMAT ext_format, int_format;
 
-	int bpp = texdata->format == IMG_RGB ? 3 : 4;
+	int bpp = texdata.format == IMG_RGB ? 3 : 4;
 
-	int w = texdata->width;
-	int h = texdata->height;
+	int w = texdata.width;
+	int h = texdata.height;
 
 	// have to swap all blue and red values
-	for (int m=texdata->mipmaps-1; m>=0; m--)
+	for (int m=texdata.numMipMaps-1; m>=0; m--)
 	{
 		for (int r=0; r<h; r++)
 		{
 			for (int c=0; c<w; c++)
 			{
 				char tmp;
-				tmp = texdata->mipdata[m][r*w*bpp + c*bpp + 0];
-				texdata->mipdata[m][r*w*bpp + c*bpp + 0] = texdata->mipdata[m][r*w*bpp + c*bpp + 2];
-				texdata->mipdata[m][r*w*bpp + c*bpp + 2] = tmp;
+				tmp = texdata.data[m][r*w*bpp + c*bpp + 0];
+				texdata.data[m][r*w*bpp + c*bpp + 0] = texdata.data[m][r*w*bpp + c*bpp + 2];
+				texdata.data[m][r*w*bpp + c*bpp + 2] = tmp;
 			}
 		}
 		h /= 2;
@@ -509,7 +509,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		if (!w) w = 1;
 	}
 
-	if (texdata->format == IMG_RGB)
+	if (texdata.format == IMG_RGB)
 	{
 		ext_format = D3DX_SF_R8G8B8;
 		int_format = g_p32BitTextures->bval ? D3DX_SF_R8G8B8 : D3DX_SF_R5G6B5;
@@ -520,10 +520,10 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		int_format = g_p32BitTextures->bval ? D3DX_SF_A8R8G8B8 : D3DX_SF_A4R4G4B4;
 	}
 
-	DWORD mipmap = texdata->mipmap ? 0 : D3DX_TEXTURE_NOMIPMAP;
-	DWORD nummips= texdata->mipmap ? texdata->mipmaps : 0;
-	DWORD width = texdata->width;
-	DWORD height = texdata->height;
+	DWORD mipmap = texdata.bMipMaps ? 0 : D3DX_TEXTURE_NOMIPMAP;
+	DWORD nummips= texdata.bMipMaps ? texdata.numMipMaps : 0;
+	DWORD width =  texdata.width;
+	DWORD height = texdata.height;
 
 	D3DXCreateTexture(m_pD3DDevice,
 					  &mipmap,
@@ -536,14 +536,14 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 
 
 
-	if (texdata->mipmap)
+	if (texdata.bMipMaps)
 	{
-		for (int m=texdata->mipmaps-1; m>=0; m--)
+		for (int m=texdata.numMipMaps-1; m>=0; m--)
 		{
 			D3DXLoadTextureFromMemory(m_pD3DDevice,
 									  mTexBins[bin].tex_surfs[num],
-									  texdata->mipmaps-1-m,
-									  texdata->mipdata[m],
+									  texdata.numMipMaps-1-m,
+									  texdata.data[m],
 									  NULL,
 									  ext_format,
 									  D3DX_DEFAULT,
@@ -557,7 +557,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		D3DXLoadTextureFromMemory(m_pD3DDevice,
 								  mTexBins[bin].tex_surfs[num],
 								  0,
-								  texdata->mipdata[texdata->mipmaps-1],
+								  texdata.data[texdata.numMipMaps-1],
 								  NULL,
 								  ext_format,
 								  D3DX_DEFAULT,

@@ -35,7 +35,7 @@ public:
 	int  TextureCount(int bin) { return mTexBins[bin].num; }
 	void TextureBinDestroy(int bin);
 	void TextureSet(int bin, int texnum);
-	void TextureLoad(int bin, int num, const tex_load_t *texdata);
+	void TextureLoad(int bin, int num, const TextureData &texdata);
 
 	void MatrixReset(void);
 	void MatrixRotateX(float degrees);

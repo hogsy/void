@@ -128,7 +128,11 @@ void FError(char *error, ...)
 	va_start(args, error);
 	vsprintf(textBuffer, error, args);
 	va_end(args);
-	
+
+	g_pVoidExp->SystemError(textBuffer);
+
+/*
+
 	MessageBox(NULL, textBuffer, "Error", MB_OK);
 	
 	//Win32 func
@@ -136,6 +140,7 @@ void FError(char *error, ...)
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);					// second message parameter 
+*/
 }
 
 // just a small booboo. let us know and keep going
