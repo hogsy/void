@@ -350,7 +350,7 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 
 	fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
 	
-	int bytes_read = fread(buf,size,count,m_fp);
+	int bytes_read = ::fread(buf,size,count,m_fp);
 	if(bytes_read != bytes_req) 
 		ComPrintf("CFileReader::Read: Warning, only read %d of %d bytes for %s\n",
 					bytes_read, bytes_req, m_openFiles[handle]->filename);	
@@ -364,8 +364,8 @@ int  CPakFile::GetChar(HFS handle)
 {
 	if(m_openFiles[handle]->curpos +1 <= m_openFiles[handle]->filelen)
 	{
-		fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
-		return fgetc(m_fp);
+		::fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+		return ::fgetc(m_fp);
 	}
 	return EOF;
 }
@@ -384,8 +384,17 @@ bool CPakFile::Seek(uint offset, int origin, HFS handle)
 	case SEEK_CUR:
 			newpos += (m_openFiles[handle]->curpos + offset);
 			break;
+	default:
+			ComPrintf("CFileReader::Seek: Bad origin specified %s\n", m_openFiles[handle]->filename);
+			return false;
 	}
-	return 0;
+	if((newpos > m_openFiles[handle]->filepos + m_openFiles[handle]->filelen) ||
+		(newpos < m_openFiles[handle]->filepos))
+	{
+		ComPrintf("CFileReader::Seek: Bad parameters. %s\n", m_openFiles[handle]->filename);
+		return false;
+	}
+	return(!::fseek(m_fp,newpos,SEEK_SET));
 }
 
 uint CPakFile::GetPos(HFS handle)
@@ -395,3 +404,4 @@ uint CPakFile::GetPos(HFS handle)
 uint CPakFile::GetSize(HFS handle)
 {	return m_openFiles[handle]->filelen;
 }
+

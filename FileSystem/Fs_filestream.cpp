@@ -105,7 +105,6 @@ ulong CFileStream::Read(void *buf,uint size, uint count)
 		ComPrintf("CFileStream::Read: Invalid parameters :%s\n",m_filename);
 		return 0;
 	}
-
 	if(m_fp)
 		return ::fread(buf,size,count, m_fp);
 	return 0;
