@@ -59,10 +59,8 @@ public:
 
 	//==============================================================
 	//I_Console Interface
-
 	void RegisterCVar(CVarBase * var,I_ConHandler * pHandler=0);
 	void UnregisterHandler(I_ConHandler * pHandler);
-
 	void RegisterCommand(const char *cmdname, int id, I_ConHandler * pHandler);
 	void ComPrint(const char* text);
 	bool ExecString(const char *string);
@@ -98,48 +96,46 @@ public:
 private:
 
 	enum
-	{
-		MAX_CONSOLE_BUFFER = 1024
+	{	MAX_CONSOLE_BUFFER = 1024
 	};
 
-	//looks through config file to see if any parms match the given token
-	//set parm to that token if found
-	bool GetTokenParms(const char * token, CParms * parms);
+	void UpdateCVarFromArchive(CVarBase * pCvar);
+	void WriteCVarToArchive(CVarBase * pCvar);
+
+	//Helper funcs
 	int  ReadConfigParm(char *buf, int bufsize, FILE * fp);
 	bool IsCmdLineParm(const char * token, int tokenLen);
 
 	//==============================================================
 	typedef std::list<CCommand>	 CmdList;
-	typedef std::list<CCommand>::iterator  CmdListIt;
-
 	typedef std::list<CVarBase*> CVarList;
+	typedef std::list<CCommand>::iterator  CmdListIt;
 	typedef std::list<CVarBase*>::iterator CVarListIt;
 	
-	//List of registered commands
-	CmdList		m_lCmds;		
-	
-	//List of registered cvars
-	CVarList	m_lCVars;		
+	CmdList		m_lCmds;		//Currently registered commands
+	CVarList	m_lCVars;		//Currently registered cvars
 
-	//Hold parsed parms of commandString enterered
+	std::string	m_conString;	//Current String in Console
+
+	StrList		m_cmdBuffer;	//Commands entered in the console
+	StrListIt	m_itCmd;		//iterator to keep track of the Commands buffer
+
+	//Parsed parms of string enterered
 	CParms		m_parms;
 	char		m_szParmBuffer[MAX_CONSOLE_BUFFER];
-	
-	//Current String in Console
-	std::string	m_conString;	
 
-	//Fixed List of previously entered strings
-	StrList	m_cmdBuffer;	
-	//iterator to keep track of the Command buffer
-	StrListIt	m_itCmd;
-
-	StrList  m_configFileParms;
-	StrList  m_cmdLineParms;
+	//List of Cvar Strings. 
+	//Loaded from configs on startup.
+	//Updated when handlers are unregistered
+	//Written to config file on exit
+	StrList		m_cvarStrings;	
+	//List of command line parms 
+	StrList		m_cmdLineParms;
 	
+	HANDLE		m_hLogFile;
+
 	//The Console Renderer
 	I_ConsoleRenderer	*	m_prCons;
-
-	HANDLE		m_hLogFile;	
 
 #ifdef VOID_DOS_CONSOLE
 	HANDLE		m_hOut;			//handle to console output		

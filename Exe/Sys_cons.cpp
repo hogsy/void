@@ -35,14 +35,14 @@ CConsole::CConsole(const char * curPath) : m_parms(CON_MAXARGSIZE)
 	//open logfile
 	char debugfilename[COM_MAXPATH];
 	strcpy(debugfilename,curPath);
-	strcat(debugfilename,"/debug.log");
+	strcat(debugfilename,"debug.log");
 
 	m_hLogFile = ::CreateFile(debugfilename,GENERIC_WRITE, FILE_SHARE_READ, 0,
 				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
 
 #ifdef DOSCONS
-	AllocConsole();
-	SetConsoleTitle("Void Debug");
+	::AllocConsole();
+	::SetConsoleTitle("Void Debug");
 	m_hIn  = ::GetStdHandle(STD_INPUT_HANDLE);
 	m_hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
@@ -64,12 +64,11 @@ CConsole::~CConsole()
 	if(m_hLogFile != INVALID_HANDLE_VALUE)
 		::CloseHandle(m_hLogFile);
 
-
 #ifdef DOSCONS
 	ComPrintf("CConsole::Shutting down Console\n");
-	CloseHandle(m_hIn);
-	CloseHandle(m_hOut);
-	FreeConsole();
+	::CloseHandle(m_hIn);
+	::CloseHandle(m_hOut);
+	::FreeConsole();
 #endif
 
 	m_prCons = 0;
@@ -80,8 +79,8 @@ CConsole::~CConsole()
 Set the Renderer
 ==========================================
 */
-void CConsole::SetConsoleRenderer(I_ConsoleRenderer * prcons)
-{	m_prCons = prcons;
+void CConsole::SetConsoleRenderer(I_ConsoleRenderer * pRCons)
+{	m_prCons = pRCons;
 }
 
 /*
@@ -342,14 +341,7 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 
 	//Find archived keyval and set it to that.
 	if(!(var->flags & CVAR_READONLY))
-	{
-		CParms parms(CON_MAXARGSIZE);
-		if(GetTokenParms(var->name, &parms))
-		{
-			if(parms.NumTokens() > 1)
-				var->ForceSet(parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER));
-		}
-	}
+		UpdateCVarFromArchive(var);
 	
 	//Insert into the list
 	m_lCVars.insert(it,var);
@@ -366,12 +358,13 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 	if(!pHandler)
 		return;
 
-	//FIXME: Write archived CVars to a Temp file ?
-
 	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end();)
 	{
 		if((*it)->handler == pHandler)
+		{
+			WriteCVarToArchive(*it);
 			m_lCVars.erase(it++);
+		}
 		else
 			it++;
 	}
@@ -390,19 +383,13 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 Register CFunc
 ==========================================
 */
-void CConsole::RegisterCommand(const char *cmdname,   int id,
-							   I_ConHandler * pHandler)
+void CConsole::RegisterCommand(const char *cmdname,   int id,   I_ConHandler * pHandler)
 {
 	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it++)
 	{
 		if(strcmp(it->name, cmdname) > 0)
 			break;
 	}
-
-	//Find archived command in config, and exec that as well
-	CParms parms(CON_MAXARGSIZE);
-	if(GetTokenParms(cmdname, &parms))
-		pHandler->HandleCommand(id,parms);
 	
 	m_lCmds.insert(it,CCommand(cmdname,id,pHandler));
 }
@@ -558,25 +545,59 @@ will set parms to the matching token
 it finds LAST
 ======================================
 */
-bool CConsole::GetTokenParms(const char * token, CParms * parms)
+void CConsole::UpdateCVarFromArchive(CVarBase * pVar)
 {
-	CParms	configParm(80);
-	char	buffer[80];
-	const char * archivedString=0;
+	CParms archivedParms(CON_MAXARGSIZE);
+	const char * archivedString = 0;
 
-	for(StrListIt itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
+	for(StrListIt itVal = m_cvarStrings.begin(); itVal != m_cvarStrings.end(); itVal++)
 	{
-		configParm = itVal->c_str();
-		if(strcmp(token,configParm.StringTok(0,buffer,80))==0)
-			archivedString = itVal->c_str();
+		archivedParms = itVal->c_str();
+		if(archivedParms.NumTokens() > 1)
+		{
+			//match the name
+			if(strcmp(pVar->name,archivedParms.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER))==0)
+				archivedString = itVal->c_str();
+		}
 	}
 
+	//Did we find a string ?
 	if(archivedString)
 	{
-		parms->Set(archivedString);
-		return true;
+		archivedParms = archivedString;
+		pVar->ForceSet(archivedParms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER));
 	}
-	return false;
+}
+
+/*
+================================================
+Makes sure that the cvars value has been archived
+================================================
+*/
+void CConsole::WriteCVarToArchive(CVarBase * pCvar)
+{
+	CParms archivedParms(CON_MAXARGSIZE);
+	StrListIt itMatched = m_cvarStrings.begin();
+
+	for(StrListIt itVal = m_cvarStrings.begin(); itVal != m_cvarStrings.end(); itVal++)
+	{
+		archivedParms = itVal->c_str();
+		if(archivedParms.NumTokens() > 1)
+		{
+			//match the name
+			if(strcmp(pCvar->name,archivedParms.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER))==0)
+				itMatched = itVal;
+		}
+	}
+
+	char line[80];
+	sprintf(line,"%s \"%s\"\n", pCvar->name, pCvar->string);
+
+	//We did find a match. Now we need to modify this string
+	if(itMatched != m_cvarStrings.begin())
+		*itMatched = line;
+	else	//Didnt find a match. Need to add the string
+		m_cvarStrings.push_back(std::string(line));
 }
 
 /*
@@ -618,7 +639,7 @@ void CConsole::LoadConfig(const char * szFilename)
 		return;
 	}
 
-	m_configFileParms.empty();
+	m_cvarStrings.empty();
 
 	int  lines=0;
 	char line[CON_MAXARGSIZE];
@@ -629,7 +650,7 @@ void CConsole::LoadConfig(const char * szFilename)
 		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
 
-		m_configFileParms.push_back(std::string(line));
+		m_cvarStrings.push_back(std::string(line));
 		memset(line,0,CON_MAXARGSIZE);
 		lines ++;
 
@@ -641,7 +662,7 @@ void CConsole::LoadConfig(const char * szFilename)
 
 /*
 ======================================
-Runs a Config file
+Executes a Config file
 ======================================
 */
 void CConsole::ExecConfig(const char *szFilename)
@@ -662,7 +683,6 @@ void CConsole::ExecConfig(const char *szFilename)
 	const char * firstParm;
 	int firstParmLen;
 	char line[CON_MAXARGSIZE];
-	
 	memset(line,0,CON_MAXARGSIZE);
 	
 	do
@@ -670,17 +690,18 @@ void CConsole::ExecConfig(const char *szFilename)
 		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
 		
-		parm = line;
+		parm.Set(line);
 		firstParm = parm.StringTok(0,m_szParmBuffer,MAX_CONSOLE_BUFFER);
 		firstParmLen = strlen(firstParm);
 
-		//Ignore if the parm was specified in the commandline as that takes
-		//higher precedence
+		//Ignore if the parm was specified in the commandline 
+		//as that takes higher precedence
 		if(IsCmdLineParm(firstParm,firstParmLen))
 			continue;
 		
 		if(!ExecString(line))
 			ComPrintf("Unknown command \"%s\"\n",line);
+
 		memset(line,0,CON_MAXARGSIZE);
 		lines ++;
 

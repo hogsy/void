@@ -73,14 +73,15 @@ struct I_Console
 	static  I_Console * GetConsole();
 
 	//Cvar Registration
-	virtual void RegisterCVar(CVarBase * pVar,
-							  I_ConHandler * pHandler=0)=0;
-
-	virtual void UnregisterHandler(I_ConHandler * pHandler)=0;
+	virtual void RegisterCVar(CVarBase * pVar, I_ConHandler * pHandler=0)=0;
 
 	//Con Command Registration
-	virtual void RegisterCommand(const char * cmdname, int id,
-							  I_ConHandler * pHandler)=0;
+	virtual void RegisterCommand(const char * cmdname, int id,	
+								 I_ConHandler * pHandler)=0;
+
+	//Every ConHandler needs to call this on destruction so that 
+	//its vars and commands are removed and archived.
+	virtual void UnregisterHandler(I_ConHandler * pHandler)=0;
 
 	//Print Functions
 	virtual void ComPrint(const char* text)=0;
