@@ -41,51 +41,51 @@ void world_destroy(world_t *world)
 		return;
 
 	if(world->edges)
-		free(world->edges);
+		delete [] world->edges;
 
 	if (world->textures)
-		free(world->textures);
+		delete [] world->textures;
 
 	if (world->texdefs)
-		free(world->texdefs);
+		delete [] world->texdefs;
 
 	if (world->brushes)
-		free(world->brushes);
+		delete [] world->brushes;
 
 	if (world->iverts)
-		free(world->iverts);
+		delete [] world->iverts;
 
 	if (world->nodes)
-		free(world->nodes);
+		delete [] world->nodes;
 
 	if (world->leafs)
-		free(world->leafs);
+		delete [] world->leafs;
 
 	if (world->planes)
-		free(world->planes);
+		delete [] world->planes;
 
 	if (world->sides)
-		free(world->sides);
+		delete [] world->sides;
 
 	if (world->verts)
-		free(world->verts);
+		delete [] world->verts;
 
 	if (world->entities)
-		free(world->entities);
+		delete [] world->entities;
 
 	if (world->keys)
-		free(world->keys);
+		delete [] world->keys;
 
 	if (world->leafvis)
-		free(world->leafvis);
+		delete [] world->leafvis;
 
 	if(world->lightdata)
-		free(world->lightdata);
+		delete [] world->lightdata;
 
 	if(world->lightdefs)
-		free(world->lightdefs);
+		delete [] world->lightdefs;
 
-	free(world);
+	delete world;
 	world = NULL;
 }
 
@@ -124,7 +124,7 @@ static FILE *bsp_file;
 
 int load_lump(int l, void **data)
 {
-	*data = MALLOC(header.lumps[l].length+1);
+	*data = (void*) new unsigned char[header.lumps[l].length+1];
 	memset(*data, 0, header.lumps[l].length+1);
 
 	fseek(bsp_file, header.lumps[l].offset, SEEK_SET);
@@ -216,7 +216,7 @@ world_t* world_read(char *filename)
 		return NULL;
 	}
 
-	world_t *w = (world_t*)MALLOC(sizeof(world_t));
+	world_t *w = new world_t;
 
 	// read in all the lumps
 	w->nnodes	= load_lump(LUMP_NODES,			(void**)&w->nodes)	 / sizeof(bspf_node_t);
