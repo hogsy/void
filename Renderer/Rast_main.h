@@ -177,6 +177,7 @@ protected:
 	CVar    m_cWndY;        //Windowed Y pos
 
 
+
 	// arrays to store poly data
 
 	typedef struct
@@ -214,6 +215,7 @@ protected:
 // cvars the rasterizers use
 extern CVar *	g_p32BitTextures;
 extern CVar *	g_pFov;
+extern CVar *	g_pD3DXShift;
 
 #endif	// RENDERER
 #endif

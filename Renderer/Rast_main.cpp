@@ -252,3 +252,4 @@ void CRasterizer::PolyColor4f(float r, float g, float b, float a)
 	mColor |= (byte)(a*255) << 24;
 }
 
+

@@ -700,7 +700,11 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 		break;
 
 	case VRAST_ORTHO:
-		D3DXMatrixOrthoOffCenter(&m_matProjection, 0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
+		if (g_pD3DXShift->ival == 0)
+			D3DXMatrixOrthoOffCenter(&m_matProjection, 0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
+		else
+			D3DXMatrixOrthoOffCenter(&m_matProjection,	1.0f/g_pD3DXShift->ival, g_rInfo.width + 1.0f/g_pD3DXShift->ival,
+														1.0f/g_pD3DXShift->ival, g_rInfo.height+ 1.0f/g_pD3DXShift->ival, -1, 1);
 
 		break;
 	}

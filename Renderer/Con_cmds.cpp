@@ -22,6 +22,7 @@ CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
 CVar *	g_p32BitTextures=0;
 CVar *	g_pBeamTolerance=0;
+CVar *	g_pD3DXShift=0;	// d3dx text shift value
 
 //======================================================================================
 //Command Handling routines
@@ -254,6 +255,18 @@ bool CVar_BeamTolerance(const CVar * var, const CParms &parms)
 }
 
 
+/*
+=======================================
+set how much the console will fade in
+=======================================
+*/
+bool CVar_D3DXShift(const CVar * var, int val)
+{
+	return true;
+}
+
+
+
 //======================================================================================
 //======================================================================================
 
@@ -278,6 +291,8 @@ bool CRConsole::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return CVar_ConAlpha(&m_conAlpha,parms.IntTok(1));
 	else if(cvar == g_pBeamTolerance)
 		return CVar_BeamTolerance((CVar*)cvar,parms);
+	else if(cvar == g_pD3DXShift)
+		return CVar_D3DXShift((CVar*)cvar,parms.IntTok(1));
 	return false;
 }
 
@@ -298,6 +313,7 @@ void CRConsole::RegisterConObjects()
 	g_pMultiTexture = new CVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE);
 	g_p32BitTextures = new CVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
 	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
+	g_pD3DXShift = new CVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
 
 	g_pConsole->RegisterCVar(g_pFullbright,this);
 	g_pConsole->RegisterCVar(g_pFov,this);
@@ -305,6 +321,7 @@ void CRConsole::RegisterConObjects()
 	g_pConsole->RegisterCVar(g_pVidSynch,this);
 	g_pConsole->RegisterCVar(g_p32BitTextures,this);
 	g_pConsole->RegisterCVar(g_pBeamTolerance,this);
+	g_pConsole->RegisterCVar(g_pD3DXShift,this);
 }
 
 /*
@@ -320,6 +337,7 @@ void CRConsole::DestroyConObjects()
 	delete g_pMultiTexture;
 	delete g_p32BitTextures;
 	delete g_pBeamTolerance;
+	delete g_pD3DXShift;
 
 	g_pFullbright = 0;
 	g_pFov = 0;
@@ -327,5 +345,6 @@ void CRConsole::DestroyConObjects()
 	g_pMultiTexture = 0;
 	g_p32BitTextures = 0;
 	g_pBeamTolerance = 0;
+	g_pD3DXShift = 0;
 }
 
