@@ -3,7 +3,7 @@
 #define BSP_H
 
 
-#include "Com_Vector.h"
+#include "Com_vector.h"
 #include "map_file.h"
 
 #define MAX_FACE_VERTS	32

@@ -2,7 +2,7 @@
 #include <memory.h>
 #include <string.h>
 
-#include "3dmath.h"
+#include "Com_vector.h"
 #include "std_lib.h"
 #include "bsp_file.h"
 #include "bsp.h"
@@ -92,7 +92,13 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 	// find the right & up vectors
 	//
 
-	vector_t	baseaxis[18] =
+	// total hack to avoid using the vector class
+	typedef struct
+	{
+		float x, y, z;
+	} vec_t;
+
+	vec_t	baseaxis[18] =
 	{
 	{ 0, 0, 1}, {1,0,0}, {0,-1, 0},			// floor
 	{ 0, 0,-1}, {1,0,0}, {0,-1, 0},		// ceiling
