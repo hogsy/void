@@ -7,7 +7,7 @@
 
 //Include proper project header
 #ifdef _VOID_EXE_
-	#include "../Exe/Source/Sys_hdr.h"
+	#include "../Exe/Sys_hdr.h"
 	#include "I_file.h"
 	#define PRINT ComPrintf
 

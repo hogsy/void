@@ -94,35 +94,35 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Snd_buf.cpp
+SOURCE=.\Snd_buf.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_buf.h
+SOURCE=.\Snd_buf.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_defs.h
+SOURCE=.\Snd_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_hdr.h
+SOURCE=.\Snd_hdr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_main.cpp
+SOURCE=.\Snd_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_main.h
+SOURCE=.\Snd_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_wave.cpp
+SOURCE=.\Snd_wave.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Snd_wave.h
+SOURCE=.\Snd_wave.h
 # End Source File
 # End Group
 # Begin Group "System"
@@ -130,35 +130,39 @@ SOURCE=.\Source\Snd_wave.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Sys_cons.cpp
+SOURCE=.\Sys_cons.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_cons.h
+SOURCE=.\Sys_cons.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_exp.h
+SOURCE=.\Sys_cvar.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_main.cpp
+SOURCE=.\Sys_exp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_main.h
+SOURCE=.\Sys_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_time.cpp
+SOURCE=.\Sys_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_time.h
+SOURCE=.\Sys_time.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_win.cpp
+SOURCE=.\Sys_time.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sys_win.cpp
 # End Source File
 # End Group
 # Begin Group "Shared"
@@ -230,31 +234,31 @@ SOURCE=..\Shared\world.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Cl_cmds.cpp
+SOURCE=.\Cl_cmds.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_cmds.h
+SOURCE=.\Cl_cmds.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_collision.cpp
+SOURCE=.\Cl_collision.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_collision.h
+SOURCE=.\Cl_collision.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_main.cpp
+SOURCE=.\Cl_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_main.h
+SOURCE=.\Cl_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cl_move.cpp
+SOURCE=.\Cl_move.cpp
 # End Source File
 # End Group
 # Begin Group "Resources"
@@ -262,19 +266,15 @@ SOURCE=.\Source\Cl_move.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
+SOURCE=.\icon1.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\icon1.ico
+SOURCE=.\resources.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\resources.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\resources.rc
+SOURCE=.\resources.rc
 # End Source File
 # End Group
 # Begin Group "Music"
@@ -282,27 +282,27 @@ SOURCE=.\Source\resources.rc
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Mus_cd.cpp
+SOURCE=.\Mus_cd.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_cd.h
+SOURCE=.\Mus_cd.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_dm.cpp
+SOURCE=.\Mus_dm.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_dm.h
+SOURCE=.\Mus_dm.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_main.cpp
+SOURCE=.\Mus_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_main.h
+SOURCE=.\Mus_main.h
 # End Source File
 # End Group
 # Begin Group "Network"
@@ -310,23 +310,23 @@ SOURCE=.\Source\Mus_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Net_defs.h
+SOURCE=.\Net_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Net_sock.cpp
+SOURCE=.\Net_sock.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Net_sock.h
+SOURCE=.\Net_sock.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Net_util.cpp
+SOURCE=.\Net_util.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Net_util.h
+SOURCE=.\Net_util.h
 # End Source File
 # End Group
 # Begin Group "Server"
@@ -334,11 +334,11 @@ SOURCE=.\Source\Net_util.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Sv_main.cpp
+SOURCE=.\Sv_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sv_main.h
+SOURCE=.\Sv_main.h
 # End Source File
 # End Group
 # Begin Group "Input"
@@ -346,39 +346,39 @@ SOURCE=.\Source\Sv_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\In_defs.h
+SOURCE=.\In_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_kb.cpp
+SOURCE=.\In_kb.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_kb.h
+SOURCE=.\In_kb.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_main.cpp
+SOURCE=.\In_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_main.h
+SOURCE=.\In_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_mouse.cpp
+SOURCE=.\In_mouse.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_mouse.h
+SOURCE=.\In_mouse.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_state.cpp
+SOURCE=.\In_state.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_state.h
+SOURCE=.\In_state.h
 # End Source File
 # End Group
 # Begin Group "Interface"
@@ -419,7 +419,7 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_hdr.h
+SOURCE=.\Sys_hdr.h
 # End Source File
 # Begin Source File
 
