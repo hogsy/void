@@ -19,6 +19,9 @@ bool PathExists(const char * path);
 void ShowMessageBox(const char * str, const char *title=0);
 
 //Move these to error handler
+
+char * GetWin32ErrorMessage(ulong msgId, char *buf, int buflen);
+
 void HRPrint(HRESULT hr, const char* str);
 void HRShowMessageBox(HRESULT hr, const char* str);
 

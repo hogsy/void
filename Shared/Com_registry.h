@@ -1,31 +1,29 @@
-#ifndef __Registry_H__
-#define __Registry_H__
-//
-// Registry.h
-//   - Helper functions registering and unregistering a component.
-//
+#ifndef VOID_COM_REGISTRY
+#define VOID_COM_REGISTRY
 
-// This function will register a component in the Registry.
-// The component calls this function from its DllRegisterServer function.
-HRESULT RegisterServer(HMODULE hModule, 
-                       const CLSID& clsid, 
-                       const char* szFriendlyName,
-                       const char* szVerIndProgID,
-                       const char* szProgID) ;
+/*
+================================================
+Void registry helper funcs
+implicitly manipulates the HKEY_CURRENT_USER 
+key only.
+================================================
+*/
 
-// This function will unregister a component.  Components
-// call this function from their DllUnregisterServer function.
-HRESULT UnregisterServer(const CLSID& clsid,
-                         const char* szVerIndProgID,
-                         const char* szProgID) ;
+namespace VoidReg {
 
+//Check if key is present
+bool DoesKeyExist(const char * keyname);
 
+//Add item-val pair in the given key
+bool AddKeyValuePair(const char *keyname,
+					const char *itemname,
+					const char *valuename);
 
-bool	GetKeyValuePair(const char *keyname, 
-						char *itemname, 
-						int &itemlen,
-						char *valuename,
-						int &valuelen);
-
+//Add item-val pair in the given key
+bool GetKeyValue(const char *keyname, 
+				 const char *itemname, 
+				 char *buffer,
+				 int   bufflen);
+}
 
 #endif
