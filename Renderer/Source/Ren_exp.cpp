@@ -39,10 +39,9 @@ saved rendering info
 =======================================
 */
 
-CRenExp::CRenExp(RenderInfo_t *pRInfo, VoidExport_t * pVExp)
+CRenExp::CRenExp(VoidExport_t * pVExp)
 {
-	rInfo = pRInfo;
-	rInfo->ready = false;
+	rInfo = new RenderInfo_t();
 
 	m_pImport = pVExp;
 	
@@ -98,6 +97,10 @@ CRenExp::~CRenExp()
 	if(g_prCons)
 		delete g_prCons;
 	g_prCons = 0;
+
+	if(rInfo)
+		delete rInfo;
+	rInfo = 0;
 	
 	delete [] g_szGamePath;
 	g_szGamePath = 0;

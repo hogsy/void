@@ -10,6 +10,7 @@ exported by the dll
 */
 
 static HFILE * g_hmemlog;
+extern RenderInfo_t* rInfo;
 
 /*
 ==========================================
@@ -19,8 +20,7 @@ start memory logging if in debug mode
 */
 
 
-RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo, 
-										 VoidExport_t * vexp)
+RENDERER_API I_Renderer * RENDERER_Create(VoidExport_t * vexp)
 {
 #ifdef _DEBUG
 	
@@ -41,7 +41,7 @@ RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo,
 
 	if(!g_pRenExp)
 	{
-		g_pRenExp = new CRenExp(rinfo,vexp);
+		g_pRenExp = new CRenExp(vexp);
 		if(!g_pRenExp)
 		{
 			::MessageBox(0,"CreateRenderer:: Unable to create Renderer",
@@ -62,7 +62,7 @@ end memory logging if in debug mode
 ==========================================
 */
 
-RENDERER_API void FreeRenderer()
+RENDERER_API void RENDERER_Free()
 {
 	if(g_pRenExp)
 	{
@@ -79,6 +79,9 @@ RENDERER_API void FreeRenderer()
 }
 
 
+RENDERER_API RenderInfo_t * RENDERER_GetParms()
+{	return rInfo;
+}
 
 
 

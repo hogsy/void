@@ -65,32 +65,48 @@ CVoid::CVoid(HINSTANCE hInstance,
 			 HINSTANCE hPrevInstance, 
 		     LPSTR lpCmdLine)
 {
+	g_hInst = hInstance;
+
 	_getcwd(g_exedir,COM_MAXPATH);		//Current Working directory
 	strcpy(g_gamedir,"game");			//Set default game dir
 
-	g_hInst = hInstance;
+	//Create timer
+	g_pTime = new CTime();						
 
-	g_pTime = new CTime();				//Init Game Timer
-	g_pCons = new CConsole();			//Console
+	//Create the game console
+	g_pCons = new CConsole();
+	
+	//Create the file system
 	g_pFileSystem = CreateFileSystem(g_pCons);
-	g_pInput= new CInput();				//Input sys
-	g_pRinfo = new RenderInfo_t;		//Rendereing Parms
-	g_pExport= new VoidExport_t;		//Exported stuff
-	g_pClient = new CClient;			//The client
+	
+	//Create the input system
+	g_pInput= new CInput();					
+	
+	//Export structure
+	g_pExport= new VoidExport_t(g_exedir,g_gamedir,
+					&g_fcurTime, &g_fframeTime);
+	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
+	
+	//Create the Renderer
+	g_pRender= RENDERER_Create(g_pExport); 
+	g_pRinfo = RENDERER_GetParms();
+	
+	//Create the client
+	g_pClient = new CClient();		
 
 #ifndef __VOIDALPHA
 	//Network Sys
-	g_pServer = new CServer;
+	g_pServer = new CServer();
 #endif
 	
 #ifdef INCLUDE_SOUND
 	//Sound
-	g_pSound = new CSound;
+	g_pSound = new CSound();
 #endif
 
 #ifdef INCLUDE_MUSIC
 	//Music
-	g_pMusic = new CMusic;
+	g_pMusic = new CMusic();
 #endif
 
 	//Set game state - full screen console - not connected
@@ -147,25 +163,11 @@ CVoid::~CVoid()
 		g_pTime = 0;
 	}
 
-	if(g_pRinfo)
-	{	delete g_pRinfo;
-		g_pRinfo = 0;
-	}
-
 	//Free the Renderer Interface
-	if(g_pRender)
-	{
-		FREERENDERER rfree = (FREERENDERER)::GetProcAddress(hRenderer, "FreeRenderer");
-		rfree(&g_pRender);
-	}
+	RENDERER_Free();
 
 	if(g_pExport)
 	{
-		g_pExport->basedir = 0;
-		g_pExport->gamedir = 0;
-		g_pExport->vconsole = 0;
-		g_pExport->frametime = 0;
-		g_pExport->curtime = 0;
 		delete g_pExport;
 		g_pExport = 0;
 	}
@@ -177,9 +179,6 @@ CVoid::~CVoid()
 	{		delete g_pCons;
 		g_pCons = 0;
 	}
-
-	//Release the renderer dll
-	::FreeLibrary(hRenderer);	
 }
 
 /*
@@ -213,40 +212,6 @@ bool CVoid::Init()
 	//================================
 	//Initialize Renderer
 	
-	g_pRinfo->hInst  = g_hInst;
-	g_pRinfo->width  = 640;
-	g_pRinfo->height = 480;
-	g_pRinfo->bpp	 = 16;
-	g_pRinfo->zdepth = 16;
-	g_pRinfo->stencil= 0;
-	g_pRinfo->active = false;
-	g_pRinfo->ready  = false;
-	g_pRinfo->fov	 = PI / 2;
-	g_pRinfo->rflags = 0;
-	
-	g_pExport->basedir = g_exedir;
-	g_pExport->gamedir = g_gamedir;
-	g_pExport->curtime = &g_fcurTime;
-	g_pExport->frametime = &g_fframeTime;
-	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
-
-	//Load Renderer dll
-	hRenderer = ::LoadLibrary("vrender.dll");
-	if(hRenderer == NULL)
-	{
-		Error("CVoid::Init:Could not load Renderer dll");
-		return false;
-	}
-
-	//Create Renderer
-	GETRENDERERAPI rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
-	hr = rapi(&g_pRender,g_pRinfo,g_pExport);
-	if(FAILED(hr))
-	{
-		Util_ErrorMessage(hr,"Void::Init:Error Loading Renderer");
-		g_pRender = NULL ; 
-		return false;
-	}
 
 	//================================
 	//We parse the command line and exec configs now since
@@ -282,7 +247,6 @@ bool CVoid::Init()
 		return false;
 	}
 	g_pRinfo->hWnd = g_hWnd;
-	g_pRinfo->hInst = g_hInst;
 
 	if(!g_pRender->InitRenderer())
 	{

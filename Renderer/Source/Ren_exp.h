@@ -35,7 +35,7 @@ public:
 	static bool CVar_Bpp(const CVar * var, int argc, char** argv);
 
 	
-	CRenExp(RenderInfo_t *pRInfo, VoidExport_t * pVExp);
+	CRenExp(VoidExport_t * pVExp);
 	~CRenExp();
 
 private:

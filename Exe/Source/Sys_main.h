@@ -40,8 +40,6 @@ class CVoid
 
 	private:
 	
-		HINSTANCE hRenderer;					//Handle to Renderer
-
 		CTime		* g_pTime;
 		CFileSystem * g_pFileSystem;
 		

@@ -32,8 +32,6 @@ void ScreenShot(char *name,int type)
 
 	// 
 	// find a file name to save it to 
-	// 
-//	sprintf(checkname, "%s\\%s\\", rInfo->base_dir, "screenshots");
 	sprintf(checkname, "%s\\%s\\", g_szGamePath, "Shots");
 	ConfirmDir(checkname);
 
@@ -50,7 +48,6 @@ void ScreenShot(char *name,int type)
 			shotname[4] = i/10 + '0';
 			shotname[5] = i%10 + '0';
 
-//			sprintf (checkname, "%s\\%s\\%s", rInfo->base_dir, "screenshots", shotname);
 			sprintf(checkname, "%s\\%s\\%s", g_szGamePath, "Shots", name);
 
 			f = fopen(checkname, "rb");
@@ -69,7 +66,6 @@ void ScreenShot(char *name,int type)
 
 	else
 	{
-//		sprintf(checkname, "%s\\%s\\%s", rInfo->base_dir, "screenshots", name);
 		sprintf(checkname, "%s\\%s\\%s", g_szGamePath, "Shots", name);
 		if(type == CImage::FORMAT_PCX)
 			DefaultExtension(checkname, ".pcx");

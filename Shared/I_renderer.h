@@ -26,7 +26,7 @@ Renderer info struct
 
 typedef struct RenderInfo_t
 {
-	RenderInfo_t(HINSTANCE hinst) : hInst(hinst)
+	RenderInfo_t()
 	{
 		width = 640;
 		height = 480;
@@ -42,7 +42,6 @@ typedef struct RenderInfo_t
 	//==========================================
 
 	HWND		hWnd;		//Window information
-	HINSTANCE	hInst;		//Why is this here ? 
 
 	HDC			hDC;		//device context
 	HGLRC		hRC;		//the gl rendering context
@@ -93,8 +92,9 @@ struct I_Renderer
 };
 
 
-RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo, VoidExport_t * vexp);
-RENDERER_API void FreeRenderer();
+RENDERER_API I_Renderer   * RENDERER_Create(VoidExport_t * vexp);
+RENDERER_API RenderInfo_t * RENDERER_GetParms();
+RENDERER_API void RENDERER_Free();
 
 #endif
 

@@ -36,7 +36,6 @@ CRConsole::CRConsole(I_ExeConsole * p_eCons): m_seperatorchar('^'),
 #if RENDERER_LOGFILE 
 	//open logfile
 //	char f[260];
-//	strcpy(f, rInfo->working_dir);
 //	strcat(f, "\\console.log");
 	m_logfile = fopen("E:\\Void\\Console.log", "w");
 #endif
