@@ -237,6 +237,7 @@ extern CVar * g_varWndY;        //Windowed Y pos
 extern CVar * g_var32BitTextures;
 extern CVar * g_varFov;
 extern CVar * g_varD3DXShift;
+extern CVar * g_varGLDriver;
 
 #endif	// RENDERER
 #endif

@@ -2,7 +2,8 @@
 #define RAST_GL_H
 
 #include "Rast_main.h"
-#include "gl.h"
+#include "gls.h"
+#include "glext.h"
 
 
 class COpenGLRast : public CRasterizer
@@ -69,13 +70,10 @@ private:
 
 	void EnumDisplayModes();
 	bool SetupPixelFormat();
+	void GetExtensions();
 
 	DEVMODE*m_devmodes;		//all available display modes
 	int		m_nummodes;		//Number of display modes
-
-	bool	m_loadeddriver;
-	bool	m_initialized;
-	char	m_gldriver[256];
 
 	bool	m_bInitialized;
 
@@ -84,7 +82,15 @@ private:
 	bool	m_CVAsupported;
 	bool	m_vsynchsupported;
 
+// gl extensions
+//====================================================================================
+	PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB;
+	PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB;
+	PFNGLLOCKARRAYSEXTPROC			glLockArraysEXT;
+	PFNGLUNLOCKARRAYSEXTPROC		glUnlockArraysEXT;
 
+	typedef BOOL (APIENTRY * WGLSWAPINTERVALEXT) (int interval);
+	WGLSWAPINTERVALEXT		wglSwapIntervalEXT;
 
 	EPolyType	mType;
 	DWORD		mColor;

@@ -27,6 +27,7 @@ CVar * g_var32BitTextures;
 CVar * g_varBeamTolerance;
 CVar * g_varD3DXShift;
 CVar * g_varGLExtensions;
+CVar * g_varGLDriver;
 
 
 //======================================================================================
@@ -216,6 +217,11 @@ bool CVar_D3DXShift(int val)
 {	return true;
 }
 
+bool CVar_GLDriver(int val)
+{
+	return true;
+}
+
 
 //======================================================================================
 //======================================================================================
@@ -251,6 +257,9 @@ bool CRConsole::HandleCVar(const CVar * cvar, const CStringVal &strVal)
 	else if(cvar == g_varD3DXShift)
 		return CVar_D3DXShift(strVal.IntVal());
 
+	else if(cvar == g_varGLDriver)
+		return CVar_GLDriver(strVal.IntVal());
+
 	return false;
 }
 
@@ -278,6 +287,7 @@ void CRConsole::RegisterConObjects()
 	g_varBeamTolerance = pConsole->RegisterCVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE,this);
 	g_varD3DXShift = pConsole->RegisterCVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE,this);
 	g_varGLExtensions = pConsole->RegisterCVar("r_glExts", "None", CVAR_STRING, CVAR_READONLY, this);
+	g_varGLDriver = pConsole->RegisterCVar("r_glDriver", "0", CVAR_INT, CVAR_ARCHIVE, this);
 }
 
 

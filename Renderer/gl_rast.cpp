@@ -1,8 +1,12 @@
+
+
 #include "Standard.h"
 #include "gl_rast.h"
-#include <gl/glu.h>
+
+//#include <gl/glu.h>
 
 extern 	CVar * g_varGLExtensions;
+
 
 /*
 =======================================
@@ -11,27 +15,20 @@ Constructor
 */
 COpenGLRast::COpenGLRast()
 {
-	m_bInitialized = false;
 	m_CVAsupported = false;
 	m_vsynchsupported = false;
 	m_nummodes = 0;
 	m_devmodes = 0;
+	m_bInitialized = false;
 
-
+	glMultiTexCoord2fARB	= NULL;
+	glActiveTextureARB		= NULL;
+	glLockArraysEXT			= NULL;
+	glUnlockArraysEXT		= NULL;
+	wglSwapIntervalEXT		= NULL;
 
 	//Enumerate the available display modes
 	EnumDisplayModes();
-
-	//load the driver
-	OpenGLFindDriver(m_gldriver);
-	if (!(OpenGLInit(m_gldriver)==0))
-	{
-		ComPrintf("GL::Unable to load opengl dll\n");
-		m_loadeddriver = false;
-		return;
-	}
-	ComPrintf("GL:Loaded GL driver: %s\n", m_gldriver);
-	m_loadeddriver = true;
 }
 
 
@@ -46,8 +43,6 @@ COpenGLRast::~COpenGLRast()
 		delete [] m_devmodes;
 	m_devmodes = NULL;
 
-	// unload the driver
-	OpenGLUnInit();
 
 	if (mMaxElements >= MAX_ELEMENTS)
 		ComPrintf("**** mMaxElements = %d ****\n", mMaxElements);
@@ -65,25 +60,34 @@ Init
 */
 bool COpenGLRast::Init()
 {
-	if (!m_loadeddriver)
+	// load the driver
+	int num_drivers = glsGetNumberOfDrivers();
+	ComPrintf("%d available OpenGL drivers\n");
+
+	int driver = 0;
+	if (g_varGLDriver->ival>0 && g_varGLDriver->ival<num_drivers)
+		driver = g_varGLDriver->ival;
+
+
+	gls_error GLSError;
+	GLSError = glsLoadDriver(driver);
+    if (GLSError != GLS_ERROR_OK)
+	{
+		Error("Couldnt load gl driver %d\n", driver);
 		return false;
+	}
+
+	gls_driver_info dinfo;
+	glsGetCurrentDriverInfo(&dinfo);
 
 
-	m_bInitialized = true;
+	ComPrintf("GL:Loaded GL driver: %s\n", dinfo.aDriverDescription);
+
 
 
 	ComPrintf("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
 	ComPrintf("CGLUtil::Init:Pos: %d %d\n",g_varWndX->ival,g_varWndY->ival);
 
-
-#ifdef DYNAMIC_GL
-	//3dfx 3d only card. default to fullscreen mode and 16 bit
-	if(_stricmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
-	{
-		g_rInfo.rflags |= RFLAG_FULLSCREEN;
-		g_rInfo.bpp = 16;
-	}
-#endif
 
 	// change display before we do anything with gl
 	if (g_rInfo.rflags & RFLAG_FULLSCREEN)
@@ -101,11 +105,11 @@ bool COpenGLRast::Init()
 	}
 
 	//Finally create GL context
-	hRC = _wglCreateContext(hDC);
-	_wglMakeCurrent(hDC, hRC);
+	hRC = glsCreateContext(hDC);
+	glsMakeCurrent(hDC, hRC);
 
 	//Get GL Extentions
-	OpenGLGetExtensions();
+	GetExtensions();
 
 
 	//Check for GL flags
@@ -162,6 +166,8 @@ bool COpenGLRast::Init()
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+	g_rInfo.ready = true;
+	m_bInitialized = true;
 	return true;
 }
 
@@ -176,8 +182,8 @@ bool COpenGLRast::Shutdown()
 	if (!hRC || !hDC)
 		return true;
 
+	m_bInitialized = false;
 	g_rInfo.ready = false;
-//	GoWindowed();
 	::ChangeDisplaySettings(NULL, 0);
 
 
@@ -191,8 +197,11 @@ bool COpenGLRast::Shutdown()
 		SetWindowCoords(rect.left, rect.top);
 	}
 
-	_wglMakeCurrent(NULL, NULL);
-	_wglDeleteContext(hRC);
+	glsMakeCurrent(NULL, NULL);
+	glsDeleteContext(hRC);
+
+	// unload the driver
+	glsUnloadDriver();
 
 	::ReleaseDC(g_rInfo.hWnd, hDC);
 
@@ -202,6 +211,26 @@ bool COpenGLRast::Shutdown()
 
 	g_rInfo.ready = false;
 	return true;
+}
+
+
+/*
+==========================================
+set all extension pointers
+==========================================
+*/
+void COpenGLRast::GetExtensions()
+{
+	// ARB multitexture
+	glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		glsGetProcAddress("glMultiTexCoord2fARB");
+	glActiveTextureARB		= (PFNGLACTIVETEXTUREARBPROC)		glsGetProcAddress("glActiveTextureARB");
+
+	// CVA
+	glLockArraysEXT			= (PFNGLLOCKARRAYSEXTPROC)			glsGetProcAddress("glLockArraysEXT");
+	glUnlockArraysEXT		= (PFNGLUNLOCKARRAYSEXTPROC)		glsGetProcAddress("glUnlockArraysEXT");
+
+	// vsynch
+	wglSwapIntervalEXT		= (WGLSWAPINTERVALEXT)				glsGetProcAddress("wglSwapIntervalEXT");
 }
 
 
@@ -422,7 +451,7 @@ void COpenGLRast::Resize()
 	g_rInfo.width  = crect.right - crect.left;
 	g_rInfo.height = crect.bottom - crect.top;
 
-	_wglMakeCurrent(hDC, hRC);
+	glsMakeCurrent(hDC, hRC);
 	glViewport(0, 0, g_rInfo.width, g_rInfo.height);
 
 }
@@ -437,13 +466,13 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 	if (!hDC || !hRC)
 		return false;
 
-	_wglMakeCurrent(hDC, hRC);
+	glsMakeCurrent(hDC, hRC);
 
-	bool fast = (bpp == g_rInfo.bpp);
+//	bool fast = (bpp == g_rInfo.bpp);
 
 
 	//Shutdown openGL first
-	if (!fast)
+//	if (!fast)
 		Shutdown();
 
 	// record old stats
@@ -460,7 +489,7 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 	else
 		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
+/*
 	if (fast)
 	{
 		g_rInfo.ready = false;
@@ -473,7 +502,7 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 	}
 
 	else
-	{
+*/	{
 		if (!Init())
 		{
 			ComPrintf("GL::UpdateDisplaySettings: Unable to change to new settings\n");
@@ -525,13 +554,13 @@ bool COpenGLRast::SetupPixelFormat()
 	};
 
 	int  selected_pf=0;
-	if (!(selected_pf = _ChoosePixelFormat(hDC, &pfd)))
+	if (!(selected_pf = ChoosePixelFormat(hDC, &pfd)))
 	{
 		ComPrintf("GL::SetupPixelFormat:Couldn't find acceptable pixel format\n");
 		return false;
 	}
 
-	if (!_SetPixelFormat(hDC, selected_pf, &pfd))
+	if (!SetPixelFormat(hDC, selected_pf, &pfd))
 	{
 		ComPrintf("GL::SetupPixelFormat::Couldn't set pixel format\n");
 		return false;
@@ -542,7 +571,7 @@ bool COpenGLRast::SetupPixelFormat()
 	g_rInfo.zdepth  = pfd.cDepthBits;
 	g_rInfo.stencil = pfd.cStencilBits;
 
-	_DescribePixelFormat(hDC, selected_pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+	DescribePixelFormat(hDC, selected_pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 	ComPrintf("CGLUtil::SetupPixelFormat:Set Pixel Format:\nBit Depth: %d\nZ Depth: %d\nStencil Depth: %d\n",
 			  pfd.cColorBits, pfd.cDepthBits, pfd.cStencilBits);
 	return true;
@@ -557,9 +586,12 @@ SetFocus
 */
 void COpenGLRast::SetFocus()
 {
+	if (!m_bInitialized)
+		return;
+
 	if (!hDC || !hRC)
 		ComPrintf("setting current without hDC or hRC!!!\n");
-	_wglMakeCurrent(hDC, hRC);
+	glsMakeCurrent(hDC, hRC);
 }
 
 
@@ -902,7 +934,7 @@ void COpenGLRast::ReportErrors(void)
 		return;
 
 	ComPrintf("gl error %d\n", err);
-	ComPrintf("gl error %s\n", gluErrorString(err));
+//	ComPrintf("gl error %s\n", gluErrorString(err));
 }
 
 
@@ -917,7 +949,7 @@ void COpenGLRast::FrameEnd(void)
 	Flush();
 
 	glFlush();
-	_SwapBuffers(hDC);
+	SwapBuffers(hDC);
 }
 
 

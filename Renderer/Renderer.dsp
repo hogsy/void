@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glu32.lib opengl32.lib kernel32.lib user32.lib gdi32.lib shell32.lib ddraw.lib dxguid.lib d3dxd.lib d3dim.lib winmm.lib ole32.lib advapi32.lib ijl11.lib /nologo /subsystem:windows /dll /profile /map:"..\vrender.map" /debug /machine:I386 /out:"..\vrender.dll" /libpath:"..\Shared\Libraries"
+# ADD LINK32 version.lib kernel32.lib user32.lib gdi32.lib shell32.lib ddraw.lib dxguid.lib d3dxd.lib d3dim.lib winmm.lib ole32.lib advapi32.lib ijl11.lib /nologo /subsystem:windows /dll /profile /map:"..\vrender.map" /debug /machine:I386 /out:"..\vrender.dll" /libpath:"..\Shared\Libraries"
 # SUBTRACT LINK32 /nodefaultlib
 
 !ENDIF 
@@ -329,19 +329,23 @@ SOURCE=.\Dll_main.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\gl.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\gl_driver.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\gl_rast.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\gl_rast.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\glext.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\gls.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\gls.h
 # End Source File
 # End Group
 # Begin Group "None"
