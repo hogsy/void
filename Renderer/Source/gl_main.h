@@ -28,7 +28,7 @@ public:
 	bool UpdateDisplaySettings(unsigned int width, 
 							   unsigned int height, 
 							   unsigned int bpp, 
-							   unsigned int fullscreen);
+							   bool fullscreen);
 	
 	bool IsDriverLoaded() { return m_loadeddriver; }
 

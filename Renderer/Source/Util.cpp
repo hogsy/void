@@ -62,7 +62,6 @@ void DefaultExtension (char *path, char *extension)
 }
 
 
-
 /*
 =======================================
 local Error and FATAL error funcs
@@ -80,7 +79,7 @@ void FError(char *error, ...)
 	MessageBox(NULL, textBuffer, "Error", MB_OK);
 	
 	//Win32 func
-	PostMessage(rInfo->hWnd,	// handle of destination window 
+	PostMessage(g_rInfo.hWnd,	// handle of destination window 
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);					// second message parameter 

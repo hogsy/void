@@ -27,7 +27,6 @@ CGLUtil::CGLUtil()
 
 	//load the driver
 	OpenGLFindDriver(m_gldriver);
-
 	if (!(OpenGLInit(m_gldriver)==0))
 	{
 		ConPrint("GL::Unable to load opengl dll\n");
@@ -45,7 +44,6 @@ CGLUtil::~CGLUtil()
 	m_nummodes = 0;
 
 	OpenGLUnInit();
-
 	ConPrint("GL::Final Shutdown OK\n");
 }
 
@@ -54,7 +52,6 @@ CGLUtil::~CGLUtil()
 Enumerate Display modes
 ==========================================
 */
-
 void CGLUtil::EnumDisplayModes()
 {
 	DEVMODE devmode;
@@ -78,7 +75,6 @@ void CGLUtil::EnumDisplayModes()
 }
 
 
-
 /*
 ==========================================
 Start up OpenGL
@@ -86,82 +82,50 @@ Start up OpenGL
 */
 bool CGLUtil::Init()
 {
-	//make sure we have the current size of the window
-	RECT wrect;
-	
-	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
-	{
-		wrect.left = m_wndXpos;
-		wrect.top  = m_wndYpos;
-	}
-	else
-	{
-		wrect.left = 0;
-		wrect.top = 0;
-	}
-	wrect.right = g_rInfo.width;
-	wrect.bottom = g_rInfo.height;
+	ConPrint("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
 
-	::AdjustWindowRect(&wrect, 
-					   WS_BORDER | WS_DLGFRAME,
-					   FALSE);
-
-	ConPrint("GL::Init:WndPos %d %d, Res %d x %d\n",wrect.left,wrect.top, g_rInfo.width, g_rInfo.height);
-
-	::SetWindowPos(g_rInfo.hWnd,
-				   HWND_TOP,
-				   //HWND_TOPMOST,
-			       wrect.left,
-			       wrect.top,
-			       wrect.right - wrect.left,
-			       wrect.bottom - wrect.top,
-			       0); //SWP_NOMOVE
-
-	::GetClientRect(g_rInfo.hWnd, &wrect);
-
-
-	//3dfx 3d only card. default to fullscreen mode
+	//3dfx 3d only card. default to fullscreen mode and 16 bit
 	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
+	{
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+		g_rInfo.bpp = 16;
+	}
 
-	// change display before we do anythign with gl
+	// change display before we do anything with gl
 	if (g_rInfo.rflags & RFLAG_FULLSCREEN)
 		g_pGL->GoFull(g_rInfo.width, g_rInfo.height, g_rInfo.bpp);
-
 	else
 		g_pGL->GoWindowed(g_rInfo.width, g_rInfo.height);
 
-
-
+	//Get Pixel Format
 	g_rInfo.hDC = ::GetDC(g_rInfo.hWnd);
-
 	if (!SetupPixelFormat())
 	{
 		ConPrint("GL::Init: Failed to set PixelFormat\n");
 		return false;
 	}
 
+	//Finally create GL context
 	g_rInfo.hRC = _wglCreateContext(g_rInfo.hDC);
 	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 
-	g_rInfo.width  = wrect.right - wrect.left;
-	g_rInfo.height = wrect.bottom - wrect.top;
-
-	// get extension pointers
+	//Get GL Extentions
+	//get extension pointers
 	OpenGLGetExtensions();
 
 	//Check for GL flags
 	ConPrint("\nGL_VENDOR: %s\n", glGetString(GL_VENDOR));
 	ConPrint("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 	ConPrint("GL_VERSION: %s\n", glGetString(GL_VERSION));
-
-	const char *ext = (const char*)glGetString(GL_EXTENSIONS);
-	int l = strlen(ext);
-	char *ext2 = new char[l];
-	memcpy(ext2, ext, l);
-	char *start = ext2;
-
 	ConPrint("GL_EXTENSIONS:\n");
+
+	const char * ext = (const char*)glGetString(GL_EXTENSIONS);
+	int l = strlen(ext) + 1;
+	char *ext2 = new char[l];
+	ext2[l] = '\0';
+	memcpy(ext2, ext, l);
+	
+	char *start = ext2;
 	for (int i = 0; i < l; i++)
 	{
 		if (ext2[i] == ' ')
@@ -180,26 +144,7 @@ bool CGLUtil::Init()
 		}
 	}
 	delete [] ext2;
-
 	return true;
-}
-
-/*
-==========================================
-Update Default window coords
-==========================================
-*/
-void CGLUtil::SetWindowCoords(int wndX, int wndY)
-{
-	if(wndX >= 40)
-		m_wndXpos = wndX;
-	else
-		m_wndXpos = 40;
-
-	if(wndY >= 20)
-		m_wndYpos = wndY;
-	else
-		m_wndYpos = 20;
 }
 
 /*
@@ -207,18 +152,53 @@ void CGLUtil::SetWindowCoords(int wndX, int wndY)
 Shutdown opengl
 ==========================================
 */
-
 bool CGLUtil::Shutdown()
 {
 	_wglMakeCurrent(NULL, NULL);
 	::ReleaseDC(g_rInfo.hWnd, g_rInfo.hDC);
+
 	_wglDeleteContext(g_rInfo.hRC);
 	::ChangeDisplaySettings(NULL, 0);
-
 	g_rInfo.ready = false;
 	return true;
 }
 
+
+/*
+==========================================
+Change to Windowed Mode
+==========================================
+*/
+bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
+{
+	//3dfx 3d only card. default to fullscreen mode
+	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+
+	RECT wrect;
+	wrect.left = 0;
+	wrect.top = 0;
+	wrect.right = g_rInfo.width;
+	wrect.bottom= g_rInfo.height;
+	
+	//Adjusts Client Size
+	::AdjustWindowRect(&wrect, 
+					   WS_CAPTION,
+					   TRUE);
+
+	::SetWindowPos(g_rInfo.hWnd,
+				   HWND_TOP,	//always on top HWND_TOP, 
+				   m_wndXpos,
+			       m_wndYpos,
+			       width,
+			       height,
+				   0);//SWP_NOSIZE | SWP_NOMOVE);
+
+//	::ShowWindow(g_rInfo.hWnd, SW_NORMAL);
+
+	g_rInfo.width  = width;
+	g_rInfo.height = height;
+	return true;
+}
 
 /*
 ==========================================
@@ -227,7 +207,6 @@ Change to FullScreen Mode
 */
 bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 {
-
 	//minimum requirements
 	if (width < 640)
 		width = 640;
@@ -252,7 +231,6 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 		//hit 2 birds with 1 stone
 		m_devmodes[mode].dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 	}
-
 
 	ConPrint("GL::GoFull:Looking for %d x %d x %d\n", width, height, bpp);
 	ConPrint("GL::GoFull:Changing Display to %d x %d x %d\n", 
@@ -304,9 +282,9 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 	}
 
 	//Record our changes
-	g_rInfo.rflags |= RFLAG_FULLSCREEN;
-	g_rInfo.width   = m_devmodes[best_mode].dmPelsWidth;
-	g_rInfo.height  = m_devmodes[best_mode].dmPelsHeight;
+	g_rInfo.rflags|= RFLAG_FULLSCREEN;
+	g_rInfo.width  = m_devmodes[best_mode].dmPelsWidth;
+	g_rInfo.height = m_devmodes[best_mode].dmPelsHeight;
 	g_rInfo.bpp	   = m_devmodes[best_mode].dmBitsPerPel;
 
 	// put the window so the client area matches the size of the entire screen
@@ -327,46 +305,28 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 				   HWND_TOPMOST,
 				   wrect.left,
 			       wrect.top,
-			       wrect.right - wrect.left,
-			       wrect.bottom - wrect.top,
+			       wrect.right,
+			       wrect.bottom,
 			       0);
-
 	return true;
 }
 
-
 /*
 ==========================================
-Change to FullScreen Mode
+Update Default window coords
 ==========================================
 */
-bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
+void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-	//3dfx 3d only card. default to fullscreen mode
-	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
-	{
-		ConPrint("GL::GoWindowed::3dfx 3donly card doesnt support windowed mode\n");
-		return false;
-	}
+	if(wndX >= 40)
+		m_wndXpos = wndX;
+	else
+		m_wndXpos = 40;
 
-
-	::ShowWindow(g_rInfo.hWnd, SW_NORMAL);
-
-	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
-
-	::SetWindowPos(g_rInfo.hWnd,
-				   HWND_TOP,	//always on top HWND_TOP, 
-				   m_wndXpos,
-			       m_wndYpos,
-			       width,
-			       height,
-				   0);//SWP_NOSIZE | SWP_NOMOVE);
-
-
-	g_rInfo.width  = width;
-	g_rInfo.height = height;
-	return true;
+	if(wndY >= 20)
+		m_wndYpos = wndY;
+	else
+		m_wndYpos = 20;
 }
 
 /*
@@ -376,6 +336,8 @@ Resize the Window
 */
 void CGLUtil::Resize()
 {
+	ConPrint("CGLUtil::Resize: Called\n");
+
 	RECT crect;
 	GetClientRect(g_rInfo.hWnd, &crect);
 	g_rInfo.width  = crect.right - crect.left;
@@ -383,6 +345,58 @@ void CGLUtil::Resize()
 
 	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	glViewport(0, 0, g_rInfo.width, g_rInfo.height);
+}
+
+
+/*
+==========================================
+Updates display settings
+==========================================
+*/
+bool CGLUtil::UpdateDisplaySettings(unsigned int width, 
+									unsigned int height, 
+									unsigned int bpp, 
+									bool fullscreen)
+{
+	//Shutdown openGL first
+	Shutdown();
+
+	// record old stats
+	bool oldfull = g_rInfo.rflags & RFLAG_FULLSCREEN;
+	uint oldwidth= g_rInfo.width;
+	uint oldheight= g_rInfo.height;
+	uint oldbpp	  = g_rInfo.bpp;
+
+	g_rInfo.bpp		= bpp;
+	g_rInfo.width	= width;
+	g_rInfo.height	= height;
+	if (fullscreen)
+		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+	else
+		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+
+	if (!Init())
+	{
+		ConPrint("GL::UpdateDisplaySettings: Unable to change to new settings\n");
+
+		// switch everythign back;
+		if (oldfull)
+			g_rInfo.rflags |= RFLAG_FULLSCREEN;
+		else
+			g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+
+		g_rInfo.bpp		= oldbpp;
+		g_rInfo.width	= oldwidth;
+		g_rInfo.height	= oldheight;
+
+		Init();
+		return false;
+	}
+
+	m_safeX = g_rInfo.width;
+	m_safeY = g_rInfo.height;
+	ConPrint("GL::UpdateDisplaySettings::Display change successful\n");
+	return true;
 }
 
 
@@ -405,15 +419,15 @@ bool CGLUtil::SetupPixelFormat()
 		0,
 		0,
 		0, 0, 0, 0,
-		16, //g_rInfo.zdepth,                 // 16-bit depth buffer
-		0, //g_rInfo.stencil,                  // no stencil buffer
+		16,//g_rInfo.zdepth,                 // 16-bit depth buffer
+		0, //g_rInfo.stencil,                 // no stencil buffer
 		0,                  // no aux buffers
-		PFD_MAIN_PLANE,			/* main layer */
+		PFD_MAIN_PLANE,		/* main layer */
 		0,	
 		0, 0, 0
 	};
 
-	int  selected_pf;
+	int  selected_pf=0;
 	if (!(selected_pf = _ChoosePixelFormat(g_rInfo.hDC, &pfd)))
 	{
 		ConPrint("GL::SetupPixelFormat:Couldn't find acceptable pixel format\n");
@@ -432,66 +446,7 @@ bool CGLUtil::SetupPixelFormat()
 	g_rInfo.stencil = pfd.cStencilBits;
 
 	_DescribePixelFormat(g_rInfo.hDC, selected_pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-	ConPrint("GL::SetupPixelFormat:Changed Pixel Format:\nBit Depth: %d\nZ Depth: %d\nStencil Depth: %d\n",
+	ConPrint("CGLUtil::SetupPixelFormat:Set Pixel Format:\nBit Depth: %d\nZ Depth: %d\nStencil Depth: %d\n",
 			  pfd.cColorBits, pfd.cDepthBits, pfd.cStencilBits);
-	return true;
-}
-
-/*
-==========================================
-
-==========================================
-*/
-bool CGLUtil::UpdateDisplaySettings(unsigned int width, 
-							unsigned int height, 
-							unsigned int bpp, 
-							unsigned int fullscreen)
-{
-
-	//Shutdown openGL first
-	Shutdown();
-
-	// record old stats
-
-	unsigned int oldfull	= g_rInfo.rflags & RFLAG_FULLSCREEN;
-	unsigned int oldwidth	= g_rInfo.width;
-	unsigned int oldheight	= g_rInfo.height;
-	unsigned int oldbpp		= g_rInfo.bpp;
-
-	if (fullscreen)
-		g_rInfo.rflags |= RFLAG_FULLSCREEN;
-	else
-		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
-	g_rInfo.bpp		= bpp;
-	g_rInfo.width	= width;
-	g_rInfo.height	= height;
-
-
-	if (!Init())
-	{
-		ConPrint("GL::UpdateDisplaySettings: Unable to change to new settings\n");
-
-		// switch everythign back;
-		
-
-		if (oldfull)
-			g_rInfo.rflags |= RFLAG_FULLSCREEN;
-		else
-			g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
-		g_rInfo.bpp		= oldbpp;
-		g_rInfo.width	= oldwidth;
-		g_rInfo.height	= oldheight;
-
-		Init();
-		return false;
-	}
-
-
-	ConPrint("GL::UpdateDisplaySettings::Display change successful\n");
-
-	m_safeX = g_rInfo.width;
-	m_safeY = g_rInfo.height;
 	return true;
 }

@@ -187,13 +187,6 @@ bool CRenExp::Shutdown(void)
 	}
 */
 
-//Test, WHY DOES THIS LEAVE A MEM LEAK
-/*
-	free(m_cWndX->default_string);
-	m_cWndX->default_string = (char *)MALLOC(8);
-	strcpy(m_cWndX->default_string,"heh");
-*/
-
 	//Destroy Subsystems
 	cache_destroy();
 	beam_shutdown();
@@ -230,9 +223,6 @@ DrawFrame
 */
 void CRenExp::DrawFrame(vector_t *origin, vector_t *angles)
 {
-// FIXME - don't *always* do this
-//	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
-
 	//draw fullscreen console
 	if (world == NULL)
 	{
@@ -343,9 +333,10 @@ bool CRenExp::UnloadWorld()
 change res or to/from fullscreen
 ==========================================
 */
-
-void CRenExp::ChangeDispSettings(unsigned int width, unsigned int height, unsigned int bpp, 
-								 unsigned int fullscreen)
+void CRenExp::ChangeDispSettings(unsigned int width, 
+								 unsigned int height, 
+								 unsigned int bpp, 
+								 bool fullscreen)
 {
 	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	
@@ -365,13 +356,12 @@ void CRenExp::ChangeDispSettings(unsigned int width, unsigned int height, unsign
 	if(!g_pTex->LoadWorldTextures(world))
 	{
 		FError("ChangeDispSettings::Error Reloading textures\n");
+		return;
 	}
-
 	model_load_map();
-
+	
 	// make sure our console is up to date
 	g_prCons->UpdateRes();
-
 	r_init();
 }
 
@@ -415,14 +405,11 @@ bool CRenExp::Restart(void)
 	return true;
 }
 
-
-
 /*
 ==========================================
 CVar validation functions
 ==========================================
 */
-
 bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
@@ -499,7 +486,7 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 		ConPrint("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
 
 		if(g_rInfo.ready)
-			g_pRenExp->ChangeDispSettings(x, y, g_rInfo.bpp, (g_rInfo.rflags & RFLAG_FULLSCREEN) ? true : false);
+			g_pRenExp->ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}
 	return false;
@@ -528,11 +515,11 @@ bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 			return false;
 		}
 
-		ConPrint("Switching to %d by %d at %d bpp\n", g_rInfo.width,g_rInfo.height,bpp );
+		ConPrint("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
 
 		if(g_rInfo.ready)
-		g_pRenExp->ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
-						(g_rInfo.rflags & RFLAG_FULLSCREEN) ? true : false);
+			g_pRenExp->ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, 
+							(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}
 	return false;

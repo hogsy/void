@@ -21,7 +21,7 @@ public:
 	void MoveWindow(int x, int y);
 	void Resize();
 	void ChangeDispSettings(unsigned int width, unsigned int height, 
-									unsigned int bpp, unsigned int fullscreen);
+							unsigned int bpp, bool fullscreen);
 
 	bool LoadWorld(world_t *level, int reload);
 	bool UnloadWorld();
