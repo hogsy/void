@@ -253,8 +253,9 @@ On Move Window
 void CRenExp::MoveWindow(int x, int y)
 {
 	//Update new xy-coords if in windowed mode
-	if(!g_rInfo.rflags & RFLAG_FULLSCREEN)
-	{	g_pGL->SetWindowCoords(x,y);
+	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
+	{	
+		g_pGL->SetWindowCoords(x,y);
 	}
 }
 

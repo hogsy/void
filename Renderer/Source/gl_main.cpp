@@ -321,8 +321,6 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-	ConPrint("CGLUtil::SetWindowCoords: Updated\n");
-
 	if(wndX >= 40)
 		m_wndXpos = wndX;
 	else
@@ -341,8 +339,6 @@ Resize the Window
 */
 void CGLUtil::Resize()
 {
-	ConPrint("CGLUtil::Resize: Called\n");
-
 	RECT crect;
 	GetClientRect(g_rInfo.hWnd, &crect);
 	g_rInfo.width  = crect.right - crect.left;
