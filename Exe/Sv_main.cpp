@@ -212,7 +212,6 @@ void CServer::RunFrame()
 	//go through all the clients, find entities in their pvs and update them
 
 	//Add client info to all connected clients
-/*
 	for(int i=0;i<m_svState.maxClients;i++)
 	{
 		if(m_clients[i] && m_clients[i]->spawned && m_net.ChanCanSend(i))
@@ -234,7 +233,7 @@ void CServer::RunFrame()
 			}
 		}
 	}
-*/
+	
 	//write to clients
 	m_net.SendPackets();
 }
@@ -535,7 +534,7 @@ void CServer::LoadWorld(const char * mapname)
 	{	
 		if(!Init())
 		{	
-			ComPrintf("CServer::LoadWorld: Error initializing server");
+			ComPrintf("CServer::LoadWorld: Error initializing server\n");
 			return;
 		}
 	}

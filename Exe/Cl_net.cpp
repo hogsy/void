@@ -65,6 +65,7 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 
 				m_clients[num].mdlCache = CACHE_GAME;
 				m_clients[num].skinNum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
+				m_pClRen->LoadImage(path, CACHE_GAME, sindex);
 				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
@@ -246,13 +247,6 @@ ComPrintf("CL: Map: %s\n", map);
 			HandleGameMsg(buffer);
 			break;
 		}
-/*	case SVC_BEGIN:
-		{
-			HandleGameMsg(buffer);
-			BeginGame();
-			break;
-		}
-*/
 	}
 }
 
@@ -280,7 +274,7 @@ void CClient::HandleDisconnect(bool listenserver)
 	//Kill server if local
 	if(listenserver)
 	{
-		ComPrintf("CL: KILLING LOCAL SERVER\n");
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
 		System::GetConsole()->ExecString("killserver");
 	}
 	UnloadWorld();

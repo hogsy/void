@@ -48,12 +48,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
-/*
-	if(packetId != CL_MOVE)
-	{
-ComPrintf("SV :message from %s\n", m_clients[clNum]);
-	}
-*/
+
 	while(packetId != 255)
 	{
 		switch(packetId)
@@ -81,7 +76,7 @@ ComPrintf("SV :message from %s\n", m_clients[clNum]);
 				if(id == 'n')
 				{
 					const char * clname = buffer.ReadString();
-ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
+//ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
 					strcpy(m_clients[clNum]->name, clname);
 
 					GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X, clNum);
@@ -101,7 +96,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 			}
 		case CL_DISCONNECT:
 			{
-ComPrintf("SV: %d - %s wants to disconnect\n", clNum, m_clients[clNum]->name);
+//ComPrintf("SV: %d - %s wants to disconnect\n", clNum, m_clients[clNum]->name);
 				m_net.SendDisconnect(clNum,DR_CLQUIT);
 				break;
 			}
@@ -133,9 +128,6 @@ Handle Client disconnection
 */
 void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 {
-//	if(reason.broadcastMsg)
-//		BroadcastPrintf(reason.broadcastMsg, m_clients[clNum]->name);
-
 	GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X, clNum);
 	if(reason.broadcastMsg)
 	{
@@ -157,13 +149,6 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
 }
-
-/*
-	m_net.ChanBeginWrite(
-	m_net.ChanBeginWrite(i,SV_CLINFO, len);
-	m_net.ChanWriteByte(m_clients[clNum]->num);
-	m_net.ChanWriteString(m_clients[clNum]->name);
-*/
 
 /*
 ======================================
