@@ -92,7 +92,11 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\Fs_file.cpp
+SOURCE=.\Fs_filebuf.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Fs_filestream.cpp
 # End Source File
 # Begin Source File
 
@@ -121,10 +125,6 @@ SOURCE=.\Fs_hdr.h
 # Begin Source File
 
 SOURCE=.\Fs_pakfile.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Fs_stream.h
 # End Source File
 # Begin Source File
 

@@ -283,6 +283,43 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuf
 	return 0;
 }
 
+
+
+bool CFileSystem::OpenFileStream(CFileStream * fstream, const char *ifilename)
+{
+	SearchPath_t * iterator = m_lastpath;
+	
+	while(iterator->prev)
+	{
+		iterator = iterator->prev;
+		//Try opening as an archive
+		if(iterator->archive)
+		{
+			//size = iterator->archive->OpenFile(ifilename,ibuffer);
+			//size = iterator->archive->LoadFile(ibuffer,buffersize,ifilename);
+			//if(size)
+			//	return size;
+		}
+		//Try opening as a standard file
+		else
+		{
+			char filepath[COM_MAXPATH];
+			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
+			
+			fstream->m_fp = fopen(filepath,"r+b");
+			if(fstream->m_fp)
+			{
+				fseek(fstream->m_fp ,0,SEEK_END);
+				fstream->m_size = ftell(fstream->m_fp );
+				fseek(fstream->m_fp ,0,SEEK_SET);
+				return true;
+			}
+		}
+	}
+	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
+	return false;
+}
+
 /*
 
 SearchPath_t * CFileSystem::GetFilePath(const char *ifilename)

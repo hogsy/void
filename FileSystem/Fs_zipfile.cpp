@@ -170,3 +170,51 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	return size;
 }
 
+
+
+
+
+
+
+HFS CZipFile::OpenFile(const char *ifilename)
+{
+	return 0;
+}
+
+void CZipFile::CloseFile(HFS handle)
+{
+}
+
+ulong CZipFile::Read(void * buf, uint size, uint count, HFS handle)
+{
+	return 0;
+}
+
+int  CZipFile::GetChar(HFS handle)
+{
+	return 0;
+}
+
+bool CZipFile::Seek(uint offset, int origin, HFS handle)
+{
+	return false;
+}
+
+uint CZipFile::GetPos(HFS handle)
+{
+	return 0;
+}
+
+uint CZipFile::GetSize(HFS handle)
+{
+	return 0;
+}
+
+
+
+
+
+
+
+
+

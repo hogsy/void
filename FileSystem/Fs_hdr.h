@@ -14,7 +14,9 @@ for other Archive handling classes
 ===========================================
 */
 
-#define ARCHIVEMAXOPENFILES 8;
+#define ARCHIVEMAXOPENFILES 32
+
+typedef int HFS;
 
 class CArchive
 {
@@ -22,6 +24,14 @@ public:
 
 	//Load a listing of files in the archive, and order them
 	virtual bool Init(const char * archivepath, const char * basepath)=0;
+
+	virtual HFS OpenFile(const char *ifilename) =0;
+	virtual void CloseFile(HFS handle) =0;
+	virtual ulong Read(void * buf, uint size, uint count, HFS handle) =0;
+	virtual int  GetChar(HFS handle) =0;
+	virtual bool Seek(uint offset, int origin, HFS handle) =0;
+	virtual uint GetPos(HFS handle) = 0;
+	virtual uint GetSize(HFS handle) = 0;
 
 	//Open file at this path, fill buffer
 	virtual uint LoadFile(byte ** ibuffer, 

@@ -23,6 +23,14 @@ struct CPakFile::PakEntry_t
 		 filelen;
 };
 
+
+struct CPakFile::PakOpenFile_t : public CPakFile::PakEntry_t
+{
+	PakOpenFile_t() { curpos = 0; };
+	long curpos;
+};
+
+
 //======================================================================================
 //======================================================================================
 
@@ -36,6 +44,9 @@ CPakFile::CPakFile()
 	m_fp = 0;
 	m_files = 0; 
 	m_numFiles = 0;
+
+	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	m_numOpenFiles = 0;
 }
 
 CPakFile::~CPakFile()
@@ -49,6 +60,9 @@ CPakFile::~CPakFile()
 		m_files[i] = 0;
 	}
 	delete [] m_files;
+
+	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	m_numOpenFiles = 0;
 }
 
 /*
@@ -276,4 +290,97 @@ bool CPakFile::BinarySearchForEntry(const char *name,
 	else if(ret < 0)	//name is less than array entry
 		return BinarySearchForEntry(name,array,item,low,mid);
 	return false;
+}
+
+
+HFS CPakFile::OpenFile(const char *ifilename)
+{
+	if(m_numOpenFiles >= ARCHIVEMAXOPENFILES)
+	{
+		ComPrintf("CPakFile::OpenFile: Max files opened in %s\n", m_archiveName);
+		return -1;
+	}
+
+	//Find free space
+	for(int i=0;i<ARCHIVEMAXOPENFILES;i++)
+	{
+		if(!m_openFiles[i])
+			break;
+	}
+	if(m_openFiles[i] != 0)
+	{
+		ComPrintf("CPakFile::OpenFile: Unable to find unused file handle in %s\n", m_archiveName);
+		return -1;
+	}
+	//Finds file, and adds to openFiles list if successful
+	PakEntry_t * entry= 0;
+	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
+	{
+		m_openFiles[i] = (PakOpenFile_t *)entry;
+		m_openFiles[i]->curpos= 0;
+		return i;
+	}
+	return -1;
+}
+
+
+void CPakFile::CloseFile(HFS handle)
+{
+	if(m_openFiles[handle])
+		m_openFiles[handle] = 0;
+}
+
+
+ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
+{
+	if(!buf || !size || !count)
+	{
+		ComPrintf("CPakFile::Read: Invalid parameters :%s\n",
+							m_openFiles[handle]->filename);
+		return 0;
+	}
+	
+	uint bytes_req = size * count;
+	if(m_openFiles[handle]->curpos + bytes_req > m_openFiles[handle]->filelen)
+	{
+		ComPrintf("CFileReader::Read: FilePointer will overflow for given parms, %s\n", 
+			m_openFiles[handle]->filename);
+		return 0;
+	}
+
+	fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+	
+	int bytes_read = fread(buf,size,count,m_fp);
+	if(bytes_read != bytes_req) 
+		ComPrintf("CFileReader::Read: Warning, only read %d of %d bytes for %s\n",
+					bytes_read, bytes_req, m_openFiles[handle]->filename);	
+	
+	m_openFiles[handle]->curpos += (bytes_read);
+	return bytes_read;
+}
+
+
+int  CPakFile::GetChar(HFS handle)
+{
+	if(m_openFiles[handle]->curpos +1 <= m_openFiles[handle]->filelen)
+	{
+		fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+		return fgetc(m_fp);
+	}
+	return EOF;
+}
+
+bool CPakFile::Seek(uint offset, int origin, HFS handle)
+{
+	return false;
+}
+
+uint CPakFile::GetPos(HFS handle)
+{
+	return 0;
+}
+
+uint CPakFile::GetSize(HFS handle)
+{
+	return 0;
 }

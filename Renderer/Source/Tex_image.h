@@ -51,7 +51,8 @@ private:
 	void	Write_TGA( FILE *fp);
 	void	Write_PCX( FILE *fp);
 
-	CFileReader m_fileReader;
+//	CFileReader m_fileReader;
+	CFileBuffer m_fileReader;
 };
 
 void	ImageReduce32(byte *dest, byte *src, int nwidth, int nheight);

@@ -13,37 +13,36 @@
 
 //====================================================================================
 //====================================================================================
-
+//Pre-declarations
+class  CArchive;
 
 //====================================================================================
 //====================================================================================
 
-struct BasicFStreamReader;
+struct FILESYSTEM_API I_FileReader
+{
+	virtual bool Open(const char * filename)=0;
+	virtual void Close()=0;
+	virtual bool isOpen()=0;
+	virtual ulong Read(void * buf, uint size, uint count)=0;
+	virtual int  GetChar()=0;
+	virtual bool Seek(uint offset, int origin)=0;
+	virtual uint GetPos() const =0;
+	virtual uint GetSize() const =0;
+};
 
-class FILESYSTEM_API CFileReader
+
+class FILESYSTEM_API CFileBuffer : public I_FileReader
 {
 public:
-
-	enum EFilePos
-	{
-		ESEEK_SET=0,
-		ESEEK_CUR=1,
-		ESEEK_END=2
-	};
-
-	enum EFileMode
-	{
-		EFILESTREAM,
-		EFILEBUFFER
-	};
-
-	CFileReader(EFileMode mode=EFILEBUFFER, int bufsize=0);
-	virtual ~CFileReader();
 	
+	CFileBuffer(int bufsize=0);
+	virtual ~CFileBuffer();
+
 	//Open the file at the given path
 	bool Open(const char * ifilename);
 	//Close the currently opened file
-	bool Close();
+	void Close();
 	//Do we have a file open right now ?
 	bool isOpen();
 	//Read "count" number of items of "size" into buffer
@@ -56,32 +55,57 @@ public:
 	uint GetPos() const;
 	uint GetSize()const;
 
-protected:
-
-	EFileMode m_mode;
-
+private:
+	
 	uint	m_size;			//File Size
 	uint	m_curpos;		//File Position
 	
-	//Buffered Mode
 	//Change this so its allocated from a static pool later on
 	byte *  m_buffer;		//File data is copied into this buffer in Buffered mode
 	uint	m_buffersize;	//Size of Buffer
 
-	//Streamed Mode
-	BasicFStreamReader	
-		 *  m_pFStream;		//Base Stream Reader, might be Std,Pak,Zip
-	
 	char *  m_filename;
 };
 
 
+class FILESYSTEM_API CFileStream : public I_FileReader
+{
+public:
+	
+	CFileStream();
+	virtual ~CFileStream();
+
+	//Open the file at the given path
+	bool Open(const char * ifilename);
+	//Close the currently opened file
+	void Close();
+	//Do we have a file open right now ?
+	bool isOpen();
+	//Read "count" number of items of "size" into buffer
+	ulong Read(void *buf,uint size, uint count);
+	//Return the current byte, advance current position
+	int GetChar();
+	//Seek to given offset starting from given origin
+	bool Seek(uint offset,  int origin);
+
+	uint GetPos() const;
+	uint GetSize()const;
+
+private:
+
+	friend class CFileSystem;
+	
+	uint	m_size;			//File Size
+	char *  m_filename;
+
+	FILE *  m_fp;			//if its a real file, then use a filestream
+	uint    m_filehandle;	//handle to filestream in an archive
+	CArchive * m_archive;   //Arhive containing the given file
+};
+
 
 //====================================================================================
 //====================================================================================
-
-//Pre-declarations
-class  CArchive;
 
 /*
 ==========================================
@@ -116,13 +140,9 @@ public:
 
 	//Loads data from file into given buffer. return size of buffer
 	//after allocation and copying.
-
-//	SearchPath_t * GetFilePath(const char *ifilename);
-//	CStreamReader * GetFileStream(const char *ifilename);
-
-//	BasicFStreamReader * GetFileStream(const char *ifilename);
-
 	uint LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuffer, const char *ifilename);
+	bool OpenFileStream(CFileStream * fstream, const char *ifilename);
+	
 	uint GetFileSize(const char * filename);
 
 	//Returns a filelisting matching the criteria
@@ -132,10 +152,8 @@ public:
 
 private:
 
-//	bool CreateFileStream(CFStreamReader * fstream, const char *ifilename);
-//	int  LoadFileBuffer(byte ** ibuffer, const char *ifilename);
-
 	struct SearchPath_t;
+
 
 	//Member Functions
 	//================================================================
@@ -167,86 +185,4 @@ private:
 FILESYSTEM_API CFileSystem * CreateFileSystem(I_ExeConsole * pconsole);
 FILESYSTEM_API void DestroyFileSystem();
 
-#endif
-
-
-
-
-
-
-
-
-#if 0
-/*
-==========================================
-The Resource File class
-Used for Buffered Binary Input 
-==========================================
-*/
-
-class FILESYSTEM_API CFileReader
-{
-public:
-
-	enum EFilePos
-	{
-		EFILE_START,
-		EFILE_CUR,
-		EFILE_END
-	};
-	
-	CFileReader();	
-	~CFileReader();
-
-	//Open the file at the given path
-	bool Open(const char * ifilename);
-
-	//Close the currently opened file
-	bool Close();
-
-	//Do we have a file open right now ?
-	bool isOpen();
-
-	//Read "count" number of items of "size" into buffer
-	ulong Read(void *buf, 
-			   const uint &size, 
-			   const uint &count);
-	
-	//Return the current byte, advance current position
-	int GetChar();
-
-	//Seek to given offset starting from given origin
-	bool Seek(const uint &offset,  EFilePos origin);
-
-	void LockStaticBuffer(const uint &size);
-	void ReleaseStaticBuffer();
-
-	//Info
-	uint GetPos() const { return m_curpos;}
-	uint GetSize()const { return m_size;  } 
-
-	//Static functions for quicker access/ avoid memory copying if all we need
-	//is just a buffer full of the requested files data.
-	static uint GetFileSize(const char * filename);
-	static bool LoadFile(void *buf, const uint &bufsize, const char * filename);
-
-private:
-
-	friend class CFileSystem;
-
-	uint	m_buffersize;	//Current size of buffer
-	bool    m_staticbuffer;	//Is it using a static buffer
-
-	FILE *  m_fp;			//We just assign fp, if its a real file ?
-
-	uint	m_size;			//File Size
-	uint	m_curpos;		//File Position
-
-	byte *  m_buffer;		//Buffer can hold file data
-	char *  m_filename;
-};
-
-
-//====================================================================================
-//====================================================================================
 #endif

@@ -105,14 +105,14 @@ static bspf_header_t header;
 
 #ifdef _VOID_EXE_
 
-static CFileReader  * m_pFile=0;
+static CFileBuffer  * m_pFile=0;
 
 int load_lump(int l, void **data)
 {
 	*data = MALLOC(header.lumps[l].length+1);
 	memset(*data, 0, header.lumps[l].length+1);
 
-	m_pFile->Seek(header.lumps[l].offset, CFileReader::ESEEK_SET);
+	m_pFile->Seek(header.lumps[l].offset, SEEK_SET);
 	m_pFile->Read(*data, header.lumps[l].length, 1);
 
 	return header.lumps[l].length;
@@ -140,7 +140,7 @@ world_t* world_read(char *filename)
 {
 #ifdef _VOID_EXE_
 	
-	m_pFile = new CFileReader();
+	m_pFile = new CFileBuffer();
 	if(!m_pFile->Open(filename))
 	{
 		PRINT("World_Read:Could not open %s\n",filename);

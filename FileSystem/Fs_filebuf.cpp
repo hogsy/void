@@ -1,17 +1,15 @@
-#if 0
-
 #include "I_filesystem.h"
-#include "Fs_stream.h"
-
 
 extern CFileSystem * g_pFileSystem;
+
+
 
 /*
 ==========================================
 Constructor and Destructor
 ==========================================
 */
-CFileReader::CFileReader(EFileMode mode, int bufsize)
+CFileBuffer::CFileBuffer(int bufsize)
 {
 	m_filename = 0;
 	m_curpos = 0;
@@ -20,7 +18,7 @@ CFileReader::CFileReader(EFileMode mode, int bufsize)
 	m_buffersize =0;
 }
 
-CFileReader::~CFileReader()
+CFileBuffer::~CFileBuffer()
 {	
 	if(m_filename)
 		delete [] m_filename;
@@ -28,12 +26,17 @@ CFileReader::~CFileReader()
 		free(m_buffer);
 }
 
+
+
+uint CFileBuffer::GetPos() const  { return m_curpos; }
+uint CFileBuffer::GetSize() const { return m_size; }
+
 /*
 =====================================
 Is the File open ?
 =====================================
 */
-bool CFileReader::isOpen()
+bool CFileBuffer::isOpen()
 {	
 	if(m_size)
 		return true;
@@ -45,7 +48,7 @@ bool CFileReader::isOpen()
 Open the requested file
 =====================================
 */
-bool CFileReader::Open(const char * ifilename)
+bool CFileBuffer::Open(const char * ifilename)
 {
 	if(isOpen())
 		Close();
@@ -69,7 +72,7 @@ bool CFileReader::Open(const char * ifilename)
 Close file
 =====================================
 */
-bool CFileReader::Close()
+void CFileBuffer::Close()
 {
 	//Don't release the buffer is using it statically
 	if(m_buffer)
@@ -85,7 +88,6 @@ bool CFileReader::Close()
 	}
 	m_curpos = 0;
 	m_size = 0;	
-	return true;
 }
 
 /*
@@ -94,7 +96,7 @@ Read items of given size of given count
 into given buffer
 ===========================================
 */
-ulong CFileReader::Read(void *buf,uint size, uint count)
+ulong CFileBuffer::Read(void *buf,uint size, uint count)
 {
 	if(!buf || !size || !count)
 	{
@@ -118,7 +120,7 @@ ulong CFileReader::Read(void *buf,uint size, uint count)
 Get current character
 ===========================================
 */
-int CFileReader::GetChar()
+int CFileBuffer::GetChar()
 {
 	if((m_curpos) >= m_size)
 	{
@@ -133,21 +135,21 @@ int CFileReader::GetChar()
 Seek to end/start, certain offset
 ===========================================
 */
-bool CFileReader::Seek(uint offset, int origin)
+bool CFileBuffer::Seek(uint offset, int origin)
 {
 	switch(origin)
 	{
-	case ESEEK_SET:
+	case SEEK_SET:
 		if(offset > m_size)
 			return false;
 		m_curpos = offset;
 		return true;
-	case ESEEK_CUR:
+	case SEEK_CUR:
 		if(m_curpos + offset > m_size)
 			return false;
 		m_curpos += offset;
 		return true;
-	case ESEEK_END:
+	case SEEK_END:
 		if(offset > m_size)
 			return false;
 		m_curpos = m_size - offset;
@@ -156,6 +158,42 @@ bool CFileReader::Seek(uint offset, int origin)
 	return false;
 }
 
+/*
+uint CFileReader::GetFileSize(const char * filename)
+{
+	return 0;
+}
+
+bool CFileReader::LoadFile(void *buf, const uint &bufsize, const char * filename)
+{
+	return false;
+}
+*/
+
+/*
+===========================================
+Lock a static buffer for file I/O which is not
+released/realloc on each file open/close call.
+
+the static buffer is only reallocated if it
+is smaller than the requred size
+===========================================
+*/
+
+#if 0
+void CFileReader::LockStaticBuffer(const uint &size)
+{
+	m_staticbuffer = true;
+	m_buffer = (byte*)MALLOC(size);
+	m_buffersize = size;
+}
+
+void CFileReader::ReleaseStaticBuffer()
+{
+	free(m_buffer);
+	m_buffer = 0;
+	m_staticbuffer = false;
+	m_buffersize = 0;
+}
 
 #endif
-

@@ -353,7 +353,7 @@ Read a TGA file from the given stream
 */
 bool CImage::Read_TGA()
 {
-	m_fileReader.Seek(12,CFileReader::ESEEK_SET);
+	m_fileReader.Seek(12,SEEK_SET);
 
 	width   = m_fileReader.GetChar();
 	width  |= m_fileReader.GetChar() << 8;
