@@ -44,6 +44,8 @@ CModelCacheEntry::CModelCacheEntry(const char *file)
 	num_frames = 0;
 	frames = NULL;
 	cmds = NULL;
+
+	LoadModel();
 }
 
 
