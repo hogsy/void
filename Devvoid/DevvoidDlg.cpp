@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Devvoid.h"
 #include "DevvoidDlg.h"
+
 #include "Std_lib.h"
 #include "Com_util.h"
 
@@ -11,7 +12,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
 
 const char DEFAULT_WORLDS_DIR [] = "Worlds";
 const char DEFAULT_GAME_DIR[] = "Game";
@@ -90,7 +90,9 @@ CDevvoidDlg::CDevvoidDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CDevvoidDlg)
 	m_szCurrentDir = _T("");
+	m_mapFile = _T("");
 	m_bCompiling = false;
+	m_bBspAndLight = false;
 	m_ambColor = 0;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
@@ -269,9 +271,6 @@ void CDevvoidDlg::OnSelcancelFilelist()
 void CDevvoidDlg::OnSelchangeFilelist() 
 {
 	// TODO: Add your control notification handler code here
-
-//	AfxMessageBox("Changed focus");
-
 	if(m_bCompiling)
 		return;
 
@@ -311,8 +310,6 @@ void CDevvoidDlg::OnSelchangeFilelist()
 	}
 	
 	DisableButtons();
-
-//	ComPrintf("Selected %s\n",curItem);
 }
 
 
@@ -458,7 +455,7 @@ void CDevvoidDlg::OnCompile()
 {
 	if(m_fileList.GetCurSel() == LB_ERR)
 	{
-		AfxMessageBox("CDevvoidDlg::OnCompile::Select a map file first");
+		AfxMessageBox("Please select a map file first");
 		return;
 	}
 
@@ -479,12 +476,13 @@ void CDevvoidDlg::OnCompile()
 	char * fileName = new char [_MAX_PATH];
 	sprintf(fileName,"%s/%s/%s/%s", GetVoidPath(), DEFAULT_GAME_DIR, DEFAULT_WORLDS_DIR, szListItem);
 
+	m_mapFile = szListItem;
+
 	if(!AfxBeginThread(BeginBSPCompile,(void*)fileName))
 	{
 		AfxMessageBox("CDevvoidDlg::OnCompile::Unable to spawn BSP thread");
 		return;
 	}
-	
 	BeginCompileThread();
 }
 
@@ -497,7 +495,7 @@ void CDevvoidDlg::OnLight()
 {
 	if(m_fileList.GetCurSel() == LB_ERR)
 	{
-		AfxMessageBox("CDevvoidDlg::OnCompile::Select a map file first");
+		AfxMessageBox("Please select a world file first");
 		return;
 	}
 
@@ -534,9 +532,7 @@ Set Color
 */
 void CDevvoidDlg::OnColor() 
 {
-	// TODO: Add your control notification handler code here
 	CColorDialog dlgColor;
-
 
 	dlgColor.m_cc.Flags |= CC_ANYCOLOR|CC_FULLOPEN|CC_RGBINIT;
 	dlgColor.m_cc.rgbResult = 0;
@@ -556,9 +552,8 @@ Both Light AND BSP it
 */
 void CDevvoidDlg::OnBsplight() 
 {
-	// TODO: Add your control notification handler code here
-	AfxMessageBox("The, ahem, developer hasn't got around to implementing this yet. "
-				  "Please bug him if you want this feature.");	
+	m_bBspAndLight = true;
+	OnCompile();
 }
 
 
@@ -615,6 +610,34 @@ void CDevvoidDlg::EndCompileThread()
 }
 
 
+void CDevvoidDlg::EndBsp()
+{	
+	EndCompileThread();
+	if(m_bBspAndLight && m_mapFile.GetLength())
+	{
+		//Check to see if it suceeded.
+		m_mapFile.Delete(m_mapFile.GetLength()-3,3);
+		m_mapFile += "wld";
+		
+		if(m_fileList.SelectString(-1, m_mapFile) == LB_ERR)
+		{
+			char msg[512];
+			sprintf(msg,"Unable to load world file %s for lighting", m_mapFile);
+			::AfxMessageBox(msg);
+		}
+		OnLight();
+	}
+	m_bBspAndLight = false;
+	m_mapFile = _T("");
+}
+
+void CDevvoidDlg::EndLight()
+{	
+	EndCompileThread();
+	m_bBspAndLight = false;
+	m_mapFile = _T("");
+}
+
 
 //==========================================================================
 //==========================================================================
@@ -631,10 +654,9 @@ UINT BeginBSPCompile( LPVOID pParam )
 	CompileBsp(bspFile);
 	delete [] bspFile;
 
-	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndCompileThread();
+	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndBsp();
 	return 0;
 }
-
 
 /*
 ================================================
@@ -658,7 +680,7 @@ UINT BeginLightMapCompile( LPVOID pParam )
 	CompileLightmaps(pLight->szPath, pLight->szFileName);
 	delete pLight;
 
-	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndCompileThread();
+	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndLight();
 	return 0;
 }
 

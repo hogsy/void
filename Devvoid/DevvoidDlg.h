@@ -24,6 +24,8 @@ public:
 	void OnCancel();
 
 	void EndCompileThread();
+	void EndBsp();
+	void EndLight();
 
 	TOutputWnd	m_wndOutput;
 
@@ -54,6 +56,9 @@ protected:
 	HICON		m_hIcon;
 	COLORREF	m_ambColor;
 	bool		m_bCompiling;
+	
+	CString		m_mapFile;
+	bool		m_bBspAndLight;
 
 
 	friend void Progress_SetRange(int min, int max);
