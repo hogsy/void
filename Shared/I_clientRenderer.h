@@ -16,7 +16,6 @@ struct I_ClientRenderer
 	virtual void UnloadModel(CacheType cache, int index)=0;
 	virtual void UnloadModelCache(CacheType cache)=0;
 	virtual void UnloadModelAll(void)=0;
-	virtual void GetInfo(ClEntity &state)=0;
 
 	/* Image Interface */
 	virtual int  LoadImage(const char *image, CacheType cache, int index=-1)=0;
