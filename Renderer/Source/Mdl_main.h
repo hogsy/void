@@ -4,48 +4,17 @@
 
 #include "Standard.h"
 #include "I_file.h"
+#include "Mdl_entry.h"
 
 
 
-typedef struct
-{
-   float s, t;
-   int vertex_index;
-} model_glcmd_t;
-
-
-
-class CModelCacheEntry
-{
-public:
-	CModelCacheEntry(const char *file);
-	~CModelCacheEntry();
-
-
-	void Draw(int skin, float frame);
-	bool IsFile(const char *file) { return (strcmp(file, modelfile)==0); }
-
-
-private:
-
-	void LoadModel(void);	// load a md2
-	void LoadFail(void);	// default model
-
-	// skin info
-	int num_skins;
-	int	skin_bin;		// rasterizer texture names
-	char **skin_names;	// text texture names
-
-	// filename of model
-	char *modelfile;
-
-	// frame data
-	int		 num_frames;
-	vector_t **frames;
-
-	// the glcommand list
-	void *cmds;
-};
+#ifdef _DEBUG
+#define MAX_DRAWMODEL_ALLOCS 64
+#define	DRAWMODELS_PER_ALLOC 4
+#else
+#define MAX_DRAWMODEL_ALLOCS 16
+#define	DRAWMODELS_PER_ALLOC 16
+#endif
 
 
 class CModelManager : public I_Model
@@ -61,6 +30,7 @@ public:
 
 	// add the model to the render cache
 	void DrawModel(hMdl index, CacheType cache, const R_EntState &state);
+	void Purge(void);
 
 	// unload models from memory
 	void UnloadModel(CacheType cache, int index);
@@ -68,6 +38,30 @@ public:
 	void UnloadModelAll(void);
 
 private:
+
+	// struct to hold a list of models to be drawn
+	typedef struct drawmodel_s
+	{
+		vector_t	origin;
+		vector_t	angles;
+		CacheType	cache;
+		hMdl		index;
+		int			skin;
+		float		frame;
+
+		drawmodel_s *next;
+	} drawmodel_t;
+
+	int		num_drawmodel_allocs;
+	drawmodel_t	*drawmodel_allocs[MAX_DRAWMODEL_ALLOCS];
+	drawmodel_t	*free_drawmodels;
+	drawmodel_t *drawmodels;	// list of models to be drawn
+
+	void drawmodelAlloc(void);
+	drawmodel_t* drawmodelGet(void);
+	void drawmodelRelease(drawmodel_t *d);
+
+
 
 	CModelCacheEntry *caches[MODEL_CACHE_NUM][MODEL_CACHE_SIZE];
 };

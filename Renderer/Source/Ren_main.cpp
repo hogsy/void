@@ -8,7 +8,6 @@
 #include "Clip.h"
 #include "Con_main.h"
 #include "Mdl_main.h"
-#include "Mdl_cache.h"
 #include "Hud_main.h"
 
 extern CRConsole * g_prCons;

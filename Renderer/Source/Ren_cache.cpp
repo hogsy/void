@@ -1,7 +1,7 @@
 
 #include "Tex_hdr.h"
 #include "Ren_cache.h"
-#include "Mdl_cache.h"
+#include "Mdl_main.h"
 
 
 
@@ -442,7 +442,7 @@ void cache_purge(void)
 	}
 
 	// fixme - put this in the cache_purge_* funcs
-//	model_cache_purge();
+	g_pModel->Purge();
 }
 
 

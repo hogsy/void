@@ -2,10 +2,69 @@
 #include "Mdl_main.h"
 #include "Mdl_cache.h"
 
-#define MAX_CACHED_MODELS	256
-////model_cache_t *model_cache;
-//model_cache_t *tmodel;
-int used_models;
+
+drawmodel_t *drawmodels=NULL;	// list of models to be drawn
+
+/*
+=========
+get_drawmodel - allocate a drawmodel
+=========
+*/
+
+#ifdef _DEBUG
+#define MAX_DRAWMODEL_ALLOCS 64
+#define	DRAWMODELS_PER_ALLOC 4
+#else
+#define MAX_DRAWMODEL_ALLOCS 16
+#define	DRAWMODELS_PER_ALLOC 16
+#endif
+
+
+int		num_drawmodel_allocs = 0;
+drawmodel_t	*drawmodel_allocs[MAX_DRAWMODEL_ALLOCS];
+drawmodel_t	*free_drawmodels=NULL;
+
+void drawmodel_alloc(void)
+{
+	if (num_drawmodel_allocs == MAX_DRAWMODEL_ALLOCS)
+		FError("too many drawmodel allocs! Tell Ripper\n");
+
+	drawmodel_allocs[num_drawmodel_allocs] = new drawmodel_t[DRAWMODELS_PER_ALLOC];
+	if (!drawmodel_allocs[num_drawmodel_allocs])
+		FError("not enough mem for drawmodels! - %d allocated", DRAWMODELS_PER_ALLOC*num_drawmodel_allocs);
+
+	free_drawmodels = drawmodel_allocs[num_drawmodel_allocs];
+	num_drawmodel_allocs++;
+
+	for (int a=0; a<DRAWMODELS_PER_ALLOC-1; a++)
+		free_drawmodels[a].next = &free_drawmodels[a+1];
+	free_drawmodels[a].next = NULL;
+}
+
+
+drawmodel_t* get_drawmodel(void)
+{
+	if (!free_drawmodels)
+		drawmodel_alloc();
+
+	drawmodel_t *ret = free_drawmodels;
+	free_drawmodels = free_drawmodels->next;
+	return ret;
+}
+
+
+/*
+=========
+free_drawmodel - return the drawmodel to the list
+=========
+*/
+void free_drawmodel(drawmodel_t *d)
+{
+	d->next = free_drawmodels;
+	free_drawmodels = d;
+}
+
+
 
 
 
