@@ -1,5 +1,4 @@
 #include "In_kb.h"
-
 /*
 ========================================================================================
 Additional Virtual key constants
@@ -23,80 +22,41 @@ enum
 };
 
 #define KB_MAXEVENTS    32
-#define KB_DIBUFFERSIZE	16
-#define KB_TOTALCHARS	256
 #define KB_REPEATWAIT	0.3f
 
-extern CKeyboard	* g_pKb;	//The Keyboard object, need this for CVar and other non member funcs
+//The Keyboard object, need this for CVar and other non member funcs
+extern CKeyboard	* g_pKb;	
 
 /*
 ========================================================================================
 Private Local Vars
 ========================================================================================
 */
-
-static HANDLE	m_hDIKeyboardEvent=0;				//Event handle
-static char		m_szKbEventName[] = "DI Keyboard";	//Event name
-
-static HHOOK	hWinKbHook=0;				//Keyboard Hook handle
-
-static float	m_fRepeatRate=0.0f;			//Current repeat rate
-static bool		m_bRepeatEvents=false;		//Report Held events ?
-static I_InKeyListener * m_pKeyHandler=0;	//Key listener object
-
-static LPDIRECTINPUTDEVICE7	m_pDIKb=0;		//The DirectInputDevice Object
+static HHOOK	hWinKbHook=0;	//Keyboard Hook handle
 
 //Device Query Buffers
-static DIDEVICEOBJECTDATA	m_aDIBufKeydata[KB_DIBUFFERSIZE]; //Receives DI buffered data 
 static BYTE					m_aKeyState[KB_TOTALCHARS];		  //Receives immediate and Win32 data
-
-//Translation table
-static unsigned int			m_aCharVal[KB_TOTALCHARS];		
 
 static KeyEvent_t			m_keyEvent;						//the key event object which gets dispatched.
 static KeyEvent_t			m_aHeldKeys[KB_TOTALCHARS];		//Used to store oldstats of the keys
 
-//State information
-static EDeviceState			m_eKbState;
-static CKeyboard::EKbMode	m_eKbMode;
-static bool					m_bExclusive;
-
-static CVar		*			m_pVarKbMode=0;
-
-//========================================================================================
-//Keyboard update funcs
-
-static void		Update_DIBuffered();
-static void		Update_DIImmediate();
-static void		Update_Win32();
-static LRESULT CALLBACK 
-				Win32_KeyboardProc( int code,       // hook code
-									WPARAM wParam,  // virtual-key code
-									LPARAM lParam); // keystroke-message information
-
-//========================================================================================
-//Misc
-static void		FlushKeyBuffer();
-
-//Initializes the Translation table for the given mode
-static void		SetCharTable(CKeyboard::EKbMode mode);
-
-//Shifts the value passed to its capitalized form, if any
-static void		ShiftCharacter(int &val);
-
-//Cvar Handler
-static bool		CKBMode(const CVar * var, int argc, char** argv);
-
+/*
+=====================================
+Send out a key event if the states qualify
+=====================================
+*/
+void In_UpdateKey(int keyid, EButtonState keyState)
+{	g_pKb->SendKeyEvent(keyid,keyState);
+}
 
 //========================================================================================
 //========================================================================================
-
 /*
 =====================================
 Constructor
 =====================================
 */
-CKeyboard::CKeyboard()
+CKeyboard::CKeyboard() 
 {
 	m_pDIKb = 0;
 	m_eKbState = DEVNONE;
@@ -104,12 +64,16 @@ CKeyboard::CKeyboard()
 	m_bExclusive = false;
 	m_eKbMode = KB_NONE;
 
+	m_fRepeatRate=0.0f;
+	m_bRepeatEvents=false;
+	m_pKeyHandler = 0;
+
+	m_pDIKb=0;
+
 	memset(m_aCharVal, 0, KB_TOTALCHARS*sizeof(unsigned int));
 	memset(m_aHeldKeys,0, KB_TOTALCHARS * sizeof(KeyEvent_t));
 	memset(m_aKeyState, 0, KB_TOTALCHARS*sizeof(BYTE));
 	memset(m_aDIBufKeydata,0,KB_DIBUFFERSIZE*sizeof(DIDEVICEOBJECTDATA));
-
-	PollKeyboard = 0; 
 
 	//Default to self as listener
 	SetKeyListener(this,false,IN_DEFAULTREPEATRATE);
@@ -126,7 +90,6 @@ CKeyboard::~CKeyboard()
 {
 	Shutdown();
 
-	PollKeyboard = 0;
 	m_pDIKb = 0;
 	m_pKeyHandler = 0;
 }
@@ -263,10 +226,12 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 	}
 
 	//Set Event Notification
+	const char szKbEventName[] = "DI Keyboard";
+
 	m_hDIKeyboardEvent =  ::CreateEvent(0,		// pointer to security attributes
 							FALSE,				// flag for manual-reset event
 						    FALSE,				// flag for initial state
-							m_szKbEventName);   // pointer to event-object name
+							szKbEventName);     // pointer to event-object name
 
 	if(m_hDIKeyboardEvent == NULL)
 	{
@@ -302,7 +267,6 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 		}
 
 		//Set Update pointer
-		PollKeyboard = Update_DIBuffered;
 		ComPrintf("CKeyboard::InitMode:Initialized DI Buffered mode\n");
 		m_eKbMode = KB_DIBUFFERED;
 
@@ -310,7 +274,6 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 	}
 	else if(mode == KB_DIIMMEDIATE)
 	{
-		PollKeyboard = Update_DIImmediate;
 		ComPrintf("CKeyboard::InitMode:Intialized to DI Immediate mode\n");
 		m_eKbMode = KB_DIIMMEDIATE;
 
@@ -347,17 +310,10 @@ HRESULT	CKeyboard::Win32_Init(EKbMode mode)
 	if(m_eKbState != DEVNONE)
 		Shutdown();
 
-	//Set Update pointer
 	if(mode == KB_WIN32POLL)
-	{
-		PollKeyboard = Update_Win32;
 		ComPrintf("CKeyboard::InitMode:Initialized Win32 Polling mode\n");
-	}
 	else
-	{
-		PollKeyboard = 0;
 		ComPrintf("CKeyboard::InitMode:Initialized Win32 Hook\n");
-	}
 
 	m_eKbMode = mode;
 	SetCharTable(mode);
@@ -527,58 +483,12 @@ int	 CKeyboard::GetDeviceState()
 }
 
 
-//========================================================================================
-/*
-===========================================
-Update the Keyboard,
-called by Input Main
-===========================================
-*/
-void CKeyboard::Update()
-{
-	if(m_eKbState == DEVACQUIRED)
-	{
-		if((m_eKbMode != KB_WIN32HOOK) &&
-		   (m_eKbMode == KB_WIN32POLL) || (WaitForSingleObject(m_hDIKeyboardEvent, 0) == WAIT_OBJECT_0))
-		{
-				PollKeyboard(); 
-		}
-		//Process Held Keys for Repeat Events
-		else if(m_bRepeatEvents)
-		{
-			for(int i=0;i<KB_TOTALCHARS;i++)
-			{
-				//Set all the BUTTONDOWN events to BUTTONHELD
-				if(m_aHeldKeys[i].state == BUTTONDOWN)
-				{
-					m_aHeldKeys[i].state = BUTTONHELD;
-					m_aHeldKeys[i].time = g_fcurTime + KB_REPEATWAIT;
-				}
-				//Dispatch HELD mouse events, if time passed since last dispatch
-				//is bigger than the repeat rate
-				else if((m_aHeldKeys[i].state == BUTTONHELD) &&
-						(g_fcurTime > (m_aHeldKeys[i].time + m_fRepeatRate)))
-				{
-					m_keyEvent.id = m_aCharVal[i]; 
-					m_keyEvent.time = m_aHeldKeys[i].time = g_fcurTime;
-					m_keyEvent.state = BUTTONHELD;
-
-					if(m_keyEvent.flags & SHIFTDOWN)
-						ShiftCharacter(m_keyEvent.id);
-
-					m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-				}
-			}
-		}
-	}
-}
-
 /*
 ===========================================
 Flushes current data
 ===========================================
 */
-void FlushKeyBuffer()
+void CKeyboard::FlushKeyBuffer()
 {
 	if(m_pDIKb && m_eKbMode == CKeyboard::KB_DIBUFFERED)
 	{
@@ -606,12 +516,82 @@ void FlushKeyBuffer()
 	}
 }
 
+
+//========================================================================================
+/*
+===========================================
+Update the Keyboard,
+called by Input Main
+===========================================
+*/
+void CKeyboard::Update()
+{
+	if(m_eKbState != DEVACQUIRED)
+		return;
+
+	switch(m_eKbMode)
+	{
+	case KB_DIBUFFERED:
+		{
+			if(WaitForSingleObject(m_hDIKeyboardEvent, 0) == WAIT_OBJECT_0)
+			{
+				Update_DIBuffered();
+				return;
+			}
+			break;
+		}
+	case KB_DIIMMEDIATE:
+		{
+			if(WaitForSingleObject(m_hDIKeyboardEvent, 0) == WAIT_OBJECT_0)
+			{
+				Update_DIImmediate();
+				return;
+			}
+			break;
+		}
+    case KB_WIN32POLL:
+		{
+			Update_Win32();
+			break;
+		}
+	}
+
+	//Does the listener require repeat events ?
+	if(m_bRepeatEvents)
+	{
+		//Check for any keys that qualify to send out another repeat event
+		for(int i=0;i<KB_TOTALCHARS;i++)
+		{
+			//Set all the BUTTONDOWN events to BUTTONHELD
+			if(m_aHeldKeys[i].state == BUTTONDOWN)
+			{
+				m_aHeldKeys[i].state = BUTTONHELD;
+				m_aHeldKeys[i].time = g_fcurTime + KB_REPEATWAIT;
+			}
+			//Dispatch HELD mouse events, if time passed since last dispatch
+			//is bigger than the repeat rate
+			else if((m_aHeldKeys[i].state == BUTTONHELD) &&
+					(g_fcurTime > (m_aHeldKeys[i].time + m_fRepeatRate)))
+			{
+				m_keyEvent.id = m_aCharVal[i]; 
+				m_keyEvent.time = m_aHeldKeys[i].time = g_fcurTime;
+				m_keyEvent.state = BUTTONHELD;
+
+				if(m_keyEvent.flags & SHIFTDOWN)
+					ShiftCharacter(m_keyEvent.id);
+
+				m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+			}
+		}
+	}
+}
+
 /*
 ===========================================
 Query DirectInput Bufferedmode
 ===========================================
 */
-void Update_DIBuffered() 
+void CKeyboard::Update_DIBuffered() 
 {
 	//number of elements in query buffer
     DWORD numElements = KB_DIBUFFERSIZE;	
@@ -687,7 +667,7 @@ void Update_DIBuffered()
 DirectInput Immediate mode
 =====================================
 */
-void Update_DIImmediate()
+void CKeyboard::Update_DIImmediate()
 {
 	//Get the input's device state, and put the state in dims
     HRESULT hr = m_pDIKb->GetDeviceState(sizeof(m_aKeyState),
@@ -768,6 +748,92 @@ void Update_DIImmediate()
 		}
 	}
 }
+
+/*
+=====================================
+Win32 Keyboard Poll function
+=====================================
+*/
+void CKeyboard::Update_Win32()
+{
+	//Get the input's device state, and put the state in dims
+    if(!GetKeyboardState(m_aKeyState))
+	{
+		ComPrintf("CKeyboard::Update_Win32: Unable to get device state\n");
+
+		FlushKeyBuffer();
+		return;
+	}
+
+	m_keyEvent.flags =0;
+
+	if(m_aKeyState[VK_SHIFT] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LSHIFT) & 0x80000000)
+			m_aKeyState[VK_LSHIFT] = 0x80;
+		else 
+			m_aKeyState[VK_RSHIFT] = 0x80;
+ 		m_keyEvent.flags |= SHIFTDOWN;
+	}
+
+	if(m_aKeyState[VK_MENU] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LMENU) & 0x80000000)
+			m_aKeyState[VK_LMENU] = 0x80;
+		else 
+			m_aKeyState[VK_RMENU] = 0x80;
+		m_keyEvent.flags |= ALTDOWN;
+	}
+
+	if(m_aKeyState[VK_CONTROL] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LCONTROL) & 0x80000000)
+			m_aKeyState[VK_LCONTROL] = 0x80;
+		else 
+			m_aKeyState[VK_RCONTROL] = 0x80;
+		m_keyEvent.flags |= CTRLDOWN;
+	}
+
+	for(int i=0;i<KB_TOTALCHARS;i++)
+	{
+		//The key is down, and wasn't down before
+		if((m_aKeyState[i] & 0x80) && (m_aHeldKeys[i].state == BUTTONUP))
+		{
+			//Set Keydown flag in HeldKeys buffer
+			m_aHeldKeys[i].state = BUTTONDOWN;
+
+			m_keyEvent.id = m_aCharVal[i];
+			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.state = BUTTONDOWN;
+			
+			//Apply flags
+			if(m_keyEvent.flags & SHIFTDOWN)
+				ShiftCharacter(m_keyEvent.id);
+				
+			//Dispatch event
+			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+		}
+		//The Key is up now, and was down before
+		else if(!(m_aKeyState[i] & 0x80) &&	m_aHeldKeys[i].state != BUTTONUP) 
+		{
+			//Reset old keystate
+			m_aHeldKeys[i].time = 0.0f;
+			m_aHeldKeys[i].state = BUTTONUP;
+
+			//Send new Keystate
+			m_keyEvent.id = m_aCharVal[i];
+			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.state = BUTTONUP;
+
+			//Apply flags
+			if(m_keyEvent.flags & SHIFTDOWN)
+				ShiftCharacter(m_keyEvent.id);
+			
+			//Dispatch event
+			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+		}
+	}
+} 
 
 
 /*
@@ -852,16 +918,16 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 			//Set Keydown flag in HeldKeys buffer
 			m_aHeldKeys[keyindex].state = BUTTONDOWN;
 
-			m_keyEvent.id = m_aCharVal[keyindex];
+			m_keyEvent.id = g_pKb->m_aCharVal[keyindex];
 			m_keyEvent.time = g_fcurTime;
 			m_keyEvent.state = BUTTONDOWN;
 			
 			//Apply flags
 			if(m_keyEvent.flags & SHIFTDOWN)
-				ShiftCharacter(m_keyEvent.id);
+				CKeyboard::ShiftCharacter(m_keyEvent.id);
 				
 			//Dispatch event
-			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+			g_pKb->m_pKeyHandler->HandleKeyEvent(m_keyEvent);
 			return 1;
 		}
 		//Key was down before, up now
@@ -873,16 +939,16 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 			m_aHeldKeys[keyindex].state = BUTTONUP;
 
 			//Send new Keystate
-			m_keyEvent.id = m_aCharVal[keyindex];
+			m_keyEvent.id = g_pKb->m_aCharVal[keyindex];
 			m_keyEvent.time = g_fcurTime;
 			m_keyEvent.state = BUTTONUP;
 
 			//Apply flags
 			if(m_keyEvent.flags & SHIFTDOWN)
-				ShiftCharacter(m_keyEvent.id);
+				CKeyboard::ShiftCharacter(m_keyEvent.id);
 			
 			//Dispatch event
-			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
+			g_pKb->m_pKeyHandler->HandleKeyEvent(m_keyEvent);
 			return 1;
 		}
 	}
@@ -890,99 +956,12 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 }
 
 /*
-=====================================
-Win32 Keyboard Poll function
-=====================================
-*/
-void Update_Win32()
-{
-	//Get the input's device state, and put the state in dims
-    if(!GetKeyboardState(m_aKeyState))
-	{
-		ComPrintf("CKeyboard::Update_Win32: Unable to get device state\n");
-
-		FlushKeyBuffer();
-		return;
-	}
-
-	m_keyEvent.flags =0;
-
-	if(m_aKeyState[VK_SHIFT] & 0x80)
-	{
-		if(::GetAsyncKeyState(VK_LSHIFT) & 0x80000000)
-			m_aKeyState[VK_LSHIFT] = 0x80;
-		else 
-			m_aKeyState[VK_RSHIFT] = 0x80;
- 		m_keyEvent.flags |= SHIFTDOWN;
-	}
-
-	if(m_aKeyState[VK_MENU] & 0x80)
-	{
-		if(::GetAsyncKeyState(VK_LMENU) & 0x80000000)
-			m_aKeyState[VK_LMENU] = 0x80;
-		else 
-			m_aKeyState[VK_RMENU] = 0x80;
-		m_keyEvent.flags |= ALTDOWN;
-	}
-
-	if(m_aKeyState[VK_CONTROL] & 0x80)
-	{
-		if(::GetAsyncKeyState(VK_LCONTROL) & 0x80000000)
-			m_aKeyState[VK_LCONTROL] = 0x80;
-		else 
-			m_aKeyState[VK_RCONTROL] = 0x80;
-		m_keyEvent.flags |= CTRLDOWN;
-	}
-
-	for(int i=0;i<KB_TOTALCHARS;i++)
-	{
-		//The key is down, and wasn't down before
-		if((m_aKeyState[i] & 0x80) && (m_aHeldKeys[i].state == BUTTONUP))
-		{
-			//Set Keydown flag in HeldKeys buffer
-			m_aHeldKeys[i].state = BUTTONDOWN;
-
-			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
-			m_keyEvent.state = BUTTONDOWN;
-			
-			//Apply flags
-			if(m_keyEvent.flags & SHIFTDOWN)
-				ShiftCharacter(m_keyEvent.id);
-				
-			//Dispatch event
-			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-		}
-		//The Key is up now, and was down before
-		else if(!(m_aKeyState[i] & 0x80) &&	m_aHeldKeys[i].state != BUTTONUP) 
-		{
-			//Reset old keystate
-			m_aHeldKeys[i].time = 0.0f;
-			m_aHeldKeys[i].state = BUTTONUP;
-
-			//Send new Keystate
-			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
-			m_keyEvent.state = BUTTONUP;
-
-			//Apply flags
-			if(m_keyEvent.flags & SHIFTDOWN)
-				ShiftCharacter(m_keyEvent.id);
-			
-			//Dispatch event
-			m_pKeyHandler->HandleKeyEvent(m_keyEvent);
-		}
-	}
-} 
-
-
-/*
-=====================================
+==========================================
 Dispatch a single Key event
 amd Add to HeldKeys if its a Keydown event
-=====================================
+==========================================
 */
-void In_UpdateKey(int keyid, EButtonState keyState)
+void CKeyboard::SendKeyEvent(int &keyid, EButtonState &keyState)
 {
 	if((keyState == BUTTONDOWN) &&
 	   (m_aHeldKeys[keyid].state == BUTTONUP))
@@ -1022,76 +1001,14 @@ void In_UpdateKey(int keyid, EButtonState keyState)
 	}
 }
 
-
-//========================================================================================
-
-
-/*
-=====================================
-Change keyboard mode
-=====================================
-*/
-bool CKBMode(const CVar * var, int argc, char** argv)
-{
-	if(argc == 2 && argv[1])
-	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
-		{
-			//Check for Vaild value
-			if(temp < CKeyboard::KB_DIBUFFERED &&
-			   temp > CKeyboard::KB_WIN32POLL)
-			{
-				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
-				return false;
-			}
-
-			//Allow configs to change the mousemode if its valid
-			//even before the mouse actually inits
-			if(m_eKbState == DEVNONE) 
-			{
-				m_eKbMode = (CKeyboard::EKbMode)temp;
-				return true;
-			}
-
-			if(FAILED(g_pKb->Init(m_bExclusive,(CKeyboard::EKbMode)temp)))
-			{
-				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",temp);
-				return false;
-			}
-			return true;
-		}
-		ComPrintf("CKeyboard::CKBMode:couldnt read required mode\n");
-	}
-
-	ComPrintf("Keyboard Mode is %d\n",m_eKbMode);
-	switch(m_eKbMode)
-	{
-	case CKeyboard::KB_NONE:
-		ComPrintf("CKeyboard mode::No mode set\n");
-	case CKeyboard::KB_DIBUFFERED:
-		ComPrintf("CKeyboard mode::DirectInput Buffered mode\n");
-		break;
-	case CKeyboard::KB_DIIMMEDIATE:
-		ComPrintf("CKeyboard mode::DirectInput Immediate mode\n");
-		break;
-	case CKeyboard::KB_WIN32POLL:
-		ComPrintf("CKeyboard mode::Win32 Keyboard polling\n");
-		break;
-	case CKeyboard::KB_WIN32HOOK:
-		ComPrintf("CKeyboard mode::Win32 Keyboard Hooks\n");
-		break;
-	}
-	return false;
-}
-
-
+//======================================================================================
+//======================================================================================
 /*
 =====================================
 changed val to its "shifted" equivalent
 =====================================
 */
-void ShiftCharacter(int &val)
+void CKeyboard::ShiftCharacter(int &val)
 {	
 	if(val >= 'a' && val <= 'z')
 		val = val - 'a' + 'A';
@@ -1172,7 +1089,7 @@ void ShiftCharacter(int &val)
 Creates Key Id translation table
 =====================================
 */
-void SetCharTable(CKeyboard::EKbMode mode)
+void CKeyboard::SetCharTable(CKeyboard::EKbMode mode)
 {
 	switch(mode)
 	{
@@ -1239,6 +1156,7 @@ void SetCharTable(CKeyboard::EKbMode mode)
 			m_aCharVal['S'] = 's';
 			m_aCharVal['T'] = 't';
 			m_aCharVal['U'] = 'u';
+			m_aCharVal['V'] = 'v';
 			m_aCharVal['W'] = 'w';
 			m_aCharVal['X'] = 'x';
 			m_aCharVal['Y'] = 'y';
@@ -1431,4 +1349,66 @@ void SetCharTable(CKeyboard::EKbMode mode)
 	m_aCharVal[INKEY_MOUSE2]  = 	INKEY_MOUSE2;
 	m_aCharVal[INKEY_MOUSE3]  = 	INKEY_MOUSE3;
 	m_aCharVal[INKEY_MOUSE4]  = 	INKEY_MOUSE4;
+}
+
+
+//========================================================================================
+
+/*
+=====================================
+Change keyboard mode
+=====================================
+*/
+bool CKBMode(const CVar * var, int argc, char** argv)
+{
+	if(argc == 2 && argv[1])
+	{
+		int temp=0;
+		if(argv[1] && sscanf(argv[1],"%d",&temp))
+		{
+			//Check for Vaild value
+			if(temp < CKeyboard::KB_DIBUFFERED &&
+			   temp > CKeyboard::KB_WIN32POLL)
+			{
+				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
+				return false;
+			}
+
+			//Allow configs to change the mousemode if its valid
+			//even before the mouse actually inits
+			if(g_pKb->m_eKbState == DEVNONE) 
+			{
+				g_pKb->m_eKbMode = (CKeyboard::EKbMode)temp;
+				return true;
+			}
+
+			if(FAILED(g_pKb->Init(g_pKb->m_bExclusive,(CKeyboard::EKbMode)temp)))
+			{
+				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",temp);
+				return false;
+			}
+			return true;
+		}
+		ComPrintf("CKeyboard::CKBMode:couldnt read required mode\n");
+	}
+
+	ComPrintf("Keyboard Mode is %d\n",g_pKb->m_eKbMode);
+	switch(g_pKb->m_eKbMode)
+	{
+	case CKeyboard::KB_NONE:
+		ComPrintf("CKeyboard mode::No mode set\n");
+	case CKeyboard::KB_DIBUFFERED:
+		ComPrintf("CKeyboard mode::DirectInput Buffered mode\n");
+		break;
+	case CKeyboard::KB_DIIMMEDIATE:
+		ComPrintf("CKeyboard mode::DirectInput Immediate mode\n");
+		break;
+	case CKeyboard::KB_WIN32POLL:
+		ComPrintf("CKeyboard mode::Win32 Keyboard polling\n");
+		break;
+	case CKeyboard::KB_WIN32HOOK:
+		ComPrintf("CKeyboard mode::Win32 Keyboard Hooks\n");
+		break;
+	}
+	return false;
 }

@@ -11,7 +11,6 @@ Inherits from listener interface so we can have
 a default handler implementation
 ===========================================
 */
-
 class CKeyboard : public I_InKeyListener	
 {
 public:
@@ -41,14 +40,45 @@ public:
 						bool bRepeatEvents,
 						float fRepeatRate);
 	void HandleKeyEvent(const KeyEvent_t &kevent) {}
+	
+	void SendKeyEvent(int &keyid, EButtonState &keyState);
 
 	void Update();
 	int	 GetDeviceState();
-	
+
 private:
 
-	//Mode specific poll functions
-	void	(*PollKeyboard) ();
+	#define KB_TOTALCHARS	256
+	#define KB_DIBUFFERSIZE	16
+
+	//========================================================================
+	//Private Member Vars
+	
+	//Event handle
+	HANDLE			m_hDIKeyboardEvent;	
+	
+	//Device State amd Mode
+	EDeviceState	m_eKbState;
+	EKbMode			m_eKbMode;
+	bool			m_bExclusive;
+	
+	float			m_fRepeatRate;		//Current repeat rate
+	bool			m_bRepeatEvents;	//Report Held events ?
+	I_InKeyListener* m_pKeyHandler;		//Key listener object
+
+	CVar *			m_pVarKbMode;
+
+	//Key Translation table		
+	uint			m_aCharVal[KB_TOTALCHARS]; 	
+	
+	//Receives DI buffered data 
+	DIDEVICEOBJECTDATA	 m_aDIBufKeydata[KB_DIBUFFERSIZE]; 
+	
+	//The DirectInputDevice Object
+	LPDIRECTINPUTDEVICE7 m_pDIKb;	
+
+	//========================================================================
+	//Private Member funcs
 
 	//Directinput init and shutdown funcs
 	HRESULT	DI_Init(EKbMode mode);
@@ -57,6 +87,22 @@ private:
 	//Win32 Init/Shutdown
 	HRESULT	Win32_Init(EKbMode mode);
 	bool	Win32_Shutdown();
+
+	void	FlushKeyBuffer();
+	void	SetCharTable(EKbMode mode);
+
+	//Update functions
+	void	Update_DIBuffered();
+	void	Update_DIImmediate();
+	void	Update_Win32();
+
+	static void	ShiftCharacter(int &val);
+
+	friend LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
+											   WPARAM wParam,  // virtual-key code
+											   LPARAM lParam); // keystroke-message information
+
+	friend bool	CKBMode(const CVar * var, int argc, char** argv);
 };
 
 #endif
