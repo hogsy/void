@@ -587,7 +587,6 @@ ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
 		}
 	}
 
-	m_ingame = true;
 	m_campath = -1;
 	
 	//Setup camera
@@ -596,6 +595,7 @@ ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
 							m_pGameClient->velocity);
 
 	m_pClGame->ForwardNetworkEvent(CLIENT_BEGINGAME);
+	m_ingame = true;
 }
 
 

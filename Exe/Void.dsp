@@ -93,6 +93,14 @@ LINK32=link.exe
 # Begin Group "Sound"
 
 # PROP Default_Filter ""
+# Begin Group "Eax"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Eax\eax.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Snd_buf.cpp

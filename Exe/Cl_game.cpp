@@ -130,18 +130,18 @@ void CGameClient::RunFrame(float frameTime)
 		if (forward.z < 0)
 			forward = m_vecUp;
 		else
-			m_vecUp.Scale(forward, -1);
+			m_vecUp.Inverse(forward);
 		forward.z = 0;
 		forward.Normalize();
 	}
 
 	right.z = 0;
-	if (right.Normalize() < 0.3)
+	if (right.Normalize() < 0.3f)
 	{
 		if (right.z > 0)
 			right = m_vecUp;
 		else
-			m_vecUp.Scale(right, -1);
+			m_vecUp.Inverse(right);
 		right.z = 0;
 		right.Normalize();
 	}
@@ -158,7 +158,7 @@ void CGameClient::RunFrame(float frameTime)
 
 	//Scale down x/y velocity if walking or crouching
 	if(m_cmd.moveFlags & ClCmd::WALK || m_cmd.moveFlags & ClCmd::CROUCH)
-		vecDesiredMove.Scale(0.5);
+		vecDesiredMove.Scale(0.5f);
 
 	if(m_cmd.moveFlags & ClCmd::JUMP)
 		vecDesiredMove.z += 300;
@@ -169,10 +169,16 @@ void CGameClient::RunFrame(float frameTime)
 	// gradually slow down (friction)
 	m_pGameClient->velocity.x *= (m_pGameClient->friction * frameTime);
 	m_pGameClient->velocity.y *= (m_pGameClient->friction * frameTime);
+	
 	if (m_pGameClient->velocity.x < 0.01f)
 		m_pGameClient->velocity.x = 0;
+	else if (m_pGameClient->velocity.x > 200.0f)
+		m_pGameClient->velocity.x = 200.0f;
+
 	if (m_pGameClient->velocity.y < 0.01f)
 		m_pGameClient->velocity.y = 0;
+	else if (m_pGameClient->velocity.y > 200.0f)
+		m_pGameClient->velocity.y = 200.0f;
 
 	m_pGameClient->velocity += vecDesiredMove;
 
