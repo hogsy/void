@@ -458,6 +458,7 @@ void CShaderManager::CachePurge(void)
 			// sky brushes never depthwrite
 			g_pRast->PolyColor(1, 1, 1, 1);
 			g_pRast->ShaderSet(shader);
+
 			do
 			{
 				if (poly->lightdef != -1)
@@ -473,6 +474,7 @@ void CShaderManager::CachePurge(void)
 					g_pRast->PolyVertexf(poly->vertices[v]);
 				}
 				g_pRast->PolyEnd();
+				g_pRast->ConAlpha(255, 255);
 
 				poly = poly->next;
 			} while (poly);

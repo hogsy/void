@@ -56,16 +56,10 @@ Renderer Initiation - set up initial render state
 void r_init(void)
 {
 	// reset last r_vidsynch
-	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
-	{
-
-		if (g_varVidSynch->ival)
-			g_pRast->SetVidSynch(1);
-		else
-			g_pRast->SetVidSynch(0);
-	}
-
-	g_rInfo.ready = true;
+	if (g_varVidSynch->ival)
+		g_pRast->SetVidSynch(1);
+	else
+		g_pRast->SetVidSynch(0);
 }
 
 

@@ -1,7 +1,11 @@
 #include "Standard.h"
 #include "Rast_d3dx.h"
 
-#pragma pack(4)
+#include "Ren_exp.h"
+extern CRenExp		  * g_pRenExp;
+
+
+
 /*
 =======================================
 Constructor 
@@ -28,6 +32,8 @@ Destructor
 */
 CRastD3DX::~CRastD3DX()
 {
+	if (m_bInitialized)
+		Shutdown();
 }
 
 
@@ -71,9 +77,9 @@ bool CRastD3DX::Init()
 		return false;
 	}
 
-    if(g_rInfo.rflags & RFLAG_FULLSCREEN)
-    {
-		hr = D3DXCreateContextEx(D3DX_DEFAULT, D3DX_CONTEXT_FULLSCREEN, g_rInfo.hWnd, NULL, g_rInfo.bpp, 0,
+	if(g_pRenExp->m_varFull->bval)
+	{
+		hr = D3DXCreateContextEx(D3DX_DEFAULT, D3DX_CONTEXT_FULLSCREEN, g_rInfo.hWnd, NULL, g_pRenExp->m_varBpp->ival, 0,
 			 D3DX_DEFAULT, 0, 1, g_rInfo.width, g_rInfo.height, D3DX_DEFAULT, &m_pD3DX);
 
         if(FAILED(hr))
@@ -153,7 +159,7 @@ bool CRastD3DX::Init()
 	bool vsynch = (caps.dwCaps2 & DDCAPS2_FLIPNOVSYNC) ? true : false;
 */
 
-	g_rInfo.ready = true;
+	m_bInitialized = true;
 	return true;
 }
 
@@ -197,7 +203,7 @@ bool CRastD3DX::Shutdown()
 
 	D3DXUninitialize();
 
- 	g_rInfo.ready = false;
+ 	m_bInitialized = false;
 	return true;
 }
 
@@ -221,7 +227,7 @@ Update Default window coords
 void CRastD3DX::SetWindowCoords(int wndX, int wndY)
 {
 	//Dont bother with initial co-ords
-	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
+	if(!m_bInitialized || g_pRenExp->m_varFull->bval)
 		return;
 
 	g_varWndX->Set(wndX);
@@ -235,6 +241,9 @@ Resize the Window
 */
 void CRastD3DX::Resize()
 {
+	if (!m_bInitialized)
+		return;
+
 	RECT crect;
 	GetClientRect(g_rInfo.hWnd, &crect);
 	g_rInfo.width  = crect.right - crect.left;
@@ -261,22 +270,25 @@ Updates display settings
 */
 bool CRastD3DX::UpdateDisplaySettings(int width, int height, int bpp, bool fullscreen)
 {
+	if (!m_bInitialized)
+		return false;
+
 	Shutdown();
 
 	// record old stats
-	bool oldfull = g_rInfo.rflags & RFLAG_FULLSCREEN;
+	bool oldfull = g_pRenExp->m_varFull->bval;
 	uint oldwidth= g_rInfo.width;
 	uint oldheight= g_rInfo.height;
-	uint oldbpp	  = g_rInfo.bpp;
+	uint oldbpp	  = g_pRenExp->m_varBpp->ival;
 
-	g_rInfo.bpp		= bpp;
+	g_pRenExp->m_varBpp->ForceSet(bpp);
 	g_rInfo.width	= width;
 	g_rInfo.height	= height;
 
 	if (fullscreen)
-		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+		g_pRenExp->m_varFull->ForceSet("1");
 	else
-		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+		g_pRenExp->m_varFull->ForceSet("0");
 
 	if (!Init())
 	{
@@ -284,11 +296,11 @@ bool CRastD3DX::UpdateDisplaySettings(int width, int height, int bpp, bool fulls
 
 		// switch everythign back;
 		if (oldfull)
-			g_rInfo.rflags |= RFLAG_FULLSCREEN;
+			g_pRenExp->m_varFull->ForceSet("1");
 		else
-			g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+			g_pRenExp->m_varFull->ForceSet("0");
 
-		g_rInfo.bpp	= oldbpp;
+		g_pRenExp->m_varBpp->ForceSet((int)oldbpp);
 		g_rInfo.width	= oldwidth;
 		g_rInfo.height	= oldheight;
 

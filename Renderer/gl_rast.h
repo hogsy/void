@@ -75,12 +75,12 @@ private:
 	DEVMODE*m_devmodes;		//all available display modes
 	int		m_nummodes;		//Number of display modes
 
-	bool	m_bInitialized;
 
 	GLuint	m_glnames[MAX_TEXTURES];
 
 	bool	m_CVAsupported;
 	bool	m_vsynchsupported;
+	bool	m_MultiSupported;	// multitexturing
 
 // gl extensions
 //====================================================================================

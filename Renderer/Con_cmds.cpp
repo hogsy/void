@@ -127,10 +127,6 @@ switch fullbright (light) rendering
 */
 bool CVar_FullBright(int val)
 {
-	if (val)
-		g_rInfo.rflags |= RFLAG_FULLBRIGHT;
-	else
-		g_rInfo.rflags &= ~RFLAG_FULLBRIGHT;
 	return true;
 }
 
@@ -141,12 +137,14 @@ toggle multitexture/multipass rendering
 */
 bool CVar_MultiTexture(int val)
 {
+/*
 	if(val)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ComPrintf("Your video card does not support ARB multitexturing.\n");
 		return false;
 	}
+*/
 	return true;
 }
 
@@ -279,15 +277,15 @@ void CRConsole::RegisterConObjects()
 	g_varWndX = pConsole->RegisterCVar("r_wndx","80",CVAR_INT,CVAR_ARCHIVE,this);
 	g_varWndY = pConsole->RegisterCVar("r_wndy","40",CVAR_INT,CVAR_ARCHIVE,this);
 
-	g_varFullbright = pConsole->RegisterCVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE,this);
-	g_varFov = pConsole->RegisterCVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE,this);
-	g_varMultiTexture = pConsole->RegisterCVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE,this);
-	g_varVidSynch = pConsole->RegisterCVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE,this);
-	g_var32BitTextures = pConsole->RegisterCVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE,this);
-	g_varBeamTolerance = pConsole->RegisterCVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE,this);
-	g_varD3DXShift = pConsole->RegisterCVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE,this);
-	g_varGLExtensions = pConsole->RegisterCVar("r_glExts", "None", CVAR_STRING, CVAR_READONLY, this);
-	g_varGLDriver = pConsole->RegisterCVar("r_glDriver", "0", CVAR_INT, CVAR_ARCHIVE, this);
+	g_varFullbright		= pConsole->RegisterCVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE,this);
+	g_varFov			= pConsole->RegisterCVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE,this);
+	g_varMultiTexture	= pConsole->RegisterCVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE,this);
+	g_varVidSynch		= pConsole->RegisterCVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE,this);
+	g_var32BitTextures	= pConsole->RegisterCVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE,this);
+	g_varBeamTolerance	= pConsole->RegisterCVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE,this);
+	g_varD3DXShift		= pConsole->RegisterCVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE,this);
+	g_varGLExtensions	= pConsole->RegisterCVar("r_glExts", "None", CVAR_STRING, CVAR_READONLY, this);
+	g_varGLDriver		= pConsole->RegisterCVar("r_glDriver", "0", CVAR_INT, CVAR_ARCHIVE, this);
 }
 
 

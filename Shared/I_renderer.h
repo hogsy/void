@@ -7,15 +7,6 @@
 #define RENDERER_API __declspec(dllimport)
 #endif
 
-/*
-======================================
-Renderer flags
-======================================
-*/
-#define RFLAG_FULLSCREEN	0x00000001
-#define RFLAG_FULLBRIGHT	0x00000002
-#define RFLAG_MULTITEXTURE	0x00000004
-#define RFLAG_SWAP_CONTROL	0x00000008
 
 /*
 ==========================================
@@ -29,28 +20,16 @@ typedef struct RenderInfo_t
 	{
 		width = 640;
 		height = 480;
-		bpp = 16;
-		zdepth = 16;
-		stencil = 0;
-		active = false;
-		ready = false;
-		rflags = 0;
 	}
 
 	//==========================================
 
 	HWND	hWnd;		//Window information
 
-	bool	active;		//in the window active?
-	bool	ready;
-
 	//==========================================
 	//Renderering Information
 	
-	byte 	rflags;
-
-	uint    width, height, bpp,
-			zdepth,	stencil;
+	uint    width, height;
 
 }RenderInfo_t;
 
@@ -80,6 +59,7 @@ struct I_Renderer
 	virtual I_HudRenderer	  * GetHud()=0;
 
 	//Windowing
+	virtual bool IsFullScreen(void)=0;
 	virtual void MoveWindow(int x, int y) = 0;
 	virtual void Resize() =0;
 	virtual void ChangeDispSettings(uint width, uint height, uint bpp, 

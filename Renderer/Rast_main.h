@@ -184,6 +184,9 @@ private:
 protected:
 	void Flush(void);
 
+	// are we initialized
+	bool	m_bInitialized;
+
 	// current rasterizer states
 	EDepthFunc		mCurDepthFunc;
 	bool			mCurDepthWrite;

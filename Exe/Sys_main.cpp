@@ -331,15 +331,10 @@ Resize Window Event
 void CVoid::OnResize(bool focus, int x, int y, int w, int h)
 {
 	if(focus==false)
-	{
-		m_pRParms->active = false;
 		return;
-	}
-
-	m_pRParms->active = true;
 
 	//Change the size of the rendering window
-	if (m_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
+	if (m_pRender)
 		m_pRender->Resize();
 
 	//Set Window extents for input if full screen
@@ -355,7 +350,7 @@ Handle Display Change
 */
 void CVoid::OnDisplayChange(int bpp, int width, int height)
 {
-	if(m_pRParms->rflags & RFLAG_FULLSCREEN)
+	if(m_pRender && m_pRender->IsFullScreen())
 		m_pInput->ShowMouse(false);
 }
 
@@ -367,15 +362,12 @@ Activiate window Event
 */
 void CVoid::OnActivate(bool focus)
 {
-	if (focus == false)
-		m_pRParms->active = false;
-	else 
+	if (focus) 
 	{
-		m_pRParms->active = true;
 		if(m_pInput)
 			m_pInput->Acquire();
 
-		if (m_pRender && (m_pRParms->rflags & RFLAG_FULLSCREEN))
+		if (m_pRender)
 			m_pRender->Resize();
 	}
 }
@@ -387,9 +379,6 @@ Get Focus Event
 */
 void CVoid::OnFocus()
 {
-	if (m_pRParms)
-		m_pRParms->active = true;
-	
 	if(m_pInput)
 		m_pInput->Acquire();
 }
@@ -405,10 +394,6 @@ void CVoid::OnLostFocus()
 	//Input loses Focus
 	if(m_pInput)
 		m_pInput->UnAcquire();
-	
-	//stop rendering
-	if (m_pRParms)
-		m_pRParms->active = false;
 }
 
 /*

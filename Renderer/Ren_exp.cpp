@@ -108,14 +108,6 @@ bool CRenExp::InitRenderer()
 	//Set all global pointers to null
 	world	= NULL;
 
-	//Setup initial state
-	g_rInfo.bpp = m_varBpp->ival;
-	if(m_varFull->ival)
-		g_rInfo.rflags |= RFLAG_FULLSCREEN;
-	else
-		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
-
 	//parse width and height out of string
 	char *c = strchr(m_varRes->string, ' ');
 	if(!c)
@@ -141,7 +133,7 @@ bool CRenExp::InitRenderer()
 
 	ComPrintf("\n***** Renderer Intialization *****\n\n");
 
-	//Start up opengl
+	//Start up rasterizer
 	if(!g_pRast->Init())
 	{
 		ComPrintf("CRenExp::InitRenderer:Failed to Init Rasterizer");
@@ -156,7 +148,6 @@ bool CRenExp::InitRenderer()
 	char res[16];
 	sprintf(res,"%d %d", g_rInfo.width, g_rInfo.height);
 	m_varRes->ForceSet(res);
-	m_varBpp->ForceSet((int)g_rInfo.bpp);
 
 	//Start up the renderer
 	r_init();
@@ -240,6 +231,19 @@ void CRenExp::Draw(const CCamera * camera)
 #endif
 }
 
+
+/*
+==========================================
+needed to tell whether or not to hide mouse cursor
+==========================================
+*/
+bool CRenExp::IsFullScreen(void)
+{
+	return m_varFull->bval;
+}
+
+
+
 /*
 ==========================================
 On Move Window
@@ -250,7 +254,7 @@ void CRenExp::MoveWindow(int x, int y)
 	g_pRast->SetFocus();
 
 	//Update new xy-coords if in windowed mode
-	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
+	if(!m_varFull->bval)
 		g_pRast->SetWindowCoords(x,y);
 }
 
@@ -262,12 +266,8 @@ On Resize Window
 void CRenExp::Resize()
 {
 	g_pRast->SetFocus();
-
-	if (g_rInfo.ready)
-	{
-		g_pRast->Resize();
-		m_pRConsole->UpdateRes();
-	}
+	g_pRast->Resize();
+	m_pRConsole->UpdateRes();
 }
 
 
@@ -418,25 +418,23 @@ bool CRenExp::CVar_FullScreen(const CStringVal &strVal)
 
 	if(temp <= 0)
 	{
-		if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
+		if(!m_varFull->bval)
 		{	ComPrintf("Already in windowed mode\n");
 			return false;
 		}
 		ComPrintf("Switching to windowed mode\n");
 		
-		if(g_rInfo.ready)
-			ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, false);
+		ChangeDispSettings(g_rInfo.width, g_rInfo.height, m_varBpp->ival, false);
 	}
 	else if( temp > 0)
 	{
-		if(g_rInfo.rflags & RFLAG_FULLSCREEN)
+		if(m_varFull->bval)
 		{	ComPrintf("Already in fullscreen mode\n");
 			return false;
 		}
 		ComPrintf("Switching to fullscreen mode\n");
-		
-		if(g_rInfo.ready)
-			ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
+
+		ChangeDispSettings(g_rInfo.width, g_rInfo.height, m_varBpp->ival, true);
 	}
 	return true;
 }
@@ -490,10 +488,9 @@ bool CRenExp::CVar_Res(const CStringVal &strVal)
 		return false;
 	}
 
-	ComPrintf("Switching to %d x %d x %d bpp\n", x,y, g_rInfo.bpp );
+	ComPrintf("Switching to %d x %d x %d bpp\n", x,y, m_varBpp->ival);
 
-	if(g_rInfo.ready)
-		ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
+	ChangeDispSettings(x, y, m_varBpp->ival, m_varFull->bval);
 	return true;
 }
 
@@ -507,7 +504,7 @@ bool CRenExp::CVar_Bpp(const CStringVal &strVal)
 	uint bpp= strVal.IntVal();
 
 	// no go if we're not changing
-	if (bpp == g_rInfo.bpp)
+	if (bpp == m_varBpp->ival)
 	{
 		ComPrintf("Already at given bpp\n");
 		return false;
@@ -519,11 +516,8 @@ bool CRenExp::CVar_Bpp(const CStringVal &strVal)
 		return false;
 	}
 
-	if(g_rInfo.ready)
-	{
-		ComPrintf("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
-		ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, (g_rInfo.rflags & RFLAG_FULLSCREEN));
-	}
+	ComPrintf("Switching to %d by %d at %d bpp\n", g_rInfo.width, g_rInfo.height, bpp);
+	ChangeDispSettings(g_rInfo.width,g_rInfo.height,bpp, m_varFull->bval);
 	return true;
 }
 
@@ -535,12 +529,13 @@ Handle rasterizer changes
 */
 bool CRenExp::CVar_Rast(const CStringVal &strVal)
 {
-/*	if (g_pRast)
+	if (g_pRast)
 	{
 		if (stricmp(strVal.String(), "d3dx")==0)
 		{
 			delete g_pRast;
 			g_pRast = new CRastD3DX();
+			g_pRast->Init();
 
 			if (g_pTex)
 				g_pTex->LoadAll();
@@ -551,17 +546,19 @@ bool CRenExp::CVar_Rast(const CStringVal &strVal)
 		{
 			delete g_pRast;
 			g_pRast = new COpenGLRast();
+			g_pRast->Init();
 
 			if (g_pTex)
 				g_pTex->LoadAll();
 		}
+
+		return true;
 	}
 
-	else */if((stricmp(strVal.String(),"d3dx")==0) ||
+	else if((stricmp(strVal.String(),"d3dx")==0) ||
 		    (stricmp(strVal.String(),"gl")==0) ||
 		    (stricmp(strVal.String(),"none")==0))
 	{
-		ComPrintf("Rasterizer change will take effect next time you run void.\n");
 		return true;
 	}
 	ComPrintf("Invalid driver specified\n");

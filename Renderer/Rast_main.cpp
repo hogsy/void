@@ -24,6 +24,7 @@ CRasterizer::CRasterizer()
 	mTexDef = NULL;
 	mLightDef = NULL;
 	mUseLights = false;
+	m_bInitialized = false;
 
 	mCurDepthFunc	= VRAST_DEPTH_LEQUAL;
 	mCurDepthWrite	= true;

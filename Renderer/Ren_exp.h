@@ -11,8 +11,13 @@ class  CRConsole;
 class CRenExp : public I_Renderer,
 			    public I_ConHandler
 {
+	// rasterizer must be able to access these cvars
+	// why doesnt 'friend class CRasterizer' work?
+	friend class CRastD3DX;
+	friend class COpenGLRast;
+
 public:
-	
+
 	CRenExp();
 	~CRenExp();
 
@@ -27,6 +32,7 @@ public:
 	I_HudRenderer	  * GetHud();
 
 	//Windowing
+	bool IsFullScreen(void);
 	void MoveWindow(int x, int y);
 	void Resize();
 	void ChangeDispSettings(unsigned int width, unsigned int height, 

@@ -2,8 +2,10 @@
 
 #include "Standard.h"
 #include "gl_rast.h"
-
 //#include <gl/glu.h>
+
+#include "Ren_exp.h"
+extern CRenExp		  * g_pRenExp;
 
 extern 	CVar * g_varGLExtensions;
 
@@ -17,6 +19,8 @@ COpenGLRast::COpenGLRast()
 {
 	m_CVAsupported = false;
 	m_vsynchsupported = false;
+	m_MultiSupported = false;
+
 	m_nummodes = 0;
 	m_devmodes = 0;
 	m_bInitialized = false;
@@ -39,10 +43,12 @@ Destructor
 */
 COpenGLRast::~COpenGLRast()
 {
+	if (m_bInitialized)
+		Shutdown();
+
 	if(m_devmodes)
 		delete [] m_devmodes;
 	m_devmodes = NULL;
-
 
 	if (mMaxElements >= MAX_ELEMENTS)
 		ComPrintf("**** mMaxElements = %d ****\n", mMaxElements);
@@ -61,8 +67,10 @@ Init
 bool COpenGLRast::Init()
 {
 	// load the driver
+	glsSetBehavior(glsGetBehavior() | GLS_BEHAVIOR_NEVER_LOAD_GLU);
+
 	int unsigned num_drivers = glsGetNumberOfDrivers();
-	ComPrintf("%u available OpenGL drivers\n");
+	ComPrintf("%d available OpenGL drivers\n", num_drivers);
 
 	int driver = 0;
 	if (g_varGLDriver->ival>0 && g_varGLDriver->ival<num_drivers)
@@ -81,7 +89,6 @@ bool COpenGLRast::Init()
 	glsGetCurrentDriverInfo(&dinfo);
 
 
-	ComPrintf("GL:Init GL driver: %s\n", dinfo.GLDriver.aDriverFilePath);
 	ComPrintf("GL:Init GL driver: %s\n%s\n", dinfo.aDriverDescription,
 											 dinfo.GLDriver.aDriverFilePath);
 
@@ -92,7 +99,7 @@ bool COpenGLRast::Init()
 
 
 	// change display before we do anything with gl
-	if (g_rInfo.rflags & RFLAG_FULLSCREEN)
+	if (g_pRenExp->m_varFull->bval)
 		GoFull();
 	else
 		GoWindowed();
@@ -143,7 +150,7 @@ bool COpenGLRast::Init()
 
 			// check for extensions we want
 			if (!strcmp(start, "GL_ARB_multitexture"))
-				g_rInfo.rflags |= RFLAG_MULTITEXTURE;
+				m_MultiSupported = true;
 
 			else if (!strcmp(start, "WGL_EXT_swap_control"))
 				m_vsynchsupported = true;
@@ -168,7 +175,6 @@ bool COpenGLRast::Init()
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-	g_rInfo.ready = true;
 	m_bInitialized = true;
 	return true;
 }
@@ -185,7 +191,6 @@ bool COpenGLRast::Shutdown()
 		return true;
 
 	m_bInitialized = false;
-	g_rInfo.ready = false;
 	::ChangeDisplaySettings(NULL, 0);
 
 
@@ -210,8 +215,6 @@ bool COpenGLRast::Shutdown()
 	hRC = NULL;
 	hDC = NULL;
 
-
-	g_rInfo.ready = false;
 	return true;
 }
 
@@ -274,9 +277,6 @@ bool COpenGLRast::GoWindowed(void)
 	// make sure we have our regular desktop resolution
 	::ChangeDisplaySettings(NULL, 0);
 
-	//3dfx 3d only card. default to fullscreen mode
-//	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
 	RECT wrect;
 	wrect.left = g_varWndX->ival;
 	wrect.top = g_varWndY->ival;
@@ -310,7 +310,7 @@ bool COpenGLRast::GoFull(void)
 {
 	int width = g_rInfo.width;
 	int height= g_rInfo.height;
-	int bpp   = g_rInfo.bpp;
+	int bpp   = g_pRenExp->m_varBpp->ival;
 
 
 	//minimum requirements
@@ -388,10 +388,9 @@ bool COpenGLRast::GoFull(void)
 
 
 	//Record our changes
-//	g_rInfo.rflags|= RFLAG_FULLSCREEN;
 	g_rInfo.width  = m_devmodes[best_mode].dmPelsWidth;
 	g_rInfo.height = m_devmodes[best_mode].dmPelsHeight;
-	g_rInfo.bpp    = m_devmodes[best_mode].dmBitsPerPel;
+	g_pRenExp->m_varBpp->ForceSet((int)m_devmodes[best_mode].dmBitsPerPel);
 
 	// put the window so the client area matches the size of the entire screen
 	
@@ -430,7 +429,7 @@ void COpenGLRast::SetWindowCoords(int wndX, int wndY)
 //		return;
 
 	//Dont bother with initial co-ords
-	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
+	if(!m_bInitialized || g_pRenExp->m_varFull->bval)
 		return;
 
 	g_varWndX->Set(wndX);
@@ -444,7 +443,7 @@ Resize the Window
 */
 void COpenGLRast::Resize()
 {
-	if (!hDC || !hRC)
+	if (!hDC || !hRC || !m_bInitialized)
 		return;
 
 
@@ -465,64 +464,48 @@ Updates display settings
 */
 bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool fullscreen)
 {
-	if (!hDC || !hRC)
+	if (!hDC || !hRC || !m_bInitialized)
 		return false;
 
 	glsMakeCurrent(hDC, hRC);
 
-//	bool fast = (bpp == g_rInfo.bpp);
-
 
 	//Shutdown openGL first
-//	if (!fast)
-		Shutdown();
+	Shutdown();
 
 	// record old stats
-	bool oldfull = g_rInfo.rflags & RFLAG_FULLSCREEN;
-	uint oldwidth= g_rInfo.width;
+	bool oldfull  =	g_pRenExp->m_varFull->bval;
+	uint oldwidth = g_rInfo.width;
 	uint oldheight= g_rInfo.height;
-	uint oldbpp	  = g_rInfo.bpp;
+	uint oldbpp	  = g_pRenExp->m_varBpp->ival;
 
-	g_rInfo.bpp		= bpp;
+	g_pRenExp->m_varBpp->ForceSet(bpp);
 	g_rInfo.width	= width;
 	g_rInfo.height	= height;
 
 	if (fullscreen)
-		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+		g_pRenExp->m_varFull->ForceSet("1");
 	else
-		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-/*
-	if (fast)
+		g_pRenExp->m_varFull->ForceSet("0");
+
+	if (!Init())
 	{
-		g_rInfo.ready = false;
+		ComPrintf("GL::UpdateDisplaySettings: Unable to change to new settings\n");
 
-		if (fullscreen)
-			GoFull();
+		// switch everythign back;
+		if (oldfull)
+			g_pRenExp->m_varFull->ForceSet("1");
 		else
-			GoWindowed();
-		glViewport(0, 0, g_rInfo.width, g_rInfo.height);
+			g_pRenExp->m_varFull->ForceSet("0");
+
+		g_pRenExp->m_varBpp->ForceSet((int)oldbpp);
+		g_rInfo.width	= oldwidth;
+		g_rInfo.height	= oldheight;
+
+		Init();
+		return false;
 	}
 
-	else
-*/	{
-		if (!Init())
-		{
-			ComPrintf("GL::UpdateDisplaySettings: Unable to change to new settings\n");
-
-			// switch everythign back;
-			if (oldfull)
-				g_rInfo.rflags |= RFLAG_FULLSCREEN;
-			else
-				g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
-
-			g_rInfo.bpp	= oldbpp;
-			g_rInfo.width	= oldwidth;
-			g_rInfo.height	= oldheight;
-
-			Init();
-			return false;
-		}
-	}
 	ComPrintf("GL::UpdateDisplaySettings::Display change successful\n");
 	return true;
 }
@@ -541,7 +524,7 @@ bool COpenGLRast::SetupPixelFormat()
 		1,					// version
 		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
 		PFD_TYPE_RGBA,
-		g_rInfo.bpp,					// bit depth
+		g_pRenExp->m_varBpp->ival,					// bit depth
 		0, 0, 0, 0, 0, 0,
 		0,
 		0,
@@ -569,12 +552,10 @@ bool COpenGLRast::SetupPixelFormat()
 	}
 
 	// record what was selected
-	g_rInfo.bpp	 = pfd.cColorBits;
-	g_rInfo.zdepth  = pfd.cDepthBits;
-	g_rInfo.stencil = pfd.cStencilBits;
+	g_pRenExp->m_varBpp->ForceSet(pfd.cColorBits);
 
 	DescribePixelFormat(hDC, selected_pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-	ComPrintf("CGLUtil::SetupPixelFormat:Set Pixel Format:\nBit Depth: %d\nZ Depth: %d\nStencil Depth: %d\n",
+	ComPrintf("CGLUtil::SetupPixelFormat:\nBit Depth: %d\nZ Depth: %d\nStencil Depth: %d\n",
 			  pfd.cColorBits, pfd.cDepthBits, pfd.cStencilBits);
 	return true;
 }
