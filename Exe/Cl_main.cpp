@@ -176,7 +176,7 @@ CWorld * CClient::LoadWorld(const char *worldname)
 		ComPrintf("CClient::LoadWorld: World not found\n");
 	else
 	{
-		if(m_pRender->LoadWorld(m_pWorld,1))
+		if(m_pRender->LoadWorld(m_pWorld,0))
 		{
 			ComPrintf("CClient::LoadWorld OK\n");
 			return m_pWorld;

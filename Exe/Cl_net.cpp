@@ -131,7 +131,7 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 		case SV_CLUPDATE:
 			{
 				int num = buffer.ReadByte();
-				if(m_clients[num].inUse && num != m_clNum)
+				if(m_clients[num].inUse && (num != m_clNum))
 				{
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
@@ -567,7 +567,8 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	//Setup Game client info
 	m_pGameClient->moveType = MOVETYPE_STEP;
 	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
-	m_pGameClient->origin.Set(0.0f,0.0f,48.0f);
+	m_pGameClient->velocity.Set(0,0,0);
+	m_pGameClient->origin.Set(0.0f,0.0f,64.0f);
 	m_pGameClient->mins = VEC_CLIENT_MINS;
 	m_pGameClient->maxs = VEC_CLIENT_MAXS;
 

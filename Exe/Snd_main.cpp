@@ -66,6 +66,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_pPrimary(new CPrimaryBuffer)
 {
+	m_pDSound = 0;
 	m_pListener = 0;	
 
 	m_pWaveManager = new CWaveManager(MAX_WAVEFILES, System::CreateFileReader(FILE_BUFFERED));
@@ -156,10 +157,14 @@ bool CSoundManager::Init()
 	if (m_pDSound) 
 		return true;
 
+	m_pSoundDriver = 0;
+	strcpy(m_szSoundDriver,"Primary Sound driver");
+
+#if 1
 	// Create the DirectSound object.
 	HRESULT hr = CoCreateInstance(CLSID_DirectSound, 
 						  0, 
-						  CLSCTX_ALL,
+						  CLSCTX_INPROC_SERVER,
 						  IID_IDirectSound, 
 						  (void**)&m_pDSound);
 
@@ -169,19 +174,13 @@ bool CSoundManager::Init()
 		return false; 
 	}
 
-
-	m_pSoundDriver = 0;
-	strcpy(m_szSoundDriver,"Primary Sound driver");
-
 	//Check sound drivers avaiblable
-#if 0
 	hr = DirectSoundEnumerate((LPDSENUMCALLBACK)EnumSoundDevices, 0);
 	if(FAILED(hr))
 	{
 		ComPrintf("CSound::Init Failed to enumerate DirectSound Interface\n");
 		return false;
 	}
-#endif
 
 	ComPrintf("CSound::Init: Initializing %s\n", m_szSoundDriver);
 	
@@ -195,9 +194,22 @@ bool CSoundManager::Init()
 		return false; 
 	}
 
+#else
+
+	//Create DirectSound using the EAX Dll
+	HRESULT hr = EAXDirectSoundCreate(0, &m_pDSound, NULL);
+
+	if (FAILED(hr))
+	{ 
+		ComPrintf("CSound::Init Failed to get DirectSound Interface\n");
+		return false; 
+	}
+
+#endif
+
+
 	//Set the cooperative level.
-	hr = m_pDSound->SetCooperativeLevel(System::GetHwnd(),
-										DSSCL_PRIORITY);
+	hr = m_pDSound->SetCooperativeLevel(System::GetHwnd(),DSSCL_PRIORITY);
 	if (FAILED(hr)) 
 	{ 
 		ComPrintf("CSound::Init Failed SetCoopLevel\n");
@@ -311,8 +323,10 @@ void CSoundManager::UpdateListener(const CCamera * pCamera)
 		return;
 	}
 
-//	hr = m_pListener->m_pDS3dListener->SetVelocity(0,0,0,DS3D_DEFERRED);
-	hr = m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,
+	hr = m_pListener->m_pDS3dListener->SetVelocity(0,0,0,DS3D_DEFERRED);
+	hr = m_pListener->m_pDS3dListener->SetOrientation(0,0,1, 0,1,0, DS3D_DEFERRED);
+
+/*	hr = m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,
 							pCamera->velocity.z,DS3D_DEFERRED);
 	if(FAILED(hr))
 	{
@@ -327,7 +341,7 @@ void CSoundManager::UpdateListener(const CCamera * pCamera)
 		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener orientation:");
 		return;
 	}
-
+*/
 	m_listenerPos = pCamera->origin;
 }
 

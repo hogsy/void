@@ -3,7 +3,6 @@
 
 #include <mmsystem.h>
 #include <dsound.h>
-
 #include "Snd_wave.h"
 
 namespace VoidSound {
