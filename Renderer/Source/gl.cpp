@@ -462,7 +462,7 @@ BOOL  WINAPI _SwapBuffers(HDC hdc)
 	}
 
 	//  if failed, always bypass from now on
-	bypassGDI = true;
+//	bypassGDI = true;
 	return fnSwapBuffers(hdc);
 }
 
@@ -480,7 +480,7 @@ int WINAPI _DescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, LPPIXELF
 	}
 
 	//  if failed, always bypass from now on
-	bypassGDI = true;
+//	bypassGDI = true;
 	return fnDescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd);
 }
 
@@ -498,7 +498,7 @@ int WINAPI _SetPixelFormat(HDC hdc, int iPixelFormat, CONST PIXELFORMATDESCRIPTO
 	}
 
 	//  if failed, always bypass from now on
-	bypassGDI = true;
+//	bypassGDI = true;
 	return fnSetPixelFormat(hdc, iPixelFormat, ppfd);
 }
 
@@ -516,6 +516,6 @@ int WINAPI _ChoosePixelFormat(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
 	}
 
 	//  if failed, always bypass from now on
-	bypassGDI = true;
+//	bypassGDI = true;
 	return fnChoosePixelFormat(hdc, ppfd);
 }
