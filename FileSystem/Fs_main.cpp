@@ -25,7 +25,7 @@ FILESYSTEM_API I_FileSystem * FILESYSTEM_Create(PrintFunc pPrint, ErrorFunc pErr
 	m_pErrorFunc = pError;
 
 
-	if(!exeDir || baseGameDir)
+	if(!exeDir || !baseGameDir)
 		return 0;
 
 	if(!g_pFileSystem)
