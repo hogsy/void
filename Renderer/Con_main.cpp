@@ -176,6 +176,7 @@ void CRConsole::Draw()
 	g_pRast->ConAlpha(top, bottom);
 
 	// transform
+	g_pRast->MatrixReset();
 	g_pRast->ProjectionMode(VRAST_ORTHO);
 	
 

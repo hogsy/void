@@ -5,12 +5,6 @@
 #define MAX_SHADER_LAYERS	8
 
 
-#define CACHE_PASS_SKY			0
-#define	CACHE_PASS_ZFILL		1
-#define	CACHE_PASS_TRANSPARENT	2
-// #define CACHE_PASS_NUM			3	// !! change this in shadermanager.h !!
-
-
 struct I_FileReader;
 
 

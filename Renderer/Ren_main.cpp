@@ -450,10 +450,6 @@ void r_drawframe(const CCamera * pcamera)
 
 	g_pRast->MatrixReset();
 
-	// switch to +y = north, +z = up coordinate system
-	g_pRast->MatrixRotateX(-90);
-	g_pRast->MatrixRotateZ(90);
-
 	g_pRast->MatrixRotateX(-camera->angles.ROLL * 180/PI);
 	g_pRast->MatrixRotateY(camera->angles.PITCH * 180/PI);
 	g_pRast->MatrixRotateZ(-camera->angles.YAW  * 180/PI);

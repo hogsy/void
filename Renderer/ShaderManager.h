@@ -4,7 +4,7 @@
 
 #define MAX_SHADERS		1024
 #define MAX_SHADER_BINS	1024
-#define CACHE_PASS_NUM			3
+#define CACHE_PASS_NUM			8
 
 typedef int hShader;
 class CShader;
@@ -92,7 +92,7 @@ private:
 	};
 
 	shader_bin_t mBins[MAX_SHADER_BINS];
-	cpoly_t		**mCache[CACHE_PASS_NUM];	// world poly cache
+	cpoly_t		**mCache;	// world poly cache
 
 	cpoly_t*	PolyAlloc(void);
 	void		CacheDestroy(void);

@@ -397,7 +397,7 @@ CShader::CShader(const char *name)
 	strcpy(mName, name);
 	mNumLayers = 0;
 	mRefCount = 0;
-	mPass = CACHE_PASS_ZFILL;
+	mPass = 4;
 	mSurfaceFlags = 0;
 	mContentFlags = CONTENTS_SOLID;
 }
@@ -444,7 +444,7 @@ void CShader::Parse(I_FileReader *shader)
 		// sky brushes move with the eyepoint
 		else if ((_stricmp(token, "sky") == 0) || (_stricmp(token, "skybrush") ==0))
 		{
-			mPass = CACHE_PASS_SKY;
+			mPass = 0;
 			mContentFlags |= CONTENTS_SKY;
 		}
 
@@ -490,7 +490,7 @@ void CShader::Parse(I_FileReader *shader)
 		(mLayers[0]->mAlphaGen.func != ALPHAGEN_IDENTITY))
 	{
 		mSurfaceFlags |= CONTENTS_TRANSPARENT;
-		mPass = CACHE_PASS_TRANSPARENT;
+		mPass = 6;
 	}
 }
 

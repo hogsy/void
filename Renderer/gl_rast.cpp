@@ -815,20 +815,6 @@ void COpenGLRast::MatrixPop(void)
 
 /*
 ========
-Poly*
-========
-void COpenGLRast::PolyStart(EPolyType type)
-{
-	mType = type;
-
-	mNumIndices = 0;
-	mNumElements = 0;
-}
-*/
-
-
-/*
-========
 PolyEnd
 ========
 */
@@ -879,6 +865,10 @@ void COpenGLRast::ProjectionMode(EProjectionMode mode)
 		x = (float) tan(g_varFov.ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		glFrustum(-x, x, -z, z, 1, 10000);
+
+		// switch to +y = north, +z = up coordinate system
+		MatrixRotateX(-90);
+		MatrixRotateZ(90);
 		break;
 
 	case VRAST_ORTHO:

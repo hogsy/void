@@ -38,10 +38,8 @@ CShaderManager::CShaderManager()
 	mFreePolys	 = NULL;
 	mNumCacheAllocs = 0;
 	
-	int i=0;
-	for (i=0; i<CACHE_PASS_NUM; i++)
-		mCache[i] = 0;
-	for(i=0; i<MAX_SHADERS;i++)
+	mCache = 0;
+	for(int i=0; i<MAX_SHADERS;i++)
 		mShaders[i] = 0;
 
 
@@ -229,16 +227,13 @@ LoadWorld
 void CShaderManager::LoadWorld(CWorld *map)
 {
 	// create cache
-	for (int i=0; i<CACHE_PASS_NUM; i++)
+	mCache = new cpoly_t* [world->ntextures];
+	if (!mCache) 
 	{
-		mCache[i] = new cpoly_t* [world->ntextures];
-		if (!mCache[i]) 
-		{
-			FError("mem for map tex cache");
-			return;
-		}
-		memset(mCache[i], 0, sizeof(cpoly_t**) * map->ntextures);
+		FError("mem for map tex cache");
+		return;
 	}
+	memset(mCache, 0, sizeof(cpoly_t**) * map->ntextures);
 
 
 	// load lightmaps
@@ -296,12 +291,9 @@ void CShaderManager::UnLoadWorld(void)
 	mWorldBin = -1;
 
 	// destroy poly cache
-	for (int i=0; i<CACHE_PASS_NUM; i++)
-	{
-		if (mCache[i])
-			delete [] mCache[i];
-		mCache[i] = 0;
-	}
+	if (mCache)
+		delete [] mCache;
+	mCache = 0;
 }
 
 
@@ -399,8 +391,8 @@ void CShaderManager::CacheAdd(cpoly_t *p)
 	int index = world->texdefs[p->texdef].texture;
 	CShader *s = GetShader(mWorldBin, index);
 
-	p->next = mCache[s->mPass][index];
-	mCache[s->mPass][index] = p;
+	p->next = mCache[index];
+	mCache[index] = p;
 }
 
 
@@ -416,38 +408,41 @@ void CShaderManager::CachePurge(void)
 	{
 		for (int t=0; t<world->ntextures; t++)
 		{
-			cpoly_t *poly = mCache[p][t];
+			if (!mCache[t])
+				continue;
 
-			if (poly)
+			CShader *shader = GetShader(mWorldBin, t);
+			if (shader->mPass != p)
+				continue;
+
+			cpoly_t *poly = mCache[t];
+
+			if (shader->mPass != p)
+				continue;
+
+			// sky brushes never depthwrite
+			g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKY) == 0);
+
+			g_pRast->PolyColor4f(1, 1, 1, 1);
+			g_pRast->ShaderSet(shader);
+			while (poly)
 			{
-				CShader *shader = GetShader(mWorldBin, t);
-				if (shader->mPass != p)
-					continue;
+				if (world->light_size)
+					g_pRast->TextureLightDef(&world->lightdefs[poly->lightdef]);
+				g_pRast->TextureTexDef(&world->texdefs[poly->texdef]);
 
-				// sky brushes never depthwrite
-				g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKY) == 0);
-
-				g_pRast->PolyColor4f(1, 1, 1, 1);
-				g_pRast->ShaderSet(shader);
-				while (poly)
+				g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
+				for (int v = 0; v < poly->num_vertices; v++)
 				{
-					if (world->light_size)
-						g_pRast->TextureLightDef(&world->lightdefs[poly->lightdef]);
-					g_pRast->TextureTexDef(&world->texdefs[poly->texdef]);
-
-					g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
-					for (int v = 0; v < poly->num_vertices; v++)
-					{
-						g_pRast->PolyVertexf(poly->vertices[v]);
-					}
-					g_pRast->PolyEnd();
-
-					poly = poly->next;
+					g_pRast->PolyVertexf(poly->vertices[v]);
 				}
+				g_pRast->PolyEnd();
 
-				ReturnPoly(mCache[p][t]);
-				mCache[p][t] = NULL;
+				poly = poly->next;
 			}
+
+			ReturnPoly(mCache[t]);
+			mCache[t] = NULL;
 		}
 	}
 }

@@ -650,13 +650,30 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 	float r = g_rInfo.width;
 	float t = g_rInfo.height;
 
+	D3DXMATRIX mat;
+
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
 		x = (float) tan(g_varFov.ival*(PI/180) * 0.5f);
 		z = x * 0.75f;						// always render in a 3:4 aspect ratio
 		D3DXMatrixPerspectiveOffCenter(&m_matProjection, -x, x, -z, z, 1, 10000);
-		break;
+		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
+
+		// switch to +y = north, +z = up coordinate system
+		// have to write this out to add it to the projection matrix not the modelview
+
+//		MatrixRotateX(-90);
+		D3DXMatrixRotationX(&mat, -90.0f * PI/180);
+		D3DXMatrixMultiply(&m_matProjection, &mat, &m_matProjection);
+		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
+
+//		MatrixRotateZ(90);
+		D3DXMatrixRotationZ(&mat, 90.0f * PI/180);
+		D3DXMatrixMultiply(&m_matProjection, &mat, &m_matProjection);
+		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
+
+		return;
 
 	case VRAST_ORTHO:
 		if (g_varD3DXShift.ival == 0)
@@ -668,10 +685,10 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 									-1.0f/g_varD3DXShift.ival, 
 									 g_rInfo.height- 1.0f/g_varD3DXShift.ival, -1, 1);
 
-		break;
-	}
+		m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
 
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
+		return;
+	}
 }
 
 
