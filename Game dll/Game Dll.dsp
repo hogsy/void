@@ -116,7 +116,7 @@ SOURCE="..\Void Game\Game_ents.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\Void Game\Game_main.h"
+SOURCE=.\Game_main.h
 # End Source File
 # End Group
 # Begin Group "Shared"

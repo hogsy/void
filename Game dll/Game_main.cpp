@@ -79,7 +79,7 @@ void CGame::ShutdownGame()
 	EntSpawner::DestroyMakers();
 }
 
-void CGame::RunFrame()
+void CGame::RunFrame(float curTime)
 {
 }
 

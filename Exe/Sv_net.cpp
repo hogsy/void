@@ -211,6 +211,37 @@ void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vecto
 }
 
 
+
+/*
+======================================
+Print a broadcast message
+======================================
+*/
+void CServer::BroadcastPrintf(const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+	m_net.BroadcastPrintf(m_printBuffer);
+}
+
+/*
+======================================
+Print a message to a given client
+======================================
+*/
+void CServer::ClientPrintf(int clNum, const char * msg,...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_printBuffer, msg, args);
+	va_end(args);
+	m_net.ClientPrintf(clNum,msg);
+}
+
+
+
 //======================================================================================
 //======================================================================================
 

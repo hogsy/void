@@ -11,6 +11,9 @@ enum
 	CMD_STATUS	= 3,
 	CMD_KICK = 4
 };
+
+const float GAME_FRAMETIME = 1/20;
+
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
 
@@ -32,6 +35,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	m_entities = 0;
 	m_clients = 0;
 
+	m_fGameTime = 0.0f;
 	m_pWorld = 0;
 	m_active = false;
 
@@ -206,11 +210,16 @@ void CServer::RunFrame()
 	//Get updates
 	m_net.ReadPackets();
 
-	//Run game
+
+	//Run game at fixed speed
+	if(m_fGameTime < System::g_fcurTime)
+	{
+		m_fGameTime = System::g_fcurTime + GAME_FRAMETIME;
+		m_pGame->RunFrame(System::g_fcurTime);
+	}
 
 	//run clients
 	//go through all the clients, find entities in their pvs and update them
-
 	//Add client info to all connected clients
 	for(int i=0;i<m_svState.maxClients;i++)
 	{
@@ -416,6 +425,63 @@ void CServer::WriteSignOnBuffer()
 		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, m_signOnBufs.entityList[i].GetSize()); 
 }
 
+/*
+==========================================
+Load the World
+==========================================
+*/
+void CServer::LoadWorld(const char * mapname)
+{
+	if(!mapname)
+		return;
+
+	bool bRestarting = false;
+	char mappath[COM_MAXPATH];
+	char worldName[64];
+
+	strcpy(worldName,mapname);
+	strcpy(mappath, GAME_WORLDSDIR);
+	strcat(mappath, mapname);
+	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
+
+	//Restart if already active
+	if(m_active)
+	{	
+		Restart();
+		bRestarting = true;
+	}
+	else
+	{
+		if(!Init())
+		{	
+			ComPrintf("CServer::LoadWorld: Error initializing server\n");
+			return;
+		}
+	}
+
+	//Load World
+	m_pWorld = CWorld::CreateWorld(mappath);
+	if(!m_pWorld)
+	{
+		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
+		Shutdown();
+		return;
+	}
+	//Load Entitiys in the world
+	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
+	LoadEntities();
+
+	//Write SignON data
+	WriteSignOnBuffer();
+
+	//update state
+	m_svState.levelId ++;
+	m_active = true;
+
+	//if its not a dedicated server, then push "connect loopback" into the console
+	if(!bRestarting)
+		System::GetConsole()->ExecString("connect localhost");
+}
 
 /*
 ======================================
@@ -442,7 +508,6 @@ int CServer::NumConfigStringBufs(int stringId) const
 	}
 	return 0;
 }
-
 
 /*
 ======================================
@@ -510,95 +575,9 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 	return false;
 }
 
-/*
-==========================================
-Load the World
-==========================================
-*/
-void CServer::LoadWorld(const char * mapname)
-{
-	if(!mapname)
-		return;
-
-	bool bRestarting = false;
-	char mappath[COM_MAXPATH];
-	char worldName[64];
-
-	strcpy(worldName,mapname);
-	strcpy(mappath, GAME_WORLDSDIR);
-	strcat(mappath, mapname);
-	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
-
-	//Shutdown if currently active
-	if(!m_active)
-	{	
-		if(!Init())
-		{	
-			ComPrintf("CServer::LoadWorld: Error initializing server\n");
-			return;
-		}
-	}
-	else
-	{
-		Restart();
-		bRestarting = true;
-	}
-
-	//Load World
-	m_pWorld = CWorld::CreateWorld(mappath);
-	if(!m_pWorld)
-	{
-		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
-		Shutdown();
-		return;
-	}
-	//Load Entitiys in the world
-	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
-	LoadEntities();
-
-	//Write SignON data
-	WriteSignOnBuffer();
-
-	//update state
-	m_svState.levelId ++;
-	m_active = true;
-
-	//if its not a dedicated server, then push "connect loopback" into the console
-	if(!bRestarting)
-		System::GetConsole()->ExecString("connect localhost");
-}
-
 
 //======================================================================================
 //======================================================================================
-/*
-======================================
-Print a broadcast message
-======================================
-*/
-void CServer::BroadcastPrintf(const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.BroadcastPrintf(m_printBuffer);
-}
-
-/*
-======================================
-Print a message to a given client
-======================================
-*/
-void CServer::ClientPrintf(int clNum, const char * msg,...)
-{
-	va_list args;
-	va_start(args, msg);
-	vsprintf(m_printBuffer, msg, args);
-	va_end(args);
-	m_net.ClientPrintf(clNum,msg);
-}
-
 
 /*
 ======================================

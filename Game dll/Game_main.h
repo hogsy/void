@@ -19,7 +19,7 @@ public:
 	void ShutdownGame();
 	int  GetVersion();
 
-	void RunFrame();
+	void RunFrame(float curTime);
 
 	bool SpawnEntity(CBuffer &buf);
 

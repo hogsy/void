@@ -134,7 +134,7 @@ struct I_Game
 	virtual void ShutdownGame()=0;
 	virtual int  GetVersion()=0;
 
-	virtual void RunFrame()=0;
+	virtual void RunFrame(float curTime)=0;
 
 	virtual bool SpawnEntity(CBuffer &buf)=0;
 
