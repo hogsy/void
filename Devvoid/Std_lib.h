@@ -4,11 +4,15 @@
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4305)     // truncate from double to float
 
+#include "Com_defs.h"
+#include "I_file.h"
+
 //Add whatever flags here
 extern bool	g_bFastBSP;
 extern unsigned char g_ambient[3];
 extern int	g_dSamples;
 
+I_FileReader * CreateFileReader(EFileMode mode);
 
 void FError(const char *err, ...);
 void Error(const char *err, ...);

@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #include "Devvoid.h"
 #include "DevvoidDlg.h"
+#include "Std_lib.h"
+#include "Com_util.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -10,14 +12,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#include "Std_lib.h"
-#include "Com_util.h"
 
 const char DEFAULT_WORLDS_DIR [] = "Worlds";
 const char DEFAULT_GAME_DIR[] = "Game";
 
 struct LightParms
 {
+	LightParms () { ambientColor = 0; samples = 0; }
+
 	char szFileName[_MAX_PATH];
 	char szPath[_MAX_PATH];
 	COLORREF ambientColor;
@@ -89,6 +91,7 @@ CDevvoidDlg::CDevvoidDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CDevvoidDlg)
 	m_szCurrentDir = _T("");
 	m_bCompiling = false;
+	m_ambColor = 0;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -167,6 +170,7 @@ BOOL CDevvoidDlg::OnInitDialog()
 	GetDlgItem(IDC_EDSAMPLES)->SetWindowText("1");
 	m_spSamples.SetBuddy(GetDlgItem(IDC_EDSAMPLES));
 	m_spSamples.SetRange(1,3);
+	m_spSamples.SetPos(1);
 	
 	UpdateFileList();
 	m_fileList.SetFocus();

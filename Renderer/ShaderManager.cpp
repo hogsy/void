@@ -3,10 +3,10 @@
 	#include "Tex_image.h"
 #else
 	#include "Com_defs.h"
-	#include "Com_Vector.h"
+	#include "Com_vector.h"
 	#include "Rast_main.h"
-	#include "../Devvoid/Std_lib.h"
 	#include "I_file.h"
+	#include "../Devvoid/Std_lib.h"
 #endif
 
 #include "Shader.h"

@@ -3,10 +3,10 @@
 	#include "..\Exe\Sys_hdr.h"
 #else
 	//Tools
+	#include "..\Devvoid\Std_lib.h"	
 #endif
 
 #include "Com_world.h"
-#include "I_file.h"
 
 //Static data
 CWorld * CWorld::m_pWorld=0;
@@ -428,7 +428,7 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 #ifdef _VOID_EXE
 	I_FileReader * pFile = System::CreateFileReader(FILE_BUFFERED);
 #else
-
+	I_FileReader * pFile = CreateFileReader(FILE_BUFFERED);
 #endif
 
 	if(!pFile->Open(szFileName))

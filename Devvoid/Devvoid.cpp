@@ -18,6 +18,7 @@ static char THIS_FILE[] = __FILE__;
 
 CDevvoidDlg * g_pDlg=0;
 FILE	* g_fLog = 0;
+I_FileSystem * g_pFileSystem=0;
 
 void FError(const char *err, ...);
 void FileSysError(const char *err);
@@ -83,7 +84,8 @@ BOOL CDevvoidApp::InitInstance()
 
 	//=========================================
 	//Initialize File System
-	if(!FILESYSTEM_Create(&ComPrintf, &FileSysError, m_exePath, "Game"))
+	g_pFileSystem = FILESYSTEM_Create(&ComPrintf, &FileSysError, m_exePath, "Game");
+	if(!g_pFileSystem)
 	{
 		AfxMessageBox("Unable to create Void FileSystem");
 		return FALSE;
@@ -246,4 +248,8 @@ void FileSysError(const char *err)
 
 const char * GetVoidPath()
 {	return ((CDevvoidApp*)AfxGetApp())->m_exePath;
+}
+
+I_FileReader * CreateFileReader(EFileMode mode)
+{	return g_pFileSystem->CreateReader(mode);
 }
