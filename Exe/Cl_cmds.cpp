@@ -199,6 +199,8 @@ void CClientGameInput::IntializeBinds()
 	BindFuncToKey(parms, false);
 	parms = "bind RIGHTARROW +right";
 	BindFuncToKey(parms, false);
+	parms = "bind SPACE jump";
+	BindFuncToKey(parms, false);
 
 	//Exec binds file
 	ExecBindsFile("vbinds.cfg");

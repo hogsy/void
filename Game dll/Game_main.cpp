@@ -82,15 +82,15 @@ void CGame::ShutdownGame()
 
 void CGame::RunFrame(float curTime)
 {
+	vector_t desiredMove;
+	vector_t forward, right, up;
+
 	//Run entities
 	for(int i=0; i<numEnts; i++)
 	{
 	}
 
-	vector_t desiredMove;
-	vector_t forward, right, up; //, angles;
-	
-	//Run through clients
+	//Run clients
 	for(i=0; i<numClients; i++)
 	{
 		if(clients[i]->spawned && clients[i]->clCmd.flags)
@@ -109,13 +109,10 @@ void CGame::RunFrame(float curTime)
 			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, right);
 			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.upmove, up);
 
-			clients[i]->clCmd.forwardmove = clients[i]->clCmd.rightmove = clients[i]->clCmd.upmove = 0;
-			clients[i]->clCmd.angles[0] = clients[i]->clCmd.angles[1] = clients[i]->clCmd.angles[2] = 0;
-
 			//Perform the actual move and update angles
 			EntMove::ClientMove(clients[i], desiredMove, clients[i]->clCmd.time);
 
-			clients[i]->clCmd.flags = 0;
+			clients[i]->clCmd.Reset();
 		}
 	}
 }

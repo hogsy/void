@@ -15,13 +15,14 @@ enum
 	CMD_ROTATE_RIGHT  =	5,
 	CMD_ROTATE_UP	  =	6,
 	CMD_ROTATE_DOWN	  =	7,
-	CMD_BIND		  =	8,
-	CMD_BINDLIST	  =	9,
-	CMD_UNBIND		  =	10,
-	CMD_UNBINDALL	  =	11,
-	CMD_CAM			  =	12,
-	CMD_TALK		  = 13,
-	CMD_DEBUG		  = 14
+	CMD_JUMP		  = 8,
+	CMD_BIND		  =	9,
+	CMD_BINDLIST	  =	10,
+	CMD_UNBIND		  =	11,
+	CMD_UNBINDALL	  =	12,
+	CMD_CAM			  =	13,
+	CMD_TALK		  = 14,
+	CMD_DEBUG		  = 15
 };
 
 /*
@@ -44,6 +45,7 @@ const ClientGameCmd g_clGameCmds[] =
 	{	"+left",		CMD_ROTATE_LEFT },
 	{	"+lookup",		CMD_ROTATE_UP	},
 	{	"+lookdown",	CMD_ROTATE_DOWN },
+	{	"jump",			CMD_JUMP },
 	{	0, 0}
 };
 
@@ -86,6 +88,7 @@ const ClientKeyConstants_t keytable[] =
 	{	"DOWNARROW",	INKEY_DOWNARROW	},
 	{	"LEFTARROW",	INKEY_LEFTARROW	},
 	{	"RIGHTARROW",	INKEY_RIGHTARROW},
+	{	"SPACE",		INKEY_SPACE		},
 	{	"TAB",			INKEY_TAB		},
 	{	"ESC",			INKEY_ESCAPE	},
 	{	"F1",			INKEY_F1	},

@@ -113,9 +113,10 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 					return;
 				}
 				
-				m_pGameClient->origin.x = x;
+/*				m_pGameClient->origin.x = x;
 				m_pGameClient->origin.y = y;
 				m_pGameClient->origin.z = z;
+*/
 				break;
 			}
 		case SV_CLFULLUPDATE:

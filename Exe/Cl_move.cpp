@@ -55,8 +55,39 @@ void CGameClient:: RotateDown(const float &val)
 Update angles. called onces per frame
 ================================================
 */
+
+float maxTilt = PI/60;
+float tiltStep = PI/600;
+
 void CGameClient::UpdateAngles(const vector_t &angles, float time)
 {
+	//Apply tilt
+	if(m_cmd.rightmove != 0)
+	{
+		m_pGameClient->angles.ROLL += (m_cmd.rightmove * time * 0.01);
+		if(m_pGameClient->angles.ROLL > maxTilt)
+			m_pGameClient->angles.ROLL = maxTilt;
+		else if(m_pGameClient->angles.ROLL < -maxTilt)
+			m_pGameClient->angles.ROLL = -maxTilt;
+		
+	}
+	//Step back to normal view
+	else
+	{
+		if(m_pGameClient->angles.ROLL >= 0)
+		{	
+			m_pGameClient->angles.ROLL -= tiltStep;
+			if(m_pGameClient->angles.ROLL < 0)
+				m_pGameClient->angles.ROLL = 0;
+		}
+		else
+		{
+			m_pGameClient->angles.ROLL += tiltStep;
+			if(m_pGameClient->angles.ROLL >= 0)
+				m_pGameClient->angles.ROLL = 0;
+		}
+	}
+
 	m_pGameClient->angles.YAW += (angles.YAW * time);  
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
@@ -156,3 +187,4 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 
 }
 */
+

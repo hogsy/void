@@ -1,20 +1,7 @@
 EXE
 ==============================================================
--Move client movement to server
-
-
-
-RENDERER
-==============================================================
-setup jpeg reading and writing
-gl driver issues with 3dfx cards? 
-
-
-
-
-
-
-TOOLS
-==========
-Create dialog based app to compile maps
-
+move gravity to server side
+add server-side gravity/maxspeed vars
+change model/skins stuff to just character
+change player model/skins to use local cache
+fix jumping

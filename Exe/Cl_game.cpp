@@ -114,6 +114,8 @@ void CGameClient::RunFrame(float frameTime)
 	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, m_vecRight);
 	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.upmove, m_vecUp);
 
+	m_vecDesiredMove.z -= 200.0f;
+
 	//Perform the actual move and update angles
 	UpdatePosition(m_vecDesiredMove, frameTime);
 	UpdateAngles(m_vecDesiredAngles,frameTime);
@@ -347,6 +349,10 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_ROTATE_DOWN:
 		RotateDown(m_cvKbSpeed.fval);
+		break;
+	case CMD_JUMP:
+		//m_vecDesiredMove.z += 5000.0f;
+		m_cmd.upmove += 5000;
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);
