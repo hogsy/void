@@ -107,6 +107,8 @@ typedef struct
 } alphagen_t;
 
 
+//===================================================================================================
+
 
 class CShaderLayer
 {
@@ -170,6 +172,7 @@ public:
 
 	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }
 	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
+	bool HasLightmap(void);	// does this shader have a lightmap
 
 	unsigned int GetContentFlags(void)	{	return	mContentFlags;	}
 	unsigned int GetSurfaceFlags(void)	{	return	mSurfaceFlags;	}

@@ -5,6 +5,11 @@
 #include "light.h"
 #include "Com_world.h"
 
+// needed for shaders
+#include "../Renderer/Rast_main.h"
+#include "../Renderer/ShaderManager.h"
+
+
 
 extern	CWorld		*world;
 extern	lightmap_t	*lightmaps[65536];	// max brush sides

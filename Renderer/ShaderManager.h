@@ -54,6 +54,7 @@ public:
 
 	void LoadShader(int bin, int index, const char *name);	// loads a specific shader, creates the default if it isn't found
 	void GetDims(char *name, int &width, int &height);	// get width & height of first non-lightmap layer of shader
+	bool HasLightmap(char *name);	// return whether or not this shader uses a lightmap
 	unsigned int GetContentFlags(char *name);
 	unsigned int GetSurfaceFlags(char *name);
 

@@ -405,10 +405,10 @@ CShader::CShader(const char *name)
 
 CShader::~CShader()
 {
+	UnLoadTextures();
+
 	for (int l=0; l<mNumLayers; l++)
 		delete mLayers[l];
-
-	UnLoadTextures();
 }
 
 
@@ -535,6 +535,22 @@ void CShader::GetDims(int &width, int &height)
 		mLayers[0]->GetDims(width, height);
 }
 
+
+/*
+===========
+HasLightmap
+===========
+*/
+bool CShader::HasLightmap(void)
+{
+	for (int l=0; l<mNumLayers; l++)
+	{
+		if (mLayers[l]->mTextureNames[0].index == -1)
+			return true;
+	}
+
+	return false;
+}
 
 
 /*

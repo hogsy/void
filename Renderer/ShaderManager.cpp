@@ -220,6 +220,26 @@ void CShaderManager::GetDims(char *name, int &width, int &height)
 
 /*
 ===========
+HasLightmap
+===========
+*/
+bool CShaderManager::HasLightmap(char *name)
+{
+	// find it if we already have it loaded
+	for (int s=0; s<mNumShaders; s++)
+	{
+		if (mShaders[s]->IsShader(name))
+			return mShaders[s]->HasLightmap();
+	}
+
+	// default shader always has a lightmap
+	// (except for models, but that should never be called for this)
+	return true;
+}
+
+
+/*
+===========
 LoadWorld
 ===========
 */

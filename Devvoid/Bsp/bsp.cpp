@@ -1048,7 +1048,6 @@ void bsp_partition(bsp_node_t *n)
 			n->contents |= n->brushes->contents;
 		return;
 	}
-	ComPrintf("split plane %d\n", best_plane);
 
 	// split all the brushes with the best plane
 	n->plane = best_plane;
