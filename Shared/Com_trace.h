@@ -11,6 +11,11 @@
 #define CONTENTS_TRANSPARENT	0x00000008		// partially visible
 #define CONTENTS_INVISIBLE		(0x00000010 | CONTENTS_TRANSPARENT)		// completely invisible
 
+
+
+#define	CONTENTS_LAVA			0x00000020
+#define	CONTENTS_WATER			0x00000040
+
 // surface flags
 #define SURF_INVISIBLE	0x00000001	// not drawn
 #define SURF_SKYVIEW	0x00000002	// implies CONTENTS_SKYVIEW
