@@ -88,9 +88,7 @@ private:
 	//World and Entities
 	world_t	*	m_pWorld;
 	bool		m_active;
-
-	EntClient * m_clients;
-
+	
 	//=================================================
 
 	CNetServer	m_net;
@@ -109,9 +107,14 @@ private:
 
 	//=================================================
 	//Should be handled by the game Dll
+
+	//the first num MAXClient entities are reserved for clients
+
 	Entity   ** m_entities;
+
 	int			m_maxEntities;
 	int			m_numEntities;
+	int			m_numClients;
 
 };
 

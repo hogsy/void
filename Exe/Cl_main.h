@@ -171,7 +171,7 @@ private:
 
 	//This is the client we should do local prediction on
 	ClClient	m_gameClient;
-	ClEntity	m_gameEnts[GAME_MAXENTITIES];
+	ClEntity 	m_gameEnts[GAME_MAXENTITIES];
 
 	int			m_numEnts;
 

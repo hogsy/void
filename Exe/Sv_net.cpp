@@ -11,22 +11,31 @@ Validate connection request from a client
 */
 bool CServer::ValidateClConnection(int clNum, bool reconnect,
 									CBuffer &buffer)
-{	
+{
+	if(m_entities[clNum] && !reconnect)
+	{
+		m_net.SendRejectMsg("Couldn't find free client slot");
+		return false;
+	}
+/*
 	if(m_clients[clNum].inUse && !reconnect)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
+*/
+	m_entities[clNum] = new EntClient();
+	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
-	strcpy(m_clients[clNum].name, buffer.ReadString());
+	strcpy(client->name, buffer.ReadString());
 	m_net.ChanSetRate(clNum, buffer.ReadInt());
 	
-	m_clients[clNum].inUse = true;
+	client->inUse = true;
 
 	if(!reconnect)
 		m_svState.numClients++;
 
-	m_net.BroadcastPrintf("%s connected", m_clients[clNum].name);
+	m_net.BroadcastPrintf("%s connected", client->name);
 	return true;
 }
 
@@ -39,6 +48,8 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
+	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+
 	switch(packetId)
 	{
 	//Talk message
@@ -50,7 +61,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			int len = strlen(msg);
 			msg[len] = 0;
 			len += 4;
-			len += strlen(m_clients[clNum].name);
+			len += strlen(client->name);
 			
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0;i<m_svState.maxClients;i++)
@@ -59,10 +70,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(i == clNum)
 					continue;
 
-				if(m_clients[i].inUse)
+				if(m_entities[i])
 				{
 					m_net.ChanBeginWrite(i,SV_TALK, len);
-					m_net.ChanWrite(m_clients[clNum].name);
+					m_net.ChanWrite(client->name);
 					m_net.ChanWrite(msg);
 					m_net.ChanFinishWrite();
 				}
@@ -76,13 +87,13 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			if(id == 'n')
 			{
 				const char * clname = buffer.ReadString();
-				m_net.BroadcastPrintf("%s renamed to %s", m_clients[clNum].name, clname);
-				strcpy(m_clients[clNum].name, clname);
+				m_net.BroadcastPrintf("%s renamed to %s", client->name, clname);
+				strcpy(client->name, clname);
 			}
 			else if (id == 'r')
 			{
 				int rate = buffer.ReadInt();
-ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum].name, rate);
+ComPrintf("SV: %s changed rate to %d\n", client->name, rate);
 				m_net.ChanSetRate(clNum,rate);
 			}
 			break;
@@ -94,12 +105,12 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum].name, rate);
 		}
 	case CL_MOVE:
 		{
-			m_clients[clNum].origin.x = buffer.ReadCoord();
-			m_clients[clNum].origin.y = buffer.ReadCoord();
-			m_clients[clNum].origin.z = buffer.ReadCoord();
-			m_clients[clNum].angles.x = buffer.ReadAngle();
-			m_clients[clNum].angles.y = buffer.ReadAngle();
-			m_clients[clNum].angles.z = buffer.ReadAngle();
+			client->origin.x = buffer.ReadCoord();
+			client->origin.y = buffer.ReadCoord();
+			client->origin.z = buffer.ReadCoord();
+			client->angles.x = buffer.ReadAngle();
+			client->angles.y = buffer.ReadAngle();
+			client->angles.z = buffer.ReadAngle();
 			break;
 		}
 	}
@@ -112,20 +123,24 @@ Handle Client disconnection
 */
 void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 {
+	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+
 	switch(reason)
 	{
 	case CLIENT_QUIT:
-		m_net.BroadcastPrintf("%s disconnected", m_clients[clNum].name);
+		m_net.BroadcastPrintf("%s disconnected", client->name);
 		break;
 	case CLIENT_TIMEOUT:
-		m_net.BroadcastPrintf("%s timed out", m_clients[clNum].name);
+		m_net.BroadcastPrintf("%s timed out", client->name);
 		break;
 	case CLIENT_OVERFLOW:
-		m_net.BroadcastPrintf("%s overflowed", m_clients[clNum].name);
+		m_net.BroadcastPrintf("%s overflowed", client->name);
 		break;
 	}
 
-	m_clients[clNum].inUse = false;
+	delete client;
+	m_entities[clNum] = 0;
+//	m_clients[clNum].inUse = false;
 	m_svState.numClients --;
 }
 
@@ -145,8 +160,9 @@ Handle Client spawning
 */
 void CServer::OnClientSpawn(int clNum)
 {
+	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 	//Check chanIds to see what client spawned
-	m_net.BroadcastPrintf("%s entered the game", m_clients[clNum].name);
+	m_net.BroadcastPrintf("%s entered the game", client->name);
 }
 
 /*

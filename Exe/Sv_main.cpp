@@ -32,16 +32,13 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
-	m_clients= new EntClient[SV_MAX_CLIENTS];
-
-	InitGame();
-
-
 	//Game
 	m_entities = new Entity * [GAME_MAXENTITES];
 	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
+	
 	m_maxEntities=0;
-	m_numEntities=0;
+	m_numEntities= 4;
+	m_numClients = 0;
 
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
@@ -50,7 +47,6 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	m_svState.levelId = 0;
 	m_svState.maxClients = 4;
 	m_svState.port = SV_DEFAULT_PORT;
-
 
 	m_numModels = 0;
 	m_numImages = 0;
@@ -78,10 +74,11 @@ CServer::~CServer()
 	Shutdown();
 
 	for(int i=0;i<GAME_MAXENTITES; i++)
-		if(m_entities[i]) delete m_entities[i];
-
+	{
+		if(m_entities[i]) 
+			delete m_entities[i];
+	}
 	delete [] m_entities;
-	delete [] m_clients;
 }
 
 
@@ -94,6 +91,8 @@ bool CServer::Init()
 {
 	if(!m_net.Init())
 		return false;
+
+	InitGame();
 	
 	//more initialization here ?
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
@@ -326,7 +325,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	//==================================
 	//Write entity baselines
 	numBufs = 0;
-	for(i=1; i<m_numEntities; i++)
+	for(i=5; i<m_numEntities; i++)
 	{
 		buffer.Reset();
 		if(!m_entities[i]->WriteBaseline(buffer))
@@ -385,8 +384,11 @@ void CServer::LoadWorld(const char * mapname)
 		Restart();
 		bRestarting = true;
 	}
-	else if(!Init())
-		return;
+	else
+	{
+		 if(!Init())
+			return;
+	}
 
 	//Load World
 	m_pWorld = world_create(mappath);
@@ -449,11 +451,13 @@ void CServer::PrintServerStatus()
 	ComPrintf("Map name   : %s\n", m_svState.worldname);
 	ComPrintf("Map id     : %d\n", m_svState.levelId);
 
+	EntClient * client = 0;
 	for(int i=0; i<m_svState.maxClients; i++)
 	{
-		if(m_clients[i].inUse)
+		if(m_entities[i])
 		{
-			ComPrintf("%s:\n", m_clients[i].name);
+			client = reinterpret_cast<EntClient *>(m_entities[i]);
+			ComPrintf("%s:\n", client->name);
 
 			const NetChanState & state = m_net.ChanGetState(i);
 			ComPrintf("  Rate:%d\n  In:%d\n  Acked:%d\n  Out:%d\n", 

@@ -15,6 +15,8 @@ const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;
 const int ENT_MAXMESSAGE = 256;
 
+const int GAME_MAXCLIENTS = 16;
+
 /*
 ============================================================================
 The basic game entitiy. 
@@ -52,7 +54,7 @@ struct Entity
 	int			volume;
 	int			attenuation;
 
-	bool WriteBaseline(CBuffer &buf) const
+	virtual bool WriteBaseline(CBuffer &buf) const
 	{
 		//we only write a baseline if the entity
 		//is using a model or soundIndex
@@ -102,7 +104,7 @@ struct EntWorldSpawn : public Entity
 		gravity = 800;
 	}
 
-//	virtual void Write(CBuffer &buf) const {}
+	virtual ~EntWorldSpawn();
 
 	char	message[ENT_MAXMESSAGE];
 	char    music[ENT_MAXSTRING];
@@ -121,6 +123,10 @@ struct EntClient : public Entity
 		memset(name,0,32); 
 		inUse = false; 
 	}
+
+	virtual ~EntClient() { }
+
+	virtual bool WriteBaseline(CBuffer &buf) const
 	
 	bool inUse;
 	char name[32];
