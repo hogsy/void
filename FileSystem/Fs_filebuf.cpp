@@ -1,8 +1,8 @@
+#include "Fs_hdr.h"
 #include "I_file.h"
 #include "I_filesystem.h"
 
 extern CFileSystem * g_pFileSystem;
-
 
 /*
 ==========================================
@@ -19,7 +19,7 @@ CFileBuffer::CFileBuffer(int bufsize)
 	m_buffersize = bufsize;
 	if(m_buffersize)
 	{	
-		m_buffer = (byte*)g_pMemManager->HeapAlloc(m_buffersize);
+		m_buffer = (byte*)g_pHunkManager->HunkAlloc(m_buffersize);
 	}
 }
 
@@ -29,7 +29,7 @@ CFileBuffer::~CFileBuffer()
 		delete [] m_filename;
 	if(m_buffer)
 	{
-		g_pMemManager->HeapFree(m_buffer);
+		g_pHunkManager->HunkFree(m_buffer);
 	}
 
 }
@@ -80,7 +80,7 @@ void CFileBuffer::Close()
 	//Don't release the buffer is using it statically
 	if(m_buffer)
 	{
-		g_pMemManager->HeapFree(m_buffer);
+		g_pHunkManager->HunkFree(m_buffer);
 		m_buffer = 0;
 	}
 

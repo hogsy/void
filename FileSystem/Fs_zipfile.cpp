@@ -545,7 +545,7 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	{
 		if(!buffersize)
 		{
-			*ibuffer = (byte*)g_pMemManager->HeapAlloc(entry->filelen);
+			*ibuffer = (byte*)g_pHunkManager->HunkAlloc(entry->filelen);
 		}
 		else
 		{

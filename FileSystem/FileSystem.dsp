@@ -145,6 +145,14 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_mem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_mem.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
@@ -157,7 +165,11 @@ SOURCE=..\Shared\I_filesystem.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_mem.h
+SOURCE=..\Shared\I_hunkmem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_void.h
 # End Source File
 # End Group
 # End Target

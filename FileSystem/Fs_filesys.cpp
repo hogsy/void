@@ -285,7 +285,7 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 
 				if(!buffersize)
 				{
-					*ibuffer = (byte*)g_pMemManager->HeapAlloc(size);
+					*ibuffer = (byte*)g_pHunkManager->HunkAlloc(size);
 				}
 				else
 				{

@@ -1,3 +1,4 @@
+#include "Fs_hdr.h"
 #include "I_filesystem.h"
 
 /*
@@ -5,10 +6,11 @@
 Local vars
 ==========================================
 */
-I_MemManager * g_pMemManager = 0;
-I_Console    * g_pConsole = 0;
+CMemManager		g_memManager("mem_fs.log");
 
-CFileSystem  * g_pFileSystem = 0;
+I_HunkManager * g_pHunkManager = 0;
+I_Console     * g_pConsole = 0;
+CFileSystem	  *	g_pFileSystem = 0;
 
 /*
 ==========================================
@@ -18,7 +20,7 @@ copy pointer to console for cvar/printing functions
 */
 FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp)
 {
-	g_pMemManager = vexp->memManager;
+	g_pHunkManager = vexp->hunkManager;
 	g_pConsole    = vexp->console;
 	
 	if(!g_pFileSystem)
@@ -39,7 +41,7 @@ FILESYSTEM_API void FILESYSTEM_Free()
 		g_pFileSystem = 0;
 	}
 	g_pConsole = 0;
-	g_pMemManager = 0;
+	g_pHunkManager = 0;
 }
 
 /*
