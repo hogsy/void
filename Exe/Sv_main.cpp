@@ -613,9 +613,14 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 	{
 		buf.WriteShort(ent->num);
 		buf.WriteByte(ent->moveType);
-		buf.WriteCoord(ent->origin.x);
+/*		buf.WriteCoord(ent->origin.x);
 		buf.WriteCoord(ent->origin.y);
 		buf.WriteCoord(ent->origin.z);
+*/
+		buf.WriteFloat(ent->origin.x);
+		buf.WriteFloat(ent->origin.y);
+		buf.WriteFloat(ent->origin.z);
+
 		buf.WriteAngle(ent->angles.x);
 		buf.WriteAngle(ent->angles.y);
 		buf.WriteAngle(ent->angles.z);

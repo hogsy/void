@@ -291,7 +291,7 @@ void CGame::ClientBegin(int clNum)
 	clients[clNum]->mins = VEC_CLIENT_MINS;
 	clients[clNum]->maxs = VEC_CLIENT_MAXS;
 
-	clients[clNum]->origin.Set(0.0f,0.0f,30.0f);
+	clients[clNum]->origin.Set(0.0f,0.0f,48.0f);
 	clients[clNum]->angles.Set(0.0f, 0.0f, 0.0f);
 	clients[clNum]->velocity.Set(0.0f, 0.0f, 0.0f);
 

@@ -136,6 +136,9 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					m_clients[num].angles.x = buffer.ReadCoord();
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
+
+m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %.2f, %.2f, %.2f", 
+					 m_clients[num].origin.x,m_clients[num].origin.y,m_clients[num].origin.z);
 				}
 				break;
 			}
@@ -241,9 +244,9 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 
 				m_entities[id].moveType = (EMoveType)buffer.ReadByte();
 
-				m_entities[id].origin.x = buffer.ReadCoord();
-				m_entities[id].origin.y = buffer.ReadCoord();
-				m_entities[id].origin.z = buffer.ReadCoord();
+				m_entities[id].origin.x = buffer.ReadFloat();
+				m_entities[id].origin.y = buffer.ReadFloat();
+				m_entities[id].origin.z = buffer.ReadFloat();
 
 				m_entities[id].angles.x = buffer.ReadAngle();
 				m_entities[id].angles.y = buffer.ReadAngle();
@@ -260,7 +263,6 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 							
 							m_entities[id].skinNum = buffer.ReadShort();
 							//m_entities[id].skinNum|=  MODEL_SKIN_UNBOUND_GAME;
-
 							buffer.ReadShort();
 //							m_entities[id].frameNum = 
 //							m_entities[id].nextFrame = m_entities[id].frameNum;
