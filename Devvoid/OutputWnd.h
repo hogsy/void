@@ -74,7 +74,7 @@ private:
 	LOGFONT			m_lfFont;			// Font as a LOGFONT
 	COLORREF		m_BackCol;			// Background Colour
 	CStringArray	m_Lines;			// Lines
-	int				m_nHead;			// Head of the buffer
+	UINT			m_nHead;			// Head of the buffer
 	UINT			m_nMaxLines;		// Maximum buffer size
 	UINT			m_nDefTextCol;		// Default Text Colour Index
 	UINT			m_nXOffset;			// X Offset for drawing
@@ -125,7 +125,7 @@ public:
 	void SetBackColour( COLORREF col );	// Set the background Colour
 	COLORREF GetBackColour() const { return( m_BackCol ); };// Retrieve the background Colour
 	void SetColourTable( COLORREF* pColTable ) { memcpy( &m_ColTable, pColTable, sizeof( COLORREF ) * 16 ); if( GetSafeHwnd() ) Invalidate(); };
-	void SetHead( int nHead );			// Set the Head
+	void SetHead( UINT nHead );			// Set the Head
 	int GetHead() const { return( m_nHead ); };	// Return the Head
 	void SetMaxLines( UINT nMaxLines );		// Set max number of lines
 	UINT GetMaxLines() const { return( m_nMaxLines ); };	// Return max number of lines

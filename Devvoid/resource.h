@@ -11,10 +11,13 @@
 #define IDC_BROWSE                      1001
 #define IDC_FILELIST                    1002
 #define IDC_COMPILE                     1003
+#define IDC_BSP                         1003
 #define IDC_PROGRESS                    1004
 #define IDC_LIGHT                       1005
+#define IDC_VIS                         1006
 #define IDC_FASTMODE                    1007
 #define IDC_BSPLIGHT                    1009
+#define IDC_FULLCOMPILE                 1009
 #define IDC_COLOR                       1010
 #define IDC_SPIN1                       1011
 #define IDC_EDSAMPLES                   1012

@@ -12,8 +12,6 @@
 				   re-submitting it complete with modifications to 
 				   http://www.codeguru.com, share your talent with others!!
 */
-
-
 #include "stdafx.h"			// Precompiled Header
 #include "OutputWnd.h"		// class TOutputWnd
 
@@ -641,7 +639,7 @@ void TOutputWnd::SetBackColour( COLORREF col )
 */
 
 
-void TOutputWnd::SetHead( int nPos )
+void TOutputWnd::SetHead( UINT nPos )
 {
 	if( nPos < -1 ) nPos = -1;
 	if( nPos > GetLineCount() - 1 ) nPos = GetLineCount() - 1;
@@ -1013,7 +1011,7 @@ void TOutputWnd::OnVScroll( UINT nSBCode,
 						    UINT nPos, 
 							CScrollBar* pScrollBar ) 
 {
-	int nUBound = GetLineCount() - 1;
+	UINT nUBound = GetLineCount() - 1;
 	switch( nSBCode )
 	{
 	case SB_TOP:

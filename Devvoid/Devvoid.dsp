@@ -322,6 +322,10 @@ SOURCE=.\Light\lightmap.h
 SOURCE=.\Light\vlight.cpp
 # End Source File
 # End Group
+# Begin Group "Vis"
+
+# PROP Default_Filter ""
+# End Group
 # Begin Source File
 
 SOURCE=.\ReadMe.txt

@@ -4,9 +4,6 @@
 #include "Devvoid.h"
 #include "DevvoidDlg.h"
 
-#include "Std_lib.h"
-#include "Com_util.h"
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -27,6 +24,7 @@ struct LightParms
 };
 
 UINT BeginBSPCompile( LPVOID pParam );
+UINT BeginVisCompile( LPVOID pParam );
 UINT BeginLightMapCompile( LPVOID pParam );
 
 
@@ -90,9 +88,9 @@ CDevvoidDlg::CDevvoidDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CDevvoidDlg)
 	m_szCurrentDir = _T("");
-	m_mapFile = _T("");
+	m_curFile = _T("");
 	m_bCompiling = false;
-	m_bBspAndLight = false;
+	m_bFullCompile = false;
 	m_ambColor = 0;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
@@ -119,12 +117,13 @@ BEGIN_MESSAGE_MAP(CDevvoidDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_BROWSE, OnBrowse)
 	ON_WM_CREATE()
-	ON_BN_CLICKED(IDC_COMPILE, OnCompile)
+	ON_BN_CLICKED(IDC_BSP, OnBsp)
 	ON_BN_CLICKED(IDC_LIGHT, OnLight)
 	ON_BN_CLICKED(IDC_COLOR, OnColor)
-	ON_BN_CLICKED(IDC_BSPLIGHT, OnBsplight)
+	ON_BN_CLICKED(IDC_FULLCOMPILE, OnFullCompile)
 	ON_LBN_SELCANCEL(IDC_FILELIST, OnSelcancelFilelist)
 	ON_LBN_SELCHANGE(IDC_FILELIST, OnSelchangeFilelist)
+	ON_BN_CLICKED(IDC_VIS, OnVis)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -256,10 +255,14 @@ escape/enter quits
 void CDevvoidDlg::OnOK(){}
 void CDevvoidDlg::OnCancel(){}
 void CDevvoidDlg::OnClose() 
-{	DestroyWindow();
+{	
+	if(m_bCompiling)
+	{
+		::MessageBox(m_hWnd,"Cannot exit. Compiling","Error",MB_OK);
+		return;
+	}
+	DestroyWindow();
 }
-
-
 
 void CDevvoidDlg::OnSelcancelFilelist() 
 {
@@ -267,6 +270,8 @@ void CDevvoidDlg::OnSelcancelFilelist()
 	AfxMessageBox("ListBox lost focus");
 	DisableButtons();
 }
+
+
 
 void CDevvoidDlg::OnSelchangeFilelist() 
 {
@@ -285,39 +290,37 @@ void CDevvoidDlg::OnSelchangeFilelist()
 	
 	m_fileList.GetText(m_fileList.GetCurSel(), curItem);
 
+	//Disable all buttons, then enable the proper one
+	DisableButtons();
+
+
 	if(Util::CompareExts(curItem,"map"))
 	{
-		pButton = (CButton*)GetDlgItem(IDC_LIGHT);
-		if(pButton)
-			pButton->EnableWindow(FALSE);
-
-		pButton = (CButton*)GetDlgItem(IDC_COMPILE);
+		pButton = (CButton*)GetDlgItem(IDC_BSP);
 		if(pButton)
 			pButton->EnableWindow(TRUE);
 
-		pButton = (CButton*)GetDlgItem(IDC_BSPLIGHT);
+		pButton = (CButton*)GetDlgItem(IDC_FULLCOMPILE);
 		if(pButton)
 			pButton->EnableWindow(TRUE);
 		return;
 	}
-	
+
+	if(Util::CompareExts(curItem,"prt"))
+	{
+		pButton = (CButton*)GetDlgItem(IDC_VIS);
+		if(pButton)
+			pButton->EnableWindow(TRUE);
+		return;
+	}
+
 	if(Util::CompareExts(curItem,"wld"))
 	{
 		pButton = (CButton*)GetDlgItem(IDC_LIGHT);
 		if(pButton)
 			pButton->EnableWindow(TRUE);
-
-		pButton = (CButton*)GetDlgItem(IDC_COMPILE);
-		if(pButton)
-			pButton->EnableWindow(FALSE);
-
-		pButton = (CButton*)GetDlgItem(IDC_BSPLIGHT);
-		if(pButton)
-			pButton->EnableWindow(FALSE);
 		return;
 	}
-	
-	DisableButtons();
 }
 
 
@@ -367,7 +370,6 @@ void CDevvoidDlg::UpdateFileList()
 	HANDLE hSearch = INVALID_HANDLE_VALUE;
 	
 	//Add maps
-
 	CString szSearchPath = m_szCurrentDir + "\\*.map";
 
 	hSearch	= ::FindFirstFile(szSearchPath,&findData);
@@ -391,7 +393,25 @@ void CDevvoidDlg::UpdateFileList()
 	szSearchPath = m_szCurrentDir + "\\*.wld";
 
 	hSearch	= ::FindFirstFile(szSearchPath,&findData);
+	if(hSearch == INVALID_HANDLE_VALUE)
+	{
+		DisableButtons();
+		return;
+	}
+
+	m_fileList.AddString(findData.cFileName);
 	
+	while(::FindNextFile(hSearch,&findData))
+	{	m_fileList.AddString(findData.cFileName);
+	}
+		
+	::FindClose(hSearch);
+
+
+	//Add prts
+	szSearchPath = m_szCurrentDir + "\\*.prt";
+
+	hSearch	= ::FindFirstFile(szSearchPath,&findData);
 	if(hSearch == INVALID_HANDLE_VALUE)
 	{
 		DisableButtons();
@@ -414,7 +434,6 @@ void CDevvoidDlg::UpdateFileList()
 		m_fileList.SetCurSel(0);
 }
 
-
 /*
 ================================================
 Browse for folder
@@ -422,7 +441,6 @@ Browse for folder
 */
 void CDevvoidDlg::OnBrowse() 
 {
-	
 	BROWSEINFO		browseInfo;
 	LPITEMIDLIST	pIdList;
 
@@ -459,7 +477,7 @@ void CDevvoidDlg::OnBrowse()
 Compile the given map
 ================================================
 */
-void CDevvoidDlg::OnCompile() 
+void CDevvoidDlg::OnBsp() 
 {
 	if(m_fileList.GetCurSel() == LB_ERR)
 	{
@@ -484,14 +502,48 @@ void CDevvoidDlg::OnCompile()
 	char * fileName = new char [_MAX_PATH];
 	sprintf(fileName,"%s/%s/%s/%s", GetVoidPath(), DEFAULT_GAME_DIR, DEFAULT_WORLDS_DIR, szListItem);
 
-	m_mapFile = szListItem;
+	m_curFile = szListItem;
+	BeginCompileThread();
 
 	if(!AfxBeginThread(BeginBSPCompile,(void*)fileName))
 	{
 		AfxMessageBox("CDevvoidDlg::OnCompile::Unable to spawn BSP thread");
 		return;
 	}
+}
+
+/*
+================================================
+Light the given map
+================================================
+*/
+void CDevvoidDlg::OnVis() 
+{
+	if(m_fileList.GetCurSel() == LB_ERR)
+	{
+		AfxMessageBox("Please select a portal file first");
+		return;
+	}
+
+	CString szListItem;
+	m_fileList.GetText(m_fileList.GetCurSel(), szListItem);
+	if(!szListItem.GetLength())
+	{
+		AfxMessageBox("Select a file to compile");
+		return;
+	}
+
+	char * fileName = new char [_MAX_PATH];
+	sprintf(fileName,"%s/%s/%s/%s", GetVoidPath(), DEFAULT_GAME_DIR, DEFAULT_WORLDS_DIR, szListItem);
+
+	m_curFile = szListItem;
 	BeginCompileThread();
+
+	if(!AfxBeginThread(BeginVisCompile,(void*)fileName))
+	{
+		AfxMessageBox("CDevvoidDlg::OnCompile::Unable to spawn BSP thread");
+		return;
+	}
 }
 
 /*
@@ -523,15 +575,13 @@ void CDevvoidDlg::OnLight()
 	pLightParms->ambientColor = m_ambColor;
 	pLightParms->samples = m_spSamples.GetPos();
 
+	BeginCompileThread();
 	if(!AfxBeginThread(BeginLightMapCompile,(void*)pLightParms))
 	{
 		AfxMessageBox("CDevvoidDlg::OnCompile::Unable to spawn BSP thread");
 		return;
 	}
-
-	BeginCompileThread();
 }
-
 
 /*
 ================================================
@@ -558,12 +608,11 @@ void CDevvoidDlg::OnColor()
 Both Light AND BSP it
 ================================================
 */
-void CDevvoidDlg::OnBsplight() 
+void CDevvoidDlg::OnFullCompile() 
 {
-	m_bBspAndLight = true;
-	OnCompile();
+	m_bFullCompile = true;
+	OnBsp();
 }
-
 
 //==========================================================================
 //==========================================================================
@@ -575,7 +624,15 @@ void CDevvoidDlg::DisableButtons()
 	if(pButton)
 		pButton->EnableWindow(FALSE);
 
-	pButton = (CButton*)GetDlgItem(IDC_COMPILE);
+	pButton = (CButton*)GetDlgItem(IDC_BSP);
+	if(pButton)
+		pButton->EnableWindow(FALSE);
+
+	pButton = (CButton*)GetDlgItem(IDC_VIS);
+	if(pButton)
+		pButton->EnableWindow(FALSE);
+
+	pButton = (CButton*)GetDlgItem(IDC_FULLCOMPILE);
 	if(pButton)
 		pButton->EnableWindow(FALSE);
 }
@@ -605,7 +662,11 @@ void CDevvoidDlg::EndCompileThread()
 	if(pButton)
 		pButton->EnableWindow(TRUE);
 
-	pButton = (CButton*)GetDlgItem(IDC_COMPILE);
+	pButton = (CButton*)GetDlgItem(IDC_BSP);
+	if(pButton)
+		pButton->EnableWindow(TRUE);
+
+	pButton = (CButton*)GetDlgItem(IDC_VIS);
 	if(pButton)
 		pButton->EnableWindow(TRUE);
 
@@ -613,7 +674,6 @@ void CDevvoidDlg::EndCompileThread()
 
 	UpdateFileList();
 	OnSelchangeFilelist();
-
 	ComPrintf("Thread Returned\n");
 }
 
@@ -621,29 +681,54 @@ void CDevvoidDlg::EndCompileThread()
 void CDevvoidDlg::EndBsp()
 {	
 	EndCompileThread();
-	if(m_bBspAndLight && m_mapFile.GetLength())
+	if(m_bFullCompile && m_curFile.GetLength())
 	{
 		//Check to see if it suceeded.
-		m_mapFile.Delete(m_mapFile.GetLength()-3,3);
-		m_mapFile += "wld";
+		m_curFile.Delete(m_curFile.GetLength()-3,3);
+		m_curFile += "prt";
 		
-		if(m_fileList.SelectString(-1, m_mapFile) == LB_ERR)
+		if(m_fileList.SelectString(-1, m_curFile) == LB_ERR)
 		{
 			char msg[512];
-			sprintf(msg,"Unable to load world file %s for lighting", m_mapFile);
+			sprintf(msg,"Unable to load portal file %s for vis", m_curFile);
+			::AfxMessageBox(msg);
+		}
+		OnVis();
+		return;
+	}
+	m_bFullCompile = false;
+	m_curFile = _T("");
+}
+
+
+void CDevvoidDlg::EndVis()
+{
+	EndCompileThread();
+
+	if(m_bFullCompile && m_curFile.GetLength())
+	{
+		//Check to see if it suceeded.
+		m_curFile.Delete(m_curFile.GetLength()-3,3);
+		m_curFile += "wld";
+		
+		if(m_fileList.SelectString(-1, m_curFile) == LB_ERR)
+		{
+			char msg[512];
+			sprintf(msg,"Unable to load world file %s for lighting", m_curFile);
 			::AfxMessageBox(msg);
 		}
 		OnLight();
+		return;
 	}
-	m_bBspAndLight = false;
-	m_mapFile = _T("");
+	m_bFullCompile = false;
+	m_curFile = _T("");
 }
 
 void CDevvoidDlg::EndLight()
 {	
 	EndCompileThread();
-	m_bBspAndLight = false;
-	m_mapFile = _T("");
+	m_bFullCompile = false;
+	m_curFile = _T("");
 }
 
 
@@ -692,8 +777,25 @@ UINT BeginLightMapCompile( LPVOID pParam )
 	return 0;
 }
 
+/*
+================================================
+Vis
+================================================
+*/
+void CompileVis(const char * szFileName){}
 
+UINT BeginVisCompile( LPVOID pParam )
+{
+	char * visFile = (char*)pParam;
+	CompileVis(visFile);
+	delete [] visFile;
 
+	((CDevvoidDlg*)AfxGetApp()->GetMainWnd())->EndVis();
+	return 0;
+}
+
+//=====================================================================================
+//=====================================================================================
 
 void Progress_SetRange(int min, int max)
 {
@@ -716,5 +818,3 @@ int Progress_Step()
 		return -1;
 	return pDlg->m_progress.StepIt();
 }
-
-

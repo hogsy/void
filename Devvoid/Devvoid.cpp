@@ -4,8 +4,6 @@
 #include "Devvoid.h"
 #include "DevvoidDlg.h"
 
-#include "Std_lib.h"
-#include "Com_util.h"
 #include "Com_registry.h"
 #include "Com_release.h"
 #include "I_fileSystem.h"

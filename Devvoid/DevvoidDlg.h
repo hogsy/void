@@ -26,6 +26,7 @@ public:
 	void EndCompileThread();
 	void EndBsp();
 	void EndLight();
+	void EndVis();
 
 	TOutputWnd	m_wndOutput;
 
@@ -55,10 +56,11 @@ protected:
 
 	HICON		m_hIcon;
 	COLORREF	m_ambColor;
+
 	bool		m_bCompiling;
 	
-	CString		m_mapFile;
-	bool		m_bBspAndLight;
+	CString		m_curFile;
+	bool		m_bFullCompile;
 
 
 	friend void Progress_SetRange(int min, int max);
@@ -75,12 +77,13 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnBrowse();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnCompile();
+	afx_msg void OnBsp();
 	afx_msg void OnLight();
 	afx_msg void OnColor();
-	afx_msg void OnBsplight();
+	afx_msg void OnFullCompile();
 	afx_msg void OnSelcancelFilelist();
 	afx_msg void OnSelchangeFilelist();
+	afx_msg void OnVis();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
