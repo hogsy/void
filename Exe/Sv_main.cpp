@@ -239,7 +239,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	for(i=0;i<m_numImages; i++)
 	{
 		buffer.Reset();
-		buffer.Write(m_imageList[i].id);
+		buffer.Write((short)i); //m_imageList[i].id);
 		buffer.Write(m_imageList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -268,7 +268,8 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	for(i=0;i<m_numModels; i++)
 	{
 		buffer.Reset();
-		buffer.Write(m_modelList[i].id);
+		buffer.Write((short)i);
+		//buffer.Write(m_modelList[i].id);
 		buffer.Write(m_modelList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -296,7 +297,8 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	for(i=0;i<m_numSounds; i++)
 	{
 		buffer.Reset();
-		buffer.Write(m_soundList[i].id);
+		buffer.Write((short)i);
+		//buffer.Write(m_soundList[i].id);
 		buffer.Write(m_soundList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -531,7 +533,7 @@ int CServer::RegisterModel(const char * model)
 	m_numModels ++;
 	m_modelList[i].name = new char[strlen(model)+1];
 	strcpy(m_modelList[i].name,model);
-	m_modelList[i].id = i;
+//	m_modelList[i].id = i;
 	return i;
 }
 
@@ -558,7 +560,7 @@ int CServer::RegisterSound(const char * sound)
 	m_numSounds ++;
 	m_soundList[i].name = new char[strlen(sound)+1];
 	strcpy(m_soundList[i].name,sound);
-	m_soundList[i].id = i;
+//	m_soundList[i].id = i;
 	return i;
 }
 
@@ -585,7 +587,7 @@ int CServer::RegisterImage(const char * image)
 	m_numImages ++;
 	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
-	m_imageList[i].id = i;
+//	m_imageList[i].id = i;
 	return i;
 }
 

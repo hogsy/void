@@ -104,10 +104,6 @@ SOURCE=.\Snd_buf.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Snd_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Snd_hdr.h
 # End Source File
 # Begin Source File
@@ -241,6 +237,10 @@ SOURCE=..\Shared\Com_util.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Com_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Res_defs.h
 # End Source File
 # Begin Source File
 

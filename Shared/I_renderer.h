@@ -3,6 +3,7 @@
 
 #include "I_hud.h"
 #include "I_void.h"
+#include "Res_defs.h"
 #include "World.h"
 
 #ifdef RENDERER_EXPORTS
@@ -98,17 +99,6 @@ struct I_ConsoleRenderer
 Renderer Model Interface
 ==========================================
 */
-typedef int hMdl;
-typedef int hSnd;
-typedef int hImg;
-
-enum CacheType
-{
-	MODEL_CACHE_LOCAL	= 0,	//Always loaded. Client is reponsible for loading these.
-	MODEL_CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
-	MODEL_CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
-};
-
 enum
 {
 	MODEL_CACHE_NUM	= 3,
@@ -125,7 +115,6 @@ struct R_EntState
 	vector_t origin;
 	vector_t angle;
 };
-
 
 struct I_Model
 {
@@ -149,7 +138,6 @@ struct I_Renderer
 	virtual bool Shutdown()=0;
 
 	virtual void Draw(const CCamera * camera)=0;
-//	virtual void Draw(vector_t *origin,vector_t *angles, vector_t *blend) =0;
 	virtual void DrawConsole()= 0;
 	
 	//Get other interfaces

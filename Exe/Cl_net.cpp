@@ -78,14 +78,14 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 
 			for(int i=0; i<numModels;i++)
 			{
-				modelId = buffer.ReadInt();
+				modelId = buffer.ReadShort();
 				buffer.ReadString(modelName,32);
 
 				if(modelId == -1 || !modelName[0])
 				{
 					continue;
 				}
-				m_pModel->LoadModel(modelName,modelId,MODEL_CACHE_GAME);
+				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
 			}
 			break;
 		}

@@ -237,7 +237,7 @@ Update Sound position
 The SoundManager needs to automatically stop sounds out of range
 ======================================
 */
-void CSoundManager::UpdateSnd(hSnd index, vector_t * pos, vector_t * velocity)
+void CSoundManager::UpdateSnd(int index, vector_t * pos, vector_t * velocity)
 {
 }
 
@@ -247,7 +247,7 @@ Play sound at index blah, at this channel
 hook this up with an entity, for speed and origin
 ==========================================
 */
-void CSoundManager::PlaySnd(hSnd index, int channel,
+void CSoundManager::PlaySnd(int index, int channel,
 							  const vector_t * origin,
 							  const vector_t * velocity,
 							  bool looping)

@@ -212,7 +212,7 @@ void CClient::UnloadWorld()
 		return;
 	}
 
-	m_pModel->UnloadModelCache(MODEL_CACHE_GAME);
+	m_pModel->UnloadModelCache(CACHE_GAME);
 
 	delete m_pCamera;
 	m_pCamera = 0;

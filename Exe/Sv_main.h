@@ -77,10 +77,9 @@ private:
 	//List of currenly loaded Resources
 	struct ResInfo
 	{
-		ResInfo()  { id =0; name = 0; }
+		ResInfo()  { name = 0; }  //id =0; 
 		~ResInfo() { if(name) delete[] name; }
-
-		int    id;
+//		int    id;
 		char * name; 
 	};
 

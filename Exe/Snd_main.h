@@ -1,8 +1,19 @@
 #ifndef VOID_SOUND_INTERFACE
 #define VOID_SOUND_INTERFACE
 
-#include "Snd_defs.h"
 #include "Sys_hdr.h"
+#include "3dmath.h"
+#include "Res_defs.h"
+
+//What channel to play a sound in
+enum SndChannelType
+{
+	CHAN_AUTO   = 0,		//first free
+	CHAN_WORLD  = 1,		//ambient, world sounds etc
+	CHAN_ITEM   = 2,		//item noises, pickups etc
+	CHAN_WEAPON	= 3,		//weapon noises
+	CHAN_PLAYER = 4			//player sounds
+};
 
 //======================================================================================
 //Private stuff
@@ -21,9 +32,7 @@ Main Sound manager
 play a sound at a given channel and pos, looping or not looping
 ======================================================================================
 */
-
-class CSoundManager : public I_SoundManager,
-					  public I_ConHandler 
+class CSoundManager : public I_ConHandler 
 {
 public:
 
@@ -41,10 +50,8 @@ public:
 
 	void RunFrame();
 
-	hSnd RegisterSound(const char * path);
+	int RegisterSound(const char * path);
 	void UnregisterAll();
-
-
 
 	//update pos
 	void UpdateListener(const vector_t &pos,
@@ -53,13 +60,13 @@ public:
 						const vector_t &up);
 
 	//hook this up with an entity, for speed and origin
-	void PlaySnd(hSnd index, int channel= VoidSound::CHAN_AUTO,
+	void PlaySnd(int index, int channel= CHAN_AUTO,
 							   const vector_t * origin=0,
 							   const vector_t * velocity=0,
 							   bool looping = false);
 	//Update Sound position
 	//The SoundManager needs to automatically stop sounds out of range
-	void UpdateSnd(hSnd index, vector_t * pos, vector_t * velocity);
+	void UpdateSnd(int index, vector_t * pos, vector_t * velocity);
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);

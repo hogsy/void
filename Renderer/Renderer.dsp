@@ -294,6 +294,10 @@ SOURCE=..\Shared\Com_util.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Res_defs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\world.h
 # End Source File
 # End Group
