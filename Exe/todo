@@ -2,8 +2,9 @@
 EXE
 ==============================================================
 
+add 3d sound buffers
 add simple entity support (sound objects, spawns)
-add 3d sound buffers and a listener
+
 
 error/logging/handling
 command line parms

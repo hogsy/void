@@ -2,8 +2,8 @@
 #include "Snd_hdr.h"
 #include "Snd_wave.h"
 #include "Snd_buf.h"
+#include "Snd_listener.h"
 #include "Com_util.h"
-
 
 namespace
 {
@@ -14,7 +14,6 @@ namespace
 		CMD_INFO  = 5,
 		CMD_LIST  = 6
 	};
-
 	IDirectSound	*	m_pDSound = 0;	// The global sound object.
 }
 
@@ -34,6 +33,7 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 								 m_cDopplerFactor("s_doppler", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
 								 m_cDistanceFactor("s_distance", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE)
 {
+	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
 	m_Buffers =  new CSoundBuffer[MAX_SOUNDS];
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
@@ -58,9 +58,22 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 
 CSoundManager::~CSoundManager()
 {
+
+	if(m_pListener)
+		delete m_pListener;
+
 	delete [] m_Buffers;
 	delete [] m_Channels;
 	delete m_pPrimary;
+
+//	m_pPrimary->Destroy();
+
+	if(m_pDSound)
+	{
+		m_pDSound->Release();
+		m_pDSound = 0;
+		ComPrintf("CSound::Shutdown : Released DirectSound\n");
+	}
 }
 
 /*
@@ -144,12 +157,16 @@ bool CSoundManager::Init()
 	pcmwf.nAvgBytesPerSec = pcmwf.nSamplesPerSec * pcmwf.nBlockAlign;
 	pcmwf.wFormatTag = WAVE_FORMAT_PCM;
 
-	m_pPrimary->Create(pcmwf);
+	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf);
+	if(!lpd3dlistener)
+	{
+		Shutdown();
+		return false;
+	}
+
+	m_pListener = new C3DListener(lpd3dlistener);
 
 	ComPrintf("CSound::Init OK\n");
-
-//	RegisterSound("sounds/loop.wav");
-//	RegisterSound("sounds/hum.wav");
 	return true;
 }
 
@@ -161,7 +178,10 @@ shutdown the system
 */
 void CSoundManager::Shutdown()
 {
-	UnregisterAll();
+//	UnregisterAll();
+
+/*	if(m_pListener)
+		delete m_pListener;
 	
 	m_pPrimary->Destroy();
 
@@ -171,6 +191,7 @@ void CSoundManager::Shutdown()
 		m_pDSound = 0;
 		ComPrintf("CSound::Shutdown : Released DirectSound\n");
 	}
+*/
 }
 
 /*
@@ -182,6 +203,19 @@ once wave streams are supported
 */
 void CSoundManager::RunFrame()
 {
+}
+
+/*
+======================================
+
+======================================
+*/
+void CSoundManager::UpdateListener(const vector_t &pos,
+								   const vector_t &velocity,
+								   const vector_t &forward,
+								   const vector_t &up)
+{
+	m_pListener->UpdateState(pos,velocity,forward,up);
 }
 
 /*
@@ -335,26 +369,6 @@ void CSoundManager::SListSounds()
 //	ComPrintf("Currently playing %d channels\n", m_channelsInUse);
 }
 
-
-/*
-======================================
-Device Enumeration. Can't find any use yet
-======================================
-*/
-/*
-BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
-									  const char * szDesc,
-									  const char * szModule,
-									  void * pContext)
-{
-	if(szDesc)
-		ComPrintf("Desc : %s\n", szDesc);
-	if(szModule)
-		ComPrintf("Module : %s\n", szModule);
-	return true;
-}
-*/
-
 /*
 ==========================================
 Print current sounds info
@@ -457,11 +471,27 @@ bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	return false;
 }
 
-//======================================================================================
-//======================================================================================
-//======================================================================================
-//======================================================================================
+/*
+======================================
+Device Enumeration. Can't find any use yet
+======================================
+*/
+/*
+BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
+									  const char * szDesc,
+									  const char * szModule,
+									  void * pContext)
+{
+	if(szDesc)
+		ComPrintf("Desc : %s\n", szDesc);
+	if(szModule)
+		ComPrintf("Module : %s\n", szModule);
+	return true;
+}
+*/
 
+//======================================================================================
+//======================================================================================
 
 namespace VoidSound
 {

@@ -12,6 +12,7 @@ namespace VoidSound
 	class CPrimaryBuffer;	//The primary sound buffer, there can be only one
 	class CSoundBuffer;		//A sound buffer wrapping up a wavefile
 	class CSoundChannel;	//A sound buffer which actually gets played
+	class C3DListener;		//The 3d Sound listener
 }
 
 //======================================================================================
@@ -41,7 +42,10 @@ public:
 	void UnregisterAll();
 
 	//update pos
-
+	void UpdateListener(const vector_t &pos,
+						const vector_t &velocity,
+						const vector_t &forward,
+						const vector_t &up);
 
 	//hook this up with an entity, for speed and origin
 	void Play(hSnd index, int channel= VoidSound::CHAN_AUTO);
@@ -53,9 +57,11 @@ public:
 private:
 
 	VoidSound::CPrimaryBuffer*  m_pPrimary;
+	VoidSound::C3DListener   *  m_pListener;
+	
 	VoidSound::CSoundBuffer  *	m_Buffers;	//All sounds are buffered when registered
 	VoidSound::CSoundChannel *	m_Channels;	//Channels which are actually played
-
+	
 	int	 m_numBuffers;
 //	int	 m_channelsInUse;
 
@@ -77,10 +83,6 @@ private:
 	void SListSounds();
 	bool SPrintInfo();
 
-//	static BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,            
-//										  const char * szDesc,
-//										  const char * szModule,
-//										  void * pContext);
 };
 
 #endif

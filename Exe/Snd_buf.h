@@ -22,7 +22,7 @@ public:
 	CPrimaryBuffer();
 	~CPrimaryBuffer();
 
-	bool Create(WAVEFORMATEX &pcmwf);
+	IDirectSound3DListener  * Create(WAVEFORMATEX &pcmwf);
 	void Destroy();
 
 	//Master Volume,	range 0 (max) to 5000 (min)

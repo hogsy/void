@@ -3,6 +3,7 @@
 
 
 #include "Com_defs.h"
+#include "3dmath.h"
 
 //This is all the game code needs to see
 

@@ -25,7 +25,7 @@ CPrimaryBuffer::~CPrimaryBuffer()
 Initialize, set format and start mixing
 ==========================================
 */
-bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
+IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 {
 	//Set up DSBUFFERDESC structure. 
 	DSBUFFERDESC dsbdesc; 
@@ -41,7 +41,8 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
     if(FAILED(hr))
     { 
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:");
-        return false;
+		return 0;
+        //return false;
     } 
 
 	hr = m_pDSBuffer->SetFormat(&pcmwf);
@@ -49,7 +50,8 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	{
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Set Format:");
 		Destroy();
-		return false;
+		//return false;
+		return 0;
 	}
 
 	hr = m_pDSBuffer->Play(0,0,DSBPLAY_LOOPING);
@@ -57,7 +59,8 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	{
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Can't start mixing:");
 		Destroy();
-		return false;
+		//return false;
+		return 0;
 	}
 
 #if 0
@@ -65,12 +68,24 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
 		Destroy();
-		return false;
+		//return false;
+		return 0;
 	}
 #endif
 
+	IDirectSound3DListener * p3dlistener=0;
+	hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DListener, (LPVOID *)&p3dlistener);
+	if(FAILED(hr))
+    {
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Get 3dlistener:");
+		Destroy();
+		//return false;
+		return 0;
+	}
+
+
 	ComPrintf("CPrimaryBuffer::Create: OK\n");
-	return true;
+	return p3dlistener;
 }
 
 /*

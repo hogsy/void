@@ -111,6 +111,10 @@ SOURCE=.\Snd_hdr.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Snd_listener.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Snd_main.cpp
 # End Source File
 # Begin Source File

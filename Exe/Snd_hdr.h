@@ -4,14 +4,13 @@
 #include <mmsystem.h>
 #include <dsound.h>
 
+namespace VoidSound {
 
-namespace VoidSound
-{
-	class CWaveFile;		//A Wave file
+class CWaveFile;		//A Wave file
 
-	LPDIRECTSOUND GetDirectSound();
-	
-	void PrintDSErrorMessage(HRESULT hr, char * prefix);
+LPDIRECTSOUND GetDirectSound();
+void PrintDSErrorMessage(HRESULT hr, char * prefix);
+
 }
 
 
