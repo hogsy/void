@@ -21,12 +21,13 @@ Constructor
 CClient::CClient(I_Renderer * prenderer,
 				 CSoundManager * psound,
 				 CMusic	* pmusic):
-					m_noclip("cl_noclip","0",   CVAR_INT,0),
-					m_clport("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
-					m_clrate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
-					m_clname("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-					m_clmodel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_clskin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_cvClip("cl_clip","1",     CVAR_BOOL,0),
+					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
+					m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
+					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -54,12 +55,13 @@ CClient::CClient(I_Renderer * prenderer,
 	m_hsTalk = 0;
 	m_hsMessage = 0;
 
-	System::GetConsole()->RegisterCVar(&m_noclip);
-	System::GetConsole()->RegisterCVar(&m_clport,this);
-	System::GetConsole()->RegisterCVar(&m_clrate,this);
-	System::GetConsole()->RegisterCVar(&m_clname,this);
-	System::GetConsole()->RegisterCVar(&m_clmodel,this);
-	System::GetConsole()->RegisterCVar(&m_clskin,this);
+	System::GetConsole()->RegisterCVar(&m_cvClip);
+	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
+	System::GetConsole()->RegisterCVar(&m_cvPort,this);
+	System::GetConsole()->RegisterCVar(&m_cvRate,this);
+	System::GetConsole()->RegisterCVar(&m_cvName,this);
+	System::GetConsole()->RegisterCVar(&m_cvModel,this);
+	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
 	
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
@@ -166,7 +168,7 @@ void CClient::BeginGame()
 	VectorSet(&desired_movement, 0, 0, 0);
 
 	VectorSet(&m_gameClient.angle, 0.0f,0.0f,0.0f);
-	VectorSet(&m_gameClient.origin, 0.0f,0.0f,16.0f);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.origin, 0.0f,0.0f,32.0f);	// FIXME - origin + view height
 	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
@@ -320,7 +322,6 @@ void CClient::RunFrame()
 			buf.WriteAngle(m_gameClient.angle.y);
 			buf.WriteAngle(m_gameClient.angle.z);
 		}
-
 	}
 	else
 	{
@@ -361,16 +362,16 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		MoveRight();
 		break;
 	case CMD_ROTATE_LEFT:
-		RotateLeft();
+		RotateLeft(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_RIGHT:
-		RotateRight();
+		RotateRight(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_UP:
-		RotateUp();
+		RotateUp(m_cvKbSpeed.fval);
 		break;
 	case CMD_ROTATE_DOWN:
-		RotateDown();
+		RotateDown(m_cvKbSpeed.fval);
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);
@@ -413,7 +414,7 @@ Validate/Handle any CVAR changes
 */
 bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
-	if(cvar == reinterpret_cast<CVarBase*>(&m_clport))
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cvPort))
 	{
 		int port = parms.IntTok(1);
 		if(port < 1024 || port > 32767)
@@ -423,23 +424,29 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_clrate))
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvRate))
 		return ValidateRate(parms);
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_clname))
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
 		return ValidateName(parms);
+	else if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
+	{
+		float val = parms.FloatTok(1);
+		if(val <= 0.0 || val >= 1.0)
+		{
+			ComPrintf("Out of range. Should be between 0.0 and 1.0\n");
+			return false;
+		}
+		return true;
+	}
 	return false;
 }
 
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
-/*
-	static int hHowl = 0;
-	if(!hHowl)
-		hHowl = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
-
-	static vector_t horigin;
-	VectorSet(&horigin,0,0,48);
-	m_pSound->PlaySnd(hHowl, CACHE_LOCAL, CHAN_WORLD, &horigin, 0, true);
-*/
+	static ClEntity entHowl;
+	
+	entHowl.soundIndex = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
+	Void3d::VectorSet(entHowl.origin,0,0,48);
+	m_pSound->PlaySnd(&entHowl, entHowl.soundIndex, CACHE_LOCAL, 0,0, CHAN_WORLD | CHAN_LOOPING);
 }

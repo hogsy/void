@@ -2,8 +2,9 @@
 #include "Snd_hdr.h"
 #include "Snd_buf.h"
 #include "Snd_chan.h"
-#include "Snd_wave.h"
 #include "Com_util.h"
+
+using namespace VoidSound;
 
 namespace
 {
@@ -13,30 +14,31 @@ namespace
 		CMD_STOP  = 2,
 		CMD_INFO  = 5,
 		CMD_LIST  = 6,
-		MAX_CHANNELS = 16
+		MAX_CHANNELS = 16,
+		MAX_WAVEFILES = 512
 	};
 	//Direct sound object.
 	IDirectSound	*	m_pDSound = 0;	
+	CWaveManager	*	m_pWaveManager = 0;
 }
-
-using namespace VoidSound;
-
 
 /*
 ==========================================
-Constructor/Destructor
+Constructor
 ==========================================
 */
-CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cHighQuality("s_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
-								 m_cRollOffFactor("s_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDopplerFactor("s_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDistanceFactor("s_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE)
+CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cHighQuality("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
+								 m_cRollOffFactor("snd_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
 
-	//Create wave caches
+	m_pWaveManager = new CWaveManager(MAX_WAVEFILES);
+
+	//Create buffer caches
 	for(int i=0; i< RES_NUMCACHES; i++)
 		m_bufferCache[i] =  new CSoundBuffer[GAME_MAXSOUNDS];
 	
@@ -52,14 +54,53 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVAR_FLOAT, CVAR_ARCHIV
 	System::GetConsole()->RegisterCVar(&m_cDopplerFactor,this);
 	System::GetConsole()->RegisterCVar(&m_cDistanceFactor,this);
 	
-	System::GetConsole()->RegisterCommand("splay",CMD_PLAY,this);
-	System::GetConsole()->RegisterCommand("sstop",CMD_STOP,this);
-	System::GetConsole()->RegisterCommand("sinfo",CMD_INFO,this);
-	System::GetConsole()->RegisterCommand("slist",CMD_LIST,this);
+	System::GetConsole()->RegisterCommand("sndplay",CMD_PLAY,this);
+	System::GetConsole()->RegisterCommand("sndstop",CMD_STOP,this);
+	System::GetConsole()->RegisterCommand("sndinfo",CMD_INFO,this);
+	System::GetConsole()->RegisterCommand("sndlist",CMD_LIST,this);
 }
 
+
+/*
+======================================
+Destructor
+======================================
+*/
 CSoundManager::~CSoundManager()
-{	Shutdown();
+{	
+	if(m_pListener)
+	{
+		delete m_pListener;
+		m_pListener=0;
+	}
+
+	if(m_Channels)
+	{
+		delete [] m_Channels;
+		m_Channels = 0;
+	}
+
+	for(int i=0; i<RES_NUMCACHES; i++)
+		delete [] m_bufferCache[i];
+
+	if(m_pPrimary)
+	{
+		delete m_pPrimary;
+		m_pPrimary = 0;
+	}
+
+	if(m_pDSound)
+	{
+		m_pDSound->Release();
+		m_pDSound = 0;
+		ComPrintf("CSound::Shutdown : Released DirectSound\n");
+	}
+	
+	if(m_pWaveManager)
+	{
+		delete m_pWaveManager;
+		m_pWaveManager = 0;
+	}
 }
 
 /*
@@ -102,7 +143,6 @@ bool CSoundManager::Init()
 	if (FAILED(hr)) 
 	{ 
 		ComPrintf("CSound::Init Failed SetCoopLevel\n");
-		Shutdown(); 
 		return false; 
 	}
 
@@ -116,7 +156,6 @@ bool CSoundManager::Init()
 	if(FAILED(hr))
 	{
 		ComPrintf("CSound::Init Failed to Get Capabilities\n");
-		Shutdown();
 		return false;
 	}
 
@@ -171,12 +210,11 @@ bool CSoundManager::Init()
 	pcmwf.nAvgBytesPerSec = pcmwf.nSamplesPerSec * pcmwf.nBlockAlign;
 	pcmwf.wFormatTag = WAVE_FORMAT_PCM;
 
-	
 	//Get 3dListener Interface
 	IDirectSound3DListener * lpd3dlistener = m_pPrimary->Create(pcmwf);
 	if(!lpd3dlistener)
 	{
-		Shutdown();
+		ComPrintf("CSound::Init Failed to create listener\n");
 		return false;
 	}
 
@@ -190,7 +228,6 @@ bool CSoundManager::Init()
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CSoundManager::Init:Setting Listener parms:");
-		Shutdown();
 		return false;
 	}
 
@@ -198,42 +235,6 @@ bool CSoundManager::Init()
 	SPrintInfo();
 	ComPrintf("CSound::Init OK\n");
 	return true;
-}
-
-/*
-======================================
-Shutdown
-======================================
-*/
-void CSoundManager::Shutdown()
-{
-	if(m_pListener)
-	{
-		delete m_pListener;
-		m_pListener=0;
-	}
-
-	if(m_Channels)
-	{
-		delete [] m_Channels;
-		m_Channels = 0;
-	}
-
-	for(int i=0; i<RES_NUMCACHES; i++)
-		delete [] m_bufferCache[i];
-
-	if(m_pPrimary)
-	{
-		delete m_pPrimary;
-		m_pPrimary = 0;
-	}
-
-	if(m_pDSound)
-	{
-		m_pDSound->Release();
-		m_pDSound = 0;
-		ComPrintf("CSound::Shutdown : Released DirectSound\n");
-	}
 }
 
 //======================================================================================
@@ -246,8 +247,7 @@ of range now, and silence them
 ==========================================
 */
 void CSoundManager::RunFrame()
-{
-	m_pListener->m_pDS3dListener->CommitDeferredSettings();
+{	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 }
 
 /*
@@ -269,30 +269,21 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 
 /*
 ======================================
-Update Sound position
-The SoundManager needs to automatically stop sounds out of range
+Play sound at given cache and index on given channel
 ======================================
 */
-void CSoundManager::UpdateGameSound(int index, vector_t * pos, vector_t * velocity)
-{
-}
-
-
-/*
-======================================
-
-======================================
-*/
-void CSoundManager::PlaySnd(int index, CacheType cache, int channel, 
-							const vector_t * origin,  const vector_t * velocity,
-							bool looping)
+void CSoundManager::PlaySnd(const ClEntity * ent,
+							int index, CacheType cache,
+							int volume, int attenuation,
+							int channel)
+//void CSoundManager::PlaySnd(int index, CacheType cache,
+//							int channel, const ClEntity * ent)
 {
 	if(!m_bufferCache[cache][index].InUse())
 	{
 		ComPrintf("CSoundManager::Play: no sound at index %d, cache %d\n", index, cache);
 		return;
 	}
-
 
 	for(int i=0; i<MAX_CHANNELS; i++)
 		if(!m_Channels[i].IsPlaying())
@@ -304,24 +295,52 @@ void CSoundManager::PlaySnd(int index, CacheType cache, int channel,
 		return;
 	}
 
-	m_Channels[i].Create(m_bufferCache[cache][index],origin,velocity);
-	bool ret = false;
-	if(looping == true)
-		ret = m_Channels[i].Play(true);
-	else
-		ret = m_Channels[i].Play(false);
-	
-	if(ret)
-	{
-//TEMP, dont really need this info during gameplay
-//		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
-	}
-}
+	m_Channels[i].Create(m_bufferCache[cache][index], ent, volume, attenuation);
 
+	bool loop = false;
+	channel & CHAN_LOOPING ? loop = true : loop = false;
+	if(!m_Channels[i].Play(loop))
+		ComPrintf("Error playing sound %s at index %d\n", 
+				index, m_bufferCache[cache][index].GetFilename());
+}
 
 /*
 ======================================
 
+======================================
+*/
+void CSoundManager::PlaySnd(int index, CacheType cache,
+							int volume,
+							int channel)
+{
+	if(!m_bufferCache[cache][index].InUse())
+	{
+		ComPrintf("CSoundManager::Play: no sound at index %d, cache %d\n", index, cache);
+		return;
+	}
+
+	for(int i=0; i<MAX_CHANNELS; i++)
+		if(!m_Channels[i].IsPlaying())
+			break;
+	if(i== MAX_CHANNELS)
+	{
+		ComPrintf("CSoundManager::Play: Unable to play %s, max sounds reached\n", 
+			m_bufferCache[cache][index].GetFilename());
+		return;
+	}
+
+	m_Channels[i].Create(m_bufferCache[cache][index],volume);
+	bool loop = false;
+	channel & CHAN_LOOPING ? loop = true : loop = false;
+	if(!m_Channels[i].Play(loop))
+		ComPrintf("Error playing sound %s at index %d\n", 
+					index, m_bufferCache[cache][index].GetFilename());
+}
+
+/*
+======================================
+Register a new sound at given index,
+or load and return new index if not specified
 ======================================
 */
 hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
@@ -338,21 +357,18 @@ hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
 		}
 	}
 
-//FIX ME, duplicate buffers if sound is found in a different cache ?
-
 	//Load at first avaiable slot, or just return index if its already loaded
 	int unusedSlot= -1;
 	for(int i=0; i<GAME_MAXSOUNDS; i++)
 	{
 		if(m_bufferCache[cache][i].InUse())
 		{
-		//if we found an index to the loaded sound, then just return
+		    //if we found an index to the loaded sound, then just return
 		   if(strcmp(path, m_bufferCache[cache][i].GetFilename()) == 0)
 				return i;
 		}
 		else if(unusedSlot == -1)
 			unusedSlot = i;
-
 	}
 
 	//Didnt find any space to load the wav
@@ -371,10 +387,9 @@ hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
 
 /*
 ======================================
-
+Unregister the given sound
 ======================================
 */
-
 void CSoundManager::UnregisterSound(hSnd index, CacheType cache)
 {
 	if(m_bufferCache[cache][index].InUse())
@@ -392,12 +407,16 @@ void CSoundManager::UnregisterCache(CacheType cache)
 		UnregisterSound(i, cache);
 }
 
+/*
+======================================
+Destroy all files
+======================================
+*/
 void CSoundManager::UnregisterAll()
 {
 	for(int i=0; i< 3; i++)
 		UnregisterCache((CacheType)i);
 }
-
 
 //======================================================================================
 //Console commands
@@ -407,35 +426,28 @@ void CSoundManager::UnregisterAll()
 Play a sound
 ==========================================
 */
-void CSoundManager::SPlay(const char * arg)
+void CSoundManager::SPlay(const CParms &parms)
 {
-/*	if(arg)
+	if(parms.NumTokens() < 2)
 	{
-		char wavfile[COM_MAXPATH];
-
-		strcpy(wavfile,arg);
-		Util::SetDefaultExtension(wavfile,"wav");
-
-		//Run through the buffers to check if it has been registered
-		for(int i=0; i<m_numBuffers;i++)
-		{
-			if(strcmp(wavfile, m_Buffers[i].GetFilename()) == 0)
-				break;
-		}
-
-		//Create a new buffer
-		if(i == m_numBuffers)
-		{
-			i = RegisterSound(wavfile);
-			if(!i)
-				return;
-		}
-		//Play the sound
-		PlaySnd(i);
+		ComPrintf("Usage : sndplay <wavefile>\n");
 		return;
 	}
-	ComPrintf("Usage : splay <wavepath>\n");
-*/
+
+	char wavefile[COM_MAXPATH];
+	parms.StringTok(1,wavefile,COM_MAXPATH);
+
+	Util::SetDefaultExtension(wavefile,"wav");
+
+	//Run through buffers to see if it has been registered
+	hSnd index = RegisterSound(wavefile, CACHE_LOCAL);
+	if(index == -1)
+	{
+		ComPrintf("Unable to find wavefile %s\n", wavefile);
+		return;
+	}
+
+	PlaySnd(index,CACHE_LOCAL);
 }
 
 /*
@@ -464,11 +476,19 @@ List all the loaded sounds
 */
 void CSoundManager::SListSounds()
 {
-//	for(int i=0;i<m_numBuffers;i++)
-//		m_Buffers[i].PrintStats();
-
-	//Currently playing
-//	ComPrintf("Currently playing %d channels\n", m_channelsInUse);
+	int j;
+	ComPrintf("Local Cache\n=======================\n");
+	for(j=0; j<GAME_MAXSOUNDS; j++)
+		if(m_bufferCache[0][j].InUse())
+			m_bufferCache[0][j].PrintStats();
+	ComPrintf("Game Cache\n=======================\n");
+	for(j=0; j<GAME_MAXSOUNDS; j++)
+		if(m_bufferCache[1][j].InUse())
+			m_bufferCache[1][j].PrintStats();
+	ComPrintf("Temp Cache\n=======================\n");
+	for(j=0; j<GAME_MAXSOUNDS; j++)
+		if(m_bufferCache[2][j].InUse())
+			m_bufferCache[2][j].PrintStats();
 }
 
 /*
@@ -518,7 +538,32 @@ void CSoundManager::SPrintInfo()
 
 	ComPrintf("Distance Factor : %.2f\nRolloff Factor : %.2f\nDoppler Factor : %.2f\n",
 				l3dparms.flDistanceFactor,l3dparms.flRolloffFactor, l3dparms.flDopplerFactor);
-	ComPrintf("Listener pos : %.2f %.2f %.2f\n", l3dparms.vPosition.x, l3dparms.vPosition.y, l3dparms.vPosition.x);
+	ComPrintf("Listener pos : %.2f %.2f %.2f\n", l3dparms.vPosition.x, 
+						l3dparms.vPosition.y, l3dparms.vPosition.x);
+}
+
+/*
+==========================================
+Handle Commands
+==========================================
+*/
+void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
+{
+	switch(cmdId)
+	{
+	case CMD_PLAY:
+		SPlay(parms);
+		break;
+	case CMD_STOP:
+		SStop(parms.IntTok(1));
+		break;
+	case CMD_INFO:
+		SPrintInfo();
+		break;
+	case CMD_LIST:
+		SListSounds();
+		break;
+	}
 }
 
 //======================================================================================
@@ -568,10 +613,7 @@ bool CSoundManager::SetRollOffFactor(const CParms &parms)
 {
 	//Just print value and return
 	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("%s = \"%s\"\n", m_cRollOffFactor.name, m_cRollOffFactor.string);
 		return false;
-	}
 
 	float factor = parms.FloatTok(1);
 	if(factor < DS3D_MINROLLOFFFACTOR ||   factor > DS3D_MAXROLLOFFFACTOR)
@@ -603,10 +645,7 @@ bool CSoundManager::SetDistanceFactor(const CParms &parms)
 {
 	//Just print value and return
 	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("%s = \"%s\"\n", m_cDistanceFactor.name, m_cDistanceFactor.string);
 		return false;
-	}
 
 	float factor = parms.FloatTok(1);
 	if(factor <= 0.0f)
@@ -637,16 +676,13 @@ bool CSoundManager::SetDopplerFactor(const CParms &parms)
 {
 	//Just print value and return
 	if(parms.NumTokens() < 2)
-	{
-		ComPrintf("%s = \"%s\"\n", m_cDopplerFactor.name, m_cDopplerFactor.string);
 		return false;
-	}
-
+	
 	float factor = parms.FloatTok(1);
 	if(factor < DS3D_MINDOPPLERFACTOR ||  factor > DS3D_MAXDOPPLERFACTOR)
 	{
 		ComPrintf("Valid range for Doppler factor is %0.2f to %0.2f\n",
-			DS3D_MINDOPPLERFACTOR, DS3D_MAXDOPPLERFACTOR);
+					DS3D_MINDOPPLERFACTOR, DS3D_MAXDOPPLERFACTOR);
 		return false;
 	}
 
@@ -682,39 +718,13 @@ bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	return false;
 }
 
-
-/*
-==========================================
-Handle Commands
-==========================================
-*/
-void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
-{
-	switch(cmdId)
-	{
-	case CMD_PLAY:
-		SPlay(parms.UnsafeStringTok(1));
-		break;
-	case CMD_STOP:
-		SStop(parms.IntTok(1));
-		break;
-	case CMD_INFO:
-		SPrintInfo();
-		break;
-	case CMD_LIST:
-		SListSounds();
-		break;
-	}
-}
-
-
-
 //======================================================================================
 //======================================================================================
 
 namespace VoidSound
 {
 	IDirectSound	*   GetDirectSound() { return m_pDSound; }
+	CWaveManager	*	GetWaveManager() { return m_pWaveManager; }
 
 	void PrintDSErrorMessage(HRESULT hr, char * prefix)
 	{
@@ -777,6 +787,8 @@ namespace VoidSound
 		ComPrintf("%s\n",error);
 	}
 }
+
+
 
 /*
 ======================================

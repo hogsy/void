@@ -78,10 +78,10 @@ private:
 	void MoveBackward();
 	void MoveRight();
 	void MoveLeft();
-	void RotateRight(float val=1.0);
-	void RotateLeft(float val=1.0);
-	void RotateUp(float val=1.0);
-	void RotateDown(float val=1.0);
+	void RotateRight(const float &val);
+	void RotateLeft(const float &val);
+	void RotateUp(const float &val);
+	void RotateDown(const float &val);
 
 	//==================================================
 	//Console commands
@@ -92,15 +92,14 @@ private:
 
 	//==================================================
 	//Client CVars
-	CVar	m_clport;
-	CVar	m_clname;
-	CVar	m_clrate;
-	CVar    m_clmodel;
-	CVar    m_clskin;
+	CVar	m_cvPort;
+	CVar	m_cvName;
+	CVar	m_cvRate;
+	CVar    m_cvModel;
+	CVar    m_cvSkin;
+	CVar    m_cvKbSpeed;
+	CVar	m_cvClip;
 	
-	CVar	m_noclip;
-	
-
 	//==================================================
 	//Subsystems
 

@@ -17,6 +17,8 @@ CSoundChannel::CSoundChannel()
 {
 	m_pDSBuffer= 0;
 	m_pDS3dBuffer = 0;
+	m_pEntity  = 0;
+	m_bInUse  = false;
 }
 
 CSoundChannel::~CSoundChannel()
@@ -40,21 +42,20 @@ void CSoundChannel::Destroy()
 		m_pDS3dBuffer->Release();
 		m_pDS3dBuffer = 0;
 	}
-	origin = 0;
-	velocity = 0;
+	m_pEntity =0;
+	m_bInUse = false;
 }
 
 /*
-==========================================
-from another buffer
-==========================================
+======================================
+Duplicate buffer info
+======================================
 */
-bool CSoundChannel::Create(CSoundBuffer &buffer,       //Create a duplicate buffer
-						   const vector_t * porigin,
-						   const vector_t * pvelocity)	
+bool CSoundChannel::CreateBuffer(const CSoundBuffer &buffer)
 {
 	//Destry current buffer if active
-	Destroy();
+	if(m_bInUse)
+		Destroy();
 
 	HRESULT hr = GetDirectSound()->DuplicateSoundBuffer(buffer.GetDSBuffer(), &m_pDSBuffer);
 	if(FAILED(hr)) 
@@ -73,56 +74,82 @@ bool CSoundChannel::Create(CSoundBuffer &buffer,       //Create a duplicate buff
 	{
 		if (hr != DSERR_BUFFERLOST)
 		{
-			ComPrintf("CSoundChannel::Create: Could not lock buffer: %s", buffer.GetWaveData()->m_filename);
+			ComPrintf("CSoundChannel::Create: Could not lock buffer: %s", buffer.GetFilename());
 			return false;
 		}
 		m_pDSBuffer->Restore();
 		if(m_pDSBuffer->Lock(0, 0, &lockPtr1, &lockSize1, 0,0,DSBLOCK_ENTIREBUFFER) != DS_OK)
 		{
-			ComPrintf("CSoundChannel::Create: Could not lock buffer 2: %s", buffer.GetWaveData()->m_filename);
+			ComPrintf("CSoundChannel::Create: Could not lock buffer 2: %s", buffer.GetFilename());
 			return false;
 		}
 	}
 
 	// write the data
 	if (lockSize1)
-		memcpy(lockPtr1, buffer.GetWaveData()->m_data, lockSize1);
+		memcpy(lockPtr1, buffer.GetWaveData()->GetData(), lockSize1);
 	m_pDSBuffer->Unlock(lockPtr1, lockSize1, 0, 0);
 
-		hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer,(LPVOID *)&m_pDS3dBuffer);
-		if(FAILED(hr))
-		{
+	hr = m_pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer,(LPVOID *)&m_pDS3dBuffer);
+	if(FAILED(hr))
+	{
 ComPrintf("Unable to get 3d interface\n");
-			Destroy();
-			return false;
-		}
+		Destroy();
+		return false;
+	}
+	return true;
+}
+
+/*
+==========================================
+Create a sound sourced from an entitiy
+==========================================
+*/
+bool CSoundChannel::Create(const CSoundBuffer &buffer,
+						   const ClEntity * ent,
+						   int volume,
+						   int attenuation)
+{
+
+	if(!CreateBuffer(buffer))
+		return false;
+
+	//HRESULT hr;
 
 	//Get a 3d Interface if its a 3d sound
-	if(porigin || pvelocity)
-	{
-		m_pDS3dBuffer->SetMinDistance(150, DS3D_IMMEDIATE);
+	m_pEntity = ent;
+
+	m_pDS3dBuffer->SetMinDistance(150, DS3D_DEFERRED);
 //		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
+	m_pDS3dBuffer->SetPosition(m_pEntity->origin.x, 
+							   m_pEntity->origin.y, 
+							   m_pEntity->origin.z, 
+							   DS3D_DEFERRED); //DS3D_DEFERRED);
+//	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_IMMEDIATE);
 
-		if(porigin) 
-			m_pDS3dBuffer->SetPosition(porigin->x, porigin->y, porigin->z, DS3D_IMMEDIATE); //DS3D_DEFERRED);
-		if(pvelocity)
-			m_pDS3dBuffer->SetVelocity(pvelocity->x, pvelocity->y, pvelocity->z, DS3D_IMMEDIATE);
-		origin = porigin;
-		velocity = pvelocity;
-	}
-	else
+	m_bInUse = true;
+	return true;
+}
+
+/*
+======================================
+Create a 2d sound
+======================================
+*/
+bool CSoundChannel::Create(const CSoundBuffer &buffer,
+							int volume)
+{
+	if(!CreateBuffer(buffer))
+		return false;
+
+	HRESULT	hr = m_pDS3dBuffer->SetMode(DS3DMODE_DISABLE,DS3D_DEFERRED);
+	if(FAILED(hr))
 	{
-		//hr = m_pDS3dBuffer->SetMode(DS3DMODE_DISABLE,DS3D_IMMEDIATE);
-		hr = m_pDS3dBuffer->SetMode(DS3DMODE_DISABLE,DS3D_DEFERRED);
-		if(FAILED(hr))
-		{
-ComPrintf("Unable to  3d interface\n");
-			Destroy();
-			return false;
-		}
-
+ComPrintf("Unable to disable 3d interface\n");
+		Destroy();
+		return false;
 	}
-
+	m_bInUse = true;
 	return true;
 }
 
@@ -159,6 +186,7 @@ bool CSoundChannel::Play(bool looping)
 		}
 		return false;
 	}
+	ComPrintf("Chan : Volume : %d\n", GetVolume());
 	return true;
 }
 
@@ -168,8 +196,7 @@ Stop playback
 ==========================================
 */
 void CSoundChannel::Stop()
-{	
-	m_pDSBuffer->Stop();
+{	m_pDSBuffer->Stop();
 }
 
 /*
@@ -192,4 +219,34 @@ bool CSoundChannel::IsPlaying() const
 			return true;
 	}
 	return false;
+}
+
+
+
+
+long CSoundChannel::GetVolume()
+{
+	if(!m_pDSBuffer)
+		return 0;
+
+	long lvol=0;
+	if(FAILED(m_pDSBuffer->GetVolume(&lvol)))
+	{
+		ComPrintf("CSoundChannel:GetVolume: Failed to get volume\n");
+		return 0;
+	}
+	return lvol;
+}
+
+void CSoundChannel::SetVolume(long vol)
+{
+	if(!m_pDSBuffer)
+		return;
+
+	HRESULT hr = m_pDSBuffer->SetVolume(vol);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CSoundChannel::SetVolume:");
+		ComPrintf("Unable to set to %d db\n",vol);
+	}
 }

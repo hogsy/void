@@ -252,10 +252,10 @@ Write UserInfo to buffer
 */
 void CClient::WriteUserInfo(CBuffer &buffer)
 {
-	buffer.WriteString(m_clname.string);
-	buffer.WriteString(m_clmodel.string);
-	buffer.WriteString(m_clskin.string);
-	buffer.WriteInt(m_clrate.ival);
+	buffer.WriteString(m_cvName.string);
+	buffer.WriteString(m_cvModel.string);
+	buffer.WriteString(m_cvSkin.string);
+	buffer.WriteInt(m_cvRate.ival);
 }
 
 
@@ -292,7 +292,7 @@ void CClient::Talk(const char * string)
 	if(!*msg || *msg == '\0')
 		return;
 
-	ComPrintf("%s: %s\n", m_clname.string, msg);
+	ComPrintf("%s: %s\n", m_cvName.string, msg);
 	m_pSound->PlaySnd(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
@@ -313,7 +313,7 @@ bool CClient::ValidateName(const CParms &parms)
 
 	if(!name[0])
 	{
-		ComPrintf("Name = \"%s\"\n", m_clname.string);
+		ComPrintf("Name = \"%s\"\n", m_cvName.string);
 		return false;
 	}
 	if(!m_ingame)
@@ -336,7 +336,7 @@ bool CClient::ValidateRate(const CParms &parms)
 	int rate = parms.IntTok(1);
 	if(rate == -1)
 	{
-		ComPrintf("Rate = \"%d\"\n", m_clrate.ival);
+		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
 		return false;
 	}
 

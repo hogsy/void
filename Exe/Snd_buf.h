@@ -2,7 +2,6 @@
 #define VOID_SOUND_BUFFER
 
 #include "Snd_hdr.h"
-#include "Snd_wave.h"
 
 //======================================================================================
 //======================================================================================
@@ -70,9 +69,8 @@ public:
 	CSoundBuffer();
 	~CSoundBuffer();
 
-	//Update these to keep cache type later on
-	bool Create(const char * path);		//Create a new buffer
-	
+	//Create a new buffer
+	bool Create(const char * path);		
 	void Destroy();
 
 	bool  InUse()	   const;
@@ -82,8 +80,9 @@ public:
 	const char         * GetFilename() const;
 	
 private:
+
 	IDirectSoundBuffer * m_pDSBuffer;
-	CWaveFile		   * m_pWaveData;	
+	CWaveFile		   * m_pWaveFile;	
 };
 
 }

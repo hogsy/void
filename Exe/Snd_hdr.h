@@ -5,11 +5,16 @@
 #include <mmsystem.h>
 #include <dsound.h>
 
+#include "Snd_wave.h"
+
 namespace VoidSound {
 
-class CWaveFile;		//A Wave file
+//class CWaveFile;		//A Wave file
+//class CWaveManager;
 
-LPDIRECTSOUND GetDirectSound();
+LPDIRECTSOUND  GetDirectSound();
+CWaveManager * GetWaveManager();
+
 void PrintDSErrorMessage(HRESULT hr, char * prefix);
 
 }

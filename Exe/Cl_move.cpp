@@ -5,6 +5,8 @@
 #define MAX_CLIP_PLANES 5
 #define STOP_EPSILON 0.3f
 
+const float CL_ROTATION_SENS = 0.05f;
+
 extern world_t *g_pWorld;
 
 
@@ -88,7 +90,7 @@ void CClient::Move(vector_t *dir, float time)
 		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_gameClient.origin, dir, time);
 
 	// can we clip through walls?  it's simple then
-	if (m_noclip.ival)
+	if (!m_cvClip.ival)
 	{
 		VectorMA(&m_gameClient.origin, time, dir, &m_gameClient.origin);
 		return;
@@ -290,32 +292,32 @@ void CClient::MoveLeft()
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
-void CClient::RotateRight(float val)
+void CClient::RotateRight(const float &val)
 {
-	m_gameClient.angle.YAW += (val/20);  //System::g_fframeTime * 
+	m_gameClient.angle.YAW += (val * CL_ROTATION_SENS);  
 	if (m_gameClient.angle.YAW > PI)
 		m_gameClient.angle.YAW -= 2*PI;
 }
 
-void CClient:: RotateLeft(float val)
+void CClient:: RotateLeft(const float &val)
 {
-	m_gameClient.angle.YAW -= (val/20);  //System::g_fframeTime *
+	m_gameClient.angle.YAW -= (val * CL_ROTATION_SENS); 
 	if (m_gameClient.angle.YAW < -PI)
 		m_gameClient.angle.YAW += 2*PI;
 }
 
-void CClient::RotateUp(float val)
+void CClient::RotateUp(const float &val)
 {
-	m_gameClient.angle.PITCH +=  (val/20);  //System::g_fframeTime *
+	m_gameClient.angle.PITCH +=  (val * CL_ROTATION_SENS);
 	if (m_gameClient.angle.PITCH < -PI/2)
 		m_gameClient.angle.PITCH = -PI/2;
 	if (m_gameClient.angle.PITCH > PI/2)
 		m_gameClient.angle.PITCH = PI/2;
 }
 
-void CClient:: RotateDown(float val)
+void CClient:: RotateDown(const float &val)
 {
-	m_gameClient.angle.PITCH -=  (val/20);  //System::g_fframeTime *
+	m_gameClient.angle.PITCH -=  (val * CL_ROTATION_SENS); 
 	if (m_gameClient.angle.PITCH < -PI/2)
 		m_gameClient.angle.PITCH = -PI/2;
 	if (m_gameClient.angle.PITCH > PI/2)

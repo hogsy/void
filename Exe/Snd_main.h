@@ -4,6 +4,7 @@
 #include "Sys_hdr.h"
 #include "3dmath.h"
 #include "Game_defs.h"
+#include "Clgame_defs.h"
 
 /*
 ======================================
@@ -32,37 +33,33 @@ public:
 	~CSoundManager();
 
 	bool Init();
-	void Shutdown();
-
-	void RunFrame();
 
 	//finds id, or creates new one, if index = -1, otherwise loads sound at give index
 	hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1);
 	void UnregisterSound(hSnd index, CacheType cache);
 	void UnregisterCache(CacheType cache);
 	void UnregisterAll();
-	
-	//update pos
+
+	//Run a Sound Frame
+	void RunFrame();
+
+	//update pos CCamera
 	void UpdateListener(const vector_t &pos,
 						const vector_t &velocity,
 						const vector_t &forward,
 						const vector_t &up);
 
-	//hook this up with an entity, for speed and origin
+	//Play a sound originating from an entity
+	//If volume and attenuation are 0 then it uses the ones set to the entitiy
+	void PlaySnd(const ClEntity * ent,
+				 int index, CacheType cache,
+				 int volume =0, int attenuation =0,
+				 int channel = CHAN_AUTO);
+	
+	//Play a 2d-UI sound at given volume
 	void PlaySnd(int index, CacheType cache,
-				 int channel= CHAN_AUTO,
-				 const vector_t * origin=0,
-				 const vector_t * velocity=0,
-				 bool looping = false);
-/*
-	void PlaySnd(const ClEntity &ent,
-				 int channel = CHAN_AUTO,
 				 int volume = 0,
-				 int attenuation = 0);
-*/
-	//Update Sound position
-	//The SoundManager needs to automatically stop sounds out of range
-	void UpdateGameSound(int index, vector_t * pos, vector_t * velocity);
+				 int channel = CHAN_AUTO);
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
@@ -95,7 +92,7 @@ private:
 
 	//==========================================
 	//console funcs
-	void SPlay(const char * arg);
+	void SPlay(const CParms &parms);
 	void SStop(int channel);
 	void SListSounds();
 	void SPrintInfo();

@@ -174,7 +174,7 @@ Constructor/Destructor
 */
 CSoundBuffer::CSoundBuffer()
 {
-	m_pWaveData = 0;
+	m_pWaveFile = 0;
 	m_pDSBuffer = 0;
 }
 
@@ -194,23 +194,28 @@ bool CSoundBuffer::Create(const char * path)
 	if(InUse())
 		Destroy();
 
-	m_pWaveData = new CWaveFile(path);
+
+	m_pWaveFile = GetWaveManager()->Create(path);
+	if(!m_pWaveFile)
+		return false;
+
+/*	m_pWaveData = new CWaveFile(path);
 	if(m_pWaveData->IsEmpty())
 	{
 		delete m_pWaveData;
 		m_pWaveData = 0;
 		return false;
 	}
-
+*/
 
 	WAVEFORMATEX waveFormat;
 	// Set up wave format structure. 
     memset(&waveFormat, 0, sizeof(WAVEFORMATEX)); 
 	waveFormat.cbSize = sizeof(WAVEFORMATEX);
 	waveFormat.nChannels = 1;
-	waveFormat.nBlockAlign = m_pWaveData->m_blockAlign;		
-	waveFormat.wBitsPerSample = m_pWaveData->m_bitsPerSample;
-	waveFormat.nSamplesPerSec = m_pWaveData->m_samplesPerSecond;
+	waveFormat.nBlockAlign = m_pWaveFile->m_blockAlign;		
+	waveFormat.wBitsPerSample = m_pWaveFile->m_bitsPerSample;
+	waveFormat.nSamplesPerSec = m_pWaveFile->m_samplesPerSecond;
 	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
 	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
     
@@ -220,9 +225,9 @@ bool CSoundBuffer::Create(const char * path)
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
 	dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
 					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
-					  DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
+					  DSBCAPS_CTRL3D; // | DSBCAPS_MUTE3DATMAXDISTANCE;
 	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
-    dsbdesc.dwBufferBytes = m_pWaveData->m_size;
+    dsbdesc.dwBufferBytes = m_pWaveFile->m_size;
     dsbdesc.lpwfxFormat = &waveFormat; 
     
 	// Create buffer. 
@@ -243,9 +248,11 @@ Print info about the Buffer
 */
 void CSoundBuffer::PrintStats() const
 {
-	if(m_pWaveData)
-		ComPrintf("(%2d): %s : (%5d) %d bytes\n", m_pWaveData->m_bitsPerSample, m_pWaveData->m_filename,
-					m_pWaveData->m_samplesPerSecond, m_pWaveData->m_size);
+	if(m_pWaveFile)
+		ComPrintf("%2dbit:%5dkhz:%6d bytes: %s\n", m_pWaveFile->m_bitsPerSample, 
+												  m_pWaveFile->m_samplesPerSecond, 
+												  m_pWaveFile->m_size,
+												  m_pWaveFile->GetFileName());
 }
 
 /*
@@ -259,8 +266,9 @@ void CSoundBuffer::Destroy()
 	{
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
-		delete m_pWaveData;
-		m_pWaveData = 0;
+//		delete m_pWaveData;
+		GetWaveManager()->Release(m_pWaveFile);
+		m_pWaveFile = 0;
 	}
 }
 
@@ -278,10 +286,10 @@ bool CSoundBuffer::InUse() const
 
 const char * CSoundBuffer::GetFilename() const 
 { 
-	if(m_pWaveData) 
-	return m_pWaveData->m_filename; 
+	if(m_pWaveFile) 
+	return m_pWaveFile->GetFileName(); 
   return 0; 
 }
 
 IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
-CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveData; }
+CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveFile; }

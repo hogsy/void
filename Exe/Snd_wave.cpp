@@ -59,7 +59,7 @@ CWaveFile::CWaveFile()
 	m_samplesPerSecond = m_size = 0;
 	m_blockAlign = 0;
 	m_data = 0;
-
+	m_refs = 0;
 	m_filename = 0;
 }
 
@@ -80,8 +80,7 @@ Destructor
 
 
 CWaveFile::~CWaveFile()
-{
-	Unload();
+{	Unload();
 }
 	
 /*
@@ -180,8 +179,10 @@ void CWaveFile::Unload()
 	{
 		g_pHunkManager->HunkFree(m_data);
 		m_data = 0;
-		m_size = 0;
+		
 	}
+	m_refs = 0;
+	m_size = 0;
 }
 	
 bool CWaveFile::IsEmpty() const
