@@ -6,14 +6,15 @@
 //==============================================================
 
 #define MAX_CVARSTRING_LEN	512
+#define COM_MAXARGS			5
 
 struct CVar;
-
 //validation func, cvar is only updated if this returns true
 typedef bool (*CVAR_FUNC)(const CVar *, int,  char**);	
-typedef void (*CFUNC)(int,  char**);
 
 //==============================================================
+
+
 
 struct CVar
 {
@@ -65,20 +66,32 @@ struct CVar
 
 //==============================================================
 
-struct CFunc
+typedef int HCMD;
+
+struct I_CmdHandler
 {
-	CFunc()
-	{	name = 0;
-		func = 0;
-	}
-	
-	~CFunc()
-	{	if(name) delete [] name;name = 0;
-		func = 0;
+	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
+};
+
+struct CCommand
+{
+	CCommand(const char * iname,
+			 HCMD iid, 
+			 I_CmdHandler * ihandler)	 : handler(ihandler), id(iid)
+	{
+		name = new char[strlen(iname)+1];
+		strcpy(name,iname);
 	}
 
+	~CCommand()
+	{
+		delete [] name;
+		handler = 0;
+	}
+
+	HCMD	id;
 	char *	name;
-	CFUNC	func;
+	I_CmdHandler * handler;
 };
 
 #endif
