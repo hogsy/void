@@ -185,7 +185,9 @@ void CRHud::DrawHud()
 	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
 	glDisable(GL_DEPTH_TEST);
 
-
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	for(int i=0;i<MAX_MESSAGES;i++)
 	{
 		if(m_hmessages[i].inuse)

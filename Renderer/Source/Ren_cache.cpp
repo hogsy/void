@@ -257,11 +257,19 @@ void cache_purge_single()
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LEQUAL);
-			glColor4f(1, 1, 1, 0.4f);
+			glColor4f(1, 1, 1, 0.2f);
 			break;
 
 		case CACHE_PASS_ALPHABLEND*2+1:		// lightmap
-			continue;	// lighting not available or in fullbright
+			if ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT))
+			{
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+				glEnable(GL_DEPTH_TEST);
+				glDepthFunc(GL_LEQUAL);
+			}
+			else
+				continue;	// lighting not available or in fullbright
 			break;
 
 		default:
@@ -289,9 +297,6 @@ void cache_purge_single()
 			}
 		}
 	}
-
-//	glPixelTransfer(GL_DEPTH_BIAS, 0);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
 

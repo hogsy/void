@@ -242,6 +242,8 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	eye.origin = *origin;
 	eye.angles = *angles;
 
+//	return;
+
 	AngleToVector (&eye.angles, &forward, &right, &up);
 	VectorNormalize(&forward);
 	VectorNormalize(&right);
@@ -265,8 +267,6 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	glPopMatrix();
 
 // display any messages
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
 	g_prHud->DrawHud();
 
 // draw the console if we need to
