@@ -544,7 +544,10 @@ void CConsole::ExecCmdLine()
 
 /*
 ======================================
-Archived Token Access
+Looks through config file parms to see
+if anything matches the given token.
+will set parms to the matching token
+it finds LAST
 ======================================
 */
 bool CConsole::GetTokenParms(const char * token, CParms * parms)
@@ -554,12 +557,14 @@ bool CConsole::GetTokenParms(const char * token, CParms * parms)
 
 	for(StrListIt itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
 	{
-		archivedString = itVal->c_str();
-		if(strncmp(token, archivedString, len ) == 0)
-		{
-			parms->Set(itVal->c_str());
-			return true;
-		}
+		if(strncmp(token, itVal->c_str(), len ) == 0)
+			archivedString = itVal->c_str();
+	}
+
+	if(archivedString)
+	{
+		parms->Set(archivedString);
+		return true;
 	}
 	return false;
 }
@@ -577,7 +582,7 @@ int CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
 	if(c == EOF || c == '\0')
 		return false;
 
-	while(c && (c != '\n') && (c != EOF) && (len < CON_MAXARGSIZE))
+	while(c && (c != '\n') && (c != EOF) && (len < bufsize))
 	{
 		buf[len++] = c;
 		c = fgetc(fp);
