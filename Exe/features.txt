@@ -1,0 +1,31 @@
+
+
+Current Features
+===================
+
+//Add Renderer stuff
+
+Virtualized file system with overrideable paths.
+Support for uncompressed zip and pak files.
+
+Input supporting DirectInput and normal Win32 polling.
+Can use events or continous polling.
+Dispatching of input events to registered listeners.
+
+Sound using DirectSound with 3dbuffers. 
+Sound engine keeps track of entity positions and adjusts/mutes/reloads attached sounds.
+Windows MCI CD Audio support
+
+Full featured console with command and variable registration and manipulation.
+Config file and keybindings support.
+
+Open ended client/server networking library.
+Well defined and extendible network protcol.
+
+Game code and entity spawning and handling resides in a seperate game dll.
+Local client-side movement which stays in synch with server.
+
+Memory leak detection and reporting.
+Windows Registry support for fileType and misc info.
+
+Very modularized and easy to read code.

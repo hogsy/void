@@ -449,10 +449,6 @@ SOURCE=..\Shared\I_hunkmem.h
 
 SOURCE=..\Shared\I_renderer.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_sound.h
-# End Source File
 # End Group
 # Begin Group "Network"
 

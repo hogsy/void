@@ -1,13 +1,17 @@
 
 major issues
 =====================================
+
+proper animation sequences depending on movement on the server
 add animation cycle flags for clients
-add proper animation sequences depending on movement
+
 add crouch mode (bbox.z/2 and viewheight=0)
 remove fmod and add mp3 playback using directShow
 
 game entities
 =====================================
+
 add delay var to sound sources
 add renderering flags to model entities
-add frame range to model entities
+add frame range and scale to model entities
+

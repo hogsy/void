@@ -3,10 +3,14 @@
 
 #include "Sys_hdr.h"
 
-//======================================================================================
-//Not doing anything special for music
-//client code can just send console messages to play stuff
-//======================================================================================
+/*
+======================================================================================
+The music code is VERY bare bones right now.
+
+Not doing anything special
+client code can just send console messages to play stuff
+======================================================================================
+*/
 
 namespace VoidMusic
 {
