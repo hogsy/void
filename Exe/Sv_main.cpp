@@ -92,7 +92,6 @@ bool CServer::Init()
 	//more initialization here ?
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 	m_active = true;
-
 	return true;
 }
 
@@ -509,6 +508,7 @@ bool CServer::SpawnEntity(CBuffer &buf)
 	{
 		m_entities[m_numEntities] = ent;
 		m_numEntities++;
+		return true;
 	}
 	return false;
 }

@@ -134,7 +134,6 @@ private:
 //======================================================================================
 //======================================================================================
 
-
 //Worldspawn spawner
 EntMaker <EntWorldSpawn> worldSpawnMaker("worldspawn");
 EntFields EntMaker<EntWorldSpawn,CEntityMaker>::entFields;
@@ -156,84 +155,3 @@ void CServer::InitGame()
 	EntMaker<EntSpeaker>::AddField(KeyField("attenuation",(int)&(speaker->attenuation), KEY_INT));
 	EntMaker<EntSpeaker>::AddField(KeyField("sound",(int)&(speaker->soundName), KEY_STRING));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-======================================================================================
-Derived Entity Makers
-TODO, try templates here ?
-the only "distinct" things are the Entity being created
-and the EntFields vector
-======================================================================================
-*/
-/*
-class CEntWorldSpawnMaker: public CEntMaker
-{
-public:
-	//Maker func
-	Entity * MakeEntity(const char * classname, CBuffer &parms) const
-	{
-		char * key = 0;
-		EntWorldSpawn * ent = new EntWorldSpawn();
-		do
-		{
-			key = parms.ReadString();
-			ParseKey(ent,key,parms);
-		}while(key && *key != 0);
-		return ent;
-	}
-
-protected:
-
-	//For subclassing
-	CEntWorldSpawnMaker(const char * classname) : CEntMaker(classname){ 	}
-
-	static void ParseKey(EntWorldSpawn * ent, const char * key, CBuffer &parms)
-	{
-		for(EntFields::iterator it = entFields.begin(); it != entFields.end(); it++)
-		{	//Matched. then parse
-			if(strcmp(it->name, key) == 0)	
-			{
-				KeyField::ReadField(*it,parms, reinterpret_cast<byte*>(ent));
-				return;
-			}
-		}
-		//call parent if no match
-		CEntMaker::ParseKey(ent,key,parms);
-	}
-
-private:
-	
-	//One time only registration
-	CEntWorldSpawnMaker() : CEntMaker("worldspawn")	
-	{
-		//register fields
-		EntWorldSpawn * ent = 0;
-		entFields.push_back(KeyField("name",(int)&(ent->message), KEY_STRING));
-		entFields.push_back(KeyField("music",(int)&(ent->music), KEY_STRING));
-		entFields.push_back(KeyField("gravity",(int)&(ent->gravity), KEY_INT));
-	}
-
-	static EntFields entFields;
-	static const CEntWorldSpawnMaker registerThis;
-};
-
-EntFields CEntWorldSpawnMaker::entFields;
-const CEntWorldSpawnMaker CEntWorldSpawnMaker::registerThis;
-*/
-

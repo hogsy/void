@@ -1,7 +1,13 @@
+#ifndef VOID_GAME_INTERFACE
+#define VOID_GAME_INTERFACE
 
 
 
-//Implemented by the main server
+/*
+======================================
+Functions exported by the Exe
+======================================
+*/
 struct I_GameHandler
 {
 	virtual void BroadcastPrint(const char * msg)=0;
@@ -24,19 +30,24 @@ struct I_GameHandler
 //implemented by the game dll
 struct I_GameServer
 {
+	virtual void InitGame()=0;
+	virtual void ShutdownGame()=0;
+	virtual int  GetVersion()=0;
+
+	virtual void RunFrame()=0;
+
+	virtual bool SpawnEntity(CBuffer &buf)=0;
+
+	//Client funcs
+//	virtual bool ClientConnect( 
 };
 
 
 
-#if 0 // quake2
-//===============================================================
-//
-// functions provided by the main engine
-//
+#if 0 
 typedef struct
 {
 	void	(*setmodel) (edict_t *ent, char *name);
-
 	// collision detection
 	trace_t	(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
 	int		(*pointcontents) (vec3_t point);
@@ -54,9 +65,6 @@ typedef struct
 	void	(*Pmove) (pmove_t *pmove);		// player movement code common with client prediction
 } game_import_t;
 
-//
-// functions exported by the game subsystem
-//
 typedef struct
 {
 	int			apiversion;
@@ -105,5 +113,8 @@ typedef struct
 	int			num_edicts;		// current number, <= max_edicts
 	int			max_edicts;
 } game_export_t;
+
+#endif
+
 
 #endif
