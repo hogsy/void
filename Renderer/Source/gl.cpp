@@ -61,10 +61,10 @@ WGLMAKECURRENT		_wglMakeCurrent		= NULL;
 
 // other gdi funcs
 //====================================================================================
-SWAPBUFFERS				__SwapBuffers			= NULL;
-SETPIXELFORMAT			__SetPixelFormat		= NULL;
-DESCRIBEPIXELFORMAT		__DescribePixelFormat	= NULL;
-CHOOSEPIXELFORMAT		__ChoosePixelFormat		= NULL;
+SWAPBUFFERS				fnSwapBuffers			= NULL;
+SETPIXELFORMAT			fnSetPixelFormat		= NULL;
+DESCRIBEPIXELFORMAT		fnDescribePixelFormat	= NULL;
+CHOOSEPIXELFORMAT		fnChoosePixelFormat		= NULL;
 
 
 //====================================================================================
@@ -408,10 +408,10 @@ int OpenGLInit(char *lib)
 
 
 // other gdi funcs
-	__SwapBuffers			= (SWAPBUFFERS)			GetProcAddress(openglInst, "wglSwapBuffers");
-	__SetPixelFormat		= (SETPIXELFORMAT)		GetProcAddress(openglInst, "wglSetPixelFormat");
-	__DescribePixelFormat	= (DESCRIBEPIXELFORMAT)	GetProcAddress(openglInst, "wglDescribePixelFormat");
-	__ChoosePixelFormat		= (CHOOSEPIXELFORMAT)	GetProcAddress(openglInst, "wglChoosePixelFormat");
+	fnSwapBuffers			= (SWAPBUFFERS)			GetProcAddress(openglInst, "wglSwapBuffers");
+	fnSetPixelFormat		= (SETPIXELFORMAT)		GetProcAddress(openglInst, "wglSetPixelFormat");
+	fnDescribePixelFormat	= (DESCRIBEPIXELFORMAT)	GetProcAddress(openglInst, "wglDescribePixelFormat");
+	fnChoosePixelFormat		= (CHOOSEPIXELFORMAT)	GetProcAddress(openglInst, "wglChoosePixelFormat");
 
 	return 0;
 }
@@ -461,7 +461,7 @@ BOOL  WINAPI _SwapBuffers(HDC hdc)
 
 	//  if failed, always bypass from now on
 	bypassGDI = true;
-	return __SwapBuffers(hdc);
+	return fnSwapBuffers(hdc);
 }
 
 
@@ -479,7 +479,7 @@ int WINAPI _DescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, LPPIXELF
 
 	//  if failed, always bypass from now on
 	bypassGDI = true;
-	return __DescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd);
+	return fnDescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd);
 }
 
 
@@ -497,7 +497,7 @@ int WINAPI _SetPixelFormat(HDC hdc, int iPixelFormat, CONST PIXELFORMATDESCRIPTO
 
 	//  if failed, always bypass from now on
 	bypassGDI = true;
-	return __SetPixelFormat(hdc, iPixelFormat, ppfd);
+	return fnSetPixelFormat(hdc, iPixelFormat, ppfd);
 }
 
 
@@ -515,5 +515,5 @@ int WINAPI _ChoosePixelFormat(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
 
 	//  if failed, always bypass from now on
 	bypassGDI = true;
-	return __ChoosePixelFormat(hdc, ppfd);
+	return fnChoosePixelFormat(hdc, ppfd);
 }
