@@ -196,8 +196,8 @@ void CGameClient::RunFrame(float frameTime)
 		m_cmd.time = 255.0f;
 
 	//Print misc crap
-	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %s", m_pGameClient->origin.ToString());
-	m_pClGame->HudPrintf(0,120,0,"VELOCITY: %s",m_pGameClient->velocity.ToString());
+//	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %s", m_pGameClient->origin.ToString());
+//	m_pClGame->HudPrintf(0,120,0,"VELOCITY: %s",m_pGameClient->velocity.ToString());
 
 	//Drawing
 	//FIXME: PVS Check should be here
@@ -438,6 +438,8 @@ void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 		Talk(parms.String());
 		break;
 	case CMD_DEBUG:
+		if(m_pGameClient)
+			ComPrintf("Current Pos: %s\n", m_pGameClient->origin.ToString());
 		break;
 	}
 }

@@ -118,8 +118,9 @@ void CClient::RunFrame()
 	if(m_bInGame)
 	{
 		//Print FPS, Update frame time
-		m_pHud->Printf(0,50,0, "%3.2f : %4.2f", 1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
-		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
+		m_pHud->Printf(0,50,0, "%3.2f FPS", 1/(System::GetCurTime() - m_fFrameTime));
+		m_pHud->Printf(0,60,0, "%4.2f secs", System::GetCurTime());
+//		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
 		m_fFrameTime = System::GetCurTime();
 
 		//Draw NetStats if flagged
