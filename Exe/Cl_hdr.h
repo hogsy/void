@@ -39,7 +39,7 @@ struct I_ClientGame
 	virtual float GetCurTime()=0;
 
 	//Models
-	virtual void DrawModel(const ClEntity &state)=0;
+	virtual void DrawModel(ClEntity &state)=0;
 	virtual int  RegisterModel(const char *model, CacheType cache, int index=-1)=0;
 	virtual void UnregisterModel(CacheType cache,int index)=0;
 	virtual void UnregisterModelCache(CacheType cache)=0;

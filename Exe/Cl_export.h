@@ -14,7 +14,7 @@ public:
 	}
 
 	//Models
-	inline void DrawModel(const ClEntity &state)
+	inline void DrawModel(ClEntity &state)
 	{	m_refClient.m_pClRen->DrawModel(state);
 	}
 	inline int  RegisterModel(const char *model, CacheType cache,int index=-1)

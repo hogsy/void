@@ -12,7 +12,7 @@ struct I_ClientRenderer
 {
 	/* Model Interface */
 	virtual int  LoadModel(const char *model, CacheType cache, int index=-1)=0;
-	virtual void DrawModel(const ClEntity &state)=0;
+	virtual void DrawModel(ClEntity &state)=0;
 	virtual void UnloadModel(CacheType cache, int index)=0;
 	virtual void UnloadModelCache(CacheType cache)=0;
 	virtual void UnloadModelAll(void)=0;
