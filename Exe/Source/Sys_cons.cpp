@@ -1,13 +1,11 @@
 #include "Sys_hdr.h"
 #include "Sys_cons.h"
+#include "Com_util.h"
 
 #define CMD_CVARLIST	0
 #define CMD_CMDLIST		1
 #define CMD_TOGGLECONS	2
 #define CMD_TEST		3
-
-//Console toggle hack, FIXME
-//void CToggleConsole(int argc, char** argv);			
 
 //======================================================================================
 //======================================================================================
@@ -428,7 +426,6 @@ void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		break;
 	case CMD_TOGGLECONS:
 		System::ToggleConsole();
-		//CToggleConsole(numArgs,szArgs);
 		break;
 	case CMD_TEST:
 		CFunctest(numArgs,szArgs);
@@ -469,7 +466,12 @@ void CConsole::ToggleFullscreen(bool full)
 }
 
 void CConsole::Toggle(bool down)
-{	m_prCons->Toggle(down);
+{	
+	if(down)
+		ComPrintf("Toggling on");
+	else
+		ComPrintf("Toggling off");
+	m_prCons->Toggle(down);
 }
 
 /*

@@ -145,7 +145,7 @@ switch fullbright (light) rendering
 bool CVar_FullBright(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
-		ConPrint("r_fullbright = %d\n", var->value);
+		ConPrint("r_fullbright = %d\n", var->ival);
 	else
 	{
 		int temp=0;
@@ -171,7 +171,7 @@ bool CVar_MultiTexture(const CVar * var, int argc, char** argv)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ConPrint("Your video card does not support ARB multitexturing.\n");
-		ConPrint("multitexturing is %d\n", (int)var->value);
+		ConPrint("multitexturing is %d\n", var->ival);
 		return false;
 	}
 	return true;
@@ -186,7 +186,7 @@ switch fullbright (light) rendering
 bool CVar_Fov(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
-		ConPrint("r_fov = %d\n", var->value);
+		ConPrint("r_fov = %d\n", var->ival);
 	else
 	{
 		int temp=0;
@@ -219,7 +219,7 @@ toggle vid synch
 bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
-		ConPrint("r_vidsynch = %d\n", var->value);
+		ConPrint("r_vidsynch = %d\n", var->ival);
 	else
 	{
 		int temp=0;

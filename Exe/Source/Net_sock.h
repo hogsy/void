@@ -1,110 +1,40 @@
 #ifndef VOID_NET_SOCKET
 #define VOID_NET_SOCKET
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include "Net_util.h"
+#include "Com_defs.h"
 
 namespace VoidNet {
-
-const int MAX_INTERFACES = 10;
 
 class CNetSocket
 {
 public:
-	CNetSocket();
+
+	CNetSocket(CNetBuffer ** buffer);
 	~CNetSocket();
 
-	bool Create(int addrfamily, int type, int proto);
+	bool Create(int addrFamily, int type, int protocol);
 	void Close();
+	
+	bool Bind(const char * addr, short port, bool blocking = false);
 
-//	int GetInterfaceList(INTERFACE_INFO &addr[MAX_INTERFACES]);
+	//Send data to given dest
+	void Send(const char *ipaddr, const byte *data, int length);
+	void Send(SOCKADDR_IN &addr,  const byte *data, int length);
+	
+	//Try to receive until there is no more data
+	bool Recv();
+ 
+	int  GetInterfaceList(INTERFACE_INFO ** addr, int numAddrs);
 
-private:
-
-	SOCKET	m_sock;
-
+	//Instance Data
+	SOCKET		m_socket;
+	SOCKADDR_IN m_srcAddr;		//This might change on every recv
+	CNetBuffer *m_pBuffer;
 };
 
 }
 
-
 #endif
 
 
-
-
-
-
-
-
-#if 0
-class CSocket
-{
-public:
-
-	enum eSockState
-	{
-		SOCK_INACTIVE,
-		SOCK_IDLE,
-		SOCK_CONNECTING,
-		SOCK_CONNECTED
-	};
-
-	eSockState	m_state;			//socket state
-
-	bool		bcansend;			//can it send, is it connected
-	bool		bsend;				//ALWAYS change this to true after filling buffer
-	bool		brecv;				//ALWAYS reset this after reading buffer
-//	char		m_ipaddr[16];		//the ip address its connected to 
-
-	//time
-	double	connecttime;
-	double	lastrecvtime;
-	double  lastsendtime;
-
-
-	//unsigned int	sendseq;		//packet num
-	//unsigned int	recvseq;		//packet num
-	
-	CSocket(CBaseNBuffer * recv, CBaseNBuffer *send);	//Constructor
-	~CSocket();		
-	
-	//Initialize the Socket	and pass pointers to buffers					
-	bool Init();
-	
-	bool Bind(SOCKADDR_IN addr, int port, bool loopback=false);
-	
-	bool Connect(char *ipaddr, int port);			//Connect to this IPADDR
-	bool Connect(SOCKADDR_IN raddr, int port);		//Or this Addr info
-	bool Disconnect();
-
-	void Run();								//run this socket
-	bool Close();							//close it
-
-	bool AcceptConnection();
-
-private:
-
-//	float	timeoutperiod;
-	
-	int		m_id;
-
-	CBaseNBuffer	*m_recvBuf;
-	CBaseNBuffer	*m_sendBuf;
-
-	SOCKET				m_socket;		//the socket
-	SOCKADDR_IN			m_addr;			//local addr info, its bound to
-	WSAEVENT			m_event;		//Event object for nonblocking more
-	LPWSANETWORKEVENTS  m_pNetworkEvents;
-	
-	static	int m_numSocks;
-
-	bool Recv();		//usually called every frame
-	bool Send();		//frequency determined by clients rate setting
-
-	//Error Handling
-	void SockError(char *err);
-};
-
-
-#endif

@@ -2,6 +2,8 @@
 #include "Snd_hdr.h"
 #include "Snd_wave.h"
 #include "Snd_buf.h"
+#include "Com_util.h"
+
 
 namespace
 {

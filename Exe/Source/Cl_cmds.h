@@ -2,28 +2,33 @@
 #define VOID_CLIENT_COMMANDS
 
 #include "Sys_hdr.h"
+#include "Sys_cons.h"
 #include "In_defs.h"
 
+namespace VoidClient {
+
 //======================================================================================
 //======================================================================================
 
-#define CL_CMDBUFFERSIZE	8
+const int CL_CMDBUFFERSIZE = 8;
 
 //Registered Command Ids
-
-#define CMD_MOVE_FORWARD	0		
-#define CMD_MOVE_BACKWARD	1
-#define CMD_MOVE_LEFT		2
-#define CMD_MOVE_RIGHT		3
-#define CMD_ROTATE_LEFT		4
-#define CMD_ROTATE_RIGHT	5
-#define CMD_ROTATE_UP		6
-#define CMD_ROTATE_DOWN		7
-#define CMD_BIND			8
-#define CMD_BINDLIST		9
-#define CMD_UNBIND			10
-#define CMD_UNBINDALL		11
-#define CMD_CAM				12
+enum
+{
+	CMD_MOVE_FORWARD  = 0,
+	CMD_MOVE_BACKWARD =	1,
+	CMD_MOVE_LEFT	  = 2,
+	CMD_MOVE_RIGHT	  = 3,
+	CMD_ROTATE_LEFT	  =	4,
+	CMD_ROTATE_RIGHT  =	5,
+	CMD_ROTATE_UP	  =	6,
+	CMD_ROTATE_DOWN	  =	7,
+	CMD_BIND		  =	8,
+	CMD_BINDLIST	  =	9,
+	CMD_UNBIND		  =	10,
+	CMD_UNBINDALL	  =	11,
+	CMD_CAM			  =	12
+};
 
 //======================================================================================
 //======================================================================================
@@ -33,8 +38,6 @@ List of all the Keys and a pointer to
 the function they are bound to
 =========================================
 */
-struct CCommand;
-
 struct ClientKey
 {
 	ClientKey()	{ szCommand = 0; pCmd = 0;	}
@@ -109,7 +112,7 @@ class CClientCmdHandler : public I_InKeyListener,
 {
 public:
 
-	CClientCmdHandler();
+	CClientCmdHandler(CClient *m_pClient);
 	~CClientCmdHandler();
 
 	void SetListenerState(bool on);
@@ -132,9 +135,12 @@ private:
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
-//	CClient   * m_pClient;
+	CClient   * m_pClient;
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
 };
+
+
+}
 
 #endif

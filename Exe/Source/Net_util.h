@@ -1,101 +1,83 @@
-#if 0
+#ifndef VOID_NETWORK_HDR
+#define VOID_NETWORK_HDR
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+namespace VoidNet {
 
 
-#ifndef _NET_UTIL
-#define _NET_UTIL
-
-#include "Sys_hdr.h"
-#include "Net_defs.h"
-
-extern	char	g_computerName[256];
-extern	char	g_ipaddr[16];
-
-bool ValidIP(char *ip);
-void PrintSockError(int err=0);
-
-bool InitWinsock();
-
+bool IsValidIP(const char *ip);
+bool StringToSockAddr(const char *szaddr, SOCKADDR_IN &addr);
+void PrintSockError(int err=0,const char *msg=0);
 
 /*
-=====================================
-Network buffer class
-this is sort of a hack and is only exposed to the CSocket class
-so that it can update buffers sizes and reset data after sending etc
-=====================================
+==========================================
+Network buffer utility class
+==========================================
 */
-
-class CBaseNBuffer
+class CNetBuffer
 {
 public:
-	CBaseNBuffer(int size=MAX_DATAGRAM);
-	~CBaseNBuffer();
 
-	virtual void Reset();
-	
-	int				cursize;		//current size, updated whenever the buffer is updated
-	BYTE		*	data;			//data
-protected:
-	int				maxsize;		//max size for the buffer
-};
+	enum
+	{
+		SIZE_CHAR  = 1,
+		SIZE_SHORT = 2, 
+		SIZE_INT   = 4,
+		SIZE_FLOAT = 4,
+		DEFAULT_BUFFER_SIZE = 4096,
+		MAX_BUFFER_SIZE = 8192
+	};
 
-
-/*
-=====================================
-this is the derived class that is used by the clients
-for writing and reading data as its updated by the socket.
-=====================================
-*/
-
-
-class CNBuffer:public CBaseNBuffer
-{
-public:
-	CNBuffer(int size=MAX_DATAGRAM);
-	~CNBuffer();
-
+	CNetBuffer(int size= DEFAULT_BUFFER_SIZE);
+	~CNetBuffer();
 
 	//Writing funcs
-	void WriteChar(int i);
-	void WriteByte(int i);
-	void WriteShort(int i);
-	void WriteLong(int i);
+	void WriteChar(char c);
+	void WriteByte(byte b);
+	void WriteShort(short s);
+	void WriteInt(int i);
 	void WriteFloat(float f);
 	void WriteAngle(float f);
 	void WriteCoord(float f);
 	void WriteString(const char *s);
-
+	
 	//Reading funcs
-	int   ReadChar(void);
-	int   ReadByte(void);
-	int	  ReadShort(void);
-	int	  ReadLong(void);
-	float ReadFloat(void);
-	float ReadAngle(void);
-	float ReadCoord(void);
-	char* ReadString(void);
-	char* ReadString(char delim);
+	char  ReadChar();
+	byte  ReadByte();
+	short ReadShort();
+	int   ReadInt();
+	float ReadFloat();
+	float ReadAngle();
+	float ReadCoord();
+	char* ReadString(char delim=0);
 
+	//Other util
+	int   UnreadBytes() const { return m_curSize - m_readCount; }
+	int   FreeBytes()   const { return m_maxSize - m_curSize;   }
+	bool  BadRead()		const { return m_badRead; }
+	int   MaxSize()		const { return m_maxSize; }
 	void  Reset();
+	
+	//To enable the socket to write to the buffer directly
+	byte* GetWritePointer() const;
+	void  SetCurSize(int size){ m_curSize = size; }
 
 private:
 	
-	int				readcount;		//how much have we read
+	byte *	m_buffer;
+	int		m_curSize;
+	int		m_maxSize;
+	int		m_readCount;	//how much have we read
 
-	//flags
-	bool			overflowed;
-	bool			allowoverflow;
-	bool			badread;
+	bool	m_badRead;
 
-	static char		tstring[2048];
-
-	void  Clear()	{ cursize = 0;}
-
-	void* GetSpace(int	len);
-	int	  LongSwap(int i);
-	void  Write (void *data, int length);
+	byte*	GetSpace(int size);
 };
 
-#endif
+}
 
 
 #endif
+

@@ -442,19 +442,19 @@ void CMouse::Update_DIBuffered()
 				break;
 			}
 		case DIMOFS_X:
-			m_fXPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarXSens.value * m_pVarSens.value;
+			m_fXPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarXSens.fval * m_pVarSens.fval;
 			break;
 		case DIMOFS_Y:
-			m_fYPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarYSens.value * m_pVarSens.value;
+			m_fYPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarXSens.fval * m_pVarSens.fval;
 			break;
 		case DIMOFS_Z:
-			m_fZPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarSens.value;
+			m_fZPos = ((int)m_aDIMouseBuf[i].dwData) * m_pVarSens.fval;
 			break;
 		}
 	}
 
 	//Apply filter if needed
-	if(m_pVarFilter.value)
+	if(m_pVarFilter.bval)
 	{
 		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
 		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
@@ -462,7 +462,7 @@ void CMouse::Update_DIBuffered()
 	}
 	
 	//Invery y-axis if needed
-	if(m_pVarInvert.value)
+	if(m_pVarInvert.bval)
 		m_fYPos = -(m_fYPos);
 
 	m_pStateManager->UpdateCursor(m_fXPos,m_fYPos,m_fZPos);
@@ -500,22 +500,22 @@ void CMouse::Update_DIImmediate()
 	}
 
 	//Average out values if filtering is on
-	if(m_pVarFilter.value)
+	if(m_pVarFilter.bval)
 	{
-		m_fXPos = m_fLastXPos = ((m_pDIState->lX * m_pVarXSens.value * m_pVarSens.value)+ m_fLastXPos)/2;
-		m_fYPos = m_fLastYPos = ((m_pDIState->lY * m_pVarYSens.value * m_pVarSens.value) + m_fLastYPos)/2;
-		m_fZPos = m_fLastZPos = ((m_pDIState->lZ * m_pVarSens.value) + m_fLastZPos)/2;
+		m_fXPos = m_fLastXPos = ((m_pDIState->lX * m_pVarXSens.fval * m_pVarSens.fval)+ m_fLastXPos)/2;
+		m_fYPos = m_fLastYPos = ((m_pDIState->lY * m_pVarYSens.fval * m_pVarSens.fval) + m_fLastYPos)/2;
+		m_fZPos = m_fLastZPos = ((m_pDIState->lZ * m_pVarSens.fval) + m_fLastZPos)/2;
 
 	}
 	else
 	{
-		m_fXPos = m_pDIState->lX * m_pVarXSens.value * m_pVarSens.value;
-		m_fYPos = m_pDIState->lY * m_pVarYSens.value * m_pVarSens.value;
-		m_fZPos = m_pDIState->lZ * m_pVarSens.value;
+		m_fXPos = m_pDIState->lX * m_pVarXSens.fval * m_pVarSens.fval;
+		m_fYPos = m_pDIState->lY * m_pVarYSens.fval * m_pVarSens.fval;
+		m_fZPos = m_pDIState->lZ * m_pVarSens.fval;
 	}
 	
 	//Inverse Y-Axis if mouse is inverted
-	if(m_pVarInvert.value)
+	if(m_pVarInvert.bval)
 		m_fYPos = -(m_fYPos);
 
 	m_pStateManager->UpdateCursor(m_fXPos,m_fYPos,m_fZPos);
@@ -532,15 +532,15 @@ void CMouse::Update_Win32()
 	::GetCursorPos(&m_w32Pos);
 
 	//Calc offsets
-	m_fXPos = (m_w32Pos.x - m_dCenterX) * m_pVarXSens.value * m_pVarSens.value;;
-	m_fYPos = (m_dCenterY - m_w32Pos.y) * m_pVarYSens.value * m_pVarSens.value;
+	m_fXPos = (m_w32Pos.x - m_dCenterX) * m_pVarXSens.fval * m_pVarSens.fval;
+	m_fYPos = (m_dCenterY - m_w32Pos.y) * m_pVarYSens.fval * m_pVarSens.fval;
 
-	if(m_pVarFilter.value)
+	if(m_pVarFilter.bval)
 	{
 		m_fLastXPos = m_fXPos = (m_fXPos + m_fLastXPos)/2;
 		m_fLastYPos = m_fYPos = (m_fYPos + m_fLastYPos)/2;
 	}
-	if(m_pVarInvert.value)
+	if(m_pVarInvert.bval)
 		m_fYPos = -(m_fYPos);
 
 	/*	
@@ -782,7 +782,7 @@ bool CMouse::CXSens(const CVar * var, int argc,char** argv)
 			ComPrintf("CMouse::CXSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("X-axis Sensitivity: %.2f\n", m_pVarXSens.value);
+	ComPrintf("X-axis Sensitivity: %.2f\n", m_pVarXSens.fval);
 	return false;
 }
 
@@ -803,7 +803,7 @@ bool CMouse::CYSens(const CVar * var, int argc,char** argv)
 			ComPrintf("CMouse::CYSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("Y-axis Sensitivity: %.2f\n", m_pVarYSens.value);
+	ComPrintf("Y-axis Sensitivity: %.2f\n", m_pVarYSens.fval);
 	return false;
 }
 
@@ -824,6 +824,6 @@ bool CMouse::CSens(const CVar * var, int argc, char** argv)
 			ComPrintf("CMouse::CSens:Invalid Value entered");
 		}
 	}
-	ComPrintf("Mouse Sensitivity: %.2f\n", m_pVarSens.value);
+	ComPrintf("Mouse Sensitivity: %.2f\n", m_pVarSens.fval);
 	return false;
 }

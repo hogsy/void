@@ -39,16 +39,25 @@ public:
 		CVAR_BOOL
 	};
 
+	union
+	{
+		float fval;
+		int	  ival;
+		bool  bval;
+	};
+
 	//Public vars
 	char * name;
 	char * string;
-	float  value;
 	int	   flags;
 
 	virtual void ForceSet(const char *varval)=0;
 	virtual void ForceSet(float val)=0;
+	virtual void ForceSet(int   val)=0;
+
 	virtual void Set(const char *varval)=0;
 	virtual void Set(float val)=0;
+	virtual void Set(int val)=0;
 
 protected:
 	
@@ -56,6 +65,7 @@ protected:
 
 	char * latched_string;
 	char * default_string;
+
 	CVarType		type;
 	I_CVarHandler * handler;
 };

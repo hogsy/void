@@ -3,32 +3,49 @@
 
 namespace
 {
+	enum 
+	{
+		CMD_MAP = 1
+	};
+	const char szLoopbackAdr [] = "loopback";
 }
 
-using namespace VoidServer;
 using namespace VoidNet;
 
 //======================================================================================
 //======================================================================================
-
 /*
 ==========================================
 Constructor/Destructor
 ==========================================
 */
 CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
+	System::GetConsole()->RegisterCVar(&m_cDedicated);
+	System::GetConsole()->RegisterCVar(&m_cHostname);
+	System::GetConsole()->RegisterCVar(&m_cGame);
 	
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
-}
 
+//	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
+	
+	memset(m_boundAddr,0,sizeof(m_boundAddr));
+	
+	m_pBuffer = new CNetBuffer();
+	m_pSock = new CNetSocket(&m_pBuffer);
+
+	m_initialized = false;
+}	
 
 CServer::~CServer()
-{
+{	
+	delete m_pSock;
+	delete m_pBuffer;
 }
 
 
@@ -40,119 +57,92 @@ gets computer names and addy
 */
 bool CServer::Init()
 {
-	SOCKET s;
-	int wsError;
-	DWORD bytesReturned;
-	INTERFACE_INFO localAddr[10];  // Assume there will be no more than 10 IP interfaces 
-	char* pAddrString;
-	SOCKADDR_IN* pAddrInet;
-	u_long SetFlags;
-	
-	int numLocalAddr; 
-
-	if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
+	if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
 	{
-		ComPrintf("Socket creation failed\n");
-     	return false;
-   	}
-
-	wsError = WSAIoctl(s, SIO_GET_INTERFACE_LIST, 
-						NULL, 0, 
-						&localAddr, sizeof(localAddr), 
-						&bytesReturned, 
-						NULL, NULL);
-
-	if (wsError == SOCKET_ERROR)
-	{
-		ComPrintf("WSAIoctl fails with error %d\n", GetLastError());
-		closesocket(s);
+		PrintSockError(WSAGetLastError(),"CServer::Init: Couldnt create socket");
 		return false;
 	}
 
-	closesocket(s);
+	INTERFACE_INFO localAddr[10];  // Assume there will be no more than 10 IP interfaces 
+	int numAddrs = 0;
+	
+	numAddrs = m_pSock->GetInterfaceList((INTERFACE_INFO **)&localAddr,10);
+	if(numAddrs == 0)
+	{
+		ComPrintf("CServer::Init: Unable to get network interfaces\n");
+		return false;
+	}
 
-	// Display interface information
-	numLocalAddr = (bytesReturned/sizeof(INTERFACE_INFO));
-	for (int i=0; i<numLocalAddr; i++) 
+	ulong  addrFlags=0;
+	char*  pAddrString=0;
+	SOCKADDR_IN* pAddrInet=0;
+	
+	for (int i=0; i<numAddrs; i++) 
 	{
 		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiAddress;
 		pAddrString = inet_ntoa(pAddrInet->sin_addr);
+		
 		if (pAddrString)
 			ComPrintf("IP: %s  ", pAddrString);
-
-		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiNetmask;
-		pAddrString = inet_ntoa(pAddrInet->sin_addr);
-		if (pAddrString)
-			ComPrintf(" SubnetMask: %s ", pAddrString);
-
-		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiBroadcastAddress;
-		pAddrString = inet_ntoa(pAddrInet->sin_addr);
-		if (pAddrString)
-			ComPrintf(" Bcast Addr: %s\n", pAddrString);
-
-		SetFlags = localAddr[i].iiFlags;
-		if (SetFlags & IFF_UP)
-			ComPrintf("This interface is up");
-		if (SetFlags & IFF_BROADCAST)
-			ComPrintf(", broadcasts are supported");
-		if (SetFlags & IFF_MULTICAST)
-			ComPrintf(", and so are multicasts");
-		if (SetFlags & IFF_LOOPBACK)
-			ComPrintf(". BTW, this is the loopback interface");
-		if (SetFlags & IFF_POINTTOPOINT)
-			ComPrintf(". BTW, this is a point-to-point link");
-		ComPrintf("\n\n");
+		
+		addrFlags = localAddr[i].iiFlags;
+		if (addrFlags & IFF_UP)
+		{
+			if(!(addrFlags & IFF_LOOPBACK))
+			{
+				strcpy(m_boundAddr,pAddrString);
+				ComPrintf("  This interface is up");
+			}
+		}
+		if (addrFlags & IFF_LOOPBACK)
+			ComPrintf("  This is the loopback interface");
+//		if (addrFlags & IFF_POINTTOPOINT)
+//			ComPrintf(". this is a point-to-point link");
 	}
 
-/*
-	//init listener sock
-	struct hostent *hp;
-	unsigned long ulNameLength = sizeof(g_computerName);
+	if(m_boundAddr[0] == '\0')
+		strcpy(m_boundAddr,szLoopbackAdr);
 
-	if(!GetComputerName(g_computerName, &ulNameLength))
+	if(!m_pSock->Bind(m_boundAddr,(short)m_cPort.ival,false))
 	{
-		ComPrintf("InitWinsock:Error: couldnt find computer name\n");
+		ComPrintf("CServer::Init:Unable to bind socket\n");
+		memset(m_boundAddr,0,sizeof(m_boundAddr));
 		return false;
 	}
-	hp = gethostbyname(g_computerName);							
-  
-	if (hp == NULL)	
-	{						
-		ComPrintf("InitWinsock:ERROR:Couldnt find hostname\n");
-		return false;
-	}
-
-	IN_ADDR HostAddr;
-	memcpy(&HostAddr,hp->h_addr_list[0],sizeof(HostAddr));
-	sprintf(g_ipaddr, "%s", inet_ntoa(HostAddr));
-	return true;
-*/
+	m_initialized = true;
 	return true;
 }
 
-
 /*
 ==========================================
-
+Shutdown the server
 ==========================================
 */
 void CServer::Shutdown()
 {
+	m_pSock->Close();
 }
-
 
 /*
 ==========================================
-
+Run a server frame
 ==========================================
 */
 void CServer::RunFrame()
 {
+	if(m_initialized== false)
+		return;
+
+	int recvs = 0;
+	while(m_pSock->Recv())
+	{
+		ComPrintf("%d\n", recvs++);
+	}
 }
 
 /*
 ==========================================
-
+Handle CVars
 ==========================================
 */
 bool CServer::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
@@ -162,60 +152,30 @@ bool CServer::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 
 /*
 ==========================================
-
+Handle Commands
 ==========================================
 */
 void CServer::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 {
 }
 
-namespace VoidNet
-{
 
 /*
 ==========================================
-
+Try to load the map
 ==========================================
 */
-bool InitNetwork()
+void CServer::LoadMap(const char * mapname)
 {
-	WORD wVersionRequested;
-	WSADATA wsaData;
-	int err; 
-	
-	wVersionRequested = MAKEWORD( 2, 0 ); 
-	err = WSAStartup( wVersionRequested, &wsaData );
-	
-	if (err) 
-	{
-		ComPrintf("CServer::InitNetwork:Error: WSAStartup Failed\n");
-		return false;
-	} 
-	
-	//Confirm Version
-	if ( LOBYTE( wsaData.wVersion ) != 2 ||
-         HIBYTE( wsaData.wVersion ) != 0 ) 
-	{
-		/* Tell the user that we couldn't find a usable 
-		   WinSock DLL.                                 */    
-		WSACleanup();
-		return false; 
-	}  
-	// The WinSock DLL is acceptable. Proceed. 
-	return true;
-}
-
-void ShutdownNetwork()
-{
-	WSACleanup();
-}
-
+	//if this is not a dedicated server, then pass the world to the local client
 }
 
 
 
 
 
+//======================================================================================
+//======================================================================================
 #if 0
 #include "Sv_main.h"
 #include "Sv_client.h"
@@ -931,8 +891,8 @@ void CNetClients::RunClients()
 			m_svclients[i].Run();
 
 			//connection has timed out
-			if(!m_svclients[i].m_sock.bcansend ||
-				(m_svclients[i].m_sock.m_state == CSocket::SOCK_IDLE))
+			if(!m_svclients[i].m_pSock.bcansend ||
+				(m_svclients[i].m_pSock.m_state == CSocket::SOCK_IDLE))
 			{
 				m_svclients[i].SV_Disconnect();
 			}

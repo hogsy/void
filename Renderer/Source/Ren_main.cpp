@@ -95,7 +95,7 @@ void r_init(void)
 	// reset last r_vidsynch
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
-		if (g_pVidSynch->value)
+		if (g_pVidSynch->ival)
 			wglSwapIntervalEXT(1);
 		else
 			wglSwapIntervalEXT(0);

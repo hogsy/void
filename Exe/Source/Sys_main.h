@@ -13,6 +13,7 @@
 #include "I_renderer.h"
 #include "I_filesystem.h"
 #include "Sys_exp.h"
+#include "Cl_main.h"
 
 //========================================================================================
 
@@ -70,10 +71,12 @@ private:
 	
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 	VoidExport   * m_pExport;		//Exported Data
-	CServer		 * m_pServer;		//Server
 	CInput		 * m_pInput;		//Input 
 	CTime		 * m_pTime;			//Timer
 	CFileSystem  * m_pFileSystem;	//FileSystem
+
+	CServer		 * m_pServer;		//Server
+	CClient		 * m_pClient;		//Client and UI
 
 #ifdef INCLUDE_MUSIC
 	CMusic		 * m_pMusic;		//Music subsystem

@@ -94,7 +94,7 @@ void CClient::Move(vector_t *dir, float time)
 		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &eye.origin, dir, time);
 
 	// can we clip through walls?  it's simple then
-	if ((int)m_noclip.value)
+	if (m_noclip.ival)
 	{
 		VectorMA(&eye.origin, time, dir, &eye.origin);
 		return;

@@ -15,6 +15,7 @@ class CVar : public CVarBase
 {
 public:
 
+	//Constructor
 	CVar(const char *varname, 
 		 const char *varval,
 		 CVarType vartype,	
@@ -26,10 +27,11 @@ public:
 		type = vartype;
 		flags = varflags;
 
+		fval = 0.0f;
+
 		string = 0;
 		latched_string = 0;
 		default_string = 0;
-		value = 0.0f;
 		handler = 0;
 
 		CVar::ForceSet(varval);
@@ -52,20 +54,36 @@ public:
 	*/
 	void ForceSet(const char *varval)
 	{
+		//Reset current info
+		fval = 0;
 		if(string)
 		{
 			delete [] string;
 			string = 0;
 		}
-
+		
 		switch(type)
 		{
 		case CVAR_INT:
+			{
+				if(!sscanf(varval,"%d",&ival))
+				{
+					ival = 0;
+					string = new char[strlen("\" \"") + 1];
+					strcpy(string,"\" \"");
+				}
+				else
+				{
+					string = new char[strlen(varval) + 1];
+					strcpy(string,varval);
+				}
+				break;
+			}
 		case CVAR_FLOAT:
 			{
-				if(!sscanf(varval,"%f",&value))
+				if(!sscanf(varval,"%f",&fval))
 				{
-					value =0;
+					fval = 0;
 					string = new char[strlen("\" \"") + 1];
 					strcpy(string,"\" \"");
 				}
@@ -78,20 +96,26 @@ public:
 			}
 		case CVAR_BOOL:
 			{
-				if(!sscanf(varval,"%f",&value))
-					value = 0;
+				if(!sscanf(varval,"%d",&ival))
+					ival = 0;
+				
 				string = new char[2];
-				if(value)
+				if(ival)
+				{
 					string[0] = '1';
+					bval = true;
+				}
 				else
+				{
 					string[0] = '0';
+					bval = false;
+				}
 				string[1] = '\0';
 				break;
 			}
 		case CVAR_STRING:
 		default:
 			{
-				value = 0;
 				string = new char[strlen(varval) + 1];
 				strcpy(string,varval);
 				break;
@@ -110,7 +134,12 @@ public:
 	void ForceSet(float val)
 	{
 		sprintf(m_buffer,"%.2f",val);
-		CVar::ForceSet(m_buffer);
+		ForceSet(m_buffer);
+	}
+	void ForceSet(int val)
+	{
+		sprintf(m_buffer,"%d",val);
+		ForceSet(m_buffer);
 	}
 
 	/*
@@ -131,6 +160,18 @@ public:
 	}
 
 	void Set(float val)
+	{
+		//Return if its a latched var
+		if(flags & CVAR_LATCH)		
+			return;
+
+		//Read only funcs can only be set once
+		if((flags & CVAR_READONLY) && default_string)
+			return;
+		CVar::ForceSet(val);
+	}
+
+	void Set(int val)
 	{
 		//Return if its a latched var
 		if(flags & CVAR_LATCH)		

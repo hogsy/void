@@ -1,7 +1,7 @@
 #include "Sys_main.h"
 #include "Sys_cons.h"
-#include "Cl_main.h"
 #include "Com_hunk.h"
+#include "Com_util.h"
 
 #include <objbase.h>
 #include <direct.h>
@@ -21,7 +21,6 @@ Subsystems
 */
 I_Renderer  *	g_pRender  =0;	//Renderer
 CConsole	*	g_pConsole =0;	//Console
-CClient		*	g_pClient  =0;	//Client and UI
 
 world_t		*	g_pWorld=0;		//The World
 extern CVoid*	g_pVoid;
@@ -80,7 +79,7 @@ CVoid::CVoid(const char * cmdLine)
 	m_pRParms = RENDERER_GetParms();
 	
 	//Create the client
-	g_pClient = new CClient();		
+	m_pClient = new CClient();		
 
 	//Network Sys
 	m_pServer = new CServer();
@@ -112,7 +111,7 @@ Destructor
 CVoid::~CVoid() 
 {
 	if(m_pServer)	delete m_pServer;	
-	if(g_pClient) 	delete g_pClient;
+	if(m_pClient) 	delete m_pClient;
 	
 #ifdef INCLUDE_SOUND
 	if(m_pSound)	delete m_pSound;
@@ -252,7 +251,7 @@ bool CVoid::Init()
 #ifndef __VOIDALPHA
 	//================================
 	//Client, create the client last
-	if(!g_pClient->InitNet())
+	if(!m_pClient->InitNet())
 	{
 		Error("CVoid::Init: Couldnt not init client socket");
 		return false;
@@ -280,8 +279,8 @@ bool CVoid::Shutdown()
 	//Subsystem shutdown proceedures
 	//=============================
 
-	if(g_pClient && g_pClient->m_ingame)
-		g_pClient->Disconnect();
+	if(m_pClient && m_pClient->m_ingame)
+		m_pClient->Disconnect();
 	
 	ShutdownServer();
 
@@ -341,20 +340,15 @@ void CVoid::RunFrame()
 	m_pSound->RunFrame();
 #endif
 
-	//Run Server
-#ifndef __VOIDALPHA
-	if(g_pServer->m_active)
-		g_pServer->RunFrame();
-#endif
-
+	m_pServer->RunFrame();
 
 	//Run Client frame
-	if(g_pClient->m_ingame)
-	//if(g_pClient->m_active)
+	if(m_pClient->m_ingame)
+	//if(m_pClient->m_active)
 	{
-		g_pClient->RunFrame();
+		m_pClient->RunFrame();
 		//draw the scene
-		g_pRender->DrawFrame(&g_pClient->eye.origin,&g_pClient->eye.angles);
+		g_pRender->DrawFrame(&m_pClient->eye.origin,&m_pClient->eye.angles);
 	}
 	else
 	{
@@ -370,7 +364,7 @@ Init Game
 */
 bool CVoid::InitServer(char *map)
 {
-/*	if(g_pClient->m_connected && !g_pClient->Disconnect())
+/*	if(m_pClient->m_connected && !m_pClient->Disconnect())
 	{
 		ComPrintf("CVoid::InitServer:Unable to disconnect Client\n");
 		return false;
@@ -390,7 +384,7 @@ bool CVoid::InitServer(char *map)
 	
 	if(g_pWorld != 0)
 	{
-		g_pClient->UnloadWorld();
+		m_pClient->UnloadWorld();
 		UnloadWorld();
 	}
 
@@ -403,10 +397,10 @@ bool CVoid::InitServer(char *map)
 		return false;
 	}
 
-	g_pClient->LoadWorld(g_pWorld);
-	g_pClient->m_connected = true;
-	g_pClient->m_ingame = true;
-	g_pClient->SetInputState(true);
+	m_pClient->LoadWorld(g_pWorld);
+	m_pClient->m_connected = true;
+	m_pClient->m_ingame = true;
+	m_pClient->SetInputState(true);
 	
 
 #ifndef __VOIDALPHA
@@ -460,7 +454,7 @@ bool CVoid::ShutdownServer()
 		g_pServer->Shutdown();
 #endif
 
-	g_pClient->UnloadWorld();
+	m_pClient->UnloadWorld();
 	UnloadWorld();
 
 /*	//destroy the world
@@ -684,8 +678,8 @@ void CVoid::WriteConfig(char *config)
 		if(fp != NULL)
 		{
 			g_pConsole->WriteCVars(fp);
-			if(g_pClient)
-				g_pClient->WriteBindTable(fp);
+			if(m_pClient)
+				m_pClient->WriteBindTable(fp);
 			fclose(fp);
 		}
 	}
@@ -747,7 +741,7 @@ void CVoid::CFuncMap(int argc, char** argv)
 		InitServer(argv[1]);
 /*		if(InitServer(argv[1]))
 		{
-			g_pClient->ConnectTo("loopback",36666);
+			m_pClient->ConnectTo("loopback",36666);
 		}
 		else
 			ComPrintf("CVoid::Map: couldnt start server\n");
@@ -779,7 +773,7 @@ namespace System
 		{
 			SetGameState(INGAME);
 			g_pConsole->Toggle(false);
-			g_pClient->SetInputState(true);
+			g_pVoid->m_pClient->SetInputState(true);
 		}
 		else if(GetGameState() == INGAME)
 		{

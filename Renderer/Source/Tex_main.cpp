@@ -221,7 +221,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		{
 			ext_format = GL_RGB;
 
-			if (g_p32BitTextures->value)
+			if (g_p32BitTextures->ival)
 				int_format = GL_RGB8;
 			else
 				int_format = GL_RGB5;
@@ -229,7 +229,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		else
 		{
 			ext_format = GL_RGBA;
-			if (g_p32BitTextures->value)
+			if (g_p32BitTextures->ival)
 				int_format = GL_RGBA8;
 			else
 				int_format = GL_RGBA4;
@@ -291,7 +291,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		{
 			ext_format = GL_RGB;
 
-			if (g_p32BitTextures->value)
+			if (g_p32BitTextures->ival)
 				int_format = GL_RGB8;
 			else
 				int_format = GL_RGB5;
@@ -299,7 +299,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		else
 		{
 			ext_format = GL_RGBA;
-			if (g_p32BitTextures->value)
+			if (g_p32BitTextures->ival)
 				int_format = GL_RGBA8;
 			else
 				int_format = GL_RGBA4;

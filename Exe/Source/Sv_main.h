@@ -10,17 +10,11 @@ Public defs
 */
 namespace VoidNet
 {
+	class CNetSocket;
+	class CNetBuffer;
+
 	bool InitNetwork();
 	void ShutdownNetwork();
-}
-
-/*
-==========================================
-Private defs
-==========================================
-*/
-namespace VoidServer
-{
 }
 
 /*
@@ -49,6 +43,18 @@ public:
 
 private:
 
+	void LoadMap(const char * mapname);
+
+	//private data
+
+	VoidNet::CNetSocket  * m_pSock;
+	VoidNet::CNetBuffer  * m_pBuffer;
+
+	bool	m_initialized;
+
+	char	m_boundAddr[16];
+
+	CVar	m_cDedicated;
 	CVar	m_cPort;		//Listen port
 	CVar 	m_cHostname;	//Hostname
 	CVar 	m_cMaxClients;	//Max Clients
@@ -57,12 +63,8 @@ private:
 
 
 
-
 //======================================================================================
 //======================================================================================
-
-
-
 
 
 #if 0

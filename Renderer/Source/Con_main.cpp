@@ -69,8 +69,8 @@ bool CRConsole::Init(bool fullscreen, bool down)
 {
 	m_status = CON_OPENING;
 	m_fullscreen = fullscreen;
-	UpdateRes();
 	m_condown = down;
+	UpdateRes();
 	return true;
 }
 
@@ -109,15 +109,14 @@ void CRConsole::Draw()
 	{
 	case CON_CLOSED:
 		{
-			if (m_condown)	// open/opening
-				m_status = CON_OPENING;
-			else
+			if (!m_condown)	// open/opening
 				return;
+			m_status = CON_OPENING;
 			break;
 		}
 	case CON_CLOSING:
 		{
-			m_alpha -= (GetFrameTime() * m_conSpeed.value);
+			m_alpha -= (GetFrameTime() * m_conSpeed.ival);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -139,7 +138,7 @@ void CRConsole::Draw()
 				break;
 			}
 
-			m_alpha += (GetFrameTime() * m_conSpeed.value);
+			m_alpha += (GetFrameTime() * m_conSpeed.ival);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{
@@ -160,15 +159,15 @@ void CRConsole::Draw()
 	}
 
 	DWORD top = (int) m_alpha;
-	if (m_alpha > (int)g_pConAlpha->value)
-		top = (int)g_pConAlpha->value;
+	if (m_alpha > g_pConAlpha->ival)
+		top = g_pConAlpha->ival;
 
 	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
 
-	if (bottom > (int)g_pConAlpha->value)
-		bottom = (int)g_pConAlpha->value;
+	if (bottom > g_pConAlpha->ival)
+		bottom = g_pConAlpha->ival;
 
 	float ftop = (float)top/255;
 	float fbot = (float)bottom/255;
@@ -547,8 +546,7 @@ Console Toggle
 ======================================
 */
 void  CRConsole::Toggle(bool down)
-{
-		m_condown = down;
+{	m_condown = down;
 }
 
 /*

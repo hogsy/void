@@ -2,6 +2,7 @@
 #include "In_state.h"
 #include "In_kb.h"
 #include "In_mouse.h"
+#include "Com_util.h"
 
 using namespace VoidInput;
 
@@ -80,7 +81,7 @@ bool CInput::Init()
 	//Are Initialized without specifying any modes, so that they
 	//can default to what they read from config files
 
-	hr = m_pMouse->Init((int)m_pVarExclusive.value, CMouse::M_NONE); 
+	hr = m_pMouse->Init(m_pVarExclusive.ival, CMouse::M_NONE); 
 	if(FAILED(hr))
 	{
 		Shutdown();
@@ -88,7 +89,7 @@ bool CInput::Init()
 		return false;
 	}
 	
-	hr =m_pKb->Init((int)m_pVarExclusive.value, CKeyboard::KB_NONE); 
+	hr =m_pKb->Init(m_pVarExclusive.ival, CKeyboard::KB_NONE); 
 	if(FAILED(hr))
 	{
 		Shutdown();
@@ -296,7 +297,7 @@ bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
 			return true;
 		}
 	}
-	if(m_pVarExclusive.value)
+	if(m_pVarExclusive.ival)
 		ComPrintf("Input in Exclusive mode\n");
 	else
 		ComPrintf("Input in NonExclusive mode\n");

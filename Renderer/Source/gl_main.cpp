@@ -82,7 +82,7 @@ bool CGLUtil::Init()
 	m_bInitialized = true;
 
 	ConPrint("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
-	ConPrint("CGLUtil::Init:Pos: %d %d\n",(int)m_cWndX.value,(int)m_cWndY.value);
+	ConPrint("CGLUtil::Init:Pos: %d %d\n",m_cWndX.ival,m_cWndY.ival);
 
 
 #ifdef DYNAMIC_GL
@@ -208,8 +208,8 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOP,
-				   (int)m_cWndX.value,
-				   (int)m_cWndY.value,
+				   m_cWndX.ival,
+				   m_cWndY.ival,
 			       width,
 			       height,
 				   0);

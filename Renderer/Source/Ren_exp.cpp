@@ -91,8 +91,8 @@ bool CRenExp::InitRenderer()
 	world	= NULL;
 
 	//Setup initial state
-	g_rInfo.bpp = (int)m_cBpp.value;
-	if(m_cFull.value)
+	g_rInfo.bpp = m_cBpp.ival;
+	if(m_cFull.ival)
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 
 	//parse width and height out of string
@@ -395,7 +395,7 @@ CVar validation functions
 bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
-	{	if(var->value==0)
+	{	if(var->ival ==0)
 			ConPrint("In windowed mode\n");
 		else
 			ConPrint("In fullscreen mode\n");
@@ -482,7 +482,7 @@ Handle bpp changes
 bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 {
 	if(argc<=1)
-	{	ConPrint("Running in %d bpp\n", (int)var->value);
+	{	ConPrint("Running in %d bpp\n", var->ival);
 	}
 	else if(argc >= 2)
 	{

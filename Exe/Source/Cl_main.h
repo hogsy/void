@@ -2,11 +2,12 @@
 #define VOID_CLIENT_MAIN
 
 #include "Sys_hdr.h"
-#include "Net_defs.h"
-#include "Net_util.h"
-#include "Net_sock.h"
-#include "I_hud.h"
-#include "Cl_cmds.h"
+#include "I_renderer.h"
+
+namespace VoidClient
+{
+	class CClientCmdHandler;
+}
 
 /*
 =====================================
@@ -81,17 +82,12 @@ private:
 	CVar 	m_clrate;
 	CVar 	m_noclip;
 
-/*
-	unsigned int	m_recvseq;		//packet num
-	CNBuffer		m_recvBuf;		//network buffer we read from
 
-	unsigned int	m_sendseq;		//packet num
-	CNBuffer		m_sendBuf;		//network buffer we write to
-*/
+
 	world_t    *m_world;
 
-	friend class CClientCmdHandler;
-	CClientCmdHandler m_pCmdHandler;
+	friend class VoidClient::CClientCmdHandler;
+	VoidClient::CClientCmdHandler * m_pCmdHandler;
 
 	I_RHud *	m_rHud;
 
@@ -114,8 +110,5 @@ private:
 
 	void Spawn(vector_t	*origin, vector_t *angles);
 };
-
-
-extern CClient * g_pClient;
 
 #endif

@@ -1,12 +1,273 @@
-#if 0
-
-
-#include <winsock2.h>
 #include "Net_util.h"
+#include "Com_defs.h"
 
-char	g_computerName[256];
-char	g_ipaddr[16];
+using namespace VoidNet;
 
+//======================================================================================
+//omrafi@hotmail.com
+//======================================================================================
+
+/*
+==========================================
+Constructor/Destructor
+==========================================
+*/
+CNetBuffer::CNetBuffer(int size)
+{
+	if(size > MAX_BUFFER_SIZE)
+		size = MAX_BUFFER_SIZE;
+
+	m_buffer = new byte[size];
+	m_maxSize = 0;
+	m_curSize = 0;
+
+	m_readCount = 0;
+
+	m_badRead = false;
+}
+
+CNetBuffer::~CNetBuffer()
+{
+	if(m_buffer)
+		delete [] m_buffer;
+}
+
+void  CNetBuffer::Reset()
+{
+	m_curSize = 0;
+	m_readCount = 0;
+}
+
+byte* CNetBuffer::GetSpace(int size)
+{
+	if(m_curSize + size >= m_maxSize)
+	{
+		ComPrintf("CNetBuffer:: Buffer overflowed\n");
+		m_curSize = 0;
+	}
+	byte * data = m_buffer + m_curSize;
+	return data;
+}
+
+byte * CNetBuffer::GetWritePointer() const
+{	return(m_buffer + m_curSize);
+}
+
+/*
+==========================================
+Writing funcs
+==========================================
+*/
+void CNetBuffer::WriteChar(char c)
+{
+	char * buf = (char *)GetSpace(SIZE_CHAR);
+	buf[0] = (char)c;
+}
+
+void CNetBuffer::WriteByte(byte b)
+{
+	byte  * buf = GetSpace(SIZE_CHAR);
+	buf[0] = b;
+}
+
+void CNetBuffer::WriteShort(short s)
+{
+	byte * buf = GetSpace(SIZE_SHORT);
+	buf[0] = s & 0xff;	//gives the lower byte
+	buf[1] = s >> 8;	//shift right to get the high byte
+}
+
+void CNetBuffer::WriteInt(int i)
+{
+	byte * buf = GetSpace(SIZE_INT);
+	buf[0] = i & 0xff;			
+	buf[1] = (i >> 8)  & 0xff;	
+	buf[2] = (i >> 16) & 0xff;	
+	buf[3] = i >> 24;
+}
+
+void CNetBuffer::WriteFloat(float f)
+{
+	union
+	{
+		float f;
+		int	  l;
+	}floatdata;
+
+	floatdata.f = f;
+	byte * buf = GetSpace(SIZE_INT);
+	memcpy(buf,&floatdata.l,SIZE_INT);
+}
+
+void CNetBuffer::WriteAngle(float f)
+{	
+	WriteByte((int)(f*256/360) & 255);
+}
+void CNetBuffer::WriteCoord(float f)
+{	
+	WriteShort((int)(f*8));
+}
+
+void CNetBuffer::WriteString(const char *s)
+{
+	int len = strlen(s);
+	byte * buf = GetSpace(len);
+	memcpy(buf,s,len);
+}
+
+/*
+==========================================
+Reading funcs
+==========================================
+*/
+
+char  CNetBuffer::ReadChar()
+{
+	if(m_readCount + SIZE_CHAR >= m_curSize)
+	{
+		m_badRead = true;
+		return -1;
+	}
+	return ((signed char)m_buffer[m_readCount++]);
+}
+
+byte  CNetBuffer::ReadByte()
+{ 
+	if(m_readCount + SIZE_CHAR >= m_curSize)
+	{
+		m_badRead = true;
+		return -1;
+	}
+	return (m_buffer[m_readCount++]);
+}
+
+
+short CNetBuffer::ReadShort()
+{
+	if(m_readCount + SIZE_SHORT >= m_curSize)
+	{
+		m_badRead = true;
+		return -1;
+	}
+	short s = (short)(m_buffer[m_readCount]	+ (m_buffer[m_readCount+1]<<8));
+	m_readCount +=SIZE_SHORT;
+	return s;
+}
+
+int CNetBuffer::ReadInt()
+{
+	if(m_readCount + SIZE_INT >= m_curSize)
+	{
+		m_badRead = true;
+		return -1;
+	}
+	int i = (int)(m_buffer[m_readCount]	+ 
+				 (m_buffer[m_readCount+1]<<8) +
+				 (m_buffer[m_readCount+2]<<16) +
+				 (m_buffer[m_readCount+3]<<32));
+	m_readCount +=SIZE_INT;
+	return i;
+
+}
+
+float CNetBuffer::ReadFloat()
+{
+	if(m_readCount + SIZE_FLOAT >= m_curSize)
+	{
+		m_badRead = true;
+		return -1;
+	}
+
+	union
+	{
+		byte  b[4];
+		float f;
+	}fb;
+
+	fb.b[0] = m_buffer[m_readCount];
+	fb.b[1] = m_buffer[m_readCount+1];
+	fb.b[2] = m_buffer[m_readCount+2];
+	fb.b[3] = m_buffer[m_readCount+3];
+	m_readCount += SIZE_FLOAT;
+	return fb.f;
+}
+
+float CNetBuffer::ReadAngle()
+{
+	return ReadChar() * (360.0f/256);
+}
+float CNetBuffer::ReadCoord()
+{
+	return ReadShort() * 1.0f / 8;
+	
+}
+char* CNetBuffer::ReadString(char delim)
+{
+	static char string[2048];
+	char c=0;
+	int len = 0;
+
+	do
+	{
+		c = ReadChar();
+		if(c == 0 || c == -1 || c == delim)
+			break;
+		string[len] = c;
+		len++;
+	}while(len < 2048);
+	
+	string[len] = 0;
+	return string;
+}
+
+
+//======================================================================================
+//======================================================================================
+
+namespace VoidNet {
+
+/*
+==========================================
+Convert String to SOCKADDR_IN
+==========================================
+*/
+bool StringToSockAddr(const char *szaddr, SOCKADDR_IN &addr)
+{
+	
+	char  *colon;
+	char   stringaddr[128];
+	
+	memset (&addr,0, sizeof(SOCKADDR_IN));
+	addr.sin_family = AF_INET;
+	addr.sin_port = 0;
+
+	strcpy (stringaddr,szaddr);
+
+	//Strip port number if specified
+	for (colon = stringaddr ; *colon ; colon++)
+	{
+		if (*colon == ':')
+		{
+			*colon = 0;
+			addr.sin_port = htons((short)atoi(colon+1));	
+		}
+	}
+	
+	//If an ip address was given then just convert to inetaddr
+	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
+	{
+		*(int *)&addr.sin_addr = inet_addr(stringaddr);
+	}
+	//Resolve hostname
+	else
+	{
+		HOSTENT	*host = 0;
+		if ((host = gethostbyname(stringaddr)) == 0)
+			return false;
+		*(int *)&addr.sin_addr = *(int *)host->h_addr_list[0];
+	}
+	return true;
+}
 
 /*
 ======================================
@@ -14,9 +275,9 @@ Tries to make sure that a string is a valid ip address
 ======================================
 */
 
-bool ValidIP(char *ip)
+bool IsValidIP(const char *ip)
 {
-	int i = strlen(ip);
+/*	int i = strlen(ip);
 	
 	if(!i || i<7)
 		return false;						//too short
@@ -52,6 +313,8 @@ bool ValidIP(char *ip)
 	if(dot!=3)
 		return false;						//not 3 dots
 	return true;
+*/
+	return false;
 }
 
 
@@ -61,7 +324,7 @@ Common Winsock errors
 ======================================
 */
 
-void PrintSockError(int err)
+void PrintSockError(int err,const char *msg)
 {
 	char error[128];
 
@@ -114,16 +377,19 @@ void PrintSockError(int err)
 	case 10094:strcpy(error,"WSAEDISCON - graceful shutdown in progress"); break;
 	default:strcpy(error,"Unknown error occured");break;
 	}
-	ComPrintf(":%s\n",error);
+	if(msg)
+		ComPrintf("%s:%s\n",msg, error);
+	else
+		ComPrintf("Winsock Error:%s\n",error);
 }
 
-/*
-=====================================
-Initialize Winsock
-=====================================
-*/
 
-bool InitWinsock()
+/*
+==========================================
+Initialize/Release Winsock
+==========================================
+*/
+bool InitNetwork()
 {
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -134,544 +400,21 @@ bool InitWinsock()
 	
 	if (err) 
 	{
-		ComPrintf("InitWinsock:Error: WSAStartup Failed\n");
+		ComPrintf("CServer::InitNetwork:Error: WSAStartup Failed\n");
 		return false;
 	} 
 	
 	//Confirm Version
-	if ( LOBYTE( wsaData.wVersion ) != 2 ||
-         HIBYTE( wsaData.wVersion ) != 0 ) 
+	if ( LOBYTE( wsaData.wVersion ) != 2 ||  HIBYTE( wsaData.wVersion ) != 0 ) 
 	{
-		/* Tell the user that we couldn't find a usable 
-		   WinSock DLL.                                 */    
 		WSACleanup();
 		return false; 
 	}  
-	// The WinSock DLL is acceptable. Proceed. 
-
-	//init listener sock
-	struct hostent *hp;
-	unsigned long ulNameLength = sizeof(g_computerName);
-
-	if(!GetComputerName(g_computerName, &ulNameLength))
-	{
-		ComPrintf("InitWinsock:Error: couldnt find computer name\n");
-		return false;
-	}
-	hp = gethostbyname(g_computerName);							
-  
-	if (hp == NULL)	
-	{						
-		ComPrintf("InitWinsock:ERROR:Couldnt find hostname\n");
-		return false;
-	}
-
-	IN_ADDR HostAddr;
-	memcpy(&HostAddr,hp->h_addr_list[0],sizeof(HostAddr));
-	sprintf(g_ipaddr, "%s", inet_ntoa(HostAddr));
 	return true;
 }
 
-
-//============================================================================
-//============================================================================
-
-char	CNBuffer::tstring[2048];
-
-/*
-======================================
-CNBuffer - Constructor
-======================================
-*/
-
-CNBuffer :: CNBuffer(int size):CBaseNBuffer(size)
-{	
-/*	if (size < 256)
-		size = 256;
-	data = (unsigned char*) malloc(size);
-	maxsize = size;
-	cursize = 0;
-*/
-	readcount =0;
-	overflowed = false;
-	allowoverflow = false;
-	badread = false;
+void ShutdownNetwork()
+{	WSACleanup();
 }
 
-/*
-======================================
-CNBuffer - Destructor
-======================================
-*/
-CNBuffer::~CNBuffer()
-{
-//	free(data);
 }
-
-/*
-======================================
-GetSpace
-======================================
-*/
-
-void * CNBuffer::GetSpace (int len)
-{
-	void	*ndata;
-	
-	if (cursize + len > maxsize)
-	{
-		if (!allowoverflow)
-			ComPrintf("CNBuffer::GetSpace overflow without permission\n");
-		
-		if (len > maxsize)
-			ComPrintf("CNBuffer::GetSpace %i is larger than max_size\n",len);
-			
-		overflowed = true;
-		Clear (); 
-	}
-
-	ndata = data + cursize;
-	cursize += len;
-	return ndata;
-}
-
-
-
-int CNBuffer::LongSwap (int l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((int)b1<<24) + ((int)b2<<16) + ((int)b3<<8) + b4;
-}
-
-
-//============================================================================
-// Writing Funcs
-//============================================================================
-
-
-/*
-======================================
-WriteChar
-======================================
-*/
-
-void CNBuffer::WriteChar (int i)
-{
-	unsigned char	*buf;
-	
-#ifdef PARANOID
-	if (i < -128 || i > 127)
-		ComPrintf("WriteChar: range error");
-#endif
-
-	buf = (unsigned char*)GetSpace (1);
-	buf[0] = i;
-}
-
-
-/*
-======================================
-Write Byte
-======================================
-*/
-
-void CNBuffer::WriteByte (int i)
-{
-	unsigned char	*buf;
-	
-#ifdef PARANOID
-	if (i < 0 || i > 255)
-		ComPrintf("WriteByte: range error");
-#endif
-
-	buf = (unsigned char*)GetSpace (1);
-	buf[0] = i;
-}
-
-
-/*
-=======================================
-Write Short
-=======================================
-*/
-
-void CNBuffer::WriteShort(int c)
-{
-	byte	*buf;
-	
-#ifdef PARANOID
-	if (c < ((short)0x8000) || c > (short)0x7fff)
-		ComPrintf("WriteShort: range error");
-#endif
-
-	buf = (unsigned char*)GetSpace (2);
-	buf[0] = c&0xff;
-	buf[1] = c>>8;
-}
-
-
-/*
-=======================================
-Write Long
-=======================================
-*/
-void CNBuffer::WriteLong (int c)
-{
-	byte	*buf;
-
-	buf = (unsigned char*)GetSpace (4);
-	buf[0] = c&0xff;
-	buf[1] = (c>>8)&0xff;
-	buf[2] = (c>>16)&0xff;
-	buf[3] = c>>24;
-}
-
-
-/*
-=======================================
-WriteFloat
-=======================================
-*/
-
-void CNBuffer::WriteFloat (float f)
-{
-	union
-	{
-		float	f;
-		int	l;
-	} dat;
-	
-	dat.f = f;
-	dat.l = LongSwap (dat.l);
-
-	Write (&dat.l, 4);
-}
-
-/*
-=======================================
-Write String
-=======================================
-*/
-void CNBuffer::WriteString (const char *s)
-{
-	if(!s)
-		memcpy(GetSpace(1),"",1);
-	else
-	{
-		int len = strlen(s) + 1;
-		memcpy(GetSpace(len),s,len);
-	}
-/*	if (!s)
-		Write ("", 1);
-	else
-		Write (s, strlen(s)+1);
-*/
-}
-
-
-/*
-=======================================
-Write co-ords,
-quantized by multiplying by 8 on writing
-and dividing by 8 on receive
-=======================================
-*/
-void CNBuffer::WriteCoord (float f)
-{
-	WriteShort ((int)(f*8));
-}
-
-
-/*
-=======================================
-Write angles
-=======================================
-*/
-
-void CNBuffer::WriteAngle ( float f)
-{
-	WriteByte (((int)f*256/360) & 255);
-}
-
-
-//===========================================================================
-
-void  CNBuffer::Write (void *data, int length)
-{
-	memcpy(GetSpace(length),data,length);
-}
-
-
-
-
-//============================================================================
-// Reading Funcs
-//============================================================================
-
-/*
-======================================
-Read Char from the buffer
-======================================
-*/
-int CNBuffer::ReadChar (void)
-{
-	int	c;
-	
-	if (readcount+1 > cursize)
-	{
-		badread = true;
-		return -1;
-	}
-		
-	c = (signed char)data[readcount];
-	readcount++;
-	return c;
-}
-
-/*
-======================================
-Read a Byte from the buffer
-======================================
-*/
-int CNBuffer::ReadByte (void)
-{
-	int	c;
-	
-	if (readcount+1 > cursize)
-	{
-		badread = true;
-		return -1;
-	}
-		
-	c = (unsigned char)data[readcount];
-	readcount++;
-	return c;
-}
-
-/*
-=======================================
-Read a Short from the buffer 
-=======================================
-*/
-
-int CNBuffer::ReadShort (void)
-{
-	int	c;
-	
-	if (readcount+2 > cursize)
-	{
-		badread = true;
-		return -1;
-	}
-		
-	c = (short)( data[readcount] + (data[readcount+1]<<8) );
-	
-	readcount += 2;
-	return c;
-}
-
-
-/*
-=======================================
-Read a long from the buffer
-=======================================
-*/
-int CNBuffer::ReadLong (void)
-{
-	int	c;
-	
-	if (readcount+4 > cursize)
-	{
-		badread = true;
-		return -1;
-	}
-		
-	c = data[readcount]
-		+ (data[readcount+1]<<8)
-		+ (data[readcount+2]<<16)
-		+ (data[readcount+3]<<24);
-		
-	readcount += 4;
-	
-	return c;
-}
-
-
-/*
-=======================================
-Read a float from the buffer
-=======================================
-*/
-
-float CNBuffer::ReadFloat (void)
-{
-	union
-	{
-		byte	b[4];
-		float	f;
-		int		l;
-	} dat;
-	
-	dat.b[0] =	data[readcount];
-	dat.b[1] =	data[readcount+1];
-	dat.b[2] =	data[readcount+2];
-	dat.b[3] =	data[readcount+3];
-	readcount += 4;
-	
-	dat.l = LongSwap(dat.l);
-
-	return dat.f;	
-}
-
-
-/*
-=======================================
-Read a string from the buffer
-=======================================
-*/
-
-char *CNBuffer::ReadString (void)
-{
-	int		l,c;
-
-	memset(tstring,0,sizeof(char)*2048);
-	
-	l = 0;
-	do
-	{
-		c = ReadChar ();
-		if (c == -1 || c == 0)
-			break;
-		tstring[l] = c;
-		l++;
-	} while (l < sizeof(tstring)-1);
-	
-	tstring[l] = 0;
-	readcount +=l;
-	return tstring;
-}
-
-/*
-=======================================
-Read a string from the buffer
-=======================================
-*/
-
-char *CNBuffer::ReadString(char delim)
-{
-	int		l,c,p;
-
-	memset(tstring,0,sizeof(char)*2048);
-	
-	l = 0;
-	p = 0;
-	do
-	{
-		c = ReadChar ();
-		
-		if ((c == -1) || (c == 0) || 
-			(l>0 && c == delim))		//get rid of leading delims
-			break;
-
-		if(c != delim)
-		{
-			tstring[p] = c;
-			p++;
-		}
-		l++;
-	} while (p < sizeof(tstring)-1);
-	
-	tstring[p] = 0;
-	readcount +=1;
-	return tstring;
-}
-
-
-/*
-=======================================
-Read co-ords
-=======================================
-*/
-
-float CNBuffer::ReadCoord (void)
-{
-	return ReadShort() * (1.0f/8);
-}
-
-
-/*
-=======================================
-read Angles
-=======================================
-*/
-float CNBuffer::ReadAngle (void)
-{
-	return ReadChar() * (360.0f/256);
-}
-
-
-//============================================================================
-
-void CNBuffer::Reset()
-{
-	if(!cursize)
-		return;
-
-	readcount =0; 
-	cursize =0; 
-	memset(data,0,maxsize);
-	overflowed = false;
-	allowoverflow = false;
-	badread = false;
-}
-
-
-
-//=====================================================================================
-//=====================================================================================
-
-
-/*
-=====================================
-
-=====================================
-*/
-
-CBaseNBuffer :: CBaseNBuffer(int size)
-{	
-	if (size < 512)
-		size = 512;
-	data = (unsigned char*) malloc(size);
-//	data = new unsigned char[size];
-	maxsize = size;
-	memset(data,0,size);
-	cursize = 0;
-}
-
-
-CBaseNBuffer :: ~CBaseNBuffer()
-{
-	free(data);
-//	delete [] data;
-}
-
-
-void CBaseNBuffer::Reset()
-{
-	if(!cursize)
-		return;
-
-	cursize =0; 
-	memset(data,0,maxsize);
-}
-
-
-
-#endif
-

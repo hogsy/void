@@ -86,11 +86,13 @@ public:
 	bool Init(I_ConsoleRenderer * prcons);
 	bool Shutdown();
 
+	void UnlatchCVars();
+
 	void ExecConfig(const char *filename);
 	void WriteCVars(FILE *fp);
 
+	//Client comand binding
 	void ExecCommand(CCommand * cmd, const char * cmdString);
-
 	CCommand * GetCommandByName(const char * cmdString);
 	
 	//Console funcs
