@@ -8,7 +8,6 @@
 world_t	*g_pWorld;
 int PointContents(vector_t &v);
 
-
 /*
 ======================================
 Constructor
@@ -70,7 +69,6 @@ Destroy the client
 CClient::~CClient()
 {
 	m_pNetCl->Disconnect();
-//	UnloadWorld();
 
 	m_pRender = 0;
 	m_pHud = 0;
@@ -208,13 +206,14 @@ void CClient::RunFrame()
 		m_fFrameTime = System::g_fcurTime;
 
 		//Networking
-		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", m_pNetCl->GetChan().m_dropCount, 
-							m_pNetCl->GetChan().m_dropCount + m_pNetCl->GetChan().m_goodCount, 
-							m_pNetCl->GetChan().m_numChokes);
-		m_pHud->HudPrintf(0,410,0, "In      %d", m_pNetCl->GetChan().m_inMsgId);
-		m_pHud->HudPrintf(0,420,0, "In  Ack %d", m_pNetCl->GetChan().m_inAckedMsgId);
-		m_pHud->HudPrintf(0,430,0, "Out     %d", m_pNetCl->GetChan().m_outMsgId);
-		m_pHud->HudPrintf(0,440,0, "Out Ack %d", m_pNetCl->GetChan().m_lastOutReliableMsgId);
+		const NetChanState & chanState = m_pNetCl->GetChanState();
+		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
+							chanState.dropCount + chanState.goodCount, chanState.numChokes);
+		m_pHud->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
+		m_pHud->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
+		m_pHud->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
+		m_pHud->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+
 
 		// FIXME - put this in game dll
 		vector_t screenblend;

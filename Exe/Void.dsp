@@ -423,10 +423,6 @@ SOURCE=..\Shared\I_void.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Network\Net_chan.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Net_client.h
 # End Source File
 # Begin Source File
@@ -436,10 +432,6 @@ SOURCE=..\Shared\Net_defs.h
 # Begin Source File
 
 SOURCE=..\Shared\Net_server.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Network\Net_util.h
 # End Source File
 # End Group
 # Begin Group "External"

@@ -4,8 +4,10 @@
 #include "Sys_hdr.h"
 #include "I_renderer.h"
 #include "Snd_defs.h"
-#include "../Network/Net_chan.h"
 #include "Net_client.h"
+
+//#include "../Network/Net_chan.h"
+
 
 /*
 ======================================

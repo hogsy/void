@@ -169,7 +169,7 @@ bool CVoid::Init()
 
 	//================================
 	//Server
-	if(!InitNetwork())
+	if(!CServer::InitNetwork())
 	{
 		Error("CVoid::Init: Could not initalize Winsock");
 		return false;
@@ -236,7 +236,7 @@ CVoid::~CVoid()
 	if(m_pServer)	
 		delete m_pServer;	
 
-	ShutdownNetwork();
+	CServer::ShutdownNetwork();
 	
 #ifdef INCLUDE_SOUND
 	if(m_pSound)	

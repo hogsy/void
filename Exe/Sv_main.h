@@ -1,5 +1,5 @@
-#ifndef VOID_NETWORK_SERVER
-#define VOID_NETWORK_SERVER
+#ifndef VOID_GAME_SERVER
+#define VOID_GAME_SERVER
 
 #include "Sys_hdr.h"
 #include "World.h"
