@@ -2,6 +2,8 @@
 #include <windows.h>
 #include "gl.h"
 
+#ifdef DYNAMIC_GL
+
 #include "3dfx/glide.h"		//3dfx card presense test
 
 // gl* funcs
@@ -45,6 +47,8 @@ GLVERTEX2I			glVertex2i			= NULL;
 GLVERTEX3F			glVertex3f			= NULL;
 GLVIEWPORT			glViewport			= NULL;
 
+#endif
+
 // gl extensions
 //====================================================================================
 GLMULTITEXCOORD2FARB	glMultiTexCoord2fARB	= NULL;
@@ -70,11 +74,19 @@ CHOOSEPIXELFORMAT		fnChoosePixelFormat		= NULL;
 
 //====================================================================================
 
+
 /*
 ==========================================
 List of FULL openGL ICDs
 ==========================================
 */
+
+static bool		 bypassGDI = false;
+static HINSTANCE openglInst = NULL;
+
+
+
+#ifdef DYNAMIC_GL
 
 const char * openglICDs[] =
 {
@@ -84,8 +96,6 @@ const char * openglICDs[] =
 	0
 };
 
-static HINSTANCE openglInst = NULL;
-static bool		 bypassGDI = false;
 
 
 //====================================================================================
@@ -202,7 +212,7 @@ const char * Get3dfxOpenGLDriver()
 	return 0;
 }
 
-
+#endif
 
 /*
 ==========================================
@@ -211,6 +221,8 @@ OpenGLFindDriver
 */
 void OpenGLFindDriver(char *openglLib)
 {
+#ifdef DYNAMIC_GL
+
 	//Check for 3dfx hardware first
 	const char * gl3dfxdriver = Get3dfxOpenGLDriver();
 	if(gl3dfxdriver)
@@ -336,6 +348,12 @@ void OpenGLFindDriver(char *openglLib)
 		else
 			strcpy(openglLib, "opengl32.dll");		//default
 	}
+
+#else
+	strcpy(openglLib, "static");
+
+#endif
+
 }
 
 
@@ -347,6 +365,8 @@ OpenGLInit
 */
 int OpenGLInit(char *lib)
 {
+#ifdef DYNAMIC_GL
+
 //	openglInst = LoadLibrary(lib); 
 	openglInst = ::LoadLibraryEx(lib, NULL,0);
 
@@ -360,8 +380,6 @@ int OpenGLInit(char *lib)
 
 	if (stricmp(lib, "opengl32.dll")) 
 		bypassGDI = true;
-
-
 
 // gl* funcs
 	glBegin				= (GLBEGIN)				GetProcAddress(openglInst, "glBegin");
@@ -415,6 +433,23 @@ int OpenGLInit(char *lib)
 	fnDescribePixelFormat	= (DESCRIBEPIXELFORMAT)	GetProcAddress(openglInst, "wglDescribePixelFormat");
 	fnChoosePixelFormat		= (CHOOSEPIXELFORMAT)	GetProcAddress(openglInst, "wglChoosePixelFormat");
 
+#else
+
+	// wgl* functions
+	_wglCreateContext	= wglCreateContext;
+	_wglDeleteContext	= wglDeleteContext;
+	_wglGetProcAddress	= wglGetProcAddress;
+	_wglMakeCurrent		= wglMakeCurrent;
+
+	// other gdi funcs
+	fnSwapBuffers			= SwapBuffers;
+	fnSetPixelFormat		= SetPixelFormat;
+	fnDescribePixelFormat	= DescribePixelFormat;
+	fnChoosePixelFormat		= ChoosePixelFormat;
+
+#endif
+
+
 	return 0;
 }
 
@@ -438,10 +473,13 @@ OpenGLUnInit
 */
 void OpenGLUnInit(void)
 {
+#ifdef DYNAMIC_GL
+
 	if(openglInst)
 		FreeLibrary(openglInst); 
 	openglInst = NULL; 
 	bypassGDI = false;
+#endif
 } 
 
 

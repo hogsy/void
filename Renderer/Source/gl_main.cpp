@@ -84,12 +84,15 @@ bool CGLUtil::Init()
 	ConPrint("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
 	ConPrint("CGLUtil::Init:Pos: %d %d\n",(int)m_cWndX.value,(int)m_cWndY.value);
 
+
+#ifdef DYNAMIC_GL
 	//3dfx 3d only card. default to fullscreen mode and 16 bit
 	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
 	{
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 		g_rInfo.bpp = 16;
 	}
+#endif
 
 	// change display before we do anything with gl
 	if (g_rInfo.rflags & RFLAG_FULLSCREEN)

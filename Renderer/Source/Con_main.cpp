@@ -547,7 +547,8 @@ Console Toggle
 ======================================
 */
 void  CRConsole::Toggle(bool down)
-{	m_condown = down;
+{
+		m_condown = down;
 }
 
 /*

@@ -1,3 +1,7 @@
+
+#ifdef DYNAMIC_GL
+
+
 //
 // replacement <gl/gl.h> - has everything, but replacement function defs
 //
@@ -1325,6 +1329,104 @@ void	OpenGLGetExtensions(void);
 
 #endif /* __GL_H__ */
 #endif /* __gl_h_ */
+
+
+#else
+#ifndef GL_H
+#define GL_H
+
+#include <gl/gl.h>
+
+
+/* ARB_multitexture */
+#define GL_ACTIVE_TEXTURE_ARB               0x84E0
+#define GL_CLIENT_ACTIVE_TEXTURE_ARB        0x84E1
+#define GL_MAX_TEXTURE_UNITS_ARB            0x84E2
+#define GL_TEXTURE0_ARB                     0x84C0
+#define GL_TEXTURE1_ARB                     0x84C1
+#define GL_TEXTURE2_ARB                     0x84C2
+#define GL_TEXTURE3_ARB                     0x84C3
+#define GL_TEXTURE4_ARB                     0x84C4
+#define GL_TEXTURE5_ARB                     0x84C5
+#define GL_TEXTURE6_ARB                     0x84C6
+#define GL_TEXTURE7_ARB                     0x84C7
+#define GL_TEXTURE8_ARB                     0x84C8
+#define GL_TEXTURE9_ARB                     0x84C9
+#define GL_TEXTURE10_ARB                    0x84CA
+#define GL_TEXTURE11_ARB                    0x84CB
+#define GL_TEXTURE12_ARB                    0x84CC
+#define GL_TEXTURE13_ARB                    0x84CD
+#define GL_TEXTURE14_ARB                    0x84CE
+#define GL_TEXTURE15_ARB                    0x84CF
+#define GL_TEXTURE16_ARB                    0x84D0
+#define GL_TEXTURE17_ARB                    0x84D1
+#define GL_TEXTURE18_ARB                    0x84D2
+#define GL_TEXTURE19_ARB                    0x84D3
+#define GL_TEXTURE20_ARB                    0x84D4
+#define GL_TEXTURE21_ARB                    0x84D5
+#define GL_TEXTURE22_ARB                    0x84D6
+#define GL_TEXTURE23_ARB                    0x84D7
+#define GL_TEXTURE24_ARB                    0x84D8
+#define GL_TEXTURE25_ARB                    0x84D9
+#define GL_TEXTURE26_ARB                    0x84DA
+#define GL_TEXTURE27_ARB                    0x84DB
+#define GL_TEXTURE28_ARB                    0x84DC
+#define GL_TEXTURE29_ARB                    0x84DD
+#define GL_TEXTURE30_ARB                    0x84DE
+#define GL_TEXTURE31_ARB                    0x84DF
+
+
+
+
+// gl extensions
+typedef void (APIENTRY * GLMULTITEXCOORD2FARB) (GLenum target, GLfloat s, GLfloat t);
+typedef void (APIENTRY * GLACTIVETEXTUREARB) (GLenum target);
+typedef BOOL (APIENTRY * WGLSWAPINTERVALEXT) (int interval);
+
+
+// wgl* functions
+typedef	 HGLRC (WINAPI * WGLCREATECONTEXT) (HDC);
+typedef	 BOOL  (WINAPI * WGLDELETECONTEXT) (HGLRC);
+typedef	 PROC  (WINAPI * WGLGETPROCADDRESS) (LPCSTR);
+typedef	 BOOL  (WINAPI * WGLMAKECURRENT) (HDC, HGLRC);
+
+
+// other gdi funcs
+typedef BOOL (WINAPI * SWAPBUFFERS) (HDC);
+typedef BOOL (WINAPI * SETPIXELFORMAT) (IN HDC, IN int, IN CONST PIXELFORMATDESCRIPTOR *);
+typedef int  (WINAPI * DESCRIBEPIXELFORMAT) ( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR);
+typedef int  (WINAPI * CHOOSEPIXELFORMAT) ( IN HDC, IN CONST PIXELFORMATDESCRIPTOR *);
+
+
+
+
+extern	GLMULTITEXCOORD2FARB glMultiTexCoord2fARB;
+extern	GLACTIVETEXTUREARB glActiveTextureARB;
+extern	WGLSWAPINTERVALEXT wglSwapIntervalEXT;
+
+// wgl* functions
+extern	WGLCREATECONTEXT	_wglCreateContext;
+extern	WGLDELETECONTEXT	_wglDeleteContext;
+extern	WGLGETPROCADDRESS	_wglGetProcAddress;
+extern	WGLMAKECURRENT		_wglMakeCurrent;
+
+// other gdi funcs
+BOOL WINAPI _SwapBuffers(HDC hdc);
+int  WINAPI _DescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, LPPIXELFORMATDESCRIPTOR ppfd);
+int	 WINAPI _SetPixelFormat(HDC hdc, int iPixelFormat, CONST PIXELFORMATDESCRIPTOR *ppfd);
+int  WINAPI _ChoosePixelFormat(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd);
+
+
+void	OpenGLUnInit(void);
+int		OpenGLInit(char *lib);
+void	OpenGLFindDriver(char *openglLib);
+void	OpenGLGetExtensions(void);
+
+
+#endif
+#endif
+
+
 
 
 
