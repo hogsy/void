@@ -6,17 +6,6 @@
 #include "Snd_defs.h"
 #include "Net_client.h"
 
-//#include "../Network/Net_chan.h"
-
-
-/*
-======================================
-Predeclarations
-======================================
-*/
-class CClientCmdHandler;	//Handles all client command processing
-class CNetClient;			//Handles all client network communication
-
 /*
 =====================================
 Client class
@@ -28,8 +17,9 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
+
 class CClient :	public I_ConHandler,
-				public I_ClientNetHandler
+				public I_NetClientHandler
 {
 public:
 	CClient(I_Renderer * prenderer);
@@ -42,23 +32,27 @@ public:
 
 	//Client Interface
 	void Print(ClMsgType type, const char * msg, ...);
-	bool LoadWorld(const char *worldname);
-	void UnloadWorld();
-
-	const ClUserInfo & GetUserInfo() const { return userInfo; }
 
 	//Parse and handle a game message
 	void HandleGameMsg(CBuffer &buffer); 
+	
 	//Parse and handle spawm parms
 	void HandleSpawnMsg(const byte &msgId, CBuffer &buffer); 
+
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
+
+	//Write userInfo to the given buffer
+	void WriteUserInfo(CBuffer &buffer);
 	
 	//Console Interface
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
 private:
+
+	bool LoadWorld(const char *worldname);
+	void UnloadWorld();
 
 	//==================================================
 	//Movement
@@ -88,28 +82,25 @@ private:
 
 	//==================================================
 	//Subsystems
+
 	friend class CClientCmdHandler;
 	CClientCmdHandler * m_pCmdHandler;
 
-	CNetClient * m_pNetCl;
-
-	//Renderer and HUD interfaces
+	CNetClient* m_pNetCl;
 	I_Renderer* m_pRender;
 	I_RHud    *	m_pHud;
-
-	float		m_fFrameTime;
 
 	//==================================================
 	//Client side stuff
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
 
+	float		m_fFrameTime;
 	bool		m_ingame;
 
 	//==================================================
 	//the following should be accessible by the game dll
 
-	ClUserInfo	userInfo;
 	eyepoint_t  eye;
 	vector_t	desired_movement;
 	

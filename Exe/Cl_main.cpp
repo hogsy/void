@@ -19,12 +19,13 @@ CClient::CClient(I_Renderer * prenderer):
 					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
 {
-
 	m_pCmdHandler = new CClientCmdHandler(*this);
-	m_pNetCl	  = new CNetClient(this);
+	
+	//Setup network listener
+	m_pNetCl= new CNetClient(this);
+	m_pNetCl->SetRate(2500);
 
 	m_ingame = false;
-	
 	m_fFrameTime = 0.0f;
 	
 	m_pHud = 0;
@@ -93,7 +94,6 @@ bool CClient::LoadWorld(const char *worldname)
 
 	char mappath[COM_MAXPATH];
 	
-//	strcpy(mappath,VoidNet::szWORLDDIR);
 	strcpy(mappath,szWORLDDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,".bsp");
@@ -147,7 +147,6 @@ bool CClient::LoadWorld(const char *worldname)
 	return true;
 }
 
-
 /*
 =====================================
 Unload the world
@@ -156,12 +155,12 @@ Unload the world
 void CClient::UnloadWorld()
 {
 	if(!m_ingame)
-		return; // true;
+		return;
 
 	if(!m_pRender->UnloadWorld())
 	{
 		ComPrintf("CClient::UnloadWorld - Renderer couldnt unload world\n");
-		return; // false;
+		return;
 	}
 	
 	world_destroy(g_pWorld);
@@ -171,10 +170,7 @@ void CClient::UnloadWorld()
 	System::SetGameState(INCONSOLE);
 
 	m_ingame = false;
-//	return true;
 }
-
-//======================================================================================
 
 /*
 ======================================
@@ -205,7 +201,7 @@ void CClient::RunFrame()
 		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
 		m_fFrameTime = System::g_fcurTime;
 
-		//Networking
+		//Print Networking stats
 		const NetChanState & chanState = m_pNetCl->GetChanState();
 		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
 							chanState.dropCount + chanState.goodCount, chanState.numChokes);
@@ -213,7 +209,6 @@ void CClient::RunFrame()
 		m_pHud->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
 		m_pHud->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
 		m_pHud->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
-
 
 		// FIXME - put this in game dll
 		vector_t screenblend;
@@ -235,10 +230,117 @@ void CClient::RunFrame()
 	}
 	
 	//Write updates
-
 	m_pNetCl->SendUpdate();
 }
 
+//======================================================================================
+//Network handling
+//======================================================================================
+/*
+======================================
+Process game message
+======================================
+*/
+void CClient::HandleGameMsg(CBuffer &buffer)
+{
+	byte msgId = 0;
+	while(msgId != 255)
+	{
+		msgId= (int)buffer.ReadByte();
+		//bad message
+		if(msgId == 255)
+			break;
+
+		switch(msgId)
+		{
+		case SV_TALK:
+			{
+				char name[32];
+				strcpy(name,buffer.ReadString());
+				Print(CLMSG_TALK,"%s: %s\n",name,buffer.ReadString());
+//				m_bCanSend = true;
+				break;
+			}
+		case SV_DISCONNECT:
+			{
+				Print(CLMSG_SERVER,"Server quit\n");
+				m_pNetCl->Disconnect(true);
+				break;
+			}
+		case SV_PRINT:	//just a print message
+			{
+				Print(CLMSG_SERVER,"%s\n",buffer.ReadString());
+				break;
+			}
+		case SV_RECONNECT:
+			{
+				m_pNetCl->Reconnect();
+				break;
+			}
+		}
+	}
+}
+
+/*
+======================================
+Process Spawn message
+======================================
+*/
+void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
+{
+	switch(msgId)
+	{
+	case SVC_INITCONNECTION:
+		{
+			char * game = buffer.ReadString();
+ComPrintf("CL: Game: %s\n", game);
+			char * map = buffer.ReadString();
+ComPrintf("CL: Map: %s\n", map);
+			if(!LoadWorld(map))
+				m_pNetCl->Disconnect();
+			break;
+		}
+	case SVC_MODELLIST:
+		break;
+	case SVC_SOUNDLIST:
+		break;
+	case SVC_IMAGELIST:
+		break;
+	case SVC_BASELINES:
+		break;
+	case SVC_BEGIN:
+		{
+		
+			break;
+		}
+	}
+}
+
+/*
+======================================
+Handle disconnect from server
+======================================
+*/
+void CClient::HandleDisconnect(bool listenserver)
+{
+	//Kill server if local
+	if(listenserver)
+		System::GetConsole()->ExecString("killserver");
+	UnloadWorld();
+}
+
+/*
+======================================
+Write UserInfo to buffer
+======================================
+*/
+void CClient::WriteUserInfo(CBuffer &buffer)
+{
+	buffer.Write(m_clname.string);
+	buffer.Write(m_clrate.ival);
+}
+
+//======================================================================================
 //======================================================================================
 
 /*
@@ -306,8 +408,6 @@ bool CClient::ValidateName(const CParms &parms)
 		ComPrintf("Name = \"%s\"\n", m_clname.string);
 		return false;
 	}
-	strcpy(userInfo.name,name);
-
 	if(!m_ingame)
 		return true;
 
@@ -342,10 +442,8 @@ bool CClient::ValidateRate(const CParms &parms)
 		ComPrintf("Rate is out of range\n");
 		return false;
 	}
-	userInfo.rate = rate;
-	
-	m_pNetCl->SetRate(rate);
 
+	m_pNetCl->SetRate(rate);
 	if(!m_ingame)
 		return true;
 
@@ -447,89 +545,6 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	else if(cvar == dynamic_cast<CVarBase*>(&m_clname))
 		return ValidateName(parms);
 	return false;
-}
-
-	//Parse and handle a game message
-void CClient::HandleGameMsg(CBuffer &buffer)
-{
-	byte msgId = 0;
-	while(msgId != 255)
-	{
-		msgId= (int)buffer.ReadByte();
-		//bad message
-		if(msgId == 255)
-			break;
-
-//		m_pClient->HandleGameMsg(msgId,buffer);
-
-		switch(msgId)
-		{
-		case SV_TALK:
-			{
-				char name[32];
-				strcpy(name,buffer.ReadString());
-				Print(CLMSG_TALK,"%s: %s\n",name,buffer.ReadString());
-//				m_bCanSend = true;
-				break;
-			}
-		case SV_DISCONNECT:
-			{
-				Print(CLMSG_SERVER,"Server quit\n");
-				m_pNetCl->Disconnect(true);
-				break;
-			}
-		case SV_PRINT:	//just a print message
-			{
-				Print(CLMSG_SERVER,"%s\n",buffer.ReadString());
-				break;
-			}
-		case SV_RECONNECT:
-			{
-				m_pNetCl->Reconnect();
-				break;
-			}
-		}
-	}
-}
-
-//Parse and handle spawm parms
-void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
-{
-	switch(msgId)
-	{
-	case SVC_INITCONNECTION:
-		{
-			char * game = buffer.ReadString();
-ComPrintf("CL: Game: %s\n", game);
-			char * map = buffer.ReadString();
-ComPrintf("CL: Map: %s\n", map);
-			if(!LoadWorld(map))
-				m_pNetCl->Disconnect();
-			break;
-		}
-	case SVC_MODELLIST:
-		break;
-	case SVC_SOUNDLIST:
-		break;
-	case SVC_IMAGELIST:
-		break;
-	case SVC_BASELINES:
-		break;
-	case SVC_BEGIN:
-		{
-		
-			break;
-		}
-	}
-}
-
-//Handle disconnect from server
-void CClient::HandleDisconnect(bool listenserver)
-{
-	//Kill server if local
-	if(listenserver)
-		System::GetConsole()->ExecString("killserver");
-	UnloadWorld();
 }
 
 

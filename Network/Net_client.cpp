@@ -1,19 +1,23 @@
 #include "Net_sock.h"
 #include "Net_client.h"
 
+using namespace VoidNet;
 
 /*
 ======================================
 Constructor/Destructor
 ======================================
 */
-CNetClient::CNetClient(I_ClientNetHandler * client): 
-								m_pClient(client),
-								m_buffer(MAX_BUFFER_SIZE)//,  //VoidNet::
+CNetClient::CNetClient(I_NetClientHandler * client): 
+						m_pClient(client),
+						m_buffer(MAX_BUFFER_SIZE),
+						m_backBuffer(MAX_BUFFER_SIZE)
 {
 	m_pSock = new CNetSocket(&m_buffer);
+	
+	m_pNetChan = new CNetChan();
+	m_pNetChan->Reset();
 
-	m_netChan.Reset();
 	memset(m_szServerAddr,0,24);
 
 	m_bLocalServer = false;
@@ -31,18 +35,20 @@ CNetClient::CNetClient(I_ClientNetHandler * client):
 }
 
 CNetClient::~CNetClient()
-{	
+{
+	delete m_pSock;
+	delete m_pNetChan;
+	
 	m_pClient = 0;
 	m_szLastOOBMsg = 0;
 }
 
 //======================================================================================
 //======================================================================================
+
 /*
 ======================================
 Process any waiting packets
-fix me, change his to look for multiple messages
-		should only look from messages from the server once connected
 ======================================
 */
 void CNetClient::ReadPackets()
@@ -56,7 +62,7 @@ void CNetClient::ReadPackets()
 		while(m_pSock->Recv())
 		{
 //m_pClient->Print(CLMSG_DEFAULT,"CLNet:Reading update\n");
-			m_netChan.BeginRead();
+			m_pNetChan->BeginRead();
 			m_pClient->HandleGameMsg(m_buffer);
 		}
 	}
@@ -97,11 +103,11 @@ void CNetClient::SendUpdate()
 	if(m_netState == CL_SPAWNED)
 	{
 		//Checks local rate
-		if(m_netChan.CanSend())
+		if(m_pNetChan->CanSend())
 		{
-			m_netChan.PrepareTransmit();
-			m_pSock->SendTo(m_netChan);
-			m_netChan.m_buffer.Reset();
+			m_pNetChan->PrepareTransmit();
+			m_pSock->SendTo(m_pNetChan);
+			m_pNetChan->m_buffer.Reset();
 //m_pClient->Print(CLMSG_DEFAULT"CL: Client sending update\n");
 		}
 		return;
@@ -121,19 +127,18 @@ void CNetClient::SendUpdate()
 		//Its been a while and our reliable packet hasn't been answered, try again
 //		if(m_fNextSendTime > System::g_fcurTime)
 //			return;
-//			m_netChan.m_reliableBuffer.Reset();
+//			m_pNetChan->m_reliableBuffer.Reset();
 		
 		//Ask for next spawn parm if we have received a reply to the last
 		//otherwise, keep asking for the last one
-		if(m_netChan.CanSendReliable())
-		//if(m_netChan.CanSend())
+		if(m_pNetChan->CanSendReliable())
+		//if(m_pNetChan->CanSend())
 		{
-			m_netChan.m_buffer.Reset();
-			m_netChan.m_buffer.Write(m_levelId);
-			m_netChan.m_buffer.Write((m_spawnState + 1));
-			m_netChan.PrepareTransmit();
-
-			m_pSock->SendTo(m_netChan);
+			m_pNetChan->m_buffer.Reset();
+			m_pNetChan->m_buffer.Write(m_levelId);
+			m_pNetChan->m_buffer.Write((m_spawnState + 1));
+			m_pNetChan->PrepareTransmit();
+			m_pSock->SendTo(m_pNetChan);
 
 			//We got all the necessary info. just ack and switch to spawn mode
 			if(m_spawnState == SVC_BEGIN)
@@ -179,7 +184,7 @@ void CNetClient::HandleSpawnParms()
 	//We got a response to reset Resend requests
 	m_numResends = 0;
 
-	m_netChan.BeginRead();
+	m_pNetChan->BeginRead();
 	byte id = m_buffer.ReadByte();
 	
 	//Reconnect, the server probably changed maps 
@@ -256,8 +261,7 @@ void CNetClient::HandleOOBMessage()
 		
 		//Setup the network channel. 
 		//Only reliable messages are sent until spawned
-		m_netChan.Setup(m_pSock->GetSource(),&m_buffer);
-		m_netChan.SetRate(m_pClient->GetUserInfo().rate);
+		m_pNetChan->Setup(m_pSock->GetSource(),&m_buffer);
 
 m_pClient->Print(CLMSG_DEFAULT, "CLNet: Connected\n");
 		return;
@@ -279,11 +283,9 @@ void CNetClient::SendConnectReq()
 	m_buffer.Write(C2S_CONNECT);			//Header
 	m_buffer.Write(VOID_PROTOCOL_VERSION);	//Protocol Version
 	m_buffer.Write(m_challenge);			//Challenge Req
-//	m_buffer.Write(m_virtualPort);			//Virtual Port
 	
 	//User Info
-	m_buffer.Write(m_pClient->GetUserInfo().name);
-	m_buffer.Write(m_pClient->GetUserInfo().rate);
+	m_pClient->WriteUserInfo(m_buffer);
 
 	m_pSock->Send(m_buffer);
 
@@ -400,15 +402,15 @@ void CNetClient::Disconnect(bool serverPrompted)
 		if(!serverPrompted)
 		{
 			//send disconnect message if remote
-			m_netChan.m_buffer.Reset();
-			m_netChan.m_buffer.Write(CL_DISCONNECT);
-			m_netChan.PrepareTransmit();
-			m_pSock->SendTo(m_netChan);
+			m_pNetChan->m_buffer.Reset();
+			m_pNetChan->m_buffer.Write(CL_DISCONNECT);
+			m_pNetChan->PrepareTransmit();
+			m_pSock->SendTo(m_pNetChan);
 		}
 		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
 	}
 
-	m_netChan.Reset();
+	m_pNetChan->Reset();
 	
 	m_szServerAddr[0] = 0;
 	m_bLocalServer = false;
@@ -444,9 +446,28 @@ void CNetClient::Reconnect()
 
 /*
 ======================================
-update rate on the server
+Update local net vars
 ======================================
 */
 void CNetClient::SetRate(int rate)
-{	m_netChan.SetRate(rate);
+{	m_pNetChan->SetRate(rate);
 }
+void CNetClient::SetPort(short port)
+{	
+}
+
+/*
+======================================
+Access functions for the game Client
+======================================
+*/
+CBuffer & CNetClient::GetSendBuffer()
+{	return m_pNetChan->m_buffer;
+}
+CBuffer & CNetClient::GetReliableBuffer()
+{	return m_backBuffer;
+}
+const NetChanState & CNetClient::GetChanState() const
+{	return m_pNetChan->m_state;
+}
+

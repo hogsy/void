@@ -5,6 +5,8 @@
 
 struct sockaddr_in;
 
+namespace VoidNet {
+
 class  CNetAddr
 {
 public:
@@ -53,5 +55,7 @@ private:
 
 	static char  m_szLocalAddress[24];
 };
+
+}
 
 #endif

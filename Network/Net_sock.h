@@ -4,6 +4,8 @@
 #include "Net_hdr.h"
 #include "Net_chan.h"
 
+namespace VoidNet {
+
 class CNetSocket
 {
 public:
@@ -19,10 +21,9 @@ public:
 	//Send to source
 	void Send(const byte * data, int length);
 	void Send(const CBuffer &buffer);
-	
 
 	//Send data to given dest
-	void SendTo(const CNetChan &netchan);
+	void SendTo(const CNetChan * pNetchan);
 	void SendTo(const byte * data, int length, const CNetAddr &addr);
 	void SendTo(const CBuffer &buffer, const CNetAddr &addr);
 	
@@ -47,5 +48,7 @@ private:
 	SOCKADDR_IN m_srcSockAddr;
 	SOCKADDR_IN m_destSockAddr;
 };
+
+}
 
 #endif

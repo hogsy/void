@@ -6,6 +6,8 @@
 #include "Com_defs.h"
 #include "Net_util.h"
 
+namespace VoidNet {
 void PrintSockError(int err=0,const char *msg=0);
+}
 
 #endif

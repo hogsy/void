@@ -1,11 +1,12 @@
 #include "Net_sock.h"
 
+using namespace VoidNet;
+
 /*
 ==========================================
 Constructor Destructor
 ==========================================
 */
-
 CNetSocket::CNetSocket(CBuffer * buffer)
 {
 	m_socket = INVALID_SOCKET;
@@ -100,7 +101,6 @@ int CNetSocket::GetInterfaceList(INTERFACE_INFO ** addr, int numAddrs)
 		PrintSockError(WSAGetLastError(),"CNetSocket::GetInterfaceList:WSAIoctl failed");
 		return 0;
 	}
-
 	return (bytesReturned/sizeof(INTERFACE_INFO));
 }
 
@@ -290,8 +290,8 @@ void CNetSocket::Send(const CBuffer &buffer)
 {	SendTo(buffer,m_srcAddr);
 }
 
-void CNetSocket::SendTo(const CNetChan &netchan)
-{	SendTo(netchan.m_sendBuffer,netchan.m_addr);
+void CNetSocket::SendTo(const CNetChan * pNetchan)
+{	SendTo(pNetchan->m_sendBuffer,pNetchan->m_addr);
 }
 
 

@@ -1,7 +1,7 @@
-#include "Net_svclient.h"
-#include "Net_defs.h"
+#include "Net_server.h"
+#include "Net_chan.h"
 
-//using namespace VoidNet;
+using namespace VoidNet;
 
 //======================================================================================
 //======================================================================================
@@ -10,27 +10,36 @@
 Constructor/Destructor
 ======================================
 */
-SVClient::SVClient()
-{	Reset();
+CClientChan::CClientChan()
+{
+	m_pNetChan = new CNetChan();
+	Reset();
 }
 
-SVClient::~SVClient() {}
+CClientChan::~CClientChan() 
+{
+	delete m_pNetChan;
+}
 
 /*
 ======================================
 Reset the client
 ======================================
 */
-void SVClient::Reset()
+void CClientChan::Reset()
 {
 	m_id = 0;
-	m_netChan.Reset();
+	m_pNetChan->Reset();
 	m_state = CL_FREE;
 	m_numBuf=0;
 	m_bBackbuf = false;
 	m_bDropClient = false;
 	m_bSend = false;
 	memset(m_name,0,sizeof(m_name));
+}
+
+const NetChanState & CClientChan::GetChanState() const
+{	return m_pNetChan->m_state;
 }
 
 /*
@@ -40,14 +49,14 @@ if all the backbuffers are full, and it has STILL overflowed
 then just give up
 ======================================
 */
-void SVClient::ValidateBuffer()
+void CClientChan::ValidateBuffer()
 {
 	if(m_bBackbuf)
 	{
 		//drop client if overflowed
 		if(m_backBuffer[m_numBuf].OverFlowed())
 		{
-ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_netChan.GetAddrString());
+ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_pNetChan->GetAddrString());
 			m_bDropClient = true;
 		}
 	}
@@ -59,10 +68,10 @@ make space for a data chunk of the given size
 change current backbuffer if needed
 ======================================
 */
-void SVClient::MakeSpace(int reqsize)
+void CClientChan::MakeSpace(int reqsize)
 {
 	//a message of this size will overflow the buffer
-	if((m_netChan.m_buffer.GetSize() + reqsize) >= m_netChan.m_buffer.GetMaxSize())
+	if((m_pNetChan->m_buffer.GetSize() + reqsize) >= m_pNetChan->m_buffer.GetMaxSize())
 	{
 		//havent been using any backbuffers, so start now
 ComPrintf("Using backbuffer for %s\n", m_name);
@@ -76,7 +85,7 @@ ComPrintf("Using backbuffer for %s\n", m_name);
 				//drop client if we have filled up the LAST backbuffer,
 				if(m_numBuf + 1 == MAX_BACKBUFFERS)
 				{
-ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.GetAddrString());
+ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_pNetChan->GetAddrString());
 					m_bDropClient = true;
 					return;
 				}
@@ -92,19 +101,19 @@ ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.GetAddrSt
 Server wants to send a new message now
 ======================================
 */
-bool SVClient::ReadyToSend()
+bool CClientChan::ReadyToSend()
 {
 	if(m_bBackbuf)
 	{
 		//Does the outgoing buffer have space ?
-//		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf]->GetSize() <
-		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf].GetSize() <
-		   m_netChan.m_buffer.GetMaxSize())
+//		if(m_pNetChan->m_buffer.GetSize() + m_backBuffer[m_numBuf]->GetSize() <
+		if(m_pNetChan->m_buffer.GetSize() + m_backBuffer[m_numBuf].GetSize() <
+		   m_pNetChan->m_buffer.GetMaxSize())
 		{
 ComPrintf("SV Writing to backbuffer\n");
 			//Write to sock buffer
-			//m_netChan.m_buffer.Write((*m_backBuffer[m_numBuf]));
-			m_netChan.m_buffer.Write(m_backBuffer[m_numBuf]);
+			//m_pNetChan->m_buffer.Write((*m_backBuffer[m_numBuf]));
+			m_pNetChan->m_buffer.Write(m_backBuffer[m_numBuf]);
 			//reset buffer. 
 			//m_backBuffer[m_numBuf]->Reset();
 			m_backBuffer[m_numBuf].Reset();
@@ -117,9 +126,9 @@ ComPrintf("SV Writing to backbuffer\n");
 	}
 
 	//drop client if the outgoing buffer has overflowed
-	if(m_netChan.m_buffer.OverFlowed())
+	if(m_pNetChan->m_buffer.OverFlowed())
 	{
-		m_netChan.m_buffer.Reset();
+		m_pNetChan->m_buffer.Reset();
 		//broadcast and drop client here
 /*		SV_BroadcastPrintf (PRINT_HIGH, "%s overflowed\n", c->name);
 		Con_Printf ("WARNING: reliable overflow for %s\n",c->name);
@@ -131,7 +140,7 @@ ComPrintf("SV Writing to backbuffer\n");
 
 	// only send messages if the client has sent one
 	// and the bandwidth is not choked
-	if(!m_bSend || !m_netChan.CanSend())
+	if(!m_bSend || !m_pNetChan->CanSend())
 		return false;
 	return true;
 }
@@ -139,17 +148,17 @@ ComPrintf("SV Writing to backbuffer\n");
 //======================================================================================
 //======================================================================================
 
-void SVClient::BeginMessage(byte msgid, int estSize)
+void CClientChan::BeginMessage(byte msgid, int estSize)
 {
 	MakeSpace(estSize);
 	WriteByte(msgid);
 }
 
 
-void SVClient::WriteByte(byte b)
+void CClientChan::WriteByte(byte b)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(b);
+		m_pNetChan->m_buffer.Write(b);
 	else
 	{
 //		m_backBuffer[m_numBuf]->Write(b);
@@ -158,10 +167,10 @@ void SVClient::WriteByte(byte b)
 	}
 }
 
-void SVClient::WriteChar(char c)
+void CClientChan::WriteChar(char c)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(c);
+		m_pNetChan->m_buffer.Write(c);
 	else
 	{
 		m_backBuffer[m_numBuf].Write(c);
@@ -169,10 +178,10 @@ void SVClient::WriteChar(char c)
 	}
 }
 
-void SVClient::WriteShort(short s)
+void CClientChan::WriteShort(short s)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(s);
+		m_pNetChan->m_buffer.Write(s);
 	else
 	{
 		m_backBuffer[m_numBuf].Write(s);
@@ -180,10 +189,10 @@ void SVClient::WriteShort(short s)
 	}
 }
 
-void SVClient::WriteInt(int i)
+void CClientChan::WriteInt(int i)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(i);
+		m_pNetChan->m_buffer.Write(i);
 	else
 	{
 		m_backBuffer[m_numBuf].Write(i);
@@ -191,10 +200,10 @@ void SVClient::WriteInt(int i)
 	}
 }
 
-void SVClient::WriteFloat(float f)
+void CClientChan::WriteFloat(float f)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(f);
+		m_pNetChan->m_buffer.Write(f);
 	else
 	{
 		m_backBuffer[m_numBuf].Write(f);
@@ -202,10 +211,10 @@ void SVClient::WriteFloat(float f)
 	}
 }
 
-void SVClient::WriteString(const char *string)
+void CClientChan::WriteString(const char *string)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.Write(string);
+		m_pNetChan->m_buffer.Write(string);
 	else
 	{
 		m_backBuffer[m_numBuf].Write(string);
@@ -213,10 +222,10 @@ void SVClient::WriteString(const char *string)
 	}
 }
 
-void SVClient::WriteCoord(float c)
+void CClientChan::WriteCoord(float c)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.WriteCoord(c);
+		m_pNetChan->m_buffer.WriteCoord(c);
 	else
 	{
 		m_backBuffer[m_numBuf].WriteCoord(c);
@@ -224,10 +233,10 @@ void SVClient::WriteCoord(float c)
 	}
 }
 
-void SVClient::WriteAngle(float a)
+void CClientChan::WriteAngle(float a)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.WriteAngle(a);
+		m_pNetChan->m_buffer.WriteAngle(a);
 	else
 	{
 		m_backBuffer[m_numBuf].WriteAngle(a);
@@ -235,11 +244,11 @@ void SVClient::WriteAngle(float a)
 	}
 }
 
-void SVClient::WriteData(byte * data, int len)
+void CClientChan::WriteData(byte * data, int len)
 {
 	//no backbuffer. just write to channel
 	if(!m_bBackbuf)
-		m_netChan.m_buffer.WriteData(data,len);
+		m_pNetChan->m_buffer.WriteData(data,len);
 	else	
 	{
 		//write to current backbuffer

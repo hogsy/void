@@ -2,7 +2,7 @@
 #include "Net_util.h"
 #include "Net_defs.h"
 
-//using namespace VoidNet;
+using namespace VoidNet;
 
 //======================================================================================
 //Network Address class
@@ -156,7 +156,7 @@ bool CNetAddr::IsValid() const
 Common Winsock errors
 ======================================
 */
-
+namespace VoidNet {
 void PrintSockError(int err,const char *msg)
 {
 	char error[128];
@@ -215,43 +215,4 @@ void PrintSockError(int err,const char *msg)
 	else
 		ComPrintf("Winsock Error:%s\n",error);
 }
-
-//======================================================================================
-//======================================================================================
-
-//namespace VoidNet {
-
-/*
-==========================================
-Initialize/Release Winsock
-==========================================
-*/
-bool InitNetwork()
-{
-	WORD wVersionRequested;
-	WSADATA wsaData;
-	int err; 
-	
-	wVersionRequested = MAKEWORD( 2, 0 ); 
-	err = WSAStartup( wVersionRequested, &wsaData );
-	
-	if (err) 
-	{
-		ComPrintf("CServer::InitNetwork:Error: WSAStartup Failed\n");
-		return false;
-	} 
-	
-	//Confirm Version
-	if ( LOBYTE( wsaData.wVersion ) != 2 ||  HIBYTE( wsaData.wVersion ) != 0 ) 
-	{
-		WSACleanup();
-		return false; 
-	}  
-	return true;
 }
-
-void ShutdownNetwork()
-{	WSACleanup();
-}
-
-//}
