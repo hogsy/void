@@ -220,7 +220,7 @@ void r_draw_leaf(int l)
 		if (!(*(world->leafvis + world->leafs[eye_leaf].vis + (l>>3)) & (1<<(l&7))))
 			return;
 	}
-/*
+
 	//
 	//frustum cull - check this nodes bounding box to the frustum
 	//
@@ -236,7 +236,7 @@ void r_draw_leaf(int l)
 		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
 			return;
 	}
-*/
+
 // just push everything right through to the cache
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
 	for (int b=world->leafs[l].first_brush; b < endb; b++)
@@ -332,8 +332,8 @@ void r_draw_node(int n, bool testfrust)
 
 
 			// if the one closest to the inside is outside, the box is completely out
-//			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
-//				return;
+			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
+				return;
 
 			if ((dot(out, frust[p].norm) - frust[p].d) < 0)
 				testfrust = true;
