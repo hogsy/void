@@ -141,7 +141,7 @@ void CNetServer::ChanBeginWrite(const MultiCastSet &set, byte msgid, int estSize
 {
 	ChanFinishWrite();
 
-	for(int i=0; i< SV_MAX_CLIENTS; i++)
+	for(int i=0; i< m_pSvState->maxClients; i++)
 	{
 		if(set.dest[i])
 		{

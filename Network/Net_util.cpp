@@ -92,7 +92,7 @@ void CNetAddr::Set(const char * szaddr)
 
 	//if no port number then default
 	if(sockAddr.sin_port == 0)
-		sockAddr.sin_port = htons(SV_DEFAULT_PORT);
+		sockAddr.sin_port = htons(NET_SVDEFAULTPORT);
 
 	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
 		*(int *)&sockAddr.sin_addr = inet_addr(stringaddr);

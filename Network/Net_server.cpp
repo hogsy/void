@@ -25,7 +25,6 @@ Constructor/Destructor
 */
 CNetServer::CNetServer()
 {	
-	m_clChan = new CNetClChan[SV_MAX_CLIENTS];
 	m_pSock  = new CNetSocket(&m_recvBuf);
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 
@@ -43,22 +42,24 @@ CNetServer::~CNetServer()
 
 /*
 ======================================
-Create the Server
-======================================
-*/
-void CNetServer::Create(I_Server * server, const ServerState * state)
-{	
-	m_pServer = server;
-	m_pSvState = state;
-}
-
-/*
-======================================
 Initialize the Network Server
 ======================================
 */
-bool CNetServer::Init()
+bool CNetServer::Init(I_Server * server, const ServerState * state)
 {
+	m_pServer = server;
+	m_pSvState = state;
+
+	if(m_pSvState->maxClients < 0 || m_pSvState->maxClients > NET_MAXCLIENTS)
+	{
+		ComPrintf("CNetServer::Create: Network library cannot support more than %d clients.\n", 
+			NET_MAXCLIENTS);
+		return false;
+	}
+	m_clChan = new CNetClChan[m_pSvState->maxClients];
+
+
+	//Initialize Network sockets
 	if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, false))
 	{
 		PrintSockError(WSAGetLastError(),"CNetServer::Init: Couldnt create socket");
@@ -520,7 +521,7 @@ void CNetServer::SendSpawnParms(int chanId)
 			//Begin client
 			m_clChan[chanId].m_spawnLevel = 0;
 			m_clChan[chanId].m_state = CL_INGAME;
-			m_pServer->OnClientSpawn(chanId);
+			m_pServer->OnClientBegin(chanId);
 
 			//Write spawn pos
 
