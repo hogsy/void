@@ -200,8 +200,7 @@ bool CVoid::Init()
 	//Create the window
 	g_hWnd = CreateWindow(VOID_MAINWINDOWCLASS, 
 						  VOID_MAINWINDOWTITLE,
-						  WS_CAPTION,
-						  //WS_BORDER | WS_DLGFRAME | WS_POPUP, 
+						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
 						  CW_USEDEFAULT, 
 						  CW_USEDEFAULT, 
 						  640,
