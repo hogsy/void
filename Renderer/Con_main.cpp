@@ -208,6 +208,7 @@ void CRConsole::Draw()
 
 	//print all our text over the top
 	PrintBuffer();
+	g_pRast->ConAlpha(255, 255);
 }
 
 

@@ -177,6 +177,9 @@ void CRHud::DrawHud()
 	//transform
 	g_pRast->MatrixReset();
 	g_pRast->ProjectionMode(VRAST_ORTHO);
+	g_pRast->TextureLightDef(NULL);
+	g_pRast->TextureTexDef(NULL);
+
 
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 0));
 
@@ -185,8 +188,10 @@ void CRHud::DrawHud()
 		if(m_hmessages[i].inuse)
 		{
 			m_hmessages[i].Draw();
+			g_pRast->ConAlpha(255, 255);
 		}
 	}
+
 }
 
 

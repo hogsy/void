@@ -164,7 +164,7 @@ public:
 
 	unsigned int GetNumTris(void)	{ return mTrisDrawn;	}
 	void UseLights(bool l)	{	mUseLights = l;		}
-	void ConAlpha(byte t, byte b)	{	mConAlphaTop = t;	mConAlphaBot = b;	}
+	void ConAlpha(byte t, byte b)	{	Flush();	mConAlphaTop = t;	mConAlphaBot = b;	}
 
 
 private:
