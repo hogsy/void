@@ -2,6 +2,7 @@
 #include "Game_main.h"
 #include "Com_parms.h"
 
+
 CVar	g_varGravity("g_gravity", "800", CVAR_FLOAT, 0);
 CVar	g_varMaxSpeed("g_maxspeed", "200", CVAR_FLOAT, 0);
 CVar	g_varFriction("g_friction", "0.9", CVAR_FLOAT, 0);
@@ -31,6 +32,9 @@ bool CGame::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 	if(cvar == reinterpret_cast<CVarBase *>(&g_varGravity))
 	{
 		float val = strVal.FloatVal();
+
+ComPrintf("GAME: Grav changing to %f\n", val);
+
 		for(int i=0; i<numClients; i++)
 		{
 			clients[i]->gravity = val;

@@ -20,7 +20,6 @@ extern I_GameHandler * g_pImports;
 
 
 //Global Game CVars
-
 extern CVar	g_varGravity;
 extern CVar g_varMaxSpeed;
 extern CVar g_varFriction;
