@@ -92,59 +92,6 @@ int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex
 		caches[mdlCache][mdlIndex]->LoadModel(m_pFile,model);
 	
 	return mdlIndex;
-
-
-
-	// find the first available spot in this mdlCache
-/*	if (mdlIndex == -1)
-	{
-		for (int i=0; i<GAME_MAXMODELS; i++)
-		{
-			if (!caches[mdlCache][i])
-			{
-				mdlIndex = i;
-				break;
-			}
-		}
-
-		if (i==GAME_MAXMODELS)
-		{
-			ComPrintf("no available mdlCache entries for model %s\n", model);
-			return -1;
-		}
-	}
-
-	// make sure our spot is free
-	if (caches[mdlCache][mdlIndex])
-	{
-		ComPrintf("model already in specified mdlIndex\n");
-		delete caches[mdlCache][mdlIndex];
-	}
-
-
-	// search all caches to see if it is already loaded somewhere
-	for (int c=0; c<CACHE_NUMCACHES; c++)
-	{
-		for (int i=0; i<GAME_MAXMODELS; i++)
-		{
-			if (caches[c][i] && caches[c][i]->IsFile(model))
-			{
-				caches[mdlCache][mdlIndex] = caches[c][i];
-				caches[c][i]->AddRef();
-				return mdlIndex;
-			}
-		}
-	}
-
-	// else create a new one
-	if (_stricmp("md2", &model[strlen(model)-3])==0)
-		caches[mdlCache][mdlIndex] =  new CModelMd2();
-	else
-		caches[mdlCache][mdlIndex] =  new CModelSp2();
-
-	caches[mdlCache][mdlIndex]->LoadModel(model);
-	return mdlIndex;
-*/
 }
 
 

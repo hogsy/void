@@ -195,9 +195,12 @@ void CGameClient::RunFrame(float frameTime)
 
 	//Drawing
 	//fix me. draw ents only in the pvs
-	for(int i=0; i< GAME_MAXENTITIES; i++)
+	int i;
+	for(i=0; i< GAME_MAXENTITIES; i++)
 	{
-		if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
+		if(m_entities[i].inUse && 
+		  (m_entities[i].mdlIndex > -1) &&
+		  (m_entities[i].skinNum > -1))
 			m_pClGame->DrawModel(m_entities[i]);	
 	}
 	

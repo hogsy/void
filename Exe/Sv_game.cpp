@@ -82,7 +82,6 @@ int CServer::RegisterModel(const char * model)
 		    return i;
 	}
 	m_numModels ++;
-//	m_modelList[i].name = new char[strlen(model)+1];
 	strcpy(m_modelList[i].name,model);
 	return i;
 }
@@ -107,7 +106,6 @@ int CServer::RegisterSound(const char * sound)
 		    return i;
 	}
 	m_numSounds ++;
-//	m_soundList[i].name = new char[strlen(sound)+1];
 	strcpy(m_soundList[i].name,sound);
 	return i;
 }
@@ -132,7 +130,6 @@ int CServer::RegisterImage(const char * image)
 		    return i;
 	}
 	m_numImages ++;
-//	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
 	return i;
 }

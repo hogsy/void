@@ -1,6 +1,7 @@
 #include "Game_hdr.h"
 #include "Game_main.h"
 #include "Game_spawn.h"
+#include "Game_anims.h"
 #include "Com_buffer.h"
 #include "Com_trace.h"
 
@@ -134,6 +135,8 @@ void CGame::RunFrame(float curTime)
 	vector_t forward, right, up;
 	EntClient * pClient = 0;
 
+	EPlayerAnim clAnim= PLAYER_NONE;
+
 	for(i=0; i<numClients; i++)
 	{
 		//Only move the client if we got new input from him  ?
@@ -142,7 +145,6 @@ void CGame::RunFrame(float curTime)
 		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
 		{
 			pClient = clients[i];
-
 
 			pClient->angles = pClient->clCmd.angles;
 			pClient->angles.AngleToVector(&forward,&right,&up);
@@ -182,6 +184,8 @@ void CGame::RunFrame(float curTime)
 				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), right);
 			if (pClient->clCmd.moveFlags & ClCmd::MOVELEFT)
 				desiredMove.VectorMA(desiredMove, -(pClient->maxSpeed), right);
+
+			clAnim = PLAYER_RUN;
 			
 			//Check for touching ground
 			TraceInfo traceInfo;
@@ -191,8 +195,11 @@ void CGame::RunFrame(float curTime)
 			m_pWorld->Trace(traceInfo,pClient->origin, end, pClient->mins,pClient->maxs);
 			if(traceInfo.fraction != 1)
 			{
+				clAnim = PLAYER_JUMP;
+
 				if (pClient->clCmd.moveFlags & ClCmd::JUMP)
-					desiredMove.z += 300;
+				{	desiredMove.z += 300;
+				}
 			}
 			
 			// always add gravity
@@ -206,6 +213,18 @@ void CGame::RunFrame(float curTime)
 				pClient->velocity.x = 0;
 			if (pClient->velocity.y < 0.01f)
 				pClient->velocity.y = 0;
+
+			if(pClient->velocity.x == 0 &&
+			   pClient->velocity.y == 0 &&
+			   pClient->velocity.z == 0)
+				clAnim = PLAYER_STAND;
+
+			if(clAnim != pClient->animSeq)
+			{
+				pClient->animSeq = clAnim;
+				pClient->sendFlags |= SVU_ANIMSEQ;
+			}
+					
 
 			//Add velocity created by new input
 			pClient->velocity += desiredMove;

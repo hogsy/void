@@ -75,61 +75,6 @@ int CImageManager::LoadImage(const char *image, CacheType cache, int imgIndex)
 
 	caches[cache][imgIndex] =  new CImageCacheEntry(image);
 	return imgIndex;
-
-
-/*	// else create a new one
-	if (_stricmp("md2", &model[strlen(model)-3])==0)
-		caches[mdlCache][mdlIndex] =  new CModelMd2();
-	else
-		caches[mdlCache][mdlIndex] =  new CModelSp2();
-
-	caches[mdlCache][mdlIndex]->LoadModel(model);
-	return mdlIndex;
-*/
-
-	// find the first available spot in this cache
-/*	if (index == -1)
-	{
-		for (int i=0; i<GAME_MAXIMAGES; i++)
-		{
-			if (!caches[cache][i])
-			{
-				index = i;
-				break;
-			}
-		}
-
-		if (i==GAME_MAXIMAGES)
-		{
-			ComPrintf("CImageManager::LoadImage: no available cache entries for  %s\n", image);
-			return -1;
-		}
-	}
-
-	// make sure our spot is free
-	if (caches[cache][index])
-	{
-		ComPrintf("image already in specified index\n");
-		delete caches[cache][index];
-	}
-
-	// search all caches to see if it is already loaded somewhere
-	for (int c=0; c<CACHE_NUMCACHES; c++)
-	{
-		for (int i=0; i<GAME_MAXIMAGES; i++)
-		{
-			if (caches[c][i] && caches[c][i]->IsFile(image))
-			{
-				caches[cache][index] = caches[c][i];
-				caches[c][i]->AddRef();
-				return index;
-			}
-		}
-	}
-	// else create a new one
-	caches[cache][index] =  new CImageCacheEntry(image);
-	return index;
-*/
 }
 
 /*

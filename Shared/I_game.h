@@ -39,9 +39,13 @@ struct EntClient : public Entity
 
 		mdlIndex = 255;
 		skinNum = 255;
+
+		animSeq = 0;
+		animFrame = 0;
 	}
 
 	bool  bSpawned;
+	bool  bSendToSelf;
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
@@ -49,9 +53,13 @@ struct EntClient : public Entity
 	//Server will write only angles and coord by default. 
 	//But changes to these can be added as well.
 	byte  sendFlags;
+	
 	float friction;
 	float gravity;
 	float maxSpeed;
+
+	byte  animSeq;
+	int	  animFrame;
 
 	//Strings
 	char  name[CL_MAXNAME];

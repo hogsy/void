@@ -121,6 +121,10 @@ SOURCE=.\Game.def
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Game_anims.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Game_main.h
 # End Source File
 # Begin Source File

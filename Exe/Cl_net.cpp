@@ -110,6 +110,9 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 						m_pGameClient->friction = buffer.ReadFloat();
 					if(b & SVU_MAXSPEED)
 						m_pGameClient->maxSpeed = buffer.ReadFloat();
+
+					if(b & SVU_ANIMSEQ)
+						buffer.ReadByte();
 				}
 				
 				if(!m_cvLocalMove.bval)
@@ -206,8 +209,21 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 		}
 	case SVC_IMAGELIST:
 		{
+			char imgName[32];
+			int imgId=0;
 			int numImages = buffer.ReadShort();
+
 			ComPrintf("CL: ImageList :%d images: %d bytes\n", numImages, buffer.GetSize());
+			
+			for(int i=0; i<numImages;i++)
+			{
+				imgId = buffer.ReadShort();
+				buffer.ReadString(imgName,32);
+
+				if(imgId == -1 || !imgName[0])
+						continue;
+				m_pClGame->RegisterImage(imgName,CACHE_GAME, imgId);
+			}
 			break;
 		}
 	case SVC_BASELINES:
@@ -241,7 +257,10 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 					case 'm':
 						{
 							m_entities[id].mdlIndex = buffer.ReadShort();
+							
 							m_entities[id].skinNum = buffer.ReadShort();
+							//m_entities[id].skinNum|=  MODEL_SKIN_UNBOUND_GAME;
+
 							m_entities[id].frameNum = buffer.ReadShort();
 							m_entities[id].nextFrame = m_entities[id].frameNum;
 							m_entities[id].frac = 0;
@@ -331,6 +350,10 @@ ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 
 	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_clients[num].mdlCache = CACHE_LOCAL;
+
+	m_clients[num].frac = 0.0f;
+	m_clients[num].frameNum = 0;
+	m_clients[num].nextFrame = 0;
 
 	//Setup bounding box. gravity,. friction etc here as well
 	m_clients[num].mins = VEC_CLIENT_MINS;

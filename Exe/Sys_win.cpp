@@ -15,6 +15,13 @@ static bool RegisterWindow(HINSTANCE hInst);
 static void UnRegisterWindow(HINSTANCE hInst);
 static bool ChangeToVoidDir();
 
+#ifdef VOID_TEST
+static const char VOID_REG_KEY [] = "Software\\Devvoid\\VoidTest";
+#else
+static const char VOID_REG_KEY [] = "Software\\Devvoid\\Void";
+#endif
+
+
 //The game
 CVoid		* g_pVoid=0;		
 
@@ -237,7 +244,7 @@ static bool ChangeToVoidDir()
 	char bufPath[COM_MAXPATH];
 	char message[512];
 
-	if(!VoidReg::DoesKeyExist("Software\\Devvoid\\Void"))
+	if(!VoidReg::DoesKeyExist(VOID_REG_KEY))
 	{
 		MessageBox(0,"Void has not been installed on this system.\r"
 					 "Please make sure you run the setup program first.",
@@ -245,7 +252,7 @@ static bool ChangeToVoidDir()
 		return false;
 	}
 
-	if(!VoidReg::GetKeyValue("Software\\Devvoid\\Void","Path", bufPath, MAX_PATH))
+	if(!VoidReg::GetKeyValue(VOID_REG_KEY,"Path", bufPath, MAX_PATH))
 	{
 		MessageBox(0,"Error reading registry info, please reinstall Void", "Void", MB_OK);
 		return false;

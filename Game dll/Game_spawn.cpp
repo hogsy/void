@@ -62,9 +62,11 @@ protected:
 	static void ParseKey(Entity * ent, const char * key, CBuffer &parms)
 	{
 		//Handle resource Names differently
-		if(strcmp(key,"model")==0)
+		if(_stricmp(key,"model")==0)
 			ent->mdlIndex = g_pImports->RegisterModel(parms.ReadString());
-		else if(strcmp(key,"noise")==0)
+		else if(_stricmp(key,"skin")==0)
+			ent->skinNum  = g_pImports->RegisterImage(parms.ReadString());
+		else if(_stricmp(key,"noise")==0)
 			ent->sndIndex = g_pImports->RegisterSound(parms.ReadString());
 		else
 		{	

@@ -277,7 +277,7 @@ void CServer::RunFrame()
 		//Write updates to all connected clients
 		for(int i=0;i<m_svState.maxClients;i++)
 		{
-			if((!m_clients[i]) || (!m_clients[i]->bSpawned) || (!m_net.ChanCanSend(i)))
+			if((!m_clients[i]) || (!m_clients[i]->bSpawned)) // || (!m_net.ChanCanSend(i)))
 				continue;
 
 			//Write clients own position
@@ -295,6 +295,8 @@ void CServer::RunFrame()
 					m_net.ChanWriteFloat(m_clients[i]->friction);
 				if(m_clients[i]->sendFlags & SVU_MAXSPEED)
 					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
+				if(m_clients[i]->sendFlags & SVU_ANIMSEQ)
+					m_net.ChanWriteByte(m_clients[i]->animSeq);
 				m_clients[i]->sendFlags = 0;
 			}
 
