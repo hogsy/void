@@ -12,9 +12,11 @@
 	#include "I_file.h"
 	#define PRINT ComPrintf
 
-	//Keep track of last world loaded for the exe
 	static CFileStream  * m_pFile=0;
+
+	//Keep track of last world loaded for the exe
 	static world_t		* m_pWorld = 0;
+	static int			  m_refCount = 0;
 	static char			  m_worldName[64];
 
 #elif defined _VVIS
@@ -42,6 +44,16 @@ void world_destroy(world_t *world)
 {
 	if (!world)
 		return;
+
+//Ref counts in exe
+#ifdef _VOID_EXE_
+	if(world == m_pWorld)
+	{
+		m_refCount--;
+		if(m_refCount > 0)
+			return;
+	}
+#endif
 
 	if(world->edges)
 		delete [] world->edges;
@@ -146,7 +158,10 @@ world_t* world_read(char *filename)
 
 	// or return cached pointer to client if the local server has alreadly loaded it
 	if(!strcmp(filename,m_worldName) && m_pWorld)
+	{
+		m_refCount++;
 		return m_pWorld;
+	}
 	
 	m_pFile = new CFileStream();
 
@@ -201,7 +216,9 @@ world_t* world_read(char *filename)
 
 	//Cache pointer to the last loaded world
 	strcpy(m_worldName,filename);
+	
 	m_pWorld = w;
+	m_refCount++;
 
 	return w;
 
