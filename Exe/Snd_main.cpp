@@ -471,7 +471,10 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 							  int volume,
 							  int chantype)
 {
-	if(!m_bufferCache[cache][index].InUse())
+	if(index == -1 || cache == -1)
+		return;
+
+	if(!(m_bufferCache[cache][index].InUse()))
 	{
 		ComPrintf("CSoundManager::PlaySnd2d: no sound at index %d, cache %d\n", index, cache);
 		return;
@@ -490,9 +493,12 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 	m_Channels[i].Create2d(m_bufferCache[cache][index],volume);
 	bool loop = false;
 	chantype & CHAN_LOOPING ? loop = true : loop = false;
+	
 	if(!m_Channels[i].Play(loop))
+	{
 		ComPrintf("CSoundManager::PlaySnd2d: Error playing sound %s at index %d\n", 
 					index, m_bufferCache[cache][index].GetFilename());
+	}
 }
 
 //======================================================================================
