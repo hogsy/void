@@ -27,8 +27,11 @@ public:
 	void Reset();
 	
 	void SetRate(int rate);	
+	void ResetReliable();
+
 	void PrintStats() const;
 	bool MatchAddr(const CNetAddr &addr) const;
+	const CNetAddr & GetAddr() const;
 	const char * GetAddrString() const;
 
 	//Check status
@@ -37,6 +40,7 @@ public:
 
 	//Prepere channel for transmission
 	void PrepareTransmit();
+	
 	//Just got a message. start by reading the id headers
 	bool BeginRead();
 

@@ -11,6 +11,7 @@ const int  VOID_PROTOCOL_VERSION = 1;		//Current protcol version
 
 //Connnectionless client to Server messages
 const char C2S_GETSTATUS[]		= "getstatus";
+const char C2S_GETFULLSTATUS[]  = "getfullstatus";
 const char C2S_CONNECT[]		= "connect";
 const char C2S_GETCHALLENGE[]	= "getchallenge";
 
@@ -18,6 +19,7 @@ const char C2S_GETCHALLENGE[]	= "getchallenge";
 const char S2C_REJECT[]			= "reject";
 const char S2C_CHALLENGE[]		= "challenge";
 const char S2C_STATUS[]			= "status";
+const char S2C_FULLSTATUS[]		= "fullstatus";
 const char S2C_ACCEPT[]			= "accept";
 
 //Common connectionless messages

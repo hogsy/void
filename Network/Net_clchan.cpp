@@ -118,6 +118,7 @@ ComPrintf("SV Writing to backbuffer\n");
 	if(m_netChan.m_buffer.OverFlowed())
 	{
 		m_netChan.m_buffer.Reset();
+		m_bDropClient = true;
 		//broadcast and drop client here
 /*		SV_BroadcastPrintf (PRINT_HIGH, "%s overflowed\n", c->name);
 		Con_Printf ("WARNING: reliable overflow for %s\n",c->name);

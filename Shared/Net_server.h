@@ -4,6 +4,92 @@
 #include "Com_buffer.h"
 #include "Net_defs.h"
 
+/*
+============================================================================
+The Game server usually needs to know how to handle a client disconnection
+For example the game server shouldnt broadcast a Client disconnection
+if it was the Server which went down.
+
+The OnClientDrop function includes a EDisconnectReason parameter.
+============================================================================
+*/
+enum EDisconnectReason
+{
+	SERVER_QUIT=0,
+	CLIENT_QUIT=1,
+	CLIENT_TIMEOUT=2,
+	CLIENT_OVERFLOW=3
+};
+
+/*
+============================================================================
+This info is sent to the client in a series of stages during the
+connection phase. Giving the client indexes for Images/Sounds/Models and
+Entity baselines will save a LOT of network traffic during gameplay.
+
+Therefor the Game Server NEEDs to update this data on every map change.
+
+The struct is HUGE in size, About 22k, 
+But making a list doesnt seem worth the hassle
+============================================================================
+*/
+struct NetSignOnBufs
+{
+	NetSignOnBufs() 
+	{
+		numImageBufs = 0;
+		numModelBufs = 0;
+		numSoundBufs = 0;
+		numEntityBufs = 0;
+	}
+
+	CBuffer  gameInfo;
+
+	int		 numImageBufs;
+	CBuffer  imageList[4];
+	
+	int      numModelBufs;
+	CBuffer  modelList[4];
+
+	int		 numSoundBufs;
+	CBuffer  soundList[4];
+
+	int      numEntityBufs;
+	CBuffer  entityList[4];
+};
+
+
+/*
+============================================================================
+This callback interface should be implemented by the main server class so
+that the Network server can let the main server handle special events
+============================================================================
+*/
+struct I_Server
+{
+	//process ingame client message
+	virtual void HandleClientMsg(int clNum, CBuffer &buffer)=0;		
+
+	//Will return false if the GAME server doesnt want to accept the client
+	virtual bool ValidateClConnection(int clNum, 
+									  bool reconnect,
+									  CBuffer &buffer)=0; 
+	//Handle client spawn
+	virtual void OnClientSpawn(int clNum)=0;
+
+	//Handle map change for this client ?
+	virtual void OnLevelChange(int clNum)=0;
+
+	//Handle client disconnection
+	virtual void OnClientDrop (int clNum, EDisconnectReason reason)=0;
+
+	//Have the game server write status info so the network server
+	//can respond to a status request
+	virtual void WriteGameStatus(CBuffer &buffer)=0;
+
+	//Add more as needed
+};
+
 //Predeclarations
 namespace VoidNet 
 {	
@@ -13,58 +99,36 @@ namespace VoidNet
 }
 
 /*
-======================================
-callback interface which should be 
-implemented by the main server class
-======================================
-*/
-struct I_Server
-{
-	//process ingame client message
-	virtual void HandleClientMsg(int chanId, CBuffer &buffer)=0;		
-
-	//Will return false, and reject reason in FAILED if rejected
-	virtual bool ValidateClConnection(int chanId, bool reconnect,
-							  CBuffer &buffer)=0; 
-
-	virtual void OnClientSpawn(int chanId)=0;
-	virtual void OnLevelChange(int chanId)=0;
-
-	//reason is given if it was network related
-	virtual void OnClientDrop(int chanId, int state,
-							  const char * reason=0)=0;
-};
-
-
-/*
-======================================
-The Network Server
-======================================
+============================================================================
+The Main Server class should create this to handle all network processing
+The Network Server is derived from a NetChanWriter class. This class doesnt
+have any dependencies, and can be passed around to any other subsystems
+including any game server dlls
+============================================================================
 */
 class CNetServer : public NetChanWriter
 {
 public:
 
+	//Call these on Application Startup/Shutdown
+	static bool InitWinsock();
+	static void ShutdownWinsock();
+
 	CNetServer();
 	~CNetServer();
 
-	void Create(I_Server * server, ServerState * state);
+	//Create the server. Call this first thing
+	void Create(I_Server * server, const ServerState * state);
 
+	//Management
 	bool Init();
 	void Shutdown();
 	void Restart();
 
+	//ReadPacket should be called at the beginning of the
+	//server frame, and SendPackets at the end
 	void ReadPackets();
 	void SendPackets();
-
-	void ClientPrintf(int chanId, const char * message, ...);
-	void BroadcastPrintf(const char* message, ...);
-	
-	//To current connecting client	
-	void SendRejectMsg(const char * reason);
-
-	void SendReconnect(int chanId);
-	void SendDisconnect(int chanId, const char * reason);
 
 	//NetChanWriter Implementation
 	void BeginWrite(int chanId, byte msgid, int estSize);
@@ -84,25 +148,27 @@ public:
 	//Set the Rate of the given channel
 	void SetChanRate(int chanId, int rate);
 
-	//Call these on Application Startup/Shutdown
-	static bool InitWinsock();
-	static void ShutdownWinsock();
+	//Reject client connection for given reason
+	void SendRejectMsg(const char * reason);
+	
+	//Have the given Client reconnect
+	void SendReconnect(int chanId);
 
-//FIXME
-	enum
-	{
-		MAX_SIGNONBUFFERS = 8,
-		MAX_CHALLENGES =  512
-	};
-	//Used to stores Entity baselines etc which
-	//are transmitted to the client on connection
-	int			m_numSignOnBuffers;
-	CBuffer		m_signOnBuf[MAX_SIGNONBUFFERS];
+	//Have the client disconnect. Give reason
+	void SendDisconnect(int chanId, EDisconnectReason reason);
+	
+	//Print a Server message to the given client(s)
+	void ClientPrintf(int chanId, const char * message, ...);
+	void BroadcastPrintf(const char* message, ...);
+
+	//Access functions
+	NetSignOnBufs & GetSignOnBufs() { return m_signOnBufs; }
+	const char * GetLocalAddr() const { return m_szLocalAddr; }
 
 private:
 
 	//Handle Connectionless requests
-	void HandleStatusReq();
+	void HandleStatusReq(bool full);
 	void HandleConnectReq();
 	void HandleChallengeReq();
 
@@ -118,16 +184,22 @@ private:
 	struct NetChallenge;
 	NetChallenge  * m_challenges;
 
+	I_Server      * m_pServer;		//Main Server
+
+	NetSignOnBufs	m_signOnBufs;
+
 	VoidNet::CNetSocket * m_pSock;	//The Socket
 	VoidNet::CNetClChan * m_clChan;	//Client channels
 
-	ServerState * m_pSvState;	//Server Status
-	I_Server    * m_pServer;	//Main Server
+	const ServerState * m_pSvState;	//Server Status
 
+	char	m_szLocalAddr[24];
+	
 	CBuffer	m_recvBuf;
 	CBuffer	m_sendBuf;
 
 	char	m_printBuffer[512];
+	
 	int		m_curChanId;
 };
 

@@ -31,8 +31,7 @@ public:
 	void WriteBindTable(FILE *fp);
 
 	//Client Interface
-	void Print(ClMsgType type, const char * msg, ...);
-
+	
 	//Parse and handle a game message
 	void HandleGameMsg(CBuffer &buffer); 
 	
@@ -44,6 +43,9 @@ public:
 
 	//Write userInfo to the given buffer
 	void WriteUserInfo(CBuffer &buffer);
+
+	//Util Print
+	void Print(const char * msg, ...);
 	
 	//Console Interface
 	void HandleCommand(HCMD cmdId, const CParms &parms);

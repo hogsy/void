@@ -63,9 +63,11 @@ bool CServer::Init()
 {
 	if(!m_net.Init())
 		return false;
-
+	
 	//more initialization here ?
+	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 	m_active = true;
+
 	return true;
 }
 
@@ -81,8 +83,11 @@ void CServer::Shutdown()
 
 	m_net.Shutdown();
 
+	m_svState.numClients = 0;
+	m_svState.levelId = 0;
+	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
 	m_active = false;
-
+	
 	//destroy world data
 	if(m_pWorld)
 		world_destroy(m_pWorld);
@@ -244,10 +249,20 @@ void CServer::LoadWorld(const char * mapname)
 	//Create Sigon-message. includes static entity baselines
 	//=======================
 	//all we need is the map name right now
-	m_net.m_numSignOnBuffers = 1;
+
+	NetSignOnBufs & buf = m_net.GetSignOnBufs();
+	
+	buf.gameInfo.Write(SVC_INITCONNECTION);
+	buf.gameInfo.Write(m_svState.gameName);
+	buf.gameInfo.Write(m_svState.worldname);
+
+//	buf.gameInfo.push_back(new CBuffer());
+
+/*	m_net.m_numSignOnBuffers = 1;
 	m_net.m_signOnBuf[0].Write(SVC_INITCONNECTION);
 	m_net.m_signOnBuf[0].Write(m_svState.gameName);
 	m_net.m_signOnBuf[0].Write(m_svState.worldname);
+*/
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)

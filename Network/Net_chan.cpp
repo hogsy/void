@@ -229,6 +229,11 @@ void CNetChan::PrintStats() const
 	ComPrintf("In:%d  InAcked:%d Out:%d\n", m_state.inMsgId, m_state.inAckedId, m_state.outMsgId);
 }
 
+
+void CNetChan::ResetReliable()
+{	m_reliableBuffer.Reset();
+}
+
 //also check Port here ?
 bool CNetChan::MatchAddr(const CNetAddr &addr) const
 {	return (addr == m_addr);
@@ -236,4 +241,8 @@ bool CNetChan::MatchAddr(const CNetAddr &addr) const
 
 const char * CNetChan::GetAddrString() const
 {	return m_addr.ToString();
+}
+
+const CNetAddr & CNetChan::GetAddr() const
+{	return m_addr;
 }

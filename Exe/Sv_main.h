@@ -34,7 +34,8 @@ public:
 	void HandleClientMsg(int chanId, CBuffer &buffer);
 	void OnClientSpawn(int chanId);
 	void OnLevelChange(int chanId);
-	void OnClientDrop(int chanId, int state, const char * reason= 0);
+	void OnClientDrop(int chanId, EDisconnectReason reason);
+	void WriteGameStatus(CBuffer &buffer);
 
 	//Console Handler Interface
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);

@@ -17,7 +17,10 @@ bool CServer::ValidateClConnection(int chanId, bool reconnect,
 
 	strcpy(m_client[chanId].name, buffer.ReadString());
 	m_net.SetChanRate(chanId, buffer.ReadInt());
+	
 	m_client[chanId].inUse = true;
+
+	m_svState.numClients++;
 
 	m_net.BroadcastPrintf("%s connected", m_client[chanId].name);
 	return true;
@@ -82,7 +85,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
 		}
 	case CL_DISCONNECT:
 		{
-			m_net.SendDisconnect(clNum,0);
+			m_net.SendDisconnect(clNum,CLIENT_QUIT);
 			break;
 		}
 	}
@@ -90,6 +93,18 @@ ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
 
 
 
+
+void CServer::OnClientDrop(int chanId, EDisconnectReason reason)
+{
+//	m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
+
+	m_client[chanId].inUse = false;
+	m_svState.numClients --;
+}
+
+void CServer::WriteGameStatus(CBuffer &buffer)
+{
+}
 
 
 void CServer::OnClientSpawn(int clNum)
@@ -99,13 +114,6 @@ void CServer::OnClientSpawn(int clNum)
 //	m_client[clNum].name
 }
 
-void CServer::OnClientDrop(int clNum, int state, 
-					  const char * reason )
-{
-	m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
-	m_client[clNum].inUse = false;
-	m_svState.numClients --;
-}
 
 void CServer::OnLevelChange(int clNum)
 {

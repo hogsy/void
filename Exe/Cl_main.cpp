@@ -258,19 +258,22 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			{
 				char name[32];
 				strcpy(name,buffer.ReadString());
-				Print(CLMSG_TALK,"%s: %s\n",name,buffer.ReadString());
+				System::GetSoundManager()->Play(m_hsTalk);
+				ComPrintf("%s: %s\n",name,buffer.ReadString());
 //				m_bCanSend = true;
 				break;
 			}
 		case SV_DISCONNECT:
 			{
-				Print(CLMSG_SERVER,"Server quit\n");
+				System::GetSoundManager()->Play(m_hsMessage);
+				ComPrintf("Server quit\n");
 				m_pNetCl->Disconnect(true);
 				break;
 			}
 		case SV_PRINT:	//just a print message
 			{
-				Print(CLMSG_SERVER,"%s\n",buffer.ReadString());
+				System::GetSoundManager()->Play(m_hsMessage);
+				ComPrintf("%s\n",buffer.ReadString());
 				break;
 			}
 		case SV_RECONNECT:
@@ -349,7 +352,7 @@ void CClient::WriteUserInfo(CBuffer &buffer)
 Print a message 
 ======================================
 */
-void CClient::Print(ClMsgType type, const char * msg, ...)
+void CClient::Print(const char * msg, ...)
 {
 	static char textBuffer[1024];
 	va_list args;
@@ -357,7 +360,7 @@ void CClient::Print(ClMsgType type, const char * msg, ...)
 	vsprintf(textBuffer, msg, args);
 	va_end(args);
 
-	switch(type)
+/*	switch(type)
 	{
 	case CLMSG_SERVER:
 		System::GetSoundManager()->Play(m_hsMessage);
@@ -366,6 +369,7 @@ void CClient::Print(ClMsgType type, const char * msg, ...)
 		System::GetSoundManager()->Play(m_hsTalk);
 		break;
 	}
+*/
 	System::GetConsole()->ComPrint(textBuffer);
 }
 

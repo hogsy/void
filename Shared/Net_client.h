@@ -10,39 +10,37 @@ The game client will have to implement this interface
 so that the Network Client can do callbacks to it
 ======================================================================================
 */
-enum ClMsgType
-{
-	CLMSG_DEFAULT,
-	CLMSG_SERVER,
-	CLMSG_TALK
-};
-
 struct I_NetClientHandler
 {
-	//Client print func
-	virtual void Print(ClMsgType type, const char * msg, ...)=0;
 	//Parse and handle a game message
 	virtual void HandleGameMsg(CBuffer &buffer)=0; 
+	
 	//Parse and handle spawm parms
 	virtual void HandleSpawnMsg(const byte &msgId, CBuffer &buffer)=0; 
+	
 	//Handle disconnect from server
 	virtual void HandleDisconnect(bool listenserver)=0;
+	
 	//Writes the Game clients userinfo
 	virtual void WriteUserInfo(CBuffer &buffer)=0;
+
+	//Client print func. Route this to the console/Client area. whatever
+	virtual void Print(const char * msg, ...)=0;
 };
 
-/*
-======================================================================================
-Responsible for handling all 
-network communication for the client
-======================================================================================
-*/
+
 //Internal Class declarations
 namespace VoidNet
 {
 	class CNetSocket;
 	class CNetChan;
 }
+
+/*
+======================================================================================
+Responsible for handling all network communication for the client
+======================================================================================
+*/
 
 class CNetClient
 {
@@ -99,7 +97,6 @@ private:
 	VoidNet::CNetSocket * m_pSock;
 
 	CBuffer	m_buffer;
-	
 	CBuffer	m_reliableBuf;
 };
 

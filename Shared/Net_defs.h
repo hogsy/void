@@ -9,9 +9,9 @@ Network Client states
 enum
 {	
 	CL_FREE = 0,		//nothing doing. can be used
-	CL_INUSE = 1,		//trying to connect
-	CL_CONNECTED = 2,	//havent spawned yet
-	CL_SPAWNED = 4		//in game
+	CL_INUSE = 1,		//socket is active, trying to connect or something
+	CL_CONNECTED = 2,	//connected, need to get prespawn info
+	CL_INGAME = 4		//in game
 };
 
 /*
@@ -58,6 +58,8 @@ struct NetChanState
 /*
 ======================================
 Server State Struct
+This should be maintained by the
+main server class
 ======================================
 */
 struct ServerState
@@ -78,8 +80,8 @@ struct ServerState
 	char	worldname[32];	//Map name
 	int		levelId;		//Current map id
 	
-	char	localAddr[24];	//Server address
-	short	port;			//Server port num
+	char	localAddr[24];	//Force server address
+	short	port;			//Force server portnum
 	
 	char	hostName[32];	//Server name
 	char	gameName[32];	//Game name
