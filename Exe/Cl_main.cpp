@@ -125,8 +125,9 @@ bool CClient::LoadWorld(const char *worldname)
 	}
 
 	//Create local ent
-	VectorSet(&m_entQuad.angle,0,0,0);
-	VectorSet(&m_entQuad.origin,0,0,32);
+	Void3d::VectorSet(m_entQuad.angle,0,0,0);
+	Void3d::VectorSet(m_entQuad.origin,0,0, -64);
+	
 	m_entQuad.frame = 0;
 	m_entQuad.skinnum= 0;
 	m_entQuad.cache = MODEL_CACHE_LOCAL;
