@@ -61,8 +61,8 @@ Init
 bool COpenGLRast::Init()
 {
 	// load the driver
-	int num_drivers = glsGetNumberOfDrivers();
-	ComPrintf("%d available OpenGL drivers\n");
+	int unsigned num_drivers = glsGetNumberOfDrivers();
+	ComPrintf("%u available OpenGL drivers\n");
 
 	int driver = 0;
 	if (g_varGLDriver->ival>0 && g_varGLDriver->ival<num_drivers)
@@ -81,7 +81,9 @@ bool COpenGLRast::Init()
 	glsGetCurrentDriverInfo(&dinfo);
 
 
-	ComPrintf("GL:Loaded GL driver: %s\n", dinfo.aDriverDescription);
+	ComPrintf("GL:Init GL driver: %s\n", dinfo.GLDriver.aDriverFilePath);
+	ComPrintf("GL:Init GL driver: %s\n%s\n", dinfo.aDriverDescription,
+											 dinfo.GLDriver.aDriverFilePath);
 
 
 
