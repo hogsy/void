@@ -41,12 +41,12 @@ Stats of a Network comm channel
 */
 struct NetChanState
 {
-	NetChanState() { Reset(); }
+	NetChanState() { rate = 0.0; Reset(); }
 	void Reset() 
 	{
 		inMsgId = inAckedId = outMsgId = lastOutReliableId = 0;
 		dropCount = goodCount = numChokes = 0;
-		rate = 0.0;
+//		rate = 0.0;
 	}
 	uint	inMsgId;			//Latest incoming messageId
 	uint	inAckedId;			//Latest remotely acked message.

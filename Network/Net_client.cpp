@@ -61,38 +61,34 @@ void CNetClient::ReadPackets()
 	if(m_netState == CL_FREE)
 		return;
 
-	if(m_netState == CL_INGAME)
+	if(m_netState != CL_INUSE) //INGAME)
 	{
 		//Look for messages only from the server
 		while(m_pSock->Recv())
 		{
 			//m_pClient->Print("CL: Reading update\n");
 			m_pNetChan->BeginRead();
-			m_pClient->HandleGameMsg(m_buffer);
+
+			if(m_netState == CL_INGAME)
+				m_pClient->HandleGameMsg(m_buffer);
+			else if(m_netState == CL_CONNECTED)
+				HandleSpawnParms();
 		}
+		return;
 	}
-	else 
+	
+	//Look for OOB unconnected messages
+	while(m_pSock->RecvFrom())
 	{
-		while(m_pSock->RecvFrom())
+		if((m_netState == CL_INUSE) &&
+		   (m_buffer.ReadInt() == -1))
 		{
 			m_pNetChan->m_lastReceived = System::g_fcurTime;
-			if(m_netState == CL_CONNECTED)
-			{
-				HandleSpawnParms();
-				continue;
-			}
-			//socket is only active. not connected or anything
-			else if(m_netState == CL_INUSE)
-			{
-				if(m_buffer.ReadInt() == -1)
-				{
-					HandleOOBMessage();
-					continue;
-				}
-			}
-			//m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
-		}	
-	}
+			HandleOOBMessage();
+			continue;
+		}
+		//m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
+	}	
 }
 
 /*
@@ -113,11 +109,10 @@ void CNetClient::SendUpdate()
 		return;
 	}
 
-	//are we spawned ?
-	if(m_netState == CL_INGAME)
+	//Checks local rate
+	if(m_pNetChan->CanSend())
 	{
-		//Checks local rate
-		if(m_pNetChan->CanSend())
+		if(m_netState == CL_INGAME)
 		{
 			//Check for overflows in buffers
 			if(m_pNetChan->m_bFatalError || m_reliableBuf.OverFlowed())
@@ -136,54 +131,40 @@ void CNetClient::SendUpdate()
 			
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
-			m_pNetChan->m_buffer.Reset();
 			//m_pClient->Print("CL:  sending update\n");
 		}
-		return;
-	}
+		else if(m_netState == CL_CONNECTED)
+		{
+//			if(m_fNextSendTime < System::g_fcurTime)
+//				m_pNetChan->ResetReliable();
 
-	//We have connected. Need to ask server for baselines
-	if(m_netState == CL_CONNECTED)
-	{
-		//Its been a while and our reliable packet hasn't been answered, try again
-		if(m_fNextSendTime < System::g_fcurTime)
-		{
-			m_pNetChan->ResetReliable();
-		}
-		//Ask for next spawn parm if we have received a reply to the last
-		//otherwise, keep asking for the last one
-		if(m_pNetChan->CanSendReliable())
-		{
-			m_pNetChan->m_buffer.Reset();
-			m_pNetChan->m_buffer.Write(m_levelId);
-			m_pNetChan->m_buffer.Write((m_spawnState + 1));
-			m_pNetChan->PrepareTransmit();
-			m_pSock->SendTo(m_pNetChan);
-		
-					
-			//We got all the necessary info. just ack and switch to spawn mode
+			//We have connected. Need to ask server for baselines
+			if(m_pNetChan->CanSendReliable())
+			{
+				m_pNetChan->m_buffer.Reset();
+				m_pNetChan->m_buffer.Write(m_levelId);
+				m_pNetChan->m_buffer.Write((byte)(m_spawnState + 1));
+			}
+				m_pNetChan->PrepareTransmit();
+				m_pSock->SendTo(m_pNetChan);
+			//	m_fNextSendTime = System::g_fcurTime + 0.5;
+			//}
+			
 			if(m_spawnState == SVC_BEGIN)
-			{
-m_pClient->Print("CL: Client is ready to SPAWN\n");
 				m_netState = CL_INGAME;
-			}
-
-			else
-			{
-				m_fNextSendTime = System::g_fcurTime + 1.0f;
-//m_pClient->Print("CL: Asking for spawnstate %d\n", m_spawnState+1);
-			}
-
 		}
-	}
-	//Unconnected socket. sends OOB queries
-	else if((m_netState == CL_INUSE) && (m_fNextSendTime < System::g_fcurTime))
-	{
-		if(m_szLastOOBMsg == C2S_GETCHALLENGE)
-			SendChallengeReq();
-		else if(m_szLastOOBMsg == C2S_CONNECT)
-			SendConnectReq();
-		return;
+		//Resent OOB queries
+		else if((m_netState == CL_INUSE) && 
+				(m_szLastOOBMsg != 0)  &&
+				(m_fNextSendTime < System::g_fcurTime))
+		{
+
+			if(m_szLastOOBMsg == C2S_GETCHALLENGE)
+				SendChallengeReq();
+			else if(m_szLastOOBMsg == C2S_CONNECT)
+				SendConnectReq();
+//			return;
+		}
 	}
 }
 
@@ -201,13 +182,18 @@ entity baselines
 void CNetClient::HandleSpawnParms()
 {
 	//We got a response to reset Resend requests
-	m_pNetChan->BeginRead();
 	byte id = m_buffer.ReadByte();
 
 m_pClient->Print("CL: Got spawn level %d\n", (int)id);
 	
 	//Reconnect, the server probably changed maps 
 	//while we were getting spawn info. start again
+	if(id == SV_DISCONNECT)
+	{
+m_pClient->Print("%s\n", m_buffer.ReadString());
+		Disconnect();
+		return;
+	}
 	if(id == SV_RECONNECT)
 	{
 m_pClient->Print("CL: Server asked to reconnect\n");

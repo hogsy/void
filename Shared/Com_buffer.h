@@ -47,7 +47,7 @@ public:
 	bool  OverFlowed()  const { return m_overFlowed; }
 	int   UnreadBytes() const { return m_curSize - m_readCount; }
 	
-	void  BeginRead() { m_readCount = 0; }
+	void  BeginRead() { m_badRead = false; m_readCount = 0; }
 	void  Reset();
 	void  SetSize(int size){ m_curSize = size; }
 

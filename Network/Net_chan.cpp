@@ -32,6 +32,7 @@ Setup the NetChannel for listening
 void CNetChan::Setup(const CNetAddr &addr, CBuffer * recvBuffer )
 {
 	Reset();
+	
 	m_addr = addr;
 	m_pRecvBuffer = recvBuffer;
 
@@ -54,7 +55,9 @@ void CNetChan::Reset()
 	m_sendBuffer.Reset();
 
 	m_state.Reset();
-	m_lastReceived = 0.0f;
+
+	m_lastReceived = System::g_fcurTime;
+//	m_lastReceived = 0.0f;
 	
 	m_bOutReliableMsg = 0;
 	m_bInReliableMsg=0;			//Is the message recived supposed to be reliable ?

@@ -12,7 +12,7 @@ Validate connection request from a client
 bool CServer::ValidateClConnection(int clNum, bool reconnect,
 									CBuffer &buffer)
 {	
-	if(m_client[clNum].inUse)
+	if(m_client[clNum].inUse && !reconnect)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
@@ -23,7 +23,8 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 	
 	m_client[clNum].inUse = true;
 
-	m_svState.numClients++;
+	if(!reconnect)
+		m_svState.numClients++;
 
 	m_net.BroadcastPrintf("%s connected", m_client[clNum].name);
 	return true;

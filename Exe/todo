@@ -2,8 +2,6 @@
 EXE
 ==============================================================
 
-
-fix spawn streams  proper protocol
 add simple entity support (sound objects, spawns)
 add 3d sound buffers and a listener
 

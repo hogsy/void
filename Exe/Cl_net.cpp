@@ -142,7 +142,7 @@ void CClient::Talk(const char * string)
 	if(!*msg || *msg == '\0')
 		return;
 
-	ComPrintf("CL: %s: %s\n", m_clname.string, msg);
+	ComPrintf("%s: %s\n", m_clname.string, msg);
 	System::GetSoundManager()->Play(m_hsTalk);
 
 	//Send this reliably ?

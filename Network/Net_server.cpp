@@ -18,7 +18,6 @@ enum
 	MAX_CHALLENGES =  512
 };
 
-
 //======================================================================================
 /*
 ======================================
@@ -454,6 +453,13 @@ void CNetServer::ParseSpawnMessage(int chanId)	//Client hasn't spawned yet
 {
 	//Check if client is trying to spawn into current map
 	int levelid = m_recvBuf.ReadInt();
+
+	if(m_recvBuf.BadRead())
+	{
+		SendDisconnect(chanId,CLIENT_BADMSG);
+		return;
+	}
+
 	if( levelid != m_pSvState->levelId)
 	{
 ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", chanId, levelid ,m_pSvState->levelId);
@@ -466,6 +472,11 @@ ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", chanId, le
 
 ComPrintf("SV:Client(%d) requesting spawn level %d\n", chanId, spawnparm);
 
+	if(m_recvBuf.BadRead())
+	{
+		SendDisconnect(chanId,CLIENT_BADMSG);
+		return;
+	}
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
@@ -487,7 +498,6 @@ ComPrintf("SV:Client(%d) requesting spawn level %d\n", chanId, spawnparm);
 
 //======================================================================================
 //======================================================================================
-
 /*
 ======================================
 Print a server message to a given client
@@ -569,6 +579,9 @@ void CNetServer::SendDisconnect(int chanId, EDisconnectReason reason)
 	case CLIENT_OVERFLOW:
 		m_clChan[chanId].m_netChan.m_buffer.Write("Overflowed");
 		break;
+	case CLIENT_BADMSG:
+		m_clChan[chanId].m_netChan.m_buffer.Write("Bad Message");
+		break;
 	}
 	
 	m_clChan[chanId].m_netChan.PrepareTransmit();
@@ -606,10 +619,13 @@ void CNetServer::ReadPackets()
 				m_clChan[i].m_netChan.BeginRead();
 
 				if(m_clChan[i].m_state == CL_INGAME)
+				{
 					m_pServer->HandleClientMsg(i, m_recvBuf);
+				}
 				else if(m_clChan[i].m_state == CL_CONNECTED)
+				{
 					ParseSpawnMessage(i);
-
+				}
 				m_clChan[i].m_bSend = true;
 				break;
 			}
