@@ -198,7 +198,7 @@ void CClient::SendUpdates()
 	//we have spawned. send update packet
 	if(m_state == CL_SPAWNED)
 	{
-		if(m_netChan.CanSend() &&  m_canSend) // m_netChan.m_buffer.GetSize())
+		if(m_netChan.CanSend()) // &&  m_canSend) // m_netChan.m_buffer.GetSize())
 		{
 			m_netChan.PrepareTransmit();
 			m_pSock->Send(m_netChan.m_sendBuffer);

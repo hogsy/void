@@ -163,9 +163,6 @@ void CServer::Shutdown()
 	//Send disconnect messages to clients, if active
 	if(m_pWorld)
 	{
-		if(!m_cDedicated.ival)
-			System::GetConsole()->ExecString("disconnect");
-
 		for(int i=0;i<m_cMaxClients.ival;i++)
 		{
 			if(m_clients[i].m_state != CL_SPAWNED) 
@@ -176,6 +173,7 @@ void CServer::Shutdown()
 			m_clients[i].m_netChan.m_buffer.Reset();
 			m_clients[i].m_netChan.m_buffer += SV_DISCONNECT;
 			m_clients[i].m_netChan.m_buffer += "Server quit";
+			m_clients[i].m_netChan.PrepareTransmit();
 			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 			m_clients[i].Reset();
 		}
@@ -183,8 +181,10 @@ void CServer::Shutdown()
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
 		m_worldName[0] = 0;
-	}
 
+		if(!m_cDedicated.ival)
+			System::GetConsole()->ExecString("disconnect");
+	}
 	m_pSock->Close();
 	ComPrintf("CServer::Shutdown OK\n");
 }
@@ -508,8 +508,10 @@ void CServer::ParseClientMessage(SVClient &client)
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0; i<m_cMaxClients.ival;i++)
 			{
+				//dont send to source
 				if(&m_clients[i] == &client)
 					continue;
+
 				if(m_clients[i].m_state == CL_SPAWNED)
 				{
 					m_clients[i].BeginMessage(SV_TALK,len);
