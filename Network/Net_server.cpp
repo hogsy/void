@@ -78,6 +78,7 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 	if(numAddrs == 0)
 	{
 		ComPrintf("CNetServer::Init: Unable to get network interfaces\n");
+		Shutdown();
 		return false;
 	}
 
@@ -141,7 +142,8 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 	if(!netaddr.IsValid())
 	{
 		ComPrintf("CNetServer::Init: Unable to resolve ip address: %s\n", m_szLocalAddr);
-		memset(m_szLocalAddr,0,sizeof(m_szLocalAddr));
+//		memset(m_szLocalAddr,0,sizeof(m_szLocalAddr));
+		Shutdown();
 		return false;
 	}
 
@@ -151,7 +153,8 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 	//Bind Socket
 	if(!m_pSock->Bind(netaddr))
 	{
-		ComPrintf("CNetServer::Init:Unable to bind socket\n");
+		ComPrintf("CNetServer::Init:Unable to bind socket to  %s\n", m_szLocalAddr );
+		Shutdown();
 		return false;
 	}
 	return true;
@@ -173,8 +176,14 @@ void CNetServer::Shutdown()
 		SendDisconnect(i,DR_SVQUIT);
 	}
 */
-	delete [] m_clChan;
-	m_clChan = 0;
+	if(m_clChan)
+	{
+		delete [] m_clChan;
+		m_clChan = 0;
+	}
+
+	memset(m_szLocalAddr,0,sizeof(m_szLocalAddr));
+	CNetAddr::SetLocalServerAddr(m_szLocalAddr);
 
 	m_pMultiCast = 0;
 	m_pSock->Close();
@@ -193,6 +202,11 @@ void CNetServer::Restart()
 		if(m_clChan[i].m_state == CL_INGAME)
 			SendReconnect(i);
 	}
+}
+
+
+bool CNetServer::IsActive() const
+{	return m_pSock->ValidSocket();
 }
 
 //======================================================================================

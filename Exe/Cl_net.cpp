@@ -321,16 +321,17 @@ on the server
 */
 bool CGameClient::ValidateRate(const CParms &parms)
 {
-	int rate = parms.IntTok(1);
-	if(rate == -1)
+	
+	if(parms.NumTokens() < 2)
 	{
 		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
 		return false;
 	}
 
+	int rate = parms.IntTok(1);
 	if(rate < 1000 || rate > 10000)
 	{
-		ComPrintf("Rate is out of range\n");
+		ComPrintf("Rate needs to be in (1000-10000): %d\n", rate);
 		return false;
 	}
 

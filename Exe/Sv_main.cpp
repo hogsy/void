@@ -8,11 +8,11 @@
 namespace {
 enum 
 {
-	//Shutdown Server and send reconnects if needed. Then reintialize with new data
+	//Send reconnects if active. Shutdown server. Unload game. Reintialize with new data. Reload GAME
 	CMD_MAP = 1,		
-	//Send Reconnect. and just change map.
+	//Send Reconnect. Change map.
 	CMD_CHANGELEVEL = 2,
-	//Shutdown Server and send disconnects
+	//Send disconnects Shutdown Server. Unload Game.
 	CMD_KILLSERVER = 3,
 	
 	CMD_STATUS	= 4,
@@ -78,6 +78,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	m_entities = 0;
 	m_clients = 0;
 
+	m_hGameDll = 0;
 	m_fGameTime = 0.0f;
 	m_pWorld = 0;
 	m_active = false;
@@ -109,63 +110,30 @@ CServer::~CServer()
 	m_clients = 0;
 }
 
+
 /*
 ======================================
-Initialize the Server from dead state
+Initialize the Server
 ======================================
 */
 bool CServer::Init()
 {
-	//Unlatch all CVARS
-/*
-	m_cGame.Unlatch();
-	m_cHostname.Unlatch();
-	m_cPort.Unlatch();
-
-	//Initialize State values
-	strcpy(m_svState.gameName, m_cGame.string);
-	strcpy(m_svState.hostName, m_cHostname.string);
-	m_svState.maxClients = m_cMaxClients.ival;
-	m_svState.port = m_cPort.ival;
-	memset(m_svState.worldname, 0, sizeof(m_svState.worldname));
-	m_svState.levelId = 0;
-*/
-	m_svCmds.clear();
-	ResetServerState();
+	UpdateServerState();
 
 	//Initialize Network
 	if(!m_net.Init(this, &m_svState))
 		return false;
+	
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 
-	//Load the game dll
-	m_hGameDll = ::LoadLibrary("vgame.dll");
-	if(m_hGameDll == NULL)
-	{
-		ComPrintf("CServer::Init: Failed to load game dll\n");
-		Shutdown();
+	if(!LoadGame())
 		return false;
-	}
 
-	GAME_LOADFUNC pfnLoadFunc = (GAME_LOADFUNC)::GetProcAddress(m_hGameDll,"GAME_GetAPI");
-	if(!pfnLoadFunc)
-	{
-		ComPrintf("CServer::Init: Failed to get Load Func\n");
-		Shutdown();
-		return false;
-	}
-
-	m_pGame = pfnLoadFunc(this,System::GetConsole());
-	if(!m_pGame || !m_pGame->InitGame())
-	{
-		ComPrintf("CServer::Init: Failed to initialize Game Interface\n");
-		Shutdown();
-		return false;
-	}
-
-	m_entities = m_pGame->entities;
-	m_clients = m_pGame->clients;
-	m_active = true;
+	//Copy old state
+	m_svOldState = m_svState;
+	
+	//Clear Cmd buffer
+	m_svCmds.clear();
 
 	ComPrintf("CServer::Init OK: %d commands in buffer\n", m_svCmds.size());
 	return true;
@@ -183,17 +151,65 @@ void CServer::Shutdown()
 	
 	m_active = false;
 
-	//Send Disconnects
-	for(int i=0;i<m_svState.maxClients;i++)
-	{
-		if(m_clients[i] && m_clients[i]->inUse)
-			m_net.SendDisconnect(i, DR_SVQUIT);
-	}
-
 	//Kill the network
 	m_net.Shutdown();
 
-	//Kill the game
+	UnloadGame();
+	UnloadWorld();
+
+	ComPrintf("CServer::Shutdown OK\n");
+}
+
+/*
+======================================
+Load Game dll
+======================================
+*/
+bool CServer::LoadGame()
+{
+	if(m_hGameDll)
+	{
+		ComPrintf("CServer::LoadGame: Unload current game first\n");
+		return false;
+	}
+
+	//Load the game dll
+	m_hGameDll = ::LoadLibrary("vgame.dll");
+	if(m_hGameDll == NULL)
+	{
+		ComPrintf("CServer::LoadGame: Failed to load game dll\n");
+		Shutdown();
+		return false;
+	}
+
+	GAME_LOADFUNC pfnLoadFunc = (GAME_LOADFUNC)::GetProcAddress(m_hGameDll,"GAME_GetAPI");
+	if(!pfnLoadFunc)
+	{
+		ComPrintf("CServer::LoadGame: Failed to get Load Func\n");
+		Shutdown();
+		return false;
+	}
+
+	m_pGame = pfnLoadFunc(this,System::GetConsole());
+	if(!m_pGame || !m_pGame->InitGame())
+	{
+		ComPrintf("CServer::LoadGame: Failed to initialize Game Interface\n");
+		Shutdown();
+		return false;
+	}
+
+	m_entities = m_pGame->entities;
+	m_clients = m_pGame->clients;
+	return true;
+}
+
+/*
+================================================
+Unload the game code
+================================================
+*/
+void CServer::UnloadGame()
+{
 	if(m_pGame)
 	{
 		m_pGame->ShutdownGame();
@@ -205,66 +221,6 @@ void CServer::Shutdown()
 		::FreeLibrary(m_hGameDll);
 		m_hGameDll = 0;
 	}
-
-	ResetServerState();
-/*
-	//Unlatch Vars
-	m_cGame.Unlatch();
-	m_cHostname.Unlatch();
-	m_cPort.Unlatch();
-
-	//Reset State info
-	strcpy(m_svState.gameName, m_cGame.string);
-	strcpy(m_svState.hostName, m_cHostname.string);
-	m_svState.maxClients = m_cMaxClients.ival;
-	m_svState.port = m_cPort.ival;
-	m_svState.levelId = 0;
-	m_svState.numClients = 0;
-	m_svState.levelId = 0;
-	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
-	
-	//destroy world data
-	if(m_pWorld)
-		CWorld::DestroyWorld(m_pWorld);
-	m_pWorld = 0;
-*/
-
-	ComPrintf("CServer::Shutdown OK\n");
-}
-
-/*
-======================================
-Restart the server
-======================================
-*/
-void CServer::Restart()
-{
-	if(!m_active)
-		return;
-
-	m_pGame->ShutdownGame();
-	m_net.Restart();
-
-	ResetServerState();
-/*	if(m_pWorld)
-	{
-		CWorld::DestroyWorld(m_pWorld);
-		m_pWorld = 0;
-		memset(m_svState.worldname, 0, sizeof(m_svState.worldname));
-	}
-*/
-	m_pGame->InitGame();
-	ComPrintf("CServer::Restart OK\n");
-}
-
-
-/*
-================================================
-
-================================================
-*/
-void CServer::ChangeLevel(const char * worldName)
-{
 }
 
 
@@ -274,7 +230,7 @@ void CServer::ChangeLevel(const char * worldName)
 Reset Server State Vars
 ================================================
 */
-void CServer::ResetServerState()
+void CServer::UpdateServerState()
 {
 	//Unlatch Vars
 	m_cGame.Unlatch();
@@ -286,15 +242,9 @@ void CServer::ResetServerState()
 	strcpy(m_svState.hostName, m_cHostname.string);
 	m_svState.maxClients = m_cMaxClients.ival;
 	m_svState.port = m_cPort.ival;
-	m_svState.levelId = 0;
 	m_svState.numClients = 0;
-	m_svState.levelId = 0;
+	m_svState.levelId ++;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
-	
-	//destroy world data
-	if(m_pWorld)
-		CWorld::DestroyWorld(m_pWorld);
-	m_pWorld = 0;
 }
 
 
@@ -373,17 +323,36 @@ void CServer::ExecServerCommands()
 //======================================================================================
 //======================================================================================
 
+void CServer::UnloadWorld()
+{
+	//destroy world data
+	if(m_pWorld)
+		CWorld::DestroyWorld(m_pWorld);
+	m_pWorld = 0;
+	m_active = false;
+}
+
 /*
 ==========================================
 Load the World
 ==========================================
 */
-void CServer::LoadWorld(const char * mapname)
+bool CServer::LoadWorld(const char * mapname)
 {
 	if(!mapname)
-		return;
+	{
+		ComPrintf("CServer::LoadWorld: No map given\n");
+		return false;
+	}
 
-	bool bRestarting = false;
+	if(m_pWorld)
+	{
+		ComPrintf("CServer::LoadWorld: Can't load \"%s\", Unload Current world first\n", mapname);
+		return false;
+	}
+
+
+//	bool bRestarting = false;
 	char mappath[COM_MAXPATH];
 	char worldName[64];
 
@@ -393,7 +362,7 @@ void CServer::LoadWorld(const char * mapname)
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
 	//Restart if already active
-	if(m_active)
+/*	if(m_active)
 	{	
 		Restart();
 		bRestarting = true;
@@ -406,14 +375,15 @@ void CServer::LoadWorld(const char * mapname)
 			return;
 		}
 	}
+*/
 
 	//Load World
 	m_pWorld = CWorld::CreateWorld(mappath);
 	if(!m_pWorld)
 	{
 		ComPrintf("CServer::LoadWorld: Could not load map %s\n", mappath);
-		Shutdown();
-		return;
+//		Shutdown();
+		return false;
 	}
 	//Load Entitiys in the world
 	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
@@ -427,10 +397,11 @@ void CServer::LoadWorld(const char * mapname)
 	m_active = true;
 
 	//if its not a dedicated server, then push "connect loopback" into the console
-	if(!bRestarting)
-		System::GetConsole()->ExecString("connect localhost");
+//	if(!bRestarting)
+//		System::GetConsole()->ExecString("connect localhost");
 
 	ComPrintf("CServer::LoadWorld : OK\n");
+	return true;
 }
 
 
@@ -725,6 +696,8 @@ bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	return false;
 }
 
+
+
 /*
 ==========================================
 Handle Commands
@@ -736,21 +709,62 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	{
 	case CMD_MAP:
 		{
+			bool bRestarting = m_active;
+			if(m_active)
+			{
+				//Send Reconnects if active right now
+				m_net.Restart();
+				Shutdown();
+			}
+
+			if(Init())
+			{
+				char mapname[64];
+				parms.StringTok(1,(char*)mapname,64);
+				LoadWorld(mapname);
+
+				//FIXME, check for dedicated
+				if(!bRestarting)
+					AddServerCmd("connect localhost");
+			}
+
+			break;
+		}
+	case CMD_CHANGELEVEL:
+		{
+			if(parms.NumTokens() < 2)
+			{
+				ComPrintf("CServer:: Can't change levels. Missing map name\n");
+				return;
+			}
+
 			char mapname[64];
 			parms.StringTok(1,(char*)mapname,64);
+
+			if(!m_active)
+			{
+				ComPrintf("CServer:: Can't change level to %s. Server need to be intialized first\n");
+				return;
+			}
+
+			m_net.Restart();
+			UnloadWorld();
 			LoadWorld(mapname);
 			break;
 		}
 	case CMD_KILLSERVER:
-		Shutdown();
-		break;
+		{
+			for(int i=0;i<m_svState.maxClients;i++)
+			{
+				if(m_clients[i] && m_clients[i]->inUse)
+					m_net.SendDisconnect(i, DR_SVQUIT);
+			}
+			Shutdown();
+			break;
+		}
 	case CMD_STATUS:
 		PrintServerStatus();
 		break;
-	case CMD_CHANGELEVEL:
-		{
-			break;
-		}
 	case CMD_KICK:
 		{
 			break;

@@ -61,39 +61,6 @@ struct NetChanState
 
 /*
 ======================================
-Server State Struct
-This should be maintained by the
-main server class
-======================================
-*/
-struct ServerState
-{
-	ServerState()
-	{	
-		port = 0;
-		maxClients = numClients = levelId = 0;
-		memset(hostName,0,sizeof(hostName));
-		memset(gameName,0,sizeof(gameName));
-		memset(worldname,0,sizeof(worldname));
-		memset(localAddr,0,sizeof(localAddr));
-	}
-
-	int		maxClients;		//Max num of clients
-	int		numClients;		//Current num of clients
-	
-	char	worldname[32];	//Map name
-	int		levelId;		//Current map id
-	
-	//Force server address
-	char	localAddr[NET_IPADDRLEN];	
-	short	port;			//Force server portnum
-	
-	char	hostName[32];	//Server name
-	char	gameName[32];	//Game name
-};
-
-/*
-======================================
 Simple Multicast struct
 Can use this to have the Network server
 write a to bunch of clients

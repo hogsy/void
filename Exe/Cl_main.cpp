@@ -168,12 +168,11 @@ void CClient::UnloadWorld()
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 	m_pSound->UnregisterCache(CACHE_GAME);
 
-//	m_pClState->UnloadWorld();
-
 	if(m_pWorld)
 		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
 
+	m_clientState = CLIENT_DISCONNECTED;
 	System::SetGameState(INCONSOLE);
 }
 

@@ -121,15 +121,18 @@ private:
 	bool Init();
 	void Shutdown();
 	
-	void Restart();
-	void ChangeLevel(const char * worldName);
-	
 	void PrintServerStatus();
-	void ResetServerState();
+	void UpdateServerState();
 	void ExecServerCommands();
 
+	void SendReconnects();
+
+	bool LoadGame();
+	void UnloadGame();
+
 	void LoadEntities();
-	void LoadWorld(const char * mapname);
+	bool LoadWorld(const char * mapname);
+	void UnloadWorld();
 	
 	bool WriteEntBaseLine(const Entity * ent, CBuffer &buf) const;
 	void WriteSignOnBuffer();
@@ -159,6 +162,7 @@ private:
 	
 	//=================================================
 	ServerState		m_svState;
+	ServerState		m_svOldState;
 
 	char			m_printBuffer[512];
 	NetSignOnBufs	m_signOnBufs;

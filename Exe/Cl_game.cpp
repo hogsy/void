@@ -196,6 +196,8 @@ void CGameClient::UnloadWorld()
 	if(!m_ingame)
 		return;
 
+	m_ingame = false;
+
 	EntMove::SetWorld(0);
 
 	delete m_pCamera;
@@ -204,8 +206,6 @@ void CGameClient::UnloadWorld()
 	m_pGameClient = 0;
 	m_pWorld = 0;
 	
-	m_ingame = false;
-
 	for(int i=0; i< GAME_MAXCLIENTS; i++)
 		if(m_clients[i].inUse) 
 			m_clients[i].Reset();
@@ -247,8 +247,6 @@ void CGameClient::Print(const char * msg, ...)
 void CGameClient::Spawn(vector_t	*origin, vector_t *angles)
 {
 }
-
-
 
 
 
