@@ -52,12 +52,16 @@ public:
 
 	//Open the file at the given path
 	bool Open(const char * ifilename);
+	
 	//Close the currently opened file
 	void Close();
+	
 	//Do we have a file open right now ?
 	bool isOpen() const;
+	
 	//Read "count" number of items of "size" into buffer
 	uint Read(void *buf,uint size, uint count);
+	
 	//Return the current byte, advance current position
 	int GetChar();
 	void GetToken(char *buff, bool newline);
