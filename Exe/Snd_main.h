@@ -68,13 +68,13 @@ public:
 
 	//Play a sound originating from an entity
 	//If volume and attenuation are 0 then it uses the ones set to the entitiy
-	void PlaySnd(const ClEntity * ent,
+	void PlaySnd3d(const ClEntity * ent,
 				 int index, CacheType cache,
 				 int volume = 10, int attenuation =0,
 				 int chantype = CHAN_AUTO);
 	
 	//Play a 2d-UI sound at given volume
-	void PlaySnd(int index, CacheType cache,
+	void PlaySnd2d(int index, CacheType cache,
 				 int volume = 10,
 				 int chantype = CHAN_AUTO);
 
@@ -94,17 +94,20 @@ private:
 	VoidSound::CSoundChannel *	m_Channels;			
 
 	//Keep track of static sources
+
+
 	struct SndSource
 	{
 		SndSource() { Reset(); }
 		void Reset() { channel = -1; ent = 0; }  //muteDist =0.0f; 
 		~SndSource() { Reset(); }
-
-//		float muteDist;
+		
 		int   channel;
 		const ClEntity * ent;
 	};
 	SndSource m_sndSources[MAX_STATICSOURCES];
+
+	void PlayStaticSound(SndSource &source);
 	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;

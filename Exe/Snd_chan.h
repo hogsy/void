@@ -19,13 +19,13 @@ public:
 	~CSoundChannel();
 
 	//Create a duplicate buffer. then get a 3dinterface from it
-	bool Create(const CSoundBuffer &buffer,
+	bool Create2d(const CSoundBuffer &buffer,
 				int volume);
 
-	bool Create(const CSoundBuffer &buffer,
-				const ClEntity * ent, 
-				int volume,
-				int attenuation);	
+	bool Create3d(const CSoundBuffer &buffer,
+				  const ClEntity * ent, 
+				  int volume,
+				  int attenuation);	
 	
 	void Destroy();
 	

@@ -115,7 +115,7 @@ max =  min * volume;
 Create a sound sourced from an entitiy
 ==========================================
 */
-bool CSoundChannel::Create(const CSoundBuffer &buffer,
+bool CSoundChannel::Create3d(const CSoundBuffer &buffer,
 						   const ClEntity * ent,
 						   int volume,
 						   int attenuation)
@@ -126,18 +126,23 @@ bool CSoundChannel::Create(const CSoundBuffer &buffer,
 
 	//HRESULT hr;
 
+	//Calculate mute distance
+	m_muteDist = GetMuteDist(volume,attenuation);
+
 	//Get a 3d Interface if its a 3d sound
 	m_pEntity = ent;
 
-	m_pDS3dBuffer->SetMinDistance(500, DS3D_DEFERRED);
-//		m_pDS3dBuffer->SetMaxDistance(600, DS3D_IMMEDIATE);
+	m_pDS3dBuffer->SetMinDistance(m_muteDist * 0.25, DS3D_DEFERRED);
+//	m_pDS3dBuffer->SetMaxDistance(m_muteDist * 0.75, DS3D_DEFERRED);
+
 	m_pDS3dBuffer->SetPosition(m_pEntity->origin.x, 
 							   m_pEntity->origin.y, 
 							   m_pEntity->origin.z, 
 							   DS3D_DEFERRED); //DS3D_DEFERRED);
 //	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_IMMEDIATE);
 
-	//Calculate mute distance
+	
+	
 
 	m_bInUse = true;
 	return true;
@@ -148,7 +153,7 @@ bool CSoundChannel::Create(const CSoundBuffer &buffer,
 Create a 2d sound
 ======================================
 */
-bool CSoundChannel::Create(const CSoundBuffer &buffer,
+bool CSoundChannel::Create2d(const CSoundBuffer &buffer,
 							int volume)
 {
 	if(!CreateBuffer(buffer))
