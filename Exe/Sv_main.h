@@ -88,8 +88,14 @@ public:
 	void WriteGameStatus(CBuffer &buffer);
 	int  NumConfigStringBufs(int stringId) const;
 	bool WriteConfigString(CBuffer &buffer, int stringId, int numBuffer=0);
-	
+
 	//Game Interface
+/*	int  PointContents(const vector_t &v);
+	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end);
+	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end, 
+									 const vector_t &mins, const vector_t &maxs);
+*/	
+	I_World * GetWorld();
 	void ExecCommand(const char * cmd);
 	void DebugPrint(const char * msg);
 	void FatalError(const char * msg);

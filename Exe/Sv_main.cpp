@@ -579,6 +579,13 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 //======================================================================================
 //======================================================================================
 
+
+I_World * CServer::GetWorld()
+{	return m_pWorld;
+}
+
+
+
 /*
 ======================================
 Send sound message to clients in range
@@ -604,6 +611,8 @@ void CServer::FatalError(const char * msg)
 	ComPrintf("Server Error : %s\n", msg);
 	Shutdown();
 }
+
+
 
 /*
 ======================================

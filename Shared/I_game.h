@@ -77,6 +77,9 @@ class to game dlls
 */
 struct I_GameHandler
 {
+	//Interface to World
+	virtual I_World * GetWorld()=0;
+
 	virtual void BroadcastPrintf(const char * msg,...)=0;
 	virtual void ClientPrintf(int clNum, const char * msg,...)=0;
 

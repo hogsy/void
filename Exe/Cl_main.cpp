@@ -142,7 +142,7 @@ bool CClient::LoadWorld(const char *worldname)
 	}
 
 	//setup
-	CMoveType::SetWorld(m_pWorld);
+	EntMove::SetWorld(m_pWorld);
 
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
@@ -212,7 +212,7 @@ void CClient::UnloadWorld()
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 
-	CMoveType::SetWorld(0);
+	EntMove::SetWorld(0);
 
 	delete m_pCamera;
 	m_pCamera = 0;

@@ -20,7 +20,7 @@ void CClient::Move(vector_t &dir, float time)
 		return;
 	}
 
-	CMoveType::ClientMove(m_pClient, dir, time);
+	EntMove::ClientMove(m_pClient, dir, time);
 }
 
 

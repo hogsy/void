@@ -2,6 +2,7 @@
 #define VOID_GAME_DEFS
 
 #include "Com_vector.h"
+#include "Com_trace.h"
 
 /*
 ======================================
@@ -16,7 +17,6 @@ const int	GAME_MAXCLIENTS = 16;
 const char	GAME_WORLDSDIR[]= "Worlds/";
 
 
-
 //======================================================================================
 //======================================================================================
 
@@ -28,24 +28,6 @@ enum EMoveType
 	MOVETYPE_TRAJECTORY,
 	MOVETYPE_STEP
 };
-
-//Forward declarations
-class  CWorld;
-struct BaseEntity;
-
-//defined in Game_move.cpp
-class CMoveType
-{
-public:
-	static void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
-	static void ClientMove(BaseEntity *ent, vector_t &dir, float time);
-
-	static void SetWorld(CWorld * pWorld);
-
-private:
-	static CWorld * m_pWorld;
-};
-
 
 /*
 ============================================================================
@@ -101,5 +83,20 @@ struct ClCmd
 			upmove;
 	//add buttons and what not
 };
+
+
+/*
+================================================
+defined in Game_move.cpp
+================================================
+*/
+namespace EntMove {
+
+void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
+void ClientMove(BaseEntity *ent, vector_t &dir, float time);
+void SetWorld(I_World * pWorld);
+
+}
+
 
 #endif

@@ -3,40 +3,31 @@
 
 #include "Com_defs.h"
 #include "Com_vector.h"
+#include "Com_trace.h"
 #include "Bsp_file.h"
 
 class CFileStream;
 
 /*
 ============================================================================
-keeps info about trace operations within the world
-============================================================================
-*/
-struct TraceInfo
-{
-	TraceInfo() { fraction = 0.0f; plane = 0; }
-	~TraceInfo() { plane = 0; }
-
-	vector_t	endpos;		// where the trace ended
-	float		fraction;	// fraction of trace completed
-	plane_t	  * plane;
-};
-
-/*
-============================================================================
 The World class
 ============================================================================
 */
-class CWorld
+class CWorld : public I_World
 {
 public:
 
 	CWorld();
 	~CWorld();
 
+	//Interface Implementation
+	int  PointContents(const vector_t &v);
+	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end);
+	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end, 
+									 const vector_t &mins, const vector_t &maxs);
+
 	void PrintInfo() const;
-	void WriteToFile(void);
-	void WriteToFile(char * szFilename);
+	void WriteToFile();
 
 	//Util Key Access funcs
 	int	  GetKeyInt(int ent, const char * keyName) const;
@@ -44,14 +35,11 @@ public:
 	float GetKeyFloat(int ent, const char * keyName) const;
 	const char* GetKeyString(int ent, const char * keyName) const;
 
-	int  PointContents(const vector_t &v);
-	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end);
-	void Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end, 
-									 const vector_t &mins, const vector_t &maxs);
-
+#ifdef _VLIGHT_
 	// functions needed by vlight
 	void DestroyLightData(void);
 	void SetLightData(unsigned char *data, int len, bspf_texdef_t *defs, int numdefs);
+#endif
 
 	//the world should be loaded and destroyed using these
 	static CWorld * CreateWorld(const char * szFileName);
@@ -96,8 +84,8 @@ private:
 	plane_t * Ray(int node, const vector_t &start, const vector_t &end, 
 				  float *endfrac, plane_t *lastplane);
 
-	static int LoadLump(FILE * fp, int l, void **data);
-	static int LoadLump(CFileStream &file, int l, void **data);
+	static int  LoadLump(FILE * fp, int l, void **data);
+	static int  LoadLump(CFileStream &file, int l, void **data);
 	static void AddLump(FILE *f, bspf_header_t &header, int l, void *data, int size);
 
 	//Cached world data to prevent 
