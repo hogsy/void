@@ -579,12 +579,6 @@ void CImageReader::ImageReduce()
 		{
 			for (s = 0; s < bpp; s++)
 			{
-/*				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *4)+ s];
-				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*4 + s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *4)+ s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
-				color /= 4;
-*/
 				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *bpp)+ s];
 				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*bpp + s];
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *bpp)+ s];
