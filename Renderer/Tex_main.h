@@ -30,8 +30,8 @@ private:
 		ALL_TEXTURES
 	};
 
-	int				m_numBaseTextures;
-	int				m_numWorldTextures;
+//	int				m_numBaseTextures;
+//	int				m_numWorldTextures;
 	ETextures		m_loaded;
 
 	char			m_textureDir[10];

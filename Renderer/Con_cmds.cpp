@@ -38,7 +38,7 @@ void ScreenShot(const char *name, EImageFileFormat type)
 
 	//find a file name to save it to 
 	sprintf(checkname, "%s\\%s\\", GetCurPath(), "Shots");
-	FileUtil::ConfirmDir(checkname);
+//	FileUtil::ConfirmDir(checkname);
 
 	if (!name)
 	{

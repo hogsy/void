@@ -1,4 +1,7 @@
+
 #include "Standard.h"
+#include "Shader.h"
+#include "ShaderManager.h"
 #include "ren_cache.h"
 
 extern	vector_t	forward, right, up;	// view directions
@@ -106,7 +109,7 @@ free_sil - return the sil to the list
 void free_sil(sil_t *s)
 {
 	// free all polys
-	return_poly(s->polys);
+	g_pShaders->ReturnPoly(s->polys);
 
 	s->next = free_sils;
 	free_sils = s;
@@ -215,14 +218,14 @@ void sil_get_sky_polys(sil_t *s)
 	int num_clipverts;
 
 	// return any polys we may have gotten
-	return_poly(s->polys);
+	g_pShaders->ReturnPoly(s->polys);
 	s->polys = NULL;
 
 	// add each of the sky polys and clip to the sil
 	int endside = world->brushes[0].first_side + world->brushes[0].num_sides;
 	for (int side=world->brushes[0].first_side; side<endside; side++)
 	{
-		cpoly_t *poly = get_poly();
+		cpoly_t *poly = g_pShaders->GetPoly();
 		poly->num_vertices = world->sides[side].num_verts;
 		poly->texdef		= world->sides[side].texdef;
 		poly->lightdef		= world->sides[side].lightdef;
@@ -278,7 +281,7 @@ void sil_get_sky_polys(sil_t *s)
 			if (allback)
 			{
 				poly->next = NULL;
-				return_poly(poly);
+				g_pShaders->ReturnPoly(poly);
 				break;
 			}
 
@@ -373,7 +376,7 @@ sil_t* sil_build(bspf_brush_t *b)
 			else
 			{
 				// add facing polys to the list
-				poly = get_poly();
+				poly = g_pShaders->GetPoly();
 				poly->num_vertices = world->sides[s+b->first_side].num_verts;
 				poly->texdef		= world->sides[s+b->first_side].texdef;
 				poly->lightdef		= world->sides[s+b->first_side].lightdef;
@@ -400,7 +403,8 @@ sil_t* sil_build(bspf_brush_t *b)
 		for (; sil->polys; sil->polys = next)
 		{
 			next = sil->polys->next;
-			cache_add_poly(sil->polys, CACHE_PASS_ZBUFFER);
+			sil->polys->forcez = true;
+			g_pShaders->CacheAdd(sil->polys);
 		}
 
 		free_sil(sil);
@@ -516,11 +520,11 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 	dists[v] = dists[0];
 	sides[v] = sides[0];
 
-	cpoly_t *tmp = get_poly();
+	cpoly_t *tmp = g_pShaders->GetPoly();
 	tmp->next = *front;
 	*front = tmp;
 
-	tmp = get_poly();
+	tmp = g_pShaders->GetPoly();
 	tmp->next = *back;
 	*back = tmp;
 
@@ -575,7 +579,7 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 		tmp = *front;
 		*front = tmp->next;
 		tmp->next = NULL;
-		return_poly(tmp);
+		g_pShaders->ReturnPoly(tmp);
 	}
 
 	if ((*back)->num_vertices < 3)
@@ -583,11 +587,11 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 		tmp = *back;
 		*back = tmp->next;
 		tmp->next = NULL;
-		return_poly(tmp);
+		g_pShaders->ReturnPoly(tmp);
 	}
 
 	base->next = NULL;
-	return_poly(base);
+	g_pShaders->ReturnPoly(base);
 }
 
 
@@ -791,10 +795,8 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 		for ( ; sil->polys; sil->polys = next)
 		{
 			next = sil->polys->next;
-			if (sil->sky)
-				cache_add_poly(sil->polys, CACHE_PASS_SKY);
-			else
-				cache_add_poly(sil->polys, CACHE_PASS_ZFILL);	// polys from beam tree are always perfect
+			sil->polys->forcez = false;
+			g_pShaders->CacheAdd(sil->polys);
 		}
 
 		free_sil(sil);
@@ -913,26 +915,20 @@ void beam_insert(bspf_brush_t *br, int contents)
 	// non-solid are never passed through beam tree
 	if (!(contents & CONTENTS_SOLID))
 	{
-		int cpass;
-		if (contents & CONTENTS_TRANSLUCENT)
-			cpass = CACHE_PASS_ALPHABLEND;
-
-		else
-			cpass = CACHE_PASS_ZBUFFER;
-
 		for (int s=0; s<br->num_sides; s++)
 		{
-			cpoly_t *poly = get_poly();
+			cpoly_t *poly = g_pShaders->GetPoly();
 			poly->num_vertices = world->sides[s+br->first_side].num_verts;
 			poly->texdef		= world->sides[s+br->first_side].texdef;
 			poly->lightdef		= world->sides[s+br->first_side].lightdef;
+			poly->forcez = true;
 
 			for (int v=0; v<poly->num_vertices; v++)
 			{
 				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->vertices[v]);
 			}
 
-			cache_add_poly(poly, cpass);
+			g_pShaders->CacheAdd(poly);
 		}
 
 		return;

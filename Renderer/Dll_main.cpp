@@ -128,7 +128,7 @@ void FError(char *error, ...)
 	va_end(args);
 
 	g_pVoidExp->SystemError(textBuffer);
-
+ 
 /*
 
 	MessageBox(NULL, textBuffer, "Error", MB_OK);

@@ -7,20 +7,20 @@
 
 int used_polys;
 extern bool			lights_available;
-
+/*
 // !!! only map polys are cached !!!
 #ifdef _DEBUG
 #define POLY_CACHE_POLYS	(1024/512)
 #define POLY_CACHE_ALLOCS	(32*512)
 #else
 #define POLY_CACHE_POLYS	1024
-#define POLY_CACHE_ALLOCSlemme experiment here.	32
+#define POLY_CACHE_ALLOCS	32
 #endif
 
 cpoly_t *free_polys = NULL;
 cpoly_t* cache_allocs[POLY_CACHE_ALLOCS];
 int		 num_cache_allocs = 0;
-
+*/
 // FIXME - put in a different struct
 vector_t *fullblend;
 //extern eyepoint_t	eye;			// where we're gonna draw from
@@ -31,7 +31,7 @@ extern const CCamera * camera;
 =================
 allocate some more polys
 =================
-*/
+
 cpoly_t* poly_alloc(void)
 {
 	if (num_cache_allocs == POLY_CACHE_ALLOCS)
@@ -54,13 +54,13 @@ cpoly_t* poly_alloc(void)
 
 	return ret;
 }
-
+*/
 
 /*
 ==================
 get a poly from the pool
 ==================
-*/
+
 cpoly_t* get_poly(void)
 {
 	if (!free_polys)
@@ -70,14 +70,14 @@ cpoly_t* get_poly(void)
 	free_polys = free_polys->next;
 	return ret;
 }
-
+*/
 
 
 /*
 ==================
 return a list of polys to the pool
 ==================
-*/
+
 void return_poly(cpoly_t *p)
 {
 	if (!p)
@@ -89,12 +89,12 @@ void return_poly(cpoly_t *p)
 	p->next = free_polys;
 	free_polys = tmp;
 }
-
+*/
 
 
 /******************************************************************************
 draw a poly
-******************************************************************************/
+******************************************************************************
 void r_draw_world_poly(cpoly_t *p, dimension_t dim, bool shift)
 {
 	float s, t;
@@ -165,11 +165,11 @@ void r_draw_light_poly(cpoly_t *p)
 	}
 	g_pRast->PolyEnd();
 }
-
-
+*/
+/*
 void r_draw_multi_poly(cpoly_t *p, dimension_t dim)
 {
-/*
+
 	// skip polys without a lightmap
 	if (p->lightdef == -1)
 		return;
@@ -216,13 +216,13 @@ void r_draw_multi_poly(cpoly_t *p, dimension_t dim)
 
 	}
 	glEnd();
-*/
-}
 
+}
+*/
 
 /******************************************************************************
 clear out all cached polys
-******************************************************************************/
+******************************************************************************
 void cache_purge_single()
 {
 	bool lightmaps = ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT));
@@ -308,7 +308,7 @@ void cache_purge_single()
 		}
 
 
-		for(uint t=0; t<g_pRast->TextureCount(tex->bin_world); t++)
+		for(uint t=0; t<world->ntextures; t++)
 		{
 			// only bind if we have a poly that uses it
 			if (!tex->polycaches[pass/2][t])
@@ -321,10 +321,12 @@ void cache_purge_single()
 
 			for (cpoly_t *p=tex->polycaches[pass/2][t]; p; p=p->next)
 			{
+
 				if (pass%2 == 0)
 					r_draw_world_poly(p, tex->dims[t], pass!=0);
 				else
 					r_draw_light_poly(p);
+
 			}
 		}
 	}
@@ -332,15 +334,15 @@ void cache_purge_single()
 	// alphablend turns it off
 	g_pRast->DepthWrite(true);
 }
-
-
+*/
+/*
 void cache_purge_multi()
 {
 	//
 	// arb multi texturing
 	//
 	
-/*
+
 	// world textures are unit 0, lightmaps are unit 1
 	// set up blending
 
@@ -415,13 +417,14 @@ void cache_purge_multi()
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glEnable(GL_TEXTURE_2D);
 
-*/
+
 }
-
-
+*/
+/*
 //extern CVar  g_pMultiTexture;
 void cache_purge(void)
 {
+
 	bool multitex = ((g_rInfo.rflags&RFLAG_MULTITEXTURE) && 
 					!(g_rInfo.rflags&RFLAG_FULLBRIGHT) 
 					&& world->nlightdefs && world->light_size);
@@ -435,7 +438,7 @@ void cache_purge(void)
 	// free all the polys that are cached
 	for (int p=0; p<CACHE_PASS_NUM; p++)
 	{
-		for(uint t=0; t<g_pRast->TextureCount(tex->bin_world); t++)
+		for(uint t=0; t<world->ntextures; t++)
 		{
 			return_poly(tex->polycaches[p][t]);
 			tex->polycaches[p][t] = NULL;
@@ -445,21 +448,21 @@ void cache_purge(void)
 	// fixme - put this in the cache_purge_* funcs
 	g_pClient->Purge();
 }
-
+*/
 
 /******************************************************************************
 add a poly to be drawn
-******************************************************************************/
+******************************************************************************
 void cache_add_poly(cpoly_t *poly, int pass)
 {
 	poly->next = tex->polycaches[pass][world->texdefs[poly->texdef].texture];
 	tex->polycaches[pass][world->texdefs[poly->texdef].texture] = poly;
 }
-
+*/
 
 /******************************************************************************
 free mem from the whole cache
-******************************************************************************/
+******************************************************************************
 void cache_destroy(void)
 {
 	for (int i=0; i<num_cache_allocs; i++)
@@ -468,7 +471,7 @@ void cache_destroy(void)
 	num_cache_allocs = 0;
 	free_polys = NULL;
 }
-
+*/
 
 
 

@@ -12,6 +12,7 @@
 
 #include "I_file.h"
 #include "Shader.h"
+#include "Tex_image.h"
 
 
 /*
@@ -235,7 +236,7 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 
 		// unknown
 		else
-			ComPrintf("unsupported layer keyword %s\n", token);
+			ComPrintf("unsupported shader layer keyword %s\n", token);
 
 	} while (1);
 
@@ -270,6 +271,26 @@ void CShaderLayer::Default(const char *name, int &texindex)
 
 
 /*
+===========
+GetDims
+===========
+*/
+void CShaderLayer::GetDims(int &width, int &height)
+{
+	TextureData		tdata;
+	char texname[COM_MAXPATH];
+	sprintf(texname,"%s/%s","textures",mTextureNames[0].filename);
+
+	CImageReader::GetReader().Read(texname, tdata);
+	CImageReader::GetReader().FreeMipData();
+
+	width = tdata.width;
+	height= tdata.height;
+}
+
+
+
+/*
 ===================================================================================================
 CShader
 ===================================================================================================
@@ -281,6 +302,7 @@ CShader::CShader(const char *name)
 	mNumTextures = 0;
 	mNumLayers = 0;
 	mRefCount = 0;
+	mPass = CACHE_PASS_ZFILL;
 }
 
 
@@ -316,6 +338,11 @@ void CShader::Parse(CFileBuffer *shader)
 			mNumLayers++;
 		}
 
+		else if (_stricmp(token, "sky") == 0)
+		{
+			mPass = CACHE_PASS_SKY;
+		}
+
 		// end of shader def
 		else if (_stricmp(token, "}") == 0)
 			break;
@@ -325,6 +352,13 @@ void CShader::Parse(CFileBuffer *shader)
 			ComPrintf("unsupported shader keyword %s\n", token);
 
 	} while (1);
+
+
+	// FIXME - check for alphagen funcs too
+	if ((mLayers[0]->mSrcBlend != VRAST_SRC_BLEND_NONE) ||
+		(mLayers[0]->mDstBlend != VRAST_DST_BLEND_NONE))
+		mPass = CACHE_PASS_TRANSPARENT;
+
 }
 
 
@@ -353,6 +387,21 @@ void CShader::Release(void)
 	if (mRefCount == 0)
 		UnLoadTextures();
 }
+
+
+/*
+===========
+GetDims
+===========
+*/
+void CShader::GetDims(int &width, int &height)
+{
+	if (mLayers[0]->mIsLight)
+		mLayers[1]->GetDims(width, height);
+	else
+		mLayers[0]->GetDims(width, height);
+}
+
 
 
 /*

@@ -21,7 +21,7 @@ public:
 private:
 	int mRefCount;
 
-	int	tex_bin;		// rasterizer texture name
+//	int	tex_bin;		// rasterizer texture name
 	int mShaderBin;
 	char *imagefile;	// text texture name
 };

@@ -27,7 +27,7 @@ protected:
 	// skin info
 	int num_skins;
 	int mShaderBin;
-	int	skin_bin;		// rasterizer texture names
+//	int	skin_bin;		// rasterizer texture names
 	char **skin_names;	// text texture names
 
 	// filename of model

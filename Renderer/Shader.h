@@ -5,6 +5,12 @@
 #define MAX_SHADER_LAYERS	8
 
 
+#define CACHE_PASS_SKY			0
+#define	CACHE_PASS_ZFILL		1
+#define	CACHE_PASS_TRANSPARENT	2
+// #define CACHE_PASS_NUM			3	// !! change this in shadermanager.h !!
+
+
 class CFileBuffer;
 
 
@@ -24,6 +30,7 @@ public:
 
 	void Parse(CFileBuffer *layer, int &texindex);
 	void Default(const char *name, int &texindex);
+	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
 
 
 
@@ -52,7 +59,6 @@ public:
 	// tex coord generation
 	ETexGen			mTexGen;
 	vector_t		mTexVector[2];
-
 };
 
 
@@ -67,6 +73,7 @@ public:
 	void Default(void);
 
 	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }
+	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
 
 	void AddRef(void);
 	void Release(void);
@@ -74,6 +81,7 @@ public:
 	void LoadTextures(void);
 	void UnLoadTextures(void);
 
+	int mPass;	// which pass it should be rendered as
 
 private:
 

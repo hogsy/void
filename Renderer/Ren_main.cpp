@@ -2,7 +2,9 @@
 #include "Ren_main.h"
 #include "Ren_beam.h"
 #include "Ren_cache.h"
-#include "Tex_hdr.h"
+#include "ShaderManager.h"
+#include "Client.h"
+
 
 extern CVar		 * g_pVidSynch;
 const  CCamera   * camera=0;
@@ -229,7 +231,8 @@ void r_draw_world()
 	build_frust();
 	beam_reset();
 	r_draw_node(0);
-	cache_purge();
+	g_pShaders->CachePurge();
+	g_pClient->Purge();
 }
 
 

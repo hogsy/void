@@ -4,14 +4,8 @@
 #include "Tex_image.h"
 
 
-const char * BaseTextureList[] =
-{
-	"base/_ascii",
-	"base/conback",
-	0
-};
 
-tex_t			* tex=0;
+//tex_t			* tex=0;
 CTextureManager * g_pTex=0;
 extern	CVar *	g_p32BitTextures;
 
@@ -26,8 +20,8 @@ CTextureManager::CTextureManager()
 	strcpy(m_textureDir,"textures");
 	
 	m_loaded = NO_TEXTURES;
-	m_numBaseTextures = 0;
-	m_numWorldTextures = 0;
+//	m_numBaseTextures = 0;
+//	m_numWorldTextures = 0;
 }
 
 /*
@@ -48,6 +42,7 @@ Load base game textures
 */
 bool CTextureManager::Init()
 {
+/*
 	//allocate all mem
 	tex = new tex_t();
 	if (tex == NULL) 
@@ -61,7 +56,7 @@ bool CTextureManager::Init()
 		m_numBaseTextures =  count +1;
 
 	//Alloc space for base textures
-	tex->bin_base = g_pRast->TextureBinInit(m_numBaseTextures);
+//	tex->bin_base = g_pRast->TextureBinInit(m_numBaseTextures);
 
 	ComPrintf("CTextureManager::Init:Creating base textures");
 
@@ -79,6 +74,7 @@ bool CTextureManager::Init()
 	m_loaded = BASE_TEXTURES;
 	
 	CImageReader::GetReader().FreeMipData();
+*/
 	return true;
 }
 
@@ -91,14 +87,14 @@ Release all textures
 */
 bool CTextureManager::Shutdown()
 {
-	if (!tex)
+/*	if (!tex)
 		return false;
 
 	UnloadWorldTextures();
 
 	ComPrintf("CTextureManager::Shutdown:Destroying base textures :");
 
-	g_pRast->TextureBinDestroy(tex->bin_base);
+//	g_pRast->TextureBinDestroy(tex->bin_base);
 
 	delete tex;	
 	tex = 0;
@@ -106,6 +102,7 @@ bool CTextureManager::Shutdown()
 	m_loaded = NO_TEXTURES;
 
 	ComPrintf("OK\n");
+*/
 	return true;
 }
 
@@ -116,6 +113,7 @@ LoadWorld Textures
 */
 bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 {
+/*
 	if(m_loaded != BASE_TEXTURES)
 		return false;
 
@@ -130,22 +128,23 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 
 	m_numWorldTextures = 0;
 
-	//Count number of textures
-	while (pWorld->textures[m_numWorldTextures][0] != '\0')
-		m_numWorldTextures++;
+*/	//Count number of textures
+//	while (pWorld->textures[m_numWorldTextures][0] != '\0')
+//		m_numWorldTextures++;
 
-	tex->bin_world = g_pRast->TextureBinInit(m_numWorldTextures);
 
+//	tex->bin_world = g_pRast->TextureBinInit(m_numWorldTextures);
+/*
 	// allocate the poly cache
 	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
-		tex->polycaches[i] = new cpoly_t* [m_numWorldTextures];
+		tex->polycaches[i] = new cpoly_t* [world->ntextures];
 		if (!tex->polycaches[i]) 
 		{
 			FError("mem for map tex cache");
 			return false;
 		}
-		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * m_numWorldTextures);
+		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * world->ntextures);
 	}
 
 	// allocate dim's
@@ -155,7 +154,8 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 		FError("mem for map tex dims");
 		return false;
 	}
-
+*/
+/*
 	TextureData tData;
 	tData.bMipMaps = true;
 	tData.bClamped  = false;
@@ -166,7 +166,7 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 
 		tex->dims[t][0] = tData.width;
 		tex->dims[t][1] = tData.height;
-
+*/
 		// create all mipmaps
 /*		int mipcount = tData.numMipMaps - 1;
 		while (mipcount > 0)
@@ -175,9 +175,9 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 			mipcount--;
 		}
 */
-		g_pRast->TextureLoad(tex->bin_world, t, tData);
-	}
-
+//		g_pRast->TextureLoad(tex->bin_world, t, tData);
+//	}
+/*
 // FIXME - temp hack to get lightmapping working
 	if (!pWorld->nlightdefs || !pWorld->light_size)
 	{
@@ -208,6 +208,7 @@ bool CTextureManager::LoadWorldTextures(CWorld * pWorld)
 	}
 
 	CImageReader::GetReader().FreeMipData();
+*/
 	m_loaded = ALL_TEXTURES;
 	return true;
 }
@@ -220,6 +221,7 @@ UnloadWorld Textures
 */
 bool CTextureManager::UnloadWorldTextures()
 {
+/*
 	if(m_loaded != ALL_TEXTURES)
 		return true;
 
@@ -230,8 +232,8 @@ bool CTextureManager::UnloadWorldTextures()
 
 	g_pRast->TextureBinDestroy(tex->bin_world);
 	tex->bin_world = -1;
-
-	for (int i=0; i<CACHE_PASS_NUM; i++)
+*/
+/*	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
 		delete [] tex->polycaches[i];
 		tex->polycaches[i] = 0;
@@ -249,7 +251,7 @@ bool CTextureManager::UnloadWorldTextures()
 		delete [] tex->dims;
 		tex->dims = 0;
 	}
-
+*/
 	ComPrintf("OK\n");
 
 	m_loaded = BASE_TEXTURES;

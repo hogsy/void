@@ -132,7 +132,6 @@ public:
 	virtual int  TextureBinInit(int num)=0;
 	virtual int  TextureCount(int bin)=0;
 	virtual void TextureBinDestroy(int bin)=0;
-	virtual void TextureSet(int bin, int texnum)=0;
 	virtual void TextureLoad(int bin, int num, const TextureData &texdata)=0;
 
 	virtual void MatrixReset(void)=0;
@@ -171,6 +170,7 @@ public:
 
 private:
 	void DrawLayer(int l);
+	virtual void TextureSet(int bin, int texnum)=0;
 
 protected:
 	CVar    m_cWndX;        //Windowed X pos

@@ -4,9 +4,36 @@
 
 #define MAX_SHADERS		1024
 #define MAX_SHADER_BINS	1024
+#define CACHE_PASS_NUM			3
 
 typedef int hShader;
 class CShader;
+
+
+// !!! only map polys are cached !!!
+#ifdef _DEBUG
+#define POLY_CACHE_POLYS	(1024/512)
+#define POLY_CACHE_ALLOCS	(32*512)
+#else
+#define POLY_CACHE_POLYS	1024
+#define POLY_CACHE_ALLOCS	32
+#endif
+
+
+
+struct cpoly_t
+{
+	int			num_vertices;
+	vector_t	vertices[32];
+
+	int			texdef;
+	int			lightdef;
+
+	bool		forcez;	// forces a ztest
+
+	cpoly_t *next;
+};
+
 
 
 class CShaderManager
@@ -25,6 +52,14 @@ public:
 #endif
 
 	void LoadShader(int bin, int index, const char *name);	// loads a specific shader, creates the default if it isn't found
+	void GetDims(char *name, int &width, int &height);	// get width & height of first non-lightmap layer of shader
+
+	
+	void CacheAdd(cpoly_t *p);
+	void CachePurge(void);
+	cpoly_t*	GetPoly(void);
+	void		ReturnPoly(cpoly_t *p);
+
 
 	CShader *GetShader(int bin, int index)	{	return (mShaders[mBins[bin].indices[index]]);	}
 
@@ -54,6 +89,17 @@ private:
 	};
 
 	shader_bin_t mBins[MAX_TEXTURE_BINS];
+	cpoly_t		**mCache[CACHE_PASS_NUM];	// world poly cache
+
+	cpoly_t*	PolyAlloc(void);
+	void		CacheDestroy(void);
+
+	cpoly_t		*mFreePolys;
+	cpoly_t		*mCacheAllocs[POLY_CACHE_ALLOCS];
+	int			mNumCacheAllocs;
+
+
+
 
 	int mNumShaders;
 	void ParseShaders(const char *shaderfile);	// parse all shaders into memory

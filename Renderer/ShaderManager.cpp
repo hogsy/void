@@ -10,17 +10,23 @@
 #include "I_file.h"
 #endif
 
-#include "ShaderManager.h"
 #include "Shader.h"
+#include "ShaderManager.h"
 
 
 
 
 CShaderManager	*g_pShaders=0;
 
-#ifdef RENDERER
-extern const char * BaseTextureList[];
-#endif
+
+const char * BaseTextureList[] =
+{
+	"base/_ascii",
+	"base/conback",
+	0
+};
+
+
 
 
 /*
@@ -35,11 +41,17 @@ CShaderManager::CShaderManager()
 	mLightmapBin = -1;
 	mWorldBin	 = -1;
 	mBaseBin	 = -1;
+	mFreePolys	 = NULL;
+	mNumCacheAllocs = 0;
 
 
 	CFileBuffer	 fileReader;
 	if (!fileReader.Open("Shaders/shaderlist.txt"))
 		return;
+
+
+	for (int i=0; i<CACHE_PASS_NUM; i++)
+		mCache[i] = 0;
 
 
 	char token[1024];
@@ -61,6 +73,10 @@ CShaderManager::~CShaderManager()
 {
 	for (int s=0; s<mNumShaders; s++)
 		delete mShaders[s];
+
+#ifdef RENDERER
+	CacheDestroy();
+#endif
 }
 
 
@@ -132,12 +148,53 @@ void CShaderManager::LoadShader(int bin, int index, const char *name)
 
 /*
 ===========
+GetDims
+===========
+*/
+void CShaderManager::GetDims(char *name, int &width, int &height)
+{
+	// find it if we already have it loaded
+	for (int s=0; s<mNumShaders; s++)
+	{
+		if (mShaders[s]->IsShader(name))
+		{
+			mShaders[s]->GetDims(width, height);
+			return;
+		}
+	}
+
+	// create the default
+	if (mNumShaders == MAX_SHADERS)
+		FError("too many shaders - tell js\n");
+
+	mShaders[mNumShaders] = new CShader(name);
+	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->AddRef();
+	mShaders[mNumShaders]->GetDims(width, height);
+}
+
+
+/*
+===========
 LoadWorld
 ===========
 */
 #ifdef RENDERER
 void CShaderManager::LoadWorld(CWorld *map)
 {
+	// create cache
+	for (int i=0; i<CACHE_PASS_NUM; i++)
+	{
+		mCache[i] = new cpoly_t* [world->ntextures];
+		if (!mCache[i]) 
+		{
+			FError("mem for map tex cache");
+			return;
+		}
+		memset(mCache[i], 0, sizeof(cpoly_t**) * map->ntextures);
+	}
+
+
 	// load lightmaps
 	if (map->nlightdefs && map->light_size)
 	{
@@ -164,16 +221,18 @@ void CShaderManager::LoadWorld(CWorld *map)
 	// load textures
 
 	//Count number of textures
-	int n=0;
-	while (map->textures[n][0] != '\0')
-		n++;
-
 	if (mWorldBin != -1)
 			ComPrintf("CShaderManager::LoadWorld - world bin in use\n");
 
-	mWorldBin = BinInit(n);
-	for (int t=0; t<n; t++)
+	mWorldBin = BinInit(world->ntextures);
+//	char texname[260];
+	for (int t=0; t<world->ntextures; t++)
+	{
+//		strcpy(texname, "textures");
+//		strcat(texname, "/");
+//		strcat(texname, map->textures[t]);
 		LoadShader(mWorldBin, t, map->textures[t]);
+	}
 }
 
 /*
@@ -194,6 +253,14 @@ void CShaderManager::UnLoadWorld(void)
 	if (mWorldBin != -1)
 		BinDestroy(mWorldBin);
 	mWorldBin = -1;
+
+	// destroy poly cache
+	for (int i=0; i<CACHE_PASS_NUM; i++)
+	{
+		if (mCache[i])
+			delete [] mCache[i];
+		mCache[i] = 0;
+	}
 }
 
 
@@ -280,9 +347,124 @@ void CShaderManager::BinDestroy(int bin)
 
 
 
+/*
+========
+CacheAdd
+========
+*/
+#ifdef RENDERER
+void CShaderManager::CacheAdd(cpoly_t *p)
+{
+	int index = world->texdefs[p->texdef].texture;
+	CShader *s = GetShader(mWorldBin, index);
+
+	p->next = mCache[s->mPass][index];
+	mCache[s->mPass][index] = p;
+}
+
+
+/*
+========
+CachePurge
+========
+*/
+void CShaderManager::CachePurge(void)
+{
+	for (int p=0; p<CACHE_PASS_NUM; p++)
+	{
+		for (int t=0; t<world->ntextures; t++)
+		{
+			cpoly_t *poly = mCache[p][t];
+
+			if (poly)
+			{
+				CShader *shader = GetShader(mWorldBin, t);
+				if (shader->mPass != p)
+					continue;
+
+				g_pRast->ShaderSet(shader);
+				while (poly)
+				{
+					g_pRast->TextureTexDef(&world->texdefs[poly->texdef]);
+					g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
+					for (int v = 0; v < poly->num_vertices; v++)
+					{
+						g_pRast->PolyVertexf(poly->vertices[v]);
+					}
+					g_pRast->PolyEnd();
+
+					poly = poly->next;
+				}
+
+				ReturnPoly(mCache[p][t]);
+				mCache[p][t] = NULL;
+			}
+		}
+	}
+}
 
 
 
 
 
 
+
+// poly memory management funcs
+cpoly_t* CShaderManager::PolyAlloc(void)
+{
+	if (mNumCacheAllocs == POLY_CACHE_ALLOCS)
+		FError("too many cache alloc's!  ** tell Ripper **");
+
+	// free_polys must be NULL
+	mFreePolys = new cpoly_t[POLY_CACHE_POLYS];
+	if (!mFreePolys)
+		FError("mem for poly cache - %d allocated", POLY_CACHE_POLYS*mNumCacheAllocs);
+
+	// set the linkage
+	for (int i=0; i<POLY_CACHE_POLYS-1; i++)
+		mFreePolys[i].next = &mFreePolys[i+1];
+	mFreePolys[i].next = NULL;
+
+	mCacheAllocs[mNumCacheAllocs] = mFreePolys;
+	mNumCacheAllocs++;
+	cpoly_t *ret = mFreePolys;
+	mFreePolys = mFreePolys->next;
+
+	return ret;
+}
+
+
+void CShaderManager::CacheDestroy(void)
+{
+	for (int i=0; i<mNumCacheAllocs; i++)
+		delete [] mCacheAllocs[i];
+
+	mNumCacheAllocs = 0;
+	mFreePolys = NULL;
+}
+
+
+cpoly_t* CShaderManager::GetPoly(void)
+{
+	if (!mFreePolys)
+		return PolyAlloc();
+
+	cpoly_t *ret = mFreePolys;
+	mFreePolys = mFreePolys->next;
+	return ret;
+}
+
+
+void CShaderManager::ReturnPoly(cpoly_t *p)
+{
+	if (!p)
+		return;
+
+	cpoly_t *tmp = p;
+	while (p->next)
+		p = p->next;
+	p->next = mFreePolys;
+	mFreePolys = tmp;
+}
+
+#endif

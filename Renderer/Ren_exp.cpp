@@ -173,7 +173,6 @@ bool CRenExp::Shutdown(void)
 	g_pRast->SetFocus();
 
 	//Destroy Subsystems
-	cache_destroy();
 	beam_shutdown();
 
 	g_pClient->UnLoadTextures();

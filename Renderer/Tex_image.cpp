@@ -1,4 +1,14 @@
+
+
+#ifdef RENDERER
 #include "Standard.h"
+#else
+#include "Com_defs.h"
+#include "Rast_main.h"
+#include "../vbsp/source/std_lib.h"
+#endif
+
+
 #include "Tex_image.h"
 #include "Ijl/ijl.h"
 
@@ -73,7 +83,11 @@ void CImageReader::FreeMipData(void)
 	for (int i=0; i<MAX_MIPMAPS; i++)
 	{
 		if (m_mipmapdata[i])
+#ifdef RENDERER
 			g_pHunkManager->HunkFree(m_mipmapdata[i]);
+#else
+			free(m_mipmapdata[i]);
+#endif
 		m_mipmapdata[i] = 0;
 	}
 }
@@ -512,7 +526,11 @@ void CImageReader::ConfirmMipData(void)
 		if (m_mipmapdata[m])
 			continue;
 
+#ifdef RENDERER
 		m_mipmapdata[m] = (byte*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
+#else
+		m_mipmapdata[m] = new byte[mipdatasizes[m]];
+#endif
 		if (!m_mipmapdata[m])
 		{
 			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
