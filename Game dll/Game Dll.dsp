@@ -93,7 +93,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\Game_ents.cpp
+SOURCE=.\Game_dll.cpp
 # End Source File
 # Begin Source File
 
@@ -102,6 +102,14 @@ SOURCE=.\Game_main.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Game_move.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Game_spawn.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Game_var.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -113,11 +121,11 @@ SOURCE=.\Game.def
 # End Source File
 # Begin Source File
 
-SOURCE=.\Game_ents.h
+SOURCE=.\Game_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Game_main.h
+SOURCE=.\Game_spawn.h
 # End Source File
 # End Group
 # Begin Group "Shared"
@@ -158,6 +166,10 @@ SOURCE=..\Shared\Com_parms.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Com_parms.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_trace.h
 # End Source File
 # Begin Source File
 

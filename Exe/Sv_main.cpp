@@ -19,8 +19,6 @@ enum
 	CMD_KICK = 5
 };
 
-const float GAME_FRAMETIME = 0.05f;	// 1/20
-
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
 
@@ -270,49 +268,42 @@ void CServer::RunFrame()
 	//Get updates
 	m_net.ReadPackets();
 
-
 	//Run game at fixed speed
 	if(m_fGameTime < System::GetCurTime())
 	{
 		m_fGameTime = System::GetCurTime() + GAME_FRAMETIME;
-		m_pGame->RunFrame(System::GetCurTime(), GAME_FRAMETIME);
+		m_pGame->RunFrame(System::GetCurTime());
 
-	//Write updates to all connected clients
-	for(int i=0;i<m_svState.maxClients;i++)
-	{
-		if((!m_clients[i]) || (!m_clients[i]->spawned) || (!m_net.ChanCanSend(i)))
-			continue;
-
-		//Write clients own position, this does not include angles ?
-		m_net.ChanBeginWrite(i, SV_UPDATE, 12);
-		m_net.ChanWriteFloat(m_clients[i]->origin.x);
-		m_net.ChanWriteFloat(m_clients[i]->origin.y);
-		m_net.ChanWriteFloat(m_clients[i]->origin.z);
-		m_net.ChanFinishWrite();
-
-		//Write position AND angles of other clients in PVS
-		for(int j=0; j<m_svState.maxClients; j++)
+		//Write updates to all connected clients
+		for(int i=0;i<m_svState.maxClients;i++)
 		{
-			if((!m_clients[j]) || (!m_clients[j]->spawned) || (i==j))
+			if((!m_clients[i]) || (!m_clients[i]->spawned) || (!m_net.ChanCanSend(i)))
 				continue;
 
-			m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 20);
-			m_net.ChanWriteShort(m_clients[j]->num);
-				
-			m_net.ChanWriteCoord(m_clients[j]->origin.x);
-			m_net.ChanWriteCoord(m_clients[j]->origin.y);
-			m_net.ChanWriteCoord(m_clients[j]->origin.z);
-/*
-			m_net.ChanWriteFloat(m_clients[j]->origin.x);
-			m_net.ChanWriteFloat(m_clients[j]->origin.y);
-			m_net.ChanWriteFloat(m_clients[j]->origin.z);
-*/
-			m_net.ChanWriteAngle(m_clients[j]->angles.x);
-			m_net.ChanWriteAngle(m_clients[j]->angles.y);
-			m_net.ChanWriteAngle(m_clients[j]->angles.z);
+			//Write clients own position
+			m_net.ChanBeginWrite(i, SV_UPDATE, 12);
+			m_net.ChanWriteFloat(m_clients[i]->origin.x);
+			m_net.ChanWriteFloat(m_clients[i]->origin.y);
+			m_net.ChanWriteFloat(m_clients[i]->origin.z);
 			m_net.ChanFinishWrite();
+
+			//Write position AND angles of other clients in PVS
+			for(int j=0; j<m_svState.maxClients; j++)
+			{
+				if((!m_clients[j]) || (!m_clients[j]->spawned) || (i==j))
+					continue;
+
+				m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 20);
+				m_net.ChanWriteShort(m_clients[j]->num);
+				m_net.ChanWriteCoord(m_clients[j]->origin.x);
+				m_net.ChanWriteCoord(m_clients[j]->origin.y);
+				m_net.ChanWriteCoord(m_clients[j]->origin.z);
+				m_net.ChanWriteAngle(m_clients[j]->angles.x);
+				m_net.ChanWriteAngle(m_clients[j]->angles.y);
+				m_net.ChanWriteAngle(m_clients[j]->angles.z);
+				m_net.ChanFinishWrite();
+			}
 		}
-	}
 
 	}
 
@@ -342,23 +333,9 @@ void CServer::ExecServerCommands()
 //======================================================================================
 //======================================================================================
 
-void CServer::UnloadWorld()
-{
-	//destroy world data
-	if(m_pWorld)
-	{
-		if(m_pGame)
-			m_pGame->UnloadWorld();
-
-		CWorld::DestroyWorld(m_pWorld);
-		m_pWorld = 0;
-		ComPrintf("CServer : Unloaded World\n");
-	}
-}
-
 /*
 ==========================================
-Load the World
+Load/Unload the World
 ==========================================
 */
 bool CServer::LoadWorld(const char * mapname)
@@ -415,6 +392,20 @@ bool CServer::LoadWorld(const char * mapname)
 
 	ComPrintf("CServer::LoadWorld: %s OK\n", m_svState.worldname);
 	return true;
+}
+
+void CServer::UnloadWorld()
+{
+	//destroy world data
+	if(m_pWorld)
+	{
+		if(m_pGame)
+			m_pGame->UnloadWorld();
+
+		CWorld::DestroyWorld(m_pWorld);
+		m_pWorld = 0;
+		ComPrintf("CServer : Unloaded World\n");
+	}
 }
 
 
@@ -772,6 +763,7 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 			}
 
 			m_net.SendReconnectToAll();
+			
 			//FIXME. check for dedicated
 			System::GetConsole()->ExecString("reconnect");
 

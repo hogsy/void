@@ -68,6 +68,8 @@ private:
 	void MoveBackward();
 	void MoveRight();
 	void MoveLeft();
+	void Jump();
+	void Crouch();
 	void RotateRight(const float &val);
 	void RotateLeft(const float &val);
 	void RotateUp(const float &val);

@@ -3,7 +3,6 @@
 
 #include "In_defs.h"
 
-
 //Registered Command Ids
 enum
 {
@@ -16,13 +15,14 @@ enum
 	CMD_ROTATE_UP	  =	6,
 	CMD_ROTATE_DOWN	  =	7,
 	CMD_JUMP		  = 8,
-	CMD_BIND		  =	9,
-	CMD_BINDLIST	  =	10,
-	CMD_UNBIND		  =	11,
-	CMD_UNBINDALL	  =	12,
-	CMD_CAM			  =	13,
-	CMD_TALK		  = 14,
-	CMD_DEBUG		  = 15
+	CMD_CROUCH		  = 9,
+	CMD_BIND		  =	10,
+	CMD_BINDLIST	  =	11,
+	CMD_UNBIND		  =	12,
+	CMD_UNBINDALL	  =	13,
+	CMD_CAM			  =	14,
+	CMD_TALK		  = 15,
+	CMD_DEBUG		  = 16
 };
 
 /*
@@ -46,6 +46,7 @@ const ClientGameCmd g_clGameCmds[] =
 	{	"+lookup",		CMD_ROTATE_UP	},
 	{	"+lookdown",	CMD_ROTATE_DOWN },
 	{	"jump",			CMD_JUMP },
+	{	"crouch",		CMD_CROUCH },
 	{	0, 0}
 };
 

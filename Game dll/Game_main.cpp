@@ -1,39 +1,13 @@
+#include "Game_hdr.h"
 #include "Game_main.h"
+#include "Game_spawn.h"
 #include "Com_buffer.h"
-#include "Game_ents.h"
-#include "I_console.h"
 
-const char MEM_SZLOGFILE[] = "mem_game.log";
-
-I_GameHandler * g_pImports=0;
-I_Console * g_pCons=0;
-
-CGame *		g_pGame=0;
-
-
-I_Game * GAME_GetAPI(I_GameHandler * pImports, I_Console * pConsole)
-{
-	g_pImports = pImports;
-	g_pCons = pConsole;
-	if(!g_pGame)
-		g_pGame = new CGame();
-	return g_pGame;
-}
-
-void GAME_Shutdown()
-{
-	if(g_pGame)
-	{	delete g_pGame;
-		g_pGame = 0;
-	}
-	g_pImports = 0;
-	g_pCons = 0;
-}
-
-//======================================================================================
-//======================================================================================
-
-
+/*
+================================================
+Constructor/Destructor
+================================================
+*/
 CGame::CGame()
 {
 	entities = new Entity * [GAME_MAXENTITIES];
@@ -44,6 +18,8 @@ CGame::CGame()
 	clients = new EntClient * [GAME_MAXCLIENTS];
 	memset(clients,0, sizeof(EntClient *) * GAME_MAXCLIENTS);
 	numClients = 0;
+
+	InitializeVars();
 }
 
 CGame::~CGame()
@@ -68,124 +44,160 @@ CGame::~CGame()
 	}
 }
 
-
+/*
+================================================
+Initalize/Destroy the Game
+================================================
+*/
 bool CGame::InitGame()
-{
-	EntSpawner::RegisterMakers();
+{	EntSpawner::RegisterMakers();
 	return true;
 }
 
 void CGame::ShutdownGame()
-{
-	EntSpawner::DestroyMakers();
+{	EntSpawner::DestroyMakers();
 }
 
-void CGame::RunFrame(float curTime, float frameTime)
-{
-	vector_t desiredMove;	// only the new move from input
-	vector_t forward, right, up;
-	vector_t f, r;
+/*
+================================================
+Load/Unload World
+================================================
+*/
+bool CGame::LoadWorld(I_World * pWorld)
+{	EntMove::SetWorld(pWorld);
+	return true;
+}
 
+void CGame::UnloadWorld()
+{	EntMove::SetWorld(0);
+}
+
+
+/*
+================================================
+Spawn entities from parms
+================================================
+*/
+bool CGame::SpawnEntity(CBuffer &buf)
+{
+	buf.BeginRead();
+	char * classname = buf.ReadString();
+
+	Entity * ent = EntSpawner::CreateEntity(classname,buf);
+	if(ent)
+	{
+ComPrintf("GAME: %s at (%.2f,%.2f,%.2f)\n", ent->classname, ent->origin.x, ent->origin.y, ent->origin.z);
+		entities[numEnts] = ent;
+		entities[numEnts]->num = numEnts;
+		numEnts++;
+		return true;
+	}
+	return false;
+}
+
+
+//==========================================================================
+//The Game frame
+//==========================================================================
+
+void CGame::RunFrame(float curTime)
+{
 	//Run entities
 	for(int i=0; i<numEnts; i++)
 	{
 	}
 
-	//Run clients
+	//Run client movement
+
+	vector_t desiredMove;	
+	vector_t forward, right, up;
+
 	for(i=0; i<numClients; i++)
 	{
-		if(clients[i]->spawned && clients[i]->clCmd.flags)
+		//Only move the client if we got new input from him  ?
+		//So if the client is lagged, he will be stuck on the server, and
+		//jump back to his original position when his connection unclogs
+		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
 		{
-			clients[i]->angles.x = clients[i]->clCmd.angles[0];
-			clients[i]->angles.y = clients[i]->clCmd.angles[1];
-			clients[i]->angles.z = clients[i]->clCmd.angles[2];
-
+			clients[i]->angles = clients[i]->clCmd.angles;
 			clients[i]->angles.AngleToVector(&forward,&right,&up);
-			forward.Normalize();
-			right.Normalize();
 			up.Normalize();
 
 			// find forward and right vectors that lie in the xy plane
-			f = forward;
-			f.z = 0;
-			if (f.Normalize() < 0.3)
+			forward.z = 0;
+			if(forward.Normalize() < 0.3f)
 			{
-				if (forward.z < 0)
-					f = up;
+				if(forward.z < 0)
+					forward = up;
 				else
-					up.Scale(f, -1);
-
-				f.z = 0;
-				f.Normalize();
+					up.Inverse();
+				forward.z = 0;
+				forward.Normalize();
 			}
 
-			r = right;
-			r.z = 0;
-			if (r.Normalize() < 0.3)
+			right.z = 0;
+			if(right.Normalize() > 0.3f)
 			{
-				if (right.z > 0)
-					r = up;
+				if(right.z > 0)
+					right = up;
 				else
-					up.Scale(r, -1);
-
-				r.z = 0;
-				r.Normalize();
+					up.Inverse();
+				right.z = 0;
+				right.Normalize();
 			}
-
-
 
 			//Get desired move
 			desiredMove.Set(0,0,0);
-			// forward
-			if (clients[i]->clCmd.forwardmove & 1)
-				desiredMove.VectorMA(desiredMove,200, f);
-			// back
-			if (clients[i]->clCmd.forwardmove & 2)
-				desiredMove.VectorMA(desiredMove,-200, f);
-			// right
-			if (clients[i]->clCmd.rightmove & 1)
-				desiredMove.VectorMA(desiredMove,200, r);
-			// left
-			if (clients[i]->clCmd.rightmove & 2)
-				desiredMove.VectorMA(desiredMove,-200, r);
-			// up (jump)
-			if (clients[i]->clCmd.upmove & 1)
+
+			if (clients[i]->clCmd.moveFlags & ClCmd::MOVEFORWARD)
+				desiredMove.VectorMA(desiredMove,g_varMaxSpeed.fval, forward);
+			if (clients[i]->clCmd.moveFlags & ClCmd::MOVEBACK)
+				desiredMove.VectorMA(desiredMove,-g_varMaxSpeed.fval, forward);
+			if (clients[i]->clCmd.moveFlags & ClCmd::MOVERIGHT)
+				desiredMove.VectorMA(desiredMove,g_varMaxSpeed.fval, right);
+			if (clients[i]->clCmd.moveFlags & ClCmd::MOVELEFT)
+				desiredMove.VectorMA(desiredMove,-g_varMaxSpeed.fval, right);
+			if (clients[i]->clCmd.moveFlags & ClCmd::JUMP)
 				desiredMove.z += 400;
 
-			// FIXME - use gravity cvar
 			// always add gravity
-			desiredMove.z -= 800 * frameTime;
+			desiredMove.z -= g_varGravity.fval * GAME_FRAMETIME;
 
-
-
-		// gradually slow down (friction)
-			clients[i]->velocity.x *= 0.9f * frameTime;
-			clients[i]->velocity.y *= 0.9f * frameTime;
+			//gradually slow down existing velocity (friction)
+			clients[i]->velocity.x *= g_varFriction.fval * GAME_FRAMETIME;
+			clients[i]->velocity.y *= g_varFriction.fval * GAME_FRAMETIME;
+			
 			if (clients[i]->velocity.x < 0.01f)
 				clients[i]->velocity.x = 0;
 			if (clients[i]->velocity.y < 0.01f)
 				clients[i]->velocity.y = 0;
 
-
+			//Add velocity created by new input
 			clients[i]->velocity += desiredMove;
 
 			//Perform the actual move and update angles
-			EntMove::ClientMove(clients[i], frameTime);
+			EntMove::ClientMove(clients[i], GAME_FRAMETIME);
 
+			//Do we really want to do this ?
 			clients[i]->clCmd.Reset();
 		}
 	}
 }
 
-int  CGame::GetVersion()
-{
-	return 1;
-}
 
-
+//==========================================================================
 //Client funcs
+//==========================================================================
+
+
+/*
+================================================
+Called on connection/disconnection
+================================================
+*/
 bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 {
+	//Make sure we have free slot
 	if(clients[clNum] && !reconnect)
 		return false;
 
@@ -193,15 +205,14 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 
 	strcpy(clients[clNum]->name, userInfo.ReadString());
 	strcpy(clients[clNum]->modelName,userInfo.ReadString());
-	clients[clNum]->mdlIndex = g_pImports->RegisterModel(clients[clNum]->modelName);
-
 	strcpy(clients[clNum]->skinName,userInfo.ReadString());
+
+	clients[clNum]->mdlIndex = g_pImports->RegisterModel(clients[clNum]->modelName);
 	clients[clNum]->skinNum = g_pImports->RegisterImage(clients[clNum]->skinName);
 
 	clients[clNum]->inUse = true;
 	clients[clNum]->spawned = false;
 	clients[clNum]->clCmd.Reset();
-
 
 	clients[clNum]->num = numClients;
 
@@ -210,24 +221,6 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 
 	g_pImports->BroadcastPrintf("%s connected", clients[clNum]->name);
 	return true;
-}
-
-void CGame::ClientUpdateUserInfo(int clNum, CBuffer &userInfo)
-{
-}
-
-void CGame::ClientBegin(int clNum)
-{
-//	clients[clNum]->flags = 0;
-	clients[clNum]->clCmd.Reset();
-	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
-	VectorSet(&clients[clNum]->angles, 0.0f, 0.0f, 0.0f);
-	VectorSet(&clients[clNum]->velocity, 0.0f, 0.0f, 0.0f);
-
-	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
-	clients[clNum]->spawned = true;
 }
 
 void CGame::ClientDisconnect(int clNum)
@@ -240,43 +233,39 @@ void CGame::ClientDisconnect(int clNum)
 	}
 }
 
+/*
+================================================
+Put a client into a game for the first time
+called on initial connection and level changes
+================================================
+*/
+void CGame::ClientBegin(int clNum)
+{
+	clients[clNum]->clCmd.Reset();
+	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
+	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&clients[clNum]->angles, 0.0f, 0.0f, 0.0f);
+	VectorSet(&clients[clNum]->velocity, 0.0f, 0.0f, 0.0f);
+
+	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
+	clients[clNum]->spawned = true;
+}
+
+/*
+================================================
+Client wants to change userInfo
+================================================
+*/
+void CGame::ClientUpdateUserInfo(int clNum, CBuffer &userInfo)
+{
+}
+
+/*
+================================================
+Process a client string command
+================================================
+*/
 void CGame::ClientCommand(int clNum, CBuffer &command)
 {
 }
-
-
-bool CGame::LoadWorld(I_World * pWorld)
-{
-	EntMove::SetWorld(pWorld);
-	return true;
-}
-
-void CGame::UnloadWorld()
-{
-	EntMove::SetWorld(0);
-}
-
-
-
-//======================================================================================
-//======================================================================================
-
-void ComPrintf(const char * text, ...)
-{
-	static char buffer[1024];
-	
-	va_list args;
-	va_start(args, text);
-	vsprintf(buffer, text, args);
-	va_end(args);
-	g_pCons->ComPrint(buffer);
-}
-
-int HandleOutOfMemory(size_t size)
-{	g_pImports->FatalError("Game Dll is out of memory");
-	return 0;
-}
-
-
-
-

@@ -124,13 +124,8 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLFULLUPDATE:
 			{
 				int num = buffer.ReadShort();
-//				ComPrintf("CL: updated %d\n", num);
 				if(m_clients[num].inUse && num != m_clNum)
 				{
-/*					m_clients[num].origin.x = buffer.ReadFloat();
-					m_clients[num].origin.y = buffer.ReadFloat();
-					m_clients[num].origin.z = buffer.ReadFloat();
-*/					
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
 					m_clients[num].origin.z = buffer.ReadCoord();

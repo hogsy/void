@@ -87,9 +87,7 @@ void CClientGameInput::HandleKeyEvent(const KeyEvent &kevent)
 Handle Cursor Move Event
 ==========================================
 */
-void CClientGameInput::HandleCursorEvent(const float &ix,
-									 const float &iy,
-									 const float &iz)
+void CClientGameInput::HandleCursorEvent(const float &ix, const float &iy, const float &iz)
 {
 	m_bCursorChanged = true;
 	m_fXpos = ix;
@@ -169,6 +167,7 @@ void CClientGameInput::BindFuncToKey(const CParms &parms, bool bPrint)
 /*
 ======================================
 Default key bindings
+Yes, I know this looks horrible =)
 ======================================
 */
 void CClientGameInput::IntializeBinds()
@@ -200,6 +199,8 @@ void CClientGameInput::IntializeBinds()
 	parms = "bind RIGHTARROW +right";
 	BindFuncToKey(parms, false);
 	parms = "bind SPACE jump";
+	BindFuncToKey(parms, false);
+	parms = "bind MOUSE2 crouch";
 	BindFuncToKey(parms, false);
 
 	//Exec binds file

@@ -24,8 +24,6 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE)
-//				m_cvModel("cl_model", "Amber", CVAR_STRING, CVAR_ARCHIVE),
-//				m_cvSkin("cl_skin", "Amber", CVAR_STRING, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -45,8 +43,6 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
-//	System::GetConsole()->RegisterCVar(&m_cvModel,this);
-//	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
 
 	//Register Commands
 	for(int i=0; g_clGameCmds[i].szCmd; i++)
@@ -91,11 +87,9 @@ void CGameClient::RunFrame(float frameTime)
 	//Reset move and angles stuff from the old frame
 	m_vecDesiredMove.Set(0,0,0);
 	m_vecDesiredAngles.Set(0,0,0);
-	
-	m_cmd.forwardmove = m_cmd.rightmove = m_cmd.upmove = 0;
-	m_cmd.angles[0] = m_cmd.angles[1] = m_cmd.angles[2] = 0;
+	m_cmd.Reset();
 
-	//Input
+	//Run Input
 	if(m_pCmdHandler->CursorChanged())
 	{
 		m_pCmdHandler->UpdateCursorPos(m_vecMouseAngles.x, m_vecMouseAngles.y, m_vecMouseAngles.z);
@@ -142,28 +136,22 @@ void CGameClient::RunFrame(float frameTime)
 
 
 	//Get desired move
-	// forward
-	if (m_cmd.forwardmove & 1)
+	if(m_cmd.moveFlags & ClCmd::MOVEFORWARD)
 		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, f);
-	// back
-	if (m_cmd.forwardmove & 2)
+	if(m_cmd.moveFlags & ClCmd::MOVEBACK)
 		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, f);
-	// right
-	if (m_cmd.rightmove & 1)
+	if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
 		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, r);
-	// left
-	if (m_cmd.rightmove & 2)
+	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
 		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, r);
-	// up (jump)
-	if (m_cmd.upmove & 1)
+	if(m_cmd.moveFlags & ClCmd::JUMP)
 		m_vecDesiredMove.z += 400;
 
 	// FIXME - use gravity cvar
 	// always add gravity
 	m_vecDesiredMove.z -= 800 * frameTime;
 
-
-// gradually slow down (friction)
+	// gradually slow down (friction)
 	m_pGameClient->velocity.x *= 0.9f * frameTime;
 	m_pGameClient->velocity.y *= 0.9f * frameTime;
 	if (m_pGameClient->velocity.x < 0.01f)
@@ -176,15 +164,12 @@ void CGameClient::RunFrame(float frameTime)
 
 	// FIXME - cap velocity somewhere around here
 
-
 	//Perform the actual move and update angles
 	UpdatePosition(frameTime);
 	UpdateAngles(m_vecDesiredAngles,frameTime);
 
 	//Save current view to send to the server
-	m_cmd.angles[0] = m_pGameClient->angles.x;
-	m_cmd.angles[1] = m_pGameClient->angles.y;
-	m_cmd.angles[2] = m_pGameClient->angles.z;
+	m_cmd.angles = m_pGameClient->angles;
 	m_cmd.time = frameTime * 1000.0f;
 	if(m_cmd.time > 255.0f)
 		m_cmd.time = 255.0f;
@@ -193,8 +178,7 @@ void CGameClient::RunFrame(float frameTime)
 	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
 	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
 	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
-//	m_pClGame->HudPrintf(0,160,0,"ANGLES  : %.2f,%.2f,%.2f", m_pGameClient->angles.x,
-//				m_pGameClient->angles.y,m_pGameClient->angles.z);	
+//	m_pClGame->HudPrintf(0,160,0,"ANGLES : %.2f,%.2f,%.2f", m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);
 
 	//Drawing
 	//fix me. draw ents only in the pvs
@@ -224,21 +208,11 @@ them to the buffer
 void CGameClient::WriteCmdUpdate(CBuffer &buf)
 {
 	buf.WriteByte(CL_MOVE);
-
 	buf.WriteByte(m_cmd.time);
-
-	buf.WriteShort(m_cmd.forwardmove);
-	buf.WriteShort(m_cmd.rightmove);
-	buf.WriteShort(m_cmd.upmove);
-
-	buf.WriteFloat(m_cmd.angles[0]);
-	buf.WriteFloat(m_cmd.angles[1]);
-	buf.WriteFloat(m_cmd.angles[2]);
-
-/*	m_pClGame->HudPrintf(0,180,0,"CMD: %d,%d,%d, ANG: %.2f,%.2f,%.2f, %.2fms", 
-		m_cmd.forwardmove, m_cmd.rightmove, m_cmd.upmove, m_cmd.angles[0],m_cmd.angles[1],m_cmd.angles[2],
-		m_cmd.time);
-*/
+	buf.WriteByte(m_cmd.moveFlags);
+	buf.WriteFloat(m_cmd.angles.x);
+	buf.WriteFloat(m_cmd.angles.y);
+	buf.WriteFloat(m_cmd.angles.z);
 }
 
 /*
@@ -412,8 +386,10 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		RotateDown(m_cvKbSpeed.fval);
 		break;
 	case CMD_JUMP:
-		//m_vecDesiredMove.z += 5000.0f;
-		m_cmd.upmove |= 1;
+		Jump();
+		break;
+	case CMD_CROUCH:
+		Crouch();
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);

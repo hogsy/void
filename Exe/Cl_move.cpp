@@ -14,27 +14,27 @@ been normalized.
 ================================================
 */
 void CGameClient::MoveForward()
-{
-	m_cmd.forwardmove |= 1;
-//	m_cmd.forwardmove += (int)m_maxvelocity;
+{	m_cmd.moveFlags |= ClCmd::MOVEFORWARD;
 }
 
 void CGameClient::MoveBackward()
-{
-//	m_cmd.forwardmove -= (int)m_maxvelocity;
-	m_cmd.forwardmove |= 2;
+{	m_cmd.moveFlags |= ClCmd::MOVEBACK;
 }
 
 void CGameClient::MoveRight()
-{	
-//	m_cmd.rightmove += (int)m_maxvelocity;
-	m_cmd.rightmove |= 1;
+{	m_cmd.moveFlags |= ClCmd::MOVERIGHT;
 }
 
 void CGameClient::MoveLeft()
-{
-//	m_cmd.rightmove -= (int)m_maxvelocity;
-	m_cmd.rightmove |= 2;
+{	m_cmd.moveFlags |= ClCmd::MOVELEFT;
+}
+
+void CGameClient::Jump()
+{	m_cmd.moveFlags |= ClCmd::JUMP;
+}
+
+void CGameClient::Crouch()
+{	m_cmd.moveFlags |= ClCmd::CROUCH;
 }
 
 /*

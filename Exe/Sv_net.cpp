@@ -102,44 +102,18 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 		case CL_MOVE:
 			{
 				m_incomingCmd.time = ((int)buffer.ReadByte())/1000.0f;
-				m_incomingCmd.forwardmove = buffer.ReadShort();
-				m_incomingCmd.rightmove = buffer.ReadShort();
-				m_incomingCmd.upmove = buffer.ReadShort();
-				m_incomingCmd.angles[0] = buffer.ReadFloat();
-				m_incomingCmd.angles[1] = buffer.ReadFloat();
-				m_incomingCmd.angles[2] = buffer.ReadFloat();
+				m_incomingCmd.moveFlags = buffer.ReadByte();
+				m_incomingCmd.angles.x = buffer.ReadFloat();
+				m_incomingCmd.angles.y = buffer.ReadFloat();
+				m_incomingCmd.angles.z = buffer.ReadFloat();
 
 				if(buffer.BadRead())
 				{
 					ComPrintf("SV: Bad command from client %s:%d\n", m_clients[clNum]->name,clNum);
 					return;
 				}
-
-				// dont use copy operator cause we need to or the moveflags
-//				m_clients[clNum]->clCmd = m_incomingCmd;
-				m_clients[clNum]->clCmd.angles[0] = m_incomingCmd.angles[0];
-				m_clients[clNum]->clCmd.angles[1] = m_incomingCmd.angles[1];
-				m_clients[clNum]->clCmd.angles[2] = m_incomingCmd.angles[2];
-				m_clients[clNum]->clCmd.forwardmove |= m_incomingCmd.forwardmove;
-				m_clients[clNum]->clCmd.rightmove |= m_incomingCmd.rightmove;
-				m_clients[clNum]->clCmd.upmove |= m_incomingCmd.upmove;
-				m_clients[clNum]->clCmd.time = m_incomingCmd.time;
-
-				m_clients[clNum]->clCmd.flags = 1;
-
-/*
-				m_clients[clNum]->clCmd.time = ((int)buffer.ReadByte())/1000.0f;
-				m_clients[clNum]->clCmd.forwardmove = buffer.ReadShort();
-				m_clients[clNum]->clCmd.rightmove = buffer.ReadShort();
-				m_clients[clNum]->clCmd.upmove = buffer.ReadShort();
-				m_clients[clNum]->clCmd.angles[0] = buffer.ReadFloat();
-				m_clients[clNum]->clCmd.angles[1] = buffer.ReadFloat();
-				m_clients[clNum]->clCmd.angles[2] = buffer.ReadFloat();
-				ComPrintf("SV: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
-					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
-				if(buffer.BadRead())
-					return;
-*/
+				
+				m_clients[clNum]->clCmd.UpdateCmd(m_incomingCmd);
 				break;
 			}
 		default:

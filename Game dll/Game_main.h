@@ -1,21 +1,18 @@
 #ifndef VOID_GAME_MAIN
 #define VOID_GAME_MAIN
 
-#include "Com_defs.h"
-#include "Com_mem.h"
-#include "Com_vector.h"
-
-#include "Net_defs.h"
-#include "I_game.h"
+#include "I_console.h"
 
 class CBuffer;
+struct I_World;
 
 /*
 ======================================
 Implementation of the Game Interface
 ======================================
 */
-class CGame : public I_Game
+class CGame : public I_Game,
+			  public I_ConHandler
 {
 public:
 
@@ -24,13 +21,12 @@ public:
 
 	bool InitGame();
 	void ShutdownGame();
-	int  GetVersion();
+	int  GetVersion(){ return GAME_VERSION; }
 
 	bool LoadWorld(I_World * pWorld);
 	void UnloadWorld();
 
-
-	void RunFrame(float curTime, float frameTime);
+	void RunFrame(float curTime);
 
 	bool SpawnEntity(CBuffer &buf);
 
@@ -41,14 +37,16 @@ public:
 	void ClientDisconnect(int clNum);
 	void ClientCommand(int clNum, CBuffer &command);
 
+	//Console Handler
+	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+
+
 private:
+
+	void InitializeVars();
 
 };
 
-//main game class
-extern CGame * g_pGame;
-
-//game imports
-extern I_GameHandler * g_pImports;
 
 #endif
