@@ -66,9 +66,10 @@ get_plane - like q2, # and #^1 are opposites
 =============
 */
 #define PLANE_NORM_SNAP 0.00001
+#define PLANE_DIST_SNAP 0.01
 int get_plane(plane_t plane)
 {
-
+	// snap the normal vector
 	if ((1 - fabs(plane.norm.x)) < PLANE_NORM_SNAP)
 	{
 		if (plane.norm.x > 0)
@@ -101,6 +102,11 @@ int get_plane(plane_t plane)
 		plane.norm.x = 0;
 		plane.norm.y = 0;
 	}
+
+	// snap d
+	if (fabs(plane.d-floor(plane.d+0.5)) < PLANE_DIST_SNAP)
+		plane.d = floor(plane.d+0.5);
+
 
 	// do we already have a close one?
 	for (int p=0; p<num_planes; p++)

@@ -103,8 +103,14 @@ void portal_remove_nodes(portal_t *portal)
 portal_add_nodes
 ============
 */
+float side_area(bsp_brush_side_t *si);
 void portal_add_nodes(portal_t *portal, bsp_node_t *n1, bsp_node_t *n2)
 {
+	// only add if the portal side isnt 'tiny'
+	if (side_area(portal->side) < 1.0f)
+		return;
+
+
 	portal->nodes[0] = n1;
 	portal->next[0] = n1->portals;
 	n1->portals = portal;

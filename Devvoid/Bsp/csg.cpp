@@ -38,7 +38,7 @@ bool quick_test_intersect(bsp_brush_t *b1, bsp_brush_t *b2)
 ==============
 slow_test_intersect - test all points to all planes
 ==============
-*/
+
 bool slow_test_intersect(bsp_brush_t *b1, bsp_brush_t *b2)
 {
 	bsp_brush_side_t *s, *s1;
@@ -82,6 +82,29 @@ bool slow_test_intersect(bsp_brush_t *b1, bsp_brush_t *b2)
 	}
 
 	return false;
+}
+*/
+
+
+/*
+===========
+brush_volume
+===========
+*/
+float side_area(bsp_brush_side_t *si);
+float brush_volume(bsp_brush_t *b)
+{
+	float vol = 0;
+	vector_t corner = b->sides->verts[0];
+
+	bsp_brush_side_t *s;
+	for (s=b->sides; s; s=s->next)
+	{
+		float d = dot(planes[s->plane].norm, corner) - planes[s->plane].d;
+		vol += d * side_area(s);
+	}
+
+	return vol/(-3);
 }
 
 
@@ -232,6 +255,13 @@ bsp_brush_t* brush_intersect(bsp_brush_t* b1, bsp_brush_t *b2)
 	calc_brush_bounds(inter);
 	inter->contents = b1->contents | b2->contents;
 
+	// make sure there is a volume to it
+	if (brush_volume(inter) < 0.5f)
+	{
+		free_bsp_brush(inter);
+		return NULL;
+	}
+
 	return inter;
 }
 
@@ -287,20 +317,20 @@ bsp_brush_t* run_csg(bsp_brush_t *head)
 
 						// insert all subtracted brushes into the list
 						tmp2 = brush_subtract(b1, tmp);
-						if (tmp2)
-						{
+//						if (tmp2)
+//						{
 							tail->next = tmp2;
 							while (tail->next)
 								tail = tail->next;
-						}
+//						}
 
 						tmp3 = brush_subtract(b2, tmp);
-						if (tmp3)
-						{
+//						if (tmp3)
+//						{
 							tail->next = tmp3;
 							while (tail->next)
 								tail = tail->next;
-						}
+//						}
 
 						// add the intersection to the end
 						tail->next = tmp;
