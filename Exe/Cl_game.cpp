@@ -111,15 +111,58 @@ void CGameClient::RunFrame(float frameTime)
 	m_vecRight.Normalize();
 	m_vecUp.Normalize();
 
-	//Get desired move
-	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.forwardmove, m_vecForward);
-	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, m_vecRight);
-	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.upmove, m_vecUp);
+	// find forward and right vectors that lie in the xy plane
+	vector_t f, r;
+	f = m_vecForward;
+	f.z = 0;
+	if (f.Normalize() < 0.3)
+	{
+		if (m_vecForward.z < 0)
+			f = m_vecUp;
+		else
+			m_vecUp.Scale(f, -1);
 
-	m_vecDesiredMove.z -= 200.0f;
+		f.z = 0;
+		f.Normalize();
+	}
+
+
+	r = m_vecRight;
+	r.z = 0;
+	if (r.Normalize() < 0.3)
+	{
+		if (m_vecRight.z > 0)
+			r = m_vecUp;
+		else
+			m_vecUp.Scale(r, -1);
+
+		r.z = 0;
+		r.Normalize();
+	}
+
+
+	//Get desired move
+	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.forwardmove, f);
+	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, r);
+
+// gradually slow down (friction)
+	m_vecVelocity.x *= 0.9f * frameTime;
+	m_vecVelocity.y *= 0.9f * frameTime;
+	if (m_vecVelocity.x < 0.01f)
+		m_vecVelocity.x = 0;
+	if (m_vecVelocity.y < 0.01f)
+		m_vecVelocity.y = 0;
+
+//	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.upmove, m_vecUp);
+	m_vecDesiredMove.z += m_cmd.upmove;
+
+	m_vecDesiredMove.z -= 800 * frameTime;
+
+	m_vecVelocity.VectorMA(m_vecVelocity, frameTime, m_vecDesiredMove);
+
 
 	//Perform the actual move and update angles
-	UpdatePosition(m_vecDesiredMove, frameTime);
+	UpdatePosition(m_vecVelocity, 1); //frameTime);
 	UpdateAngles(m_vecDesiredAngles,frameTime);
 
 	//Save current view to send to the server
@@ -354,7 +397,7 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_JUMP:
 		//m_vecDesiredMove.z += 5000.0f;
-		m_cmd.upmove += 5000;
+		m_cmd.upmove += 400;
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(parms);

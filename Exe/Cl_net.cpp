@@ -101,6 +101,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				m_clients[num].Reset();
 				break;
 			}
+/*
 		case SV_UPDATE:
 			{
 				float x = buffer.ReadFloat();
@@ -119,6 +120,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 
 				break;
 			}
+*/
 		case SV_CLFULLUPDATE:
 			{
 				int num = buffer.ReadShort();
