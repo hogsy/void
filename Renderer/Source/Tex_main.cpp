@@ -3,6 +3,7 @@
 #include "Tex_main.h"
 #include "Tex_image.h"
 
+//FIX ME, all the base textures are uploaded as RGBA right now
 const char * BaseTextureList[] =
 {
 	"base/_ascii",
@@ -76,11 +77,10 @@ bool CTextureManager::Init()
 	glGenTextures(m_numBaseTextures, tex->base_names);
 	for(count=0;count<m_numBaseTextures;count++)
 	{
-		LoadTexture(BaseTextureList[count]);
+		LoadTexture(BaseTextureList[count],IMG_RGBA);
 		m_texReader->ColorKey();
 
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
-
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -135,9 +135,7 @@ bool CTextureManager::Init()
 		
 		m_texReader->Reset();
 	}
-
 	m_texReader->UnlockBuffer();
-
 	m_loaded = BASE_TEXTURES;
 	return true;
 }
@@ -228,7 +226,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 	for (t = 0; t < tex->num_textures; t++)
 	{
-		LoadTexture(map->textures[t]);
+		LoadTexture(map->textures[t], IMG_RGB);
 		mipcount = m_texReader->GetMipCount();
 			
 		//Set initial dimensions
@@ -250,11 +248,11 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
-						 GL_RGBA,
+						 GL_RGB8, //GL_RGBA,
 						 m_texReader->GetWidth(),
 						 m_texReader->GetHeight(),
 						 0,
-						 GL_RGBA,
+						 GL_RGB, //GL_RGBA,
 						 GL_UNSIGNED_BYTE,
 						 m_texReader->GetData());
 		}
@@ -262,7 +260,6 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	}
 
 // FIXME - temp hack to get lightmapping working
-
 	if (!map->nlightdefs || !map->light_size)
 		return true;
 
@@ -364,12 +361,12 @@ bool CTextureManager::UnloadWorldTextures()
 Load a map texture
 ==========================================
 */
-void CTextureManager::LoadTexture(const char *filename)
+void CTextureManager::LoadTexture(const char *filename, int bpp)
 {
 	static char texname[COM_MAXPATH];
 	sprintf(texname,"%s/%s",m_textureDir,filename);
 
-	if(!m_texReader->Read(texname))
+	if(!m_texReader->Read(texname,(EImageFormat)bpp))
 	{
 		m_texReader->Reset();
 		m_texReader->DefaultTexture();

@@ -22,6 +22,9 @@ namespace
 		WORD palette_type;
 		byte junk[58];
 	} PCX_header;
+
+	const int DEFAULT_TEXTURE_WIDTH  = 16;
+	const int DEFAULT_TEXTURE_HEIGHT = 64;
 }
 
 //======================================================================================
@@ -34,14 +37,14 @@ Image Reader COnstructor/Destructor
 */
 CImageReader::CImageReader()
 {
+	width = height = 0;
+	format = IMG_NONE;
+
 	buffersize = 0;
 	data = 0;
-	width = height = 0;
-	format = FORMAT_NONE;
-
+	
 	mipbuffersize = 0;
 	mipmapdata = 0;
-
 }
 
 CImageReader::~CImageReader()		
@@ -53,72 +56,19 @@ CImageReader::~CImageReader()
 
 /*
 ==========================================
-Lock a static buffer to do texture i/o
-avoid continously allocing and freeing memory
-==========================================
-*/
-void CImageReader::LockBuffer(int size)
-{
-	UnlockBuffer();
-
-	data = (byte*) g_pHunkManager->HunkAlloc(size);
-	if(!data)
-	{
-		FError("CImageReader::LockBuffer: Failed to alloc %d\n", size);
-		return;
-	}
-	buffersize = size;
-}
-
-void CImageReader::UnlockBuffer()
-{
-	buffersize = 0;
-	if(data)
-	{
-		g_pHunkManager->HunkFree(data);
-		data = 0;
-	}
-}
-
-void CImageReader::LockMipMapBuffer(int size)
-{
-	UnlockMipMapBuffer();
-
-	mipmapdata = (byte*) g_pHunkManager->HunkAlloc(size);
-	if(!mipmapdata)
-	{
-		FError("CImageReader::LockMipMapBuffer: Failed to alloc %d\n", size);
-		return;
-	}
-	mipbuffersize = size;
-}
-
-void CImageReader::UnlockMipMapBuffer()
-{
-	mipbuffersize = 0;
-	if(mipmapdata)
-	{
-		g_pHunkManager->HunkFree(data);
-		mipmapdata = 0;
-	}
-}
-
-/*
-==========================================
 Key the transparent color
 ==========================================
 */
 void CImageReader::ColorKey()
 {
-	if(!data || bpp != 4)
+	if(!data || format != IMG_RGBA)
 		return;
 
-	for (int p = 0; p < width * height * 4; p+=4)
+	int size = width * height * 4;
+	for (int p = 0; p < size ; p+=4)
 	{
-		if ((data[p  ] == 228) &&
-			(data[p+1] == 41) &&
-			(data[p+2] == 226))
-			data[p+3] = 0;
+		if ((data[p  ] == 228) && (data[p+1] == 41) &&	(data[p+2] == 226))
+			 data[p+3] = 0;
 	}
 }
 
@@ -137,7 +87,7 @@ void CImageReader::Reset()
 	}
 	height = 0;
 	width = 0;
-	format = FORMAT_NONE;
+	format = IMG_NONE;
 }
 
 /*
@@ -148,8 +98,8 @@ used as a replacement when we can't find a texture
 */
 bool CImageReader::DefaultTexture()
 {
-	width = 16;
-	height = 64;
+	width = DEFAULT_TEXTURE_WIDTH;
+	height = DEFAULT_TEXTURE_HEIGHT;
 
 	// all raw pic data is 32 bits
 	if(buffersize < width * height * 4)
@@ -161,103 +111,24 @@ bool CImageReader::DefaultTexture()
 	for (int p = 0; p < width * height * 4; p++)
 	{
 		data[p] = rand();
-		if (p%4 == 3)
+		if (format == IMG_RGBA && p%4 == 3)
 			data[p] = 255;	// make sure it's full alpha
 	}
-	format = FORMAT_TGA;
 	return true;
 }
-
-
-/*
-==========================================
-Set the texture to be 2n in size,
-and return number of possible mipmaps
-==========================================
-*/
-int CImageReader::GetMipCount()
-{
-	int tmps = 1;
-	int miplevels = 0;
-	
-	// make it a power of 2
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (width & tmps)
-			break;
-	}
-	width = tmps;
-	
-	for (tmps=1<<10; tmps; tmps>>=1)
-	{
-		if (height & tmps)
-			break;
-	}
-	height = tmps;
-
-	int largestdim = width;
-	if (width < height)
-		largestdim = height;
-
-	// figure out how many mip map levels we should have
-	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
-		miplevels++;
-
-	if(miplevels > 10)
-		miplevels = 10;
-	return miplevels;
-}
-
-/*
-==========================================
-Read Image data from a stream
-used for reading Lightmaps from the world file
-==========================================
-*/
-bool CImageReader::ReadLightMap(unsigned char **stream)
-{
-	// read the data from the stream
-	width = **stream;
-	(*stream)++;
-	height = **stream;
-	(*stream)++;
-
-	if (!width || !height)
-		return false;
-
-	// all raw pic data is 32 bits
-	if(buffersize < width * height * 4)
-	{
-		buffersize = width * height * 4;
-		LockBuffer(buffersize);
-	}
-
-	for (int p = 0; p < width * height * 4; p++)
-	{
-		if (p%4 == 3)
-			data[p] = 255;	//make sure it's full alpha
-		else
-		{
-			data[p] = **stream;
-			(*stream)++;
-		}
-	}
-	format = FORMAT_TGA;
-	return true;
-}
-
 
 /*
 ==========================================
 Read a texture from the given path
 ==========================================
 */
-bool CImageReader::Read(const char *file)
+bool CImageReader::Read(const char * file, EImageFormat iformat)
 {
 	if(data)
 		Reset();
 
-	char  filename[MAX_PATH];
+	char filename[MAX_PATH];
+	bool err = false;
 
 /*	sprintf(filename,"%s.jpg",file);
 	if(m_fileReader.Open(filename) == true)
@@ -272,7 +143,10 @@ bool CImageReader::Read(const char *file)
 	sprintf(filename,"%s.tga",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		bool err = Read_TGA();
+		if(iformat == IMG_RGB)
+			err = Read_TGA();
+		else if(iformat == IMG_RGBA)
+			err = Read_TGA32();
 		m_fileReader.Close();
 		return err;
 	}
@@ -280,7 +154,10 @@ bool CImageReader::Read(const char *file)
 	sprintf(filename,"%s.pcx",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		bool err = Read_PCX();
+		if(iformat == IMG_RGB)
+			err = Read_PCX();
+		else if(iformat == IMG_RGBA)
+			err = Read_PCX32();
 		m_fileReader.Close();
 		return err;
 	}
@@ -289,6 +166,9 @@ bool CImageReader::Read(const char *file)
 	return false;
 }
 
+//======================================================================================
+//24 bit, image reading funcs
+//======================================================================================
 
 /*
 ==========================================
@@ -309,9 +189,194 @@ bool CImageReader::Read_PCX()
 		return false;
 	}
 
+	if(header.num_planes != IMG_RGB)
+	{
+		ConPrint("CImageReader::Read_PCX: Image isn't in RGB\n");
+		return false;
+	}
+
+	int bpp = 3;
 	width = header.width - header.x + 1;
 	height= header.height - header.y + 1;
-	bpp = 4;
+	
+	if(buffersize < width * height * bpp)
+	{
+		buffersize = width * height * bpp;
+		LockBuffer(buffersize);
+	}
+	memset(data, 0xFF, width * height * bpp);
+
+	byte ch;
+	int number, color;
+	int countx, county, index;
+
+	//for every line
+	for (county = 0; county < height; county++)
+	{
+		//decode this line for each r g b		
+		for (color = 0; color < bpp; color++)
+		{
+			for (countx = 0; countx < width; )
+			{
+				ch = m_fileReader.GetChar();
+
+				// Verify if the uppers two bits are sets
+				if ((ch >= 192) && (ch <= 255))
+				{
+					number = ch - 192;
+					ch = m_fileReader.GetChar();
+				}
+				else
+					number = 1;
+
+				for (index = 0; index < number; index++)
+				{
+					data[(county * bpp * (width)) + (bpp * countx) + color] = ch;
+					countx++;
+				}
+			}
+		}
+	}
+	format = IMG_RGB;
+	return true;
+}
+
+/*
+==========================================
+Read a TGA file from the given file
+==========================================
+*/
+bool CImageReader::Read_TGA()
+{
+	m_fileReader.Seek(12,SEEK_SET);
+
+	width   = m_fileReader.GetChar();
+	width  |= m_fileReader.GetChar() << 8;
+	height  = m_fileReader.GetChar();
+	height |= m_fileReader.GetChar() << 8;
+	int bpp = m_fileReader.GetChar() / 8;
+
+	if(bpp != IMG_RGB)
+	{
+		ComPrintf("CImageReader::Read_TGA: Image is not RGB\n");
+		return false;
+	}
+
+	// alpha/no alpha?  we already know that
+	m_fileReader.GetChar();	
+
+	if(buffersize < width * height * bpp)
+	{
+		buffersize = width * height * bpp;
+		LockBuffer(buffersize);
+	}
+	memset(data, 0xFF, width * height * bpp);
+	
+	for (int h= height-1; h>=0; h--)
+	{
+		for (int w=0; w<width; w++)
+		{
+			data[h*width*bpp + w*bpp + 2] = m_fileReader.GetChar(); 
+			data[h*width*bpp + w*bpp + 1] = m_fileReader.GetChar();
+			data[h*width*bpp + w*bpp    ] = m_fileReader.GetChar(); 
+		}
+	}
+	format = IMG_RGB;
+	return true;
+}
+
+/*
+==========================================
+Read a jpeg
+==========================================
+*/
+bool CImageReader::Read_JPG()
+{
+	JPEG_CORE_PROPERTIES jcprop;
+	
+	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
+	
+	if(ijlInit( &jcprop ) != IJL_OK ) 
+	{
+		ComPrintf("CImageReader::Read_JPG: Unable to initialize the Intel JPEG library\n");
+		return false;
+	}
+
+	jcprop.JPGBytes = m_fileReader.GetData();
+	jcprop.JPGSizeBytes = m_fileReader.GetSize();
+
+	if(ijlRead( &jcprop, IJL_JBUFF_READPARAMS ) != IJL_OK )
+	{
+		ComPrintf("CImageReader::Read_JPG: Unable to read jpeg header\n");
+		return false;
+	}
+
+	if(jcprop.JPGChannels != IMG_RGB)
+	{
+		ComPrintf("CImageReader::Read_JPB: Image is not RGB\n");
+		ijlFree( &jcprop );
+		return false;
+	}
+
+	width=jcprop.JPGWidth;
+	height=jcprop.JPGHeight;
+
+	if(buffersize < jcprop.JPGWidth * jcprop.JPGHeight * jcprop.JPGChannels)
+	{
+		buffersize = width * height * jcprop.JPGChannels;
+		LockBuffer(buffersize);
+	}
+	memset(data, 0, width * height * jcprop.JPGChannels);
+
+	jcprop.DIBWidth    = jcprop.JPGWidth;
+	jcprop.DIBHeight   = jcprop.JPGHeight;
+	jcprop.DIBChannels = jcprop.JPGChannels;
+	jcprop.DIBBytes    = data; 
+	jcprop.DIBColor	   = IJL_RGB;
+	
+	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
+	{
+		ComPrintf("CImageReader::Read_JPG: Can't read jpeg file\n");
+		height = 0;
+		width = 0;
+		return false;
+	}
+
+	if( ijlFree( &jcprop ) != IJL_OK ) 
+	{
+		ComPrintf("CImageReader::Read_JPG: Can't free intel jpeg library!\n");
+		return false;
+	}
+	format=IMG_RGB;
+	return true;
+}
+
+
+//======================================================================================
+//32 bit image reader funcs
+//======================================================================================
+
+/*
+==========================================
+Read a PCX file from current filereader
+==========================================
+*/
+bool CImageReader::Read_PCX32()
+{
+	PCX_header header;
+
+	m_fileReader.Read(&header,sizeof(header),1);
+	if((header.manufacturer != 10) || 
+	   (header.version != 5) || 
+	   (header.encoding != 1)|| 
+	   (header.bits_per_pixel != 8))
+	{
+		ConPrint("CImageReader::Read_PCX:Bad texture file");
+		return false;
+	}
+
+	width = header.width - header.x + 1;
+	height= header.height - header.y + 1;
 
 	// always store the pic in 32 bit rgba WHY ?
 	if(buffersize < width * height * 4)
@@ -380,17 +445,16 @@ bool CImageReader::Read_PCX()
 			}
 		}
 	}
-	format=FORMAT_PCX;
+	format= IMG_RGBA;
 	return true;
 }
-
 
 /*
 ==========================================
 Read a TGA file from the given stream
 ==========================================
 */
-bool CImageReader::Read_TGA()
+bool CImageReader::Read_TGA32()
 {
 	m_fileReader.Seek(12,SEEK_SET);
 
@@ -398,7 +462,7 @@ bool CImageReader::Read_TGA()
 	width  |= m_fileReader.GetChar() << 8;
 	height  = m_fileReader.GetChar();
 	height |= m_fileReader.GetChar() << 8;
-	bpp     = m_fileReader.GetChar() / 8;
+	int bpp     = m_fileReader.GetChar() / 8;
 
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();	
@@ -417,89 +481,63 @@ bool CImageReader::Read_TGA()
 			data[h*width*4 + w*4 + 2] = m_fileReader.GetChar(); 
 			data[h*width*4 + w*4 + 1] = m_fileReader.GetChar();
 			data[h*width*4 + w*4    ] = m_fileReader.GetChar(); 
-			if (bpp == 4)
-				data[h*width*4 + w*4 + 3] = m_fileReader.GetChar(); 
+			data[h*width*4 + w*4 + 3] = m_fileReader.GetChar(); 
 		}
 	}
-
-	format=FORMAT_TGA;
+	format= IMG_RGBA;;
 	return true;
 }
-
 
 /*
 ==========================================
 Read a jpeg
 ==========================================
 */
-bool CImageReader::Read_JPG()
+bool CImageReader::Read_JPG32()
+{	return false;
+}
+
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Set the texture to be 2n in size,
+and return number of possible mipmaps
+==========================================
+*/
+int CImageReader::GetMipCount()
 {
-	JPEG_CORE_PROPERTIES jcprop;
+	int tmps = 1;
+	int miplevels = 0;
 	
-	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
+	// make it a power of 2
+	for (tmps=1<<10; tmps; tmps>>=1)
+	{
+		if (width & tmps)
+			break;
+	}
+	width = tmps;
 	
-	if(ijlInit( &jcprop ) != IJL_OK ) 
+	for (tmps=1<<10; tmps; tmps>>=1)
 	{
-		ComPrintf("CImageReader::Read_JPG: Unable to initialize the Intel JPEG library\n");
-		return false;
+		if (height & tmps)
+			break;
 	}
+	height = tmps;
 
-	jcprop.JPGBytes = m_fileReader.GetData();
-	jcprop.JPGSizeBytes = m_fileReader.GetSize();
+	int largestdim = width;
+	if (width < height)
+		largestdim = height;
 
-	if(ijlRead( &jcprop, IJL_JBUFF_READPARAMS ) != IJL_OK )
-	{
-		ComPrintf("CImageReader::Read_JPG: Unable to read jpeg header\n");
-		return false;
-	}
+	// figure out how many mip map levels we should have
+	for (miplevels=1, tmps=1; tmps < largestdim; tmps <<= 1)
+		miplevels++;
 
-	width=jcprop.JPGWidth;
-	height=jcprop.JPGHeight;
-	bpp= jcprop.JPGChannels;
-
-	if(buffersize < jcprop.JPGWidth * jcprop.JPGHeight * 4)
-	{
-		buffersize = width * height * 4;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0, width * height * 4);
-
-	jcprop.DIBWidth    = jcprop.JPGWidth;
-	jcprop.DIBHeight   = jcprop.JPGHeight;
-	jcprop.DIBChannels = 3; //jcprop.JPGChannels;
-	jcprop.DIBBytes    = data; //tex->mem;
-	
-	switch(jcprop.JPGChannels)
-	{
-		case 1:
-			jcprop.DIBColor	   = IJL_G;
-		break;
-		
-		default:
-		case 3:
-			jcprop.DIBColor	   = IJL_RGB;
-			//jcprop.DIBColor = IJL_RGBA_FPX;
-		break;
-	}
-	
-
-	if( ijlRead( &jcprop, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
-	{
-		ComPrintf("CImageReader::Read_JPG: Can't read jpeg file\n");
-		height = 0;
-		width = 0;
-//		free(tex->mem);
-//		tex->mem=NULL;
-		return false;
-	}
-
-	if( ijlFree( &jcprop ) != IJL_OK ) 
-	{
-		ComPrintf("CImageReader::Read_JPG: Can't free intel jpeg library!\n");
-		return false;
-	}
-	format=FORMAT_JPG;
-	return true;
+	if(miplevels > 10)
+		miplevels = 10;
+	return miplevels;
 }
 
 
@@ -514,11 +552,11 @@ void CImageReader::ImageReduce()
 	DWORD color;
 	int r=0, c=0, s=0;
 	
-	width /=2;
-	height /=2;
-
 	int	sfactor = 1;
 	int	tfactor = 1;
+
+	width /=2;
+	height /=2;
 
 	if (!width)
 	{
@@ -532,33 +570,126 @@ void CImageReader::ImageReduce()
 		tfactor = 0;
 	}
 
-	int size = (width)*(height)*4;
-
-//	mipmapdata
-//	byte * temp = new byte[size];
-//	if(!temp)	
-//		FError("Mem for texture reduction");
+	int bpp = (int)format;
+	int size = (width)*(height)*(bpp);
 
 	for (r = 0; r < height; r++)
 	{
 		for (c = 0; c < width; c++)
 		{
-			for (s = 0; s < 4; s++)
+			for (s = 0; s < bpp; s++)
 			{
-				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *4)+ s];
+/*				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *4)+ s];
 				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*4 + s];
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *4)+ s];
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
 				color /= 4;
-//				temp[(r*width*4) + (c*4) + s] = (byte) color;
-				mipmapdata[(r*width*4) + (c*4) + s] = (byte) color;
+*/
+				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *bpp)+ s];
+				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*bpp + s];
+				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *bpp)+ s];
+				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*bpp + s];
+				color /= bpp;
+				mipmapdata[(r*width*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
 	}
-
 	memcpy(data,mipmapdata, size);
-//	memcpy(data,temp, size);
-//	delete [] temp;
+}
+
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Read Image data from a stream
+used for reading Lightmaps from the world file
+==========================================
+*/
+bool CImageReader::ReadLightMap(unsigned char **stream)
+{
+	// read the data from the stream
+	width = **stream;
+	(*stream)++;
+	height = **stream;
+	(*stream)++;
+
+	if (!width || !height)
+		return false;
+
+	// all raw pic data is 32 bits
+	if(buffersize < width * height * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+
+	for (int p = 0; p < width * height * 4; p++)
+	{
+		if (p%4 == 3)
+			data[p] = 255;	//make sure it's full alpha
+		else
+		{
+			data[p] = **stream;
+			(*stream)++;
+		}
+	}
+	format = IMG_RGBA;
+	return true;
+}
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Lock a static buffer to do texture i/o
+avoid continously allocing and freeing memory
+==========================================
+*/
+void CImageReader::LockBuffer(int size)
+{
+	UnlockBuffer();
+	data = (byte*) g_pHunkManager->HunkAlloc(size);
+	if(!data)
+	{
+		FError("CImageReader::LockBuffer: Failed to alloc %d\n", size);
+		return;
+	}
+	buffersize = size;
+}
+
+void CImageReader::UnlockBuffer()
+{
+	buffersize = 0;
+	if(data)
+	{
+		g_pHunkManager->HunkFree(data);
+		data = 0;
+	}
+}
+
+void CImageReader::LockMipMapBuffer(int size)
+{
+	UnlockMipMapBuffer();
+	mipmapdata = (byte*) g_pHunkManager->HunkAlloc(size);
+	if(!mipmapdata)
+	{
+		FError("CImageReader::LockMipMapBuffer: Failed to alloc %d\n", size);
+		return;
+	}
+	mipbuffersize = size;
+}
+
+void CImageReader::UnlockMipMapBuffer()
+{
+	mipbuffersize = 0;
+	if(mipmapdata)
+	{
+		g_pHunkManager->HunkFree(data);
+		mipmapdata = 0;
+	}
 }
 
 
@@ -567,6 +698,7 @@ void CImageReader::ImageReduce()
 //Image Writer Implementation
 //======================================================================================
 //======================================================================================
+
 
 /*
 ==========================================
@@ -596,7 +728,7 @@ Write am Image to Disk
 ==========================================
 */
 
-void CImageWriter::Write(const char *name, EImageFormat iformat)
+void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 {
 	if(!m_pData)
 	{

@@ -29,7 +29,7 @@ CVar 	g_pVidSynch("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 Take a screen shot, write it to disk
 ======================================
 */
-void ScreenShot(char *name, EImageFormat type)
+void ScreenShot(char *name, EImageFileFormat type)
 {
 	
 	char	checkname[260];
@@ -78,7 +78,7 @@ void ScreenShot(char *name, EImageFormat type)
 	//Got file name, Now actually take the shot and write it
 	int  width  = g_rInfo.width;
 	int  height = g_rInfo.height;
-	byte * data = new byte[width * height * 4];
+	byte * data = (byte*)g_pHunkManager->HunkAlloc(width * height * 4);
 
 	if (data == NULL) 
 	{
@@ -89,7 +89,8 @@ void ScreenShot(char *name, EImageFormat type)
 
 	CImageWriter imageWriter(width,height,data);
 	imageWriter.Write(checkname,type);
-	delete [] data;
+
+	g_pHunkManager->HunkFree(data);
 }
 
 /*

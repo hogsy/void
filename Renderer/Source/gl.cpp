@@ -347,7 +347,10 @@ OpenGLInit
 */
 int OpenGLInit(char *lib)
 {
-	openglInst = LoadLibrary(lib); 
+//	openglInst = LoadLibrary(lib); 
+	openglInst = ::LoadLibraryEx(lib, NULL,0);
+
+ 
 	if (openglInst == NULL) 
 	{ 
 		MessageBox(GetFocus(), "OpenGLInit::Could not open OpenGL Library", "Void Renderer Error", MB_OK); 
@@ -400,15 +403,13 @@ int OpenGLInit(char *lib)
 	glVertex3f			= (GLVERTEX3F)			GetProcAddress(openglInst, "glVertex3f");
 	glViewport			= (GLVIEWPORT)			GetProcAddress(openglInst, "glViewport");
 
-
-// wgl* functions
+	// wgl* functions
 	_wglCreateContext	= (WGLCREATECONTEXT)	GetProcAddress(openglInst, "wglCreateContext");
 	_wglDeleteContext	= (WGLDELETECONTEXT)	GetProcAddress(openglInst, "wglDeleteContext");
 	_wglGetProcAddress	= (WGLGETPROCADDRESS)	GetProcAddress(openglInst, "wglGetProcAddress");
 	_wglMakeCurrent		= (WGLMAKECURRENT)		GetProcAddress(openglInst, "wglMakeCurrent");
 
-
-// other gdi funcs
+	// other gdi funcs
 	fnSwapBuffers			= (SWAPBUFFERS)			GetProcAddress(openglInst, "wglSwapBuffers");
 	fnSetPixelFormat		= (SETPIXELFORMAT)		GetProcAddress(openglInst, "wglSetPixelFormat");
 	fnDescribePixelFormat	= (DESCRIBEPIXELFORMAT)	GetProcAddress(openglInst, "wglDescribePixelFormat");
