@@ -143,7 +143,6 @@ bool CClient::LoadWorld(const char *worldname)
 	VectorSet(&m_gameClient.maxs, 10, 10, 10);
 	VectorSet(&m_screenBlend,0,0,0);
 
-//	m_camera.Set(&m_gameClient.origin, &m_gameClient.angles, &m_screenBlend);
 	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
 
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
@@ -174,7 +173,6 @@ void CClient::UnloadWorld()
 		return;
 	}
 
-//	m_camera.Reset();
 	delete m_pCamera;
 	m_pCamera = 0;
 
@@ -240,7 +238,6 @@ void CClient::RunFrame()
 			VectorSet(&m_screenBlend, 1, 1, 1);
 
 		m_pRender->Draw(m_pCamera);
-		//m_pRender->Draw(m_camera.origin, m_camera.angles, m_camera.blend);
 	}
 	else
 	{
