@@ -73,7 +73,7 @@ void copy_brush2(bsp_brush_t *in,  bsp_brush_t *out);
 int clip_side(bsp_brush_side_t *s, int plane);
 void clip_brush(bsp_brush_t *b, int plane);
 void calc_brush_bounds(bsp_brush_t *b);
-int bsp_test_brush(bsp_brush_t *b, int plane);
+int bsp_test_brush(bsp_brush_t *b, int plane, bool *epsilon);
 void reset_bsp_brush(void);
 void bsp_brush_split(bsp_brush_t *b, bsp_brush_t **front, bsp_brush_t **back, int plane);
 void make_base_side(bsp_brush_side_t *side);

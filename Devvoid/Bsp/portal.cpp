@@ -108,7 +108,10 @@ void portal_add_nodes(portal_t *portal, bsp_node_t *n1, bsp_node_t *n2)
 {
 	// only add if the portal side isnt 'tiny'
 	if (side_area(portal->side) < 1.0f)
+	{
+		ComPrintf("removing portal\n");
 		return;
+	}
 
 
 	portal->nodes[0] = n1;

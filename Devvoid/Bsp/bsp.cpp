@@ -237,6 +237,7 @@ void make_base_side(bsp_brush_side_t *side)
 clip_side
 =============
 */
+float side_area(bsp_brush_side_t *si);
 #define PLANE_ON	0
 #define PLANE_FRONT	1
 #define PLANE_BACK	-1
@@ -326,6 +327,9 @@ int clip_side_p(bsp_brush_side_t *s, plane_t *p)
 	memcpy(s->verts, clipverts, sizeof(vector_t) * num_cverts);
 	s->num_verts = num_cverts;
 
+	if (side_area(s) < 1.0f)
+		s->num_verts = 0;
+
 	return PLANE_ON;
 }
 
@@ -343,7 +347,7 @@ void clip_brush(bsp_brush_t *b, int plane)
 {
 // add this plane to the list if it clips
 	bsp_brush_side_t *s;
-	int side = bsp_test_brush(b, plane);
+	int side = bsp_test_brush(b, plane, NULL);
 
 	// front gets clipped away
 	if (side == 1)
@@ -566,6 +570,7 @@ void bsp_add_sky_brush(bsp_brush_t *b)
 	{
 		next = s->next;
 
+		// only add sides facing the origin
 		if (planes[s->plane].d < 0)
 		{
 			bsp_add_sky_side(s);
@@ -807,10 +812,12 @@ int node_contents(bsp_node_t *n)
 bsp_test_brush
 ============
 */
-int bsp_test_brush(bsp_brush_t *b, int plane)
+int bsp_test_brush(bsp_brush_t *b, int plane, bool *epsilon)
 {
 	bool front = false;
 	bool back = false;
+	float dfront = -99999;
+	float dback  =  99999;
 
 	float d;
 
@@ -828,20 +835,36 @@ int bsp_test_brush(bsp_brush_t *b, int plane)
 
 
 			d = dot(planes[plane].norm, s->verts[v]) - planes[plane].d;
+
+			if (d > dfront)
+				dfront = d;
+			if (d < dback)
+				dback = d;
+
 			if (d > 0.01)
 			{
-				if (back)
-					return 0;
+//				if (back)
+//					return 0;
 				front = true;
 			}
 			else if (d < -0.01)
 			{
-				if (front)
-					return 0;
+//				if (front)
+//					return 0;
 				back = true;
 			}
 		}
 	}
+
+	if (epsilon)
+	{
+		if (((dfront > 0) && (dfront < 2)) ||
+			((dback  < 0) && (dback  >-2)))
+			*epsilon = true;
+		else
+			*epsilon = false;
+	}
+
 
 	if (front && back)
 		return 0;
@@ -863,7 +886,7 @@ bsp_brush_split
 void bsp_brush_split(bsp_brush_t *b, bsp_brush_t **front, bsp_brush_t **back, int plane)
 {
 	// see if we actually split the brush
-	int test = bsp_test_brush(b, plane);
+	int test = bsp_test_brush(b, plane, NULL);
 	if (test==1)
 	{
 		*front = b;
@@ -914,7 +937,8 @@ int bsp_select_plane(bsp_node_t *n)
 {
 
 	// find splits, fronts, backs
-	int splits, front, back;
+	int splits, front, back, epsilon;
+	bool bepsilon;
 
 	int v, best_val = 9999999;
 	int best_plane  = -1;
@@ -937,17 +961,19 @@ int bsp_select_plane(bsp_node_t *n)
 				continue;
 
 			// make sure it splits the volume
-			if (bsp_test_brush(n->volume, s->plane) != 0)
+			if (bsp_test_brush(n->volume, s->plane, NULL) != 0)
 				continue;
 
 			if (bsp_test_to_parents(n, best_plane))
 				continue;
 
-			splits = front = back = 0;
+			splits = front = back = epsilon = 0;
 
 			for (b2=n->brushes; b2; b2=b2->next)
 			{
-				r = bsp_test_brush(b2, s->plane);
+				r = bsp_test_brush(b2, s->plane, &bepsilon);
+				if (bepsilon)
+					epsilon++;
 				if (r==1)
 					front++;
 				else if (r==-1)
@@ -960,6 +986,9 @@ int bsp_select_plane(bsp_node_t *n)
 		// how good of a splitter is it?
 			v = splits*5 + abs(front-back);
 
+			// epsilon brushes = bad
+			v += epsilon * 1000;
+
 			// axial plane == good
 			if (!(( (planes[s->plane].norm.x == -1) || 
 					(planes[s->plane].norm.x ==  1) ||
@@ -967,7 +996,7 @@ int bsp_select_plane(bsp_node_t *n)
 					(planes[s->plane].norm.y ==  1) ||
 					(planes[s->plane].norm.z == -1) ||
 					(planes[s->plane].norm.z ==  1))))
-					v *= 10;
+					v *= 2;
 
 
 			if (v < best_val)
