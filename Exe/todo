@@ -2,10 +2,9 @@
 EXE
 ==============================================================
 //soon
-add client command buffering
 add 3d sound buffers and a listener
 error/logging/handling
-default key bindings should not depend on default.cfg
+add client command buffering
 command line parms
 
 //low priority, would be nice to have sometime

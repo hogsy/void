@@ -394,7 +394,6 @@ void CConsole::WriteCVars(FILE * fp)
 Proxy functions 
 ==========================================
 */
-
 void CConsole::SetFullscreen(bool full)
 {	
 	m_prCons->ToggleFullscreen(full);

@@ -65,6 +65,12 @@ CVoid::CVoid(const char * cmdLine)
 	//Create the Renderer
 	m_pRender = RENDERER_Create(m_pExport); 
 	m_pRParms = RENDERER_GetParms();
+
+	//Register these commands before the client is create so it can bind to them
+	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
+	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
 	
 	//Create the client
 	m_pClient = new CClient(m_pRender);		
@@ -84,11 +90,6 @@ CVoid::CVoid(const char * cmdLine)
 
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
-
-	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
-	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
 }
 
 /*
@@ -105,7 +106,7 @@ bool CVoid::Init()
 	//parse Command line
 //	ParseCmdLine(lpCmdLine);
 
-	m_Console.ExecConfig("default.cfg");
+//	m_Console.ExecConfig("default.cfg");
 	m_Console.ExecConfig("void.cfg");
 
 

@@ -118,6 +118,8 @@ public:
 	CClientCmdHandler(CClient *m_pClient);
 	~CClientCmdHandler();
 
+	void SetDefaultBinds();
+
 	void SetListenerState(bool on);
 	void RunCommands();
 

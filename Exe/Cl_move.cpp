@@ -299,7 +299,6 @@ void CClient::MoveLeft()
 void CClient::RotateRight(float val)
 {
 	eye.angles.YAW += System::g_fframeTime * val;
-//	eye.angles.YAW += val;
 	if (eye.angles.YAW > PI)
 		eye.angles.YAW -= 2*PI;
 }
@@ -307,7 +306,6 @@ void CClient::RotateRight(float val)
 void CClient:: RotateLeft(float val)
 {
 	eye.angles.YAW -= System::g_fframeTime * val;
-//	eye.angles.YAW += val;
 	if (eye.angles.YAW < -PI)
 		eye.angles.YAW += 2*PI;
 }
@@ -315,7 +313,6 @@ void CClient:: RotateLeft(float val)
 void CClient::RotateUp(float val)
 {
 	eye.angles.PITCH += System::g_fframeTime * val;
-//	eye.angles.PITCH += val;
 	if (eye.angles.PITCH < -PI/2)
 		eye.angles.PITCH = -PI/2;
 	if (eye.angles.PITCH > PI/2)
@@ -325,7 +322,6 @@ void CClient::RotateUp(float val)
 void CClient:: RotateDown(float val)
 {
 	eye.angles.PITCH -= System::g_fframeTime * val;
-//	eye.angles.PITCH -= val;
 	if (eye.angles.PITCH < -PI/2)
 		eye.angles.PITCH = -PI/2;
 	if (eye.angles.PITCH > PI/2)

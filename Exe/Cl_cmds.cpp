@@ -57,7 +57,6 @@ void CClientCmdHandler::RunCommands()
 	{
 		if(m_cmdBuffer[i])
 		{
-
 			m_Parms = m_cmdBuffer[i]->szCommand;
 			m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
 			if(m_cmdBuffer[i]->szCommand[0] != '+')
@@ -158,7 +157,7 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 
 	arg = parms.StringTok(2);
 	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(arg);
-	if(m_cmdKeys[keynum].pCmd < 0)
+	if(m_cmdKeys[keynum].pCmd == 0)
 	{
 		ComPrintf("Bind : %s is not a valid command\n",arg);
 		return;
@@ -173,6 +172,42 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 		strcat(m_cmdKeys[keynum].szCommand, parms.StringTok(i));
 	}
 	ComPrintf("\"%s\"(%d) = \"%s\"\n",parms.StringTok(1),keynum, m_cmdKeys[keynum].szCommand);
+}
+
+
+/*
+======================================
+Default key bindings
+======================================
+*/
+void CClientCmdHandler::SetDefaultBinds()
+{
+	CParms parms(80);
+
+	parms = "bind ` contoggle";
+	BindFuncToKey(parms);
+	parms = "bind o +forward";
+	BindFuncToKey(parms);
+	parms = "bind l +back";
+	BindFuncToKey(parms);
+	parms = "bind k +moveleft";
+	BindFuncToKey(parms);
+	parms = "bind ; +moveright";
+	BindFuncToKey(parms);
+	parms = "bind a +lookup";
+	BindFuncToKey(parms);
+	parms = "bind z +lookdown";
+	BindFuncToKey(parms);
+	parms = "bind q quit";
+	BindFuncToKey(parms);
+	parms = "bind UPARROW +forward";
+	BindFuncToKey(parms);
+	parms = "bind DOWNARROW +back";
+	BindFuncToKey(parms);
+	parms = "bind LEFTARROW +left";
+	BindFuncToKey(parms);
+	parms = "bind RIGHTARROW +right";
+	BindFuncToKey(parms);
 }
 
 /*

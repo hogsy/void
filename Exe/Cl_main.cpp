@@ -68,6 +68,8 @@ CClient::CClient(I_Renderer * prenderer):
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
+
+	m_pCmdHandler->SetDefaultBinds();
 }
 
 /*
@@ -135,6 +137,7 @@ bool CClient::LoadWorld(const char *worldname)
 	VectorSet(&eye.mins, -10, -10, -40);
 	VectorSet(&eye.maxs,  10,  10,  10);
 	VectorSet(&desired_movement, 0, 0, 0);
+
 	eye.angles.ROLL = 0;
 	eye.angles.PITCH = 0;
 	eye.angles.YAW = 0;
