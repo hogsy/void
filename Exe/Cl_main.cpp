@@ -28,6 +28,7 @@ CClient::CClient(I_Renderer * prenderer,
 					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
+					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -53,6 +54,7 @@ CClient::CClient(I_Renderer * prenderer,
 	m_hsMessage = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvClip);
+	System::GetConsole()->RegisterCVar(&m_cvNetStats);
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
@@ -160,7 +162,7 @@ void CClient::BeginGame()
 	VectorSet(&desired_movement, 0, 0, 0);
 
 	VectorSet(&m_gameClient.angle, 0.0f,0.0f,0.0f);
-	VectorSet(&m_gameClient.origin, 0.0f,0.0f,32.0f);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
 	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
@@ -245,7 +247,10 @@ void CClient::RunFrame()
 {
 	m_pNetCl->ReadPackets();
 
-	if(m_ingame)
+	//draw the console or menues etc
+	if(!m_ingame)
+		m_pRender->DrawConsole();
+	else
 	{
 		m_pCmdHandler->RunCommands();
 
@@ -256,14 +261,12 @@ void CClient::RunFrame()
 		{
 			VectorNormalize(&desired_movement);
 			Move(&desired_movement, System::g_fframeTime * m_maxvelocity);
-			desired_movement.x = desired_movement.y = desired_movement.z = 0;
+			Void3d::VectorSet(desired_movement,0,0,0);
 		}
 
 		//Print Stats
-		m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", m_gameClient.origin.x,
-													   m_gameClient.origin.y,
-													   m_gameClient.origin.z);
-
+		m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
+				m_gameClient.origin.x,  m_gameClient.origin.y, m_gameClient.origin.z);
 		m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
 			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
 		m_fFrameTime = System::g_fcurTime;
@@ -275,16 +278,9 @@ void CClient::RunFrame()
 		m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
-		//Print Networking stats
-		const NetChanState & chanState = m_pNetCl->GetChanState();
 
-		m_pClRen->HudPrintf(0,390,0, "Latency %.2f", chanState.latency * 100);
-		m_pClRen->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
-							chanState.dropCount + chanState.goodCount, chanState.numChokes);
-		m_pClRen->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
-		m_pClRen->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
-		m_pClRen->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
-		m_pClRen->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+		if(m_cvNetStats.bval)
+			ShowNetStats();
 
 		// FIXME - put this in game dll
 		int contents = PointContents(m_gameClient.origin);
@@ -305,19 +301,10 @@ void CClient::RunFrame()
 			if(m_entities[i].inUse)
 			{
 				if(m_entities[i].mdlIndex >= 0)
-				{
 					m_pClRen->DrawModel(m_entities[i]);	
-				}
-				//Play sounds in RANGE
-/*				else if(m_entities[i].soundIndex >= 0)
-				{
-					m_pSound->PlaySnd(&m_entities[i],m_entities[i].soundIndex, CACHE_GAME);
-				}
-*/
 			}
 		}
-
-
+		//Draw clients
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
@@ -326,9 +313,9 @@ void CClient::RunFrame()
 
 		m_pRender->Draw(m_pCamera);
 
+		//Write any updates
 		if(m_pNetCl->CanSend())
 		{
-
 			//Write all updates
 			CBuffer &buf = m_pNetCl->GetSendBuffer();
 			
@@ -342,15 +329,8 @@ void CClient::RunFrame()
 			buf.WriteAngle(m_gameClient.angle.z);
 		}
 	}
-	else
-	{
-		//draw the console or menues etc
-		m_pRender->DrawConsole();
-	}
-
 	//Write updates
 	m_pNetCl->SendUpdate();
-
 }
 
 

@@ -7,18 +7,11 @@
 #include "Clgame_defs.h"
 #include "Game_ents.h"
 
-
 //Pre-declarations
-class  CCamera;
 class  CSoundManager;
 class  CMusic;
-//struct I_ClientRenderer;
+class  CCamera;
 struct I_Renderer;
-/*
-struct I_RHud;
-struct I_Model;
-struct I_Image;
-*/
 
 /*
 =====================================
@@ -91,6 +84,7 @@ private:
 	bool ValidateName(const CParms &parms);
 	bool ValidateRate(const CParms &parms);
 	void CamPath();
+	void ShowNetStats();
 
 	//==================================================
 	//Client CVars
@@ -101,6 +95,8 @@ private:
 	CVar    m_cvSkin;
 	CVar    m_cvKbSpeed;
 	CVar	m_cvClip;
+	CVar	m_cvNetStats;
+
 	
 	//==================================================
 	//Subsystems
@@ -109,11 +105,6 @@ private:
 	
 	I_Renderer		  * m_pRender;
 	I_ClientRenderer  * m_pClRen;
-/*
-	I_RHud		 	  *	m_pHud;
-	I_Model			  * m_pModel;
-	I_Image			  * m_pImage;
-*/
 
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;
@@ -130,8 +121,6 @@ private:
 
 	float		m_fFrameTime;
 	bool		m_ingame;
-
-
 
 	//This is the client we should do local prediction on
 
