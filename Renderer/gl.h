@@ -1192,12 +1192,16 @@ typedef	void (APIENTRY * GLCLEAR) (GLbitfield mask);
 typedef void (APIENTRY * GLCLEARCOLOR) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 typedef	void (APIENTRY * GLCOLOR3F) (GLfloat red, GLfloat green, GLfloat blue);
 typedef	void (APIENTRY * GLCOLOR4F) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+typedef void (APIENTRY * GLCOLORPOINTER) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 typedef	void (APIENTRY * GLCULLFACE) (GLenum mode);
 typedef	void (APIENTRY * GLDELETETEXTURES) (GLsizei n, const GLuint *textures);
 typedef	void (APIENTRY * GLDEPTHFUNC) (GLenum func);
 typedef void (APIENTRY * GLDEPTHMASK) (GLboolean flag);
 typedef	void (APIENTRY * GLDISABLE) (GLenum cap);
+typedef void (APIENTRY * GLDISABLECLIENTSTATE) (GLenum array);
+typedef void (APIENTRY * GLDRAWELEMENTS) (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
 typedef	void (APIENTRY * GLENABLE) (GLenum cap);
+typedef void (APIENTRY * GLENABLECLIENTSTATE) (GLenum array);
 typedef	void (APIENTRY * GLEND) (void);
 typedef	void (APIENTRY * GLFLUSH) (void);
 typedef	void (APIENTRY * GLFRONTFACE) (GLenum mode);
@@ -1216,6 +1220,7 @@ typedef	void (APIENTRY * GLREADPIXELS) (GLint x, GLint y, GLsizei width, GLsizei
 typedef	void (APIENTRY * GLROTATEF) (GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 typedef	void (APIENTRY * GLSCALEF) (GLfloat x, GLfloat y, GLfloat z);
 typedef	void (APIENTRY * GLTEXCOORD2F) (GLfloat s, GLfloat t);
+typedef void (APIENTRY * GLTEXCOORDPOINTER) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 typedef	void (APIENTRY * GLTEXENVF) (GLenum target, GLenum pname, GLfloat param);
 typedef	void (APIENTRY * GLTEXIMAGE2D) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
 typedef	void (APIENTRY * GLTRANSLATEF) (GLfloat x, GLfloat y, GLfloat z);
@@ -1223,6 +1228,7 @@ typedef void (APIENTRY * GLTEXPARAMETERI) (GLenum target, GLenum pname, GLint pa
 typedef	void (APIENTRY * GLVERTEX2F) (GLfloat x, GLfloat y);
 typedef	void (APIENTRY * GLVERTEX2I) (GLint x, GLint y);
 typedef	void (APIENTRY * GLVERTEX3F) (GLfloat x, GLfloat y, GLfloat z);
+typedef void (APIENTRY * GLVERTEXPOINTER) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 typedef	void (APIENTRY * GLVIEWPORT) (GLint x, GLint y, GLsizei width, GLsizei height);
 
 
@@ -1262,12 +1268,16 @@ extern	GLCLEAR glClear;
 extern	GLCLEARCOLOR glClearColor;
 extern	GLCOLOR3F glColor3f;
 extern	GLCOLOR4F glColor4f;
+extern	GLCOLORPOINTER glColorPointer;
 extern	GLCULLFACE glCullFace;
 extern	GLDELETETEXTURES glDeleteTextures;
 extern	GLDEPTHFUNC glDepthFunc;
 extern	GLDEPTHMASK glDepthMask;
 extern	GLDISABLE glDisable;
+extern	GLDISABLECLIENTSTATE glDisableClientState;
+extern	GLDRAWELEMENTS glDrawElements;
 extern	GLENABLE glEnable;
+extern	GLENABLECLIENTSTATE glEnableClientState;
 extern	GLEND glEnd;
 extern	GLFLUSH glFlush;
 extern	GLFRONTFACE glFrontFace;
@@ -1286,6 +1296,7 @@ extern	GLREADPIXELS glReadPixels;
 extern	GLROTATEF glRotatef;
 extern	GLSCALEF glScalef;
 extern	GLTEXCOORD2F glTexCoord2f;
+extern	GLTEXCOORDPOINTER glTexCoordPointer;
 extern	GLTEXENVF glTexEnvf;
 extern	GLTEXIMAGE2D glTexImage2D;
 extern	GLTRANSLATEF glTranslatef;
@@ -1293,6 +1304,7 @@ extern  GLTEXPARAMETERI glTexParameteri;
 extern	GLVERTEX2F glVertex2f;
 extern	GLVERTEX2I glVertex2i;
 extern	GLVERTEX3F glVertex3f;
+extern	GLVERTEXPOINTER glVertexPointer;
 extern	GLVIEWPORT glViewport;
 
 // gl extensions

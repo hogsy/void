@@ -10,6 +10,9 @@
 #define MAX_MIPMAPS 11
 #define MAX_TEXTURE_BINS 1024
 
+#define MAX_INDICES		(8192*2)
+#define MAX_ELEMENTS	(8192*2)
+
 // depth buffer functions
 enum EDepthFunc
 {

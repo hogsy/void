@@ -238,8 +238,6 @@ void sil_get_sky_polys(sil_t *s)
 		{
 			plane_t plane;
 			vector_t a, b;
-//			VectorSub(s->edges[edge][0], eye.origin, a);
-//			VectorSub(s->edges[edge][1], eye.origin, b);
 			VectorSub(s->edges[edge][0], camera->origin, a);
 			VectorSub(s->edges[edge][1], camera->origin, b);
 
@@ -813,7 +811,6 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 	sil->nedges--;
 	vector_t a, b;
 	VectorSub(sil->edges[sil->nedges][0], sil->edges[sil->nedges][1], a);
-//	VectorSub(sil->edges[sil->nedges][0], eye.origin, b);
 	VectorSub(sil->edges[sil->nedges][0], camera->origin, b);
 
 

@@ -8,45 +8,51 @@
 
 // gl* funcs
 //====================================================================================
-GLBEGIN				glBegin				= NULL;
-GLBINDTEXTURE		glBindTexture		= NULL;
-GLBLENDFUNC			glBlendFunc			= NULL;
-GLCLEAR				glClear				= NULL;
-GLCLEARCOLOR		glClearColor		= NULL;
-GLCOLOR3F			glColor3f			= NULL;
-GLCOLOR4F			glColor4f			= NULL;
-GLCULLFACE			glCullFace			= NULL;
-GLDELETETEXTURES	glDeleteTextures	= NULL;
-GLDEPTHFUNC			glDepthFunc			= NULL;
-GLDEPTHMASK			glDepthMask			= NULL;
-GLDISABLE			glDisable			= NULL;
-GLENABLE			glEnable			= NULL;
-GLEND				glEnd				= NULL;
-GLFLUSH				glFlush				= NULL;
-GLFRONTFACE			glFrontFace			= NULL;
-GLFRUSTUM			glFrustum			= NULL;
-GLGENTEXTURES		glGenTextures		= NULL;
-GLGETERROR			glGetError			= NULL;
-GLGETINTEGERV		glGetIntegerv		= NULL;
-GLGETSTRING			glGetString			= NULL;
-GLHINT				glHint				= NULL;
-GLLOADIDENTITY		glLoadIdentity		= NULL;
-GLMATRIXMODE		glMatrixMode		= NULL;
-GLORTHO				glOrtho				= NULL;
-GLPOPMATRIX			glPopMatrix			= NULL;
-GLPUSHMATRIX		glPushMatrix		= NULL;
-GLREADPIXELS		glReadPixels		= NULL;
-GLROTATEF			glRotatef			= NULL;
-GLSCALEF			glScalef			= NULL;
-GLTEXCOORD2F		glTexCoord2f		= NULL;
-GLTEXENVF			glTexEnvf			= NULL;
-GLTEXIMAGE2D		glTexImage2D		= NULL;
-GLTEXPARAMETERI		glTexParameteri		= NULL;
-GLTRANSLATEF		glTranslatef		= NULL;
-GLVERTEX2F			glVertex2f			= NULL;
-GLVERTEX2I			glVertex2i			= NULL;
-GLVERTEX3F			glVertex3f			= NULL;
-GLVIEWPORT			glViewport			= NULL;
+GLBEGIN					glBegin				= NULL;
+GLBINDTEXTURE			glBindTexture		= NULL;
+GLBLENDFUNC				glBlendFunc			= NULL;
+GLCLEAR					glClear				= NULL;
+GLCLEARCOLOR			glClearColor		= NULL;
+GLCOLOR3F				glColor3f			= NULL;
+GLCOLOR4F				glColor4f			= NULL;
+GLCOLORPOINTER			glColorPointer		= NULL;
+GLCULLFACE				glCullFace			= NULL;
+GLDELETETEXTURES		glDeleteTextures	= NULL;
+GLDEPTHFUNC				glDepthFunc			= NULL;
+GLDEPTHMASK				glDepthMask			= NULL;
+GLDISABLE				glDisable			= NULL;
+GLDISABLECLIENTSTATE	glDisableClientState= NULL;
+GLDRAWELEMENTS			glDrawElements		= NULL;
+GLENABLE				glEnable			= NULL;
+GLENABLECLIENTSTATE		glEnableClientState	= NULL;
+GLEND					glEnd				= NULL;
+GLFLUSH					glFlush				= NULL;
+GLFRONTFACE				glFrontFace			= NULL;
+GLFRUSTUM				glFrustum			= NULL;
+GLGENTEXTURES			glGenTextures		= NULL;
+GLGETERROR				glGetError			= NULL;
+GLGETINTEGERV			glGetIntegerv		= NULL;
+GLGETSTRING				glGetString			= NULL;
+GLHINT					glHint				= NULL;
+GLLOADIDENTITY			glLoadIdentity		= NULL;
+GLMATRIXMODE			glMatrixMode		= NULL;
+GLORTHO					glOrtho				= NULL;
+GLPOPMATRIX				glPopMatrix			= NULL;
+GLPUSHMATRIX			glPushMatrix		= NULL;
+GLREADPIXELS			glReadPixels		= NULL;
+GLROTATEF				glRotatef			= NULL;
+GLSCALEF				glScalef			= NULL;
+GLTEXCOORD2F			glTexCoord2f		= NULL;
+GLTEXCOORDPOINTER		glTexCoordPointer	= NULL;
+GLTEXENVF				glTexEnvf			= NULL;
+GLTEXIMAGE2D			glTexImage2D		= NULL;
+GLTEXPARAMETERI			glTexParameteri		= NULL;
+GLTRANSLATEF			glTranslatef		= NULL;
+GLVERTEX2F				glVertex2f			= NULL;
+GLVERTEX2I				glVertex2i			= NULL;
+GLVERTEX3F				glVertex3f			= NULL;
+GLVERTEXPOINTER			glVertexPointer		= NULL;
+GLVIEWPORT				glViewport			= NULL;
 
 #endif
 
@@ -390,12 +396,16 @@ int OpenGLInit(char *lib)
 	glClearColor		= (GLCLEARCOLOR)		GetProcAddress(openglInst, "glClearColor");
 	glColor3f			= (GLCOLOR3F)			GetProcAddress(openglInst, "glColor3f");
 	glColor4f			= (GLCOLOR4F)			GetProcAddress(openglInst, "glColor4f");
+	glColorPointer		= (GLCOLORPOINTER)		GetProcAddress(openglInst, "glColorPointer");
 	glCullFace			= (GLCULLFACE)			GetProcAddress(openglInst, "glCullFace");
 	glDeleteTextures	= (GLDELETETEXTURES)	GetProcAddress(openglInst, "glDeleteTextures");
 	glDepthFunc			= (GLDEPTHFUNC)			GetProcAddress(openglInst, "glDepthFunc");
 	glDepthMask			= (GLDEPTHMASK)			GetProcAddress(openglInst, "glDepthMask");
 	glDisable			= (GLDISABLE)			GetProcAddress(openglInst, "glDisable");
+	glDisableClientState= (GLDISABLECLIENTSTATE)GetProcAddress(openglInst, "glDisableClientState");
+	glDrawElements		= (GLDRAWELEMENTS)		GetProcAddress(openglInst, "glDrawElements");
 	glEnable			= (GLENABLE)			GetProcAddress(openglInst, "glEnable");
+	glEnableClientState	= (GLENABLECLIENTSTATE)	GetProcAddress(openglInst, "glEnableClientState");
 	glEnd				= (GLEND)				GetProcAddress(openglInst, "glEnd");
 	glFlush				= (GLFLUSH)				GetProcAddress(openglInst, "glFlush");
 	glFrontFace			= (GLFRONTFACE)			GetProcAddress(openglInst, "glFrontFace");
@@ -414,6 +424,7 @@ int OpenGLInit(char *lib)
 	glRotatef			= (GLROTATEF)			GetProcAddress(openglInst, "glRotatef");
 	glScalef			= (GLSCALEF)			GetProcAddress(openglInst, "glScalef");
 	glTexCoord2f		= (GLTEXCOORD2F)		GetProcAddress(openglInst, "glTexCoord2f");
+	glTexCoordPointer	= (GLTEXCOORDPOINTER)	GetProcAddress(openglInst, "glTexCoordPointer");
 	glTexEnvf			= (GLTEXENVF)			GetProcAddress(openglInst, "glTexEnvf");
 	glTexImage2D		= (GLTEXIMAGE2D)		GetProcAddress(openglInst, "glTexImage2D");
 	glTexParameteri		= (GLTEXPARAMETERI)		GetProcAddress(openglInst, "glTexParameteri");
@@ -421,6 +432,7 @@ int OpenGLInit(char *lib)
 	glVertex2f			= (GLVERTEX2F)			GetProcAddress(openglInst, "glVertex2f");
 	glVertex2i			= (GLVERTEX2I)			GetProcAddress(openglInst, "glVertex2i");
 	glVertex3f			= (GLVERTEX3F)			GetProcAddress(openglInst, "glVertex3f");
+	glVertexPointer		= (GLVERTEXPOINTER)		GetProcAddress(openglInst, "glVertexPointer");
 	glViewport			= (GLVIEWPORT)			GetProcAddress(openglInst, "glViewport");
 
 	// wgl* functions

@@ -96,8 +96,23 @@ private:
 
 	bool	m_bInitialized;
 
-
 	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
+
+
+	// arrays to store poly data
+	vector_t	mVerts[MAX_ELEMENTS];
+	float		mColors[MAX_ELEMENTS][4];
+	float		mTexCoords[MAX_ELEMENTS][2];	// single pass only right now
+
+	unsigned int	mIndices[MAX_INDICES];
+	int			mNumIndices;
+	int			mNumElements;
+	int	mMaxElements;
+	int mMaxIndices;
+
+	EPolyType	mType;
+	vector_t	mColor;
+	float		mAlpha;
 };
 
 void FError(char *error, ...);
