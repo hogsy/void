@@ -43,10 +43,20 @@ void CClientGameInput::RunCommands()
 	{
 		if(m_cmdBuffer[i])
 		{
-			m_Parms = m_cmdBuffer[i]->szCommand;
+			if(m_cmdBuffer[i]->szCommand[0] == '+')
+				m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
+			else
+			{
+				m_Parms = m_cmdBuffer[i]->szCommand;
+				m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
+				m_cmdBuffer[i] = 0;
+			}
+
+/*			m_Parms = m_cmdBuffer[i]->szCommand;
 			m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
 			if(m_cmdBuffer[i]->szCommand[0] != '+')
 				m_cmdBuffer[i] = 0;
+*/
 		}
 	}
 }

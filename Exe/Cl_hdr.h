@@ -24,9 +24,9 @@ class  CBuffer;
 
 enum EClState
 {
-	CLIENT_DISCONNECTED,
-	CLIENT_RECONNECTING,
-	CLIENT_INGAME
+	CLIENT_DISCONNECTED =0,
+	CLIENT_RECONNECTING =1,
+	CLIENT_INGAME =2
 };
 
 
@@ -70,7 +70,6 @@ struct I_ClientGame
 	virtual void UnloadWorld()=0;
 
 	//Networking
-	virtual const NetChanState & GetNetChanState() const =0;
 	virtual CBuffer & GetSendBuffer()=0;
 	virtual CBuffer & GetReliableSendBuffer()=0;
 

@@ -1,8 +1,6 @@
 #ifndef VOID_CLIENT_EXPORTS
 #define VOID_CLIENT_EXPORTS
 
-#include "Cl_hdr.h"
-
 
 class CClientExports : public I_ClientGame
 {
@@ -90,10 +88,6 @@ public:
 	}
 
 	//Networking
-	inline const NetChanState & GetNetChanState() const
-	{	return m_refClient.m_pNetCl->GetChanState();
-	}
-	
 	inline CBuffer & GetSendBuffer()
 	{	return m_refClient.m_pNetCl->GetSendBuffer();
 	}

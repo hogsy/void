@@ -1,6 +1,11 @@
 #ifndef VOID_SOUND_SYSTEM
 #define VOID_SOUND_SYSTEM
 
+#include "Com_defs.h"
+#include "Com_vector.h"
+#include "Cl_defs.h"
+
+
 /*
 ======================================
 Private stuff

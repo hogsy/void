@@ -1,8 +1,10 @@
 #include "Sys_hdr.h"
+
 #include "Com_vector.h"
 #include "Com_world.h"
+#include "Com_camera.h"
+
 #include "Cl_defs.h"
-#include "Cl_main.h"
 #include "Cl_game.h"
 
 

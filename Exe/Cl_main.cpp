@@ -1,11 +1,8 @@
 #include "Sys_hdr.h"
 
-#include "Com_buffer.h"
 #include "Com_vector.h"
 #include "Com_util.h"
 #include "Com_World.h"
-
-#include "Cl_main.h"
 
 #include "I_clientRenderer.h"
 #include "I_renderer.h"
@@ -15,11 +12,24 @@
 
 #include "Net_defs.h"
 #include "Net_protocol.h"
-#include "Net_client.h"
 
-#include "Cl_export.h"
-#include "Cl_cmds.h"
+#include "Cl_defs.h"
 #include "Cl_game.h"
+#include "Cl_hdr.h"
+#include "Cl_main.h"
+#include "Cl_export.h"
+
+#include "Cl_cmds.h"
+
+enum
+{
+	CMD_CONNECT		  = 1,
+	CMD_DISCONNECT	  = 2,
+	CMD_RECONNECT	  = 3
+};
+
+//==========================================================================
+//==========================================================================
 
 
 /*
@@ -27,39 +37,40 @@
 Constructor
 ======================================
 */
-CClient::CClient(I_Renderer * prenderer,
-				 CSoundManager * psound,
-				 CMusic	* pmusic):
+CClient::CClient(I_Renderer * pRenderer,
+				 CSoundManager * pSound,
+				 CMusic	* pMusic) :
 					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
-					m_pRender(prenderer),	
-					m_pSound(psound),
-					m_pMusic(pmusic)
+					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
+					m_pRender(pRenderer),	
+					m_pSound(pSound),
+					m_pMusic(pMusic)
 {
+	//Get Renderer Interfaces
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
 	
+	//Create Export Struct
 	m_pExports = new CClientExports(*this);
-
+	
+	//Create Game Client
+	m_pClState = new CGameClient(m_pExports);
+	
 	//Setup network listener
-	m_pClState = new CGameClient(m_pExports);//*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
 	m_pNetCl= new CNetClient(m_pClState);
 	
-
+	m_clientState = CLIENT_DISCONNECTED;
+	m_fFrameTime  = 0.0f;
 	m_pWorld = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
-
+	System::GetConsole()->RegisterCVar(&m_cvNetStats);
 
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
-
-//	m_pNetCl->SetRate(m_cvRate.ival);
 }
 
-void CClient::SetNetworkRate(int rate)
-{	m_pNetCl->SetRate(rate);
-}
 /*
 ======================================
 Destroy the client
@@ -81,11 +92,8 @@ CClient::~CClient()
 	m_pSound = 0;
 	m_pMusic = 0;
 
-
 	delete m_pClState;
-
 	delete m_pNetCl;
-
 	delete m_pExports;
 }
 
@@ -151,8 +159,6 @@ void CClient::UnloadWorld()
 
 	m_pSound->UnregisterAll();
 	System::SetGameState(INCONSOLE);
-
-	m_pClState->m_ingame = false;
 }
 
 /*
@@ -164,13 +170,7 @@ void CClient::RunFrame()
 {
 	m_pNetCl->ReadPackets();
 
-	//draw the console or menues etc
-	if(!m_pClState->m_ingame)
-	{
-		m_pRender->Draw();
-		
-	}
-	else 
+	if(m_clientState == CLIENT_INGAME)
 	{
 		m_pClState->RunFrame(System::GetFrameTime());
 
@@ -187,8 +187,8 @@ void CClient::RunFrame()
 		m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
-//		if(m_cvNetStats.bval)
-//			ShowNetStats();
+		if(m_cvNetStats.bval)
+			ShowNetStats();
 
 		m_pSound->UpdateListener(m_pClState->m_pGameClient->origin, velocity, up, forward);
 
@@ -210,6 +210,10 @@ void CClient::RunFrame()
 		m_pRender->Draw(m_pClState->m_pCamera);
 		
 		WriteUpdate();
+	}
+	else
+	{
+		m_pRender->Draw();
 	}
 	
 	//Write updates
@@ -237,7 +241,6 @@ void CClient::WriteUpdate()
 		m_pClState->WriteCmdUpdate(buf);
 	}
 }
-
 
 
 //======================================================================================
@@ -318,20 +321,12 @@ void CClient::SetClientState(int state)
 		System::SetGameState(::INGAME);
 		SetInputState(true);
 		break;
+	default:
+		return;
 	};
+	m_clientState = state;
 }
 
-
-
-CBuffer & CClient::GetSendBuffer()
-{
-	return m_pNetCl->GetSendBuffer();
-}
-
-CBuffer & CClient::GetReliableSendBuffer()
-{
-	return m_pNetCl->GetReliableBuffer();
-}
 
 
 /*
@@ -352,4 +347,15 @@ void CClient::ShowNetStats()
 	m_pHud->Printf(0,430,0, "Out     %d", chanState.outMsgId);
 	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
+}
+
+
+/*
+================================================
+
+================================================
+*/
+
+void CClient::SetNetworkRate(int rate)
+{	m_pNetCl->SetRate(rate);
 }

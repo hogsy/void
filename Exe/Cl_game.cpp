@@ -1,26 +1,27 @@
 #include "Sys_hdr.h"
 
+#include "Com_buffer.h"
+#include "Com_vector.h"
 #include "Com_util.h"
 #include "Com_world.h"
 #include "Com_camera.h"
 
-#include "I_clientRenderer.h"
-#include "I_renderer.h"
-#include "I_hud.h"
-#include "Snd_main.h"
-#include "Mus_main.h"
-
 #include "Net_defs.h"
 #include "Net_protocol.h"
+#include "Net_client.h"
 
-#include "Cl_main.h"
-#include "Cl_cmds.h"
-
+#include "Cl_defs.h"
 #include "Cl_hdr.h"
+#include "Cl_cmds.h"
 #include "Cl_game.h"
 
+#include "I_clientRenderer.h"
 
-
+/*
+================================================
+Constructor
+================================================
+*/
 CGameClient::CGameClient(I_ClientGame * pClGame) : 
 				m_pClGame(pClGame),
 				m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
@@ -28,36 +29,27 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 				m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-				m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-				m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE)
+				m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
 
 	m_ingame = false;
-
-	m_pGameClient = 0;
-
 	m_numEnts = 0;
 	
-
 	m_hsTalk = 0;
 	m_hsMessage = 0;
 
+	m_pGameClient = 0;
 	m_pCamera = 0;
-	
 	m_pWorld = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvClip);
-	System::GetConsole()->RegisterCVar(&m_cvNetStats);
-		
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvModel,this);
 	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
-
-	
 
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
@@ -76,9 +68,13 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 
 	m_pCmdHandler->IntializeBinds();
-
 }
 
+/*
+================================================
+
+================================================
+*/
 CGameClient::~CGameClient()
 {
 	m_pCmdHandler->WriteBinds("vbinds.cfg");

@@ -1,22 +1,14 @@
 #ifndef VOID_CLIENT_STATE
 #define VOID_CLIENT_STATE
 
-#include "Sys_hdr.h"
 #include "Com_buffer.h"
-#include "Com_vector.h"
-#include "Cl_defs.h"
 #include "Net_client.h"
 
-
-//This will need Resource loading interfaces
-//And simple sound/music interfaces from the main client
-
+//Forward declarations
 class  CWorld;
 class  CCamera;
 class  CClientGameInput;
-
 struct I_ClientGame;
-
 
 /*
 ================================================
@@ -31,7 +23,6 @@ public:
 	
 	CGameClient(I_ClientGame * pClGame);
 	~CGameClient();
-
 
 	//Client Interface
 	//Parse and handle a game message
@@ -53,7 +44,6 @@ public:
 	void Print(const char * msg, ...);
 
 
-
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
@@ -67,7 +57,7 @@ public:
 	CVar    m_cvModel;
 	CVar    m_cvSkin;
 	CVar	m_cvClip;
-	CVar	m_cvNetStats;
+	
 
 	void Talk(const char * string);
 	bool ValidateName(const CParms &parms);

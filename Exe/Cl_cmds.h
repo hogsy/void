@@ -24,10 +24,7 @@ enum
 	CMD_UNBIND		  =	10,
 	CMD_UNBINDALL	  =	11,
 	CMD_CAM			  =	12,
-	CMD_CONNECT		  = 13,
-	CMD_DISCONNECT	  = 14,
-	CMD_TALK		  = 15,
-	CMD_RECONNECT	  = 16
+	CMD_TALK		  = 13
 };
 
 
