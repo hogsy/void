@@ -66,8 +66,6 @@ private:
 
 	//==================================================
 	//Movement
-	void UpdatePosition(const float &time);
-		
 	void MoveForward();
 	void MoveBackward();
 	void MoveRight();
@@ -83,7 +81,8 @@ private:
 
 	//==================================================
 
-	void UpdateViewAngles(const float &time);
+	void UpdatePosition();
+	void UpdateViewAngles();
 	void UpdateViewBlends();
 
 	void Spawn(vector_t	&origin, vector_t &angles);

@@ -297,7 +297,6 @@ void CServer::RunFrame()
 					m_net.ChanWriteFloat(m_clients[i]->friction);
 				if(m_clients[i]->sendFlags & SVU_MAXSPEED)
 					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
-				
 				m_clients[i]->sendFlags = 0;
 			}
 			m_net.ChanFinishWrite();
@@ -319,13 +318,7 @@ void CServer::RunFrame()
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
 				m_net.ChanWriteCoord(m_clients[j]->angles.z);
 
-				if(m_clients[j]->animSeq & 255)
-				{
-					m_clients[j]->animSeq &= ~255;
-					m_net.ChanWriteByte(m_clients[j]->animSeq);
-				}
-				else
-					m_net.ChanWriteByte(0);
+				m_net.ChanWriteByte(m_clients[j]->animSeq);
 
 				m_net.ChanFinishWrite();
 			}

@@ -142,8 +142,14 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					m_clients[num].angles.z = buffer.ReadCoord();
 
 					byte b = buffer.ReadByte();
-					if(b)
-						ClAnim::SetAnim(m_clients[num].animInfo,(EPlayerAnim)b);
+
+					ClAnim::SetAnim(m_clients[num].animInfo,(EPlayerAnim)b);
+					if(b == PLAYER_STAND)
+						ComPrintf("Client Stand\n");
+					else if(b == PLAYER_RUN)
+						ComPrintf("Client Run\n");
+					else if(b == PLAYER_JUMP)
+						ComPrintf("Client Jump\n");
 
 m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %s", m_clients[num].origin.ToString());
 				}

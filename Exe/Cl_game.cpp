@@ -183,8 +183,8 @@ void CGameClient::RunFrame(float frameTime)
 	m_pGameClient->velocity += vecDesiredMove;
 
 	//Perform the actual move and update angles
-	UpdatePosition(frameTime);
-	UpdateViewAngles(frameTime);
+	UpdatePosition();
+	UpdateViewAngles();
 	UpdateViewBlends();
 
 	//Save current view to send to the server

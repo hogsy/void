@@ -100,24 +100,15 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 			}
 		case CL_MOVE:
 			{
-				m_clients[clNum]->clCmd.Reset();
-
-				m_clients[clNum]->clCmd.time = ((int)buffer.ReadByte())* 1000.0f;
-
-				//AnimState will be decided based on moveflags
-				m_clients[clNum]->clCmd.moveFlags = buffer.ReadByte();
+				
+				m_incomingCmd.time = ((int)buffer.ReadByte())* 1000.0f;
+				m_incomingCmd.moveFlags = buffer.ReadByte();
 
 				//TEMP
 				m_clients[clNum]->origin.x = buffer.ReadFloat();
 				m_clients[clNum]->origin.y = buffer.ReadFloat();
 				m_clients[clNum]->origin.z = buffer.ReadFloat();
-				
-				m_clients[clNum]->clCmd.angles.x = buffer.ReadFloat();
-				m_clients[clNum]->clCmd.angles.y = buffer.ReadFloat();
-				m_clients[clNum]->clCmd.angles.z = buffer.ReadFloat();
 
-/*
-				m_incomingCmd.moveFlags = buffer.ReadByte();
 				m_incomingCmd.angles.x = buffer.ReadFloat();
 				m_incomingCmd.angles.y = buffer.ReadFloat();
 				m_incomingCmd.angles.z = buffer.ReadFloat();
@@ -128,7 +119,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					return;
 				}
 				m_clients[clNum]->clCmd.UpdateCmd(m_incomingCmd);
-*/
+
 				break;
 			}
 		default:

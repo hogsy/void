@@ -34,6 +34,7 @@ struct EntClient : public Entity
 	EntClient() :Entity("client")
 	{	
 		bSpawned = false;
+
 		friction = gravity = maxSpeed = 0.0f;
 		sendFlags = 0;
 
@@ -44,7 +45,6 @@ struct EntClient : public Entity
 	}
 
 	bool  bSpawned;
-	bool  bSendToSelf;
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
@@ -57,7 +57,6 @@ struct EntClient : public Entity
 	float gravity;
 	float maxSpeed;
 
-	int	  animFrame;
 	byte  animSeq;
 
 	//Strings

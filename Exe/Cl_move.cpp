@@ -81,13 +81,13 @@ void CGameClient:: RotateDown(const float &val)
 Update angles. called onces per frame
 ================================================
 */
-void CGameClient::UpdateViewAngles(const float &time)
+void CGameClient::UpdateViewAngles()
 {
-	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * time);  
+	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * m_fFrameTime);  
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
 
-	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * time);
+	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
 	if (m_pGameClient->angles.PITCH < -PI/2)
 		m_pGameClient->angles.PITCH = -PI/2;
 	if (m_pGameClient->angles.PITCH > PI/2)
@@ -99,14 +99,14 @@ void CGameClient::UpdateViewAngles(const float &time)
 	{
 		if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
 		{
-			m_pGameClient->angles.ROLL += (time * CL_TILT_SPEED);
+			m_pGameClient->angles.ROLL += (CL_TILT_SPEED * m_fFrameTime);
 			if(m_pGameClient->angles.ROLL > m_cvViewTilt.fval)
 				m_pGameClient->angles.ROLL = m_cvViewTilt.fval;
 		}
 
 		if(m_cmd.moveFlags & ClCmd::MOVELEFT)
 		{
-			m_pGameClient->angles.ROLL -= (time * CL_TILT_SPEED);
+			m_pGameClient->angles.ROLL -= (CL_TILT_SPEED * m_fFrameTime);
 			if(m_pGameClient->angles.ROLL < -m_cvViewTilt.fval)
 				m_pGameClient->angles.ROLL = -m_cvViewTilt.fval;
 		}
@@ -116,13 +116,13 @@ void CGameClient::UpdateViewAngles(const float &time)
 		//Step back to normal view
 		if(m_pGameClient->angles.ROLL >= 0)
 		{	
-			m_pGameClient->angles.ROLL -= (CL_TILT_RESTORE_SPEED * time);
+			m_pGameClient->angles.ROLL -= (CL_TILT_RESTORE_SPEED * m_fFrameTime);
 			if(m_pGameClient->angles.ROLL < 0)
 				m_pGameClient->angles.ROLL = 0;
 		}
 		else
 		{
-			m_pGameClient->angles.ROLL += (CL_TILT_RESTORE_SPEED * time);
+			m_pGameClient->angles.ROLL += (CL_TILT_RESTORE_SPEED * m_fFrameTime);
 			if(m_pGameClient->angles.ROLL >= 0)
 				m_pGameClient->angles.ROLL = 0;
 		}
@@ -135,9 +135,9 @@ void CGameClient::UpdateViewAngles(const float &time)
 Perform the actual move
 ================================================
 */
-void CGameClient::UpdatePosition(const float &time)
+void CGameClient::UpdatePosition()
 {
-	EntMove::ClientMove(m_pGameClient, time);
+	EntMove::ClientMove(m_pGameClient, m_fFrameTime);
 
 	TraceInfo traceInfo;
 	vector_t  end(m_pGameClient->origin);
