@@ -32,7 +32,7 @@ public:
 	//Parse and handle spawm parms
 	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
 	//Handle disconnect from server
-	void HandleDisconnect(bool listenserver);
+	void HandleDisconnect();
 	//Put Client in game. The clNum is the clients num on the server
 	void BeginGame(int clNum, CBuffer &buffer);
 	//Write userInfo to the given buffer
@@ -45,9 +45,6 @@ public:
 	I_InCursorListener	* GetCursorListener();
 	CCamera *			  GetCamera();
 
-	bool LoadWorld(CWorld * pWorld);
-	void UnloadWorld();
-
 	void RunFrame(float frameTime);
 	void WriteCmdUpdate(CBuffer &buf);
 
@@ -57,27 +54,8 @@ public:
 
 private:
 
-	vector_t m_moveAngles;
-
-	void UpdateView();
-
-	I_ClientGame * m_pClGame;
-	
-	CVar    m_cvKbSpeed;
-	CVar	m_cvName;
-	CVar	m_cvRate;
-	CVar    m_cvModel;
-	CVar    m_cvSkin;
-	CVar	m_cvClip;
-	
-
-	void Talk(const char * string);
-	bool ValidateName(const CParms &parms);
-	bool ValidateRate(const CParms &parms);
-
-	int			m_hsTalk;		//handle to talk sound
-	int			m_hsMessage;	//handle to server message sound
-
+	bool LoadWorld(CWorld * pWorld);
+	void UnloadWorld();
 
 	//==================================================
 	//Movement
@@ -93,40 +71,64 @@ private:
 	void CamPath();
 
 	//==================================================
-	//Client side stuff
 
-	CClientGameInput * m_pCmdHandler;
+	void Spawn(vector_t	*origin, vector_t *angles);
+	void UpdateViewBlends();
 
 
-	CWorld	 *  m_pWorld;
+	//==================================================
+	//CVars and Commands
+
+	void Talk(const char * string);
+	bool ValidateName(const CParms &parms);
+	bool ValidateRate(const CParms &parms);
+
+	CVar    m_cvKbSpeed;
+	CVar	m_cvName;
+	CVar	m_cvRate;
+	CVar    m_cvModel;
+	CVar    m_cvSkin;
+	CVar	m_cvClip;
+
+	//==================================================
+
+	int			m_hsTalk;		//handle to talk sound
+	int			m_hsMessage;	//handle to server message sound
 
 	bool		m_ingame;
+	ClCmd		m_cmd;
+	ClCmd		m_oldCmd;
+
+	int			m_campath;
+	float		m_camtime;
+	float		m_maxvelocity;
+	
+	//==================================================
+	//Client Side Entities
 
 	int			m_numEnts;
 	ClEntity 	m_entities[GAME_MAXENTITIES];
+	
 	ClClient 	m_clients[GAME_MAXCLIENTS];
-
 	ClClient *	m_pGameClient;
+
+
+	//==================================================
+
+	CClientGameInput *	m_pCmdHandler;
+	I_ClientGame	 *	m_pClGame;
+
+	CWorld	*	m_pWorld;
+
+	CCamera	*	m_pCamera;
+	
+	vector_t	m_vecViewAngles;
+	vector_t	m_vecBlend;
 	vector_t	m_vecForward,
 				m_vecRight,
 				m_vecUp,
 				m_vecVelocity;
-	
-	ClCmd		m_cmd;
-	ClCmd		m_oldCmd;
-
-	//This should hook up to the game client whne the client
-	//enters a game
-	CCamera	*	m_pCamera;
-
-	vector_t	m_screenBlend;
-	vector_t	desired_movement;
-	
-	int			m_campath;
-	float		m_camtime;
-	float		m_maxvelocity;
-
-	void Spawn(vector_t	*origin, vector_t *angles);
+	vector_t	m_vecDesiredMove;
 };
 
 #endif

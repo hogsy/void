@@ -68,7 +68,7 @@ struct I_ClientGame
 	virtual void SetClientState(EClState state)=0;
 	virtual void SetNetworkRate(int rate)=0;
 	
-	virtual bool LoadWorld(const char *worldname)=0;
+	virtual CWorld * LoadWorld(const char * worldName)=0;
 	virtual void UnloadWorld()=0;
 
 	//Networking

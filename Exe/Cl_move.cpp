@@ -7,61 +7,36 @@
 #include "Cl_base.h"
 #include "Cl_game.h"
 
-
 const float CL_ROTATION_SENS = 0.05f;
 
-
-//void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
-
-
-// FIXME - this should be an entitiy move, not a client move
-void CGameClient::Move(vector_t &dir, float time)
-{
-	// figure out what dir we want to go if we're folling a path
-//	if (m_campath != -1)
-//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pGameClient->origin, &dir, time);
-
-	//Clipping should be on by default
-//	if (m_cvClip.ival)
-		EntMove::ClientMove(m_pGameClient, dir, time);
-///	else
-//		EntMove::NoClipMove(m_pGameClient, dir, time);
-}
-
-
-
+/*
+================================================
+Step Functions. The angle vectors have already
+been normalized.
+================================================
+*/
 void CGameClient::MoveForward()
-{
-	static vector_t forward;
-	AngleToVector (&m_pGameClient->angles, &forward, NULL, NULL);
-	VectorNormalize(&forward);
-	VectorAdd2(desired_movement,forward);
+{	m_vecDesiredMove += m_vecForward;
 }
 
 void CGameClient::MoveBackward()
-{
-	static vector_t backword;
-	AngleToVector (&m_pGameClient->angles, &backword, NULL, NULL);
-	VectorNormalize(&backword);
-	VectorMA(&desired_movement, -1, &backword, &desired_movement);
+{	m_vecDesiredMove -= m_vecForward;
 }
 
 void CGameClient::MoveRight()
-{
-	static vector_t right;
-	AngleToVector (&m_pGameClient->angles, NULL, &right, NULL);
-	VectorNormalize(&right);
-	VectorAdd2(desired_movement,right);
+{	m_vecDesiredMove += m_vecRight;
 }
 
 void CGameClient::MoveLeft()
-{
-	static vector_t left;
-	AngleToVector (&m_pGameClient->angles, NULL, &left, NULL);
-	VectorNormalize(&left);
-	VectorMA(&desired_movement, -1, &left, &desired_movement);
+{	m_vecDesiredMove -= m_vecRight;
 }
 
+
+/*
+================================================
+Rotate camera in the appropriate dir
+================================================
+*/
 void CGameClient::RotateRight(const float &val)
 {
 	m_pGameClient->angles.YAW += (val * CL_ROTATION_SENS);  
@@ -95,12 +70,30 @@ void CGameClient:: RotateDown(const float &val)
 }
 
 
+/*
+================================================
+Perform the actual move
+================================================
+*/
+//void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
 
+void CGameClient::Move(vector_t &dir, float time)
+{
+	// figure out what dir we want to go if we're folling a path
+//	if (m_campath != -1)
+//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pGameClient->origin, &dir, time);
+
+	//Clipping should be on by default
+//	if (m_cvClip.ival)
+		EntMove::ClientMove(m_pGameClient, dir, time);
+///	else
+//		EntMove::NoClipMove(m_pGameClient, dir, time);
+}
 
 /*
-===========
+================================================
 follow a camera path
-===========
+================================================
 */
 void CGameClient::CamPath()
 {
@@ -120,11 +113,6 @@ void CGameClient::CamPath()
 	}
 */
 }
-
-
-
-//======================================================================================
-//======================================================================================
 
 
 /*

@@ -1,7 +1,7 @@
+#include "Sys_hdr.h"
 #include "Sv_main.h"
 #include "Com_world.h"
-#include "Net_defs.h"
-#include "Net_protocol.h"
+
 
 /*
 ======================================
@@ -147,9 +147,15 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 	}
 	m_net.ChanFinishWrite();
 	
-
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
+
+
+	//TODO: Check for Dedicated later
+/*	if(m_svState.numClients == 0)
+	{	Shutdown();
+	}
+*/
 }
 
 /*

@@ -87,6 +87,7 @@ CClient::~CClient()
 	m_pClRen = 0;
 	m_pHud = 0;
 	m_pRender = 0;
+	m_pWorld = 0;
 	
 	if(m_pSound)
 		m_pSound->UnregisterAll();
@@ -99,7 +100,7 @@ CClient::~CClient()
 Load the world for the client to render
 =====================================
 */
-bool CClient::LoadWorld(const char *worldname)
+CWorld * CClient::LoadWorld(const char *worldname)
 {
 	char mappath[COM_MAXPATH];
 	
@@ -110,6 +111,22 @@ bool CClient::LoadWorld(const char *worldname)
 	m_pWorld = CWorld::CreateWorld(mappath);
 
 	if(!m_pWorld)
+		ComPrintf("CClient::LoadWorld: World not found\n");
+	else
+	{
+		if(m_pRender->LoadWorld(m_pWorld,1))
+		{
+			ComPrintf("CClient::LoadWorld OK\n");
+			return m_pWorld;
+		}
+		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
+	}
+
+	m_pNetCl->Disconnect(false);
+	return 0;
+
+
+/*	if(m_pWorld)
 	{
 		ComPrintf("CClient::LoadWorld: World not found\n");
 		m_pNetCl->Disconnect(false);
@@ -128,6 +145,7 @@ bool CClient::LoadWorld(const char *worldname)
 
 	ComPrintf("CClient::Load World: OK\n");
 	return true;
+*/
 }
 
 /*
@@ -150,9 +168,10 @@ void CClient::UnloadWorld()
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 	m_pSound->UnregisterCache(CACHE_GAME);
 
-	m_pClState->UnloadWorld();
+//	m_pClState->UnloadWorld();
 
-	CWorld::DestroyWorld(m_pWorld);
+	if(m_pWorld)
+		CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
 
 	System::SetGameState(INCONSOLE);
@@ -241,15 +260,12 @@ void CClient::SetClientState(int state)
 		break;
 	case CLIENT_INGAME:
 		System::SetGameState(::INGAME);
-		SetInputState(true);
 		break;
 	default:
 		return;
 	};
 	m_clientState = state;
 }
-
-
 
 /*
 ================================================
@@ -259,7 +275,7 @@ Route it according
 */
 void CClient::SetInputState(bool on)  
 {	
-	if(on == true)
+	if(on)
 	{
 		System::GetInputFocusManager()->SetCursorListener(m_pClState->GetCursorListener());
 		System::GetInputFocusManager()->SetKeyListener(m_pClState->GetKeyListener(),false);
@@ -271,7 +287,6 @@ void CClient::SetInputState(bool on)
 	}
 
 }
-
 
 
 /*
@@ -297,6 +312,7 @@ void CClient::ShowNetStats()
 void CClient::SetNetworkRate(int rate)
 {	m_pNetCl->SetRate(rate);
 }
+
 
 
 

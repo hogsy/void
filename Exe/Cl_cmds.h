@@ -3,10 +3,6 @@
 
 #include "In_defs.h"
 
-struct CCommand;
-
-//======================================================================================
-//======================================================================================
 
 //Registered Command Ids
 enum
@@ -27,37 +23,37 @@ enum
 	CMD_TALK		  = 13
 };
 
-
-
+/*
+================================================
+Utility struct to easily add game commands
+================================================
+*/
 struct ClientGameCmd
 {
 	const char * szCmd;
 	unsigned int id;
 };
-
 const ClientGameCmd g_clGameCmds[] =
 {
-	{	"+forward",	CMD_MOVE_FORWARD },
-	{	"+back",	CMD_MOVE_BACKWARD },
-	{	"+moveleft",	CMD_MOVE_LEFT },
-	{	"+moveright",	CMD_MOVE_RIGHT },
-	{	"+right",	CMD_ROTATE_RIGHT },
-	{	"+left",	CMD_ROTATE_LEFT },
-	{	"+lookup",	CMD_ROTATE_UP },
+	{	"+forward",		CMD_MOVE_FORWARD  },
+	{	"+back",		CMD_MOVE_BACKWARD },
+	{	"+moveleft",	CMD_MOVE_LEFT	},
+	{	"+moveright",	CMD_MOVE_RIGHT	},
+	{	"+right",		CMD_ROTATE_RIGHT},
+	{	"+left",		CMD_ROTATE_LEFT },
+	{	"+lookup",		CMD_ROTATE_UP	},
 	{	"+lookdown",	CMD_ROTATE_DOWN },
 	{	0, 0}
 };
 
-
-
-//======================================================================================
-//======================================================================================
 /*
 =========================================
 List of all the Keys and a pointer to 
 the function they are bound to
 =========================================
 */
+struct CCommand;
+
 struct ClientKey
 {
 	ClientKey()	{ pCmd = 0;	szCommand[0] = 0;}
@@ -68,11 +64,10 @@ struct ClientKey
 };
 
 /*
-============================================================================
+=========================================
 A Constant list of Special keys "names"
-and their corresponding values
-only 
-============================================================================
+and their corresponding values only 
+=========================================
 */
 struct ClientKeyConstants_t
 {
@@ -113,15 +108,6 @@ const ClientKeyConstants_t keytable[] =
 	{	0,	0}
 };
 
-
-//======================================================================================
-//======================================================================================
-
-const int CL_CMDBUFFERSIZE = 8;
-
-
-class CGameClient;
-
 /*
 ======================================
 Client Command Handler
@@ -132,6 +118,7 @@ Client Command Handler
 -provide means to bind keys to commands
 ======================================
 */
+const int CL_CMDBUFFERSIZE = 8;
 
 class CClientGameInput : public I_InKeyListener,	
 						 public I_InCursorListener
@@ -148,7 +135,7 @@ public:
 	
 	//Will update cursor pos if it had changed and return true
 	bool CursorChanged() const { return m_bCursorChanged; }
-	void UpdateCursorPos(float &ix, float &iy, float &iz) const;
+	void UpdateCursorPos(float &ix, float &iy, float &iz);
 
 	void HandleKeyEvent	  (const KeyEvent &kevent);
 	void HandleCursorEvent(const float &ix,
@@ -167,10 +154,10 @@ private:
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
-	float			m_fXpos, m_fYpos, m_fZpos;
-	mutable bool	m_bCursorChanged;
+	float	m_fXpos, m_fYpos, m_fZpos;
+	bool	m_bCursorChanged;
 
-	CParms		m_Parms;
+	CParms	m_Parms;
 
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];

@@ -253,6 +253,9 @@ SOURCE=..\Shared\Com_world.h
 # Begin Group "Client"
 
 # PROP Default_Filter ""
+# Begin Group "Client Game"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\Cl_cmds.cpp
@@ -263,15 +266,24 @@ SOURCE=.\Cl_cmds.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Cl_export.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Cl_game.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\Cl_game.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cl_move.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cl_net.cpp
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\Cl_export.h
 # End Source File
 # Begin Source File
 
@@ -284,10 +296,6 @@ SOURCE=.\Cl_main.cpp
 # Begin Source File
 
 SOURCE=.\Cl_main.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Cl_move.cpp
 # End Source File
 # End Group
 # Begin Group "Resources"
@@ -337,6 +345,14 @@ SOURCE=.\Mus_main.h
 # Begin Group "Server"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Sv_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv_game.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\Sv_main.cpp
@@ -448,30 +464,6 @@ SOURCE=..\Shared\Net_protocol.h
 # Begin Source File
 
 SOURCE=..\Shared\Net_server.h
-# End Source File
-# End Group
-# Begin Group "External"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\Mssdk\Include\BaseTsd.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Mssdk\Include\Guiddef.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Mssdk\Include\PropIdl.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Mssdk\Include\Tvout.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
 # Begin Group "Game"

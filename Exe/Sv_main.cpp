@@ -1,6 +1,7 @@
+#include "Sys_hdr.h"
 #include "Sv_main.h"
-#include "Net_defs.h"
-#include "Net_protocol.h"
+#include "Sv_defs.h"
+
 #include "Com_util.h"
 #include "Com_world.h"
 
@@ -16,6 +17,45 @@ const float GAME_FRAMETIME = 1/20;
 
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
+
+
+//==========================================================================
+//==========================================================================
+
+static CServer * g_pServer=0;
+
+namespace VoidServer {
+
+bool InitializeNetwork()
+{	return CNetServer::InitWinsock();
+}
+void ShutdownNetwork()
+{	CNetServer::ShutdownWinsock();
+}
+
+void Create()
+{	
+	if(!g_pServer)
+		g_pServer = new CServer;
+}
+
+void Destroy()
+{
+	if(g_pServer)
+		delete g_pServer;
+}
+
+void RunFrame()
+{	g_pServer->RunFrame();
+}
+
+}
+
+
+
+//==========================================================================
+//==========================================================================
+
 
 /*
 ======================================
@@ -128,6 +168,15 @@ void CServer::Shutdown()
 {
 	if(!m_active)
 		return;
+	
+	m_active = false;
+
+	//Send Disconnects
+	for(int i=0;i<m_svState.maxClients;i++)
+	{
+		if(m_clients[i] && m_clients[i]->inUse)
+			m_net.SendDisconnect(i, DR_SVQUIT);
+	}
 
 	//Kill the network
 	m_net.Shutdown();
@@ -160,8 +209,7 @@ void CServer::Shutdown()
 	m_svState.numClients = 0;
 	m_svState.levelId = 0;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
-	m_active = false;
-
+	
 	//destroy world data
 	if(m_pWorld)
 		CWorld::DestroyWorld(m_pWorld);

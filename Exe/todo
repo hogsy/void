@@ -1,6 +1,8 @@
 EXE
 ==============================================================
 
+-Add server command buffering
+
 -Move client movement to server
 -Add free/inuse SoundSource lists in 3dsound manager
 -Add free/inuse Wave lists in wavemanager

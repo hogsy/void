@@ -1,6 +1,7 @@
 #ifndef VOID_SOUND_SYSTEM
 #define VOID_SOUND_SYSTEM
 
+#include "Com_vector.h"
 #include "Game_defs.h"
 
 /*

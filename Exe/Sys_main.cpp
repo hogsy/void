@@ -1,7 +1,8 @@
 #include "Sys_hdr.h"
 #include "In_main.h"
 #include "Mus_main.h"
-#include "Sv_main.h"
+//#include "Sv_main.h"
+#include "Sv_defs.h"
 #include "I_renderer.h"
 #include "I_filesystem.h"
 #include "Sys_exp.h"
@@ -102,10 +103,11 @@ CVoid::CVoid(const char * cmdLine)
 #endif
 
 	//Network Sys
-	m_pServer = new CServer();
+//	m_pServer = new CServer();
+	VoidServer::Create();
 	
 	//Create the client
-	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
+//	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
 
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
@@ -181,7 +183,8 @@ bool CVoid::Init()
 
 	//================================
 	//Server
-	if(!CServer::InitNetwork())
+//	if(!CServer::InitNetwork())
+	if(!VoidServer::InitializeNetwork())
 	{
 		System::FatalError("CVoid::Init: Could not initalize Winsock");
 		return false;
@@ -214,6 +217,8 @@ bool CVoid::Init()
 		return false;
 	}
 */
+		//Create the client
+	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
 
 	//Start timer
 	m_Time.Reset();
@@ -240,10 +245,13 @@ CVoid::~CVoid()
 	if(m_pClient)
 		delete m_pClient;
 	
-	if(m_pServer)	
-		delete m_pServer;	
+//	if(m_pServer)	
+//		delete m_pServer;	
+	
+	VoidServer::Destroy();
+	VoidServer::ShutdownNetwork();
 
-	CServer::ShutdownNetwork();
+//	CServer::ShutdownNetwork();
 	
 	if(m_pSound)	
 		delete m_pSound;
@@ -294,7 +302,8 @@ void CVoid::RunFrame()
 
 	m_pSound->RunFrame();
 
-	m_pServer->RunFrame();
+//	m_pServer->RunFrame();
+	VoidServer::RunFrame();
 
 	//Client will handle drawing as well.
 	//Can be in the console , in the UI, or in the game.

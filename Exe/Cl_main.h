@@ -40,7 +40,8 @@ private:
 	//Hacks 
 	void SetClientState(int state);
 	void SetNetworkRate(int rate);
-	bool LoadWorld(const char *worldname);
+
+	CWorld * LoadWorld(const char *worldname);
 	void UnloadWorld();
 
 	void WriteUpdate();

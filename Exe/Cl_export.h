@@ -87,13 +87,14 @@ public:
 	{	m_refClient.m_pNetCl->SetRate(rate);
 	}
 	
-	inline bool LoadWorld(const char *worldname)
-	{	return m_refClient.LoadWorld(worldname);
+	inline CWorld * LoadWorld(const char * worldName)
+	{	return m_refClient.LoadWorld(worldName);
 	}
 	
 	inline void UnloadWorld()
 	{	m_refClient.UnloadWorld();
 	}
+
 
 	//Networking
 	inline CBuffer & GetSendBuffer()

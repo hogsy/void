@@ -2,7 +2,6 @@
 #include "Sys_cons.h"
 #include "Cl_cmds.h"
 
-
 /*
 ==========================================
 Constructor/Destructor
@@ -23,14 +22,18 @@ CClientGameInput::~CClientGameInput()
 }
 
 
-void CClientGameInput::UpdateCursorPos(float &ix, float &iy, float &iz) const
+/*
+================================================
+Return the updated cursor position
+================================================
+*/
+void CClientGameInput::UpdateCursorPos(float &ix, float &iy, float &iz)
 {
 	m_bCursorChanged = false;
 	ix = m_fXpos;
 	iy = m_fYpos;
 	iz = m_fZpos;
 }
-
 
 /*
 ==========================================
