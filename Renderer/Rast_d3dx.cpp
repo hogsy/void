@@ -146,8 +146,12 @@ bool CRastD3DX::Init()
 	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
 	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 
-
-
+/*
+	DDCAPS caps;
+	caps.dwSize = sizeof(DDCAPS);
+	m_pDD->GetCaps(&caps, NULL);
+	bool vsynch = (caps.dwCaps2 & DDCAPS2_FLIPNOVSYNC) ? true : false;
+*/
 
 	g_rInfo.ready = true;
 	return true;
@@ -737,7 +741,7 @@ void CRastD3DX::FrameEnd(void)
 	Sleep(1);
 	m_pD3DDevice->EndScene();
 	// Update frame
-  
+
 	HRESULT hr = m_pD3DX->UpdateFrame(mVidSynch ? 0 : D3DX_UPDATE_NOVSYNC);
 	if (FAILED(hr))
 		mhError = hr;
