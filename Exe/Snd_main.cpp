@@ -500,6 +500,11 @@ void CSoundManager::RemoveStaticSource(const ClEntity * ent)
 }
 
 
+void CSoundManager::UpdateStaticSource(const ClEntity * ent)
+{
+}
+
+
 /*
 ======================================
 Register a new sound at given index,
@@ -553,7 +558,7 @@ int CSoundManager::RegisterSound(const char *path, CacheType cache, int index)
 Unregister the given sound
 ======================================
 */
-void CSoundManager::UnregisterSound(int index, CacheType cache)
+void CSoundManager::UnregisterSound(CacheType cache, int index)
 {
 	if(m_bufferCache[cache][index].InUse())
 		m_bufferCache[cache][index].Destroy();
@@ -567,7 +572,7 @@ Unregister all sounds in the given cache
 void CSoundManager::UnregisterCache(CacheType cache)
 {
 	for(int i=0; i< GAME_MAXSOUNDS; i++)
-		UnregisterSound(i, cache);
+		UnregisterSound(cache,i);
 }
 
 /*

@@ -17,7 +17,7 @@
 #include "Net_protocol.h"
 #include "Net_client.h"
 
-
+#include "Cl_export.h"
 #include "Cl_cmds.h"
 #include "Cl_game.h"
 
@@ -37,6 +37,8 @@ CClient::CClient(I_Renderer * prenderer,
 {
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
+	
+	m_pExports = new CClientExports(*this);
 
 	//Setup network listener
 	m_pClState = new CGameClient(*this, m_pClRen, m_pHud, m_pSound, m_pMusic);
@@ -83,6 +85,8 @@ CClient::~CClient()
 	delete m_pClState;
 
 	delete m_pNetCl;
+
+	delete m_pExports;
 }
 
 /*
@@ -300,17 +304,17 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 }
 
 
-void CClient::SetState(int state)
+void CClient::SetClientState(int state)
 {
 	switch(state)
 	{
-	case CL_DISCONNECTED:
+	case CLIENT_DISCONNECTED:
 		m_pNetCl->Disconnect(true);
 		break;
-	case CL_RECONNECTING:
+	case CLIENT_RECONNECTING:
 		m_pNetCl->Reconnect(true);
 		break;
-	case CL_INGAME:
+	case CLIENT_INGAME:
 		System::SetGameState(::INGAME);
 		SetInputState(true);
 		break;

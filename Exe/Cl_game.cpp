@@ -16,6 +16,7 @@
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 
+#include "Cl_hdr.h"
 #include "Cl_game.h"
 
 
@@ -449,7 +450,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				m_pSound->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
 				//m_pNetCl->Disconnect(true);
-				m_refClient.SetState(CClient::CL_DISCONNECTED);
+				m_refClient.SetClientState(CLIENT_DISCONNECTED);
 				break;
 			}
 		case SV_PRINT:	//just a print message
@@ -461,7 +462,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_RECONNECT:
 			{
 				//m_pNetCl->Reconnect(true);
-				m_refClient.SetState(CClient::CL_RECONNECTING);
+				m_refClient.SetClientState(CLIENT_RECONNECTING);
 				break;
 			}
 		case SV_CLFULLINFO:
@@ -691,7 +692,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	HandleGameMsg(buffer);
 	BeginGame();
 
-	m_refClient.SetState(CClient::CL_INGAME);
+	m_refClient.SetClientState(CLIENT_INGAME);
 }
 
 

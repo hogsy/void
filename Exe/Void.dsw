@@ -78,13 +78,13 @@ Package=<4>
     Project_Dep_Name Network
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name Renderer
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name FileSystem
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name Game Dll
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Renderer
     End Project Dependency
 }}}
 

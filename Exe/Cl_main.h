@@ -13,6 +13,8 @@ class  CWorld;
 class  CNetClient;
 class  CBuffer;
 
+class CClientExports;
+
 struct I_Renderer;
 struct I_HudRenderer;
 struct I_ClientRenderer;
@@ -37,14 +39,6 @@ public:
 
 	~CClient();
 
-	enum 
-	{
-		CL_DISCONNECTED,
-		CL_RECONNECTING,
-		CL_INGAME
-
-	};
-
 	void RunFrame();
 
 	void SetInputState(bool on);
@@ -55,8 +49,11 @@ public:
 	
 private:
 
+	friend class CClientExports;
+	CClientExports	* m_pExports;
+
 	//Hacks 
-	void SetState(int state);
+	void SetClientState(int state);
 	void SetNetworkRate(int rate);
 	bool LoadWorld(const char *worldname);
 	void UnloadWorld();

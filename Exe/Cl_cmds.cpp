@@ -1,4 +1,3 @@
-//#include "Cl_game.h"
 #include "Sys_hdr.h"
 #include "Sys_cons.h"
 #include "Cl_cmds.h"

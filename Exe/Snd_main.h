@@ -44,7 +44,7 @@ public:
 
 	//finds id, or creates new one, if index = -1, otherwise loads sound at give index
 	int  RegisterSound(const char *path, CacheType cache, int  index = -1);
-	void UnregisterSound(int index, CacheType cache);
+	void UnregisterSound(CacheType cache, int index);
 	void UnregisterCache(CacheType cache);
 	void UnregisterAll();
 
