@@ -140,6 +140,7 @@ public:
 	void SendPackets();
 
 	//NetChanWriter Implementation
+	bool ChanCanSend(int chanId);
 	void ChanBeginWrite(int chanId, byte msgid, int estSize);
 	void ChanWrite(byte b);
 	void ChanWrite(char c);

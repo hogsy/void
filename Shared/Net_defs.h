@@ -48,7 +48,6 @@ struct NetChanState
 		inMsgId = inAckedId = outMsgId = lastOutReliableId = 0;
 		dropCount = goodCount = numChokes = 0;
 		latency = 0.0f;
-//		rate = 0.0;
 	}
 	
 	uint	inMsgId;			//Latest incoming messageId
@@ -59,8 +58,6 @@ struct NetChanState
 	int		goodCount;			//Number of packed received okay
 	int		numChokes;			//Times we throttled back to conform to the rate
 	float   latency;
-	
-//	double	rate;				//Byte/Sec
 };
 
 /*

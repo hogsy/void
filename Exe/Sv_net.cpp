@@ -17,25 +17,55 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
-/*
-	if(m_clients[clNum].inUse && !reconnect)
-	{
-		m_net.SendRejectMsg("Couldn't find free client slot");
-		return false;
-	}
-*/
-	m_clients[clNum] = new EntClient();
-//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
+
+
+	m_clients[clNum] = new EntClient();
+	
 	strcpy(m_clients[clNum]->name, buffer.ReadString());
+	
+	strcpy(m_clients[clNum]->modelName,buffer.ReadString());
+	m_clients[clNum]->modelIndex = RegisterModel(m_clients[clNum]->modelName);
+
+	strcpy(m_clients[clNum]->skinName,buffer.ReadString());
+	m_clients[clNum]->skinNum = RegisterImage(m_clients[clNum]->skinName);
+
 	m_net.ChanSetRate(clNum, buffer.ReadInt());
 	
 	m_clients[clNum]->inUse = true;
+	m_clients[clNum]->spawned = false;
+
+	m_numEntities++;
 
 	if(!reconnect)
 		m_svState.numClients++;
 
+	m_clients[clNum]->num = m_svState.numClients;
+
 	m_net.BroadcastPrintf("%s connected", m_clients[clNum]->name);
+
+	int len = 10 + strlen(m_clients[clNum]->name) + 
+		strlen(m_clients[clNum]->modelName) + strlen(m_clients[clNum]->skinName);
+
+	//Add client info to all connected clients
+	for(int i=0;i<m_svState.maxClients;i++)
+	{
+		//dont send to source
+		if(i == clNum)
+			continue;
+
+		if(m_clients[i] && m_clients[i]->spawned)
+		{
+			m_net.ChanBeginWrite(i,SV_CLIENTINFO, len);
+			m_net.ChanWrite((short)m_clients[clNum]->num);
+			m_net.ChanWrite(m_clients[clNum]->name);
+			m_net.ChanWrite((short)m_clients[clNum]->modelIndex);
+			m_net.ChanWrite(m_clients[clNum]->modelName);
+			m_net.ChanWrite((short)m_clients[clNum]->skinNum);
+			m_net.ChanWrite(m_clients[clNum]->skinName);
+			m_net.ChanFinishWrite();
+		}
+	}
 	return true;
 }
 
@@ -70,7 +100,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(i == clNum)
 					continue;
 
-				if(m_clients[i]) //[i])
+				if(m_clients[i])
 				{
 					m_net.ChanBeginWrite(i,SV_TALK, len);
 					m_net.ChanWrite(m_clients[clNum]->name);
@@ -128,21 +158,23 @@ void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 	switch(reason)
 	{
 	case CLIENT_QUIT:
+ComPrintf("%s Disconnected", m_clients[clNum]->name);
 		m_net.BroadcastPrintf("%s disconnected", m_clients[clNum]->name);
 		break;
 	case CLIENT_TIMEOUT:
+ComPrintf("%s Timed out", m_clients[clNum]->name);
 		m_net.BroadcastPrintf("%s timed out", m_clients[clNum]->name);
 		break;
 	case CLIENT_OVERFLOW:
+ComPrintf("%s overflowed", m_clients[clNum]->name);
 		m_net.BroadcastPrintf("%s overflowed", m_clients[clNum]->name);
 		break;
 	}
 
-//	delete client;
-//	m_entities[clNum] = 0;
+	//Run through resources to see if we can free anything ?
+
 	delete m_clients[clNum];
 	m_clients[clNum] = 0;
-//	m_clients[clNum].inUse = false;
 	m_svState.numClients --;
 }
 
@@ -162,11 +194,38 @@ Handle Client spawning
 */
 void CServer::OnClientSpawn(int clNum)
 {
-//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 	//Check chanIds to see what client spawned
 	m_net.BroadcastPrintf("%s entered the game", m_clients[clNum]->name);
+	m_clients[clNum]->spawned = true;
 
-	//broadcast client info
+	//send other clients info
+	for(int i=0; i< m_svState.numClients; i++)
+	{
+		if(i == clNum || !m_clients[i] ||
+			!m_clients[i]->inUse)
+			continue;
+		
+		m_net.ChanBeginWrite(clNum,SV_CLIENTINFO, 0);
+		m_net.ChanWrite((short)m_clients[i]->num);
+		m_net.ChanWrite(m_clients[i]->name);
+		m_net.ChanWrite((short)m_clients[i]->modelIndex);
+		m_net.ChanWrite(m_clients[i]->modelName);
+		m_net.ChanWrite((short)m_clients[i]->skinNum);
+		m_net.ChanWrite(m_clients[i]->skinName);
+		m_net.ChanFinishWrite();
+	}
+
+
+/*
+	m_net.ChanBeginWrite(clNum,SV_CLIENTINFO, len);
+	m_net.ChanWrite((short)m_clients[clNum]->num);
+	m_net.ChanWrite(m_clients[clNum]->name);
+	m_net.ChanWrite((short)m_clients[clNum]->modelIndex);
+	m_net.ChanWrite(m_clients[clNum]->modelName);
+	m_net.ChanWrite((short)m_clients[clNum]->skinNum);
+	m_net.ChanWrite(m_clients[clNum]->skinName);
+	m_net.ChanFinishWrite();
+*/
 }
 
 /*

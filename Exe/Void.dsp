@@ -444,10 +444,6 @@ SOURCE=..\Shared\Net_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Net_protocol.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Net_server.h
 # End Source File
 # End Group
@@ -503,6 +499,10 @@ SOURCE=.\I_game.h
 SOURCE=..\Shared\Clgame_defs.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\Shared\Net_protocol.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\todo

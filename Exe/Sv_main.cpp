@@ -192,6 +192,31 @@ void CServer::RunFrame()
 	//run clients
 	//go through all the clients, find entities in their pvs and update them
 
+	//Add client info to all connected clients
+	for(int i=0;i<m_svState.maxClients;i++)
+	{
+		if(m_clients[i] && m_clients[i]->spawned && m_net.ChanCanSend(i))
+		{
+			for(int j=0; j<m_svState.maxClients; j++)
+			{
+				if(!m_clients[j] || !m_clients[j]->spawned || i==j)
+					continue;
+
+				m_net.ChanBeginWrite(i,SV_CLUPDATE, 0);
+				m_net.ChanWrite((short)m_clients[j]->num);
+				m_net.ChanWriteCoord(m_clients[j]->origin.x);
+				m_net.ChanWriteCoord(m_clients[j]->origin.y);
+				m_net.ChanWriteCoord(m_clients[j]->origin.z);
+				m_net.ChanWriteAngle(m_clients[j]->angles.x);
+				m_net.ChanWriteAngle(m_clients[j]->angles.y);
+				m_net.ChanWriteAngle(m_clients[j]->angles.z);
+				m_net.ChanFinishWrite();
+			}
+		}
+	}
+
+
+
 	//write to clients
 	m_net.SendPackets();
 }

@@ -35,6 +35,9 @@ struct Entity
 		modelIndex = -1;
 		soundIndex = -1;
 
+		memset(modelName,0,64);
+		memset(skinName,0,64);
+
 		skinNum = frameNum = 0;
 		volume = attenuation = 0;
 	}
@@ -48,6 +51,9 @@ struct Entity
 	vector_t	angles;
 
 	int		    modelIndex;
+	char		modelName[64];
+	char		skinName[64];
+
 	int			skinNum;
 	int			frameNum;
 
@@ -123,6 +129,7 @@ struct EntClient : public Entity
 	{	
 		memset(name,0,32); 
 		inUse = false; 
+		spawned = false;
 	}
 
 	virtual ~EntClient() { }
@@ -133,6 +140,8 @@ struct EntClient : public Entity
 	}
 	
 	bool inUse;
+	bool spawned;
+
 	char name[32];
 
 	vector_t mins;

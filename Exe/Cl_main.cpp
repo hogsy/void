@@ -26,6 +26,7 @@ CClient::CClient(I_Renderer * prenderer,
 					m_clrate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 					m_clmodel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_clskin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -58,6 +59,7 @@ CClient::CClient(I_Renderer * prenderer,
 	System::GetConsole()->RegisterCVar(&m_clrate,this);
 	System::GetConsole()->RegisterCVar(&m_clname,this);
 	System::GetConsole()->RegisterCVar(&m_clmodel,this);
+	System::GetConsole()->RegisterCVar(&m_clskin,this);
 	
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
@@ -186,21 +188,12 @@ void CClient::BeginGame()
 	VectorSet(&desired_movement, 0, 0, 0);
 
 	VectorSet(&m_gameClient.angle, 0.0f,0.0f,0.0f);
-	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.origin, 0.0f,0.0f,16.0f);	// FIXME - origin + view height
 	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
-
 	
-	m_clients[0].inUse = true;
-	m_clients[0].cache = CACHE_GAME;
-	m_clients[0].skinnum = m_pImage->LoadImage("Players/Ratamahatta/Ratamahatta", -1, CACHE_GAME);
-	m_clients[0].skinnum |= MODEL_SKIN_UNBOUND_GAME;
-	m_clients[0].index = m_pModel->LoadModel("Players/Ratamahatta/tris.md2", -1, CACHE_GAME);
-	VectorSet(&m_clients[0].origin, 0, -100, 48);
-	VectorSet(&m_clients[0].angle, 0, 0, 0);
-
-
+	
 	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angle, m_screenBlend);
 
 	m_ingame = true;
@@ -323,8 +316,8 @@ void CClient::RunFrame()
 		}
 
 
-		m_pModel->DrawModel(m_clients[0]);
-/*		for(i=0; i< GAME_MAXCLIENTS; i++)
+//		m_pModel->DrawModel(m_clients[0]);
+		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].index >=0)
 			{
@@ -332,20 +325,23 @@ void CClient::RunFrame()
 			}
 		}
 
-*/
 		m_pRender->Draw(m_pCamera);
 
-		//Write all updates
-		CBuffer &buf = m_pNetCl->GetSendBuffer();
-		
-		buf.Reset();
-		buf.Write(CL_MOVE);
-		buf.WriteCoord(m_gameClient.origin.x);
-		buf.WriteCoord(m_gameClient.origin.y);
-		buf.WriteCoord(m_gameClient.origin.z);
-		buf.WriteAngle(m_gameClient.angle.x);
-		buf.WriteAngle(m_gameClient.angle.y);
-		buf.WriteAngle(m_gameClient.angle.z);
+		if(m_pNetCl->CanSend())
+		{
+
+			//Write all updates
+			CBuffer &buf = m_pNetCl->GetSendBuffer();
+			
+			buf.Reset();
+			buf.Write(CL_MOVE);
+			buf.WriteCoord(m_gameClient.origin.x);
+			buf.WriteCoord(m_gameClient.origin.y);
+			buf.WriteCoord(m_gameClient.origin.z);
+			buf.WriteAngle(m_gameClient.angle.x);
+			buf.WriteAngle(m_gameClient.angle.y);
+			buf.WriteAngle(m_gameClient.angle.z);
+		}
 
 	}
 	else

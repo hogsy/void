@@ -2,7 +2,10 @@
 EXE
 ==============================================================
 error/logging/handling
+
 command line parms
+fix config files.
+
 
 //low priority, would be nice to have sometime
 mpeg playback via directShow services

@@ -15,7 +15,8 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 	byte msgId = 0;
 	while(msgId != 255)
 	{
-		msgId= (int)buffer.ReadByte();
+		msgId= buffer.ReadByte();
+		
 		//bad message
 		if(msgId == 255)
 			break;
@@ -50,10 +51,52 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_CLIENTINFO:
 			{
-//				SV_CLIENTINFO
+				int num = buffer.ReadShort();
+				m_clients[num].Reset();
+				strcpy(m_clients[num].name, buffer.ReadString());
+
+				int mindex = buffer.ReadShort();
+				char model[64];
+				strcpy(model,buffer.ReadString());
+
+				int sindex = buffer.ReadShort();
+				char path[COM_MAXPATH];
+
+				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
+
+				m_clients[num].cache = CACHE_GAME;
+				m_clients[num].skinnum = m_pImage->LoadImage(path, sindex, CACHE_GAME);
+				m_clients[num].skinnum |= MODEL_SKIN_UNBOUND_GAME;
+
+				sprintf(path,"Players/%s/tris.md2", model);
+				m_clients[num].index = m_pModel->LoadModel(path, mindex, CACHE_GAME);
+				m_clients[num].cache = CACHE_GAME;
+
+				m_clients[num].inUse = true;
+
 				break;
 			}
+		case SV_CLUPDATE:
+			{
+				//buffer.Reset();
+				int num = buffer.ReadShort();
 
+				if(m_clients[num].inUse)
+				{
+					m_clients[num].origin.x = buffer.ReadCoord();
+					m_clients[num].origin.y = buffer.ReadCoord();
+					m_clients[num].origin.z = buffer.ReadCoord();
+					m_clients[num].angle.x = buffer.ReadAngle();
+					m_clients[num].angle.y = buffer.ReadAngle();
+					m_clients[num].angle.z = buffer.ReadAngle();
+				}
+				break;
+			}
+		default:
+			{
+				buffer.Reset();
+				break;
+			}
 		}
 	}
 }
@@ -209,6 +252,8 @@ Write UserInfo to buffer
 void CClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.Write(m_clname.string);
+	buffer.Write(m_clmodel.string);
+	buffer.Write(m_clskin.string);
 	buffer.Write(m_clrate.ival);
 }
 

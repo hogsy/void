@@ -97,6 +97,7 @@ private:
 	CVar	m_clname;
 	CVar	m_clrate;
 	CVar    m_clmodel;
+	CVar    m_clskin;
 	
 	CVar	m_noclip;
 	
