@@ -182,7 +182,7 @@ A device messed up. release all the keys
 void CInputState::FlushKeys()
 {
 	//Send key up events for all keys currently down, to reset them
-	ComPrintf("CInputState::Flushing keys\n");
+//	ComPrintf("CInputState::Flushing keys\n");
 
 	for(int i=0;i<IN_NUMKEYS;i++)
 	{
