@@ -7,6 +7,16 @@ using namespace VoidNet;
 //Network Address class
 //======================================================================================
 
+char CNetAddr::m_szLocalAddress[24];
+void CNetAddr::SetLocalAddress(const char * localaddy)
+{	strcpy(m_szLocalAddress, localaddy);
+}
+
+/*
+==========================================
+Constructors
+==========================================
+*/
 CNetAddr::CNetAddr()
 {
 	ip[0] = ip[1] = ip[2] = ip[3] =0;
@@ -18,7 +28,11 @@ CNetAddr::CNetAddr(const char * szaddr)
 {	Set(szaddr);
 }
 
-//Assignment operators
+/*
+==========================================
+Assignment operators
+==========================================
+*/
 CNetAddr & CNetAddr::operator = (const SOCKADDR_IN &saddr)
 {
 	*(int *)&ip = *(int *)&saddr.sin_addr;
@@ -50,7 +64,10 @@ void CNetAddr::Set(const char * szaddr)
 	char		stringaddr[128];
 	SOCKADDR_IN sockAddr;
 	
-	strcpy (stringaddr,szaddr);
+	if(!szaddr || !strcmp(szaddr,"localhost"))
+		strcpy(stringaddr, m_szLocalAddress);
+	else	
+		strcpy (stringaddr,szaddr);
 
 	//Strip port number if specified
 	sockAddr.sin_port = 0;
@@ -64,16 +81,9 @@ void CNetAddr::Set(const char * szaddr)
 		}
 	}
 
-	if(!szaddr)
-		sockAddr.sin_addr.s_addr = INADDR_ANY;
-	else if(!strcmp(szaddr,"loopback"))
-		sockAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	else if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
-	{
+	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
 		*(int *)&sockAddr.sin_addr = inet_addr(stringaddr);
-	}
-	//Resolve hostname
-	else
+	else	//Resolve hostname
 	{
 		HOSTENT	*host = 0;
 		if ((host = gethostbyname(stringaddr)) == 0)
@@ -90,7 +100,11 @@ void CNetAddr::Set(const char * szaddr)
 	valid = true;
 }
 
-//Utility
+/*
+==========================================
+Utility
+==========================================
+*/
 const char * CNetAddr::ToString() const
 {
 	static char stringaddr[64];
@@ -110,7 +124,6 @@ void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr) const
 	*(int *)&saddr.sin_addr  = *(int *)&ip;
 }
 
-//Util
 void CNetAddr::Print() const
 {	
 	if(port > 0)
@@ -229,9 +242,10 @@ void CNetBuffer::WriteCoord(float f)
 
 void CNetBuffer::WriteString(const char *s)
 {
-	int len = strlen(s);
+	int len = strlen(s) + 1;
 	byte * buf = GetSpace(len);
 	memcpy(buf,s,len);
+	buf[len-1] = 0;
 }
 
 /*
@@ -283,7 +297,7 @@ int CNetBuffer::ReadInt()
 	int i = (int)(m_buffer[m_readCount]	+ 
 				 (m_buffer[m_readCount+1]<<8) +
 				 (m_buffer[m_readCount+2]<<16) +
-				 (m_buffer[m_readCount+3]<<32));
+				 (m_buffer[m_readCount+3]<<24));
 	m_readCount +=SIZE_INT;
 	return i;
 

@@ -116,7 +116,7 @@ bool CServer::Init()
 		pAddrString = inet_ntoa(pAddrInet->sin_addr);
 		
 		if (pAddrString)
-			ComPrintf("IP: %s  ", pAddrString);
+			ComPrintf("IP: %s", pAddrString);
 		
 		addrFlags = localAddr[i].iiFlags;
 		if (addrFlags & IFF_UP)
@@ -140,7 +140,9 @@ bool CServer::Init()
 
 	CNetAddr netaddr;
 	netaddr= (const char*)m_boundAddr;
-	//netaddr= "127.0.0.1:20010";
+	
+	//Save Local Address
+	CNetAddr::SetLocalAddress(m_boundAddr);
 
 	if(!m_pSock->Bind(netaddr,false))
 	{
@@ -317,15 +319,15 @@ void CServer::ReadPackets()
 	
 	while(m_pSock->Recv())
 	{
-		ComPrintf("Got Data\n");
-
 		packetId = m_recvBuf.ReadInt();
+//		ComPrintf("%d %s\n", packetId, m_recvBuf.ReadString());
 
-		if(packetId == -1)
+/*		if(packetId == -1)
 		{
 			ProcessQueryPacket();
 			continue;
 		}
+*/
 	}
 }
 
@@ -389,204 +391,6 @@ void CServer::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 //======================================================================================
 //======================================================================================
 #if 0
-#include "Sv_main.h"
-#include "Sv_client.h"
-CNetClients g_netclients;
-char		g_gamedir[MAXPATH];
-/*
-========================================
-Constructor
-========================================
-*/
-CServer::CServer() 
-{
-	m_pWorld=0;
-	m_pNetworkEvents = new WSANETWORKEVENTS;
-	m_protocolversion = PROTOCOL_VERSION;
-	m_active = false;
-
-	g_pCons->RegisterCVar(&m_port,"sv_port","36666",CVAR_INT,CVAR_ARCHIVE|CVAR_LATCH);	
-	g_pCons->RegisterCVar(&m_hostname,"sv_hostname","Skidz",CVAR_STRING,CVAR_ARCHIVE);
-	g_pCons->RegisterCVar(&m_dedicated,"sv_dedicated","0",CVAR_INT,CVAR_ARCHIVE|CVAR_LATCH);
-	g_pCons->RegisterCVar(&m_maxclients,"sv_maxclients","2",CVAR_INT,CVAR_ARCHIVE|CVAR_LATCH);
-	g_pCons->RegisterCVar(&m_game,"game","Game",CVAR_STRING,CVAR_LATCH);		
-
-	strcpy(g_gamedir,m_game->string);
-}
-
-
-/*
-========================================
-Destructor
-========================================
-*/
-CServer::~CServer()
-{
-	delete m_pNetworkEvents;
-}
-
-/*
-=======================================
-Private Function to Initialize Winsock
-=======================================
-*/
-
-bool CServer::Init()
-{
-	g_pCons->RegisterCFunc("sv_status",&SV_Status);
-	strcpy(g_gamedir,m_game->string);
-	g_pCons->dprintf("Server::Init: Gamedir:%s\n",g_gamedir);
-
-	//Seed random number generator for challenge strings
-	srand((unsigned)time(NULL));
-
-	g_pCons->dprintf("CServer::Init:%s\n:%s\n",g_computerName,g_ipaddr);
-	return true;
-}
-
-
-
-/*
-=======================================
-Init Server
-Map changes will NOT call this
-Game changes will
-=======================================
-*/
-//bool CServer::InitGame(world_t *world)
-bool CServer::InitGame(char *mapname)
-{
-	char worldname[128];
-	
-	Util::DefaultExtension(mapname,".bsp");
-//	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
-//	sprintf(worldname,"%s\\worlds\\%s",g_exedir,mapname);
-
-	if(m_pWorld != 0)
-		world_destroy(m_pWorld);
-	m_pWorld = 0;
-
-	m_pWorld = world_create(worldname);
-	
-	if(!m_pWorld)
-	{
-		g_pCons->dprintf("CServer::InitGame: couldnt load %s\n",mapname);
-		return false;
-	}
-
-	Util::RemoveExtension(mapname,m_mapname);
-
-	if(m_socket != INVALID_SOCKET)
-		closesocket(m_socket);
-
-	//if no address is specified, or local host
-//	m_addr.sin_addr.s_addr = inet_addr(m_ipaddr);
-	m_addr.sin_addr.s_addr = htonl(INADDR_ANY);       
-	m_addr.sin_family = AF_INET;
-	m_addr.sin_port = htons((int)m_port->value);
-
-	m_socket = socket(AF_INET,SOCK_DGRAM,0);
-	if (m_socket == INVALID_SOCKET)
-	{
-		g_pCons->dprintf("CServer::Init:ERROR:Couldnt create socket\n");
-		closesocket(m_socket);
-		return false;
-	}
-
-	// bind the socket to the internet address 
-	if (bind(m_socket, (struct sockaddr *)&m_addr, sizeof(m_addr)) == SOCKET_ERROR) 
-	{
-		g_pCons->dprintf("CServer::Init:ERROR:Couldnt bind socket\n");
-		closesocket(m_socket);
-		return false;
-	}
-
-	//Create Event
-	m_event = WSACreateEvent();
-	if(m_event ==WSA_INVALID_EVENT)
-	{
-		g_pCons->dprintf("CServer::Init:Error creating event\n");
-		closesocket(m_socket);
-		return false;
-	}
-
-	if(WSAEventSelect(m_socket,m_event,FD_READ|FD_WRITE)==SOCKET_ERROR)
-	{
-		g_pCons->dprintf("CServer::Init:Error selecting Event\n");
-		closesocket(m_socket);
-		return false;
-	}
-
-	//init clients
-	g_netclients.Init(m_addr,(int)m_maxclients->value, (int)m_port->value);
-
-//  m_world = world;
-	m_active = true;
-
-	g_pCons->dprintf("CServer::Init:Server on:%s:%d\n",g_ipaddr,(int)m_port->value);
-	return true;
-}
-
-/*
-=======================================
-Shuts down the server
-=======================================
-*/
-bool CServer::Shutdown()
-{
-	if(m_pWorld)
-		world_destroy(m_pWorld);
-	m_pWorld = 0;
-
-
-	//network shutdown
-	WSAEventSelect(m_socket,m_event,0);
-	closesocket(m_socket);
-	memset(&m_addr, 0, sizeof(struct sockaddr_in));
-
-	m_active = false;
-	
-	m_sockBuf.Reset();
-	m_datagram.Reset();
-	m_reliable_datagram.Reset();
-
-	g_netclients.Shutdown();
-
-	return true;
-}
-
-
-
-/*
-=======================================
-Send data in Listener buffer 
-to specified address
-=======================================
-*/
-
-bool CServer::SendNBuffer(SOCKADDR_IN * addr)
-{
-	int nSent;
-	
-	if (m_socket == INVALID_SOCKET)
-		return false;
-
-	nSent = sendto(m_socket, (char *)m_sockBuf.data,m_sockBuf.cursize,0,
-				  (LPSOCKADDR)addr, sizeof(struct sockaddr_in));
-
-	if(nSent == SOCKET_ERROR)
-	{
-		g_pCons->dprintf("CServer:SendData:error sending %s to %s\n",
-								(char *)m_sockBuf.data,inet_ntoa(addr->sin_addr));
-		PrintSockError();
-		return false;
-	}
-	g_pCons->dprintf("CServer:SendData:%s\nto:%s\nsize:%d/%d\n",
-								(char *)m_sockBuf.data,inet_ntoa(addr->sin_addr),nSent,m_sockBuf.cursize);
-	m_sockBuf.Reset();
-	return true;
-}
-
 
 /*
 =====================================
@@ -760,7 +564,6 @@ void CServer::CheckNewConnections()
 		}
 	}
 }
-
 
 
 /*

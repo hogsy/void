@@ -46,6 +46,8 @@ public:
 	void Print()   const;
 	bool IsValid() const;
 
+	static void SetLocalAddress(const char * localaddy);
+
 private:
 
 	void Set(const char * szaddr);
@@ -53,6 +55,8 @@ private:
 	byte	ip[4];
 	short	port;
 	bool	valid;
+
+	static char  m_szLocalAddress[24];
 };
 
 
