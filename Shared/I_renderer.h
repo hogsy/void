@@ -115,8 +115,9 @@ enum CacheType
 struct R_EntState 
 {
 	CacheType	cache;
-	int			index;
+	hMdl		index;
 	int			skinnum;
+	float		frame;	// fixme - make 2 ints - last frame and next frame
 
 	vector_t origin;
 	vector_t angle;
