@@ -277,7 +277,7 @@ void CClient::RunFrame()
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 
 		//draw the ents in pvs
-		for(int i=0; i< MAX_CLIENTENTS; i++)
+		for(int i=0; i< GAME_MAXENTITIES; i++)
 		{
 //			m_gameEnts[i].frame = 0;
 //			m_gameEnts[i].skinnum= 0;

@@ -8,30 +8,13 @@
 #include "Net_client.h"
 #include "Game_ents.h"
 
+//Pre-declarations
 /*
-struct R_EntState 
-{
-	CacheType	cache;
-	hMdl		index;
-	int			skinnum;
-	float		frame;	// fixme - make 2 ints - last frame and next frame
-
-	vector_t origin;
-	vector_t angle;
-};
+	CSoundManager	  * m_pSound;
+	CMusic		      * m_pMusic;
+	CClientCmdHandler * m_pCmdHandler;
+	CNetClient		  * m_pNetCl;
 */
-/*
-  Type of client side ents
- 
-  drawable
-	clients
-	monsters
-	static ents, no prediction
-
-const int MAX_CLIENTENTS = 1024;
-*/
-
-const int MAX_CLIENTENTS = 1024;
 
 /*
 =====================================
@@ -142,7 +125,7 @@ private:
 	//This is the client we should do local prediction on
 	EntClient	m_gameClient;
 
-	R_EntState  m_gameEnts[MAX_CLIENTENTS];
+	R_EntState  m_gameEnts[GAME_MAXENTITIES];
 	int			m_numEnts;
 
 	//This should hook up to the game client whne the client

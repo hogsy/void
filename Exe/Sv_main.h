@@ -4,7 +4,7 @@
 #include "Sys_hdr.h"
 #include "Net_server.h"
 #include "Game_ents.h"
-#include "Res_defs.h"
+#include "Game_defs.h"
 
 //Predeclarations
 struct world_t;
@@ -78,13 +78,13 @@ private:
 		char * name; 
 	};
 
-	ResInfo	m_modelList[RES_MAXMODELS];
+	ResInfo	m_modelList[GAME_MAXMODELS];
 	int		m_numModels;
 
-	ResInfo m_imageList[RES_MAXIMAGES];
+	ResInfo m_imageList[GAME_MAXIMAGES];
 	int     m_numImages;
 
-	ResInfo m_soundList[RES_MAXSOUNDS];
+	ResInfo m_soundList[GAME_MAXSOUNDS];
 	int		m_numSounds;
 	
 	//=================================================

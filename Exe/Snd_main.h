@@ -3,7 +3,7 @@
 
 #include "Sys_hdr.h"
 #include "3dmath.h"
-#include "Res_defs.h"
+#include "Game_defs.h"
 
 /*
 ======================================

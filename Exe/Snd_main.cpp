@@ -37,7 +37,7 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVAR_FLOAT, CVAR_ARCHIV
 
 	//Create wave caches
 	for(int i=0; i< RES_NUMCACHES; i++)
-		m_bufferCache[i] =  new CSoundBuffer[RES_MAXSOUNDS];
+		m_bufferCache[i] =  new CSoundBuffer[GAME_MAXSOUNDS];
 	
 	//Create sound channels
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
@@ -341,7 +341,7 @@ hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
 
 	//Load at first avaiable slot, or just return index if its already loaded
 	int unusedSlot= -1;
-	for(int i=0; i<RES_MAXSOUNDS; i++)
+	for(int i=0; i<GAME_MAXSOUNDS; i++)
 	{
 		if(m_bufferCache[cache][i].InUse())
 		{
@@ -387,7 +387,7 @@ Unregister all sounds in the given cache
 */
 void CSoundManager::UnregisterCache(CacheType cache)
 {
-	for(int i=0; i< RES_MAXSOUNDS; i++)
+	for(int i=0; i< GAME_MAXSOUNDS; i++)
 		UnregisterSound(i, cache);
 }
 

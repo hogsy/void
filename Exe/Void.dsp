@@ -240,10 +240,6 @@ SOURCE=..\Shared\Com_util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Res_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\World.cpp
 # End Source File
 # Begin Source File
@@ -474,6 +470,10 @@ SOURCE=..\..\Mssdk\Include\WinEFS.h
 # Begin Group "Game"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Game_ents.cpp
