@@ -2,10 +2,7 @@
 #define RASTERIZER_H
 
 
-#include "I_renderer.h"
-#include "I_console.h"
 #include "3dmath.h"
-
 
 
 // max number of possible mipmaps 10 -> 1024 max dim size
@@ -53,7 +50,7 @@ enum EImageFormat
 
 typedef struct
 {
-	unsigned char *mipdata[MAX_MIPMAPS];
+	unsigned char **mipdata;
 	int mipmaps;	// number of mipmaps
 	EImageFormat format;
 	int height;

@@ -174,6 +174,11 @@ void CRConsole::Draw()
 
 	// transform
 	g_pRast->ProjectionMode(VRAST_ORTHO);
+	
+	if(m_fullscreen)
+		ftop = fbot = 1;
+
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
 	g_pRast->TextureSet(tex->bin_base, 1);
 
@@ -184,23 +189,23 @@ void CRConsole::Draw()
 	g_pRast->PolyVertexi(0, g_rInfo.height);
 	g_pRast->PolyTexCoord(1, 0);
 	g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height);
-	
+
 	g_pRast->PolyColor4f(fbot, fbot, fbot, fbot);
 	g_pRast->PolyTexCoord(1, 1);
 	if(m_fullscreen)
 		g_pRast->PolyVertexi(g_rInfo.width, 0);
 	else
-		g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height/2);
+		g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height/2 - 1);
 	g_pRast->PolyTexCoord(0, 1);
 	if(m_fullscreen)
 		g_pRast->PolyVertexi(0, 0);
 	else
-		g_pRast->PolyVertexi(0, g_rInfo.height/2);
-	
+		g_pRast->PolyVertexi(0, g_rInfo.height/2 - 1);
+
 	g_pRast->PolyEnd();
 
 	//print all our text over the top
-	PrintBuffer(top, bottom);
+	PrintBuffer();
 }
 
 
@@ -210,13 +215,30 @@ Print Current Console Messages -
 assumes view and tex filter are ok
 ======================================
 */
-void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
+void CRConsole::PrintBuffer()
 {
 	//Alpha values
 	float ftop, fbot;
 	float diff;
 	float alpha;
 	int a;
+
+
+	DWORD top = (int) m_alpha;
+	if (m_alpha > 255)
+		top = 255;
+
+	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
+	if (m_alpha < CON_DIFFERENTIAL)
+		bottom = 0;
+
+	if (bottom > 255)
+		bottom = 255;
+
+	ftop = (float)top/255;
+	fbot = (float)bottom/255;
+
+
 
 	diff = float(top - bottom);
 	diff /= m_maxlines;
@@ -231,7 +253,9 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 
 
 	g_pRast->TextureSet(tex->bin_base, 0);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
 	g_pRast->PolyStart(VRAST_QUADS);
+
 
 	//Text positioning
 	//Find starting position
@@ -309,32 +333,37 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 				x2 += 8;
 			}
 		}
-		//reset pos for cursor
-		x1-=8;	x2-=8;
 	}
 
-	//fix me
-	if(((int)GetCurTime()) % 2)
+	// Draw the blinking cursor
+	if(((int)(GetCurTime()*10)) % 2)
 	{
 		//Print the cursor
 		s = ('_' % 16) * 0.0625f;
 		t = ('_' / 16) * 0.0625f;
 
+		x1 = (m_statuslen % m_maxchars) * 8 - 8;
+		if (x1<0) x1 = 0;
+		x2 = x1+8;
+
+		int cy2 = (m_fullscreen ? 0 : g_rInfo.height/2);
+		int cy1 = cy2 + 8;
+
 		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s, t);
-		g_pRast->PolyVertexi(x1, 8);
+		g_pRast->PolyVertexi(x1, cy1);
 
 		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s + 0.0625f, t);
-		g_pRast->PolyVertexi(x2, 8);
+		g_pRast->PolyVertexi(x2, cy1);
 
 		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
-		g_pRast->PolyVertexi(x2, 0);
+		g_pRast->PolyVertexi(x2, cy2);
 
 		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s, t + 0.0625f);
-		g_pRast->PolyVertexi(x1, 0);
+		g_pRast->PolyVertexi(x1, cy2);
 	}
 
 
@@ -344,6 +373,8 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 	{
 		y2=y1;
 		y1+= 8;
+		x1 = 0;
+		x2 = 8;
 
 		for(start = 0; start < m_maxchars; start++)
 		{

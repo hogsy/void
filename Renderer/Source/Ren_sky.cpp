@@ -1,6 +1,6 @@
 
 #include "standard.h"
-#include "Ren_sky.h"
+//#include "Ren_sky.h"
 #include "Ren_cache.h"
 #include "clip.h"
 

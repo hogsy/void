@@ -45,6 +45,7 @@ COpenGLRast::~COpenGLRast()
 
 	// unload the driver
 	OpenGLUnInit();
+	::ChangeDisplaySettings(NULL, 0);
 	ComPrintf("GL::Final Shutdown OK\n");
 }
 
@@ -66,7 +67,7 @@ bool COpenGLRast::Init()
 	ComPrintf("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
 //	ComPrintf("CGLUtil::Init:Pos: %d %d\n",m_cWndX.ival,m_cWndY.ival);
 
-/*
+
 #ifdef DYNAMIC_GL
 	//3dfx 3d only card. default to fullscreen mode and 16 bit
 	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
@@ -75,11 +76,11 @@ bool COpenGLRast::Init()
 		g_rInfo.bpp = 16;
 	}
 #endif
-*/
+
 	// change display before we do anything with gl
-//	if (g_rInfo.rflags & RFLAG_FULLSCREEN)
-//		GoFull();
-//	else
+	if (g_rInfo.rflags & RFLAG_FULLSCREEN)
+		GoFull();
+	else
 		GoWindowed();
 
 	//Get Pixel Format
@@ -158,16 +159,14 @@ bool COpenGLRast::Shutdown()
 	}
 */
 	_wglMakeCurrent(NULL, NULL);
+	_wglDeleteContext(hRC);
+
 	::ReleaseDC(g_rInfo.hWnd, hDC);
 
-	_wglDeleteContext(hRC);
-	::ChangeDisplaySettings(NULL, 0);
+
 	g_rInfo.ready = false;
 	return true;
 }
-
-
-
 
 
 /*
@@ -205,6 +204,9 @@ Change to Windowed Mode
 */
 bool COpenGLRast::GoWindowed(void)
 {
+	// make sure we have our regular desktop resolution
+	::ChangeDisplaySettings(NULL, 0);
+
 	//3dfx 3d only card. default to fullscreen mode
 	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
@@ -318,7 +320,7 @@ bool COpenGLRast::GoFull(void)
 	}
 
 	//Record our changes
-	g_rInfo.rflags|= RFLAG_FULLSCREEN;
+ 	g_rInfo.rflags|= RFLAG_FULLSCREEN;
 	g_rInfo.width  = m_devmodes[best_mode].dmPelsWidth;
 	g_rInfo.height = m_devmodes[best_mode].dmPelsHeight;
 	g_rInfo.bpp    = m_devmodes[best_mode].dmBitsPerPel;
@@ -400,9 +402,9 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 	g_rInfo.width	= width;
 	g_rInfo.height	= height;
 
-//	if (fullscreen)
-//		g_rInfo.rflags |= RFLAG_FULLSCREEN;
-//	else
+	if (fullscreen)
+		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+	else
 		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
 	if (!Init())
@@ -483,9 +485,9 @@ bool COpenGLRast::SetupPixelFormat()
 
 
 
-//======================================================================================
+//=========================================================================================================================
 // OpenGL implementation of drawing functions
-//======================================================================================
+//=========================================================================================================================
 
 
 
@@ -561,6 +563,8 @@ int COpenGLRast::TextureBinInit(int num)
 			if (!mTexBins[i].glnames)
 				FError("not enough mem for gl names");
 
+			glEnable(GL_TEXTURE_2D);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 			glGenTextures(mTexBins[i].num, mTexBins[i].glnames);
 			return i;
 		}
@@ -584,9 +588,6 @@ void COpenGLRast::TextureBinDestroy(int bin)
 		return;
 	}
 
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
 	glDeleteTextures(mTexBins[bin].num, mTexBins[bin].glnames);
 	delete mTexBins[bin].glnames;
 	mTexBins[bin].glnames = NULL;
@@ -597,8 +598,7 @@ void COpenGLRast::TextureBinDestroy(int bin)
 
 void COpenGLRast::TextureSet(int bin, int texnum)
 {
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
 }
 

@@ -39,20 +39,7 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
 	g_prHud = new CRHud();
-
 	g_pRast = new COpenGLRast();
-	if (!g_pRast)
-	{
-		ConPrint("Couldn't Initialize Rasterizer!");
-		Shutdown();
-		return;
-	}
-
-	if (g_pRast->Init())
-	{
-		Shutdown();
-		return;
-	}
 
 	g_pConsole->RegisterCVar(&m_cFull,this);
 	g_pConsole->RegisterCVar(&m_cBpp,this);
@@ -101,6 +88,9 @@ bool CRenExp::InitRenderer()
 	g_rInfo.bpp = m_cBpp.ival;
 	if(m_cFull.ival)
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
+	else
+		g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
+
 
 	//parse width and height out of string
 	char *c = strchr(m_cRes.string, ' ');
@@ -156,6 +146,8 @@ Shutdown
 */
 bool CRenExp::Shutdown(void)
 {
+	ConPrint("Shutting donw renderer\n");
+
 	//Destroy Subsystems
 	cache_destroy();
 	beam_shutdown();

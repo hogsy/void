@@ -73,15 +73,21 @@ bool CTextureManager::Init()
 		LoadTexture(BaseTextureList[count]);
 
 		// create all mipmaps
-		const tex_load_t *tdata = m_texReader->GetData();
-		int mipcount = tdata->mipmaps - 1;
+		tex_load_t tdata;
+		tdata.format = m_texReader->GetFormat();
+		tdata.height = m_texReader->GetHeight();
+		tdata.width  = m_texReader->GetWidth();
+		tdata.mipmaps= m_texReader->GetNumMips();
+		tdata.mipdata= m_texReader->GetMipData();
+
+		int mipcount = tdata.mipmaps - 1;
 		while (mipcount > 0)
 		{
 			m_texReader->ImageReduce(mipcount);
 			mipcount--;
 		}
 
-		g_pRast->TextureLoad(tex->bin_base, count, tdata);
+		g_pRast->TextureLoad(tex->bin_base, count, &tdata);
 
 
 
@@ -197,7 +203,6 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 	for (t=0; t<m_numWorldTextures; t++)
 	{
-
 		LoadTexture(map->textures[t]);
 
 		//Set initial dimensions
@@ -205,67 +210,28 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		tex->dims[t][1] = m_texReader->GetHeight();
 
 		// create all mipmaps
-		const tex_load_t *tdata = m_texReader->GetData();
-		mipcount = tdata->mipmaps - 1;
+		tex_load_t tdata;
+		tdata.format = m_texReader->GetFormat();
+		tdata.height = m_texReader->GetHeight();
+		tdata.width  = m_texReader->GetWidth();
+		tdata.mipmaps= m_texReader->GetNumMips();
+		tdata.mipdata= m_texReader->GetMipData();
+
+		int mipcount = tdata.mipmaps - 1;
 		while (mipcount > 0)
 		{
 			m_texReader->ImageReduce(mipcount);
 			mipcount--;
 		}
 
-		g_pRast->TextureLoad(tex->bin_world, t, tdata);
-
-
-/*
-		glBindTexture(GL_TEXTURE_2D, tex->tex_names[t]);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-
-		int ext_format, int_format;
-		if (m_texReader->GetFormat() == IMG_RGB)
-		{
-			ext_format = GL_RGB;
-
-			if (g_p32BitTextures->ival)
-				int_format = GL_RGB8;
-			else
-				int_format = GL_RGB5;
-		}
-		else
-		{
-			ext_format = GL_RGBA;
-			if (g_p32BitTextures->ival)
-				int_format = GL_RGBA8;
-			else
-				int_format = GL_RGBA4;
-		}
-
-		for (m = 0; m < mipcount; m++)
-		{
-			if(m)
-				m_texReader->ImageReduce();
-
-			glTexImage2D(GL_TEXTURE_2D,
-						 m,
-						 int_format,
-						 m_texReader->GetWidth(),
-						 m_texReader->GetHeight(),
-						 0,
-						 ext_format,
-						 GL_UNSIGNED_BYTE,
-						 m_texReader->GetData());
-		}
-*/
+		g_pRast->TextureLoad(tex->bin_world, t, &tdata);
 	}
 
 // FIXME - temp hack to get lightmapping working
 	if (!map->nlightdefs || !map->light_size)
 	{
 		m_loaded = ALL_TEXTURES;
+		m_texReader->FreeMipData();
 		return true;
 	}
 
@@ -325,6 +291,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		*/
 	}
 
+	m_texReader->FreeMipData();
 	m_loaded = ALL_TEXTURES;
 	return true;
 }
