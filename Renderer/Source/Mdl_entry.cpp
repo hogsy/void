@@ -403,6 +403,7 @@ void CModelCacheEntry::LoadFail()
 Draw
 =======================================
 */
+extern	I_Void		  *	g_pVoidExp;
 void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 {
 	if (skin & MODEL_SKIN_UNBOUND_GAME)
@@ -415,11 +416,16 @@ void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 	if (frac>=1) fframe = cframe;
 	if (frac<=0) cframe = fframe;
 
+	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames);
+	fframe = (int)floorf(frame);
+	cframe = (int)ceilf(frame);
+	frac = frame-fframe;
+
 	vector_t v;
 
 	float w1, w2;	// vertex weights
-	w1 = frac;
-	w2 = 1 - frac;
+	w1 = 1 - frac;
+	w2 = frac;
 
 
 	int *ptr = (int*)cmds;
