@@ -34,6 +34,12 @@ struct I_FileReader
 
 //====================================================================================
 
+/*
+==========================================
+FileBuffer Reader Class
+==========================================
+*/
+
 class FILESYSTEM_API CFileBuffer : public I_FileReader
 {
 public:
@@ -70,6 +76,12 @@ private:
 
 
 //====================================================================================
+
+/*
+==========================================
+FileStream Reader class
+==========================================
+*/
 
 class FILESYSTEM_API CFileStream : public I_FileReader
 {
@@ -112,14 +124,11 @@ private:
 /*
 ==========================================
 The File Manager
--maintains the Searchpaths with precedence
--loads supported archive files
--loads actual file data (zip/pak/real)
- into given buffers
+maintains the Searchpaths with precedence
 ==========================================
 */
 
-class FILESYSTEM_API CFileSystem
+class FILESYSTEM_API CFileSystem : public I_CmdHandler
 {
 public:
 	CFileSystem();
@@ -144,6 +153,9 @@ public:
 	int FindFiles(CStringList *filelist,		//File List to fill
 				  const char  *ext,				//Extension		  
 				  const char  *path=0);			//Search in a specific path
+
+	//Handle Console Commands
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 	//Returns current path EXE+Game
 	static const char * GetCurrentPath();
