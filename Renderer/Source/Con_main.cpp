@@ -8,15 +8,14 @@
 #define CONBACK_INDEX			1
 #define CON_DIFFERENTIAL		150
 
-extern	CVar *	g_pConAlpha;
-
 /*
 =======================================
 Constructor
 =======================================
 */
 CRConsole::CRConsole(): m_seperatorchar('^'),
-						m_conSpeed("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+						m_conSpeed("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+						m_conAlpha("r_conalpha","200", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 						
 {
 	m_statuslen = 0;
@@ -39,6 +38,7 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 	}
 
 	g_pConsole->RegisterCVar(&m_conSpeed);
+	g_pConsole->RegisterCVar(&m_conAlpha);
 
 	RegisterConObjects();
 }
@@ -159,15 +159,15 @@ void CRConsole::Draw()
 	}
 
 	DWORD top = (int) m_alpha;
-	if (m_alpha > g_pConAlpha->ival)
-		top = g_pConAlpha->ival;
+	if (m_alpha > m_conAlpha.ival)
+		top = m_conAlpha.ival;
 
 	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
 
-	if (bottom > g_pConAlpha->ival)
-		bottom = g_pConAlpha->ival;
+	if (bottom > m_conAlpha.ival)
+		bottom = m_conAlpha.ival;
 
 	float ftop = (float)top/255;
 	float fbot = (float)bottom/255;
@@ -238,6 +238,7 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 
 
 	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
+	glBegin(GL_QUADS);
 
 	//Text positioning
 	//Find starting position
@@ -265,10 +266,16 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 		if(m_statuslen > m_maxchars)
 			numlines = (int)(m_statuslen /m_maxchars) + 1;
 
-		glBegin(GL_QUADS);
-
 		for(int lines =0; lines < numlines; lines ++)
 		{
+			if(lines)
+			{
+				y2 = y1;
+				y1 += 8;
+			}
+			x1 = 0;
+			x2 = 8;
+
 			if(m_statuslen == m_maxchars)
 			{
 				start = 0;
@@ -312,16 +319,37 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 				x1 = x2;
 				x2 += 8;
 			}
-
-			if(numlines > 1)
-			{
-				y2 = y1;
-				y1 += 8;
-			}
-			x1 = 0;
-			x2 = 8;
 		}
-		glEnd();
+		//reset pos for cursor
+		x1-=8;	x2-=8;
+	}
+
+	//fix me
+	if(((int)GetCurTime()) % 2)
+	{
+		//Print the cursor
+		s = ('_' % 16) * 0.0625f;
+		t = ('_' / 16) * 0.0625f;
+
+		glColor4f(ftop, ftop, ftop, ftop);
+		glColor4f(1, 1, 1, ftop);
+		glTexCoord2f(s, t);
+		glVertex2i(x1, 8);
+
+		glColor4f(ftop, ftop, ftop, ftop);
+		glColor4f(1, 1, 1, ftop);
+		glTexCoord2f(s + 0.0625f, t);
+		glVertex2i(x2, 8);
+
+		glColor4f(fbot, fbot, fbot, fbot);
+		glColor4f(1, 1, 1, fbot);
+		glTexCoord2f(s + 0.0625f, t + 0.0625f);
+		glVertex2i(x2, 0);
+
+		glColor4f(fbot, fbot, fbot, fbot);
+		glColor4f(1, 1, 1, fbot);
+		glTexCoord2f(s, t + 0.0625f);
+		glVertex2i(x1, 0);
 	}
 
 
@@ -331,8 +359,6 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 	{
 		y2=y1;
 		y1+= 8;
-
-		glBegin(GL_QUADS);
 
 		for(start = 0; start < m_maxchars; start++)
 		{
@@ -367,8 +393,6 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 			x1 = x2;
 			x2 += 8;
 		}
-		
-		glEnd();
 	}
 
 
@@ -390,13 +414,10 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 		alpha += diff;
 		ftop = (float)a/255;
 
-		glBegin(GL_QUADS);
-
 		for (int c = 0; c < m_lines[l]->length; c++)
 		{
 			s = (m_lines[l]->line[c] % 16) * 0.0625f;
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
-
 
 
 			glColor4f(ftop, ftop, ftop, ftop);
@@ -419,8 +440,8 @@ void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 			x1 = x2;
 			x2 += 8;
 		}
-		glEnd();
 	}
+	glEnd();
 }
 
 
@@ -441,13 +462,17 @@ void CRConsole::AddMessage(char *buff, bool first)
 	m_lines[0] = last;
 
 	//set up the new entry
-	last->length = strlen(buff) + 2;
+	last->length = strlen(buff); // + 2;
 	if (last->length > m_maxchars)	// will never be more than we can fit
 		last->length = m_maxchars;
 
-	int c = first ? '>' : ' ';
-	last->line[0] = last->line[1] = c;
-	memcpy(&last->line[2], buff, last->length-2);
+//	int c = first ? '>' : ' ';
+//	last->line[0] = last->line[1] = c;
+//	memcpy(&last->line[2], buff, last->length-2);
+//	if(first)
+		memcpy(&last->line, buff, last->length);
+//	else
+//		memcpy(&last->line[2], buff, last->length-2);
 
 	//we're scrolled up, stay in the same spot
 	if(m_curline > 0)
@@ -513,7 +538,6 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 			
 			msg[m_maxchars-2] = tmp;
 			PrintRecursive(false, &msg[m_maxchars-2]);
-
 			return;
 		}
 
@@ -524,7 +548,6 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 
 			msg[c] = ' ';
 			PrintRecursive(false, &msg[c+1]);
-
 			return;
 		}
 	}
@@ -554,7 +577,6 @@ void  CRConsole::Toggle(bool down)
 set full or half screen console
 ======================================
 */
-
 void  CRConsole::ToggleFullscreen(bool full)
 {
 	m_fullscreen = full;
@@ -563,32 +585,44 @@ void  CRConsole::ToggleFullscreen(bool full)
 
 /*
 ======================================
-scroll up a line
+scroll up/down, top/bottom
 ======================================
 */
-void  CRConsole::Lineup()
+void CRConsole::MoveCurrentLine(LineOffset offset)
+{
+	switch(offset)
+	{
+	case LINE_UP:
+		if((m_curline + 1 < CON_MAX_LINES) && (m_lines[m_curline]->length))
+			m_curline++;
+		break;
+	case LINE_DOWN:
+		if(m_curline >0)
+			m_curline--;
+		break;
+	case PAGE_UP:
+		break;
+	case PAGE_DOWN:
+		break;
+	case TOP:
+		while((m_curline + 1 < CON_MAX_LINES) && (m_lines[m_curline]->length))
+			m_curline++;
+		break;
+	case BOTTOM:
+		m_curline = 0;
+		break;
+	}
+}
+
+/*
+======================================
+set the bottom line that says what is 
+currently being typed usually
+======================================
+*/
+void  CRConsole::SetStatusline(const char  *status_line, const int &len)
 {	
-	if(m_curline < (CON_MAX_LINES-1))
-		m_curline++;
-}
-
-/*
-======================================
-scroll down a line
-======================================
-*/
-void  CRConsole::Linedown()
-{	if(m_curline >0)
-		m_curline--;
-}
-
-/*
-======================================
-set the bottom line that says what is currently being typed usually
-======================================
-*/
-void  CRConsole::Statusline(const char  *status_line, const int &len)
-{	m_statusline = status_line;
+	m_statusline = status_line;
 	m_statuslen = len;
 }
 

@@ -11,7 +11,6 @@
 #define RENDERER_API __declspec(dllimport)
 #endif
 
-
 #define RFLAG_FULLSCREEN	0x00000001
 #define RFLAG_FULLBRIGHT	0x00000002
 #define RFLAG_MULTITEXTURE	0x00000004
@@ -68,11 +67,20 @@ Renderer Console Interface
 */
 struct I_ConsoleRenderer
 {
+	enum LineOffset
+	{
+		LINE_UP,
+		LINE_DOWN,
+		PAGE_UP,
+		PAGE_DOWN,
+		TOP,
+		BOTTOM
+	};
+	
 	virtual void Toggle(bool down) = 0;
 	virtual void ToggleFullscreen(bool full) = 0;
-	virtual void Lineup() = 0;
-	virtual void Linedown() = 0;
-	virtual void Statusline(const char  *status_line, const int &len) = 0;
+	virtual void MoveCurrentLine(LineOffset offset) = 0;
+	virtual void SetStatusline(const char  *status_line, const int &len) = 0;
 	virtual void AddLine(char *line, int color=0, int size=0) = 0;
 };
 

@@ -1,5 +1,6 @@
 #include "Con_main.h"
 #include "Tex_image.h"
+#include "Com_util.h"
 
 /*
 ==========================================
@@ -14,7 +15,6 @@ CVar *	g_pFov=0;
 CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
 CVar *	g_p32BitTextures=0;
-CVar *	g_pConAlpha=0;
 CVar *	g_pBeamTolerance=0;
 
 
@@ -277,8 +277,8 @@ bool CRConsole::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return CVar_VidSynch((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_p32BitTextures)
 		return CVar_32BitTextures((CVar*)cvar,parms.IntTok(1));
-	else if(cvar == g_pConAlpha)
-		return CVar_ConAlpha((CVar*)cvar,parms.IntTok(1));
+	else if(cvar == (CVarBase*)&m_conAlpha)
+		return CVar_ConAlpha(&m_conAlpha,parms.IntTok(1));
 	else if(cvar == g_pBeamTolerance)
 		return CVar_BeamTolerance((CVar*)cvar,parms);
 	return false;
@@ -300,7 +300,6 @@ void CRConsole::RegisterConObjects()
 	g_pVidSynch  = new CVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 	g_pMultiTexture = new CVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_p32BitTextures = new CVar("r_32bittextures","1", CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
-	g_pConAlpha = new CVar("r_conalpha","200", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
 
 	g_pConsole->RegisterCVar(g_pFullbright,this);
@@ -308,7 +307,6 @@ void CRConsole::RegisterConObjects()
 	g_pConsole->RegisterCVar(g_pMultiTexture,this);
 	g_pConsole->RegisterCVar(g_pVidSynch,this);
 	g_pConsole->RegisterCVar(g_p32BitTextures,this);
-	g_pConsole->RegisterCVar(g_pConAlpha,this);
 	g_pConsole->RegisterCVar(g_pBeamTolerance,this);
 }
 
@@ -324,7 +322,6 @@ void CRConsole::DestroyConObjects()
 	delete g_pVidSynch;
 	delete g_pMultiTexture;
 	delete g_p32BitTextures;
-	delete g_pConAlpha;
 	delete g_pBeamTolerance;
 
 	g_pFullbright = 0;
@@ -332,7 +329,6 @@ void CRConsole::DestroyConObjects()
 	g_pVidSynch =0;
 	g_pMultiTexture = 0;
 	g_p32BitTextures = 0;
-	g_pConAlpha = 0;
 	g_pBeamTolerance = 0;
 }
 

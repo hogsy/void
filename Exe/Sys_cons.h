@@ -92,7 +92,6 @@ public:
 	void WriteCVars(FILE *fp);
 
 	//Client comand binding
-	void ExecCommand(CCommand * cmd, const char * cmdString);
 	CCommand * GetCommandByName(const char * cmdString);
 	
 	//Console funcs

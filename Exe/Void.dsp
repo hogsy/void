@@ -215,6 +215,10 @@ SOURCE=..\Shared\Com_mem.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_parms.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_parms.h
 # End Source File
 # Begin Source File

@@ -1,11 +1,9 @@
 #include "Sys_cons.h"
 #include "Com_util.h"
-
 #include <direct.h>
 
 //Private stuff
 //======================================================================================
-
 namespace
 {
 	enum
@@ -16,8 +14,6 @@ namespace
 	};
 	const int  CON_MAXARGSIZE  = 80;
 }
-char CParms::szParmBuffer[1024];
-
 //======================================================================================
 
 /*
@@ -138,19 +134,24 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 						m_cmdBuffer.pop_front();
 					m_cmdBuffer.push_back(std::string(m_conString));
 					m_itCmd = m_cmdBuffer.end();
-				}
-				
-				//print out the line
-				ExecString(m_conString.c_str());
+
+					ComPrintf("]%s\n",m_conString.c_str());
+
+					//Exec the string
+					ExecString(m_conString.c_str());
 	
-				//reset the buffer
-				m_conString.erase();
+					//reset the buffer
+					m_conString.erase();
+				}
+				else
+					ComPrintf("]\n");
+
 				break;
 			}
 			case INKEY_TAB:
 			{
 				//Print all the CVars and cmds that match the given string
-				if(!m_conString.size())
+				if(!m_conString.length())
 					return;
 
 				StringList	matchingNames;
@@ -175,6 +176,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					//Print all the matched entries
 					for(StringList::iterator it = matchingNames.begin(); it != matchingNames.end(); it++)
 						ComPrintf("%s\n", it->c_str());
+					ComPrintf("==========================\n");
 					m_conString.assign(matchingNames.back());
 				}
 				break;
@@ -207,12 +209,22 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			}
 			case INKEY_PGUP:
 			{
-				m_prCons->Lineup();
+				m_prCons->MoveCurrentLine(I_ConsoleRenderer::LINE_UP);
 				break;
 			}
 			case INKEY_PGDN:
 			{
-				m_prCons->Linedown();
+				m_prCons->MoveCurrentLine(I_ConsoleRenderer::LINE_DOWN);
+				break;
+			}
+			case INKEY_HOME:
+			{
+				m_prCons->MoveCurrentLine(I_ConsoleRenderer::TOP);
+				break;
+			}
+			case INKEY_END:
+			{
+				m_prCons->MoveCurrentLine(I_ConsoleRenderer::BOTTOM);
 				break;
 			}
 			default:	
@@ -222,79 +234,16 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 				break;
 			}
 		}
-		m_prCons->Statusline(m_conString.c_str(),m_conString.size()+1);
+		m_prCons->SetStatusline(m_conString.c_str(),m_conString.size()+1);
 	}
 }
-
-/*
-======================================
-Exec a command line in the console
-======================================
-*/
-void CConsole::ExecCommand(CCommand * cmd, const char * cmdString)
-{
-	m_parms = cmdString;
-	cmd->handler->HandleCommand(cmd->id,m_parms);
-}
-
-/*
-==========================================
-See if the first arg matches any funcs or commands.
-exec func if it does.
-==========================================
-*/
-/*bool CConsole::Exec(int argc, char** argv) 
-{
-	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
-	{
-		if(strcmp(itcmd->name, argv[0])==0)
-		{	itcmd->handler->HandleCommand(itcmd->id,argc,argv);
-			return true;
-		}
-	}
-
-	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
-	{
-		if(!strcmp((*it)->name,argv[0]))
-		{
-			//only exec'ed IF function returns true
-			if((!(*it)->handler) || (*it)->handler->HandleCVar((*it),argc,argv))
-			{
-				if(argc >= 2 && argv[1])
-				{
-					if((*it)->type != CVarBase::CVAR_STRING)
-						(*it)->Set(argv[1]);
-					else
-					{
-						char newstr[80];
-						strcpy(newstr,argv[1]);
-				
-						for(int i=2,len=0;i<argc;i++)
-						{
-							len += strlen(argv[i]+1);
-							if(len >= 80)
-								break;
-							strcat(newstr," ");
-							strcat(newstr,argv[i]);
-						}
-						(*it)->Set(newstr);
-					}
-				}
-				ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
-			}
-			return true;
-		}
-	}
-	return false;
-}
-*/
 
 /*
 =======================================
-
+Try to execute a string in the console
 =======================================
 */
-void CConsole::ExecString(const char *string) //const
+void CConsole::ExecString(const char *string)
 {
 	m_parms = string;
 	const char * szfirstArg = m_parms.StringTok(0);
@@ -344,15 +293,8 @@ void CConsole::ExecString(const char *string) //const
 			return;
 		}
 	}
-	ComPrintf("%s\n",string);
-/*	int nargc = Util::BufParse(string, m_szargv);
-
-	if((nargc) && !Exec(nargc,m_szargv))
-	{
-		ComPrintf("%s\n",string);
-	}
-	m_conString.erase();
-*/
+	//Couldn't exec
+	ComPrintf("Unknown command \"%s\"\n",string);
 }
 
 /*
@@ -602,6 +544,11 @@ void CConsole::RegisterCommand(const char *cmdname,
 }
 
 
+/*
+======================================
+Only needed by the client
+======================================
+*/
 CCommand * CConsole::GetCommandByName(const char * cmdString)
 {
 	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it ++)

@@ -28,9 +28,10 @@ public:
 	//Interface functions
 	void Toggle(bool down);
 	void ToggleFullscreen(bool full);
-	void Lineup();
-	void Linedown();
-	void Statusline(const char  *status_line, const int &len);
+	
+	void MoveCurrentLine(LineOffset offset);
+	
+	void SetStatusline(const char  *status_line, const int &len);
 	void AddLine(char *line, int color=0, int size=0);
 
 	void UpdateRes();
@@ -76,6 +77,7 @@ private:
 
 	//CVars
 	CVar 		m_conSpeed;
+	CVar 		m_conAlpha;
 
 	bool		m_condown;		// is the console down
 	bool		m_fullscreen;	// fullscreen console?
