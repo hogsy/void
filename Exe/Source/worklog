@@ -20,3 +20,13 @@ March 18th, 2000
 -Added Event dispatching, listener, focus manager interfaces
 -Added Win32 Hook Mode for Keyboard events
 -Input System is pretty much done now to satisfaction now =)
+
+March 25th, 2000
+-Cleaned up FileSystem
+
+March 26th, 2000
+-Added zip file support to file system
+
+March 29th, 2000
+-Moved filesystem to a statically linked dll
+-integrated it into renderer and exe

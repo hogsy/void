@@ -12,6 +12,7 @@
 #include "resources.h"	
 #include "I_renderer.h"
 
+
 //========================================================================================
 #define MAINWINDOWCLASS "Void"
 #define MAINWINDOWTITLE	"Void"
@@ -29,8 +30,9 @@ RECT		g_hRect;
 
 //pointers to subsystems
 //========================================================================================
-CFileSystem * g_pFileSystem = 0;
-CTime		* g_pTime =0;
+static CTime		* g_pTime =0;
+static CFileSystem  * g_pFileSystem = 0;
+
 CConsole	* g_pCons =0;		//Console
 CInput		* g_pInput=0;		//Input 
 
@@ -50,9 +52,10 @@ CClient		* g_pClient=0;		//Client and UI
 
 //Rendering info, and API
 //========================================================================================
-RenderInfo_t * g_pRinfo =0;		//holds current renderering info
+static RenderInfo_t * g_pRinfo =0;		//holds current renderering info
+static VoidExport_t * g_pExport=0;
 I_Renderer   * g_pRender=0;
-VoidExport_t * g_pExport=0;
+
 
 //========================================================================================
 CVoid		 * g_pVoid =0;		//The game
@@ -65,6 +68,73 @@ static void CFuncMap(int argc, char** argv);		//start local server with map + co
 static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
+
+/*
+==========================================
+Windows Entry Point
+==========================================
+*/
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
+				   LPSTR lpCmdLine, int nCmdShow)
+{
+	
+	InitMemReporting();
+
+	MSG msg;
+	g_pVoid = new CVoid(hInst, hPrevInst, lpCmdLine, nCmdShow);
+
+	if(!g_pVoid->Init()) 
+	{
+		g_pVoid->Error("Error Initializing Subsystems\n");
+		g_pVoid->Shutdown();
+		delete g_pVoid;
+		EndMemReporting();
+		return -1;
+	}
+
+	while (1)
+	{
+		if(PeekMessage(&msg,g_hWnd,NULL, 0, PM_REMOVE)) 
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		g_pVoid->RunFrame();	// Game loop function
+	}
+
+/*	while(1)
+	{
+		if(PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE))
+		{
+			do
+			{
+				if(!GetMessage(&msg,g_hWnd,0,0))
+				{
+					g_pVoid->Shutdown();
+					delete g_pVoid;
+
+					EndMemReporting();					
+
+					return 0;
+				}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+
+			}while (PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE));
+		}
+		else
+		{
+			g_pVoid->RunFrame();	// Game loop function
+		}
+	}
+*/
+	//Will never get executed
+	g_pVoid->Shutdown();
+	delete g_pVoid;  
+	EndMemReporting();
+	return -1;
+}
+
 
 /*
 ==========================================
@@ -177,73 +247,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 
 /*
 ==========================================
-Windows Entry Point
-==========================================
-*/
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
-				   LPSTR lpCmdLine, int nCmdShow)
-{
-	
-	InitMemReporting();
-//	::atexit(EndMemReporting);
-
-	MSG msg;
-	g_pVoid = new CVoid(hInst, hPrevInst, lpCmdLine, nCmdShow);
-
-	if(!g_pVoid->Init()) 
-	{
-		g_pVoid->Error("Error Initializing Subsystems\n");
-		g_pVoid->Shutdown();
-		delete g_pVoid;
-		EndMemReporting();
-		return -1;
-	}
-
-	while (1)
-	{
-		if(PeekMessage(&msg,g_hWnd,NULL, 0, PM_REMOVE)) 
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		g_pVoid->RunFrame();	// Game loop function
-	}
-
-/*	while(1)
-	{
-		if(PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE))
-		{
-			do
-			{
-				if(!GetMessage(&msg,g_hWnd,0,0))
-				{
-					g_pVoid->Shutdown();
-					delete g_pVoid;
-
-					EndMemReporting();					
-
-					return 0;
-				}
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-
-			}while (PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE));
-		}
-		else
-		{
-			g_pVoid->RunFrame();	// Game loop function
-		}
-	}
-*/
-	//Will never get executed
-	g_pVoid->Shutdown();
-	delete g_pVoid;  
-	EndMemReporting();
-	return -1;
-}
-
-/*
-==========================================
 Register the Window
 ==========================================
 */
@@ -267,7 +270,6 @@ bool CVoid::RegisterWindow()
 
 	if (!RegisterClassEx(&wcl))
 		return false;
-
 	return true;
 }
 
@@ -298,10 +300,11 @@ CVoid::CVoid(HINSTANCE hInstance,
 	//Init Memory first of all
 //	g_pMem = new CMemManager(COM_DEFAULTHUNKSIZE);
 
+
 	g_pTime = new CTime();				//Init Game Timer
 	g_pCons = new CConsole();			//Console
-	g_pFileSystem = new CFileSystem();	//The File System
-
+	g_pFileSystem = CreateFileSystem(g_pCons);
+	
 	g_pInput= new CInput();				//Input sys
 
 #ifndef __VOIDALPHA
@@ -333,7 +336,7 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_pCons->RegisterCFunc("exit",&CFuncQuit);							//Quit
 	g_pCons->RegisterCFunc("map", &CFuncMap);
 //	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
-//	g_pCons->RegisterCFunc("connect",&CFuncConnect);
+	g_pCons->RegisterCFunc("connect",&CFuncConnect);
 //	g_pCons->RegisterCFunc("unzip", &CUnzipfile);
 }
 
@@ -412,12 +415,10 @@ CVoid::~CVoid()
 		g_pExport = 0;
 	}
 
-	if(g_pFileSystem)
-	{
-		delete g_pFileSystem;
-		g_pFileSystem = 0;
-	}
-	
+
+	DestroyFileSystem();
+
+
 	if(g_pCons)
 	{
 		delete g_pCons;
@@ -455,29 +456,9 @@ bool CVoid::Init()
 		return false;
 	}
 
-	//Initialize the File System
-	if(!g_pFileSystem->Init(g_exedir,g_gamedir))
+	if(!g_pFileSystem->Init(g_exedir,"Game"))
 	{
-		Error("CVoid::Init: Could not initialize file system");
-		return false;
-	}
-
-	//Renderer
-	//================================
-	hRenderer = ::LoadLibrary("vrender.dll");
-	if(hRenderer == NULL)
-	{
-		Error("CVoid::Init:Could not load Renderer dll");
-		return false;
-	}
-
-	GETRENDERERAPI rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
-	hr = rapi(&g_pRender);
-
-	if(FAILED(hr))
-	{
-		Util_ErrorMessage(hr,"Void::Init:Error Loading Renderer");
-		g_pRender = NULL ; 
+		Error("CVoid::Init:Error Initializing File System\n");
 		return false;
 	}
 
@@ -498,15 +479,28 @@ bool CVoid::Init()
 	g_pExport->frametime = &g_fframeTime;
 	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
 
-	if(!g_pRender->PreInit(g_pRinfo,&g_pExport))
+
+	//Renderer
+	//================================
+	hRenderer = ::LoadLibrary("vrender.dll");
+	if(hRenderer == NULL)
 	{
-		Error("Void::Init:Error Intializing Renderering API\n");	
+		Error("CVoid::Init:Could not load Renderer dll");
+		return false;
+	}
+
+	GETRENDERERAPI rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
+	hr = rapi(&g_pRender,g_pRinfo,g_pExport);
+	if(FAILED(hr))
+	{
+		Util_ErrorMessage(hr,"Void::Init:Error Loading Renderer");
+		g_pRender = NULL ; 
 		return false;
 	}
 
 	//================================
-	//We parse the command line exec configs NOW
-	//once the renderer has been activated and its cvars have been registered
+	//We parse the command line and exec configs now since
+	//the renderer has been activated and its cvars have been registered
 
 	//parse Command line
 	ParseCmdLine(g_exedir);
@@ -520,39 +514,37 @@ bool CVoid::Init()
 		return false;
 	}
 
-	//timer
-	g_pTime->Init();
 
-	//create the window
-	g_pRinfo->hWnd = CreateWindow(MAINWINDOWCLASS, 
-								  MAINWINDOWTITLE,
-								  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
-								  CW_USEDEFAULT, 
-								  CW_USEDEFAULT, 
-								  640,
-								  480,
-								  HWND_DESKTOP, 
-								  NULL, 
-								  g_hInst,
-								  NULL);
-	if (!g_pRinfo->hWnd)
+		//create the window
+	g_hWnd = CreateWindow(MAINWINDOWCLASS, 
+						  MAINWINDOWTITLE,
+						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
+						  CW_USEDEFAULT, 
+						  CW_USEDEFAULT, 
+						  640,
+						  480,
+						  HWND_DESKTOP, 
+						  NULL, 
+						  g_hInst,
+						  NULL);
+	if(!g_hWnd)
 	{
 		Error("CVoid::Init:Error Creating Window\n");
 		return false;
 	}
+	g_pRinfo->hWnd = g_hWnd;
 	g_pRinfo->hInst = g_hInst;
-
 
 	if(!g_pRender->InitRenderer())
 	{
 		Error("Void::Init:Error Intializing Renderer\n");	
 		return false;
 	}
+//	ShowWindow(g_hWnd, SW_NORMAL); 
+//	UpdateWindow(g_hWnd);
 
-	g_hWnd = g_pRinfo->hWnd;
-	g_hInst = g_pRinfo->hInst;
-	ShowWindow(g_hWnd, SW_NORMAL); 
-	UpdateWindow(g_hWnd);
+	//timer
+	g_pTime->Init();
 
 	//Input
 	if(!g_pInput->Init()) 
@@ -560,8 +552,6 @@ bool CVoid::Init()
 		Error("CVoid::Init: Could not Initialize Input");
 		return false;
 	}
-	//Input Focus
-//	g_pInput->Acquire();
 
 
 /*	if(!InitZip())
@@ -619,6 +609,10 @@ bool CVoid::Init()
 	g_pTime->Reset();
 	
 	g_pCons->ExecConfig("autoexec.cfg");
+
+		ShowWindow(g_hWnd, SW_NORMAL); 
+	UpdateWindow(g_hWnd);
+
 	return true;
 }
 
@@ -748,21 +742,33 @@ bool CVoid::InitServer(char *map)
 		return false;
 	}
 */
+
 	char worldname[128];
 	char mapname[128];
 	
 	strcpy(mapname, map);
 	Util_DefaultExtension(mapname,".bsp");
-	//	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
-	sprintf(worldname,"%s\\game\\worlds\\%s",g_exedir,mapname);
+	
+//	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
+	
+	strcpy(worldname,"Worlds/");
+	strcat(worldname,mapname);
 	
 	if(g_pWorld != 0)
 	{
 		g_pClient->UnloadWorld();
 		world_destroy(g_pWorld);
 	}
+
 	g_pWorld = 0;
 	g_pWorld = world_create(worldname);
+
+	if(!g_pWorld)
+	{
+		ComPrintf("CVoid::InitGame: couldnt load map\n");
+		return false;
+	}
+
 	g_pClient->LoadWorld(g_pWorld);
 	g_pClient->m_connected = true;
 	g_pClient->m_ingame = true;
@@ -1015,6 +1021,12 @@ Connect
 */
 void CFuncConnect(int argc, char ** argv)
 {
+	//List Current Search Paths
+	g_pFileSystem->ListSearchPaths();
+
+	//Print out the list of files in added archives
+	g_pFileSystem->ListArchiveFiles();
+/*
 	if(argc ==2)
 	{
 		if(ValidIP(argv[1]))
@@ -1025,6 +1037,7 @@ void CFuncConnect(int argc, char ** argv)
 //TEMP
 	else
 		g_pClient->ConnectTo("24.112.133.112",36666);
+*/
 }
 
 

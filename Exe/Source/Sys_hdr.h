@@ -20,7 +20,8 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
-#include "Com_fs.h"
+
+#include "I_filesystem.h"
 
 #include "Sys_cons.h"
 #include "Util_sys.h"
