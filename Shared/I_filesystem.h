@@ -23,7 +23,7 @@ struct FILESYSTEM_API I_FileReader
 {
 	virtual bool Open(const char * filename)=0;
 	virtual void Close()=0;
-	virtual bool isOpen()=0;
+	virtual bool isOpen()const =0;
 	virtual ulong Read(void * buf, uint size, uint count)=0;
 	virtual int  GetChar()=0;
 	virtual bool Seek(uint offset, int origin)=0;
@@ -31,6 +31,8 @@ struct FILESYSTEM_API I_FileReader
 	virtual uint GetSize() const =0;
 };
 
+
+//====================================================================================
 
 class FILESYSTEM_API CFileBuffer : public I_FileReader
 {
@@ -44,7 +46,7 @@ public:
 	//Close the currently opened file
 	void Close();
 	//Do we have a file open right now ?
-	bool isOpen();
+	bool isOpen() const;
 	//Read "count" number of items of "size" into buffer
 	ulong Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
@@ -56,17 +58,18 @@ public:
 	uint GetSize()const;
 
 private:
-	
+
+	char *  m_filename;
 	uint	m_size;			//File Size
 	uint	m_curpos;		//File Position
 	
 	//Change this so its allocated from a static pool later on
 	byte *  m_buffer;		//File data is copied into this buffer in Buffered mode
 	uint	m_buffersize;	//Size of Buffer
-
-	char *  m_filename;
 };
 
+
+//====================================================================================
 
 class FILESYSTEM_API CFileStream : public I_FileReader
 {
@@ -80,7 +83,7 @@ public:
 	//Close the currently opened file
 	void Close();
 	//Do we have a file open right now ?
-	bool isOpen();
+	bool isOpen() const;
 	//Read "count" number of items of "size" into buffer
 	ulong Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
@@ -93,8 +96,6 @@ public:
 
 private:
 
-	friend class CFileSystem;
-	
 	uint	m_size;			//File Size
 	char *  m_filename;
 
@@ -137,11 +138,6 @@ public:
 
 	//Print out the list of files in added archives
 	void ListArchiveFiles();
-
-	//Loads data from file into given buffer. return size of buffer
-	//after allocation and copying.
-	uint LoadFileData(byte ** ibuffer, uint buffersize, const char *ifilename);
-	uint OpenFileStream(FILE * ifp, int &ifileHandle, const char *ifilename);
 	
 	uint GetFileSize(const char * filename);
 
@@ -151,6 +147,19 @@ public:
 				  const char  *path=0);			//Search in a specific path
 
 private:
+
+	friend class CFileStream;
+	friend class CFileBuffer;
+
+	uint OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarchive, 
+						const char *ifilename);
+
+	//Loads data from file into given buffer. return size of buffer
+	//after allocation and copying.
+	uint LoadFileData(byte ** ibuffer, uint buffersize, 
+						const char *ifilename);
+
+	//================================================================
 
 	struct SearchPath_t;
 
