@@ -126,6 +126,7 @@ void CInput::Shutdown()
 	if(m_pDInput) 
 	{
 		m_pDInput->Release();
+		m_pDInput = 0;
 		ComPrintf("CInput::Release :DirectInput Released\n");
 	}
 	ComPrintf("CInput::Shutdown: OK\n");
@@ -140,7 +141,10 @@ Acquire the mouse
 bool CInput::AcquireMouse()
 {
 	//If device has not been initialized then just return
-	if((!m_pMouse) || m_pMouse->GetDeviceState() == DEVNONE)
+	if(!m_pMouse)
+		return true;
+		
+	if(m_pMouse->GetDeviceState() == DEVNONE)
 		return false;
 	
 	//Already acquired, or acquring was successful
@@ -158,8 +162,11 @@ Acquire the Keyboard
 */
 bool CInput::AcquireKeyboard()
 {
+	if(!m_pKb)
+		return true;
+
 	//If device has not been initialized then just return
-	if((!m_pKb) || m_pKb->GetDeviceState() == DEVNONE)
+	if(!m_pKb->GetDeviceState() == DEVNONE)
 		return false;
 	
 	//Already acquired, or acquring was successful
