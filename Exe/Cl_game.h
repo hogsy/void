@@ -111,6 +111,7 @@ private:
 	int			m_hsMessage;	//handle to server message sound
 	
 	bool		m_ingame;
+	float		m_fFrameTime;
 
 	ClCmd		m_cmd;
 	ClCmd		m_oldCmd;

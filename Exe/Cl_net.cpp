@@ -100,7 +100,10 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				{
 					//Order matters
 					if(b & SVU_GRAVITY)
+					{
 						m_pGameClient->gravity = buffer.ReadFloat();
+ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
+					}
 					if(b & SVU_FRICTION)
 						m_pGameClient->friction = buffer.ReadFloat();
 					if(b & SVU_MAXSPEED)
@@ -109,9 +112,14 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				
 				if(!m_cvLocalMove.bval)
 				{
-					m_pGameClient->origin.x = x;
-					m_pGameClient->origin.y = y;
-					m_pGameClient->origin.z = z;
+					x -= m_pGameClient->origin.x;
+					y -= m_pGameClient->origin.y;
+					z -= m_pGameClient->origin.z;
+
+					m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
+					m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
+					m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
+
 				}
 				break;
 			}

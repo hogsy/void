@@ -16,11 +16,7 @@ public:
 	~CStringVal() { szString = 0; }
 
 	int IntVal() const 
-	{
-		int i = atoi(szString);
-		if(!i)
-			return COM_INVALID_VALUE;
-		return i;
+	{	return atoi(szString);
 	}
 
 	bool BoolVal() const
@@ -28,11 +24,7 @@ public:
 	}
 
 	float FloatVal() const
-	{
-		float f = atof(szString);
-		if(f = 0.0f)
-			return COM_INVALID_VALUE;
-		return f;
+	{	return atof(szString);
 	}
 
 	const char * String() const { return szString; }

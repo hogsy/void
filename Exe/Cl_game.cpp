@@ -93,6 +93,8 @@ Run a Client frame
 */
 void CGameClient::RunFrame(float frameTime)
 {
+	m_fFrameTime = frameTime;
+
 	//Reset move and angles stuff from the old frame
 	m_vecDesiredAngles.Set(0,0,0);
 	m_cmd.Reset();
