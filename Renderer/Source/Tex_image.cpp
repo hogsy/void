@@ -475,10 +475,16 @@ void CImageReader::ImageReduce(int m)
 		{
 			for (s = 0; s < bpp; s++)
 			{
+
                 color =  mipmapdata[m][ ((2*r)	  	   *w*bpp*2) + ((2*c)		  *bpp)+ s];
                 color += mipmapdata[m][ ((2*r)		   *w*bpp*2) + ((2*c)+sfactor)*bpp + s];
                 color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)		  *bpp)+ s];
                 color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)+sfactor)*bpp + s];
+
+/*
+				color = mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
+*/
+
                 color /= 4;
 
 				mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
@@ -536,7 +542,7 @@ void CImageReader::ConfirmMipData(void)
 	for (int m=miplevels-1; m>=0; m--)
 	{
 		if (mipmapdata[m])
-			return;;;
+			break;
 
 		mipmapdata[m] = (unsigned char*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
 		if (!mipmapdata[m])
@@ -544,6 +550,12 @@ void CImageReader::ConfirmMipData(void)
 			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
 			return;
 		}
+	}
+
+	for (m=miplevels-1; m>=0; m--)
+	{
+		memset(mipmapdata[m], 255, mipdatasizes[m]);
+
 	}
 }
 

@@ -369,10 +369,10 @@ sil_t* sil_build(bspf_brush_t *b)
 				sil->area -= world->sides[s+b->first_side].area * d;
 
 //			// use sky polys instead if it's a sky brush
-//			if (world->sides[s+b->first_side].flags & SURF_SKY)
+			if (world->sides[s+b->first_side].flags & SURF_SKY)
 				sil->sky = true;
 
-//			else
+			else
 			{
 				// add facing polys to the list
 				poly = get_poly();
@@ -445,8 +445,8 @@ sil_t* sil_build(bspf_brush_t *b)
 		VectorScale(&sil->center, 1.0f/(2*sil->nedges), &sil->center);
 
 		// if any one of the polys was a sky surf make this sil a sky sil
-//		if (sil->sky)
-//			sil_get_sky_polys(sil);
+		if (sil->sky)
+			sil_get_sky_polys(sil);
 
 		return sil;
 	}

@@ -3,6 +3,7 @@
 #include "Mdl_cache.h"
 
 
+
 poly_t *cache_polys;
 extern poly_t *tpoly;
 int used_polys;
@@ -23,6 +24,8 @@ int		 num_cache_allocs = 0;
 
 // FIXME - put in a different struct
 vector_t *fullblend;
+//extern eyepoint_t	eye;			// where we're gonna draw from
+extern const CCamera * camera;
 
 
 /*
@@ -93,22 +96,37 @@ void return_poly(cpoly_t *p)
 /******************************************************************************
 draw a poly
 ******************************************************************************/
-void r_draw_world_poly(poly_t *p, dimension_t dim)
+void r_draw_world_poly(poly_t *p, dimension_t dim, bool shift)
 {
 	float s, t;
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 
 	for (int v = 0; v<p->num_vertices; v++)
 	{
-		s = p->vertices[v].x * world->texdefs[p->texdef].vecs[0][0] + 
-			p->vertices[v].y * world->texdefs[p->texdef].vecs[0][1] + 
-			p->vertices[v].z * world->texdefs[p->texdef].vecs[0][2] + 
-			world->texdefs[p->texdef].vecs[0][3];
+		if (shift)
+		{
+			s = p->vertices[v].x * world->texdefs[p->texdef].vecs[0][0] + 
+				p->vertices[v].y * world->texdefs[p->texdef].vecs[0][1] + 
+				p->vertices[v].z * world->texdefs[p->texdef].vecs[0][2] + 
+				world->texdefs[p->texdef].vecs[0][3];
 
-		t = p->vertices[v].x * world->texdefs[p->texdef].vecs[1][0] + 
-			p->vertices[v].y * world->texdefs[p->texdef].vecs[1][1] + 
-			p->vertices[v].z * world->texdefs[p->texdef].vecs[1][2] + 
-			world->texdefs[p->texdef].vecs[1][3];
+			t = p->vertices[v].x * world->texdefs[p->texdef].vecs[1][0] + 
+				p->vertices[v].y * world->texdefs[p->texdef].vecs[1][1] + 
+				p->vertices[v].z * world->texdefs[p->texdef].vecs[1][2] + 
+				world->texdefs[p->texdef].vecs[1][3];
+		}
+		else
+		{
+			s = (p->vertices[v].x - camera->origin.x) * world->texdefs[p->texdef].vecs[0][0] + 
+				(p->vertices[v].y - camera->origin.y) * world->texdefs[p->texdef].vecs[0][1] + 
+				(p->vertices[v].z - camera->origin.z) * world->texdefs[p->texdef].vecs[0][2] + 
+				world->texdefs[p->texdef].vecs[0][3];
+
+			t = (p->vertices[v].x - camera->origin.x) * world->texdefs[p->texdef].vecs[1][0] + 
+				(p->vertices[v].y - camera->origin.y) * world->texdefs[p->texdef].vecs[1][1] + 
+				(p->vertices[v].z - camera->origin.z) * world->texdefs[p->texdef].vecs[1][2] + 
+				world->texdefs[p->texdef].vecs[1][3];
+		}
 
 		s /= dim[0];
 		t /= dim[1];
@@ -209,6 +227,7 @@ void cache_purge_single()
 	bool lightmaps = ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT));
 
 	g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
+
 	//
 	// single texture / multi pass rendering
 	//
@@ -217,6 +236,15 @@ void cache_purge_single()
 		// set blending mode for this pass
 		switch (pass)
 		{
+		// sky
+		case CACHE_PASS_SKY*2:
+			g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+			break;
+
+		case CACHE_PASS_SKY*2+1:
+			continue;
+
 		// zfill
 		case CACHE_PASS_ZFILL*2:		// texture
 			g_pRast->DepthFunc(VRAST_DEPTH_FILL);
@@ -274,15 +302,6 @@ void cache_purge_single()
 				continue;	// lighting not available or in fullbright
 			break;
 
-		case CACHE_PASS_SKY*2:
-			g_pRast->PolyColor4f(1, 1, 1, 1);
-			g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
-			break;
-
-		case CACHE_PASS_SKY*2+1:
-			continue;
-
 		default:
 			continue;
 		}
@@ -301,13 +320,14 @@ void cache_purge_single()
 			for (cpoly_t *p=tex->polycaches[pass/2][t]; p; p=p->next)
 			{
 				if (pass%2 == 0)
-					r_draw_world_poly(&p->poly, tex->dims[t]);
+					r_draw_world_poly(&p->poly, tex->dims[t], pass!=0);
 				else
 					r_draw_light_poly(&p->poly);
 			}
 		}
 	}
 
+	// alphablend turns it off
 	g_pRast->DepthWrite(true);
 }
 

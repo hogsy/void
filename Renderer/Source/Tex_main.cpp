@@ -85,6 +85,7 @@ bool CTextureManager::Init()
 		g_pRast->TextureLoad(tex->bin_base, count, &tdata);
 	}
 	m_loaded = BASE_TEXTURES;
+	m_texReader->FreeMipData();
 	return true;
 }
 
@@ -163,6 +164,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		return false;
 	}
 
+
 	for (t=0; t<m_numWorldTextures; t++)
 	{
 		LoadTexture(map->textures[t]);
@@ -187,6 +189,8 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 			m_texReader->ImageReduce(mipcount);
 			mipcount--;
 		}
+
+		memset(tdata.mipdata[0], 255, mipdatasizes[0]);
 
 		g_pRast->TextureLoad(tex->bin_world, t, &tdata);
 	}
