@@ -9,7 +9,7 @@
 #include "Con_main.h"
 #include "Mdl_main.h"
 #include "Hud_main.h"
-#include "ClientRenderer.h"
+#include "Client.h"
 
 extern CRConsole * g_prCons;
 extern CVar *	g_pVidSynch;

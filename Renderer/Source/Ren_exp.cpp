@@ -8,7 +8,7 @@
 #include "Mdl_main.h"
 #include "Con_main.h"
 #include "Img_main.h"
-#include "ClientRenderer.h"
+#include "Client.h"
 
 #include "gl_rast.h"
 #include "Rast_none.h"

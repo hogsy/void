@@ -165,38 +165,6 @@ SOURCE=.\Source\Tex_main.cpp
 SOURCE=.\Source\Tex_main.h
 # End Source File
 # End Group
-# Begin Group "Models"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Mdl_entry.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Mdl_entry.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Mdl_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Mdl_main.h
-# End Source File
-# End Group
-# Begin Group "Hud"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Hud_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Hud_main.h
-# End Source File
-# End Group
 # Begin Group "Shared"
 
 # PROP Default_Filter ""
@@ -337,26 +305,6 @@ SOURCE=..\Shared\I_void.h
 SOURCE=.\Source\Dll_main.cpp
 # End Source File
 # End Group
-# Begin Group "Image"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Img_entry.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Img_entry.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Img_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Img_main.h
-# End Source File
-# End Group
 # Begin Group "Rast"
 
 # PROP Default_Filter ""
@@ -407,6 +355,66 @@ SOURCE=.\Source\Rast_d3dx.h
 # Begin Source File
 
 SOURCE=.\Source\Rasterizer.h
+# End Source File
+# End Group
+# Begin Group "Client"
+
+# PROP Default_Filter ""
+# Begin Group "Image"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Img_entry.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_entry.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_main.h
+# End Source File
+# End Group
+# Begin Group "Hud"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Hud_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Hud_main.h
+# End Source File
+# End Group
+# Begin Group "Models"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Mdl_entry.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_entry.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mdl_main.h
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\Source\Client.h
 # End Source File
 # End Group
 # Begin Source File

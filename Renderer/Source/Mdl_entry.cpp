@@ -3,7 +3,7 @@
 #include "Mdl_entry.h"
 #include "Tex_image.h"
 #include "Img_main.h"
-#include "ClientRenderer.h"
+#include "Client.h"
 
 
 typedef struct
