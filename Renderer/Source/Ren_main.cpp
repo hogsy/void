@@ -108,6 +108,10 @@ void r_init(void)
 //===========================================================
 void r_draw_leaf(int l)
 {
+	// leaf 0 is always the outside leaf
+	if (l==0)
+		return;
+
 	// pvs cull
 	if (world->leafvis_size > 0)
 	{

@@ -214,10 +214,10 @@ bool COpenGLRast::GoWindowed(void)
 	g_rInfo.rflags &= ~RFLAG_FULLSCREEN;
 
 	RECT wrect;
-	wrect.left = 0;
-	wrect.top = 0;
-	wrect.right = g_rInfo.width;
-	wrect.bottom= g_rInfo.height;
+	wrect.left = m_cWndX.ival;
+	wrect.top = m_cWndY.ival;
+	wrect.right = m_cWndX.ival + g_rInfo.width;
+	wrect.bottom= m_cWndY.ival + g_rInfo.height;
 	
 	//Adjusts Client Size
 	::AdjustWindowRect(&wrect, 
@@ -229,8 +229,8 @@ bool COpenGLRast::GoWindowed(void)
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOP,
-				   m_cWndX.ival,
-				   m_cWndY.ival,
+				   wrect.left,
+				   wrect.top,
 			       width,
 			       height,
 				   0);
