@@ -316,6 +316,8 @@ void CRastD3DX::SetFocus()
 
 void CRastD3DX::DepthFunc(EDepthFunc func)
 {
+	mCurDepthFunc = func;
+
 	switch (func)
 	{
 	case VRAST_DEPTH_NONE:
@@ -341,6 +343,8 @@ void CRastD3DX::DepthFunc(EDepthFunc func)
 
 void CRastD3DX::DepthWrite(bool write)
 {
+	mCurDepthWrite = write;
+
 	if (write)
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, TRUE);
 	else
@@ -351,6 +355,9 @@ void CRastD3DX::BlendFunc(ESourceBlend src, EDestBlend dest)
 {
 	int source = 0;
 	int destination = 0;
+
+	mCurSrcBlend = src;
+	mCurDstBlend = dest;
 
 	switch (src)
 	{

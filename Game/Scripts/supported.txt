@@ -13,6 +13,11 @@ sky or skybrush
 Changes a brush to a sky brush (always rendered as if viewed from (0,0,0)).
 
 
+origintexture
+----------
+Calculates texture coords as if viewed from the origin.  Mostly used with skybrushes.
+
+
 skyview
 ----------
 Changes a brush to a skyview brush.  When rendered, skybrushes are drawn instead.  Use these on windows.
@@ -26,6 +31,12 @@ The side is not drawn.
 nonsolid
 ----------
 All brushes are solid by default.  This keyword makes any brush it is on nonsolid.
+
+
+depthfunc <func>
+----------
+Set the depthtest function.  lequal by default.
+func = lequal, equal, always, none
 
 
 qer_editorimage
@@ -82,12 +93,6 @@ blendfunc <source> <dest>
 Same as q3.
 func = add, filter, blend
 sources and dests same as q3.  Also accepted without gl_ prefix.
-
-
-depthfunc <func>
-----------
-Set the depthtest function.  lequal by default.
-func = lequal, equal
 
 
 alphagen <source>

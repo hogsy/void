@@ -536,9 +536,31 @@ Handle rasterizer changes
 */
 bool CRenExp::CVar_Rast(const CStringVal &strVal)
 {
-	if((stricmp(strVal.String(),"d3dx")==0) ||
-	   (stricmp(strVal.String(),"gl")==0) ||
-	   (stricmp(strVal.String(),"none")==0))
+/*	if (g_pRast)
+	{
+		if (stricmp(strVal.String(), "d3dx")==0)
+		{
+			delete g_pRast;
+			g_pRast = new CRastD3DX();
+
+			if (g_pTex)
+				g_pTex->LoadAll();
+		}
+
+
+		else if (stricmp(strVal.String(), "gl")==0)
+		{
+			delete g_pRast;
+			g_pRast = new COpenGLRast();
+
+			if (g_pTex)
+				g_pTex->LoadAll();
+		}
+	}
+
+	else */if((stricmp(strVal.String(),"d3dx")==0) ||
+		    (stricmp(strVal.String(),"gl")==0) ||
+		    (stricmp(strVal.String(),"none")==0))
 	{
 		ComPrintf("Rasterizer change will take effect next time you run void.\n");
 		return true;

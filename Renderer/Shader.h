@@ -12,7 +12,6 @@ struct I_FileReader;
 enum ETexGen
 {
 	TEXGEN_BASE,
-	TEXGEN_SKY,
 	TEXGEN_LIGHT,
 	TEXGEN_VECTOR,
 	TEXGEN_ENVIRONMENT
@@ -142,10 +141,6 @@ public:
 	ESourceBlend	mSrcBlend;
 	EDestBlend		mDstBlend;
 
-	// depth func
-	EDepthFunc		mDepthFunc;
-	bool			mDepthWrite;
-
 	// tex coord generation
 	ETexGen			mTexGen;
 	vector_t		mTexVector[2];
@@ -168,7 +163,7 @@ public:
 	~CShader();
 
 	void Parse(I_FileReader *shader);
-	void Default(void);
+	void Default(bool lightmap);
 
 	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }
 	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
@@ -194,6 +189,12 @@ private:
 
 	int		mNumLayers;
 	CShaderLayer *mLayers[MAX_SHADER_LAYERS];
+
+
+	// depth func
+	EDepthFunc		mDepthFunc;
+	bool			mDepthWrite;
+	bool			mOriginTexture;
 
 	unsigned int mSurfaceFlags;
 	unsigned int mContentFlags;

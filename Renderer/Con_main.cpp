@@ -183,11 +183,8 @@ void CRConsole::Draw()
 	g_pRast->TextureLightDef(NULL);
 	g_pRast->TextureTexDef(NULL);
 
-	// FIXME - shouldnt need this
-	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
 
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 1));
-
 	g_pRast->PolyStart(VRAST_QUADS);
 
 

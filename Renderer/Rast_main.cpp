@@ -29,6 +29,11 @@ CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
 	mTexDef = NULL;
 	mLightDef = NULL;
 	mUseLights = false;
+
+	mCurDepthFunc	= VRAST_DEPTH_LEQUAL;
+	mCurDepthWrite	= true;
+	mCurSrcBlend	= VRAST_SRC_BLEND_NONE;
+	mCurDstBlend	= VRAST_DST_BLEND_NONE;
 }
 
 
@@ -109,17 +114,37 @@ void CRasterizer::PolyEnd(void)
 	// put it in separate arrays cause we might need to do tcmod's and don't want to have to re-evaluate them
 	if (mTexDef)
 	{
-		for (int i=mFirstElement; i<mNumElements; i++)
+		// calc as if from origin
+		if (mShader->mOriginTexture)
 		{
-			mTexCoords[i][0] =	 mVerts[i].pos[0] * mTexDef->vecs[0][0] +
-								 mVerts[i].pos[1] * mTexDef->vecs[0][1] +
-								 mVerts[i].pos[2] * mTexDef->vecs[0][2] +
-								 mTexDef->vecs[0][3];
+			for (int i=mFirstElement; i<mNumElements; i++)
+			{
+				mTexCoords[i][0] =	(mVerts[i].pos[0]-camera->origin.x) * mTexDef->vecs[0][0] +
+									(mVerts[i].pos[1]-camera->origin.y) * mTexDef->vecs[0][1] +
+									(mVerts[i].pos[2]-camera->origin.z) * mTexDef->vecs[0][2] +
+									 mTexDef->vecs[0][3];
 
-			mTexCoords[i][1] =	 mVerts[i].pos[0] * mTexDef->vecs[1][0] +
-								 mVerts[i].pos[1] * mTexDef->vecs[1][1] +
-								 mVerts[i].pos[2] * mTexDef->vecs[1][2] +
-								 mTexDef->vecs[1][3];
+				mTexCoords[i][1] =	(mVerts[i].pos[0]-camera->origin.x) * mTexDef->vecs[1][0] +
+									(mVerts[i].pos[1]-camera->origin.y) * mTexDef->vecs[1][1] +
+									(mVerts[i].pos[2]-camera->origin.z) * mTexDef->vecs[1][2] +
+									 mTexDef->vecs[1][3];
+			}
+		}
+
+		else
+		{
+			for (int i=mFirstElement; i<mNumElements; i++)
+			{
+				mTexCoords[i][0] =	 mVerts[i].pos[0] * mTexDef->vecs[0][0] +
+									 mVerts[i].pos[1] * mTexDef->vecs[0][1] +
+									 mVerts[i].pos[2] * mTexDef->vecs[0][2] +
+									 mTexDef->vecs[0][3];
+
+				mTexCoords[i][1] =	 mVerts[i].pos[0] * mTexDef->vecs[1][0] +
+									 mVerts[i].pos[1] * mTexDef->vecs[1][1] +
+									 mVerts[i].pos[2] * mTexDef->vecs[1][2] +
+									 mTexDef->vecs[1][3];
+			}
 		}
 	}
 
@@ -149,10 +174,21 @@ void CRasterizer::Flush(void)
 	// 3 indices per triangle
 	mTrisDrawn += mNumIndices / 3;
 
+	// depth func / write
+	if (mShader->mDepthFunc != mCurDepthFunc)
+		DepthFunc(mShader->mDepthFunc);
+	if (mShader->mDepthWrite != mCurDepthWrite)
+		DepthWrite(mShader->mDepthWrite);
+
+	LockVerts();
+
 	for (int i=0; i<mShader->mNumLayers; i++)
 		DrawLayer(i);
 
 	mNumElements = mNumIndices = 0;
+
+	UnLockVerts();
+
 }
 
 
@@ -162,7 +198,10 @@ void CRasterizer::DrawLayer(int l)
 	int i, a;
 	vector_t dir, norm;
 
+	// combining these doesnt seem to work for some reason
 	if (layer->mIsLight && !mUseLights)
+		return;
+	if (layer->mIsLight && !mLightDef)	// check that if we're supposed to have a lightmap that we actually do
 		return;
 
 	if (!layer->mNumTextures)
@@ -212,28 +251,6 @@ void CRasterizer::DrawLayer(int l)
 			mVerts[i].tex1[1] = mTexCoords[i][1];
 		}
 		break;
-
-
-	//
-	// FIXME - move this to PolyEnd() somehow so we dont have to flush if the texdef changes
-	//
-	case TEXGEN_SKY:
-		if (!mTexDef)
-			break;
-
-		for (i=0; i<mNumElements; i++)
-		{
-			mVerts[i].tex1[0] = mTexCoords[i][0] - camera->origin.x * mTexDef->vecs[0][0]
-												 - camera->origin.y * mTexDef->vecs[0][1]
-												 - camera->origin.z * mTexDef->vecs[0][2];
-
-			mVerts[i].tex1[1] = mTexCoords[i][1] - camera->origin.x * mTexDef->vecs[1][0]
-												 - camera->origin.y * mTexDef->vecs[1][1]
-												 - camera->origin.z * mTexDef->vecs[1][2];
-		}
-		break;
-
-
 
 	case TEXGEN_LIGHT:
 		if (!mLightDef)
@@ -304,7 +321,8 @@ void CRasterizer::DrawLayer(int l)
 	TextureClamp(layer->mTextureClamp);
 
 	// blendfunc
-	BlendFunc(layer->mSrcBlend, layer->mDstBlend);
+	if ((layer->mSrcBlend != mCurSrcBlend) || (layer->mDstBlend != mCurDstBlend))
+		BlendFunc(layer->mSrcBlend, layer->mDstBlend);
 
 	PolyDraw();
 }
@@ -334,7 +352,7 @@ void CRasterizer::PolyTexCoord(float s, float t)
 {
 	mVerts[mNumElements].tex1[0] = s;
 	mVerts[mNumElements].tex1[1] = t;
-};
+}
 
 
 void CRasterizer::PolyColor(float r, float g, float b, float a)
@@ -358,14 +376,29 @@ void CRasterizer::ShaderSet(CShader *shader)
 
 void CRasterizer::TextureTexDef(bspf_texdef_t *def)
 {
-	// FIXME - dont need to flush all the time
-	Flush();
+	// changing texdef doesnt need a flush because
+	// the texture field of it isn't used
 	mTexDef	= def;
 }
 
 void CRasterizer::TextureLightDef(bspf_texdef_t *def)
 {
-	Flush();
-	mLightDef = def;
+	// only flush if the lightmap texture is changing
+/*	if (def != mLightDef)
+	{
+		if (def && mLightDef)
+		{
+			if (def->texture == mLightDef->texture)
+			{
+				mLightDef = def;
+				return;
+			}
+		}
+*/
+		Flush();
+		mLightDef = def;
+//	}
 }
+
+
 

@@ -127,10 +127,6 @@ public:
 	virtual void SetWindowCoords(int wndX, int wndY)=0;
 	virtual bool UpdateDisplaySettings(int width, int height, int bpp, bool fullscreen)=0;
 
-	virtual void DepthFunc(EDepthFunc func)=0;
-	virtual void DepthWrite(bool write)=0;
-	virtual void BlendFunc(ESourceBlend src, EDestBlend dest)=0;
-
 	virtual void TextureLoad(hTexture index, const TextureData &texdata)=0;
 	virtual void TextureUnLoad(hTexture index)=0;
 	virtual void TextureClamp(bool clamp)=0;
@@ -175,6 +171,15 @@ private:
 	void DrawLayer(int l);
 	virtual void TextureSet(hTexture texnum)=0;
 
+	virtual void DepthFunc(EDepthFunc func)=0;
+	virtual void DepthWrite(bool write)=0;
+	virtual void BlendFunc(ESourceBlend src, EDestBlend dest)=0;
+
+	// called just before / after pushing verts through to the rasterizer
+	virtual void LockVerts(void)=0;
+	virtual void UnLockVerts(void)=0;
+
+
 
 protected:
 	void Flush(void);
@@ -183,6 +188,12 @@ protected:
 	CVar    m_cWndX;        //Windowed X pos
 	CVar    m_cWndY;        //Windowed Y pos
 
+
+	// current rasterizer states
+	EDepthFunc		mCurDepthFunc;
+	bool			mCurDepthWrite;
+	ESourceBlend	mCurSrcBlend;
+	EDestBlend		mCurDstBlend;
 
 
 	// arrays to store poly data

@@ -92,7 +92,7 @@ void CModelCacheEntry::LoadSkins(void)
 //		if ((strcmp(skin_names[s], "none")==0) || !CImageReader::GetReader().Read(texname, tData))
 //			CImageReader::GetReader().DefaultTexture(tData);
 
-		g_pShaders->LoadShader(mShaderBin, s, texname);
+		g_pShaders->LoadShader(mShaderBin, s, texname, false);
 //		g_pRast->TextureLoad(skin_bin, s, tData);
 	}
 

@@ -12,7 +12,7 @@ Constructor
 COpenGLRast::COpenGLRast()
 {
 	m_bInitialized = false;
-
+	m_CVAsupported = false;
 	m_nummodes = 0;
 	m_devmodes = 0;
 
@@ -140,6 +140,9 @@ bool COpenGLRast::Init()
 
 			else if (!strcmp(start, "WGL_EXT_swap_control"))
 				g_rInfo.rflags |= RFLAG_SWAP_CONTROL;
+
+			else if (!strcmp(start, "GL_EXT_compiled_vertex_array"))
+				m_CVAsupported = true;
 
 			start = &ext2[i+1];
 		}
@@ -568,6 +571,8 @@ void COpenGLRast::SetFocus()
 
 void COpenGLRast::DepthFunc(EDepthFunc func)
 {
+	mCurDepthFunc = func;
+
 	switch (func)
 	{
 	case VRAST_DEPTH_NONE:
@@ -590,6 +595,8 @@ void COpenGLRast::DepthFunc(EDepthFunc func)
 
 void COpenGLRast::DepthWrite(bool write)
 {
+	mCurDepthWrite = write;
+
 	if (write)
 		glDepthMask(GL_TRUE);
 	else
@@ -600,6 +607,9 @@ void COpenGLRast::BlendFunc(ESourceBlend src, EDestBlend dest)
 {
 	int source = 0;
 	int destination = 0;
+
+	mCurSrcBlend = src;
+	mCurDstBlend = dest;
 
 	switch (src)
 	{
@@ -925,3 +935,38 @@ void COpenGLRast::SetVidSynch(int v)
 {
 	wglSwapIntervalEXT(v);
 }
+
+/*
+========
+LockVerts - allows optimization of cva's
+========
+*/
+void COpenGLRast::LockVerts(void)
+{
+	if (!m_CVAsupported)
+		return;
+
+	// only have vector data enabled when we lock
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glLockArraysEXT(0, mNumElements);
+
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
+
+/*
+========
+UnLockVerts
+========
+*/
+void COpenGLRast::UnLockVerts(void)
+{
+	if (m_CVAsupported)
+		glUnlockArraysEXT();
+}
+
+
+

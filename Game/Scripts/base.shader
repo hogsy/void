@@ -1,6 +1,8 @@
 // bitmap text
 textures/base/_ascii
 {
+	depthfunc none
+
 	{
 		clampmap textures/base/_ascii
 		nomipmap
@@ -13,6 +15,8 @@ textures/base/_ascii
 // console background
 textures/base/conback
 {
+	depthfunc none
+
 	{
 		clampmap textures/base/conback
 		nomipmap

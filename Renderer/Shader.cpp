@@ -28,8 +28,6 @@ CShaderLayer::CShaderLayer()
 	mTextureNames = NULL;
 	mSrcBlend  = VRAST_SRC_BLEND_NONE;
 	mDstBlend  = VRAST_DST_BLEND_NONE;
-	mDepthFunc = VRAST_DEPTH_LEQUAL;
-	mDepthWrite = true;
 	mAnimFreq = 0;
 	mTexGen = TEXGEN_BASE;
 	mIsLight = false;
@@ -72,8 +70,6 @@ void CShaderLayer::Parse(I_FileReader *layer)
 				mTexGen = TEXGEN_BASE;
 			else if (_stricmp(token, "lightmap") == 0)
 				mTexGen = TEXGEN_LIGHT;
-			else if (_stricmp(token, "sky") == 0)
-				mTexGen = TEXGEN_SKY;
 			else if (_stricmp(token, "environment") == 0)
 				mTexGen = TEXGEN_ENVIRONMENT;
 			else if (_stricmp(token, "vector") == 0)
@@ -238,8 +234,6 @@ void CShaderLayer::Parse(I_FileReader *layer)
 		// blend funcs
 		else if (_stricmp(token, "blendfunc") == 0)
 		{
-			mDepthWrite = false;	// blended layers dont write
-
 			layer->GetToken(token, false);
 			if (_stricmp(token, "add") == 0)
 			{
@@ -297,16 +291,6 @@ void CShaderLayer::Parse(I_FileReader *layer)
 			}
 		}
 
-		// depth funcs
-		else if (_stricmp(token, "depthfunc") == 0)
-		{
-			layer->GetToken(token, false);
-			if (_stricmp(token, "lequal") == 0)
-				mDepthFunc = VRAST_DEPTH_LEQUAL;
-			else if (_stricmp(token, "equal") == 0)
-				mDepthFunc = VRAST_DEPTH_EQUAL;
-		}
-
 		// alphagen
 		else if (_stricmp(token, "alphagen") == 0)
 		{
@@ -319,10 +303,6 @@ void CShaderLayer::Parse(I_FileReader *layer)
 				mAlphaGen.func = ALPHAGEN_WAVE;
 		}
 
-
-		// depth write	- must be after the blend func or it will be overriden
-		else if (_stricmp(token, "depthwrite") == 0)
-			mDepthWrite = true;
 
 		// dont create mipmaps
 		else if (_stricmp(token, "nomipmap") == 0)
@@ -398,6 +378,9 @@ CShader::CShader(const char *name)
 	mNumLayers = 0;
 	mRefCount = 0;
 	mPass = 4;
+	mDepthFunc = VRAST_DEPTH_LEQUAL;
+	mDepthWrite = true;
+	mOriginTexture = false;
 	mSurfaceFlags = 0;
 	mContentFlags = CONTENTS_SOLID;
 }
@@ -441,7 +424,10 @@ void CShader::Parse(I_FileReader *shader)
 			mNumLayers++;
 		}
 
-		// sky brushes move with the eyepoint
+		else if (_stricmp(token, "origintexture") == 0)
+			mOriginTexture = true;
+
+		// sky brushes are only rendered through skyview shaders
 		else if ((_stricmp(token, "sky") == 0) || (_stricmp(token, "skybrush") ==0))
 		{
 			mPass = 0;
@@ -467,6 +453,26 @@ void CShader::Parse(I_FileReader *shader)
 			// brushes must be explicitly made nonsolid
 			mContentFlags &= ~CONTENTS_SOLID;
 		}
+
+
+		// depth funcs
+		else if (_stricmp(token, "depthfunc") == 0)
+		{
+			shader->GetToken(token, false);
+			if (_stricmp(token, "lequal") == 0)
+				mDepthFunc = VRAST_DEPTH_LEQUAL;
+			else if (_stricmp(token, "equal") == 0)
+				mDepthFunc = VRAST_DEPTH_EQUAL;
+			else if (_stricmp(token, "always") == 0)
+				mDepthFunc = VRAST_DEPTH_ALWAYS;
+			else if (_stricmp(token, "none") == 0)
+				mDepthFunc = VRAST_DEPTH_NONE;
+		}
+
+		// depth write	- must be after the blend func or it will be overriden
+		else if (_stricmp(token, "depthwrite") == 0)
+			mDepthWrite = true;
+
 
 		// editor image
 		else if (_stricmp(token, "qer_editorimage") == 0)
@@ -608,14 +614,18 @@ void CShader::UnLoadTextures(void)
 Default
 =========
 */
-void CShader::Default(void)
+void CShader::Default(bool lightmap)
 {
-	mNumLayers = 2;
+	mNumLayers = 1;
 	mLayers[0] = new CShaderLayer();
-	mLayers[1] = new CShaderLayer();
-
 	mLayers[0]->Default(mName);
-	mLayers[1]->Default("$lightmap");
+
+	if (lightmap)
+	{
+		mNumLayers++;
+		mLayers[1] = new CShaderLayer();
+		mLayers[1]->Default("$lightmap");
+	}
 }
 
 

@@ -58,7 +58,7 @@ void CImageCacheEntry::LoadTexture()
 	}
 
 	mShaderBin = g_pShaders->BinInit(1);
-	g_pShaders->LoadShader(mShaderBin, 0, imagefile);
+	g_pShaders->LoadShader(mShaderBin, 0, imagefile, false);
 
 //	tex_bin = g_pRast->TextureBinInit(1);
 

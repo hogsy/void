@@ -20,6 +20,8 @@ public:
 	hTexture Load(unsigned char **data, TextureData &tData);
 	void UnLoad(hTexture tex);
 
+	void LoadAll(void);
+
 private:
 
 	struct TextureName_s

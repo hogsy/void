@@ -56,6 +56,9 @@ public:
 
 	void SetFocus(void);
 
+	void LockVerts(void) { }
+	void UnLockVerts(void) { }
+
 private:
 
 	LPDIRECTDRAWSURFACE7 mTexSurfs[MAX_TEXTURES];

@@ -133,6 +133,42 @@ void CTextureManager::UnLoad(hTexture tex)
 }
 
 
+/*
+==========================================
+Loads all currently ref'd textures - for rasterizer restarts
+==========================================
+*/
+void CTextureManager::LoadAll(void)
+{
+	TextureData tdata;
+
+	for (int t=0; t<MAX_TEXTURES; t++)
+	{
+		if (mNames[t].refCount)
+		{
+			tdata.bMipMaps = mNames[t].mipmap;
+
+			// lightmap
+			if (mNames[t].ptr)
+			{
+				unsigned char *data = mNames[t].ptr;
+				if (!CImageReader::GetReader().ReadLightMap(&data, tdata))
+					CImageReader::GetReader().DefaultTexture(tdata);
+
+			}
+
+			// file texture
+			else
+			{
+				if (!CImageReader::GetReader().Read(mNames[t].file, tdata))
+					CImageReader::GetReader().DefaultTexture(tdata);
+			}
+			
+			g_pRast->TextureLoad(t, tdata);
+		}
+
+	}
+}
 
 
 

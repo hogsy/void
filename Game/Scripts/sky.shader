@@ -5,7 +5,6 @@ textures/sky/skyview
 	{
 		map textures/sky/skyview
 		nomipmap
-		tcgen sky
 	}
 }
 
@@ -16,54 +15,54 @@ textures/sky/skyview
 textures/sky/snowbk
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowbk
-		tcgen sky
 	}
 }
 
 textures/sky/snowdn
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowdn
-		tcgen sky
 	}
 }
 
 textures/sky/snowft
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowft
-		tcgen sky
 	}
 }
 
 textures/sky/snowlf
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowlf
-		tcgen sky
 	}
 }
 
 textures/sky/snowrt
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowrt
-		tcgen sky
 	}
 }
 
 textures/sky/snowup
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snowup
-		tcgen sky
 	}
 }
 
@@ -74,54 +73,54 @@ textures/sky/snowup
 textures/sky/snow2bk
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2bk
-		tcgen sky
 	}
 }
 
 textures/sky/snow2dn
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2dn
-		tcgen sky
 	}
 }
 
 textures/sky/snow2ft
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2ft
-		tcgen sky
 	}
 }
 
 textures/sky/snow2lf
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2lf
-		tcgen sky
 	}
 }
 
 textures/sky/snow2rt
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2rt
-		tcgen sky
 	}
 }
 
 textures/sky/snow2up
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/snow2up
-		tcgen sky
 	}
 }
 
@@ -132,54 +131,54 @@ textures/sky/snow2up
 textures/sky/jumpbk
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumpbk
-		tcgen sky
 	}
 }
 
 textures/sky/jumpdn
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumpdn
-		tcgen sky
 	}
 }
 
 textures/sky/jumpft
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumpft
-		tcgen sky
 	}
 }
 
 textures/sky/jumplf
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumplf
-		tcgen sky
 	}
 }
 
 textures/sky/jumprt
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumprt
-		tcgen sky
 	}
 }
 
 textures/sky/jumpup
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/jumpup
-		tcgen sky
 	}
 }
 
@@ -190,54 +189,54 @@ textures/sky/jumpup
 textures/sky/swamp1bk
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1bk
-		tcgen sky
 	}
 }
 
 textures/sky/swamp1dn
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1dn
-		tcgen sky
 	}
 }
 
 textures/sky/swamp1ft
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1ft
-		tcgen sky
 	}
 }
 
 textures/sky/swamp1lf
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1lf
-		tcgen sky
 	}
 }
 
 textures/sky/swamp1rt
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1rt
-		tcgen sky
 	}
 }
 
 textures/sky/swamp1up
 {
 	skybrush
+	origintexture
 	{
 		clampmap textures/sky/swamp1up
-		tcgen sky
 	}
 }
 

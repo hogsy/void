@@ -116,7 +116,7 @@ void CShaderManager::ParseShaders(const char *shaderfile)
 LoadShader
 ===========
 */
-void CShaderManager::LoadShader(int bin, int index, const char *name)
+void CShaderManager::LoadShader(int bin, int index, const char *name, bool lightmap)
 {
 	// find it if we already have it loaded
 	for (int s=0; s<mNumShaders; s++)
@@ -134,7 +134,7 @@ void CShaderManager::LoadShader(int bin, int index, const char *name)
 		FError("too many shaders - tell js\n");
 
 	mShaders[mNumShaders] = new CShader(name);
-	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->Default(lightmap);
 	mShaders[mNumShaders]->AddRef();
 	mBins[bin].indices[index] = mNumShaders++;
 }
@@ -159,7 +159,7 @@ unsigned int CShaderManager::GetContentFlags(char *name)
 		FError("too many shaders - tell js\n");
 
 	mShaders[mNumShaders] = new CShader(name);
-	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->Default(false);
 	mShaders[mNumShaders]->AddRef();
 	return mShaders[mNumShaders]->GetContentFlags();
 }
@@ -184,7 +184,7 @@ unsigned int CShaderManager::GetSurfaceFlags(char *name)
 		FError("too many shaders - tell js\n");
 
 	mShaders[mNumShaders] = new CShader(name);
-	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->Default(false);
 	mShaders[mNumShaders]->AddRef();
 	return mShaders[mNumShaders]->GetSurfaceFlags();
 }
@@ -212,7 +212,7 @@ void CShaderManager::GetDims(char *name, int &width, int &height)
 		FError("too many shaders - tell js\n");
 
 	mShaders[mNumShaders] = new CShader(name);
-	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->Default(false);
 	mShaders[mNumShaders]->AddRef();
 	mShaders[mNumShaders]->GetDims(width, height);
 }
@@ -288,7 +288,7 @@ void CShaderManager::LoadWorld(CWorld *map)
 
 	mWorldBin = BinInit(world->ntextures);
 	for (int t=0; t<world->ntextures; t++)
-		LoadShader(mWorldBin, t, map->textures[t]);
+		LoadShader(mWorldBin, t, map->textures[t], true);
 }
 
 /*
@@ -332,7 +332,7 @@ void CShaderManager::LoadBase(void)
 	mBaseBin = BinInit(count);
 
 	for (int t=0; t<count; t++)
-		LoadShader(mBaseBin, t, BaseTextureList[t]);
+		LoadShader(mBaseBin, t, BaseTextureList[t], false);
 }
 
 
@@ -439,7 +439,6 @@ CachePurge
 */
 void CShaderManager::CachePurge(void)
 {
-	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 	for (int p=0; p<CACHE_PASS_NUM; p++)
 	{
 		for (int t=0; t<world->ntextures; t++)
@@ -457,14 +456,15 @@ void CShaderManager::CachePurge(void)
 				continue;
 
 			// sky brushes never depthwrite
-			g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKY) == 0);
-
 			g_pRast->PolyColor(1, 1, 1, 1);
 			g_pRast->ShaderSet(shader);
-			while (poly)
+			do
 			{
-				if (world->light_size)
+				if (poly->lightdef != -1)
 					g_pRast->TextureLightDef(&world->lightdefs[poly->lightdef]);
+				else
+					g_pRast->TextureLightDef(NULL);
+
 				g_pRast->TextureTexDef(&world->texdefs[poly->texdef]);
 
 				g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
@@ -475,7 +475,7 @@ void CShaderManager::CachePurge(void)
 				g_pRast->PolyEnd();
 
 				poly = poly->next;
-			}
+			} while (poly);
 
 			ReturnPoly(mCache[t]);
 			mCache[t] = NULL;

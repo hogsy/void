@@ -50,6 +50,8 @@ public:
 	void SetVidSynch(int v);
 
 	void SetFocus(void);
+	void LockVerts(void) { }
+	void UnLockVerts(void) { }
 
 private:
 

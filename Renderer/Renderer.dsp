@@ -464,6 +464,10 @@ SOURCE=.\ShaderManager.cpp
 
 SOURCE=.\ShaderManager.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\Game\Scripts\supported.txt
+# End Source File
 # End Group
 # Begin Group "Hud"
 

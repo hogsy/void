@@ -1234,6 +1234,8 @@ typedef	void (APIENTRY * GLVIEWPORT) (GLint x, GLint y, GLsizei width, GLsizei h
 typedef void (APIENTRY * GLMULTITEXCOORD2FARB) (GLenum target, GLfloat s, GLfloat t);
 typedef void (APIENTRY * GLACTIVETEXTUREARB) (GLenum target);
 typedef BOOL (APIENTRY * WGLSWAPINTERVALEXT) (int interval);
+typedef void (APIENTRY * GLLOCKARRAYSEXT) (int first, int count);
+typedef void (APIENTRY * GLUNLOCKARRAYSEXT) (void);
 
 
 // wgl* functions
@@ -1309,6 +1311,8 @@ extern	GLVIEWPORT glViewport;
 extern	GLMULTITEXCOORD2FARB glMultiTexCoord2fARB;
 extern	GLACTIVETEXTUREARB glActiveTextureARB;
 extern	WGLSWAPINTERVALEXT wglSwapIntervalEXT;
+extern	GLLOCKARRAYSEXT glLockArraysEXT;
+extern	GLUNLOCKARRAYSEXT glUnlockArraysEXT;
 
 // wgl* functions
 extern	WGLCREATECONTEXT	_wglCreateContext;
@@ -1394,6 +1398,8 @@ void	OpenGLGetExtensions(void);
 typedef void (APIENTRY * GLMULTITEXCOORD2FARB) (GLenum target, GLfloat s, GLfloat t);
 typedef void (APIENTRY * GLACTIVETEXTUREARB) (GLenum target);
 typedef BOOL (APIENTRY * WGLSWAPINTERVALEXT) (int interval);
+typedef void (APIENTRY * GLLOCKARRAYSEXT) (int first, sizei count);
+typedef void (APIENTRY * GLUNLOCKARRAYSEXT) (void);
 
 
 // wgl* functions
@@ -1411,16 +1417,20 @@ typedef int  (WINAPI * CHOOSEPIXELFORMAT) ( IN HDC, IN CONST PIXELFORMATDESCRIPT
 
 
 
-
+// gl extensions
 extern	GLMULTITEXCOORD2FARB glMultiTexCoord2fARB;
 extern	GLACTIVETEXTUREARB glActiveTextureARB;
 extern	WGLSWAPINTERVALEXT wglSwapIntervalEXT;
+extern	GLLOCKARRAYSEXT glLockArraysEXT;
+extern	GLUNLOCKARRAYSEXT glUnlockArraysEXT;
+
 
 // wgl* functions
 extern	WGLCREATECONTEXT	_wglCreateContext;
 extern	WGLDELETECONTEXT	_wglDeleteContext;
 extern	WGLGETPROCADDRESS	_wglGetProcAddress;
 extern	WGLMAKECURRENT		_wglMakeCurrent;
+
 
 // other gdi funcs
 BOOL WINAPI _SwapBuffers(HDC hdc);

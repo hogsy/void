@@ -54,6 +54,9 @@ public:
 
 	void SetFocus(void);
 
+	void LockVerts(void);
+	void UnLockVerts(void);
+
 private:
 
 
@@ -77,6 +80,8 @@ private:
 	bool	m_bInitialized;
 
 	GLuint	m_glnames[MAX_TEXTURES];
+
+	bool	m_CVAsupported;
 
 
 
