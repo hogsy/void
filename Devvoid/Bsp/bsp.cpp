@@ -9,20 +9,20 @@
 
 //=======================================================
 
-int					num_bsp_brushes=0;
+int					num_bsp_brushes;
 bsp_brush_t			bsp_brushes[MAX_MAP_BRUSHES];
 
-int					num_planes=0;
+int					num_planes;
 plane_t				planes[MAX_MAP_PLANES];
 bool				tested[MAX_MAP_PLANES];	// have we tested with these planes?
 
-int					num_bsp_nodes=0;
+int					num_bsp_nodes;
 bsp_node_t			bsp_nodes[MAX_MAP_NODES];
 
-int					num_bsp_brush_sides=0;
+int					num_bsp_brush_sides;
 bsp_brush_side_t	bsp_brush_sides[MAX_MAP_BRUSH_SIDES];
 
-bsp_brush_t			sky_brush = { NULL, NULL, CONTENTS_SKY | CONTENTS_SOLID, {0,0,0}, {0,0,0}};
+bsp_brush_t			sky_brush;
 
 
 //=======================================================
@@ -112,6 +112,18 @@ void reset_bsp_brush(void)
 		free_brushes[i] = true;
 	for (i=0; i<MAX_MAP_BRUSH_SIDES; i++)
 		free_brush_sides[i] = true;
+
+	num_bsp_brushes=0;
+	num_planes=0;
+	num_bsp_nodes=0;
+	num_bsp_brush_sides=0;
+
+// we dont need to be able to see these throughout the file
+	extern	int	 num_fents;
+	extern	int	 num_fkeys;
+	num_fents = 0;
+	num_fkeys = 0;
+
 }
 
 /*

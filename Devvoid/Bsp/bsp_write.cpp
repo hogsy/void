@@ -676,9 +676,6 @@ void write_bsp(entity_t *ents, char *file)
 
 	ComPrintf("\nwriting bsp file %s\n", file);
 
-	// load shaders
-	g_pShaders = new CShaderManager();
-
 
 	// build all our arrays
 	num_verts			= 0;
@@ -770,9 +767,6 @@ void write_bsp(entity_t *ents, char *file)
 	ComPrintf("%4d vert indices\n", num_vert_indices);
 	ComPrintf("%4d texture names\n", num_textures);
 	ComPrintf("%4d texdefs\n", num_texdefs);
-
-	delete g_pShaders;
-
 }
 
 

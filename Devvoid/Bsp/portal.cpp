@@ -7,7 +7,7 @@
 
 
 portal_t portals[MAX_MAP_PORTALS];
-int num_portals=0;
+int num_portals;
 
 
 /*
@@ -561,6 +561,8 @@ portal_run - do all portal related processing
 */
 void portal_run(bsp_node_t *head)
 {
+	num_portals = 0;
+
 	portal_create_r(head);
 	ComPrintf("%d portals\n", num_portals);
 

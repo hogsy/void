@@ -8,6 +8,11 @@
 #include "Com_release.h"
 #include "I_fileSystem.h"
 
+// needed for shaders
+#include "Com_vector.h"
+#include "../Renderer/Rast_main.h"
+#include "../Renderer/ShaderManager.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -58,14 +63,6 @@ CDevvoidApp theApp;
 
 BOOL CDevvoidApp::InitInstance()
 {
-/*	DWORD pMask = 0, sysMask = 0;
-	if(::GetProcessAffinityMask(::GetCurrentProcess(),&pMask,&sysMask))
-	{
-		char msg[256];
-		sprintf(msg,"proc: %d , sys : %d\n", pMask, sysMask);
-		AfxMessageBox(msg);
-	}
-*/
 	if(!::SetProcessAffinityMask(::GetCurrentProcess(), 1))
 	{	AfxMessageBox("Failed to set processor affinity");
 	}
@@ -107,6 +104,11 @@ if(!::SetProcessAffinityMask(::GetCurrentProcess(), 1))
 		return FALSE;
 	}
 
+	//=========================================
+	//Load Shaders - needed for bsp and light
+	g_pShaders = new CShaderManager();
+
+
 	CDevvoidDlg dlg;
 	
 	m_pMainWnd = &dlg;
@@ -124,6 +126,7 @@ if(!::SetProcessAffinityMask(::GetCurrentProcess(), 1))
 		//  dismissed with Cancel
 	}
 
+	delete g_pShaders;
 	FILESYSTEM_Free();
 
 	if(g_fLog)

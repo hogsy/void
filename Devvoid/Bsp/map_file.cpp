@@ -37,8 +37,8 @@ map_texinfo_t		map_texinfos[MAX_MAP_TEXINFOS];
 int					num_keys;
 key_t				keys[MAX_MAP_KEYS];
 
-extern	int					num_planes;
-extern	plane_t				planes[MAX_MAP_PLANES];
+extern	int			num_planes;
+extern	plane_t		planes[MAX_MAP_PLANES];
 
 //=======================================================
 
@@ -427,9 +427,6 @@ bool load_map(const char *path)
 {
 	ComPrintf("load_map:: loading map file %s\n", path);
 
-	// load shaders
-	g_pShaders = new CShaderManager();
-
 	map_file = fopen(path, "r");
 	if (!map_file)
 		return false;
@@ -451,47 +448,8 @@ bool load_map(const char *path)
 	ComPrintf("%5d texinfos\n", num_map_texinfos);
 	ComPrintf("%5d keys\n", num_keys);
 
-/*
-	for (int e=0; e<num_map_entities; e++)
-	{
-		ComPrintf("entitiy %d\n", e);
-
-		ComPrintf("keys:\n");
-		for (int k=map_entities[e].first_key; k<(map_entities[e].first_key + map_entities[e].num_keys); k++)
-		{
-			ComPrintf("\"%s\" \"%s\"\n", keys[k].name, keys[k].value);
-		}
-
-		ComPrintf("brushes:\n");
-		for (int b=map_entities[e].first_brush; b<(map_entities[e].first_brush + map_entities[e].num_brushes); b++)
-		{
-			ComPrintf("brush %d\n", b-map_entities[e].first_brush);
-
-			ComPrintf("sides:\n");
-			for (int s=map_brushes[b].first_side; s<(map_brushes[b].num_sides+map_brushes[b].first_side); s++)
-			{
-				ComPrintf("side %d:  ", s);
-				ComPrintf("%s, %d, %d, %d, %f, %f\n",
-							map_texinfos[map_brush_sides[s].texinfo].name,
-							map_texinfos[map_brush_sides[s].texinfo].shift[0],
-							map_texinfos[map_brush_sides[s].texinfo].shift[1],
-							map_texinfos[map_brush_sides[s].texinfo].rotation,
-							map_texinfos[map_brush_sides[s].texinfo].scale[0],
-							map_texinfos[map_brush_sides[s].texinfo].scale[1]);
-
-				ComPrintf("norm - (%f,%f,%f) d=%f\n", map_brush_sides[s].plane.norm.x,
-													map_brush_sides[s].plane.norm.y,
-													map_brush_sides[s].plane.norm.z,
-													map_brush_sides[s].plane.d);
-
-			}
-
-		}
-	}
-*/
 	fclose(map_file);
 
-	delete g_pShaders;
 	return true;
 }
 

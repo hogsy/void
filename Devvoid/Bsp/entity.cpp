@@ -9,7 +9,6 @@
 
 bsp_brush_t* run_csg(bsp_brush_t *head);
 
-entity_t *ent = NULL;
 
 /*
 ==============
@@ -17,7 +16,7 @@ allocate an entity
 ==============
 */
 entity_t fents[MAX_MAP_ENTITIES];
-int		 num_fents = 0;
+int		 num_fents;
 entity_t* get_ent(void)
 {
 	if (num_fents == MAX_MAP_ENTITIES)
@@ -35,7 +34,7 @@ allocate a key
 ==============
 */
 vkey_t fkeys[MAX_MAP_KEYS];
-int		 num_fkeys = 0;
+int		 num_fkeys;
 vkey_t* get_key(void)
 {
 	if (num_fkeys == MAX_MAP_KEYS)
