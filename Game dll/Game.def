@@ -1,0 +1,3 @@
+EXPORTS
+	GAME_GetAPI
+	GAME_Shutdown
