@@ -7,9 +7,12 @@ Console stuff
 -Home and End,	     go to top and bottom	
 -paste from windows console
 
+clean up Console. get rid of buffer/list/queues
 clean up input classes.
+proper and cleaner gl driver code
+
 
 CVar/Command/CmdLine Parms class
 error/logging/handling
-proper cleaner gl driver code
+
 
