@@ -7,8 +7,8 @@
 
 #pragma warning(disable : 4786)
 
-#include "Com_defs.h"
 #include "Com_mem.h"
+#include "Com_defs.h"
 
 #include "I_hunkmem.h"
 #include "I_console.h"

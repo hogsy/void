@@ -4,8 +4,8 @@
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4786)		// bleh, template names expand to more than what vc can handle
 
-#include "Com_defs.h"
 #include "Com_mem.h"
+#include "Com_defs.h"
 #include "I_hunkmem.h"
 
 #include "Com_util.h"
