@@ -126,7 +126,7 @@ bool CClient::LoadWorld(const char *worldname)
 
 	//Create local ent
 	Void3d::VectorSet(m_entQuad.angle,0,0,0);
-	Void3d::VectorSet(m_entQuad.origin,0,0, -64);
+	Void3d::VectorSet(m_entQuad.origin,0,0, 32);
 	
 	m_entQuad.frame = 0;
 	m_entQuad.skinnum= 0;
@@ -381,7 +381,7 @@ Validate/Handle any CVAR changes
 */
 bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
-	if(cvar == dynamic_cast<CVarBase*>(&m_clport))
+	if(cvar == reinterpret_cast<CVarBase*>(&m_clport))
 	{
 		int port = parms.IntTok(1);
 		if(port < 1024 || port > 32767)
@@ -391,9 +391,9 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
-	else if(cvar == dynamic_cast<CVarBase*>(&m_clrate))
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_clrate))
 		return ValidateRate(parms);
-	else if(cvar == dynamic_cast<CVarBase*>(&m_clname))
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_clname))
 		return ValidateName(parms);
 	return false;
 }

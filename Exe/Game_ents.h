@@ -10,8 +10,8 @@
 SERVER ENTITIES
 ======================================
 */
-
 const int ENT_MAXCLASSNAME = 32;
+const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;
 const int ENT_MAXMESSAGE = 256;
 
@@ -23,10 +23,13 @@ enum EntType
 	ENT_CLIENT
 };
 
+
 /*
 ======================================
 The base game entitiy. 
 can be subclasses for more specific stuff
+
+add all common parms we want to be baselined here
 ======================================
 */
 struct Entity
@@ -37,11 +40,28 @@ struct Entity
 		origin.x = origin.y = origin.z = 0.0f;
 		angles.x = angles.y = angles.z = 0.0f;
 	}
+	virtual ~Entity() {}
+
 	
 	int			num;
 	char		classname[ENT_MAXCLASSNAME];
 	vector_t	origin;
 	vector_t	angles;
+
+	virtual void Write(CBuffer &buf) const
+	{
+		buf.Write(num);
+		buf.Write(classname);
+		buf.WriteCoord(origin.x);
+		buf.WriteCoord(origin.y);
+		buf.WriteCoord(origin.z);
+		buf.WriteAngle(angles.x);
+		buf.WriteAngle(angles.y);
+		buf.WriteAngle(angles.z);
+	}
+
+	//Register resources here
+	virtual void Initialize(){}
 };
 
 /*
@@ -70,19 +90,53 @@ Speaker
 */
 struct EntSpeaker : public Entity
 {
-	enum	//attenuation etc 
-	{	MAX_SOUNDFILENAME = 64
-	};
-	
-	EntSpeaker(): Entity("ent_speaker")
+	EntSpeaker(): Entity("target_speaker")
 	{
+		volume = 0;
+		attenuation = 0;
+
+		soundIndex = 0;
+		memset(soundName,0,ENT_MAXRESNAME);
+	}
+
+	virtual void Write(CBuffer &buf) const
+	{
+		Entity::Write(buf);
+		buf.Write(soundIndex);
 	}
 
 	int	 volume;
 	int  attenuation;
-	char soundName[MAX_SOUNDFILENAME];
+	int  soundIndex;
+	char soundName[ENT_MAXRESNAME];
+	virtual void Initialize();
+
 };
 
+
+/*
+======================================
+EntWorldModel
+======================================
+*/
+struct EntWorldModel : public Entity
+{
+	EntWorldModel(): Entity("misc_model")
+	{	
+		modelIndex = 0;
+		memset(modelName,0,ENT_MAXRESNAME);
+	}
+
+	virtual void Write(CBuffer &buf) const
+	{
+		Entity::Write(buf);
+		buf.Write(modelIndex);
+	}
+
+	int  modelIndex;
+	char modelName[ENT_MAXRESNAME];
+	virtual void Initialize();
+};
 
 /*
 ======================================
@@ -103,6 +157,9 @@ struct EntClient : public Entity
 	vector_t mins;
 	vector_t maxs;
 };
+
+
+
 
 //======================================================================================
 //======================================================================================

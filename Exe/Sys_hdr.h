@@ -36,6 +36,8 @@ namespace System
 	const char *	GetExePath();
 	const char *	GetCurrentPath();
 	eGameState		GetGameState();
+
+	void FatalError(const char *error);
 	
 	void SetGameState(eGameState state);
 

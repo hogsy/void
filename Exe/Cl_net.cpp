@@ -69,16 +69,30 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 			break;
 		}
 	case SVC_MODELLIST:
-		break;
+		{
+			ComPrintf("CL: ModelList :%d\n", buffer.GetSize());
+			break;
+		}
 	case SVC_SOUNDLIST:
-		break;
+		{
+			ComPrintf("CL: SoundList :%d\n", buffer.GetSize());
+			break;
+		}
 	case SVC_IMAGELIST:
-		break;
+		{
+			ComPrintf("CL: ImageList :%d\n", buffer.GetSize());
+			break;
+		}
 	case SVC_BASELINES:
-		break;
+		{
+			ComPrintf("CL: Baselines :%d\n", buffer.GetSize());
+			break;
+		}
 	case SVC_BEGIN:
-		BeginGame();
-		break;
+		{
+			BeginGame();
+			break;
+		}
 	}
 }
 

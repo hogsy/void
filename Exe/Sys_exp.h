@@ -9,6 +9,8 @@ struct VoidExport : public I_Void
 	float & GetCurTime()	 { return System::g_fcurTime;		}
 	float & GetFrameTime()	 { return System::g_fframeTime;		}
 	const char * GetCurPath(){ return System::GetCurrentPath();	}
+
+	void SystemError(const char *message) { System::FatalError(message); };
 };
 
 

@@ -15,8 +15,6 @@ const int GAME_MAXSOUNDS = 256;
 const int GAME_MAXIMAGES = 256;
 const int GAME_MAXENTITES= 1024;
 
-typedef int hMdl;
-typedef int hImg;
 
 /*
 ======================================
@@ -48,10 +46,10 @@ public:
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
-	int  RegisterEntity(const char * ent);
-	hMdl RegisterModel(const char * model);
+//	int  RegisterEntity(const char * ent);
+	int  RegisterModel(const char * model);
 	int  RegisterSound(const char * image);
-	hImg RegisterImage(const char * sound);
+	int  RegisterImage(const char * sound);
 
 private:
 
@@ -65,7 +63,12 @@ private:
 	//Entity spawn buffers
 	bool SpawnEntity(CBuffer &buf);
 
-	bool LoadEntities(NetSignOnBufs &signOnBuf);
+	void LoadEntities();
+	
+	void WriteSignOnBuffer(NetSignOnBufs &signOnBuf);
+
+
+//	bool LoadEntities(NetSignOnBufs &signOnBuf);
 
 	void LoadWorld(const char * mapname);
 	void PrintServerStatus();
@@ -120,5 +123,9 @@ private:
 	int			m_numEntities;
 
 };
+
+
+extern CServer * g_pServer;
+
 
 #endif

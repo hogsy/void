@@ -114,7 +114,7 @@ bool CVoid::Init()
 	//Create the window
 	if(!CreateVoidWindow())
 	{
-		Error("CVoid::Init:Error Creating Window\n");
+		System::FatalError("CVoid::Init:Error Creating Window");
 		return false;
 	}
 	m_pRParms->hWnd = System::GetHwnd();
@@ -125,7 +125,7 @@ bool CVoid::Init()
 	HRESULT hr = CoInitialize(NULL);
 	if(FAILED(hr))
 	{
-		Error("CVoid::Init:Error Initializing COM library\n");
+		System::FatalError("CVoid::Init:Error Initializing COM library");
 		return false;
 	}
 
@@ -133,7 +133,7 @@ bool CVoid::Init()
 	//Initialize FileSystem
 	if(!m_pFileSystem->Init(m_exePath,VOID_DEFAULTGAMEDIR))
 	{
-		Error("CVoid::Init:Error Initializing File System\n");
+		System::FatalError("CVoid::Init:Error Initializing File System");
 		return false;
 	}
 
@@ -146,7 +146,7 @@ bool CVoid::Init()
 	//Initialize the Renderer
 	if(!m_pRender->InitRenderer())
 	{
-		Error("Void::Init:Error Intializing Renderer\n");	
+		System::FatalError("Void::Init:Error Intializing Renderer");	
 		return false;
 	}
 
@@ -163,7 +163,7 @@ bool CVoid::Init()
 	//Input
 	if(!m_pInput->Init()) 
 	{
-		Error("CVoid::Init: Could not Initialize Input");
+		System::FatalError("CVoid::Init: Could not Initialize Input");
 		return false;
 	}
 
@@ -171,7 +171,7 @@ bool CVoid::Init()
 	//Server
 	if(!CServer::InitNetwork())
 	{
-		Error("CVoid::Init: Could not initalize Winsock");
+		System::FatalError("CVoid::Init: Could not initalize Winsock");
 		return false;
 	}
 
@@ -180,7 +180,7 @@ bool CVoid::Init()
 #ifdef INCLUDE_SOUND
 	if(!m_pSound->Init())
 	{
-		Error("CVoid::Init: Could not initalize Sound System");
+		System::FatalError("CVoid::Init: Could not initalize Sound System");
 		return false;
 	}
 #endif
@@ -201,7 +201,7 @@ bool CVoid::Init()
 	//Client, create the client last
 	if(!m_pClient->InitNet())
 	{
-		Error("CVoid::Init: Couldnt not init client socket");
+		System::FatalError("CVoid::Init: Couldnt not init client socket");
 		return false;
 	}
 #endif
@@ -432,6 +432,7 @@ void CVoid::ParseCmdLine(const char * lpCmdLine)
 Fatal Error
 ==========================================
 */
+/*
 void CVoid::Error(char *error, ...)
 {
 	char textBuffer[1024];
@@ -446,8 +447,9 @@ void CVoid::Error(char *error, ...)
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);
-}
 
+}
+*/
 
 //======================================================================================
 //Console loopback functions
@@ -571,7 +573,23 @@ namespace System
 			g_pVoid->m_pClient->SetInputState(true);
 		}
 	}
+
+	void FatalError(const char *error)
+	{
+		Util::ShowMessageBox(error);
+		delete g_pVoid;
+		exit(1);
+	}
 }
+
+
+
+
+
+
+
+
+
 
 /*
 ===============================================
@@ -589,3 +607,6 @@ void ComPrintf(const char* text, ...)
 		
 	g_pVoid->m_Console.ComPrint(textBuffer);
 }
+
+
+

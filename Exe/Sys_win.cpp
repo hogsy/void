@@ -44,8 +44,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 	g_pVoid = new CVoid(lpCmdLine);
 	if(!g_pVoid->Init()) 
 	{
-		g_pVoid->Error("Error Initializing Subsystems\n");
-		delete g_pVoid;
+		System::FatalError("Error Initializing Subsystems\n");
 		return -1;
 	}
 
@@ -233,4 +232,18 @@ bool CVoid::CreateVoidWindow()
 	if(!m_hWnd)
 		return false;
 	return true;
+}
+
+
+/*
+======================================
+Handle out of memeoty
+======================================
+*/
+int HandleOutOfMemory(size_t size)
+{
+	delete g_pVoid;
+	UnRegisterWindow(m_hInst);
+	exit(0);
+	return 0;
 }

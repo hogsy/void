@@ -145,6 +145,8 @@ void CNetClient::SendUpdate()
 				m_pNetChan->m_buffer.Write((byte)m_spawnLevel);
 				m_pNetChan->m_buffer.Write((int)m_spawnNextPacket);
 
+m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
+
 				m_pNetChan->PrepareTransmit();
 				m_pSock->SendTo(m_pNetChan);
 
@@ -186,7 +188,6 @@ entity baselines
 */
 void CNetClient::HandleSpawnParms()
 {
-	//We got a response to reset Resend requests
 	byte id      = m_buffer.ReadByte();
 
 	//Reconnect, the server probably changed maps 

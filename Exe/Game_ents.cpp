@@ -138,8 +138,11 @@ private:
 EntMaker <EntWorldSpawn> worldSpawnMaker("worldspawn");
 EntFields EntMaker<EntWorldSpawn,CEntityMaker>::entFields;
 
-EntMaker <EntSpeaker> speakerMaker("ent_speaker");
+EntMaker <EntSpeaker> speakerMaker("target_speaker");
 EntFields EntMaker<EntSpeaker>::entFields;
+
+EntMaker <EntWorldModel> miscModelMaker("misc_model");
+EntFields EntMaker<EntWorldModel>::entFields;
 
 
 
@@ -154,4 +157,29 @@ void CServer::InitGame()
 	EntMaker<EntSpeaker>::AddField(KeyField("volume",(int)&(speaker->volume), KEY_INT));
 	EntMaker<EntSpeaker>::AddField(KeyField("attenuation",(int)&(speaker->attenuation), KEY_INT));
 	EntMaker<EntSpeaker>::AddField(KeyField("sound",(int)&(speaker->soundName), KEY_STRING));
+
+	EntWorldModel * miscModel = 0;
+	EntMaker<EntWorldModel>::AddField(KeyField("model",(int)&(miscModel->modelName), KEY_STRING));
 }
+
+
+void EntSpeaker::Initialize()
+{	soundIndex = g_pServer->RegisterSound(soundName);
+}
+
+void EntWorldModel::Initialize()
+{	modelIndex = g_pServer->RegisterModel(modelName);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

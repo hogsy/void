@@ -13,6 +13,8 @@ enum
 	CMD_STATUS	= 3
 };
 
+CServer * g_pServer=0;
+
 /*
 ======================================
 Constructor/Destructor
@@ -25,6 +27,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_chanWriter(m_net)
 {
+	g_pServer = this;
+
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
@@ -69,6 +73,8 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 
 CServer::~CServer()
 {	
+	g_pServer = 0;
+
 	Shutdown();
 
 	for(int i=0;i<GAME_MAXENTITES; i++)
@@ -175,12 +181,11 @@ void CServer::RunFrame()
 Parse and read entities
 ======================================
 */
-bool CServer::LoadEntities(NetSignOnBufs &signOnBuf)
+void CServer::LoadEntities()
 {
 	//create a spawnstring 
 	int i=0, j=0;
 	int classkey= -1;
-	int keyLen = 0;
 	CBuffer entBuffer;
 
 	for(i=0; i< m_pWorld->nentities; i++)
@@ -211,33 +216,136 @@ bool CServer::LoadEntities(NetSignOnBufs &signOnBuf)
 				entBuffer.Write(m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
 			}
 		}
-
-
-		//First spawn the entitiy, only add to signonBuffer, IF the entity parms are okay
-		if(!SpawnEntity(entBuffer))
-			continue;
-
-		//Check if the signOn buffer has space for this entity
-		if(!signOnBuf.entityList[signOnBuf.numEntityBufs].HasSpace(entBuffer.GetSize()))
-		{
-			if(signOnBuf.numEntityBufs + 1 < NetSignOnBufs::MAX_ENTITY_BUFS)
-				signOnBuf.numEntityBufs ++;
-			else
-			{	
-				//Error ran out of space to write entity info
-				ComPrintf("CServer::ParseEntities: Out of space for Entities\n");
-				return false;
-			}
-		}
-		signOnBuf.entityList[signOnBuf.numEntityBufs].Write(entBuffer);
+		SpawnEntity(entBuffer);
 	}
-
-	for(i=0;i<=signOnBuf.numEntityBufs; i++)
-		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, signOnBuf.entityList[i].GetSize()); 
 	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
-	return true;
 }
 
+
+/*
+======================================
+Get a handle to all the
+======================================
+*/
+void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
+{
+	CBuffer buffer;
+	int numBufs, i;
+
+	//==================================
+	//Write	imagelist
+	numBufs = 0;
+	signOnBuf.imageList[0].Write(m_numImages);
+	for(i=0;i<m_numImages; i++)
+	{
+		buffer.Reset();
+		buffer.Write(m_imageList[i].id);
+		buffer.Write(m_imageList[i].name);
+
+		//Check if the signOn buffer has space for this entity
+		if(!signOnBuf.imageList[numBufs].HasSpace(buffer.GetSize()))
+		{
+			if(numBufs + 1 < NetSignOnBufs::MAX_MODEL_BUFS)
+				numBufs ++;
+			else
+			{	
+				//Error ran out of space to write entity info, FATAL ?
+				ComPrintf("CServer::WriteSignOnBuffer: Out of space for modellist\n");
+				return;
+			}
+		}
+		signOnBuf.imageList[numBufs].Write(buffer);
+	}
+	signOnBuf.numImageBufs = numBufs+1;
+	for(i=0;i<signOnBuf.numImageBufs; i++)
+		ComPrintf("SignOn ImageBuf %d : %d bytes\n", i, signOnBuf.imageList[i].GetSize()); 
+
+	
+	//==================================
+	//Write	modellist
+	numBufs = 0;
+	signOnBuf.modelList[0].Write(m_numModels);
+	for(i=0;i<m_numModels; i++)
+	{
+		buffer.Reset();
+		buffer.Write(m_modelList[i].id);
+		buffer.Write(m_modelList[i].name);
+
+		//Check if the signOn buffer has space for this entity
+		if(!signOnBuf.modelList[numBufs].HasSpace(buffer.GetSize()))
+		{
+			if(numBufs + 1 < NetSignOnBufs::MAX_MODEL_BUFS)
+				numBufs ++;
+			else
+			{	
+				//Error ran out of space to write entity info, FATAL ?
+				ComPrintf("CServer::WriteSignOnBuffer: Out of space for modellist\n");
+				return;
+			}
+		}
+		signOnBuf.modelList[numBufs].Write(buffer);
+	}
+	signOnBuf.numModelBufs= numBufs+1;
+	for(i=0;i<signOnBuf.numModelBufs; i++)
+		ComPrintf("SignOn ModelBuf %d : %d bytes\n", i, signOnBuf.modelList[i].GetSize()); 
+
+	//==================================
+	//Write Soundlist
+	numBufs = 0;
+	signOnBuf.soundList[0].Write(m_numSounds);
+	for(i=0;i<m_numSounds; i++)
+	{
+		buffer.Reset();
+		buffer.Write(m_soundList[i].id);
+		buffer.Write(m_soundList[i].name);
+
+		//Check if the signOn buffer has space for this entity
+		if(!signOnBuf.soundList[numBufs].HasSpace(buffer.GetSize()))
+		{
+			if(numBufs + 1 < NetSignOnBufs::MAX_SOUND_BUFS)
+				numBufs ++;
+			else
+			{	
+				//Error ran out of space to write entity info, FATAL ?
+				ComPrintf("CServer::WriteSignOnBuffer: Out of space for soundList\n");
+				return;
+			}
+		}
+		signOnBuf.soundList[numBufs].Write(buffer);
+	}
+	signOnBuf.numSoundBufs= numBufs+1;
+	for(i=0;i<signOnBuf.numSoundBufs; i++)
+		ComPrintf("SignOn SoundBuf %d : %d bytes\n", i, signOnBuf.soundList[i].GetSize()); 
+
+	
+	//==================================
+	//Write entity baselines
+	numBufs = 0;
+	signOnBuf.entityList[0].Write(m_numEntities);
+	for(i=1; i<m_numEntities; i++)
+	{
+		buffer.Reset();
+		m_entities[i]->Write(buffer);
+
+		//Check if the signOn buffer has space for this entity
+		if(!signOnBuf.entityList[numBufs].HasSpace(buffer.GetSize()))
+		{
+			if(numBufs + 1 < NetSignOnBufs::MAX_ENTITY_BUFS)
+				numBufs ++;
+			else
+			{	
+				//Error ran out of space to write entity info, FATAL ?
+				ComPrintf("CServer::ParseEntities: Out of space for Entities\n");
+				return;
+			}
+		}
+		signOnBuf.entityList[numBufs].Write(buffer);
+	}
+
+	signOnBuf.numEntityBufs= numBufs+1;
+	for(i=0;i<signOnBuf.numEntityBufs; i++)
+		ComPrintf("SignOn EntBuf %d : %d bytes\n", i, signOnBuf.entityList[i].GetSize()); 
+}
 
 /*
 ==========================================
@@ -291,18 +399,15 @@ void CServer::LoadWorld(const char * mapname)
 	//=======================
 	//all we need is the map name right now
 
-	NetSignOnBufs & buf = m_net.GetSignOnBufs();
+	LoadEntities();
 
-	if(!LoadEntities(buf))
-	{
-		ComPrintf("CServer::LoadWorld: Could not parse map entities for: %s\n", mappath);
-		Shutdown();
-		return;
-	}
 
+	NetSignOnBufs & signOnbuf = m_net.GetSignOnBufs();
 	
-	buf.gameInfo.Write(m_svState.gameName);
-	buf.gameInfo.Write(m_svState.worldname);
+	WriteSignOnBuffer(signOnbuf);
+
+	signOnbuf.gameInfo.Write(m_svState.gameName);
+	signOnbuf.gameInfo.Write(m_svState.worldname);
 
 	//update state
 	m_svState.levelId ++;
@@ -410,7 +515,7 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 Return an id for the given model
 ======================================
 */
-hMdl CServer::RegisterModel(const char * model)
+int CServer::RegisterModel(const char * model)
 {
 	if(m_numModels == GAME_MAXMODELS)
 		return -1;
@@ -464,7 +569,7 @@ int CServer::RegisterSound(const char * sound)
 Return an id for the given image
 ======================================
 */
-hImg CServer::RegisterImage(const char * image)
+int CServer::RegisterImage(const char * image)
 {
 	if(m_numImages == GAME_MAXMODELS)
 		return -1;
@@ -507,6 +612,9 @@ bool CServer::SpawnEntity(CBuffer &buf)
 	if(ent)
 	{
 		m_entities[m_numEntities] = ent;
+		m_entities[m_numEntities]->num = m_numEntities;
+		m_entities[m_numEntities]->Initialize();
+
 		m_numEntities++;
 		return true;
 	}

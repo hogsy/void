@@ -39,8 +39,6 @@ public:
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
-	void Error(char *error, ...);
-
 	//Application Events
 	void Move(int x, int y);
 	void Resize( bool focus, int x, int y, int w, int h);
@@ -60,6 +58,7 @@ private:
 	friend eGameState   System::GetGameState();
 	friend void	System::SetGameState(eGameState state);
 	friend I_InputFocusManager * System::GetInputFocusManager();
+	friend void System::FatalError(const char *error);
 	
 	friend void ComPrintf(const char* text, ...);
 	
