@@ -83,8 +83,8 @@ struct I_Server
 	virtual bool ValidateClConnection(int clNum, 
 									  bool reconnect,
 									  CBuffer &buffer)=0; 
-	//Handle client spawn
-	virtual void OnClientSpawn(int clNum)=0;
+	//Put client into the map
+	virtual void OnClientBegin(int clNum)=0;
 
 	//Handle map change for this client ?
 	virtual void OnLevelChange(int clNum)=0;
@@ -126,11 +126,8 @@ public:
 	CNetServer();
 	~CNetServer();
 
-	//Create the server. Call this first thing
-	void Create(I_Server * server, const ServerState * state);
-
 	//Management
-	bool Init();
+	bool Init(I_Server * server, const ServerState * state);
 	void Shutdown();
 	void Restart();
 

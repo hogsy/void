@@ -1,10 +1,22 @@
-#ifndef VOID_CLGAME_DEFS
-#define VOID_CLGAME_DEFS
+#ifndef VOID_CLIENT_GAME
+#define VOID_CLIENT_GAME
 
-//#include "3dmath.h"
-//#include "I_renderer.h"
-//#include "I_clientRenderer.h"
+#include "Cl_defs.h"
 #include "Game_defs.h"
+
+enum SndChannelType
+{
+	CHAN_AUTO   = 0,		//first free
+	CHAN_UI		= 1,		//UI sound, no coordinates
+	CHAN_WORLD  = 2,		//ambient, world sounds etc
+	CHAN_CLIENT = 3,		//sounds from the player
+	CHAN_MONSTER= 4,		//Monster and player share channels
+	CHAN_PLAYER = 4,
+	CHAN_ITEM   = 5,		//item noises, pickups etc
+	CHAN_WEAPON	= 6,		//weapon noises
+	
+	CHAN_LOOPING = 128		//flagged
+};
 
 //A client side entitiy
 struct ClEntity : public EntState

@@ -1,7 +1,7 @@
 #ifndef VOID_CLIENT_RENDERER
 #define VOID_CLIENT_RENDERER
 
-#include "Game_defs.h"
+#include "Cl_defs.h"
 
 /*
 ============================================================================

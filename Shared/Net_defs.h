@@ -24,11 +24,9 @@ const int  NET_PACKET_HEADER   = 8;
 const int  NET_IPADDRLEN	   = 24;
 const int  NET_MAXDATAGRAMSIZE = 1450;
 const int  NET_MAXBUFFERSIZE   = 2900;
-
-const int  SV_MAX_CLIENTS  = 16;
-const int  SV_DEFAULT_PORT = 20010;
-
-const int  CL_DEFAULT_PORT = 20011;
+const int  NET_SVDEFAULTPORT   = 20010;
+const int  NET_CLDEFAULTPORT   = 20011;
+const int  NET_MAXCLIENTS	   = 32;
 
 //This needs to be defined for the library to link
 namespace System {
@@ -109,26 +107,26 @@ struct MultiCastSet
 	
 	//every one but the given client
 	explicit MultiCastSet(int clNum) 
-	{	memset(&dest,true, sizeof(bool) * SV_MAX_CLIENTS);
+	{	memset(&dest,true, sizeof(bool) * NET_MAXCLIENTS);
 		dest[clNum] = false;
 	}
 
 	MultiCastSet(const MultiCastSet &set)
-	{	for(int i=0; i<SV_MAX_CLIENTS; i++)
+	{	for(int i=0; i<NET_MAXCLIENTS; i++)
 			dest[i] = set.dest[i];
 	}
 
 	MultiCastSet & operator = (const MultiCastSet &set)
-	{	for(int i=0; i<SV_MAX_CLIENTS; i++)
+	{	for(int i=0; i<NET_MAXCLIENTS; i++)
 			dest[i] = set.dest[i];
 		return *this;
 	}
 
 	void Reset() 
-	{ memset(&dest,false, sizeof(bool) * SV_MAX_CLIENTS); 
+	{ memset(&dest,false, sizeof(bool) * NET_MAXCLIENTS); 
 	}
 	
-	bool dest[SV_MAX_CLIENTS];
+	bool dest[NET_MAXCLIENTS];
 };
 
 /*

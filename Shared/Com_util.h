@@ -1,13 +1,12 @@
 #ifndef VOID_COM_UTILITY
 #define VOID_COM_UTILITY
 
-#include "Com_defs.h"
+#include <windows.h>
 
 //======================================================================================
 //======================================================================================
 
-namespace Util
-{
+namespace Util {
 
 void ParseExtension(char *ext, int bufsize, const char *filename);
 void RemoveExtension (char *out, int bufsize, const char *in);

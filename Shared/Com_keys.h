@@ -3,7 +3,6 @@
 
 #include "Com_buffer.h"
 #include "Com_vector.h"
-//#include "3dmath.h"
 
 /*
 ======================================================================================
@@ -41,7 +40,9 @@ struct KeyField
 		strcpy(name,key.name);
 	}
 
-	~KeyField(){ if(name) delete [] name; }
+	~KeyField()
+	{ if(name) delete [] name; 
+	}
 
 	KeyField & operator = (const KeyField &key)
 	{
@@ -61,7 +62,7 @@ struct KeyField
 	//byte offset in Source struct to corret field
 	int		 offset;
 	KeyType  type;
-	char *   name;
+	char   *  name; //[32];
 
 	//Write Field value to given dest
 	static void ReadField(const KeyField &field, CBuffer &buf, byte * dest)
