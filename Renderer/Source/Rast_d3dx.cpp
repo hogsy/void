@@ -394,12 +394,16 @@ int CRastD3DX::TextureBinInit(int num)
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
 			m_pD3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTFP_POINT);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+//			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+//			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+
 			m_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 			m_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
-			m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT );
+			m_pD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
 
 			for (int t=0; t<num; t++)
 				mTexBins[i].tex_surfs[t] = NULL;
@@ -442,12 +446,36 @@ void CRastD3DX::TextureBinDestroy(int bin)
 void CRastD3DX::TextureSet(int bin, int texnum)
 {
 	m_pD3DDevice->SetTexture(0, mTexBins[bin].tex_surfs[texnum]);
-//	m_pD3DDevice->SetTexture(0, mTexBins[0].tex_surfs[0]);
 }
 
 void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 {
 	D3DX_SURFACEFORMAT ext_format, int_format;
+
+	int bpp = texdata->format == IMG_RGB ? 3 : 4;
+
+	int w = texdata->width;
+	int h = texdata->height;
+
+	// have to swap all blue and red values
+	for (int m=texdata->mipmaps-1; m>=0; m--)
+	{
+		for (int r=0; r<h; r++)
+		{
+			for (int c=0; c<w; c++)
+			{
+				char tmp;
+				tmp = texdata->mipdata[m][r*w*bpp + c*bpp + 0];
+				texdata->mipdata[m][r*w*bpp + c*bpp + 0] = texdata->mipdata[m][r*w*bpp + c*bpp + 2];
+				texdata->mipdata[m][r*w*bpp + c*bpp + 2] = tmp;
+			}
+		}
+		h /= 2;
+		w /= 2;
+		if (!h) h = 1;
+		if (!w) w = 1;
+	}
+
 	if (texdata->format == IMG_RGB)
 	{
 		ext_format = D3DX_SF_R8G8B8;
@@ -464,7 +492,7 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 	DWORD width = texdata->width;
 	DWORD height = texdata->height;
 
-	D3DXCreateTexture(m_pD3DDevice, 
+	D3DXCreateTexture(m_pD3DDevice,
 					  &mipmap,
 					  &width,
 					  &height,
@@ -477,7 +505,6 @@ void CRastD3DX::TextureLoad(int bin, int num, const tex_load_t *texdata)
 
 	if (texdata->mipmap)
 	{
-//		int m = texdata->mipmaps-1;
 		for (int m=texdata->mipmaps-1; m>=0; m--)
 		{
 			D3DXLoadTextureFromMemory(m_pD3DDevice,
@@ -618,7 +645,7 @@ void CRastD3DX::PolyVertexf(vector_t &vert)
 {
 	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(vert.x, vert.z, -vert.y),
 									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
-									0,
+									RGBA_MAKE(255, 255, 255, 255),
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
 }
@@ -626,7 +653,7 @@ void CRastD3DX::PolyVertexi(int x, int y)
 {
 	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(x, y, 0),
 									RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255)),
-									0,
+									RGBA_MAKE(255, 255, 255, 255),
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
 }
