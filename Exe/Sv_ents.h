@@ -1,46 +1,66 @@
-#if 0
-#include "World.h"
+#ifndef VOID_SV_ENTITIES
+#define VOID_SV_ENTITIES
 
+#include "Com_defs.h"
+#include "3dmath.h"
 
-#define MAX_CLASSNAME 32
+//======================================================================================
+//======================================================================================
 
+const int SV_MAXCLASSNAME = 32;
 
+enum EntityType
+{
+	ENT_ITEM,
+	ENT_WEAPON,
+	ENT_NPC,
+	ENT_WORLD,
+	ENT_CLIENT
+};
+
+//======================================================================================
+//======================================================================================
 /*
 ======================================
-the base entitiy class
-every entity in the game will be derived from this
+The base game entitiy. 
+can be subclasses for more specific stuff
 ======================================
 */
-
-
-class CEntBase
+class CEntity
 {
 public:
-	char classname[MAX_CLASSNAME];
 
-	unsigned int sector_index;		// which sector the entitiy is in
-//	sector_t *sector;
+	int			num;
+	EntityType	type;
+	char		classname[SV_MAXCLASSNAME];
+	
+	vector_t	origin;
 
-	vector_t origin;
-	vector_t angles;
-
-//	virtual void Think();			//every server frame
+	virtual void Run()=0;
 };
 
 
+//======================================================================================
+//======================================================================================
+
+struct EntCreationFuncs
+{
+	CEntity * (Create)();
+	const char * classname;
+};
+
 /*
 ======================================
-Speaker - play sounds
+Entity creator. Reads world data
+and creates entities with correct parms
 ======================================
 */
-
-class CEnt_Speaker : public CEntBase
+class CEntityMaker
 {
 public:
-	char	sound[16];
-	int		type;
-	int		attenuation;
+	static CEntity * CreateEntity();
 };
+
 
 #endif
 

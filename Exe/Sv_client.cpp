@@ -13,7 +13,7 @@ Constructor/Destructor
 SVClient::SVClient()
 {
 	for(int i=0; i< MAX_BACKBUFFERS; i++)
-		m_backBuffer[i] = new CNetBuffer(MAX_DATAGRAM_SIZE);
+		m_backBuffer[i] = new CBuffer(MAX_DATAGRAM_SIZE);
 	Reset();
 }
 
@@ -108,7 +108,7 @@ bool SVClient::ReadyToSend()
 		{
 ComPrintf("SV Writing to backbuffer\n");
 			//Write to sock buffer
-			m_netChan.m_buffer += (*m_backBuffer[m_numBuf]);
+			m_netChan.m_buffer.Write((*m_backBuffer[m_numBuf]));
 			//reset buffer. 
 			m_backBuffer[m_numBuf]->Reset();
 
@@ -152,10 +152,10 @@ void SVClient::BeginMessage(byte msgid, int estSize)
 void SVClient::WriteByte(byte b)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += b;
+		m_netChan.m_buffer.Write(b);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += b;
+		m_backBuffer[m_numBuf]->Write(b);
 		ValidateBuffer();
 	}
 }
@@ -163,10 +163,10 @@ void SVClient::WriteByte(byte b)
 void SVClient::WriteChar(char c)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += c;
+		m_netChan.m_buffer.Write(c);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += c;
+		m_backBuffer[m_numBuf]->Write(c);
 		ValidateBuffer();
 	}
 }
@@ -174,10 +174,10 @@ void SVClient::WriteChar(char c)
 void SVClient::WriteShort(short s)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += s;
+		m_netChan.m_buffer.Write(s);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += s;
+		m_backBuffer[m_numBuf]->Write(s);
 		ValidateBuffer();
 	}
 }
@@ -185,10 +185,10 @@ void SVClient::WriteShort(short s)
 void SVClient::WriteInt(int i)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += i;
+		m_netChan.m_buffer.Write(i);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += i;
+		m_backBuffer[m_numBuf]->Write(i);
 		ValidateBuffer();
 	}
 }
@@ -196,10 +196,10 @@ void SVClient::WriteInt(int i)
 void SVClient::WriteFloat(float f)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += f;
+		m_netChan.m_buffer.Write(f);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += f;
+		m_backBuffer[m_numBuf]->Write(f);
 		ValidateBuffer();
 	}
 }
@@ -207,10 +207,10 @@ void SVClient::WriteFloat(float f)
 void SVClient::WriteString(const char *string)
 {
 	if(!m_bBackbuf)
-		m_netChan.m_buffer += string;
+		m_netChan.m_buffer.Write(string);
 	else
 	{
-		(*m_backBuffer[m_numBuf]) += string;
+		m_backBuffer[m_numBuf]->Write(string);
 		ValidateBuffer();
 	}
 }

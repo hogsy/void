@@ -234,10 +234,7 @@ CVoid::~CVoid()
 		delete m_pServer;	
 
 	if(m_pClient)
-	{
-//		m_pClient->UnloadWorld();
 		delete m_pClient;
-	}
 
 	VoidNet::ShutdownNetwork();
 	

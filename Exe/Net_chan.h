@@ -18,13 +18,17 @@ public:
 	CNetChan();
 	~CNetChan();
 
-	void Setup(const CNetAddr &addr, CNetBuffer * recvBuffer);
+	void Setup(const CNetAddr &addr, CBuffer * recvBuffer);
 	void Reset();
 
 	bool CanSend();
 	bool CanSendReliable();
 	
-	void PrepareTransmit(); //int length, byte *data);
+	//We have written to the sendbuffer, 
+	//now we would like to prepare it for sending
+	void PrepareTransmit();
+
+	//Just got a message. start by reading the id headers
 	bool BeginRead();
 
 	void SetRate(int rate);
@@ -34,37 +38,36 @@ public:
 
 	//This is what the client writes to send to the server
 	//and the server uses this to send/recv unreliable messages to the client
-	CNetBuffer	m_buffer;
+	CBuffer	m_buffer;
 	
 	//the channel writes data to here for sending
-	CNetBuffer	m_sendBuffer;
-
-	float m_lastReceived;
+	CBuffer	m_sendBuffer;
 
 	//ptr to receiving sockets buffer
-	CNetBuffer *m_pRecvBuffer;
-	CNetBuffer  m_reliableBuffer;		//Internal, keep reliable messages for retransmit
-	
-	
+	CBuffer *m_pRecvBuffer;
+	CBuffer  m_reliableBuffer;	//Internal, keep reliable messages for retransmit
+
 	uint	m_inMsgId;				//Latest incoming messageId
-	uint m_inAckedMsgId;			//Latest remotely acked message.
-	uint m_outMsgId;				//Outgoing messageId
-	uint m_lastOutReliableMsgId;	//Id of the last reliable message sent
+	uint	m_inAckedMsgId;			//Latest remotely acked message.
+	uint	m_outMsgId;				//Outgoing messageId
+	uint	m_lastOutReliableMsgId;	//Id of the last reliable message sent
 
-	int m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
-	int m_bInReliableAcked;		//Was the last reliabled message acked by the remote host ?
+	int		m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
+	int		m_bInReliableAcked;		//Was the last reliabled message acked by the remote host ?
 
-	int	m_port;					//Client port
+	int		m_port;					//Client port
+
+	float	m_lastReceived;
 	
 	//Stats
-	int	m_dropCount;
-	int	m_goodCount;
-	int m_numChokes;
+	int		m_dropCount;
+	int		m_goodCount;
+	int		m_numChokes;
 
-	double m_clearTime;
-	double m_rate;				//Byte/Sec
-
-	bool m_bFatalError;
+	double	m_clearTime;
+	double	m_rate;					//Byte/Sec
+	
+	bool	m_bFatalError;
 };
 
 #endif

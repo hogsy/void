@@ -273,14 +273,14 @@ SOURCE=.\Cl_move.cpp
 
 SOURCE=.\Cl_net.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\Cl_net.h
+# End Source File
 # End Group
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
-# End Source File
 # Begin Source File
 
 SOURCE=.\icon1.ico
@@ -364,6 +364,10 @@ SOURCE=.\Sv_client.cpp
 # Begin Source File
 
 SOURCE=.\Sv_client.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv_ents.h
 # End Source File
 # Begin Source File
 

@@ -3,22 +3,15 @@
 
 #include "Sys_hdr.h"
 #include "I_renderer.h"
-#include "Net_defs.h"
-#include "Net_chan.h"
 #include "Snd_defs.h"
 
-//======================================================================================
-//======================================================================================
-
-namespace VoidClient
-{
-	class CClientCmdHandler;
-//	class CClientNet;
-}
-
-namespace VoidNet
-{	class CNetSocket;
-}
+/*
+======================================
+Predeclarations
+======================================
+*/
+class CClientCmdHandler;	//Handles all client command processing
+class CClientNetHandler;	//Handles all client network communication
 
 /*
 =====================================
@@ -50,18 +43,20 @@ public:
 	void WriteBindTable(FILE *fp);
 
 private:
-	void HandleSpawnParms();
-	void HandleOOBMessage();
+
+	enum ClMsgType
+	{
+		DEFAULT,
+		SERVER_MESSAGE,
+		TALK_MESSAGE
+	};
+
+	void Print(ClMsgType type, const char * msg, ...);
+
+	bool LoadWorld(const char *worldname);
+	bool UnloadWorld();
 
 	//==================================================
-	//Console commands
-	void ConnectTo(const char * ipaddr);
-	void Disconnect(bool serverPrompted = false);
-	void Reconnect();
-
-	bool UpdateName(const CParms &parms);
-	bool UpdateRate(const CParms &parms);
-
 	//Movement
 	void Move(vector_t *dir, float time);
 	void MoveForward();
@@ -73,76 +68,52 @@ private:
 	void RotateUp(float val=5.0);
 	void RotateDown(float val=5.0);
 
-	void CamPath();
-	void Talk(const char * string);
-
-	bool LoadWorld(const char *worldname);
-	bool UnloadWorld();
-
 	//==================================================
-	//Network Specific Stuff
-
-	//Read any waiting packets
-	void ReadPackets();	
-	void SendUpdates();
-
-	//Send a connection request wtih a challenge number
-	void SendChallengeReq();
-	void SendConnectReq();
-
-	CNetBuffer   m_buffer;
-	CNetChan	 m_netChan;
-	VoidNet::CNetSocket * m_pSock;
-	
-	char		m_svServerAddr[24];
-	bool		m_bLocalServer;
-	
-	int			m_challenge;
-
-	//Flow Control for an Unspawned client
-	float		m_fNextSendTime;	//Next send time
-	int			m_numResends;		//Max number of resends
-	const char* m_szLastOOBMsg;		//Keep Track of the last OOB message sent
-	
-	bool		m_canSend;
-	int			m_spawnState;
-	int			m_state;
+	//Console commands
+	void Talk(const char * string);
+	bool ValidateName(const CParms &parms);
+	bool ValidateRate(const CParms &parms);
+	void CamPath();
 
 	//==================================================
 	//Client CVars
-	CVar		m_clport;
-	CVar 		m_clname;
-	CVar 		m_clrate;
-	CVar 		m_noclip;
+	CVar	m_clport;
+	CVar	m_clname;
+	CVar	m_clrate;
+	CVar	m_noclip;
 
-	//Command Handler
-	friend class VoidClient::CClientCmdHandler;
-	VoidClient::CClientCmdHandler * m_pCmdHandler;
+	//==================================================
+	//Subsystems
+	friend class CClientCmdHandler;
+	friend class CClientNetHandler;
+
+	CClientCmdHandler * m_pCmdHandler;
+	CClientNetHandler * m_pClNet;
 
 	//Renderer and HUD interfaces
 	I_Renderer* m_pRender;
 	I_RHud    *	m_pHud;
 
-	bool m_ingame;
-	int  m_levelId;
-
-	//==================================================
-	//the following should be accessible by the game dll
-	
-	eyepoint_t  eye;
-	vector_t	desired_movement;
-	
-	int		m_campath;
-	float	m_camtime;
-	float	m_acceleration;
-	float	m_maxvelocity;
-
-	void Spawn(vector_t	*origin, vector_t *angles);
+	float		m_fFrameTime;
 
 	//==================================================
 	//Client side stuff
 	int		m_hsTalk;		//handle to talk sound
 	int		m_hsMessage;	//handle to server message sound
+
+	//==================================================
+	//the following should be accessible by the game dll
+
+	bool		m_ingame;
+	eyepoint_t  eye;
+	vector_t	desired_movement;
+	
+	int			m_campath;
+	float		m_camtime;
+	float		m_acceleration;
+	float		m_maxvelocity;
+
+	void Spawn(vector_t	*origin, vector_t *angles);
 };
 
 #endif

@@ -35,9 +35,9 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 	m_pSock = new CNetSocket(&m_recvBuf);
 
 	m_numSignOnBuffers=0;
-	for(int i=0;i<MAX_SIGNONBUFFERS;i++)
+/*	for(int i=0;i<MAX_SIGNONBUFFERS;i++)
 		m_signOnBuf[i].Create(MAX_DATAGRAM_SIZE);
-
+*/
 	m_worldName[0] = 0;
 	m_pWorld = 0;
 	
@@ -159,19 +159,7 @@ void CServer::Shutdown()
 	{
 		if(m_clients[i].m_state != CL_SPAWNED) 
 			continue;
-
 		SendDisconnect(m_clients[i],"Server quit");
-//		else if(m_clients[i].m_state == CL_CONNECTED)
-//			SendRejectMsg(
-		//send disconect messages
-/*		m_clients[i].m_netChan.m_reliableBuffer.Reset();
-		m_clients[i].m_netChan.m_buffer.Reset();
-		m_clients[i].m_netChan.m_buffer += SV_DISCONNECT;
-		m_clients[i].m_netChan.m_buffer += "Server quit";
-		m_clients[i].m_netChan.PrepareTransmit();
-		m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
-		m_clients[i].Reset();
-*/
 	}
 
 	//destroy world data
@@ -266,6 +254,56 @@ void CServer::LoadWorld(const char * mapname)
 	//Set worldname
 	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
 
+	//Load entities
+	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
+	
+	//create a spawnstring 
+	//char entparms[512];
+/*	int classkey = -1, j=0;
+	CBuffer		entbuffer(512);
+
+	for(int i=0; i< m_pWorld->nentities; i++)
+	{
+		ComPrintf("Entity num %d\n", i);
+		classkey = -1;
+
+		entbuffer.Reset();
+
+		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
+		{
+			if(strcmp("classname",m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name) == 0)
+			{
+				classkey = m_pWorld->entities[i].first_key + j;
+				entbuffer += m_pWorld->keys[classkey].value;
+
+				//strcpy(entparms, m_pWorld->keys[classkey].value);
+			}
+		}
+
+		//found class key, now copy everything else 
+		if(classkey == -1)
+			continue;
+
+		for(j=0; j< m_pWorld->entities[i].num_keys; j++)
+		{
+			if(m_pWorld->entities[i].first_key + j != classkey)
+			{
+				entbuffer += m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name;
+				entbuffer += m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value;
+				
+				//strcat(entparms," ");
+				//strcat(entparms,m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name);
+				//strcat(entparms," ");
+				//strcat(entparms,m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
+			}
+		}
+		
+	}
+
+//			ComPrintf("%d: %s = %s\n",j, m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].name,
+//					 m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
+*/
+
 	//update state
 	m_levelNum ++;
 	m_active = true;
@@ -274,9 +312,9 @@ void CServer::LoadWorld(const char * mapname)
 	//=======================
 	//all we need is the map name right now
 	m_numSignOnBuffers = 1;
-	m_signOnBuf[0] += SVC_INITCONNECTION;
-	m_signOnBuf[0] += m_cGame.string;
-	m_signOnBuf[0] += m_worldName;
+	m_signOnBuf[0].Write(SVC_INITCONNECTION);
+	m_signOnBuf[0].Write(m_cGame.string);
+	m_signOnBuf[0].Write(m_worldName);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)
@@ -362,6 +400,7 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_KILLSERVER:
 		Shutdown();
+		break;
 	case CMD_STATUS:
 		PrintServerStatus();
 		break;

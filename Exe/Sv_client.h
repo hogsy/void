@@ -52,7 +52,7 @@ struct SVClient
 	//back buffers for client reliable data
 	bool		m_bBackbuf;
 	int			m_numBuf;
-	CNetBuffer* m_backBuffer[MAX_BACKBUFFERS];
+	CBuffer* m_backBuffer[MAX_BACKBUFFERS];
 
 	//Game specifc
 	int			m_id;

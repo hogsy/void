@@ -1,8 +1,3 @@
-
-
-
-
-//#include "Cl_main.h"
 #include "Cl_collision.h"
 
 extern world_t	 *g_pWorld;

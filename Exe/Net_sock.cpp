@@ -1,15 +1,13 @@
 #include "Net_sock.h"
 #include "Sys_hdr.h"
 
-using namespace VoidNet;
-
 /*
 ==========================================
 Constructor Destructor
 ==========================================
 */
 
-CNetSocket::CNetSocket(CNetBuffer * buffer)
+CNetSocket::CNetSocket(CBuffer * buffer)
 {
 	m_socket = INVALID_SOCKET;
 	m_pBuffer = buffer;
@@ -155,7 +153,7 @@ void CNetSocket::Send(const byte * data, int length)
 }
 
 
-void CNetSocket::Send(const CNetBuffer &buffer)
+void CNetSocket::Send(const CBuffer &buffer)
 {	SendTo(buffer,m_srcAddr);
 }
 
@@ -165,7 +163,7 @@ void CNetSocket::Send(const CNetChan &netchan)
 }
 
 
-void CNetSocket::SendTo(const CNetBuffer &buffer, const CNetAddr &addr)
+void CNetSocket::SendTo(const CBuffer &buffer, const CNetAddr &addr)
 {
 	addr.ToSockAddr(m_destSockAddr);
 

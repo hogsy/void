@@ -15,9 +15,9 @@ Send a rejection message to the client
 void CServer::SendRejectMsg(const char * reason)
 {
 	m_sendBuf.Reset();
-	m_sendBuf += -1;
-	m_sendBuf += S2C_REJECT;
-	m_sendBuf += reason;
+	m_sendBuf.Write(-1);
+	m_sendBuf.Write(S2C_REJECT);
+	m_sendBuf.Write(reason);
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -30,16 +30,16 @@ void CServer::HandleStatusReq()
 {
 	//Header
 	m_sendBuf.Reset();
-	m_sendBuf += -1;
-	m_sendBuf += S2C_STATUS;
+	m_sendBuf.Write(-1);
+	m_sendBuf.Write(S2C_STATUS);
 
 	//Status info
-	m_sendBuf += VOID_PROTOCOL_VERSION;	//Protocol
-	m_sendBuf += m_cGame.string;		//Game
-	m_sendBuf += m_cHostname.string;	//Hostname
-	m_sendBuf += m_worldName;			//Map name
-	m_sendBuf += m_numClients;			//cur clients
-	m_sendBuf += m_cMaxClients.ival;		//max clients
+	m_sendBuf.Write(VOID_PROTOCOL_VERSION);	//Protocol
+	m_sendBuf.Write(m_cGame.string);		//Game
+	m_sendBuf.Write(m_cHostname.string);	//Hostname
+	m_sendBuf.Write(m_worldName);			//Map name
+	m_sendBuf.Write(m_numClients);			//cur clients
+	m_sendBuf.Write(m_cMaxClients.ival);		//max clients
 	
 	m_pSock->Send(m_sendBuf);
 }
@@ -126,9 +126,9 @@ ComPrintf("SV:Reconnect from %s\n", m_pSock->GetSource().ToString());
 	//Send the client an accept packet
 	//now the client needs to call us to get spawn parms etc
 	m_sendBuf.Reset();
-	m_sendBuf += -1;
-	m_sendBuf += S2C_ACCEPT;
-	m_sendBuf += m_levelNum;
+	m_sendBuf.Write(-1);
+	m_sendBuf.Write(S2C_ACCEPT);
+	m_sendBuf.Write(m_levelNum);
 	m_pSock->Send(m_sendBuf);
 
 ComPrintf("SV: %s connected\n",m_clients[i].m_name) ;
@@ -177,9 +177,9 @@ ComPrintf("SV: Rejecting, server full\n");
 
 	//Send response packet
 	m_sendBuf.Reset();
-	m_sendBuf += -1;
-	m_sendBuf += S2C_CHALLENGE;
-	m_sendBuf += m_challenges[i].challenge;
+	m_sendBuf.Write(-1);
+	m_sendBuf.Write(S2C_CHALLENGE);
+	m_sendBuf.Write(m_challenges[i].challenge);
 	m_pSock->SendTo(m_sendBuf, m_challenges[i].addr); 
 }
 
@@ -378,8 +378,8 @@ void CServer::SendDisconnect(SVClient &client, const char * reason)
 {
 	client.m_netChan.m_reliableBuffer.Reset();
 	client.m_netChan.m_buffer.Reset();
-	client.m_netChan.m_buffer += SV_DISCONNECT;
-	client.m_netChan.m_buffer += reason;
+	client.m_netChan.m_buffer.Write(SV_DISCONNECT);
+	client.m_netChan.m_buffer.Write(reason);
 	client.m_netChan.PrepareTransmit();
 	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
 	client.Reset();
@@ -394,7 +394,7 @@ void CServer::SendReconnect(SVClient &client)
 {
 	client.m_netChan.m_reliableBuffer.Reset();
 	client.m_netChan.m_buffer.Reset();
-	client.m_netChan.m_buffer += SV_RECONNECT;
+	client.m_netChan.m_buffer.Write(SV_RECONNECT);
 	client.m_netChan.PrepareTransmit();
 	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
 	client.m_state = CL_INUSE;
@@ -415,27 +415,27 @@ void CServer::SendSpawnParms(SVClient &client)
 	case SVC_INITCONNECTION:
 		{
 			//Send 1st signon buffer
-			client.m_netChan.m_buffer += m_signOnBuf[0];
+			client.m_netChan.m_buffer.Write(m_signOnBuf[0]);
 			break;
 		}
 	case SVC_MODELLIST:
-			client.m_netChan.m_buffer += SVC_MODELLIST;
+			client.m_netChan.m_buffer.Write(SVC_MODELLIST);
 		break;
 	case SVC_SOUNDLIST:
-			client.m_netChan.m_buffer += SVC_SOUNDLIST;
+			client.m_netChan.m_buffer.Write(SVC_SOUNDLIST);
 		break;
 	case SVC_IMAGELIST:
-			client.m_netChan.m_buffer += SVC_IMAGELIST;
+			client.m_netChan.m_buffer.Write(SVC_IMAGELIST);
 		break;
 	case SVC_BASELINES:
 		{
-			client.m_netChan.m_buffer += SVC_BASELINES;
+			client.m_netChan.m_buffer.Write(SVC_BASELINES);
 			break;
 		}
 	case SVC_BEGIN:
 		{
 			//consider client to be spawned now
-			client.m_netChan.m_buffer += SVC_BEGIN;
+			client.m_netChan.m_buffer.Write(SVC_BEGIN);
 		}
 		break;
 	}

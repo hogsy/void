@@ -1,14 +1,10 @@
-#include "Net_hdr.h"
-#include "Net_sock.h"
+#include "Cl_net.h"
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 #include "Com_util.h"
 
-using namespace VoidClient;
-
 //======================================================================================
 //======================================================================================
-
 world_t	*g_pWorld;
 int PointContents(vector_t &v);
 
@@ -18,30 +14,18 @@ Constructor
 ======================================
 */
 CClient::CClient(I_Renderer * prenderer):
-					m_buffer(VoidNet::MAX_BUFFER_SIZE),	
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
 					m_clport("cl_port","20011", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE| CVar::CVAR_LATCH),
 					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
 {
 
-	m_pCmdHandler = new CClientCmdHandler(this);
-
-	m_pSock	= new VoidNet::CNetSocket(&m_buffer);
+	m_pCmdHandler = new CClientCmdHandler(*this);
+	m_pClNet	  = new CClientNetHandler(*this);
 
 	m_ingame = false;
 	
-	m_szLastOOBMsg = 0;
-	m_fNextSendTime = 0.0f;
-	m_numResends = 0;
-
-	m_bLocalServer = false;
-	
-	m_state = VoidNet::CL_FREE; 
-	m_challenge= 0;
-	m_levelId = 0;
-	m_spawnState = 0;
-	m_canSend = false;
+	m_fFrameTime = 0.0f;
 	
 	m_pHud = 0;
 	m_pRender = prenderer;
@@ -81,16 +65,14 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	SetInputState(false);
+	UnloadWorld();
 
 	m_pRender = 0;
 	m_pHud = 0;
 
-	m_szLastOOBMsg = 0;
-
 	g_pWorld = 0;
 
-	delete m_pSock;
+	delete m_pClNet;
 	delete m_pCmdHandler;
 }
 
@@ -178,32 +160,26 @@ bool CClient::UnloadWorld()
 		return false;
 	}
 	
-	if(!m_bLocalServer)
-		world_destroy(g_pWorld);
+	world_destroy(g_pWorld);
+	g_pWorld = 0;
 
 	System::GetSoundManager()->UnregisterAll();
-
-	g_pWorld = 0;
-	m_ingame = false;
-
 	System::SetGameState(INCONSOLE);
+
+	m_ingame = false;
 	return true;
 }
 
 //======================================================================================
-//======================================================================================
 
 /*
 ======================================
-RunClient
+Client frame
 ======================================
 */
 void CClient::RunFrame()
 {
-	static float frametime=0.0f;
-
-	if(m_pSock->ValidSocket())
-		ReadPackets();
+	m_pClNet->ReadPackets();
 
 	if(m_ingame)
 	{
@@ -222,17 +198,18 @@ void CClient::RunFrame()
 		//Print Stats
 		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, eye.origin.y, eye.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - frametime));
-		frametime = System::g_fcurTime;
+		m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - m_fFrameTime));
+		m_fFrameTime = System::g_fcurTime;
 
 		//Networking
-		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", m_netChan.m_dropCount, 
-							m_netChan.m_dropCount + m_netChan.m_goodCount, m_netChan.m_numChokes);
-		m_pHud->HudPrintf(0,410,0, "In      %d", m_netChan.m_inMsgId);
-		m_pHud->HudPrintf(0,420,0, "In  Ack %d", m_netChan.m_inAckedMsgId);
-		m_pHud->HudPrintf(0,430,0, "Out     %d", m_netChan.m_outMsgId);
-		m_pHud->HudPrintf(0,440,0, "Out Ack %d", m_netChan.m_lastOutReliableMsgId);
-			
+		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", m_pClNet->GetChan().m_dropCount, 
+							m_pClNet->GetChan().m_dropCount + m_pClNet->GetChan().m_goodCount, 
+							m_pClNet->GetChan().m_numChokes);
+		m_pHud->HudPrintf(0,410,0, "In      %d", m_pClNet->GetChan().m_inMsgId);
+		m_pHud->HudPrintf(0,420,0, "In  Ack %d", m_pClNet->GetChan().m_inAckedMsgId);
+		m_pHud->HudPrintf(0,430,0, "Out     %d", m_pClNet->GetChan().m_outMsgId);
+		m_pHud->HudPrintf(0,440,0, "Out Ack %d", m_pClNet->GetChan().m_lastOutReliableMsgId);
+
 		// FIXME - put this in game dll
 		vector_t screenblend;
 		if (PointContents(eye.origin) & CONTENTS_SOLID)
@@ -244,22 +221,114 @@ void CClient::RunFrame()
 		else
 			VectorSet(&screenblend, 1, 1, 1);
 
-		m_pRender->DrawFrame(&eye.origin,&eye.angles, &screenblend);
+		m_pRender->Draw(&eye.origin,&eye.angles, &screenblend);
 	}
 	else
 	{
 		//draw the console or menues etc
-		m_pRender->DrawFrame(0,0,0);
+		m_pRender->DrawConsole();
 	}
 
-	SendUpdates();
+	m_pClNet->SendUpdates();
 }
 
 //======================================================================================
-//======================================================================================
 
+/*
+======================================
+Print a message 
+======================================
+*/
+void CClient::Print(ClMsgType type, const char * msg, ...)
+{
+	static char textBuffer[1024];
+	va_list args;
+	va_start(args, msg);
+	vsprintf(textBuffer, msg, args);
+	va_end(args);
+
+	switch(type)
+	{
+	case SERVER_MESSAGE:
+		System::GetSoundManager()->Play(m_hsMessage);
+		break;
+	case TALK_MESSAGE:
+		System::GetSoundManager()->Play(m_hsTalk);
+		break;
+	}
+	System::GetConsole()->ComPrint(textBuffer);
+}
+
+/*
+======================================
+Say something
+======================================
+*/
+void CClient::Talk(const char * string)
+{
+	if(!m_ingame)
+		return;
+
+	//parse to right after "say"
+	const char * msg = string + 4;
+	while(*msg && *msg == ' ')
+		msg++;
+
+	if(!*msg || *msg == '\0')
+		return;
+
+	ComPrintf("%s: %s\n", m_clname.string, msg);
+	System::GetSoundManager()->Play(m_hsTalk);
+
+	m_pClNet->SendTalkMsg(msg);
+}
+
+/*
+======================================
+Validate name locally before asking 
+the server to update it
+======================================
+*/
+bool CClient::ValidateName(const CParms &parms)
+{
+	const char * name = parms.StringTok(1);
+	if(!name)
+	{
+		ComPrintf("Name = \"%s\"\n", m_clname.string);
+		return false;
+	}
+	m_pClNet->UpdateName(name);
+	return true;
+}
+
+/*
+======================================
+Validate Rate before updating it 
+on the server
+======================================
+*/
+bool CClient::ValidateRate(const CParms &parms)
+{
+	int rate = parms.IntTok(1);
+	if(rate == -1)
+	{
+		ComPrintf("Rate = \"%d\"\n", m_clrate.ival);
+		return false;
+	}
+
+	if(rate < 1000 || rate > 30000)
+	{
+		ComPrintf("Rate is out of range\n");
+		return false;
+	}
+	m_pClNet->UpdateRate(rate);
+	return true;
+}
+
+//======================================================================================
 void CClient::SetInputState(bool on)  {	m_pCmdHandler->SetListenerState(on); }
 void CClient::WriteBindTable(FILE *fp){	m_pCmdHandler->WriteBindTable(fp);   }
+//======================================================================================
 
 /*
 ==========================================
@@ -310,13 +379,13 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		CamPath();
 		break;
 	case CMD_CONNECT:
-		ConnectTo(parms.StringTok(1));
+		m_pClNet->ConnectTo(parms.StringTok(1));
 		break;
 	case CMD_DISCONNECT:
-		Disconnect();
+		m_pClNet->Disconnect();
 		break;
 	case CMD_RECONNECT:
-		Reconnect();
+		m_pClNet->Reconnect();
 		break;
 	case CMD_TALK:
 		Talk(parms.String());
@@ -342,13 +411,15 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return true;
 	}
 	else if(cvar == dynamic_cast<CVarBase*>(&m_clrate))
-		return UpdateRate(parms);
+		return ValidateRate(parms);
 	else if(cvar == dynamic_cast<CVarBase*>(&m_clname))
-		return UpdateName(parms);
+		return ValidateName(parms);
 	return false;
 }
+
+
+
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
 }
-

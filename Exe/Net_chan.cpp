@@ -26,7 +26,7 @@ CNetChan::~CNetChan()
 }
 
 
-void CNetChan::Setup(const CNetAddr &addr, CNetBuffer * recvBuffer )
+void CNetChan::Setup(const CNetAddr &addr, CBuffer * recvBuffer )
 {
 	Reset();
 	m_addr = addr;
@@ -59,7 +59,7 @@ void CNetChan::Reset()
 Returns true if the bandwidth choke isn't active
 ================
 */
-bool CNetChan::CanSend()
+bool CNetChan::CanSend() 
 {
 	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
@@ -73,7 +73,7 @@ ComPrintf("CNetChan::Choked\n");
 Returns true if the bandwidth choke isn't 
 ================
 */
-bool CNetChan::CanSendReliable()
+bool CNetChan::CanSendReliable() 
 {
 	// waiting for ack
 	if (m_reliableBuffer.GetSize())
@@ -120,7 +120,7 @@ void CNetChan::PrepareTransmit()
 	if (!m_reliableBuffer.GetSize() && m_buffer.GetSize())
 	{
 		m_reliableBuffer.Reset();
-		m_reliableBuffer += m_buffer;
+		m_reliableBuffer.Write(m_buffer);
 		m_buffer.Reset();
 		send_reliable = 1;
 	}
@@ -132,14 +132,14 @@ void CNetChan::PrepareTransmit()
 	int h2 = m_inMsgId  | (m_bInReliableMsg << 31); 
 
 	m_sendBuffer.Reset();
-	m_sendBuffer += h1;
-	m_sendBuffer += h2;
+	m_sendBuffer.Write(h1);
+	m_sendBuffer.Write(h2);
 
 	// copy the reliable message to the packet first
 	if(send_reliable)
 	{
 //ComPrintf("CNetChan: Sending reliably\n");
-		m_sendBuffer += m_reliableBuffer;
+		m_sendBuffer.Write(m_reliableBuffer);
 		m_lastOutReliableMsgId = m_outMsgId;
 		m_bInReliableMsg = 1;
 	}

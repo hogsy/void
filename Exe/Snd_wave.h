@@ -9,7 +9,6 @@ namespace VoidSound {
 /*
 ==========================================
 Util class which reads in Wave file data
-
 We do NOT support Stereo wave files
 ==========================================
 */

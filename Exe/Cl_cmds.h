@@ -5,8 +5,6 @@
 
 struct CCommand;
 
-namespace VoidClient {
-
 //======================================================================================
 //======================================================================================
 
@@ -116,7 +114,8 @@ class CClientCmdHandler : public I_InKeyListener,
 {
 public:
 
-	CClientCmdHandler(CClient *m_pClient);
+	//FIXME, change parm to just a vector to hold mouse co-ords ?
+	CClientCmdHandler(CClient &owner);
 	~CClientCmdHandler();
 
 	void SetDefaultBinds();
@@ -143,13 +142,12 @@ private:
 
 	CParms		m_Parms;
 
-	CClient   * m_pClient;
+	CClient	  & m_refClient;
 
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
 };
 
 
-}
 
 #endif

@@ -3,6 +3,7 @@
 
 namespace VoidNet
 {
+
 enum
 {	CL_FREE = 0,		//nothing doing. can be used
 	CL_INUSE = 1,		//trying to connect

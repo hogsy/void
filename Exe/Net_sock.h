@@ -4,14 +4,11 @@
 #include "Net_hdr.h"
 #include "Net_chan.h"
 
-
-namespace VoidNet {
-
 class CNetSocket
 {
 public:
 
-	CNetSocket(CNetBuffer * buffer);
+	CNetSocket(CBuffer * buffer);
 	~CNetSocket();
 
 	bool Create(int addrFamily, int type, int protocol, bool blocking = false);
@@ -21,13 +18,13 @@ public:
 
 	//Send to source
 	void Send(const byte * data, int length);
-	void Send(const CNetBuffer &buffer);
+	void Send(const CBuffer &buffer);
 	
 	void Send(const CNetChan &netchan);
 
 	//Send data to given dest
 	void SendTo(const byte * data, int length, const CNetAddr &addr);
-	void SendTo(const CNetBuffer &buffer, const CNetAddr &addr);
+	void SendTo(const CBuffer &buffer, const CNetAddr &addr);
 	
 	//Try to receive until there is no more data
 	bool Recv();
@@ -45,13 +42,12 @@ private:
 	//Instance Data
 	SOCKET		m_socket;
 	
-	CNetBuffer * m_pBuffer;
+	CBuffer * m_pBuffer;
 	
 	SOCKADDR_IN m_srcSockAddr;
 	SOCKADDR_IN m_destSockAddr;
 };
 
-}
 
 #endif
 

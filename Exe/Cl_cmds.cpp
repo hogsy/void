@@ -2,8 +2,6 @@
 #include "Cl_cmds.h"
 #include "Sys_cons.h"
 
-using namespace VoidClient;
-
 //======================================================================================
 //======================================================================================
 
@@ -12,10 +10,9 @@ using namespace VoidClient;
 Constructor/Destructor
 ==========================================
 */
-CClientCmdHandler::CClientCmdHandler(CClient * pclient) : m_Parms(80)
+CClientCmdHandler::CClientCmdHandler(CClient &owner) : 
+							m_Parms(80), m_refClient(owner)
 {
-	m_pClient = pclient;
-
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
 }
@@ -100,9 +97,8 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 {
 //	if(ix || iy)
 //		ComPrintf("%.2f %.2f\n",ix,iy);
-
-	m_pClient->RotateRight(ix);
-	m_pClient->RotateUp(iy);
+	m_refClient.RotateRight(ix);
+	m_refClient.RotateUp(iy);
 }
 
 

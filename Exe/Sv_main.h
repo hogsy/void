@@ -13,8 +13,6 @@ Expose to system
 */
 namespace VoidNet
 {
-	class CNetSocket;
-
 	bool InitNetwork();
 	void ShutdownNetwork();
 }
@@ -24,6 +22,8 @@ namespace VoidNet
 Game independent network server
 ==========================================
 */
+class CNetSocket;
+
 class CServer : public I_CVarHandler,
 				public I_CmdHandler
 {
@@ -45,7 +45,6 @@ private:
 		MAX_CLIENTS = 16
 	};
 
-	
 	struct NetChallenge
 	{
 		NetChallenge()	{ challenge = 0;	time = 0.0f;  }
@@ -57,10 +56,10 @@ private:
 	NetChallenge  m_challenges[MAX_CHALLENGES];
 
 	//private data
-	VoidNet::CNetSocket* m_pSock;
+	CNetSocket* m_pSock;
 	
-	CNetBuffer  m_recvBuf;
-	CNetBuffer  m_sendBuf;
+	CBuffer  m_recvBuf;
+	CBuffer  m_sendBuf;
 
 	SVClient    m_clients[MAX_CLIENTS];
 
@@ -75,7 +74,7 @@ private:
 
 	//Stores Entity baselines etc
 	int			m_numSignOnBuffers;
-	CNetBuffer	m_signOnBuf[MAX_SIGNONBUFFERS];
+	CBuffer	m_signOnBuf[MAX_SIGNONBUFFERS];
 
 	//=================================================
 	//These arent called by the Sysmain on startup

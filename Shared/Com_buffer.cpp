@@ -5,7 +5,7 @@
 Constructor/Destructor
 ==========================================
 */
-CNetBuffer::CNetBuffer(int size)
+CBuffer::CBuffer(int size)
 {
 	m_buffer = new byte[size];
 	m_maxSize = size;
@@ -17,46 +17,24 @@ CNetBuffer::CNetBuffer(int size)
 	m_overFlowed = false;
 }
 
-CNetBuffer::CNetBuffer()
-{
-	m_curSize = 0;
 
-	m_readCount = 0;
-
-	m_badRead = false;
-	m_overFlowed = false;
-	
-	m_buffer = 0;
-	m_maxSize = 0;
-}
-
-void CNetBuffer::Create(int size)
-{
-	Reset();
-	if(m_buffer)
-		delete [] m_buffer;
-	m_buffer = new byte[size];
-	m_maxSize = size;
-}
-
-
-CNetBuffer::~CNetBuffer()
+CBuffer::~CBuffer()
 {
 	if(m_buffer)
 		delete [] m_buffer;
 }
 
-void  CNetBuffer::Reset()
+void  CBuffer::Reset()
 {
 	m_curSize = 0;
 	m_readCount = 0;
 }
 
-byte* CNetBuffer::GetSpace(int size)
+byte* CBuffer::GetSpace(int size)
 {
 	if(m_curSize + size >= m_maxSize)
 	{
-//		ComPrintf("CNetBuffer:: Buffer overflowed\n");
+//		ComPrintf("CBuffer:: Buffer overflowed\n");
 		m_curSize = 0;
 		m_overFlowed = true;
 	}
@@ -70,37 +48,33 @@ byte* CNetBuffer::GetSpace(int size)
 Writing funcs
 ==========================================
 */
-CNetBuffer & CNetBuffer::operator += (char c) 
+void CBuffer::Write(char c)
 { 
 	char * buf = (char *)GetSpace(SIZE_CHAR);
 	buf[0] = (char)c;	
-	return (*this);
 }
 
-CNetBuffer & CNetBuffer::operator += (byte b) 
+void CBuffer::Write(byte b) 
 { 
 	byte  * buf = GetSpace(SIZE_CHAR);
 	buf[0] = b;	
-	return (*this);
 }
 
-CNetBuffer & CNetBuffer::operator += (short s)
+void CBuffer::Write(short s)
 { 
 	byte * buf = GetSpace(SIZE_SHORT);
 	buf[0] = s & 0xff;	//gives the lower byte
 	buf[1] = s >> 8;	//shift right to get the high byte	
-	return (*this);
 }
-CNetBuffer & CNetBuffer::operator += (int i)
+void CBuffer::Write(int i)
 { 
 	byte * buf = GetSpace(SIZE_INT);
 	buf[0] = i & 0xff;			
 	buf[1] = (i >> 8)  & 0xff;	
 	buf[2] = (i >> 16) & 0xff;	
 	buf[3] = i >> 24;	
-	return (*this);
 } 
-CNetBuffer & CNetBuffer::operator += (float f) 
+void CBuffer::Write(float f) 
 {	
 	union
 	{
@@ -111,33 +85,30 @@ CNetBuffer & CNetBuffer::operator += (float f)
 	floatdata.f = f;
 	byte * buf = GetSpace(SIZE_INT);
 	memcpy(buf,&floatdata.l,SIZE_INT);
-	return (*this);
 }
 
-CNetBuffer & CNetBuffer::operator += (const char * string) 
+void CBuffer::Write(const char * string) 
 { 
 	int len = strlen(string) + 1;
 	byte * buf = GetSpace(len);
 	memcpy(buf,string,len);
 	buf[len-1] = 0;	
-	return (*this);
 }
 
-CNetBuffer & CNetBuffer::operator += (const CNetBuffer & buffer)
+void CBuffer::Write(const CBuffer & buffer)
 {
 	byte * buf = GetSpace(buffer.GetSize());
 	memcpy(buf,buffer.GetData(),buffer.GetSize());
-	return (*this);
 }
 
-void CNetBuffer::WriteAngle(float f)
-{	*this += ((int)(f*256/360) & 255);
+void CBuffer::WriteAngle(float f)
+{	Write((int)(f*256/360) & 255);
 }
-void CNetBuffer::WriteCoord(float f)
-{	*this += ((int)(f*8));
+void CBuffer::WriteCoord(float f)
+{	Write((int)(f*8));
 }
 
-void CNetBuffer::WriteData(byte * data, int len)
+void CBuffer::WriteData(byte * data, int len)
 {
 	byte * buf = GetSpace(len);
 	memcpy(buf,data,len);
@@ -148,7 +119,7 @@ void CNetBuffer::WriteData(byte * data, int len)
 Reading funcs
 ==========================================
 */
-char  CNetBuffer::ReadChar()
+char  CBuffer::ReadChar()
 {
 	if(m_readCount + SIZE_CHAR > m_curSize)
 	{
@@ -158,7 +129,7 @@ char  CNetBuffer::ReadChar()
 	return ((signed char)m_buffer[m_readCount++]);
 }
 
-byte  CNetBuffer::ReadByte()
+byte  CBuffer::ReadByte()
 { 
 	if(m_readCount + SIZE_CHAR > m_curSize)
 	{
@@ -169,7 +140,7 @@ byte  CNetBuffer::ReadByte()
 }
 
 
-short CNetBuffer::ReadShort()
+short CBuffer::ReadShort()
 {
 	if(m_readCount + SIZE_SHORT > m_curSize)
 	{
@@ -181,7 +152,7 @@ short CNetBuffer::ReadShort()
 	return s;
 }
 
-int CNetBuffer::ReadInt()
+int CBuffer::ReadInt()
 {
 	if(m_readCount + SIZE_INT > m_curSize)
 	{
@@ -197,7 +168,7 @@ int CNetBuffer::ReadInt()
 
 }
 
-float CNetBuffer::ReadFloat()
+float CBuffer::ReadFloat()
 {
 	if(m_readCount + SIZE_FLOAT > m_curSize)
 	{
@@ -219,15 +190,15 @@ float CNetBuffer::ReadFloat()
 	return fb.f;
 }
 
-float CNetBuffer::ReadAngle()
+float CBuffer::ReadAngle()
 {	return ReadChar() * (360.0f/256);
 }
-float CNetBuffer::ReadCoord()
+float CBuffer::ReadCoord()
 {	return ReadShort() * 1.0f / 8;
 	
 }
 
-char* CNetBuffer::ReadString(char delim)
+char* CBuffer::ReadString(char delim)
 {
 	static char string[2048];
 	char c=0;
@@ -245,3 +216,79 @@ char* CNetBuffer::ReadString(char delim)
 	string[len] = 0;
 	return string;
 }
+
+
+
+
+
+
+/*
+	CBuffer & operator += (char c);
+	CBuffer & operator += (byte b);
+	CBuffer & operator += (short s);
+	CBuffer & operator += (int i);
+	CBuffer & operator += (float f);
+	CBuffer & operator += (const char * string);
+	CBuffer & operator += (const CBuffer & buffer);
+
+
+CBuffer & CBuffer::operator += (char c) 
+{ 
+	char * buf = (char *)GetSpace(SIZE_CHAR);
+	buf[0] = (char)c;	
+	return (*this);
+}
+
+CBuffer & CBuffer::operator += (byte b) 
+{ 
+	byte  * buf = GetSpace(SIZE_CHAR);
+	buf[0] = b;	
+	return (*this);
+}
+
+CBuffer & CBuffer::operator += (short s)
+{ 
+	byte * buf = GetSpace(SIZE_SHORT);
+	buf[0] = s & 0xff;	//gives the lower byte
+	buf[1] = s >> 8;	//shift right to get the high byte	
+	return (*this);
+}
+CBuffer & CBuffer::operator += (int i)
+{ 
+	byte * buf = GetSpace(SIZE_INT);
+	buf[0] = i & 0xff;			
+	buf[1] = (i >> 8)  & 0xff;	
+	buf[2] = (i >> 16) & 0xff;	
+	buf[3] = i >> 24;	
+	return (*this);
+} 
+CBuffer & CBuffer::operator += (float f) 
+{	
+	union
+	{
+		float f;
+		int	  l;
+	}floatdata;
+
+	floatdata.f = f;
+	byte * buf = GetSpace(SIZE_INT);
+	memcpy(buf,&floatdata.l,SIZE_INT);
+	return (*this);
+}
+
+CBuffer & CBuffer::operator += (const char * string) 
+{ 
+	int len = strlen(string) + 1;
+	byte * buf = GetSpace(len);
+	memcpy(buf,string,len);
+	buf[len-1] = 0;	
+	return (*this);
+}
+
+CBuffer & CBuffer::operator += (const CBuffer & buffer)
+{
+	byte * buf = GetSpace(buffer.GetSize());
+	memcpy(buf,buffer.GetData(),buffer.GetSize());
+	return (*this);
+}
+*/

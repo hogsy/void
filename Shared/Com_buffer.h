@@ -8,28 +8,26 @@
 Network buffer utility class
 ==========================================
 */
-class CNetBuffer
+class CBuffer
 {
 public:
 
-	CNetBuffer(int size);
-	~CNetBuffer();
-
-	CNetBuffer();
-	void Create(int size);
+	//Default size goes to 1450
+	CBuffer(int size=1450);
+	~CBuffer();
 
 	//Writing funcs
-	CNetBuffer & operator += (char c);
-	CNetBuffer & operator += (byte b);
-	CNetBuffer & operator += (short s);
-	CNetBuffer & operator += (int i);
-	CNetBuffer & operator += (float f);
-	CNetBuffer & operator += (const char * string);
-	CNetBuffer & operator += (const CNetBuffer & buffer);
+	void Write(char c);
+	void Write(byte b);
+	void Write(short s);
+	void Write(int i);
+	void Write(float f);
+	void Write(const char * string);
+	void Write(const CBuffer &buffer);
 
-	void WriteData(byte * data, int len);
 	void WriteAngle(float f);
 	void WriteCoord(float f);
+	void WriteData(byte * data, int len);
 		
 	//Reading funcs
 	char  ReadChar();
@@ -42,8 +40,8 @@ public:
 	char* ReadString(char delim=0);
 
 	//Other util
+	const byte* GetData() const { return m_buffer;  }
 	bool  BadRead()	const { return m_badRead; }
-	byte* GetData() const { return m_buffer;  }
 	int   GetSize() const { return m_curSize; }
 	int   GetMaxSize()  const { return m_maxSize; }
 	bool  OverFlowed()  const { return m_overFlowed; }
