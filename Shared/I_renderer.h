@@ -41,21 +41,21 @@ typedef struct RenderInfo_t
 
 	//==========================================
 
-	HWND		hWnd;		//Window information
+	HWND	hWnd;		//Window information
 
-	bool		active;		//in the window active?
-	bool		ready;
+	bool	active;		//in the window active?
+	bool	ready;
 
 	//==========================================
 	//Renderering Information
 	
-	unsigned char	rflags;
+	byte 	rflags;
 
-	unsigned int    width, 
-					height, 
-					bpp,
-					zdepth,
-					stencil;
+	uint    width, 
+			height, 
+			bpp,
+			zdepth,
+			stencil;
 }RenderInfo_t;
 
 /*
@@ -118,9 +118,8 @@ struct I_Renderer
 	//Windowing
 	virtual void MoveWindow(int x, int y) = 0;
 	virtual void Resize() =0;
-	virtual void ChangeDispSettings(unsigned int width, unsigned int height, 
-									unsigned int bpp, bool fullscreen)=0;
-	
+	virtual void ChangeDispSettings(uint width, uint height, uint bpp, 
+									bool fullscreen)=0;
 	//World
 	virtual bool LoadWorld(CWorld *level, int reload) =0;
 	virtual bool UnloadWorld() = 0;
