@@ -54,7 +54,7 @@ inline float INV(float p)
 	return r;
 #endif
 }
-
+/*
 inline float INV(const float &p)
 {
 // devvoid needs more accuracy
@@ -75,7 +75,7 @@ inline float INV(const float &p)
 	return r;
 #endif
 }
-
+*/
 inline ulong NORM_TO_BYTE(float p)
 {
     float _n = (p) + 1.0f;

@@ -1,6 +1,6 @@
 #include "Standard.h"
 #include "Ren_main.h"
-#include "Ren_beam.h"
+//#include "Ren_beam.h"
 #include "Ren_cache.h"
 #include "ShaderManager.h"
 #include "Client.h"
@@ -122,13 +122,36 @@ void r_draw_leaf(int l)
 		point.z = (float)((frust[p].norm.z > 0) ? (world->leafs[l].maxs[2]) : (world->leafs[l].mins[2]));
 
 		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
-//			return;
-break;
+			return;
 	}
 
+// just push everything right through to the cache
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
 	for (int b=world->leafs[l].first_brush; b < endb; b++)
-		beam_insert(&world->brushes[b], world->leafs[l].contents);
+	{
+		int ends = world->brushes[b].first_side + world->brushes[b].num_sides;
+		for (int s=world->brushes[b].first_side; s<ends; s++)
+		{
+			bspf_side_t *side = &world->sides[s];
+
+			if ((DotProduct(world->planes[side->plane].norm, camera->origin) - world->planes[side->plane].d) < 0)
+				continue;
+
+
+			cpoly_t *p = g_pShaders->GetPoly();
+
+			p->forcez = true;
+			p->lightdef = side->lightdef;
+			p->next = NULL;
+			p->num_vertices = side->num_verts;
+			p->texdef = side->texdef;
+
+			for (int v=0; v<p->num_vertices; v++)
+				p->vertices[v] = world->verts[world->iverts[side->first_vert+v]];
+
+			g_pShaders->CacheAdd(p);
+		}
+	}
 }
 
 
@@ -184,8 +207,7 @@ void r_draw_node(int n, bool testfrust)
 
 			// if the one closest to the inside is outside, the box is completely out
 			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
-				break;
-//				return;
+				return;
 
 			if ((dot(out, frust[p].norm) - frust[p].d) < 0)
 				testfrust = true;
@@ -271,7 +293,7 @@ build and draw the world
 void r_draw_world()
 {
 	build_frust();
-	beam_reset();
+//	beam_reset();
 	r_draw_node(0, true);
 	g_pShaders->CachePurge();
 	g_pClient->Purge();

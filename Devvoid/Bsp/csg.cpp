@@ -235,7 +235,7 @@ bsp_brush_t* run_csg(bsp_brush_t *head)
 		num_brushes++;
 	ComPrintf("%d ->", num_brushes);
 
-	bsp_brush_t *b1, *b2, *tmp, *tmp2, *tmp3;
+	bsp_brush_t *b1, *b2, *tmp1, *tmp2, *inter, *sub;
 
 	bsp_brush_t *tail = head;
 	while (tail->next)
@@ -259,55 +259,48 @@ bsp_brush_t* run_csg(bsp_brush_t *head)
 
 				if (quick_test_intersect(b1, b2))
 				{
-					tmp = brush_intersect(b1, b2);
-					if (tmp)
+					inter = brush_intersect(b1, b2);
+					if (inter)
 					{
-						// we know b1 and b2 intersect, tmp is the intersection
+						if (b1->contents <= b2->contents)
+						{
+							tmp1 = b1;
+							tmp2 = b2;
+						}
+						else
+						{
+							tmp1 = b2;
+							tmp2 = b1;
+						}
+
+						// solid brushes eat up non-solid.  if it's 2 solid brushes, the first one eats the second
+
+						// tmp1 is not going to be changed.  tmp2 will have to be removed
+
 						more = true;
 
 						// insert all subtracted brushes into the list
-						tmp2 = brush_subtract(b1, tmp);
+						sub = brush_subtract(tmp2, tmp1);
 
-						tail->next = tmp2;
+						tail->next = sub;
 						while (tail->next)
 							tail = tail->next;
 
+						// we dont need the intersection anymore
+						free_bsp_brush(inter);
 
-						tmp3 = brush_subtract(b2, tmp);
-
-						tail->next = tmp3;
-						while (tail->next)
-							tail = tail->next;
-
-
-						// add the intersection to the end
-						tail->next = tmp;
-						tail = tail->next;
-						tail->next = NULL;
-
-						// b1 and b2 must be removed - remove the sides - they will be removed before next pass
+						// tmp2 must be removed
 						bsp_brush_side_t *s;
 						if (tmp2)
 						{
-							for (s=b1->sides; s; )
+							for (s=tmp2->sides; s; )
 							{
 								bsp_brush_side_t *ts = s;
 								s = s->next;
 								free_bsp_brush_side(ts);
 							}
 						}
-
-						if (tmp3)
-						{
-							for (s=b2->sides; s; )
-							{
-								bsp_brush_side_t *ts = s;
-								s = s->next;
-								free_bsp_brush_side(ts);
-							}
-						}
-
-						b1->sides = b2->sides = NULL;
+						tmp2->sides = NULL;
 						break;
 					}
 				}
