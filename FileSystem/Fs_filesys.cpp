@@ -2,6 +2,10 @@
 #include "Fs_zipfile.h"
 #include "I_filesystem.h"
 
+#define CMD_LISTFILES	0
+#define CMD_LISTPATHS	1
+#define CMD_DIRPATH		2
+
 /*
 ===========================================
 Supported File Types
@@ -13,7 +17,6 @@ const char  * archive_exts[] =
 	"pak",  
 	0 
 };
-
 
 /*
 =========================================
@@ -55,6 +58,10 @@ CFileSystem::CFileSystem()
 	m_numsearchpaths = 0;
 	m_searchpaths = new SearchPath_t();
 	m_lastpath = m_searchpaths;
+
+	g_pConsole->RegisterCommand("fs_list",CMD_LISTFILES,this);
+	g_pConsole->RegisterCommand("fs_path",CMD_LISTPATHS,this);
+	g_pConsole->RegisterCommand("fs_dir",CMD_DIRPATH,this);
 }
 
 
@@ -274,7 +281,10 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 
 				if(!buffersize)
 				{
-					*ibuffer= (byte*)MALLOC(size);
+//					*ibuffer= (byte*)MALLOC(size);
+					*ibuffer = (byte*)::HeapAlloc(::GetProcessHeap(),
+									  HEAP_GENERATE_EXCEPTIONS,
+									  size);
 				}
 				else
 				{
@@ -400,6 +410,7 @@ void CFileSystem::ListArchiveFiles()
 		{
 			ComPrintf("%s\n",iterator->archive->m_archiveName);
 			iterator->archive->ListFiles();
+			ComPrintf("\n");
 		}
 	}
 }
@@ -513,6 +524,30 @@ void CFileSystem::RemoveSearchPath(const char *path)
 			iterator = iterator->prev;
 	}
 }
+
+
+/*
+==========================================
+
+==========================================
+*/
+void CFileSystem::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_LISTFILES:
+		ListArchiveFiles();
+		break;
+	case CMD_LISTPATHS:
+		ListSearchPaths();
+		break;
+	case CMD_DIRPATH:
+		{
+			break;
+		}
+	}
+}
+
 
 /*
 ===========================================

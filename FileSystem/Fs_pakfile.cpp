@@ -147,7 +147,6 @@ bool CPakFile::HasFile(const char * filename)
 
 /*
 ===========================================
-FIXME- 
 this will have to use a custom memory manager later
 on to alloc the buffer for the file.
 ===========================================
@@ -167,7 +166,10 @@ uint CPakFile::LoadFile(byte ** ibuffer,
 	{
 		if(!buffersize)
 		{
-			*ibuffer= (byte*)MALLOC(entry->filelen);
+//			*ibuffer= (byte*)MALLOC(entry->filelen);
+			*ibuffer = (byte*)::HeapAlloc(::GetProcessHeap(),
+									  HEAP_GENERATE_EXCEPTIONS,
+									  entry->filelen);
 		}
 		else
 		{
@@ -201,13 +203,11 @@ bool CPakFile::GetFileList (CStringList * list)
 	if(!m_files)
 		return false;
 
-	list = new CStringList();
 	CStringList  *iterator = list;
-
 	for(int i = 0; i< m_numFiles; i++)
 	{
 		strcpy(iterator->string,m_files[i]->filename);
-		iterator->next = new CStringList;
+		iterator->next = new CStringList();
 		iterator = iterator->next;
 	}
 	return true;

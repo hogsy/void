@@ -4,8 +4,11 @@
 
 #include "Com_defs.h"
 #include "Com_list.h"
+#include "I_console.h"
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
+
+extern I_Console * g_pConsole;
 
 /*
 ===========================================

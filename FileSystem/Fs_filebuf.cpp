@@ -13,7 +13,15 @@ CFileBuffer::CFileBuffer(int bufsize)
 	m_curpos = 0;
 	m_size = 0;
 	m_buffer = 0;
-	m_buffersize =0;
+
+	m_buffersize = bufsize;
+	if(m_buffersize)
+	{	
+		//m_buffer = (byte*)MALLOC(m_buffersize);
+		m_buffer = (byte*)::HeapAlloc(::GetProcessHeap(),
+									  HEAP_GENERATE_EXCEPTIONS,
+									  m_buffersize);
+	}
 }
 
 CFileBuffer::~CFileBuffer()
@@ -21,7 +29,11 @@ CFileBuffer::~CFileBuffer()
 	if(m_filename)
 		delete [] m_filename;
 	if(m_buffer)
-		free(m_buffer);
+	{
+		::HeapFree(::GetProcessHeap(),0, m_buffer);
+		//free(m_buffer);
+	}
+
 }
 
 /*
@@ -70,7 +82,8 @@ void CFileBuffer::Close()
 	//Don't release the buffer is using it statically
 	if(m_buffer)
 	{
-		free(m_buffer);
+		::HeapFree(::GetProcessHeap(),0, m_buffer);
+//		free(m_buffer);
 		m_buffer = 0;
 	}
 
@@ -171,37 +184,3 @@ uint CFileBuffer::GetSize() const
 { return m_size; 
 }
 
-
-
-
-
-
-
-
-/*
-===========================================
-Lock a static buffer for file I/O which is not
-released/realloc on each file open/close call.
-
-the static buffer is only reallocated if it
-is smaller than the requred size
-===========================================
-*/
-
-#if 0
-void CFileReader::LockStaticBuffer(const uint &size)
-{
-	m_staticbuffer = true;
-	m_buffer = (byte*)MALLOC(size);
-	m_buffersize = size;
-}
-
-void CFileReader::ReleaseStaticBuffer()
-{
-	free(m_buffer);
-	m_buffer = 0;
-	m_staticbuffer = false;
-	m_buffersize = 0;
-}
-
-#endif

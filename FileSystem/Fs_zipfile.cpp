@@ -455,9 +455,7 @@ bool  CZipFile::GetFileList (CStringList * list)
 	if(!m_files)
 		return false;
 
-	list = new CStringList();
 	CStringList  *iterator = list;
-
 	for(int i = 0; i< m_numFiles; i++)
 	{
 		strcpy(iterator->string,m_files[i]->filename);
@@ -535,7 +533,10 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	{
 		if(!buffersize)
 		{
-			*ibuffer= (byte*)MALLOC(entry->filelen);
+//			*ibuffer= (byte*)MALLOC(entry->filelen);
+			*ibuffer = (byte*)::HeapAlloc(::GetProcessHeap(),
+									  HEAP_GENERATE_EXCEPTIONS,
+									  entry->filelen);
 		}
 		else
 		{
@@ -631,7 +632,7 @@ uint CZipFile::Read(void * buf, uint size, uint count, HFS handle)
 
 	fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 	
-	int items_read = ::fread(buf,size,count,m_fp);
+	uint items_read = ::fread(buf,size,count,m_fp);
 	if(items_read != count) 
 		ComPrintf("CZipFile::Read: Warning, only read %d of %d items for %s\n",
 					items_read, count, m_openFiles[handle].file->filename);	
