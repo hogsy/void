@@ -196,7 +196,6 @@ void CRHud::DrawHud()
 ==========================================
 Parse and add a message to the hud
 ==========================================
-*/
 
 void CRHud::HudPrintf(int x, int y, float time, char *msg)
 {
@@ -210,14 +209,32 @@ void CRHud::HudPrintf(int x, int y, float time, char *msg)
 
 	m_hmessages[i].Set(msg,x,y,time+(GetCurTime()));
 }
-
+*/
 
 /*
 ==========================================
 Just add a message to the hud
 ==========================================
 */
-void CRHud::HudPrint(char *msg, int x, int y, float time, int color)
+void CRHud::Printf(int x, int y, float time, const char *msg, ...)
+{
+	va_list args;
+	va_start(args, msg);
+	vsprintf(m_hudBuffer, msg, args);
+	va_end(args);
+
+	for(int i=0;i<MAX_MESSAGES;i++)
+		if(m_hmessages[i].inuse == false)
+			break;
+
+	//no more space
+	if(i== MAX_MESSAGES)
+		return;
+	
+	m_hmessages[i].Set(m_hudBuffer,x,y,time+(GetCurTime()));
+}
+	
+/*void CRHud::HudPrint(char *msg, int x, int y, float time, int color)
 {
 	for(int i=0;i<MAX_MESSAGES;i++)
 		if(m_hmessages[i].inuse == false)
@@ -229,18 +246,22 @@ void CRHud::HudPrint(char *msg, int x, int y, float time, int color)
 	
 	m_hmessages[i].Set(msg,x,y,time+(GetCurTime()));
 }
+*/
 
+void CRHud::AddConMessage(const char *msg, int color, float time)
+{
+}
 
 /*
 ==========================================
 Print a message, used for Console type 
 that appear at the top of the screen
 ==========================================
-*/
+
 void CRHud::PrintMessage(char *msg, int color, float time)
 {
 }
-
+*/
 
 /*
 ==========================================

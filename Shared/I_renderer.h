@@ -60,6 +60,41 @@ typedef struct RenderInfo_t
 
 /*
 ==========================================
+Renderer Interface
+==========================================
+*/
+struct I_ClientRenderer;
+struct I_ConsoleRenderer;
+struct I_HudRenderer;
+
+class  CCamera;
+class  CWorld;
+
+struct I_Renderer
+{
+	//Startup/Shutdown
+	virtual bool InitRenderer()=0;
+	virtual bool Shutdown()=0;
+
+	virtual void Draw(const CCamera * camera=0)=0;
+	
+	//Get other interfaces
+	virtual I_ClientRenderer  * GetClient()=0;
+	virtual I_ConsoleRenderer * GetConsole()=0;
+	virtual I_HudRenderer	  * GetHud()=0;
+
+	//Windowing
+	virtual void MoveWindow(int x, int y) = 0;
+	virtual void Resize() =0;
+	virtual void ChangeDispSettings(uint width, uint height, uint bpp, 
+									bool fullscreen)=0;
+	//World
+	virtual bool LoadWorld(CWorld *level, int reload) =0;
+	virtual bool UnloadWorld() = 0;
+};
+
+/*
+==========================================
 Renderer Console Interface
 ==========================================
 */
@@ -91,38 +126,6 @@ struct I_ConsoleRenderer
 	virtual void MoveCurrentLine(LineOffset offset) = 0;
 	virtual void SetStatusline(const char  *status_line, const int &len) = 0;
 	virtual void AddLine(const char *line, LineColor color=DEFAULT, int size=0) = 0;
-};
-
-/*
-==========================================
-Renderer Interface
-==========================================
-*/
-struct I_ClientRenderer;
-class  CCamera;
-class  CWorld;
-
-struct I_Renderer
-{
-	//Startup/Shutdown
-	virtual bool InitRenderer()=0;
-	virtual bool Shutdown()=0;
-
-	virtual void Draw(const CCamera * camera)=0;
-	virtual void DrawConsole()= 0;
-	
-	//Get other interfaces
-	virtual I_ClientRenderer  * GetClient()=0;
-	virtual I_ConsoleRenderer * GetConsole()=0;
-
-	//Windowing
-	virtual void MoveWindow(int x, int y) = 0;
-	virtual void Resize() =0;
-	virtual void ChangeDispSettings(uint width, uint height, uint bpp, 
-									bool fullscreen)=0;
-	//World
-	virtual bool LoadWorld(CWorld *level, int reload) =0;
-	virtual bool UnloadWorld() = 0;
 };
 
 

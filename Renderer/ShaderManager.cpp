@@ -1,5 +1,6 @@
-
+#include "Standard.h"
 #include "ShaderManager.h"
+#include "Shader.h"
 #include "Tex_image.h"
 
 CShaderManager	*g_pShaders=0;

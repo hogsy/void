@@ -406,12 +406,12 @@ void CClient::ShowNetStats()
 	//Print Networking stats
 	const NetChanState & chanState = m_pNetCl->GetChanState();
 
-	m_pClRen->HudPrintf(0,390,0, "Latency %.2f ms", chanState.latency * 1000);
-	m_pClRen->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
+	m_pHud->Printf(0,390,0, "Latency %.2f ms", chanState.latency * 1000);
+	m_pHud->Printf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
 						chanState.dropCount + chanState.goodCount, chanState.numChokes);
-	m_pClRen->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
-	m_pClRen->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
-	m_pClRen->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
-	m_pClRen->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+	m_pHud->Printf(0,410,0, "In      %d", chanState.inMsgId);
+	m_pHud->Printf(0,420,0, "In  Ack %d", chanState.inAckedId);
+	m_pHud->Printf(0,430,0, "Out     %d", chanState.outMsgId);
+	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
 }

@@ -1,7 +1,6 @@
 #ifndef CLIENTRENDERER_H
 #define CLIENTRENDERER_H
 
-#include "Hud_main.h"
 #include "Img_main.h"
 #include "Mdl_main.h"
 #include "I_clientRenderer.h"
@@ -9,11 +8,10 @@
 
 class CClientRenderer : public I_ClientRenderer,
 						private CModelManager,
-						private CImageManager,
-						private CRHud
-					    
+						private CImageManager
 {
 public:
+
 	CClientRenderer() {}
 	virtual ~CClientRenderer() { }
 
@@ -51,22 +49,6 @@ public:
 	{	CImageManager::UnloadImageAll();	
 	}
 
-	/* Hud Interface */
-	inline void  HudPrintf(int x, int y, float time,char *msg,...)
-	{	
-		va_list args;
-		va_start(args, msg);
-		vsprintf(m_hudBuffer, msg, args);
-		va_end(args);
-		CRHud::HudPrintf(x, y, time, m_hudBuffer);	
-	}
-	inline void  HudPrint(char *msg, int x, int y, float time =0.0, int color=0)
-	{	CRHud::HudPrint(msg, x, y, time, color);	
-	}
-	inline void  PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME)
-	{	CRHud::PrintMessage(msg, color, time);	
-	}
-
 	// non interface funcs
 	inline void Purge(void)
 	{	CModelManager::Purge();	
@@ -88,12 +70,6 @@ public:
 	inline void Set(CacheType cache, int index)
 	{	CImageManager::Set(cache, index);	
 	}
-	inline 	void DrawHud()
-	{	CRHud::DrawHud();	
-	}
-
-private:
-	char m_hudBuffer[1024];
 };
 
 extern CClientRenderer *g_pClient;

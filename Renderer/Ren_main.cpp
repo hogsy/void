@@ -3,11 +3,7 @@
 #include "Ren_beam.h"
 #include "Ren_cache.h"
 #include "Tex_hdr.h"
-#include "Con_main.h"
-#include "Client.h"
 
-
-extern CRConsole * g_prCons;
 extern CVar		 * g_pVidSynch;
 const  CCamera   * camera=0;
 
@@ -272,12 +268,12 @@ void r_drawframe(const CCamera * pcamera)
 	r_draw_world();
 
 	// display any messages
-	g_pClient->DrawHud();
+//	g_pClient->DrawHud();
 
 // draw the console if we need to
-	g_prCons->Draw();
+//	g_prCons->Draw();
 
-	g_pRast->FrameEnd();
+//	g_pRast->FrameEnd();
 }
 
 
@@ -290,6 +286,6 @@ Just draw the console
 void r_drawcons()
 {
 	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
-	g_prCons->Draw();
-	g_pRast->FrameEnd();
+//	g_prCons->Draw();
+//	g_pRast->FrameEnd();
 }

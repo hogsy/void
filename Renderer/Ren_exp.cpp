@@ -5,6 +5,7 @@
 #include "Ren_beam.h"
 #include "Tex_main.h"
 #include "Con_main.h"
+#include "Hud_main.h"
 #include "Client.h"
 #include "ShaderManager.h"
 
@@ -12,16 +13,13 @@
 #include "Rast_none.h"
 #include "Rast_d3dx.h"
 
+//======================================================================================
+//======================================================================================
 
-//======================================================================================
-//======================================================================================
 //Global Vars
-RenderInfo_t  g_rInfo;			//Shared Rendering Info
-CWorld		* world=0;			//The World
-CRConsole   * g_prCons=0;
-CClientRenderer *g_pClient=0;
-//======================================================================================
-//======================================================================================
+RenderInfo_t		g_rInfo;			//Shared Rendering Info
+CWorld			*	world=0;			//The World
+CClientRenderer *	g_pClient=0;
 
 /*
 =======================================
@@ -40,11 +38,13 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	//Create different subsystems
 
 	//Start the console first thing
-	g_prCons   = new CRConsole();
+	m_pRConsole= new CRConsole();
+	m_pHud     = new CRHud();
+
 	g_pShaders = new CShaderManager();
 	g_pTex     = new CTextureManager();
 	g_pClient  = new CClientRenderer();
-
+	
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
@@ -79,15 +79,17 @@ CRenExp::~CRenExp()
 		delete g_pClient;
 	g_pClient = 0;
 
+	if( m_pHud)
+		delete m_pHud;
+	m_pHud = 0;
+
 	if (g_pRast)
 		delete g_pRast;
 	g_pRast = 0;
 
-	if(g_prCons)
-		delete g_prCons;
-	g_prCons = 0;
-
-//	g_pConsole = 0;
+	if(m_pRConsole)
+		delete m_pRConsole;
+	m_pRConsole = 0;
 }
 
 
@@ -129,8 +131,8 @@ bool CRenExp::InitRenderer()
 	}
 
 	//Intialize the Console now
-	g_prCons->Init(true, true);
-	g_prCons->UpdateRes();
+	m_pRConsole->Init(true, true);
+	m_pRConsole->UpdateRes();
 
 	ComPrintf("\n***** Renderer Intialization *****\n\n");
 
@@ -179,26 +181,28 @@ bool CRenExp::Shutdown(void)
 	g_pShaders->UnLoadWorld();
 	g_pTex->Shutdown();
 	g_pRast->Shutdown();
-	g_prCons->Shutdown();
+	m_pRConsole->Shutdown();
 	return true;
 }
 
 /*
 ==========================================
-Returns the Console Interface
+Returns the Appropriate Interface
 ==========================================
 */
 I_ConsoleRenderer * CRenExp::GetConsole()
-{	return g_prCons;
+{	return m_pRConsole;
 }
-/*
-==========================================
-Returns the ClientRenderer Interface
-==========================================
-*/
+
 I_ClientRenderer * CRenExp::GetClient()
 {	return g_pClient;
 }
+
+I_HudRenderer	 * CRenExp::GetHud()
+{	return m_pHud;
+}
+
+
 
 /*
 ==========================================
@@ -209,7 +213,14 @@ DrawFrame
 void CRenExp::Draw(const CCamera * camera)
 {
 	g_pRast->SetFocus();
-	r_drawframe(camera);
+	
+	if(camera)
+		r_drawframe(camera);
+
+	m_pHud->DrawHud();
+	m_pRConsole->Draw();
+	
+	g_pRast->FrameEnd();
 
 // make sure all was well
 #ifdef _DEBUG
@@ -217,18 +228,21 @@ void CRenExp::Draw(const CCamera * camera)
 #endif
 }
 
-
+/*
 void CRenExp::DrawConsole()
 {	
 	g_pRast->SetFocus();
-	r_drawcons();
+//	r_drawcons();
+
+	m_pRConsole->Draw();
+	g_pRast->FrameEnd();
+
 // make sure all was well
 #ifdef _DEBUG
 	g_pRast->ReportErrors();
 #endif
-
 }
-
+*/
 
 /*
 ==========================================
@@ -241,9 +255,7 @@ void CRenExp::MoveWindow(int x, int y)
 
 	//Update new xy-coords if in windowed mode
 	if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
-	{	
 		g_pRast->SetWindowCoords(x,y);
-	}
 }
 
 /*
@@ -258,7 +270,7 @@ void CRenExp::Resize()
 	if (g_rInfo.ready)
 	{
 		g_pRast->Resize();
-		g_prCons->UpdateRes();
+		m_pRConsole->UpdateRes();
 	}
 }
 
@@ -333,7 +345,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 	if (bpp == g_rInfo.bpp)
 	{
 		g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
-		g_prCons->UpdateRes();
+		m_pRConsole->UpdateRes();
 		r_init();
 		return;
 	}
@@ -373,7 +385,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 	g_pClient->LoadSkins();
 
 	// make sure our console is up to date
-	g_prCons->UpdateRes();
+	m_pRConsole->UpdateRes();
 	r_init();
 }
 
@@ -392,7 +404,6 @@ bool CRenExp::Restart(void)
 	g_pShaders->UnLoadWorld();
 	g_pClient->UnLoadSkins();
 	g_pClient->UnLoadTextures();
-
 
 	// shut the thing down
 	g_pRast->Shutdown();
@@ -418,7 +429,7 @@ bool CRenExp::Restart(void)
 	g_pClient->LoadSkins();
 
 	//make sure our console is up to date
-	g_prCons->UpdateRes();
+	m_pRConsole->UpdateRes();
 
 	r_init();
 
@@ -542,6 +553,8 @@ bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 			ChangeDispSettings(x, y, g_rInfo.bpp,(g_rInfo.rflags & RFLAG_FULLSCREEN));
 		return true;
 	}
+	else
+		ComPrintf("Invalid number of parameters\n");
 	return false;
 }
 
@@ -559,8 +572,6 @@ bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 	else if(argc > 1)
 	{
 		uint bpp= parms.IntTok(1);
-		//if(!sscanf(argv[1],"%d",&bpp))
-		//	bpp  = g_rInfo.bpp;
 
 		// no go if we're not changing
 		if (bpp == g_rInfo.bpp)

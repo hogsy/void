@@ -12,6 +12,7 @@ class  CMusic;
 class  CCamera;
 class  CWorld;
 struct I_Renderer;
+struct I_HudRenderer;
 
 /*
 =====================================
@@ -105,6 +106,7 @@ private:
 	
 	I_Renderer		  * m_pRender;
 	I_ClientRenderer  * m_pClRen;
+	I_HudRenderer	  * m_pHud;
 
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;

@@ -1,5 +1,6 @@
 #include "Cl_main.h"
 #include "I_renderer.h"
+#include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
 #include "Cl_cmds.h"
@@ -34,6 +35,7 @@ CClient::CClient(I_Renderer * prenderer,
 					m_pMusic(pmusic)
 {
 	m_pClRen = m_pRender->GetClient();
+	m_pHud   = m_pRender->GetHud();
 
 	m_pCmdHandler = new CClientCmdHandler(*this);
 
@@ -104,6 +106,7 @@ CClient::~CClient()
 		m_pClRen->UnloadImageAll();
 	}
 	m_pClRen = 0;
+	m_pHud = 0;
 	m_pRender = 0;
 	
 	m_pSound = 0;
@@ -259,7 +262,7 @@ void CClient::RunFrame()
 	//draw the console or menues etc
 	if(!m_ingame)
 	{
-		m_pRender->DrawConsole();
+		m_pRender->Draw();
 		
 	}
 	else {
@@ -279,20 +282,20 @@ void CClient::RunFrame()
 //	}
 
 	//Print Stats
-	m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
+	m_pHud->Printf(0, 50,0, "%.2f, %.2f, %.2f", 
 			m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
-	m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f", 
+	m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
 		1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
 	
-	m_pClRen->HudPrintf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
+	m_pHud->Printf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
 
 	m_fFrameTime = System::GetCurTime();
 
 	vector_t forward, up, velocity;
 	VectorSet(&velocity, 0,0,0);
 	AngleToVector(&m_pClient->angles, &forward, 0, &up);
-	m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-	m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
+	m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
+	m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
 	if(m_cvNetStats.bval)
 		ShowNetStats();

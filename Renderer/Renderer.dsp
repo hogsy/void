@@ -318,6 +318,10 @@ SOURCE=..\Shared\I_file.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\I_hud.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_hunkmem.h
 # End Source File
 # Begin Source File
@@ -412,18 +416,6 @@ SOURCE=.\Img_main.cpp
 SOURCE=.\Img_main.h
 # End Source File
 # End Group
-# Begin Group "Hud"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Hud_main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Hud_main.h
-# End Source File
-# End Group
 # Begin Group "Models"
 
 # PROP Default_Filter ""
@@ -491,6 +483,22 @@ SOURCE=.\ShaderManager.cpp
 # Begin Source File
 
 SOURCE=.\ShaderManager.h
+# End Source File
+# End Group
+# Begin Group "Hud"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Hud_hdr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Hud_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Hud_main.h
 # End Source File
 # End Group
 # Begin Source File

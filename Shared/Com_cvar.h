@@ -94,8 +94,15 @@ public:
 			}
 		case CVAR_BOOL:
 			{
-				if(!sscanf(varval,"%d",&ival))
+				if(_stricmp(varval,"true") == 0)
+					ival = 1;
+				else if(_stricmp(varval,"false") == 0)
 					ival = 0;
+				else
+				{
+					if(!sscanf(varval,"%d",&ival))
+						ival = 0;
+				}
 				
 				string = new char[2];
 				if(ival)

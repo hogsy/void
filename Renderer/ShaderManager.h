@@ -1,13 +1,12 @@
-
 #ifndef SHADERMANAGER_H
 #define SHADERMANAGER_H
-
-#include "Shader.h"
 
 
 #define MAX_SHADERS		1024
 #define MAX_SHADER_BINS	1024
+
 typedef int hShader;
+class CShader;
 
 
 class CShaderManager

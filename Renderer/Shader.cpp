@@ -1,6 +1,7 @@
+#include "Standard.h"
 #include "Shader.h"
+#include "I_file.h"
 #include "Tex_image.h"
-
 
 /*
 ===================================================================================================
@@ -33,7 +34,7 @@ CShaderLayer::~CShaderLayer()
 Parse
 ========
 */
-CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
+void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 {
 	char token[1024];
 

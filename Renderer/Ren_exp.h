@@ -3,13 +3,12 @@
 
 #include "I_renderer.h"
 
+
+//Forward declarations
 struct I_ClientRenderer;
+class  CRHud;
+class  CRConsole;
 
-/*
-================================================
-
-================================================
-*/
 class CRenExp : public I_Renderer,
 			    public I_ConHandler
 {
@@ -22,11 +21,11 @@ public:
 	bool InitRenderer();
 	bool Shutdown();
 
-	void Draw(const CCamera * camera);
-	void DrawConsole();
+	void Draw(const CCamera * camera=0);
 
 	I_ConsoleRenderer * GetConsole();
 	I_ClientRenderer  * GetClient();
+	I_HudRenderer	  * GetHud();
 
 	//Windowing
 	void MoveWindow(int x, int y);
@@ -44,6 +43,9 @@ public:
 	void HandleCommand(HCMD cmdId, const CParms &parms) { }
 
 private:
+
+	CRHud		* m_pHud;
+	CRConsole	* m_pRConsole;
 
 	CVar   m_cFull;		//fullscreen
 	CVar   m_cRes;		//resolution
