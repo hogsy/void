@@ -106,7 +106,7 @@ ComPrintf("CL: Update is corrupt. Ignoring\n");
 					if(b & SVU_GRAVITY)
 					{
 						m_pGameClient->gravity = buffer.ReadFloat();
-ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
+//ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					}
 					if(b & SVU_FRICTION)
 						m_pGameClient->friction = buffer.ReadFloat();
@@ -146,17 +146,16 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					{
 						m_clients[num].clAnim = anim;
 						ClAnim::SetAnim(m_clients[num].animInfo,(EPlayerAnim)anim);
-						if(anim == PLAYER_STAND)
+/*						if(anim == PLAYER_STAND)
 							ComPrintf("Client Stand");
 						else if(anim == PLAYER_RUN)
 							ComPrintf("Client Run");
 						else if(anim == PLAYER_JUMP)
 							ComPrintf("Client Jump");
-
-						ComPrintf(": Frames : %d to %d\n", m_clients[num].animInfo.frameBegin, 
-							m_clients[num].animInfo.frameEnd);
+ComPrintf(": Frames : %d to %d\n", m_clients[num].animInfo.frameBegin, m_clients[num].animInfo.frameEnd);
+*/
 					}
-m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %s", m_clients[num].origin.ToString());
+//m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %s", m_clients[num].origin.ToString());
 				}
 				break;
 			}
@@ -341,7 +340,7 @@ void CGameClient::ReadClientInfo(CBuffer &buffer)
 {
 	int num = buffer.ReadByte();
 
-ComPrintf("CL: REMOTE : GETTING CLIENT %d\n", num);
+//ComPrintf("CL: REMOTE : GETTING CLIENT %d\n", num);
 
 	m_clients[num].Reset();
 	strcpy(m_clients[num].name, buffer.ReadString());
@@ -363,7 +362,7 @@ ComPrintf("CL: REMOTE : GETTING CLIENT %d\n", num);
 	//Load skin
 	char path[COM_MAXPATH];
 	sprintf(path,"Models/Player/%s", szCharacter);
-ComPrintf("CL: REMOTE : Loading player skin: %s\n", path);
+//ComPrintf("CL: REMOTE : Loading player skin: %s\n", path);
 	
 	m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
 	m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
@@ -371,7 +370,7 @@ ComPrintf("CL: REMOTE : Loading player skin: %s\n", path);
 	//Load Model
 	strncpy(m_clients[num].model, szCharacter, skin-szCharacter);
 	sprintf(path,"Models/Player/%s/tris.md2", m_clients[num].model);
-ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
+//ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 
 	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_clients[num].mdlCache = CACHE_LOCAL;
@@ -385,7 +384,7 @@ ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 	m_clients[num].maxs = VEC_CLIENT_MAXS;
 	m_clients[num].inUse = true;
 
-	ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
+//	ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
 }
 
 //==========================================================================
@@ -555,7 +554,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_clNum = clNum;
 	m_pGameClient = &m_clients[clNum];
 
-ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
+//ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
 	
 	m_pGameClient->Reset();
 	strcpy(m_pGameClient->name, m_cvName.string);
@@ -576,12 +575,12 @@ ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
 		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,m_pGameClient->model);
 	}
 
-ComPrintf("CL: LOCAL: Loading player skin: %s\n", path);
+//ComPrintf("CL: LOCAL: Loading player skin: %s\n", path);
 	m_pGameClient->skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
 	m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
 	sprintf(path,"Models/Player/%s/tris.md2",m_pGameClient->model);
-ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
+//ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_pGameClient->mdlCache = CACHE_LOCAL;
 	

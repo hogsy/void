@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /G5 /W3 /GX /O2 /I "..\Shared" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_EXE" /D "_VOID_EXE_" /YX /FD /c
+# ADD CPP /nologo /G5 /W3 /GX /O2 /I "..\Shared" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_EXE" /D "_VOID_EXE" /YX /FD /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib /nologo /subsystem:windows /machine:I386 /out:"..\Void.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib fmodvc.lib /nologo /subsystem:windows /incremental:yes /machine:I386 /out:"..\Void.exe" /libpath:"..\Shared\Libraries"
 # SUBTRACT LINK32 /profile /map /debug
 
 !ELSEIF  "$(CFG)" == "Void - Win32 Debug"
