@@ -26,7 +26,7 @@ enum EPlayerAnim
 	PLAYER_DEATH3
 };
 
-namespace AnimSeq {
+namespace ClAnim {
 
 enum
 {
@@ -92,7 +92,7 @@ enum
 };
 
 
-void SetPlayerAnim(EPlayerAnim anim, AnimState &animState)
+void SetAnim(AnimState &animState, EPlayerAnim anim)
 {
 	switch(anim)
 	{

@@ -20,8 +20,6 @@ struct Entity : public BaseEntity
 	{	strcpy(classname,cname);
 	}
 
-	int	  animFrame;
-	
 	virtual ~Entity() {}
 	char	classname[ENT_MAXCLASSNAME];
 };
@@ -59,6 +57,7 @@ struct EntClient : public Entity
 	float gravity;
 	float maxSpeed;
 
+	int	  animFrame;
 	byte  animSeq;
 
 	//Strings

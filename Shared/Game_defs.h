@@ -98,44 +98,6 @@ void SetWorld(I_World * pWorld);
 }
 
 /*
-================================================
-Maintain frame animation state
-================================================
-*/
-struct AnimState
-{
-	AnimState() 
-		: frameBegin(0), frameEnd(0), totalFrames(0),  currentFrame (0)	{}
-
-	AnimState(const AnimState &anim)
-		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
-		  currentFrame (0)	{}
-	
-	AnimState & operator = (const AnimState &anim)
-	{
-		frameBegin = anim.frameBegin;
-		frameEnd = anim.frameEnd;
-		totalFrames = anim.totalFrames;
-		currentFrame = 0;
-		return *this;
-	}
-
-	void Set(int begin, int end, int totFrames=0) 
-	{
-		frameBegin = begin;
-		frameEnd = end;
-		totalFrames = totFrames;
-		currentFrame=0;
-	}
-
-	int frameBegin;
-	int frameEnd;
-	
-	int	currentFrame;
-	int totalFrames;
-};
-
-/*
 ============================================================================
 Only contains data needed by routines shared between client and server code
 Both client and server subclass this adding stuff they need
@@ -237,8 +199,44 @@ enum EClUpdateFlags
 	SVU_GRAVITY = 1,
 	SVU_FRICTION = 2,
 	SVU_MAXSPEED = 4,
-	SVU_ANIMSEQ = 8,	//just the predefined seq
-	SVU_ANIMALL = 16	//sequences and current frame
+};
+
+/*
+================================================
+Maintain frame animation state
+================================================
+*/
+struct AnimState
+{
+	AnimState() 
+		: frameBegin(0), frameEnd(0), totalFrames(0),  currentFrame (0)	{}
+
+	AnimState(const AnimState &anim)
+		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
+		  currentFrame (0)	{}
+	
+	AnimState & operator = (const AnimState &anim)
+	{
+		frameBegin = anim.frameBegin;
+		frameEnd = anim.frameEnd;
+		totalFrames = anim.totalFrames;
+		currentFrame = 0;
+		return *this;
+	}
+
+	void Set(int begin, int end, int totFrames=0) 
+	{
+		frameBegin = begin;
+		frameEnd = end;
+		totalFrames = totFrames;
+		currentFrame=0;
+	}
+
+	int frameBegin;
+	int frameEnd;
+	
+	int	currentFrame;
+	int totalFrames;
 };
 
 #endif
