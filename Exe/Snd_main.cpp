@@ -255,9 +255,9 @@ bool CSoundManager::Init()
 	else
 		pcmwf.wBitsPerSample = 8; 
 	
-	if(m_bStereoSupport)
-		pcmwf.nChannels = 2;
-	else
+//	if(m_bStereoSupport)
+//		pcmwf.nChannels = 2;
+//	else
 		pcmwf.nChannels = 1;
 	
 	//Should this be user definable ?
@@ -303,13 +303,33 @@ Update Listener pos
 */
 void CSoundManager::UpdateListener(const CCamera * pCamera)
 {	
-	m_pListener->m_pDS3dListener->SetPosition(pCamera->origin.x, pCamera->origin.y, pCamera->origin.z, 
+	HRESULT hr = m_pListener->m_pDS3dListener->SetPosition(
+						pCamera->origin.x, pCamera->origin.y, pCamera->origin.z, 
 											  DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,pCamera->velocity.z,
+
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener pos:");
+		return;
+	}
+
+	hr = m_pListener->m_pDS3dListener->SetVelocity(0,0,0,DS3D_DEFERRED);
+
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener velocity:");
+		return;
+	}
+
+
+
+/*	m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,pCamera->velocity.z,
 											  DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
+*/
+/*	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
 												 pCamera->up.x,pCamera->up.y, pCamera->up.z, 
 												 DS3D_DEFERRED);
+*/
 	m_listenerPos = pCamera->origin;
 }
 
