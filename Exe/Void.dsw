@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "Devvoid"=..\Devvoid\Devvoid.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "FileSystem"=..\FileSystem\FileSystem.dsp - Package Owner=<4>
 
 Package=<5>
@@ -54,18 +66,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "VLight"=..\vLight\vLight.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "Void"=.\Void.dsp - Package Owner=<4>
 
 Package=<5>
@@ -86,18 +86,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Renderer
     End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "vbsp"=..\vbsp\vbsp.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
 }}}
 
 ###############################################################################
