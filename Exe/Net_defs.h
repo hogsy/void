@@ -19,6 +19,8 @@ const int  PACKET_HEADER	  =	8;
 const int  MAX_DATAGRAM_SIZE  =	1450;
 const int  MAX_BUFFER_SIZE	  = 2900;
 
+const int  SV_TIMEOUT_INTERVAL= 10; //10 seconds of silence
+
 const int  VOID_PROTOCOL_VERSION = 1;
 
 //======================================================================================

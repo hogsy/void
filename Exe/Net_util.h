@@ -40,8 +40,8 @@ public:
 	void Print()   const;
 	bool IsValid() const;
 
-	static void SetLocalAddress(const char * localaddy);
-	static const char * GetLocalAddress();
+	static void SetLocalServerAddr(const char * localaddy);
+	static const char * GetLocalServerAddr();
 
 private:
 

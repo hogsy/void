@@ -29,3 +29,8 @@ March 26th, 2000
 March 29th, 2000
 -Moved filesystem to a statically linked dll
 -integrated it into renderer and exe
+
+//Long period of forgetting about the worklog
+
+May 29th, 2000
+-Added timeouts, reconnects, overflows to client/server

@@ -102,11 +102,12 @@ private:
 	void WritePackets();
 
 	//Broadcast print message to all except
-	void BroadcastPrint(const char * message, int msglen, const SVClient * client);
+	void BroadcastPrintf(const SVClient * client, char* message, ...); //const char * message, int msglen);
 	void PrintServerStatus();
 	
 	void SendSpawnParms(SVClient &client);
 	void SendReconnect(SVClient &client);
+	void SendDisconnect(SVClient &client, const char * reason);
 
 	//=================================================
 	//CVars

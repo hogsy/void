@@ -30,7 +30,8 @@ enum
 	CMD_CAM			  =	12,
 	CMD_CONNECT		  = 13,
 	CMD_DISCONNECT	  = 14,
-	CMD_TALK		  = 15
+	CMD_TALK		  = 15,
+	CMD_RECONNECT	  = 16
 };
 
 //======================================================================================

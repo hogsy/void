@@ -120,6 +120,7 @@ bool CServer::Init()
 //			ComPrintf(". this is a point-to-point link");
 	}
 
+	//Default to loopback
 	if(boundAddr[0] == '\0')
 		strcpy(boundAddr,"127.0.0.1");
 	strcat(boundAddr,":");
@@ -133,7 +134,7 @@ bool CServer::Init()
 	}
 
 	//Save Local Address
-	CNetAddr::SetLocalAddress(boundAddr);
+	CNetAddr::SetLocalServerAddr(boundAddr);
 	if(!m_pSock->Bind(netaddr))
 	{
 		ComPrintf("CServer::Init:Unable to bind socket\n");
@@ -153,32 +154,36 @@ void CServer::Shutdown()
 	if(!m_active)
 		return;
 
-	//Update State
-	m_numClients = 0;
-	m_active = false;
-	m_levelNum = 0;
-
-	
 	//Send disconnect messages to clients, if active
 	for(int i=0;i<m_cMaxClients.ival;i++)
 	{
 		if(m_clients[i].m_state != CL_SPAWNED) 
 			continue;
 
+		SendDisconnect(m_clients[i],"Server quit");
+//		else if(m_clients[i].m_state == CL_CONNECTED)
+//			SendRejectMsg(
 		//send disconect messages
-		m_clients[i].m_netChan.m_reliableBuffer.Reset();
+/*		m_clients[i].m_netChan.m_reliableBuffer.Reset();
 		m_clients[i].m_netChan.m_buffer.Reset();
 		m_clients[i].m_netChan.m_buffer += SV_DISCONNECT;
 		m_clients[i].m_netChan.m_buffer += "Server quit";
 		m_clients[i].m_netChan.PrepareTransmit();
 		m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 		m_clients[i].Reset();
+*/
 	}
 
+	//destroy world data
 	if(m_pWorld)
 		world_destroy(m_pWorld);
 	m_pWorld = 0;
 	m_worldName[0] = 0;
+
+	//Update State
+	m_numClients = 0;
+	m_active = false;
+	m_levelNum = 0;
 	
 	m_pSock->Close();
 	ComPrintf("CServer::Shutdown OK\n");
@@ -195,20 +200,15 @@ void CServer::Restart()
 		return;
 
 	m_active = false;
-	
-	//Send disconnect messages to clients, if active
-//FIXME change to reconnect here
+
+	for(int i=0;i<m_cMaxClients.ival;i++)
+	{
+		if(m_clients[i].m_state == CL_SPAWNED)
+			SendReconnect(m_clients[i]);
+	}
+
 	if(m_pWorld)
 	{
-		if(!m_cDedicated.ival)
-			System::GetConsole()->ExecString("disconnect");
-
-		for(int i=0;i<m_cMaxClients.ival;i++)
-		{
-			if(m_clients[i].m_state == CL_SPAWNED)
-				m_clients[i].m_state = CL_CONNECTED;
-		}
-
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
 		m_worldName[0] = 0;
@@ -236,22 +236,24 @@ void CServer::LoadWorld(const char * mapname)
 		return;
 	}
 
-	//Now load the map
-	char worldname[64];
-	strcpy(worldname, mapname);
 
-	//Shutdown if currently active
-	if(m_active)
-		Restart();
-	else if(!Init())
-		return;
-
-	m_active = true;
-
+	bool bRestarting = false;
 	char mappath[COM_MAXPATH];
+	char worldname[64];
+
+	strcpy(worldname, mapname);
 	strcpy(mappath, szWORLDDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,".bsp");
+
+	//Shutdown if currently active
+	if(m_active)
+	{
+		Restart();
+		bRestarting = true;
+	}
+	else if(!Init())
+		return;
 
 	m_pWorld = world_create(mappath);
 	if(!m_pWorld)
@@ -264,7 +266,9 @@ void CServer::LoadWorld(const char * mapname)
 	//Set worldname
 	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
 
+	//update state
 	m_levelNum ++;
+	m_active = true;
 
 	//Create Sigon-message. includes static entity baselines
 	//=======================
@@ -275,10 +279,9 @@ void CServer::LoadWorld(const char * mapname)
 	m_signOnBuf[0] += m_worldName;
 
 	//if its not a dedicated server, then push "connect loopback" into the console
-	if(!m_cDedicated.bval)
+	if(!bRestarting && !m_cDedicated.bval)
 		System::GetConsole()->ExecString("connect localhost");
 }
-
 
 //======================================================================================
 /*
@@ -306,8 +309,34 @@ void CServer::RunFrame()
 //======================================================================================
 //======================================================================================
 
+/*
+======================================
+Print Status info
+======================================
+*/
 void CServer::PrintServerStatus()
 {
+	ComPrintf("Game Path   : %s\n", m_cGame.string);
+	ComPrintf("Hostname	   : %s\n", m_cHostname.string);
+	ComPrintf("Max clients : %d\n", m_cMaxClients.ival);
+	ComPrintf("Port        : %d\n", m_cPort.ival);
+
+	if(!m_active)
+	{
+		ComPrintf("Server is inactive\n");
+		return;
+	}
+	
+	ComPrintf("Ip address  : %s\n", CNetAddr::GetLocalServerAddr());
+	ComPrintf("Map name    : %s\n", m_worldName);
+	ComPrintf("Num Clients : %d\n========================\n", m_numClients);
+	for(int i=0; i<m_numClients; i++)
+	{
+		if(m_clients[i].m_state == CL_CONNECTED)
+			ComPrintf("%s - Connecting\n", m_clients[i].m_name);
+		else if(m_clients[i].m_state == CL_SPAWNED)
+			ComPrintf("%s - Ingame\n", m_clients[i].m_name);
+	}
 }
 
 /*

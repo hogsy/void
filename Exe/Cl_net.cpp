@@ -143,7 +143,6 @@ void CClient::ReadPackets()
 			m_netChan.BeginRead();
 
 			byte msgId = m_buffer.ReadByte();
-//			int msgId = m_buffer.ReadInt();
 			if(msgId == -1)
 			{
 				//bad message
@@ -170,8 +169,13 @@ void CClient::ReadPackets()
 				}
 			case SV_PRINT:	//just a print message
 				{
-					ComPrintf("%s",m_buffer.ReadString());
+					ComPrintf("%s\n",m_buffer.ReadString());
 					System::GetSoundManager()->Play(m_hsMessage);
+					break;
+				}
+			case SV_RECONNECT:
+				{
+					Reconnect();
 					break;
 				}
 			}
@@ -398,24 +402,27 @@ void CClient::ConnectTo(const char * ipaddr)
 Disconnect if connected to a server
 =====================================
 */
-void CClient::Disconnect(bool serverControlled)
+void CClient::Disconnect(bool serverPrompted)
 {
 	if(m_ingame)
 	{
-		UnloadWorld();
-
-		if(!serverControlled)
+		//Did the server prompt us to disconnect ?
+		if(!serverPrompted)
 		{
+			//Kill server if local
 			if(m_bLocalServer)
 				System::GetConsole()->ExecString("killserver");
+			//send disconnect message if remote
 			else
 			{
-				//CL_DISCONNECT
+				m_netChan.m_buffer.Reset();
+				m_netChan.m_buffer += CL_DISCONNECT;
+				m_netChan.PrepareTransmit();
+				m_pSock->Send(m_netChan.m_sendBuffer);
 			}
 		}
+		UnloadWorld();
 	}
-
-ComPrintf("CL: Disconnected\n");
 
 	m_netChan.Reset();
 	
@@ -431,8 +438,27 @@ ComPrintf("CL: Disconnected\n");
 	m_fNextSendTime = 0.0f;
 	m_szLastOOBMsg = 0;
 	m_numResends = 0;
+
+ComPrintf("CL: Disconnected\n");
 }
 
+/*
+======================================
+Disconnect and reconnect
+======================================
+*/
+void CClient::Reconnect()
+{
+	char svaddr[24];
+	strcpy(svaddr,m_svServerAddr);
+	Disconnect(true);
+	ConnectTo(svaddr);
+	ComPrintf("Reconnecting ...\n");
+}
+
+
+//======================================================================================
+//======================================================================================
 
 /*
 =====================================
@@ -459,7 +485,7 @@ void CClient::Talk(const char *string)
 	//Send this reliably
 	m_netChan.m_buffer += CL_TALK;
 	m_netChan.m_buffer += msg;
-	m_canSend = true;
+//	m_canSend = true;
 }
 
 /*

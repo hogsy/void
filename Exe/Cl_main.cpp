@@ -68,6 +68,7 @@ CClient::CClient(I_Renderer * prenderer):
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
+	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 
 	m_pCmdHandler->SetDefaultBinds();
@@ -313,6 +314,10 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_DISCONNECT:
 		Disconnect();
+		break;
+	case CMD_RECONNECT:
+		Reconnect();
+		break;
 	case CMD_TALK:
 		Talk(parms.String());
 		break;

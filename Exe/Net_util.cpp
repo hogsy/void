@@ -9,10 +9,10 @@ using namespace VoidNet;
 //======================================================================================
 
 char CNetAddr::m_szLocalAddress[24];
-void CNetAddr::SetLocalAddress(const char * localaddy)
+void CNetAddr::SetLocalServerAddr(const char * localaddy)
 {	strcpy(m_szLocalAddress, localaddy);
 }
-const char * CNetAddr::GetLocalAddress()
+const char * CNetAddr::GetLocalServerAddr()
 {	return m_szLocalAddress;
 }
 

@@ -5,8 +5,8 @@
 using namespace VoidNet;
 
 //======================================================================================
+//OOB protocol
 //======================================================================================
-
 /*
 ======================================
 Send a rejection message to the client
@@ -204,14 +204,23 @@ void CServer::ProcessQueryPacket()
 }
 
 
+//======================================================================================
+//Game protocol
+//======================================================================================
 /*
 ======================================
 Print the message to all the clients
 except the given one
 ======================================
 */
-void CServer::BroadcastPrint(const char * message, int msglen, const SVClient * client)
+void CServer::BroadcastPrintf(const SVClient * client, char* message, ...)
 {
+	static char msgBuffer[512];
+	va_list args;
+	va_start(args, message);
+	vsprintf(msgBuffer, message, args);
+	va_end(args);
+
 	for(int i=0;i<m_cMaxClients.ival;i++)
 	{
 		if(&m_clients[i] == client)
@@ -219,12 +228,11 @@ void CServer::BroadcastPrint(const char * message, int msglen, const SVClient * 
 
 		if(m_clients[i].m_state == CL_SPAWNED)
 		{
-			m_clients[i].BeginMessage(SV_PRINT,msglen);
-			m_clients[i].WriteString(message);
+			m_clients[i].BeginMessage(SV_PRINT,strlen(msgBuffer));
+			m_clients[i].WriteString(msgBuffer);
 		}
 	}
 }
-
 
 /*
 ======================================
@@ -271,25 +279,26 @@ void CServer::ParseClientMessage(SVClient &client)
 			if(id == 'n')
 			{
 				const char * clname = m_recvBuf.ReadString();
-				char renameMsg[128];
-				sprintf(renameMsg,"%s renamed to %s\n", client.m_name, clname);
-				
-				BroadcastPrint(renameMsg,strlen(renameMsg),0);
-
+				BroadcastPrintf(0,"%s renamed to %s", client.m_name, clname);
 				strcpy(client.m_name, clname);
 			}
 			else if (id == 'r')
 			{
 				int rate = m_recvBuf.ReadInt();
-ComPrintf("%s changed rate to %d\n", client.m_name, rate);
+ComPrintf("SV: %s changed rate to %d\n", client.m_name, rate);
 				client.m_netChan.m_rate =1.0/rate;
 			}
 			break;
 		}
+	case CL_DISCONNECT:
+		{
+			BroadcastPrintf(0,"%s disconnected", client.m_name);
+			client.Reset();
+			m_numClients --;
+			break;
+		}
 	}
 }
-
-
 
 /*
 ==========================================
@@ -333,7 +342,8 @@ void CServer::ReadPackets()
 					if(spawnstate == SVC_BEGIN+1)
 					{
 						m_clients[i].m_state = CL_SPAWNED;
-ComPrintf("SV:%s entered the game\n", m_clients[i].m_name);
+//ComPrintf("SV:%s entered the game\n", m_clients[i].m_name);
+						BroadcastPrintf(0,"%s entered the game", m_clients[i].m_name);
 					}
 					else
 					{
@@ -361,11 +371,28 @@ ComPrintf("SV:%s entered the game\n", m_clients[i].m_name);
 
 /*
 ======================================
+Tell the client to disconnect
+======================================
+*/
+void CServer::SendDisconnect(SVClient &client, const char * reason)
+{
+	client.m_netChan.m_reliableBuffer.Reset();
+	client.m_netChan.m_buffer.Reset();
+	client.m_netChan.m_buffer += SV_DISCONNECT;
+	client.m_netChan.m_buffer += reason;
+	client.m_netChan.PrepareTransmit();
+	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
+	client.Reset();
+}
 
+/*
+======================================
+Ask client to reconnect
 ======================================
 */
 void CServer::SendReconnect(SVClient &client)
 {
+	client.m_netChan.m_reliableBuffer.Reset();
 	client.m_netChan.m_buffer.Reset();
 	client.m_netChan.m_buffer += SV_RECONNECT;
 	client.m_netChan.PrepareTransmit();
@@ -428,9 +455,6 @@ void CServer::WritePackets()
 		if(m_clients[i].m_state == CL_FREE)
 			continue;
 
-		//Check timeouts here, and flag resends if we havent got any 
-		//response from this client for a while
-
 		//Will fail if we didnt receive a packet from 
 		//this client this frame, or if channels chokes
 		if(!m_clients[i].ReadyToSend())
@@ -439,6 +463,27 @@ void CServer::WritePackets()
 		//In game clients
 		if(m_clients[i].m_state == CL_SPAWNED)
 		{
+			//Check timeouts and overflows here
+			if(m_clients[i].m_netChan.m_lastReceived + SV_TIMEOUT_INTERVAL < System::g_fcurTime)
+			{
+				BroadcastPrintf(&m_clients[i],"%s timed out", m_clients[i].m_name);
+				SendDisconnect(m_clients[i],"Timed out");
+	//			m_clients[i].Reset();
+				m_numClients --;
+				continue;
+			}
+
+			if(m_clients[i].m_bDropClient)
+			{
+				BroadcastPrintf(&m_clients[i],"%s overflowed", m_clients[i].m_name);
+				SendDisconnect(m_clients[i],"Overflowed");
+	//			m_clients[i].Reset();
+				m_numClients --;
+				continue;
+			}
+
+			//flag resends if no response to a reliable packet
+
 			m_clients[i].m_netChan.PrepareTransmit();
 			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 			//m_clients[i].m_bSend = false;

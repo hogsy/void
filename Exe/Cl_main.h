@@ -56,7 +56,8 @@ private:
 	//==================================================
 	//Console commands
 	void ConnectTo(const char * ipaddr);
-	void Disconnect(bool serverControlled = false);
+	void Disconnect(bool serverPrompted = false);
+	void Reconnect();
 
 	bool UpdateName(const CParms &parms);
 	bool UpdateRate(const CParms &parms);
