@@ -79,9 +79,8 @@ bool CFileStream::Open(const char * ifilename)
 	if(isOpen())
 		Close();
 
-	m_size = g_pFileSystem->OpenFileStream(&m_fp, 
-										   m_filehandle, &m_archive,
-										   ifilename);
+	m_size = g_pFileSystem->OpenFileReader(this,ifilename);
+
 	if(m_size)
 	{
 		m_filename = new char[strlen(ifilename)+1];

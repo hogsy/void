@@ -10,6 +10,8 @@ Buffered Reader
 */
 class CFileBuffer : public I_FileReader
 {
+	friend class CFileSystem;
+
 public:
 	
 	CFileBuffer();
@@ -65,6 +67,8 @@ class CArchive;
 
 class CFileStream : public I_FileReader
 {
+	friend class CFileSystem;
+
 public:
 	
 	CFileStream();

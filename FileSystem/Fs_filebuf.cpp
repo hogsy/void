@@ -48,12 +48,11 @@ bool CFileBuffer::Open(const char * ifilename)
 	if(isOpen())
 		Close();
 
-	int size = g_pFileSystem->LoadFileData(&m_buffer,m_buffersize,ifilename);
+	m_size = g_pFileSystem->OpenFileReader(this,ifilename);
 	
 	//File opened successfully
-	if(size)
+	if(m_size)
 	{
-		m_size = size;
 		m_curpos = 0;
 		m_filename = new char[strlen(ifilename)+1];
 		strcpy(m_filename, ifilename);

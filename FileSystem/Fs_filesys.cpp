@@ -33,13 +33,11 @@ const char  * archive_exts[] =
 	0 
 };
 
-
 /*
 =======================================================================
 CFileSystem
 =======================================================================
 */
-
 /*
 ==========================================
 Constructor and Destructor
@@ -155,7 +153,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 	
 	archivelist.sort();
 	
-	for(std::list<std::string>::iterator itor = archivelist.begin(); itor != archivelist.end(); itor++)
+	for(StrListIt itor = archivelist.begin(); itor != archivelist.end(); itor++)
 	{
 		if(Util::CompareExts(itor->c_str(),"zip"))
 		{
@@ -230,7 +228,7 @@ Loads the requested file into given buffer.
 buffer needs to be null. Its allocated here
 ===========================================
 */
-uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifilename)
+uint CFileSystem::OpenFileReader(CFileBuffer * pFile, const char *ifilename)
 {
 	uint size = 0;
 	SearchPath_t * iterator = m_lastpath;
@@ -238,10 +236,12 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 	while(iterator->prev)
 	{
 		iterator = iterator->prev;
+		
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			size = iterator->archive->LoadFile(ibuffer,buffersize,ifilename);
+			size = iterator->archive->LoadFile(&(pFile->m_buffer), pFile->m_buffersize,
+											   ifilename);
 			if(size)
 				return size;
 		}
@@ -257,23 +257,23 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 				size = ftell(fp);
 				fseek(fp,0,SEEK_SET);
 
-				if(!buffersize)
+				if(!pFile->m_buffersize)
 				{
-					*ibuffer = (byte*)g_pHunkManager->HunkAlloc(size);
+					pFile->m_buffer = (byte*)g_pHunkManager->HunkAlloc(size);
 				}
 				else
 				{
-					if(size > buffersize)
+					if(size > pFile->m_buffersize)
 					{
 						ComPrintf("CFileSystem::LoadFileData: Buffer is smaller than size of file %s, %d>%d\n", 
-							ifilename, size, buffersize);
+							ifilename, size, pFile->m_buffersize);
 						fclose(fp);
 						return 0;
 					}
 				}
 			
 				//fill the file buffer
-				fread(*ibuffer,sizeof(byte),size,fp);
+				fread(pFile->m_buffer,sizeof(byte),size,fp);
 				fclose(fp);
 				return size;
 			}
@@ -282,7 +282,6 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifi
 	return 0;
 }
 
-
 /*
 ==========================================
 Try to  Open a fileStream
@@ -290,9 +289,8 @@ FILE pointer is set if its a real file
 otherwise the fileHandle and archive pointers are set
 ==========================================
 */
-uint CFileSystem::OpenFileStream(FILE ** ifp, 
-								 int &ifileHandle, CArchive ** iarchive, 
-								 const char *ifilename)
+
+uint CFileSystem::OpenFileReader(CFileStream * pFile, const char *ifilename)
 {
 	SearchPath_t * iterator = m_lastpath;
 	uint size = 0;
@@ -300,6 +298,7 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 	while(iterator->prev)
 	{
 		iterator = iterator->prev;
+		
 		//Try opening as an archive
 		if(iterator->archive)
 		{
@@ -307,8 +306,9 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 			if(handle >= 0)
 			{
 				size = iterator->archive->GetSize(handle);
-				ifileHandle = handle;
-				*iarchive = iterator->archive;
+				pFile->m_filehandle = handle;
+				pFile->m_archive = iterator->archive;
+				pFile->m_fp = 0;
 				return size;
 			}
 		}
@@ -325,14 +325,16 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 				size = ftell(fp );
 				fseek(fp ,0,SEEK_SET);
 				
-				*ifp = fp;
-				ifileHandle = 0;
+				pFile->m_fp = fp;
+				pFile->m_filehandle = 0;
+				pFile->m_archive = 0;
 				return size;
 			}
 		}
 	}
 	return 0;
 }
+
 
 /*
 ===========================================
