@@ -4,7 +4,6 @@
 #include "Sys_hdr.h"
 #include "Sys_cons.h"
 
-
 extern world_t		*g_pWorld;
 extern I_Renderer   *g_pRender;
 
@@ -12,9 +11,6 @@ CVar *		CClient::m_clport;
 CVar *		CClient::m_clname;
 CVar *		CClient::m_clrate;
 CVar *		CClient::m_noclip;
-
-I_RHud *	CClient::m_rHud;
-
 
 ClientKey  * m_clientkeys=0;
 ClientKey ** m_commandbuffer=0;
@@ -59,14 +55,10 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 	m_rHud = 0;
 
 	m_clport = Sys_GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clrate = Sys_GetConsole()->RegisterCVar("cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clname = Sys_GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
-	m_noclip = Sys_GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
-
+	m_clrate = Sys_GetConsole()->RegisterCVar("cl_rate","0",	 CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clname = Sys_GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);
+	m_noclip = Sys_GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	
-//	Sys_GetConsole()->RegisterCFunc("say", &Talk);
-
-
 	RegCommands();
 }
 
@@ -76,7 +68,6 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 Destroy the client
 ======================================
 */
-
 CClient::~CClient()
 {
 #ifndef __VOIDALPHA
@@ -99,7 +90,6 @@ the socket will remain passive until
 we actually try to connect to a server
 =======================================
 */
-
 bool CClient::InitNet()
 {
 	ComPrintf("CClient::InitNet:%s:%s\n",g_computerName,g_ipaddr);
@@ -288,8 +278,6 @@ bool CClient::UnloadWorld()
 RunClient
 ======================================
 */
-
-
 void CClient::RunFrame()
 {
 	if(m_ingame)
@@ -304,7 +292,6 @@ void CClient::RunFrame()
 			desired_movement.y = 0;
 			desired_movement.z = 0;
 		}
-
 
 		//Print Stats
 		if(m_rHud)
@@ -493,20 +480,6 @@ void CClient::RunFrame()
 #endif
 
 }
-
-
-/*
-======================================
-Console Command, change our name
-======================================
-*/
-
-bool CClient::Name(const CVar * var, int argc, char** argv)
-{
-	return true;
-}
-
-
 
 /*
 =======================================

@@ -261,50 +261,37 @@ void CClient::Move(vector_t *dir, float time)
 
 
 
-
-
-void MoveForward(int argc, char** argv)
+void CClient::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&g_pClient->eye.angles, &forward, NULL, NULL);
+	AngleToVector (&eye.angles, &forward, NULL, NULL);
 	VectorNormalize(&forward);
-//	VectorScale(&forward, g_pClient->m_acceleration, &forward);
-	VectorAdd2(g_pClient->desired_movement,forward);
+	VectorAdd2(desired_movement,forward);
 }
 
-
-void MoveBackward(int argc, char** argv)
+void CClient::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&g_pClient->eye.angles, &backword, NULL, NULL);
+	AngleToVector (&eye.angles, &backword, NULL, NULL);
 	VectorNormalize(&backword);
-//	VectorScale(&backword, -g_pClient->m_acceleration, &backword);
-//	VectorAdd2(g_pClient->desired_movement,backword);
-	VectorMA(&g_pClient->desired_movement, -1, &backword, &g_pClient->desired_movement);
+	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
 
-
-void MoveRight(int argc, char** argv)
+void CClient::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&g_pClient->eye.angles, NULL, &right, NULL);
+	AngleToVector (&eye.angles, NULL, &right, NULL);
 	VectorNormalize(&right);
-//	VectorScale(&right, g_pClient->m_acceleration, &right);
-	VectorAdd2(g_pClient->desired_movement,right);
+	VectorAdd2(desired_movement,right);
 }
 
-
-void MoveLeft(int argc, char** argv)
+void CClient::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&g_pClient->eye.angles, NULL, &left, NULL);
+	AngleToVector (&eye.angles, NULL, &left, NULL);
 	VectorNormalize(&left);
-//	VectorScale(&left, -g_pClient->m_acceleration, &left);
-//	VectorAdd2(g_pClient->desired_movement,left);
-	VectorMA(&g_pClient->desired_movement, -1, &left, &g_pClient->desired_movement);
+	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
-
-
 
 void CClient::RotateRight(float val)
 {
@@ -313,14 +300,12 @@ void CClient::RotateRight(float val)
 		eye.angles.YAW -= 2*PI;
 }
 
-
 void CClient:: RotateLeft(float val)
 {
 	eye.angles.YAW -= g_fframeTime * val;
 	if (eye.angles.YAW < -PI)
 		eye.angles.YAW += 2*PI;
 }
-
 
 void CClient::RotateUp(float val)
 {
@@ -330,7 +315,6 @@ void CClient::RotateUp(float val)
 	if (eye.angles.PITCH > PI/2)
 		eye.angles.PITCH = PI/2;
 }
-
 
 void CClient:: RotateDown(float val)
 {

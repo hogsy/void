@@ -35,10 +35,10 @@ Private Local Vars
 static HHOOK	hWinKbHook=0;	//Keyboard Hook handle
 
 //Device Query Buffers
-static BYTE					m_aKeyState[KB_TOTALCHARS];		  //Receives immediate and Win32 data
+static BYTE					m_aKeyState[IN_NUMKEYS];		  //Receives immediate and Win32 data
 
 static KeyEvent_t			m_keyEvent;						//the key event object which gets dispatched.
-static KeyEvent_t			m_aHeldKeys[KB_TOTALCHARS];		//Used to store oldstats of the keys
+static KeyEvent_t			m_aHeldKeys[IN_NUMKEYS];		//Used to store oldstats of the keys
 
 /*
 =====================================
@@ -70,9 +70,9 @@ CKeyboard::CKeyboard()
 
 	m_pDIKb=0;
 
-	memset(m_aCharVal, 0, KB_TOTALCHARS*sizeof(unsigned int));
-	memset(m_aHeldKeys,0, KB_TOTALCHARS * sizeof(KeyEvent_t));
-	memset(m_aKeyState, 0, KB_TOTALCHARS*sizeof(BYTE));
+	memset(m_aCharVal, 0, IN_NUMKEYS*sizeof(unsigned int));
+	memset(m_aHeldKeys,0, IN_NUMKEYS * sizeof(KeyEvent_t));
+	memset(m_aKeyState, 0, IN_NUMKEYS*sizeof(BYTE));
 	memset(m_aDIBufKeydata,0,KB_DIBUFFERSIZE*sizeof(DIDEVICEOBJECTDATA));
 
 	//Default to self as listener
@@ -497,7 +497,7 @@ void CKeyboard::FlushKeyBuffer()
 	}
 
 	//Send key up events for all keys currently down, to reset them
-	for(int i=0;i<KB_TOTALCHARS;i++)
+	for(int i=0;i<IN_NUMKEYS;i++)
 	{
 		m_keyEvent.flags = 0;
 
@@ -560,7 +560,7 @@ void CKeyboard::Update()
 	if(m_bRepeatEvents)
 	{
 		//Check for any keys that qualify to send out another repeat event
-		for(int i=0;i<KB_TOTALCHARS;i++)
+		for(int i=0;i<IN_NUMKEYS;i++)
 		{
 			//Set all the BUTTONDOWN events to BUTTONHELD
 			if(m_aHeldKeys[i].state == BUTTONDOWN)
@@ -705,7 +705,7 @@ void CKeyboard::Update_DIImmediate()
 		m_keyEvent.flags |= CTRLDOWN;
 
 	//Loop through the entire buffer to check for changed items
-	for(int i=0;i<KB_TOTALCHARS;i++)
+	for(int i=0;i<IN_NUMKEYS;i++)
 	{
 		//If Key is down right now, and its NOT in the HELD keys buffer
 		//Then send a Keydown event
@@ -794,7 +794,7 @@ void CKeyboard::Update_Win32()
 		m_keyEvent.flags |= CTRLDOWN;
 	}
 
-	for(int i=0;i<KB_TOTALCHARS;i++)
+	for(int i=0;i<IN_NUMKEYS;i++)
 	{
 		//The key is down, and wasn't down before
 		if((m_aKeyState[i] & 0x80) && (m_aHeldKeys[i].state == BUTTONUP))

@@ -77,6 +77,7 @@ public:
 	void ExecCommand(CCommand * cmd, const char * cmdString);
 
 	CCommand * GetCommandByName(const char * cmdString);
+	//HCMD GetCommandByName(I_CmdHandler ** phandler, const char * cmdString);
 	
 	//Console funcs
     void ToggleFullscreen(bool full);

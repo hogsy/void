@@ -48,7 +48,6 @@ public:
 
 private:
 
-	#define KB_TOTALCHARS	256
 	#define KB_DIBUFFERSIZE	16
 
 	//========================================================================
@@ -69,7 +68,7 @@ private:
 	CVar *			m_pVarKbMode;
 
 	//Key Translation table		
-	uint			m_aCharVal[KB_TOTALCHARS]; 	
+	uint			m_aCharVal[IN_NUMKEYS]; 	
 	
 	//Receives DI buffered data 
 	DIDEVICEOBJECTDATA	 m_aDIBufKeydata[KB_DIBUFFERSIZE]; 

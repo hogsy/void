@@ -1,22 +1,32 @@
 #ifndef VOID_CLIENT_COMMANDS
 #define VOID_CLIENT_COMMANDS
 
-#define CL_CMDBUFFERSIZE	8
-
 #include "Sys_hdr.h"
 #include "In_defs.h"
 
+//======================================================================================
+//======================================================================================
 
-class CClientCommandHandler //: public I_InKeyListener
-{
-//	void HandleKeyEvent	(const KeyEvent_t &kevent) { }
-/*	void HandleCursorEvent(const float &ix,
-					   const float &iy,
-					   const float &iz){}
-*/
-};
+#define CL_CMDBUFFERSIZE	8
 
+//Registered Command Ids
 
+#define CMD_MOVE_FORWARD	0		
+#define CMD_MOVE_BACKWARD	1
+#define CMD_MOVE_LEFT		2
+#define CMD_MOVE_RIGHT		3
+#define CMD_ROTATE_LEFT		4
+#define CMD_ROTATE_RIGHT	5
+#define CMD_ROTATE_UP		6
+#define CMD_ROTATE_DOWN		7
+#define CMD_BIND			8
+#define CMD_BINDLIST		9
+#define CMD_UNBIND			10
+#define CMD_UNBINDALL		11
+#define CMD_CAM				12
+
+//======================================================================================
+//======================================================================================
 /*
 =========================================
 List of all the Keys and a pointer to 
@@ -25,26 +35,56 @@ the function they are bound to
 */
 struct ClientKey
 {
-	ClientKey()
-	{ 	
-		szCommand = 0;
-		pHandler = 0;
-		pCmd = 0;
-		id = 0;
-	}
+	ClientKey()	{ szCommand = 0; pCmd = 0;	}
+	~ClientKey(){ if(szCommand)	delete [] szCommand; pCmd = 0; }
 	
-	~ClientKey()
-	{
-		if(szCommand) 
-			delete [] szCommand;
-		pCmd = 0;
-	}
-	char *	szCommand;
-	HCMD	id;	
-	I_CmdHandler * pHandler;
-	
+	char *	   szCommand;
 	CCommand * pCmd;
 };
+
+//======================================================================================
+//======================================================================================
+/*
+======================================
+Client Command Handler
+-handle input events
+-maintain a list of all the valid commands
+-maintain a command buffer that gets executed every frame
+-provide means to register new commands
+-provide means to bind keys to commands
+======================================
+*/
+
+class CClientCmdHandler : public I_InKeyListener
+{
+public:
+
+	CClientCmdHandler(CClient * pclient);
+	~CClientCmdHandler();
+
+	void SetListenerState(bool on);
+	void RunCommands();
+
+	void HandleKeyEvent	  (const KeyEvent_t &kevent);
+	void HandleCursorEvent(const float &ix,
+						   const float &iy,
+					       const float &iz);
+
+	void BindFuncToKey(int argc, char** argv);
+	void Unbind(int argc, char** argv);
+	void BindList();
+	void Unbindall();
+
+private:
+
+	void AddToCmdBuffer(ClientKey * const pcommand);
+	void RemoveFromCmdBuffer(const ClientKey * pcommand);
+
+	CClient   * m_pClient;
+	ClientKey	m_cmdKeys[IN_NUMKEYS];
+	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
+};
+
 
 /*
 =========================================
@@ -71,13 +111,13 @@ and their corresponding values
 only 
 ============================================================================
 */
-struct keyconstants_t
+struct ClientKeyConstants_t
 {
-	const char		*key;
-	unsigned int	val;
+	const char * key;
+	unsigned int val;
 };
 
-const keyconstants_t keytable[] =
+const ClientKeyConstants_t keytable[] =
 {
 	{	"MOUSE1",		INKEY_MOUSE1	},
 	{	"MOUSE2",		INKEY_MOUSE2	},

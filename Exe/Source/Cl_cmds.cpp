@@ -1,16 +1,89 @@
-/*
-======================================
-Client Command Handling
-
--maintain a list of all the valid commands
--maintain a command buffer that gets executed every frame
--provide means to register new commands
--provide means to bind keys to commands
-======================================
-*/
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 #include "Sys_cons.h"
+
+
+//======================================================================================
+//======================================================================================
+
+CClientCmdHandler::CClientCmdHandler(CClient * pclient)
+{
+	m_pClient = pclient;
+
+	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
+		m_cmdBuffer[i] = 0;
+}
+
+CClientCmdHandler::~CClientCmdHandler()
+{
+	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
+		m_cmdBuffer[i] = 0;
+}
+
+
+void CClientCmdHandler::SetListenerState(bool on)
+{
+}
+
+void CClientCmdHandler::RunCommands()
+{
+}
+
+
+void CClientCmdHandler::HandleKeyEvent(const KeyEvent_t &kevent)
+{
+}
+
+
+void CClientCmdHandler::HandleCursorEvent(const float &ix,
+										  const float &iy,
+										  const float &iz)
+{
+}
+
+void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
+{
+}
+
+void CClientCmdHandler::Unbind(int argc, char** argv)
+{
+}
+
+void CClientCmdHandler::BindList()
+{
+}
+
+void CClientCmdHandler::Unbindall()
+{
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //============================================================================
@@ -74,7 +147,9 @@ void CClient::HandleKeyEvent	(const KeyEvent_t &kevent)
 			}
 		}
 		//if its regular function and if its a keydown event,
-		else if(kevent.state == BUTTONDOWN)
+		else 
+
+		if(kevent.state == BUTTONDOWN)
 		{
 			//Send over to the console for execution
 			g_pConsole->ExecString(m_clientkeys[(kevent.id)].szCommand);
@@ -128,7 +203,7 @@ void CClient::RunCommands()
 	for(int i=0; i<CL_CMDBUFFERSIZE;i++)
 	{
 		if(m_commandbuffer[i]) 
-			m_commandbuffer[i]->pCmd->handler->HandleCommand(m_commandbuffer[i]->pCmd->id, 1, 0);
+			g_pConsole->ExecCommand(m_commandbuffer[i]->pCmd, m_commandbuffer[i]->szCommand);
 	}
 }
 
@@ -188,13 +263,16 @@ void CClient::BindFuncToKey(int argc, char** argv)
 		return;
 	}
 
-	CCommand * pCmd = g_pConsole->GetCommandByName(argv[2]);
-	if(!pCmd)
+	//CCommand * pCmd = 
+	m_clientkeys[keynum].pCmd =		g_pConsole->GetCommandByName(argv[2]);
+	//I_CmdHander * handler=0;
+	//HCMD cmdId = g_pConsole->GetCommandByName(&m_clientkeys[keynum].pHandler,argv[2]);
+	if(m_clientkeys[keynum].pCmd < 0)
 	{
 		ComPrintf("%s is not a valid command\n",argv[2]);
 		return;
 	}
-	m_clientkeys[keynum].pCmd = pCmd;
+//	m_clientkeys[keynum].pCmd = pCmd;
 	
 	//If there are more arguments then just the functions name
 	//then they will be used as function paramters
@@ -347,21 +425,6 @@ void CClient::Unbind(int argc, char** argv)
 Register the EXE Client Commands
 ======================================
 */
-
-#define CMD_MOVE_FORWARD	0		
-#define CMD_MOVE_BACKWARD	1
-#define CMD_MOVE_LEFT		2
-#define CMD_MOVE_RIGHT		3
-#define CMD_ROTATE_LEFT		4
-#define CMD_ROTATE_RIGHT	5
-#define CMD_ROTATE_UP		6
-#define CMD_ROTATE_DOWN		7
-#define CMD_BIND			8
-#define CMD_BINDLIST		9
-#define CMD_UNBIND			10
-#define CMD_UNBINDALL		11
-#define CMD_CAM				12
-
 void CClient::RegCommands()
 {
 	Sys_GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
@@ -384,16 +447,16 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 	switch(cmdId)
 	{
 	case CMD_MOVE_FORWARD:
-		MoveForward(numArgs,szArgs);
+		MoveForward();
 		break;
 	case CMD_MOVE_BACKWARD:
-		MoveBackward(numArgs,szArgs);
+		MoveBackward();
 		break;
 	case CMD_MOVE_LEFT:
-		MoveLeft(numArgs,szArgs);
+		MoveLeft();
 		break;
 	case CMD_MOVE_RIGHT:
-		MoveRight(numArgs,szArgs);
+		MoveRight();
 		break;
 	case CMD_ROTATE_LEFT:
 		RotateLeft();
@@ -474,7 +537,8 @@ void CClient::WriteBindTable(FILE *fp)
 follow a camera path
 ===========
 */
-extern world_t		 *g_pWorld;
+extern world_t	 *g_pWorld;
+
 void CClient::CamPath(int argc,char **argv)
 {
 	// find the head path node
@@ -482,13 +546,12 @@ void CClient::CamPath(int argc,char **argv)
 	{
 		if (strcmp(key_get_value(g_pWorld, ent, "classname"), "misc_camera_path_head") == 0)
 		{
-			g_pClient->m_campath = ent;
-			g_pClient->m_camtime = g_fcurTime;
+			m_campath = ent;
+			m_camtime = g_fcurTime;
 
 			vector_t origin;
 			key_get_vector(g_pWorld, ent, "origin", origin);
-			VectorCopy(origin, g_pClient->eye.origin); // move to first point of path
-
+			VectorCopy(origin, eye.origin); // move to first point of path
 			return;
 		}
 	}

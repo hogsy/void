@@ -7,6 +7,8 @@
 Listeners need these definations to handle input events
 */
 
+#define IN_NUMKEYS	256
+
 /*
 ===========================================
 Generic button state flags,

@@ -184,12 +184,16 @@ CFUNC CConsole::GetFuncByName(const char * fname)
 */
 
 CCommand * CConsole::GetCommandByName(const char * cmdString)
+//HCMD CConsole::GetCommandByName(I_CmdHandler ** phandler, const char * cmdString)
 {
 	CPtrList<CCommand>* iterator = m_pfList;
 	while(iterator->next && iterator->item)
 	{
 		if(strcmp(cmdString,iterator->item->name) ==0)
-			return iterator->item;
+		{
+			//*phandler = iterator->item->handler;
+			return iterator->item; //->id;
+		}
 		iterator = iterator->next;
 	}
 	return 0;

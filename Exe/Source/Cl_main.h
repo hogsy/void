@@ -6,6 +6,7 @@
 #include "Net_util.h"
 #include "Net_sock.h"
 #include "I_hud.h"
+#include "In_defs.h"
 
 
 /*
@@ -13,9 +14,6 @@
 The client
 =====================================
 */
-
-#include "In_defs.h"
-
 class CClient : public I_InCursorListener, 
 				public I_InKeyListener,
 				public I_CmdHandler
@@ -43,8 +41,8 @@ public:
 	//Input Listener Interface
 	void HandleKeyEvent	(const KeyEvent_t &kevent);
 	void HandleCursorEvent(const float &ix,
-					   const float &iy,
-					   const float &iz);
+						   const float &iy,
+						   const float &iz);
 
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
@@ -53,67 +51,57 @@ public:
 	//messages received from the server would be handled here
 	void RunFrame();
 
-	static bool Name(const CVar * var, int argc, char** argv);
+	friend void Talk(int argc,char **argv);
+	friend void Connect(int argc, char** argv);
+	
+	bool m_active;
+	bool m_connected;
+	bool m_ingame;
 
+	eyepoint_t  eye;
+
+private:
+
+	//Movement
+	void Move(vector_t *dir, float time);
+	void MoveForward();
+	void MoveBackward();
+	void MoveRight();
+	void MoveLeft();
+	void RotateRight(float val=5.0);
+	void RotateLeft(float val=5.0);
+	void RotateUp(float val=5.0);
+	void RotateDown(float val=5.0);
 
 	//Console funcs
 	void BindFuncToKey(int argc, char** argv);
+	void BindList(int argc, char** argv);
+	void Unbindall(int argc, char** argv);
+	void Unbind(int argc, char** argv);
+	void CamPath(int argc,char **argv);
 
-	static void BindList(int argc, char** argv);
-	static void Unbindall(int argc, char** argv);
-	static void Unbind(int argc, char** argv);
-	static void CamPath(int argc,char **argv);
 
-	friend void Talk(int argc,char **argv);
-
-	friend void MoveForward(int argc, char** argv);
-	friend void MoveBackward(int argc, char** argv);
-	friend void MoveRight(int argc, char** argv);
-	friend void MoveLeft(int argc, char** argv);
-	friend void KRotateRight(int argc, char** argv);
-	friend void KRotateLeft(int argc, char** argv);
-	friend void KRotateUp(int argc, char** argv);
-	friend void KRotateDown(int argc, char** argv);
-
-	friend void Connect(int argc, char** argv);
 	
-	eyepoint_t  eye;
+	static	CVar *		m_clport;
+	static  CVar *		m_clname;
+	static  CVar *		m_clrate;
+	static  CVar *		m_noclip;
+
 
 	unsigned int	m_recvseq;		//packet num
 	CNBuffer		m_recvBuf;		//network buffer we read from
 
 	unsigned int	m_sendseq;		//packet num
 	CNBuffer		m_sendBuf;		//network buffer we write to
-	
-	bool m_active;
-	bool m_connected;
-	bool m_ingame;
 
 	world_t    *m_world;
 
-	void Move(vector_t *dir, float time);
+	friend class CClientCmdHandler;
+	CClientCmdHandler * m_pCmdHandler;
 
-private:
+//	CClientCommandHandler * m_pCmdHandler;
 
-
-	void RotateRight(float val=5.0);
-	void RotateLeft(float val=5.0);
-	void RotateUp(float val=5.0);
-	void RotateDown(float val=5.0);
-
-
-	class CClientCommandHandler;
-
-	CClientCommandHandler * m_pCmdHandler;
-
-
-	static	CVar *		m_clport;
-	static  CVar *		m_clname;
-	static  CVar *		m_clrate;
-	static  CVar *		m_noclip;
-
-	static	I_RHud *	m_rHud;
-
+	I_RHud *	m_rHud;
 
 
 	CSocket	 	m_sock;
