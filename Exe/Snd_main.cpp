@@ -433,8 +433,6 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 //======================================================================================
 //======================================================================================
 
-
-
 /*
 ======================================
 
@@ -461,6 +459,7 @@ void CSoundManager::AddStaticSource(const ClEntity * ent)
 	m_sndSources[freeIndex].Reset();
 	m_sndSources[freeIndex].bStatic = true;
 	m_sndSources[freeIndex].ent = ent;
+	m_sndSources[freeIndex].flags = CHAN_LOOPING;
 	m_sndSources[freeIndex].muteDist = GetMuteDist(ent->volume, ent->attenuation);
 }
 
