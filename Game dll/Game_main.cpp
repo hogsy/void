@@ -2,6 +2,7 @@
 #include "Game_main.h"
 #include "Game_spawn.h"
 #include "Game_anims.h"
+
 #include "Com_buffer.h"
 #include "Com_trace.h"
 
@@ -132,11 +133,36 @@ void CGame::RunFrame(float curTime)
 	vector_t desiredMove;	
 	vector_t forward, right, up;
 	EntClient * pClient = 0;
-
-	EPlayerAnim clAnim= PLAYER_NONE;
+	EPlayerAnim clAnim;
 
 	for(i=0; i<numClients; i++)
 	{
+		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
+		{
+			pClient = clients[i];
+			pClient->angles = pClient->clCmd.angles;
+			
+			if(pClient->clCmd.moveFlags == 0)
+				clAnim = PLAYER_STAND;
+			else if(pClient->clCmd.moveFlags == ClCmd::CROUCH)
+				clAnim = PLAYER_CROUCH_STAND;
+			else if(pClient->clCmd.moveFlags & ClCmd::JUMP)
+				clAnim = PLAYER_JUMP;
+			else
+			{
+				clAnim = PLAYER_RUN;
+				if(pClient->clCmd.moveFlags & ClCmd::CROUCH)
+					clAnim = PLAYER_CROUCH_WALK;
+			}
+
+			if(clAnim != pClient->animSeq)
+			{
+				pClient->animSeq = clAnim;
+				pClient->animSeq |= 255; 
+			}
+		}
+			
+
 		/*
 		FIX ME: Server side movement needs to be redesigned.
 
@@ -147,8 +173,7 @@ void CGame::RunFrame(float curTime)
 		the client had pressed move for a single client frame.
 		*/
 
-#if 0
-
+/*
 		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
 		{
 			pClient = clients[i];
@@ -247,7 +272,7 @@ void CGame::RunFrame(float curTime)
 			//Do we really want to do this ?
 			pClient->clCmd.Reset();
 		}
-#endif
+*/
 	}
 }
 
