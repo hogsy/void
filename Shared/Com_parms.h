@@ -14,8 +14,7 @@ class CParms
 public:
 
 	enum
-	{
-		INVALID_VALUE = -1
+	{	INVALID_VALUE = -1
 	};
 
 	explicit CParms(int len);	
@@ -23,34 +22,25 @@ public:
 	CParms(const char * buf);
 	~CParms();
 
+	CParms & operator = (const char * istr);
 	void Set(const char * buf);
 
-	CParms & operator = (const char * istr);
+	//Return token number x, Token 0 is the first one
+	char* StringTok(int num, char * outString, int stringlen,  char delim=' ') const;
+	int   IntTok(int num, char delim =' ') const;
+	float FloatTok(int num, char delim =' ') const;
 
 	//Return the number of tokens
 	int NumTokens(char delim =' ') const;
 
-	//Return token number x as a string Token 0 is the first one
-	char * StringTok(int num, char * outString, int stringlen,  char delim=' ') const;
-
-	//Get pointer to string. 
-	//This is unsafe because string contents might change is another command
-	//is executed
-	const char * UnsafeStringTok(int num, char delim=' ') const;
-
-	//Return token number x as an integer Token 0 is the first one
-	int IntTok(int num, char delim =' ') const;
-
-	//Return token number x as a float Token 0 is the first one
-	float FloatTok(int num, char delim =' ') const;
-
-	const char * String() const;
-	int Length() const;
+	const char * String() const { return string; }
+	int Length() const { return length; }
 
 private:
-	char * string;
-	int	 length;
-	mutable int  numTokens;
+	
+	char *	string;
+	int		length;
+	mutable int numTokens;
 	
 	static char szParmBuffer[1024];
 };

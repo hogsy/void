@@ -257,16 +257,19 @@ Try to execute a string in the console
 bool CConsole::ExecString(const char *string)
 {
 	m_parms = string;
-	const char * szfirstArg = m_parms.UnsafeStringTok(0);
+	const char * szfirstArg = m_parms.StringTok(0,m_szParmBuffer,1024);
 
+	//Try matching with registered commands
 	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)
 	{
 		if(strcmp(itcmd->name, szfirstArg)==0)
-		{	itcmd->handler->HandleCommand(itcmd->id,m_parms);
+		{	
+			itcmd->handler->HandleCommand(itcmd->id,m_parms);
 			return true;
 		}
 	}
 
+	//Try matching with registered cvars
 	for (CVarList::iterator it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 	{
 		if(!strcmp((*it)->name,szfirstArg))
@@ -279,8 +282,7 @@ bool CConsole::ExecString(const char *string)
 				int numtokens = 0;
 				if(numtokens = m_parms.NumTokens() > 1)
 				{
-					//char argVal[128];
-					const char * argVal = m_parms.UnsafeStringTok(1);
+					const char * argVal = m_parms.StringTok(1,m_szParmBuffer,1024);
 					
 					if((*it)->type != CVAR_STRING)
 						(*it)->Set(argVal);
@@ -292,7 +294,7 @@ bool CConsole::ExecString(const char *string)
 				
 						for(int i=2,len=0;i<numtokens;i++)
 						{
-							arg = m_parms.UnsafeStringTok(i);
+							arg = m_parms.StringTok(i,m_szParmBuffer,1024);
 							len += strlen(arg+1);
 							if(len >= 80)
 								break;
@@ -309,7 +311,7 @@ bool CConsole::ExecString(const char *string)
 					}
 				}
 			}
-			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
+			ComPrintf("%s = \"%s\" : default = \"%s\"\n",(*it)->name,(*it)->string, (*it)->default_string);
 			return true;
 		}
 	}
@@ -354,7 +356,7 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 	if(GetTokenParms(var->name, &parms))
 	{
 		if(parms.NumTokens() > 1)
-			var->ForceSet(parms.UnsafeStringTok(1));
+			var->ForceSet(parms.StringTok(1,m_szParmBuffer,1024));
 	}
 	m_lCVars.insert(it,var);
 }
@@ -437,7 +439,7 @@ void CConsole::CVarlist(const CParms &parms)
 	
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.UnsafeStringTok(1);
+		const char * arg = parms.StringTok(1,m_szParmBuffer,1024);
 		int len= strlen(arg);
 		for(it = m_lCVars.begin(); it != m_lCVars.end(); it++)
 		{
@@ -467,7 +469,7 @@ void CConsole::CCmdList(const CParms &parms)
 
 	if(parms.NumTokens() >=2)
 	{
-		const char * arg = parms.UnsafeStringTok(1);
+		const char * arg = parms.StringTok(1,m_szParmBuffer,1024);
 		int len= strlen(arg);
 		for(it = m_lCmds.begin(); it != m_lCmds.end(); it ++)
 		{
@@ -640,9 +642,11 @@ void CConsole::ExecConfig(const char *szFilename)
 			break;
 		
 		parm = line;
-		firstParm = parm.UnsafeStringTok(0);
+		firstParm = parm.StringTok(0,m_szParmBuffer,1024);
 		firstParmLen = strlen(firstParm);
 
+		//Ignore if the parm was specified in the commandline as that takes
+		//higher precedence
 		if(IsCmdLineParm(firstParm,firstParmLen))
 			continue;
 		

@@ -32,8 +32,7 @@ public:
 		default_string = 0;
 		handler = 0;
 
-//		CVar::
-			ForceSet(varval);
+		ForceSet(varval);
 	}
 
 	//Destructor
@@ -163,8 +162,7 @@ public:
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
-		//CVar::
-			ForceSet(varval);
+		ForceSet(varval);
 	}
 
 	void Set(float val)
@@ -184,8 +182,7 @@ public:
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
-		//CVar::
-			ForceSet(val);
+		ForceSet(val);
 	}
 
 	void Set(int val)
@@ -205,8 +202,7 @@ public:
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
-		//CVar::
-			ForceSet(val);
+		ForceSet(val);
 	}
 
 	/*
@@ -218,8 +214,7 @@ public:
 	{	
 		if(latched_string)
 		{
-			//CVar::
-				ForceSet(latched_string);
+			ForceSet(latched_string);
 			delete [] latched_string;
 			latched_string = 0;
 		}
@@ -232,8 +227,7 @@ public:
 	*/
 	void Reset()
 	{	
-		//CVar::
-			ForceSet(default_string);
+		ForceSet(default_string);
 		if(latched_string)
 		{
 			delete [] latched_string;

@@ -49,7 +49,6 @@ struct I_ConsoleRenderer;
 
 class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener	//Key Event listener interface	
-				//public I_ConHandler
 {
 public:
 
@@ -111,7 +110,8 @@ private:
 	CVarList	m_lCVars;		
 
 	//Hold parsed parms of commandString enterered
-	CParms		m_parms;		
+	CParms		m_parms;
+	char		m_szParmBuffer[1024];
 	
 	//Current String in Console
 	std::string	m_conString;	
