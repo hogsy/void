@@ -1,4 +1,5 @@
-
+#include "Standard.h"
+#include "Ren_cache.h"
 #include "Tex_hdr.h"
 #include "Tex_main.h"
 #include "Tex_image.h"

@@ -26,7 +26,7 @@ enum EMoveType
 	MOVETYPE_BBOX,		//just a static bbox
 	MOVETYPE_MISSLE,	
 	MOVETYPE_TRAJECTORY,
-	MOVETYPE_CLIENT
+	MOVETYPE_STEP
 };
 
 //Forward declarations
@@ -37,8 +37,8 @@ struct BaseEntity;
 class CMoveType
 {
 public:
-	static void NoClipMove(BaseEntity &ent, vector_t &dir, float time);
-	static void ClientMove(BaseEntity &ent, vector_t &dir, float time);
+	static void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
+	static void ClientMove(BaseEntity *ent, vector_t &dir, float time);
 
 	static void SetWorld(CWorld * pWorld);
 

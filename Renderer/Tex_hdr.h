@@ -1,7 +1,6 @@
 #ifndef TEXTUREDEFINITIONS_H
 #define TEXTUREDEFINITIONS_H
 
-#include "Standard.h"
 #include "Ren_cache.h"
 
 typedef int dimension_t[2];

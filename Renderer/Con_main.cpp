@@ -1,7 +1,6 @@
-
+#include "Standard.h"
 #include "Con_main.h"
 #include "Tex_hdr.h"
-#include "Hud_main.h"
 
 //======================================================================================
 //======================================================================================
@@ -28,15 +27,8 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 
 	//Allocate space for Lines
 	for (int i = 0; i < CON_MAX_LINES; i++)
-	{
 		m_lines[i] = new Conline_t();
-		if (m_lines[i] == NULL) 
-		{
-			FError("Con_Init::Couldnt allocate space for Console line %d\n",i);
-			return;
-		}
-	}
-
+	
 	g_pConsole->RegisterCVar(&m_conSpeed);
 	g_pConsole->RegisterCVar(&m_conAlpha);
 

@@ -4,6 +4,7 @@
 
 #include "Standard.h"
 #include "I_file.h"
+#include "Cl_defs.h"
 #include "Mdl_entry.h"
 #include "I_clientRenderer.h"
 

@@ -1,6 +1,5 @@
-
-#include "Tex_hdr.h"
 #include "Ren_cache.h"
+#include "Tex_hdr.h"
 #include "Mdl_main.h"
 #include "Client.h"
 

@@ -1,6 +1,7 @@
 #ifndef CLIENTRENDERER_H
 #define CLIENTRENDERER_H
 
+#include "Cl_defs.h"
 #include "Hud_main.h"
 #include "Img_main.h"
 #include "Mdl_main.h"

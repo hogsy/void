@@ -14,13 +14,12 @@ void CMoveType::SetWorld(CWorld * pWorld)
 }
 
 
-
-void CMoveType::NoClipMove(BaseEntity &ent, vector_t &dir, float time)
-{	VectorMA(&ent.origin, time, &dir, &ent.origin);
+void CMoveType::NoClipMove(BaseEntity *ent, vector_t &dir, float time)
+{	VectorMA(&ent->origin, time, &dir, &ent->origin);
 }
 
 
-void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
+void CMoveType::ClientMove(BaseEntity *ent, vector_t &dir, float time)
 {
 	// all the normals of the planes we've hit
 	vector_t	hitplanes[MAX_CLIP_PLANES];	
@@ -32,18 +31,15 @@ void CMoveType::ClientMove(BaseEntity &ent, vector_t &dir, float time)
 
 	dir.Scale(time);
 	primal_dir = dir;
-//	Void3d::VectorScale(dir,dir, time);
-//	Void3d::VectorSet(primal_dir, dir);
 	
 	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
-		VectorAdd(ent.origin, dir, end);
+		VectorAdd(ent->origin, dir, end);
 
-		m_pWorld->Trace(tr, ent.origin, end, ent.mins, ent.maxs);
+		m_pWorld->Trace(tr, ent->origin, end, ent->mins, ent->maxs);
 		if (tr.fraction > 0)
 		{
-			//Void3d::VectorSet(ent.origin, tr.endpos);
-			ent.origin = tr.endpos;
+			ent->origin = tr.endpos;
 			hits = 0;
 		}
 

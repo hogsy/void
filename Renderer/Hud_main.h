@@ -3,7 +3,6 @@
 
 #include "I_clientRenderer.h"
 
-
 //Need to be able to pass some sort of layout info to the hud
 //i.e pass image/model index, screenposition, link it with an auto updated number/string
 

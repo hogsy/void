@@ -3,8 +3,6 @@
 
 #include "Standard.h"
 #include "Img_entry.h"
-#include "I_clientRenderer.h"
-
 
 class CImageManager
 {

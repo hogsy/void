@@ -1,4 +1,3 @@
-
 #include "Tex_image.h"
 #include "Ijl/ijl.h"
 

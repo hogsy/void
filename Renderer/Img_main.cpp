@@ -1,4 +1,5 @@
-
+#include "Cl_defs.h"
+#include "I_clientRenderer.h"
 #include "Img_main.h"
 
 /*
