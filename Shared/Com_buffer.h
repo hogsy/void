@@ -2,6 +2,7 @@
 #define VOID_COM_BUFFER
 
 #include "Com_defs.h"
+
 /*
 ==========================================
 Network buffer utility class
@@ -10,16 +11,6 @@ Network buffer utility class
 class CNetBuffer
 {
 public:
-	enum
-	{
-		SIZE_CHAR  = 1,
-		SIZE_SHORT = 2, 
-		SIZE_INT   = 4,
-		SIZE_FLOAT = 4,
-
-		DEFAULT_BUFFER_SIZE = 2900
-	};
-
 	CNetBuffer(int size);
 	~CNetBuffer();
 
@@ -58,6 +49,14 @@ public:
 	void  SetSize(int size){ m_curSize = size; }
 
 private:
+	enum
+	{
+		SIZE_CHAR  = 1,
+		SIZE_SHORT = 2, 
+		SIZE_INT   = 4,
+		SIZE_FLOAT = 4,
+	};
+
 	byte *	m_buffer;
 	int		m_curSize;
 	int		m_maxSize;

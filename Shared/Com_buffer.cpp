@@ -7,9 +7,6 @@ Constructor/Destructor
 */
 CNetBuffer::CNetBuffer(int size)
 {
-	if(size > DEFAULT_BUFFER_SIZE)
-		size = DEFAULT_BUFFER_SIZE;
-
 	m_buffer = new byte[size];
 	m_maxSize = size;
 	m_curSize = 0;
@@ -36,7 +33,7 @@ byte* CNetBuffer::GetSpace(int size)
 {
 	if(m_curSize + size >= m_maxSize)
 	{
-		ComPrintf("CNetBuffer:: Buffer overflowed\n");
+//		ComPrintf("CNetBuffer:: Buffer overflowed\n");
 		m_curSize = 0;
 		m_overFlowed = true;
 	}

@@ -1,16 +1,19 @@
+
 EXE
 ==============================================================
 //soon
+add client command buffering
 add 3d sound buffers and a listener
 error/logging/handling
+default key bindings should not depend on default.cfg
+command line parms
 
-//low priority, would be nice to have
-mpeg playback via wm services
+//low priority, would be nice to have sometime
+mpeg playback via directShow services
 get a basic directMusic interface going, will have to write a loader stream for that
 
 
 RENDERER
 ==============================================================
-
 setup jpeg reading and writing
-gl driver issues with 3dfx cars? 
+gl driver issues with 3dfx cards? 
