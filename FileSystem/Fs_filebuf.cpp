@@ -53,7 +53,7 @@ bool CFileBuffer::Open(const char * ifilename)
 	if(isOpen())
 		Close();
 
-	int size = g_pFileSystem->LoadFileData(&m_buffer,m_buffersize,false,ifilename);
+	int size = g_pFileSystem->LoadFileData(&m_buffer,m_buffersize,ifilename);
 	
 	//File opened successfully
 	if(size)

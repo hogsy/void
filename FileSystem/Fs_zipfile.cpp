@@ -1,5 +1,110 @@
 #include "Fs_zipfile.h"
 
+
+#define CENTRAL_HDR_SIG	'\001','\002'	/* the infamous "PK" signature bytes, */
+#define LOCAL_HDR_SIG	'\003','\004'	/*  sans "PK" (so unzip executable not */
+#define END_CENTRAL_SIG	'\005','\006'	/*  mistaken for zipfile itself) */
+#define EXTD_LOCAL_SIG	'\007','\010'	/* [ASCII "\113" == EBCDIC "\080" ??] */
+
+#define MAXCOMMENTBUFFERSIZE			1024
+#define ZIP_LOCAL_FILE_HEADER_SIZE      26
+
+static const char zip_hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
+static const char zip_hdr_local[4] = { 'P', 'K', LOCAL_HDR_SIG };
+static const char zip_hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
+static const char zip_hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
+
+typedef struct ZIP_local_file_header_s 
+{
+	byte	version_needed_to_extract[2];
+	ushort	general_purpose_bit_flag;
+	ushort	compression_method;
+	ushort	last_mod_file_time;
+	ushort	last_mod_file_date;
+	ulong	crc32;
+	ulong	csize;
+	ulong	ucsize;
+	ushort	filename_length;
+	ushort	extra_field_length;
+} ZIP_local_file_header;
+
+typedef struct ZIP_central_directory_file_header_s 
+{
+	byte	version_made_by[2];
+	byte	version_needed_to_extract[2];
+	ushort	general_purpose_bit_flag;
+	ushort	compression_method;
+	ushort	last_mod_file_time;
+	ushort	last_mod_file_date;
+	ulong	crc32;
+	ulong	csize;
+	ulong	ucsize;
+	ushort	filename_length;
+	ushort  extra_field_length;
+	ushort  file_comment_length;
+	ushort  disk_number_start;
+	ushort  internal_file_attributes;
+	ulong	external_file_attributes;
+	ulong	relative_offset_local_header;
+} ZIP_central_directory_file_header;
+
+typedef struct ZIP_end_central_dir_record_s 
+{
+	ushort	number_this_disk;
+	ushort	num_disk_start_cdir;
+	ushort	num_entries_centrl_dir_ths_disk;
+	ushort	total_entries_central_dir;
+	ulong	size_central_directory;
+	ulong	offset_start_central_directory;
+	ushort	zipfile_comment_length;
+
+} ZIP_end_central_dir_record;
+
+
+
+struct CZipFile::ZipEntry_t
+{
+	ZipEntry_t() { filepos = filelen = 0; };
+	char filename[COM_MAXFILENAME];
+	ulong filepos, 
+		 filelen;
+};
+
+struct CZipFile::ZipOpenFile_t : public CZipFile::ZipEntry_t
+{
+	ZipOpenFile_t() { curpos = 0; };
+	ulong curpos;
+};
+
+
+
+static void getShort (FILE* fin, ushort &is)
+{
+    int ix=0;
+    ix = fgetc(fin);
+	ix += (((ulong)fgetc(fin)) << 8);
+	is = ix;
+}
+
+static void getLong (FILE* fin, ulong &ix)
+{
+    int i;
+
+    i = fgetc(fin);
+    ix = (ulong)i;
+    
+    i = fgetc(fin);
+    ix += ((ulong)i)<<8;
+
+    i = fgetc(fin);
+    ix += ((ulong)i)<<16;
+
+    i = fgetc(fin);
+    ix += ((ulong)i)<<24;
+}
+
+
+
 /*
 ==========================================
 Constructor/Destructor
@@ -7,14 +112,31 @@ Constructor/Destructor
 */
 CZipFile::CZipFile()
 {
-	m_hFile = 0;
+	m_fp = 0;
+	m_files = 0; 
+	m_numFiles = 0;
+
+	memset(m_openFiles,sizeof(ZipOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	m_numOpenFiles = 0;
 }
 
 CZipFile::~CZipFile()
 {
-    if (m_hFile)
-		unzClose(m_hFile);
-	m_hFile = 0;
+	if(m_fp)
+		fclose(m_fp);
+
+	memset(m_openFiles,sizeof(ZipOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	m_numOpenFiles = 0;
+
+	for(int i=0;i<m_numFiles;i++)
+	{
+		if(m_files[i])
+		{
+			delete m_files[i];
+			m_files[i] = 0;
+		}
+	}
+	delete [] m_files;
 }
 
 
@@ -30,24 +152,232 @@ bool CZipFile::Init(const char * archivepath, const char * basepath)
 	char filepath[COM_MAXPATH];
 	sprintf(filepath,"%s/%s",basepath,archivepath);
 
-	m_hFile = unzOpen(filepath);
-	if(!m_hFile)
+	if((m_fp = ::fopen(filepath, "r+b")) == 0)
 	{
-		ComPrintf("CZipFile::Init: Unable to open %s\n", filepath);
+		ComPrintf("CZipFile::Init: Unable to open %s\n",filepath);
 		return false;
 	}
 
-	unz_global_info unzGlobal;
-	if(!unzGetGlobalInfo(m_hFile,&unzGlobal) == UNZ_OK)
+	ulong central_pos = GetCentralDirOffset(m_fp);
+
+	if(central_pos == 0)
 	{
-		ComPrintf("CZipFile::Init: Unable to read %s\n", filepath);
+		ComPrintf("CZipFile::Init: Error finding central dir: %s\n", filepath);
+		fclose(m_fp);
 		return false;
 	}
-	m_numFiles = unzGlobal.number_entry;
+
+	if(fseek(m_fp,central_pos,SEEK_SET) !=0)
+	{
+		ComPrintf("CZipFile::Init: Error seeking to Central Dir %s\n", filepath);
+		fclose(m_fp);
+		return false;
+	}
+
+	ulong sig=0;
+	ushort numdisk=0, numentry=0, numfiles =0, numTotFiles = 0;
+
+	getLong(m_fp,sig);
+	getShort(m_fp, numdisk);
+	getShort(m_fp, numentry);
+	getShort(m_fp, numfiles);
+	getShort(m_fp, numTotFiles);
+
+	if(numfiles != numTotFiles ||
+	   numdisk  > 0 ||
+	   numentry > 0 )
+	{
+	   ComPrintf("CZipFile::Init: Error Bad zip file %s\n", filepath);
+	   fclose(m_fp);
+	   return false;
+    }
+
+
+	ulong cdirSize = 0 , cdirOffset = 0;
+	ushort cdirCommentSize = 0;
+
+	getLong(m_fp,cdirSize);
+	getLong(m_fp,cdirOffset);
+	getShort(m_fp,cdirCommentSize);
+
+	if(central_pos < cdirOffset + cdirSize)
+	{
+		ComPrintf("CZipFile::Init: Error Bad offset position %s\n", filepath);
+		fclose(m_fp);
+		return 0;
+	}
+
+	fseek(m_fp,cdirOffset,SEEK_SET);
+
 	strcpy(m_archiveName,archivepath);
-	ComPrintf("%s, Added %d entries\n",archivepath, unzGlobal.number_entry);
+
+	return BuildZipEntriesList(m_fp, numfiles);
+//	return true;
+}
+
+
+ulong CZipFile::GetCentralDirOffset(FILE * fin)
+{
+	unsigned char* buf=0;
+	ulong uSizeFile=0;
+	ulong uBackRead=0;
+	ulong uMaxBack =0xffff; /* maximum size of global comment */
+	ulong uPosFound=0;
+
+	
+	if (fseek(fin,0,SEEK_END) != 0)
+		return 0;
+
+	uSizeFile = ftell( fin );
+
+	if (uMaxBack > uSizeFile)
+		uMaxBack = uSizeFile;
+
+	buf = (unsigned char*)malloc(MAXCOMMENTBUFFERSIZE+4);
+	if (buf==NULL)
+		return 0;
+
+	uBackRead = 4;
+
+	while (uBackRead< uMaxBack)
+	{
+		ulong uReadSize,uReadPos;
+		
+		if (uBackRead+MAXCOMMENTBUFFERSIZE>uMaxBack) 
+			uBackRead = uMaxBack;
+		else
+			uBackRead+=MAXCOMMENTBUFFERSIZE;
+		
+		uReadPos = uSizeFile-uBackRead;
+		
+
+		uReadSize = ((MAXCOMMENTBUFFERSIZE+4) < (uSizeFile-uReadPos)) ? 
+					 (MAXCOMMENTBUFFERSIZE+4) : (uSizeFile-uReadPos);
+		
+		if (fseek(fin,uReadPos,SEEK_SET)!=0)
+			break;
+
+		if (fread(buf,(uint)uReadSize,1,fin)!=1)
+			break;
+
+        for (int i=(int)uReadSize-3; (i--)>0; )
+		{
+			if (((*(buf+i))==0x50) && ((*(buf+i+1))==0x4b) && ((*(buf+i+2))==0x05) && ((*(buf+i+3))==0x06))
+			{
+				uPosFound = uReadPos+i;
+				break;
+			}
+		}
+
+		if(uPosFound!=0)
+			break;
+	}
+	free(buf);
+	return uPosFound;
+}
+
+
+
+bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
+{
+	char	bufname[COM_MAXFILENAME];	
+	char	bufhdr[5];
+	ZIP_central_directory_file_header	cdfh;
+	bool	err = false;
+	size_t	curpos = 0;
+
+	m_numFiles = 0;
+	m_files = new ZipEntry_t * [numfiles];
+	
+	for (int i=0;i<numfiles;i++) 
+	{
+		if(!fread(bufhdr,sizeof(zip_hdr_central),1,fp) ||
+			memcmp(bufhdr,zip_hdr_central,sizeof(zip_hdr_central)))
+		{
+			ComPrintf("CZipFile::BuildZipEntriesList: Bad CentralDir Sig %s\n", m_archiveName);
+			
+			for(i=0;i<m_numFiles;i++)
+				m_files[i] = 0;
+			m_numFiles = 0;
+			delete [] m_files;
+			
+			return false;
+		}
+
+		cdfh.version_made_by[0] = fgetc(fp);
+		cdfh.version_made_by[1]	= fgetc(fp);
+		cdfh.version_needed_to_extract[0]	= fgetc(fp);
+		cdfh.version_needed_to_extract[1]	= fgetc(fp);
+		
+		getShort(fp,cdfh.general_purpose_bit_flag);
+		getShort(fp,cdfh.compression_method);
+		getShort(fp,cdfh.last_mod_file_time	);
+		getShort(fp,cdfh.last_mod_file_date);
+		getLong(fp,cdfh.crc32);	
+		getLong(fp,cdfh.csize);	
+		getLong(fp,cdfh.ucsize);
+		getShort(fp,cdfh.filename_length);
+		getShort(fp,cdfh.extra_field_length	);
+		getShort(fp,cdfh.file_comment_length);
+		getShort(fp,cdfh.disk_number_start);
+		getShort(fp,cdfh.internal_file_attributes);
+		getLong(fp,cdfh.external_file_attributes);
+		getLong(fp,cdfh.relative_offset_local_header);
+
+
+		//Validate entry. don't add if name is too long, or can't read name
+		//Only add FILE entries. and Uncompressed files at that.
+		if((cdfh.csize == cdfh.ucsize) &&
+		   (cdfh.filename_length < COM_MAXFILENAME) &&
+		   (fread(bufname, cdfh.filename_length, 1, fp)) &&
+		   (bufname[cdfh.filename_length - 1] != '/'))
+		{
+			bufname[cdfh.filename_length] = '\0';
+			ComPrintf("%s\n", bufname);
+
+			m_files[m_numFiles] = new ZipEntry_t();
+			strcpy(m_files[m_numFiles]->filename,bufname);
+			m_files[m_numFiles]->filelen = cdfh.ucsize;
+			m_files[m_numFiles]->filepos = cdfh.relative_offset_local_header + 
+								 sizeof(zip_hdr_local) + 
+								 ZIP_LOCAL_FILE_HEADER_SIZE +
+								 cdfh.filename_length + 
+								 cdfh.extra_field_length;
+			m_numFiles++;
+
+/*			curpos = ftell(m_fp);
+			if(fseek(fp,cdfh.relative_offset_local_header + 
+					sizeof(zip_hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE,
+					SEEK_SET)==0)
+			{
+				fseek(fp,cdfh.filename_length + cdfh.extra_field_length, SEEK_CUR);
+
+				char fname[128];
+				sprintf(fname,"file%d.pcx",i);
+				
+				FILE * fout = fopen(fname,"w+b");
+				if(fout)
+				{
+					byte  * outbuf = (byte*)malloc(cdfh.ucsize);
+					fread(outbuf,cdfh.ucsize,1,fp);
+					fwrite(outbuf,cdfh.ucsize,1,fout);
+					fclose(fout);
+					free(outbuf);
+				}
+			}
+			fseek(fp,curpos,SEEK_SET);
+*/
+		}
+
+		if(fseek(fp,cdfh.extra_field_length + cdfh.file_comment_length, SEEK_CUR)) 
+		{
+			ComPrintf("CZipFile::BuildZipEntriesList: Unable to read entry: %s\n", m_archiveName);
+			break;
+		}
+	}
 	return true;
 }
+
 
 /*
 ==========================================
@@ -56,16 +386,10 @@ List all the files in the zip
 */
 void  CZipFile::ListFiles()
 {
-    int ret=0;
-	char filename[64];
-
-    ret = unzGoToFirstFile(m_hFile);
-    while (ret == UNZ_OK)
-    {
-		unzGetCurrentFileInfo(m_hFile, NULL, filename, 64, NULL, 0, NULL, 0);
-		ret = unzGoToNextFile(m_hFile);
-		ComPrintf("%s\n",filename);
-    }
+	if(!m_files)
+		return;
+	for(int i=0;i< m_numFiles;i++)
+		ComPrintf("%s\n",m_files[i]->filename);
 }
 
 
@@ -81,37 +405,25 @@ bool  CZipFile::GetFileList (CStringList * list)
 		ComPrintf("CZipFile::GetFileList: List needs to be deleted!, %s\n", m_archiveName);
 		return false;
 	}
-	if(!m_hFile)
-	{
-		ComPrintf("CZipFile::GetFileList: No zipfile opened\n");
+	
+	if(!m_files)
 		return false;
-	}
 
-	char filename[64];
-	int ret=0;
 	list = new CStringList();
 	CStringList  *iterator = list;
 
-	ret = unzGoToFirstFile(m_hFile);
-    while (ret == UNZ_OK)
-    {
-		unzGetCurrentFileInfo(m_hFile, NULL, filename, 64, NULL, 0, NULL, 0);
-		ret = unzGoToNextFile(m_hFile);
-
-		strcpy(iterator->string,filename);
-		
+	for(int i = 0; i< m_numFiles; i++)
+	{
+		strcpy(iterator->string,m_files[i]->filename);
 		iterator->next = new CStringList;
 		iterator = iterator->next;
-    }
+	}
 	return true;
 }
 
 
 bool CZipFile::HasFile(const char * filename)
-{
-	if (unzLocateFile(m_hFile,filename, 2) == UNZ_OK)
-		return true;
-	return false;
+{	return false;
 }
 
 
@@ -123,51 +435,7 @@ Load a file in the zip to the given buffer
 uint CZipFile::LoadFile(byte ** ibuffer, 
 						uint buffersize, 
 						const char *ifilename)
-{
-	if (unzLocateFile(m_hFile,ifilename, 2) != UNZ_OK)
-		return 0;
-	
-	if (unzOpenCurrentFile(m_hFile) != UNZ_OK)
-	{
-		ComPrintf("CZipFile::OpenFile: Unable to open %s , %s\n", ifilename, m_archiveName);
-	    return 0;
-	}
-
-	unz_file_info fileinfo;
-    if (unzGetCurrentFileInfo(m_hFile, &fileinfo, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK)
-	{
-		ComPrintf("CZipFile::OpenFile: Unable to get file info %s , %s\n", ifilename, m_archiveName);
-		return 0;
-	}
-	
-	if(fileinfo.uncompressed_size != fileinfo.compressed_size)
-	{
-		ComPrintf("CZipFile::OpenFile: File is compressed %s , %s\n", ifilename, m_archiveName);
-		return 0;
-	}
-
-	uint size =  fileinfo.uncompressed_size;
-	if(!buffersize)
-	{
-		*ibuffer = (byte*)MALLOC(size);
-	}
-	else
-	{
-		if(size > buffersize)
-		{
-			ComPrintf("CZipFile::LoadFile: Buffer is smaller than size of file %s, %d>%d\n", 
-					ifilename, size, buffersize);
-			return 0;
-		}
-	}
-
-	int readbytes = unzReadCurrentFile(m_hFile, *ibuffer,size);
-	if(readbytes != size)
-		ComPrintf("CZipFile::OpenFile: Warning, only read %d of %d. %s , %s\n", 
-		readbytes, size,ifilename, m_archiveName);
-
-	unzCloseCurrentFile(m_hFile);
-	return size;
+{	return 0;
 }
 
 
@@ -211,59 +479,56 @@ uint CZipFile::GetSize(HFS handle)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #if 0
 
 
-#define CENTRAL_HDR_SIG	'\001','\002'	/* the infamous "PK" signature bytes, */
-#define LOCAL_HDR_SIG	'\003','\004'	/*  sans "PK" (so unzip executable not */
-#define END_CENTRAL_SIG	'\005','\006'	/*  mistaken for zipfile itself) */
-#define EXTD_LOCAL_SIG	'\007','\010'	/* [ASCII "\113" == EBCDIC "\080" ??] */
+static bool read_cdfh(ZIP_central_directory_file_header * cdfh, FILE * infile)
+{
+	byte buff[ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE];
 
-#define DEF_WBITS	15	/* Default LZ77 window size */
+	if (!fread(buff, ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE, 1, infile))// < ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE) 
+	{
+		printf("unable to read cdir\n");
+		return false;
+	}
 
-#define CRCVAL_INITIAL  0L
+	cdfh->version_made_by[0]			= buff[C_VERSION_MADE_BY_0];
+	cdfh->version_made_by[1]			= buff[C_VERSION_MADE_BY_1];
+	cdfh->version_needed_to_extract[0]	= buff[C_VERSION_NEEDED_TO_EXTRACT_0];
+	cdfh->version_needed_to_extract[1]	= buff[C_VERSION_NEEDED_TO_EXTRACT_1];
+	cdfh->general_purpose_bit_flag		= ShortSwap(*(short *)(buff + C_GENERAL_PURPOSE_BIT_FLAG));
+	cdfh->compression_method			= ShortSwap(*(short *)(buff + C_COMPRESSION_METHOD));
+	cdfh->last_mod_file_time			= ShortSwap(*(short *)(buff + C_LAST_MOD_FILE_TIME));
+	cdfh->last_mod_file_date			= ShortSwap(*(short *)(buff + C_LAST_MOD_FILE_DATE));
+	cdfh->crc32							= LongSwap(*(long *)(buff + C_CRC32));
+	cdfh->csize							= LongSwap(*(long *)(buff + C_COMPRESSED_SIZE));
+	cdfh->ucsize						= LongSwap(*(long *)(buff + C_UNCOMPRESSED_SIZE));
+	cdfh->filename_length				= ShortSwap(*(short *)(buff + C_FILENAME_LENGTH));
+	cdfh->extra_field_length			= ShortSwap(*(short *)(buff + C_EXTRA_FIELD_LENGTH));
+	cdfh->file_comment_length			= ShortSwap(*(short *)(buff + C_FILE_COMMENT_LENGTH));
+	cdfh->disk_number_start				= ShortSwap(*(short *)(buff + C_DISK_NUMBER_START));
+	cdfh->internal_file_attributes		= ShortSwap(*(short *)(buff + C_INTERNAL_FILE_ATTRIBUTES));
+	cdfh->external_file_attributes		= LongSwap(*(long *)(buff + C_EXTERNAL_FILE_ATTRIBUTES));
+	cdfh->relative_offset_local_header	= LongSwap(*(long *)(buff + C_RELATIVE_OFFSET_LOCAL_HEADER));
+	return true;
+}
 
-typedef struct ZIP_local_file_header_s {
-	unsigned char version_needed_to_extract[2];
-	unsigned short general_purpose_bit_flag;
-	unsigned short compression_method;
-	unsigned short last_mod_file_time;
-	unsigned short last_mod_file_date;
-	unsigned long crc32;
-	unsigned long csize;
-	unsigned long ucsize;
-	unsigned short filename_length;
-	unsigned short extra_field_length;
-} ZIP_local_file_header;
-
-typedef struct ZIP_central_directory_file_header_s {
-	unsigned char version_made_by[2];
-	unsigned char version_needed_to_extract[2];
-	unsigned short general_purpose_bit_flag;
-	unsigned short compression_method;
-	unsigned short last_mod_file_time;
-	unsigned short last_mod_file_date;
-	unsigned long crc32;
-	unsigned long csize;
-	unsigned long ucsize;
-	unsigned short filename_length;
-	unsigned short extra_field_length;
-	unsigned short file_comment_length;
-	unsigned short disk_number_start;
-	unsigned short internal_file_attributes;
-	unsigned long external_file_attributes;
-	unsigned long relative_offset_local_header;
-} ZIP_central_directory_file_header;
-
-typedef struct ZIP_end_central_dir_record_s {
-	unsigned short number_this_disk;
-	unsigned short num_disk_start_cdir;
-	unsigned short num_entries_centrl_dir_ths_disk;
-	unsigned short total_entries_central_dir;
-	unsigned long size_central_directory;
-	unsigned long offset_start_central_directory;
-	unsigned short zipfile_comment_length;
-} ZIP_end_central_dir_record;
 
 /*--- ZIP_local_file_header layout ---------------------------------------------*/
 #define ZIP_LOCAL_FILE_HEADER_SIZE              26
@@ -310,589 +575,4 @@ typedef struct ZIP_end_central_dir_record_s {
 #      define E_OFFSET_START_CENTRAL_DIRECTORY  12
 #      define E_ZIPFILE_COMMENT_LENGTH          16
 
-
-
-#define FILE_ONDISK  0xfffe
-
-static const char hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
-static const char hdr_local[4] = { 'P', 'K', LOCAL_HDR_SIG };
-static const char hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
-static const char hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
-
-/*--------------------------------------------------------------------------*/
-
-/*
-short   ShortSwap (short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-short	ShortNoSwap (short l)
-{
-	return l;
-}
-
-int    LongSwap (int l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((int)b1<<24) + ((int)b2<<16) + ((int)b3<<8) + b4;
-}
-
-int	LongNoSwap (int l)
-{
-	return l;
-}
-
-float FloatSwap (float f)
-{
-	union
-	{
-		float	f;
-		byte	b[4];
-	} dat1, dat2;
-	
-	
-	dat1.f = f;
-	dat2.b[0] = dat1.b[3];
-	dat2.b[1] = dat1.b[2];
-	dat2.b[2] = dat1.b[1];
-	dat2.b[3] = dat1.b[0];
-	return dat2.f;
-}
-
-float FloatNoSwap (float f)
-{
-	return f;
-}
-*/
-
-
-
-
-/* *INDENT-OFF* */
-
-static void load_ecdr(ZIP_end_central_dir_record * ecdr, const unsigned char *buff)
-{
-	ecdr->number_this_disk 					= LittleShort(*(short *)(buff + E_NUMBER_THIS_DISK));
-	ecdr->num_disk_start_cdir				= LittleShort(*(short *)(buff + E_NUM_DISK_WITH_START_CENTRAL_DIR));
-	ecdr->num_entries_centrl_dir_ths_disk	= LittleShort(*(short *)(buff + E_NUM_ENTRIES_CENTRL_DIR_THS_DISK));
-	ecdr->total_entries_central_dir			= LittleShort(*(short *)(buff + E_TOTAL_ENTRIES_CENTRAL_DIR));
-	ecdr->size_central_directory			= LittleLong(*(long *)(buff + E_SIZE_CENTRAL_DIRECTORY));
-	ecdr->offset_start_central_directory	= LittleLong(*(long *)(buff + E_OFFSET_START_CENTRAL_DIRECTORY));
-	ecdr->zipfile_comment_length			= LittleShort(*(short *)(buff + E_ZIPFILE_COMMENT_LENGTH));
-}
-
-static gboolean read_cdfh(ZIP_central_directory_file_header * cdfh, file_t infile)
-{
-	byte buff[ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE];
-
-	if (FileRead(buff, ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE, infile) < 
-		ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIZE) 
-		return (gfalse);
-
-	cdfh->version_made_by[0]			= buff[C_VERSION_MADE_BY_0];
-	cdfh->version_made_by[1]			= buff[C_VERSION_MADE_BY_1];
-	cdfh->version_needed_to_extract[0]	= buff[C_VERSION_NEEDED_TO_EXTRACT_0];
-	cdfh->version_needed_to_extract[1]	= buff[C_VERSION_NEEDED_TO_EXTRACT_1];
-	cdfh->general_purpose_bit_flag		= LittleShort(*(short *)(buff + C_GENERAL_PURPOSE_BIT_FLAG));
-	cdfh->compression_method			= LittleShort(*(short *)(buff + C_COMPRESSION_METHOD));
-	cdfh->last_mod_file_time			= LittleShort(*(short *)(buff + C_LAST_MOD_FILE_TIME));
-	cdfh->last_mod_file_date			= LittleShort(*(short *)(buff + C_LAST_MOD_FILE_DATE));
-	cdfh->crc32							= LittleLong(*(long *)(buff + C_CRC32));
-	cdfh->csize							= LittleLong(*(long *)(buff + C_COMPRESSED_SIZE));
-	cdfh->ucsize						= LittleLong(*(long *)(buff + C_UNCOMPRESSED_SIZE));
-	cdfh->filename_length				= LittleShort(*(short *)(buff + C_FILENAME_LENGTH));
-	cdfh->extra_field_length			= LittleShort(*(short *)(buff + C_EXTRA_FIELD_LENGTH));
-	cdfh->file_comment_length			= LittleShort(*(short *)(buff + C_FILE_COMMENT_LENGTH));
-	cdfh->disk_number_start				= LittleShort(*(short *)(buff + C_DISK_NUMBER_START));
-	cdfh->internal_file_attributes		= LittleShort(*(short *)(buff + C_INTERNAL_FILE_ATTRIBUTES));
-	cdfh->external_file_attributes		= LittleLong(*(long *)(buff + C_EXTERNAL_FILE_ATTRIBUTES));
-	cdfh->relative_offset_local_header	= LittleLong(*(long *)(buff + C_RELATIVE_OFFSET_LOCAL_HEADER));
-
-	return (gtrue);
-}
-
-static gboolean read_lfh(ZIP_local_file_header * lfh, file_t infile)
-{
-	byte buff[ZIP_LOCAL_FILE_HEADER_SIZE];
-
-	if (FileRead(buff, ZIP_LOCAL_FILE_HEADER_SIZE, infile) < 
-		ZIP_LOCAL_FILE_HEADER_SIZE) return (gfalse);
-
-	lfh->version_needed_to_extract[0]	= buff[L_VERSION_NEEDED_TO_EXTRACT_0];
-	lfh->version_needed_to_extract[1]	= buff[L_VERSION_NEEDED_TO_EXTRACT_1];
-	lfh->general_purpose_bit_flag		= LittleShort(*(short *)(buff + L_GENERAL_PURPOSE_BIT_FLAG));
-	lfh->compression_method				= LittleShort(*(short *)(buff + L_COMPRESSION_METHOD));
-	lfh->last_mod_file_time				= LittleShort(*(short *)(buff + L_LAST_MOD_FILE_TIME));
-	lfh->last_mod_file_date				= LittleShort(*(short *)(buff + L_LAST_MOD_FILE_DATE));
-	lfh->crc32							= LittleLong(*(long *)(buff + L_CRC32));
-	lfh->csize							= LittleLong(*(long *)(buff + L_COMPRESSED_SIZE));
-	lfh->ucsize							= LittleLong(*(long *)(buff + L_UNCOMPRESSED_SIZE));
-	lfh->filename_length				= LittleShort(*(short *)(buff + L_FILENAME_LENGTH));
-	lfh->extra_field_length				= LittleShort(*(short *)(buff + L_EXTRA_FIELD_LENGTH));
-
-	return (gtrue);
-}
-
-/* *INDENT-ON* */
-
-static archive_entry_t *Archive_insert_entry( archive_t * ar, const char *name, const ZIP_central_directory_file_header * cdfh )
-{
-	archive_entry_t *cur;
-	archive_entry_t *prev;
-	archive_entry_t *next = NULL;
-	archive_entry_t *ae = NULL;
-
-	/* check if a file with the same name has already been added */
-	cur = ar->first;
-	prev = NULL;
-	while( cur ) {
-		if( !strcmp(cur->filename, name) ) {
-			if( prev ) {
-				ae = prev->next = (archive_entry_t *)SafeMalloc(sizeof(archive_entry_t));
-			} else {
-				ae = ar->first = (archive_entry_t *)SafeMalloc(sizeof(archive_entry_t));
-			}
-
-			next = cur->next;
-			SafeFree( cur );
-
-			break;
-		}
-		prev = cur;
-		cur = cur->next;
-	}
-
-	if( !ae ) {
-		/* add to the end of the list */
-		if( ar->first ) {
-			cur = ar->first;
-			while( cur->next )
-				cur = cur->next;
-			ae = cur->next = (archive_entry_t *) SafeMalloc(sizeof(archive_entry_t));
-		} else {
-			ae = ar->first = (archive_entry_t *) SafeMalloc(sizeof(archive_entry_t));
-		}
-	}
-
-	ae->archive		= ar;
-	ae->filename 	= copystring( name );
-	ae->next		= next;
-	ae->buffer		= NULL;
-	ae->buffer_pos	= 0;
-	ae->info 		= (ZIP_central_directory_file_header *) SafeMalloc(sizeof(ZIP_central_directory_file_header));
-	memcpy(ae->info, cdfh, sizeof(ZIP_central_directory_file_header));
-
-	ar->num_entries++;
-	return( ae );
-}
-
-static int Archive_read_zip_entries( archive_t * ar )
-{
-	size_t								cur_offs;
-	size_t								new_offs;
-	size_t								len;
-	char								buff[1024];
-	ZIP_central_directory_file_header	cdfh;
-	ZIP_local_file_header				lfh;
-	archive_entry_t						*curentry;
-
-	cur_offs = 0;
-	while ((FileRead(buff, sizeof(hdr_local), ar->file) >= sizeof(hdr_local)) && 
-			(!memcmp(buff, hdr_local, sizeof(hdr_local))) && (read_lfh(&lfh, ar->file))) 
-	{
-		new_offs = cur_offs + sizeof(hdr_local) + ZIP_LOCAL_FILE_HEADER_SIZE + lfh.filename_length + lfh.extra_field_length + lfh.csize;
-		if ((lfh.filename_length > sizeof(buff)) || 
-			(FileRead(buff, lfh.filename_length, ar->file) < lfh.filename_length)) 
-			return (0);	/* Broken zipfile? */
-		
-		buff[lfh.filename_length] = 0;
-
-		if ((buff[lfh.filename_length - 1] != '/') && (buff[lfh.filename_length - 1] != PATH_SEPARATOR)) 
-		{
-			/* partially convert lfh to cdfh */
-			zeromem(&cdfh, sizeof(cdfh));
-			cdfh.version_needed_to_extract[0] = lfh.version_needed_to_extract[0];
-			cdfh.version_needed_to_extract[1] = lfh.version_needed_to_extract[1];
-			cdfh.general_purpose_bit_flag = lfh.general_purpose_bit_flag;
-			cdfh.compression_method = lfh.compression_method;
-			cdfh.last_mod_file_time = lfh.last_mod_file_time;
-			cdfh.last_mod_file_date = lfh.last_mod_file_date;
-			cdfh.crc32 = lfh.crc32;
-			cdfh.csize = lfh.csize;
-			cdfh.ucsize = lfh.ucsize;
-			cdfh.relative_offset_local_header = cur_offs;
-
-			curentry = Archive_insert_entry( ar, buff, &cdfh );
-
-			if( FileSeek( ar->file, lfh.extra_field_length, FS_CURRENT ) )
-				return( 0 );	/* broken zipfile */
-		}
-		if( FileSeek( ar->file, cur_offs = new_offs, FS_BEGIN ) )
-			return( 0 );	/* broken zipfile */
-	}
-
-	if( !cur_offs ) 
-	{	/* no headers found */
-		/* treat this file as a plain uncompressed file */
-
-		zeromem(&cdfh, sizeof(cdfh));
-		cdfh.version_made_by[0] = 0x16;	/* Zip version 2.2 rev 6 ??? */
-		cdfh.version_made_by[1] = 0x06;
-		cdfh.version_needed_to_extract[0] = 20;	/* Unzip version 2.0 rev 0 */
-		cdfh.version_needed_to_extract[1] = 00;
-		cdfh.compression_method = FILE_ONDISK;
-
-		len = FileLength( ar->file );
-		cdfh.csize = len;
-		cdfh.ucsize = len;
-		cdfh.relative_offset_local_header = 0;
-		Archive_insert_entry( ar, buff, &cdfh );
-	}
-	return (1);
-}
-
-static gboolean Archive_read_zip_directory(archive_t * ar)
-{
-	archive_entry_t						*curentry;
-	ZIP_end_central_dir_record			ecdr;
-	ZIP_central_directory_file_header	cdfh;
-	byte								buff[1024];	/* read ZIPfile from end in 1K chunks */
-	size_t								cur_offs;
-	size_t								min_offs;
-	size_t								central_directory_offset;
-	const size_t						step = ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral);
-	unsigned int						search_pos;
-	register byte						*search_ptr;
-
-	if( !ar->file )
-		return( gfalse );
-	if( FS_FAILED(FileSeek(ar->file, 0, FS_END)))
-		return( gfalse );
-
-	cur_offs = FileTell( ar->file );
-	if( (long)cur_offs == -1 )
-		return( gfalse );
-
-	if( cur_offs >= (65535 + ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral)) ) 
-	{
-		min_offs = cur_offs - (65535 + ZIP_END_CENTRAL_DIR_RECORD_SIZE + sizeof(hdr_endcentral));
-	}
-	else 
-	{
-		min_offs = 0;
-	}
-
-	/* Try to find ZIPfile central directory structure */
-	/* For this we have to search from end of file the signature "PK" */
-	/* after which follows a two-byte END_CENTRAL_SIG */
-	while (cur_offs > min_offs) 
-	{
-
-		if (cur_offs >= sizeof(buff) - step) 
-		{
-			cur_offs -= sizeof(buff) - step;
-		}
-		else 
-		{
-			cur_offs = 0;
-		}
-
-		FileSeek( ar->file, cur_offs, FS_BEGIN );
-		search_pos = FileRead( buff, sizeof(buff), ar->file );
-
-		if( search_pos >= step ) 
-		{
-			for( search_ptr = &buff[search_pos - step]; search_ptr > buff; search_ptr--)
-				if ((*search_ptr == 'P') && (!memcmp(search_ptr, hdr_endcentral, sizeof(hdr_endcentral)))) 
-				{
-					/* central directory structure found */
-					central_directory_offset = cur_offs + (unsigned long) search_ptr - (unsigned long) buff;
-					load_ecdr( &ecdr, &search_ptr[sizeof(hdr_endcentral)] );
-					if (FS_FAILED(FileSeek(ar->file, central_directory_offset + sizeof(hdr_endcentral) + ZIP_END_CENTRAL_DIR_RECORD_SIZE, FS_BEGIN))
-					    || FS_FAILED(FileSeek(ar->file, ecdr.zipfile_comment_length, FS_CURRENT))
-					    || FS_FAILED(FileSeek(ar->file, ecdr.offset_start_central_directory, FS_BEGIN))) 
-							goto rebuild_cdr;	/* broken central directory */
-
-					/* now read central directory structure */
-					for (;;) 
-					{
-						if( (FileRead(buff, sizeof(hdr_central), ar->file) < sizeof(hdr_central)) || (memcmp(buff, hdr_central, sizeof(hdr_central))) ) 
-						{
-							if( ar->first ) 
-							{
-								return( gtrue );		/* finished reading central directory */
-							}
-							else 
-							{
-								goto rebuild_cdr;	/* broken central directory */
-							}
-						}
-						
-						if( (!read_cdfh(&cdfh, ar->file)) || 
-							(cdfh.filename_length > sizeof(buff)) || 
-							(FileRead(buff, cdfh.filename_length, ar->file) < cdfh.filename_length) ) 
-						{
-							return (gfalse);	/* broken zipfile? */
-						}
-						buff[cdfh.filename_length] = 0;
-
-						if( (buff[cdfh.filename_length - 1] != '/') && (buff[cdfh.filename_length - 1] != PATH_SEPARATOR) ) 
-						{
-							curentry = Archive_insert_entry( ar, (char *)buff, &cdfh );
-						}
-						
-						if( FS_FAILED(FileSeek(ar->file, cdfh.extra_field_length + cdfh.file_comment_length, FS_CURRENT)) ) 
-						{
-							return( gfalse );	/* broken zipfile? */
-						}
-					}
-				}
-		}
-	}
-
-rebuild_cdr:
-	/* If we are here, we did not succeeded to read central directory */
-	/* If so, we have to rebuild it by reading each ZIPfile member separately */
-	if( FS_FAILED( FileSeek( ar->file, 0, FS_BEGIN ) ) )
-		return( gfalse );
-	if( !Archive_read_zip_entries(ar) )
-		return( gfalse );
-
-	return( gtrue );
-}
-
-/* PUBLIC FUNCTIONS */
-
-gboolean Archive_Load(archive_t *ar, const char *filename)
-{
-	ar->first = NULL;
-	ar->num_entries = 0;
-
-	ar->file = FileOpen( filename, OPEN_READONLY );
-	if( !ar->file )
-		return( gfalse );
-
-	if( !Archive_read_zip_directory(ar) )
-		return( gfalse );
-
-	return (1);
-}
-
-void Archive_Free( archive_t *ar )
-{
-	archive_entry_t *cur;
-	archive_entry_t *next;
-
-	for (cur = ar->first; cur; cur = next) {
-		next = cur->next;
-
-		SafeFree(cur->info);
-		SafeFree(cur->filename);
-		SafeFree(cur->buffer);
-		cur->buffer_pos = 0;
-	}
-
-	if (ar->file) {
-		FileClose(ar->file);
-		ar->file = NULL;
-	}
-}
-
-gboolean Archive_FileExists( const archive_t *ar, const char *name, size_t *size )
-{
-	archive_entry_t *f = Archive_FindName(ar, name);
-
-	if (!f)
-		return (gfalse);
-	if (size)
-		*size = f->info->ucsize;
-
-	return (gtrue);
-}
-
-gboolean Archive_Read( byte *buf, int buflen, const archive_entry_t *f )
-{
-	size_t					bytes_left;
-	size_t					size;
-	byte					buff[1024];
-	int						err;
-	ZIP_local_file_header	lfh;
-	z_stream				zs;
-	file_t					infile;
-
-	infile = f->archive->file;
-
-	if( f->info->compression_method == FILE_ONDISK ) {
-		size = min(buflen, f->info->ucsize);
-		FileRead(buf, size, infile);
-	} else {
-
-		if ((FS_FAILED(FileSeek(infile, f->info->relative_offset_local_header, FS_BEGIN)))
-			|| (FileRead(buff, sizeof(hdr_local), infile) < sizeof(hdr_local))
-		    || (memcmp(buff, hdr_local, sizeof(hdr_local))) || (!read_lfh(&lfh, infile))
-			|| (FS_FAILED(FileSeek(infile, lfh.filename_length + lfh.extra_field_length, FS_CURRENT)))) {
-			return (gfalse);
-		}
-
-		switch( f->info->compression_method ) {
-		case 0:
-			size = min( buflen, f->info->ucsize );
-			FileRead( buf, size, infile );
-			break;
-		case Z_DEFLATED:
-			bytes_left = f->info->csize;
-			zs.next_out = (Byte *) buf;
-			zs.avail_out = buflen;
-			zs.zalloc = (alloc_func) 0;
-			zs.zfree = (free_func) 0;
-
-			/* undocumented: if wbits is negative, zlib skips header check */
-			err = inflateInit2(&zs, -DEF_WBITS);
-			if (err != Z_OK) return (gfalse);
-
-			while (bytes_left) {
-				zs.next_in = (Byte *) buff;
-				if (bytes_left > sizeof(buff))
-					size = sizeof(buff);
-				else
-					size = bytes_left;
-				zs.avail_in = FileRead(buff, size, infile);
-
-				err = inflate(&zs, bytes_left > size ? Z_PARTIAL_FLUSH : Z_FINISH);
-				bytes_left -= size;
-			}
-			inflateEnd(&zs);
-
-			if ((err != Z_STREAM_END) && ((err != Z_BUF_ERROR) || zs.avail_out)) {
-				return (gfalse);
-			}
-
-			/* do crc check */
-			if( buflen == f->info->ucsize ) {
-				if( crc32( CRCVAL_INITIAL, buf, buflen ) != f->info->crc32 ) {
-					return (gfalse);
-				}
-			}
-			break;
-		default:	/* unknown compression algorithm */
-			return (gfalse);
-		}
-	}
-
-	return( gtrue );
-}
-
-archive_entry_t *Archive_FindName( const archive_t * ar, const char *name )
-{
-	archive_entry_t *f;
-
-	f = ar->first;
-	while (f) {
-#if CASESENSITIVE
-		if (!strcmp(f->filename, name)) {
-#else
-		if (!G_stricmp(f->filename, name)) {
 #endif
-			return (f);
-		}
-		f = f->next;
-	}
-
-	return (NULL);
-}
-
-int Archive_GetFileList( const archive_t * ar, const char *path, const char *extension, char *listbuf, int bufsize )
-{
-	archive_entry_t	*f;
-	unsigned int	path_len;
-	unsigned int	ext_len;
-	unsigned int	len;
-	int				num = 0;
-	char			*listptr;
-	char			filename[MAX_OSPATH];
-	char			filepath[MAX_OSPATH];
-
-	if(!ar || !path || !extension || !listbuf || !bufsize)
-		return (0);
-
-	path_len = strlen( path );
-	ext_len = strlen( extension );
-
-	listptr = listbuf;
-
-	for( f = ar->first; f; f = f->next ) {
-		len = strlen( f->filename );
-
-		if(len < (path_len + ext_len + 1)) continue;
-
-		/* check path */
-		COM_ExtractFilePath( f->filename, filepath );
-
-		/* remove the slash */
-		filepath[strlen(filepath)-1] = 0;
-#if CASESENSITIVE
-		if( strcmp(filepath, path) ) continue;
-#else
-		if( G_stricmp(filepath, path) ) continue;
-#endif
-
-		/* check extension */
-#if CASESENSITIVE
-		if( G_stricmp(extension, f->filename + len - ext_len) ) continue;
-#else
-		if( strcmp(extension, f->filename + len - ext_len) ) continue;
-#endif
-
-		COM_ExtractFileName( f->filename, filename );
-		len = strlen( filename );
-
-		if(len > bufsize) continue;
-
-		/* add to list */
-		G_strncpyz( listptr, filename, bufsize );
-		bufsize -= (len+1);
-		listptr += (len+1);
-		num++;
-	}
-
-	return( num );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif
-
-
-
-
-
-
-

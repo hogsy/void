@@ -140,7 +140,7 @@ public:
 
 	//Loads data from file into given buffer. return size of buffer
 	//after allocation and copying.
-	uint LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuffer, const char *ifilename);
+	uint LoadFileData(byte ** ibuffer, uint &buffersize, const char *ifilename);
 	bool OpenFileStream(CFileStream * fstream, const char *ifilename);
 	
 	uint GetFileSize(const char * filename);
@@ -154,21 +154,6 @@ private:
 
 	struct SearchPath_t;
 
-
-	//Member Functions
-	//================================================================
-	void AddSearchPath(const char * path, CArchive * file=0);
-	void RemoveSearchPath(const char *path);
-
-	//Scans directory for supported archives, returns list
-	bool GetArchivesInPath(const char *path, CStringList * list);
-
-	static bool PathExists(const char * path);
-
-	//FIXME, MOVE THIS SOMEPLACE MORE APPROPRIATE
-	//Compare file Extensions
-	static bool CompareExts(const char *file, const char *ext);		
-
 	//Member variables
 	//================================================================
 	int			m_totalfiles;					//total number of Files in the archives
@@ -178,6 +163,24 @@ private:
 	int			m_numsearchpaths;				//Number of searchpaths
 	SearchPath_t * m_searchpaths;				//DoublyLinked list of searchpaths
 	SearchPath_t * m_lastpath;					//Latest path
+
+
+	//Member Functions
+	//================================================================
+	void AddSearchPath(const char * path, CArchive * file=0);
+	void RemoveSearchPath(const char *path);
+
+	//Scans directory for supported archives, returns list
+	bool GetArchivesInPath(const char *path, CStringList * list);
+
+	//Console Funcs
+	//================================================================
+	friend void CFuncListFiles(int argc, char** argv);
+
+	//MOVE THESE SOMEPLACE MORE APPROPRIATE
+	//================================================================
+	static bool CompareExts(const char *file, const char *ext);		
+	static bool PathExists(const char * path);
 };
 
 //====================================================================================

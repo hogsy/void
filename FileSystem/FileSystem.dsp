@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 comdlg32.lib advapi32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib zlib.lib /nologo /dll /machine:I386 /out:"..\vfs.dll"
+# ADD LINK32 comdlg32.lib advapi32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /machine:I386 /out:"..\vfs.dll"
 
 !ELSEIF  "$(CFG)" == "FileSystem - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 zlib.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /debug /machine:I386 /out:"..\vfs.dll" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib /nologo /dll /debug /machine:I386 /out:"..\vfs.dll" /pdbtype:sept
 
 !ENDIF 
 
@@ -90,10 +90,6 @@ LINK32=link.exe
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
-# Begin Source File
-
-SOURCE="..\..\Source\zlib113\contrib\minizip\Copy of unzip.c"
-# End Source File
 # Begin Source File
 
 SOURCE=.\Fs_filebuf.cpp
@@ -133,22 +129,6 @@ SOURCE=.\Fs_pakfile.h
 # Begin Source File
 
 SOURCE=.\Fs_zipfile.h
-# End Source File
-# End Group
-# Begin Group "Zlib"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\InfoZip\unzip.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\InfoZip\zconf.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\InfoZip\zlib.h
 # End Source File
 # End Group
 # Begin Group "Common"

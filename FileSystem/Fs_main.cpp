@@ -52,6 +52,10 @@ static void EndMemReporting()
 }
 
 
+void CFuncListFiles(int argc, char** argv)
+{	g_pFileSystem->ListArchiveFiles();
+}
+
 /*
 ==========================================
 Create the fileSystem and return it
@@ -65,6 +69,9 @@ FILESYSTEM_API CFileSystem * CreateFileSystem(I_ExeConsole * pconsole)
 	if(!g_pFileSystem)
 		g_pFileSystem = new CFileSystem();
 	m_pConsole = pconsole;
+	
+	m_pConsole->RegisterCFunc("fs_list",&CFuncListFiles);
+	
 	return g_pFileSystem;
 }
 

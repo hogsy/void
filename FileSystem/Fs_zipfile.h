@@ -1,11 +1,7 @@
 #ifndef COM_ZIPREADER_H
 #define COM_ZIPREADER_H
 
-#define ZLIB_DLL
-#include "Infozip/unzip.h"
-
 #include "Fs_hdr.h"
-
 
 class CZipFile:public CArchive
 {
@@ -36,7 +32,20 @@ public:
 
 private:
 
-	unzFile m_hFile;
+	ulong GetCentralDirOffset(FILE *fin);
+	bool  BuildZipEntriesList(FILE * fp, int numfiles);
+
+	struct ZipEntry_t;
+	struct ZipOpenFile_t;
+
+	ZipEntry_t		** m_files;
+	ZipOpenFile_t	*  m_openFiles[ARCHIVEMAXOPENFILES];
+
+	int m_numOpenFiles;
+	int m_numFiles;
+
+	FILE * m_fp;
+
 };
 
 #endif

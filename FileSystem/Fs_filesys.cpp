@@ -3,9 +3,11 @@
 #include "I_filesystem.h"
 
 
-/*===========================================
+/*
+===========================================
 Supported File Types
-===========================================*/
+===========================================
+*/
 const char  * archive_exts[] =	
 {	
 	"zip",
@@ -33,6 +35,7 @@ struct CFileSystem::SearchPath_t
 	CArchive     * archive;
 	SearchPath_t * prev;
 };
+
 
 
 /*
@@ -231,7 +234,7 @@ Loads the requested file into given buffer.
 buffer needs to be null. Its allocated here
 ===========================================
 */
-uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuffer, const char *ifilename)
+uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, const char *ifilename)
 {
 	uint size = 0;
 	SearchPath_t * iterator = m_lastpath;
@@ -259,19 +262,21 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuf
 				size = ftell(fp);
 				fseek(fp,0,SEEK_SET);
 
-				if(!staticbuffer)
+				if(!buffersize)
 				{
-					*ibuffer = (byte*)MALLOC(size);
+					*ibuffer= (byte*)MALLOC(size);
 				}
 				else
 				{
 					if(size > buffersize)
 					{
-						free(*ibuffer);
-						*ibuffer = (byte*)MALLOC(size);
-						buffersize = size;
+						ComPrintf("CFileSystem::LoadFileData: Buffer is smaller than size of file %s, %d>%d\n", 
+							ifilename, size, buffersize);
+						fclose(fp);
+						return 0;
 					}
 				}
+			
 				//fill the file buffer
 				fread(*ibuffer,sizeof(byte),size,fp);
 				fclose(fp);
@@ -441,6 +446,7 @@ void CFileSystem::ListSearchPaths()
 	}
 }
 
+
 /*
 ===========================================
 Lists files in added archives
@@ -461,7 +467,7 @@ void CFileSystem::ListArchiveFiles()
 		iterator = iterator->prev;
 		if(iterator->archive)
 		{
-			ComPrintf("\n%s\n",iterator->archive->m_archiveName);
+			ComPrintf("%s\n",iterator->archive->m_archiveName);
 			iterator->archive->ListFiles();
 		}
 	}

@@ -33,6 +33,14 @@ private:
 	struct PakEntry_t;
 	struct PakOpenFile_t;
 
+/*	typedef struct PakEntry_s
+	{
+		struct PakEntry_s * next;
+		PakEntry_t	entry;
+	
+	}PakEntries_t;
+*/
+	
 	PakEntry_t **   m_files;
 	FILE	   *	m_fp;
 

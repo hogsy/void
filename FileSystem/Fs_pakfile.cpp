@@ -34,6 +34,8 @@ struct CPakFile::PakOpenFile_t : public CPakFile::PakEntry_t
 //======================================================================================
 //======================================================================================
 
+static int totalCOMPS = 0;
+
 /*
 ===========================================
 Constructor/Destructor
@@ -54,15 +56,15 @@ CPakFile::~CPakFile()
 	if(m_fp)
 		fclose(m_fp);
 
+	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	m_numOpenFiles = 0;
+
 	for(int i=0;i<m_numFiles;i++)
 	{
 		delete m_files[i];
 		m_files[i] = 0;
 	}
 	delete [] m_files;
-
-	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
-	m_numOpenFiles = 0;
 }
 
 /*
@@ -110,15 +112,24 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	{
 		temp = new PakEntry_t();
 		fread(temp,sizeof(PakEntry_t),1,m_fp);
+
+
 		m_files[i] = temp;
 	}
 	QuickSortFileEntries(m_files,m_numFiles);
+
+	totalCOMPS;
 
 	strcpy(m_archiveName,archivepath);
 	ComPrintf("%s, Added %d entries\n", m_archiveName,m_numFiles);
 	return true;
 }
 
+/*
+==========================================
+Check to see if the archive contains this file
+==========================================
+*/
 
 bool CPakFile::HasFile(const char * filename)
 {
@@ -210,6 +221,8 @@ void CPakFile::ListFiles()
 		ComPrintf("%s\n",m_files[i]->filename);
 }
 
+
+
 /*
 ===========================================
 QuickSort PakEntry array
@@ -228,6 +241,9 @@ void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
 	for(int i=1,comp=0;i<=maxindex;i++)
 	{
 		comp = _stricmp(list[i]->filename,list[0]->filename);
+
+		totalCOMPS++;
+
 		
 		if(comp < 0)
 		{
@@ -293,6 +309,14 @@ bool CPakFile::BinarySearchForEntry(const char *name,
 }
 
 
+
+
+/*
+==========================================
+"open" a filestream and return handle
+==========================================
+*/
+
 HFS CPakFile::OpenFile(const char *ifilename)
 {
 	if(m_numOpenFiles >= ARCHIVEMAXOPENFILES)
@@ -323,14 +347,23 @@ HFS CPakFile::OpenFile(const char *ifilename)
 	return -1;
 }
 
-
+/*
+==========================================
+Close file
+==========================================
+*/
 void CPakFile::CloseFile(HFS handle)
 {
 	if(m_openFiles[handle])
 		m_openFiles[handle] = 0;
 }
 
-
+/*
+==========================================
+Read from the given handle
+returns bytes read
+==========================================
+*/
 ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 {
 	if(!buf || !size || !count)
@@ -359,8 +392,12 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	return bytes_read;
 }
 
-
-int  CPakFile::GetChar(HFS handle)
+/*
+==========================================
+return current character
+==========================================
+*/
+int CPakFile::GetChar(HFS handle)
 {
 	if(m_openFiles[handle]->curpos +1 <= m_openFiles[handle]->filelen)
 	{
@@ -370,6 +407,12 @@ int  CPakFile::GetChar(HFS handle)
 	return EOF;
 }
 
+/*
+==========================================
+Update file Handle's current position with
+requested offset
+==========================================
+*/
 bool CPakFile::Seek(uint offset, int origin, HFS handle)
 {
 	uint newpos = m_openFiles[handle]->filepos;
@@ -397,11 +440,21 @@ bool CPakFile::Seek(uint offset, int origin, HFS handle)
 	return(!::fseek(m_fp,newpos,SEEK_SET));
 }
 
+
+/*
+==========================================
+get file handles current pos
+==========================================
+*/
 uint CPakFile::GetPos(HFS handle)
 {	return m_openFiles[handle]->curpos;
 }
 
+/*
+==========================================
+get size of file belonging to handle
+==========================================
+*/
 uint CPakFile::GetSize(HFS handle)
 {	return m_openFiles[handle]->filelen;
 }
-
