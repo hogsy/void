@@ -154,6 +154,7 @@ void CRasterizer::DrawLayer(int l)
 {
 	CShaderLayer *layer = mShader->mLayers[l];
 	int i;
+	vector_t dir, norm;
 
 	if (layer->mIsLight && !mUseLights)
 		return;
@@ -234,9 +235,29 @@ void CRasterizer::DrawLayer(int l)
 								mVerts[i].pos[1] * layer->mTexVector[0].y +
 								mVerts[i].pos[2] * layer->mTexVector[0].z;
 
-			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[1].x +
+			mVerts[i].tex1[1] =	mVerts[i].pos[0] * layer->mTexVector[1].x +
 								mVerts[i].pos[1] * layer->mTexVector[1].y +
 								mVerts[i].pos[2] * layer->mTexVector[1].z;
+		}
+		break;
+
+	case TEXGEN_ENVIRONMENT:
+		for (i=0; i<mNumElements; i++)
+		{
+			dir.x = (mVerts[i].pos[0] - camera->origin.x);
+			dir.y = (mVerts[i].pos[1] - camera->origin.y);
+			dir.z = (mVerts[i].pos[2] - camera->origin.z);
+
+			norm.x = mVerts[i].pos[0];
+			norm.y = mVerts[i].pos[1];
+			norm.z = mVerts[i].pos[2];
+
+			dir.Normalize();
+			norm.Normalize();
+
+
+			mVerts[i].tex1[0] = dir.x;// + norm.x;
+			mVerts[i].tex1[1] = dir.y;// + norm.y;
 		}
 		break;
 	}

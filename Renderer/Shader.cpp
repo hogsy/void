@@ -73,6 +73,8 @@ void CShaderLayer::Parse(I_FileReader *layer, int &texindex)
 				mTexGen = TEXGEN_LIGHT;
 			else if (_stricmp(token, "sky") == 0)
 				mTexGen = TEXGEN_SKY;
+			else if (_stricmp(token, "environment") == 0)
+				mTexGen = TEXGEN_ENVIRONMENT;
 			else if (_stricmp(token, "vector") == 0)
 			{
 				mTexGen = TEXGEN_VECTOR;
