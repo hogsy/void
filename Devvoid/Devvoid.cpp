@@ -1,6 +1,5 @@
 // Devvoid.cpp : Defines the class behaviors for the application.
 //
-
 #include "stdafx.h"
 #include "Devvoid.h"
 #include "DevvoidDlg.h"
@@ -9,6 +8,7 @@
 #include "Com_util.h"
 #include "Com_registry.h"
 #include "I_fileSystem.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
