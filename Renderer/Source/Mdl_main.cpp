@@ -1,10 +1,3 @@
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-//														//
-//	I know that when the game dll's are made, this		//
-//	will have to be pretty much totally rewritten.		//
-//														//
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-
 
 #include "Mdl_main.h"
 
@@ -103,7 +96,6 @@ hMdl CModelManager::LoadModel(const char *model, hMdl index, CacheType cache)
 DrawModel 
 =======================================
 */
-extern I_Void		  *	g_pVoidExp;
 void CModelManager::DrawModel(const R_EntState &state)
 {
 	// add model to list to be drawn
@@ -119,7 +111,7 @@ void CModelManager::DrawModel(const R_EntState &state)
 UnloadModel 
 =======================================
 */
-void CModelManager::UnloadModel(CacheType cache, int index)
+void CModelManager::UnloadModel(CacheType cache, hMdl index)
 {
 	if (!caches[cache][index])
 		ComPrintf("CModelManager::UnloadModel - model not loaded\n");

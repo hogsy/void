@@ -5,7 +5,7 @@
 #include "gl.h"
 #include "Rasterizer.h"
 
-#define MAX_TEXTURE_BINS 100
+#define MAX_TEXTURE_BINS 1024
 
 struct tex_bin_t
 {

@@ -7,6 +7,7 @@
 #include "Tex_main.h"
 #include "Mdl_main.h"
 #include "Con_main.h"
+#include "Img_main.h"
 
 #include "gl_rast.h"
 
@@ -39,6 +40,7 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
 	g_pModel= new CModelManager();
+	g_pImage= new CImageManager();
 	g_prHud = new CRHud();
 	g_pRast = new COpenGLRast();
 
@@ -61,6 +63,10 @@ CRenExp::~CRenExp()
 	if (g_pModel)
 		delete g_pModel;
 	g_pModel = 0;
+
+	if (g_pImage)
+		delete g_pImage;
+	g_pImage = 0;
 
 	if (g_pRast)
 		delete g_pRast;
@@ -158,6 +164,7 @@ bool CRenExp::Shutdown(void)
 	cache_destroy();
 	beam_shutdown();
 
+	g_pImage->UnLoadTextures();
 	g_pModel->UnLoadSkins();
 	g_pTex->Shutdown();
 	g_pRast->Shutdown();
@@ -191,6 +198,16 @@ Return the Hud interface
 */
 I_Model * CRenExp::GetModel()
 {	return g_pModel;
+}
+
+
+/*
+==========================================
+Return the Hud interface
+==========================================
+*/
+I_Image * CRenExp::GetImage()
+{	return g_pImage;
 }
 
 
@@ -351,6 +368,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 	// shut the thing down
 	g_pTex->Shutdown();
 	g_pModel->UnLoadSkins();
+	g_pImage->UnLoadTextures();
 
 	g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
 
@@ -368,6 +386,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		return;
 	}
 
+	g_pImage->LoadTextures();
 	g_pModel->LoadSkins();
 
 	// make sure our console is up to date
@@ -387,6 +406,7 @@ bool CRenExp::Restart(void)
 
 	g_pTex->Shutdown();
 	g_pModel->UnLoadSkins();
+	g_pImage->UnLoadTextures();
 
 
 	// shut the thing down
@@ -399,7 +419,7 @@ bool CRenExp::Restart(void)
 		ComPrintf("failed to init texture base\n");
 		return false;
 	}
-	
+
 	// reload our textures
 	if(!g_pTex->LoadWorldTextures(world))
 	{
@@ -407,6 +427,7 @@ bool CRenExp::Restart(void)
 	}
 
 	//reload our model skins
+	g_pImage->LoadTextures();
 	g_pModel->LoadSkins();
 
 	//make sure our console is up to date

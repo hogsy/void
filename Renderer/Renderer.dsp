@@ -357,6 +357,26 @@ SOURCE=.\Source\gl_rast.cpp
 SOURCE=.\Source\gl_rast.h
 # End Source File
 # End Group
+# Begin Group "Image"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Img_entry.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_entry.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Img_main.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\Com_defs.h

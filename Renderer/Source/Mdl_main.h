@@ -33,13 +33,13 @@ public:
 	void Purge(void);
 
 	// unload models from memory
-	void UnloadModel(CacheType cache, int index);
+	void UnloadModel(CacheType cache, hMdl index);
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
 
 	void GetInfo(R_EntState &state);
 
-
+	// funcs for vid restarts
 	void LoadSkins(void);
 	void UnLoadSkins(void);
 
