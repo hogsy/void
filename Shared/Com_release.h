@@ -2,6 +2,7 @@
 #define VOID_RELEASE_H
 
 //Release specific stuff
+//#define VOID_TEST
 
 #ifdef VOID_TEST
 	static const char VOID_REG_KEY [] = "Software\\Devvoid\\VoidTest";
