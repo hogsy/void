@@ -784,7 +784,7 @@ void CSoundManager::SPrintInfo()
 Handle Commands
 ==========================================
 */
-void CSoundManager::HandleCommand(HCMD cmdId, const CParms &parms)
+void CSoundManager::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

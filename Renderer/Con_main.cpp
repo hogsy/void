@@ -33,8 +33,8 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 	for (int i = 0; i < CON_MAX_LINES; i++)
 		m_lines[i] = new Conline_t;
 	
-	g_pConsole->RegisterCVar(&m_conSpeed);
-	g_pConsole->RegisterCVar(&m_conAlpha);
+	I_Console::GetConsole()->RegisterCVar(&m_conSpeed);
+	I_Console::GetConsole()->RegisterCVar(&m_conAlpha);
 
 	RegisterConObjects();
 }

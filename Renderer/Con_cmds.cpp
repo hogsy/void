@@ -304,8 +304,8 @@ Console constructor
 */
 void CRConsole::RegisterConObjects()
 {
-	g_pConsole->RegisterCommand("tga_shot",CMD_TGASHOT,this);
-	g_pConsole->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
+	I_Console::GetConsole()->RegisterCommand("tga_shot",CMD_TGASHOT,this);
+	I_Console::GetConsole()->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
 
 	g_pFullbright= new CVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
 	g_pFov		 = new CVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
@@ -315,13 +315,13 @@ void CRConsole::RegisterConObjects()
 	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
 	g_pD3DXShift = new CVar("r_d3dx_text_shift", "0", CVAR_INT, CVAR_ARCHIVE);
 
-	g_pConsole->RegisterCVar(g_pFullbright,this);
-	g_pConsole->RegisterCVar(g_pFov,this);
-	g_pConsole->RegisterCVar(g_pMultiTexture,this);
-	g_pConsole->RegisterCVar(g_pVidSynch,this);
-	g_pConsole->RegisterCVar(g_p32BitTextures,this);
-	g_pConsole->RegisterCVar(g_pBeamTolerance,this);
-	g_pConsole->RegisterCVar(g_pD3DXShift,this);
+	I_Console::GetConsole()->RegisterCVar(g_pFullbright,this);
+	I_Console::GetConsole()->RegisterCVar(g_pFov,this);
+	I_Console::GetConsole()->RegisterCVar(g_pMultiTexture,this);
+	I_Console::GetConsole()->RegisterCVar(g_pVidSynch,this);
+	I_Console::GetConsole()->RegisterCVar(g_p32BitTextures,this);
+	I_Console::GetConsole()->RegisterCVar(g_pBeamTolerance,this);
+	I_Console::GetConsole()->RegisterCVar(g_pD3DXShift,this);
 }
 
 /*

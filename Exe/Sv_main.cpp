@@ -150,13 +150,13 @@ void CServer::Shutdown()
 	if(!m_active)
 		return;
 	
-	m_active = false;
-
 	//Kill the network
 	m_net.Shutdown();
 
 	UnloadGame();
 	UnloadWorld();
+
+	m_active = false;
 
 	ComPrintf("CServer::Shutdown OK\n");
 }
@@ -214,8 +214,8 @@ void CServer::UnloadGame()
 	if(m_pGame)
 	{
 		m_pGame->UnloadWorld();
-
 		m_pGame->ShutdownGame();
+
 		GAME_FREEFUNC pfnFreeFunc = (GAME_FREEFUNC)::GetProcAddress(m_hGameDll,"GAME_Shutdown");
 		if(pfnFreeFunc)
 			pfnFreeFunc();
@@ -739,7 +739,7 @@ bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
 Handle Commands
 ==========================================
 */
-void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
+void CServer::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

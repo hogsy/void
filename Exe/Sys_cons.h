@@ -1,8 +1,6 @@
 #ifndef VOID_CONSOLE_CLASS
 #define VOID_CONSOLE_CLASS
 
-//#define VOID_DOS_CONSOLE	1
-
 #include "In_defs.h"
 
 /*
@@ -12,7 +10,7 @@ Console Command
 */
 struct CCommand
 {
-	CCommand(const char * iname, HCMD iid, I_ConHandler * ihandler)
+	CCommand(const char * iname, int iid, I_ConHandler * ihandler)
 	{
 		name = new char[strlen(iname)+1];
 		strcpy(name,iname);
@@ -33,7 +31,7 @@ struct CCommand
 		handler = 0;
 	}
 
-	HCMD	id;
+	int	id;
 	char *	name;
 	I_ConHandler  * handler;
 };
@@ -51,7 +49,8 @@ config files
 struct I_ConsoleRenderer;
 
 class CConsole: public I_Console,		//Console interface exported to other modules
-				public I_InKeyListener	//Key Event listener interface	
+				public I_InKeyListener,	//Key Event listener interface	
+				public I_ConHandler
 {
 public:
 
@@ -61,8 +60,10 @@ public:
 	//==============================================================
 	//I_Console Interface
 
-	void RegisterCVar(CVarBase * var,I_ConHandler * handler=0);
-	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
+	void RegisterCVar(CVarBase * var,I_ConHandler * pHandler=0);
+	void UnregisterHandler(I_ConHandler * pHandler);
+
+	void RegisterCommand(const char *cmdname, int id, I_ConHandler * pHandler);
 	void ComPrint(const char* text);
 	bool ExecString(const char *string);
 
@@ -72,7 +73,7 @@ public:
 
 	//==============================================================
 	//Command Handler
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	void HandleCommand(int cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
 	//==============================================================
@@ -104,7 +105,10 @@ private:
 
 	//==============================================================
 	typedef std::list<CCommand>	 CmdList;
+	typedef std::list<CCommand>::iterator  CmdListIt;
+
 	typedef std::list<CVarBase*> CVarList;
+	typedef std::list<CVarBase*>::iterator CVarListIt;
 	
 	//List of registered commands
 	CmdList		m_lCmds;		

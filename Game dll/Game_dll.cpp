@@ -25,9 +25,11 @@ I_Game * GAME_GetAPI(I_GameHandler * pImports, I_Console * pConsole)
 void GAME_Shutdown()
 {
 	if(g_pGame)
-	{	delete g_pGame;
+	{	
+		delete g_pGame;
 		g_pGame = 0;
 	}
+	
 	g_pImports = 0;
 	g_pCons = 0;
 }
@@ -46,4 +48,8 @@ void ComPrintf(const char * text, ...)
 int HandleOutOfMemory(size_t size)
 {	g_pImports->FatalError("Game Dll is out of memory");
 	return 0;
+}
+
+I_Console * I_Console::GetConsole()
+{	return g_pCons;
 }

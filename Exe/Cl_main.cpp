@@ -324,7 +324,7 @@ float CClient::GetCurTime()
 Handle Registered Commands
 ==========================================
 */
-void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
+void CClient::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

@@ -166,7 +166,7 @@ int CParms::IntTok(int num, char delim) const
 {
 	const char * s = StringTok(num,szParmBuffer,1024,delim);
 	if(!s)
-		return INVALID_VALUE;
+		return COM_INVALID_VALUE;
 	return ::atoi(s);
 }
 
@@ -180,7 +180,7 @@ float CParms::FloatTok(int num, char delim) const
 {
 	const char * s = StringTok(num,szParmBuffer,1024,delim);
 	if(!s)
-		return INVALID_VALUE;
+		return COM_INVALID_VALUE;
 	return ::atof(s);
 }
 

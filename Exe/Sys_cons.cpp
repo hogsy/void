@@ -18,6 +18,10 @@ namespace
 	const int  CON_MAXBUFFEREDCMDS = 32;
 }
 
+I_Console * I_Console::GetConsole()
+{	return System::GetConsole();
+}
+
 /*
 ======================================
 Constructor
@@ -281,27 +285,9 @@ bool CConsole::ExecString(const char *string)
 				if(numtokens = m_parms.NumTokens() > 1)
 				{
 					const char * argVal = m_parms.StringTok(1,m_szParmBuffer,1024);
-					
-					if((*it)->type != CVAR_STRING)
-						(*it)->Set(argVal);
-					else
-					{
-						char newstr[80];
-						const char * arg=0;
-						strcpy(newstr,argVal);
-				
-						for(int i=2,len=0;i<numtokens;i++)
-						{
-							arg = m_parms.StringTok(i,m_szParmBuffer,1024);
-							len += strlen(arg+1);
-							if(len >= 80)
-								break;
-							strcat(newstr," ");
-							strcat(newstr,arg);
-						}
-						(*it)->Set(newstr);
-					}
 
+					(*it)->Set(argVal);
+					
 					if((*it)->flags & CVAR_LATCH)
 					{
 						ComPrintf("%s will be changed on restart\n", (*it)->name);
@@ -364,13 +350,33 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 }
 
 /*
+================================================
+
+================================================
+*/
+void CConsole::UnregisterHandler(I_ConHandler * pHandler)
+{
+	if(!pHandler)
+		return;
+
+
+	for(CVarListIt it = m_lCVars.begin(); it != m_lCVars.end();)
+	{
+		if((*it)->handler == pHandler)
+			m_lCVars.erase(it++);
+		else
+			it++;
+	}
+}
+
+/*
 ==========================================
 Register CFunc
 ==========================================
 */
 void CConsole::RegisterCommand(const char *cmdname,
-							   HCMD id,
-							   I_ConHandler * handler)
+							   int id,
+							   I_ConHandler * pHandler)
 {
 	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
 	{
@@ -381,9 +387,9 @@ void CConsole::RegisterCommand(const char *cmdname,
 	//Find archived command in config, and exec that as well
 	CParms parms(CON_MAXARGSIZE);
 	if(GetTokenParms(cmdname, &parms))
-		handler->HandleCommand(id,parms);
+		pHandler->HandleCommand(id,parms);
 	
-	m_lCmds.insert(it,CCommand(cmdname,id,handler));
+	m_lCmds.insert(it,CCommand(cmdname,id,pHandler));
 }
 
 /*
@@ -411,7 +417,7 @@ CCommand * CConsole::GetCommandByName(const char * cmdString)
 Handle Console command
 ==========================================
 */
-void CConsole::HandleCommand(HCMD cmdId, const CParms &parms)
+void CConsole::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

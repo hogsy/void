@@ -85,7 +85,7 @@ void CMusic::Shutdown()
 Handle one of the registered commands
 ==========================================
 */
-void CMusic::HandleCommand(HCMD cmdId, const CParms &parms)
+void CMusic::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

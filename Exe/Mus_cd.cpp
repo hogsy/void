@@ -526,7 +526,7 @@ void CMusCDAudio::HandleMCIMsg(uint &wParam, long &lParam)
 Command Handler
 ==========================================
 */
-void CMusCDAudio::HandleCommand(HCMD cmdId, const CParms &parms)
+void CMusCDAudio::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

@@ -25,8 +25,7 @@ Global vars
 */
 //Renderer Info
 extern RenderInfo_t g_rInfo;
-//Console Interface for registering CVars	
-extern I_Console *  g_pConsole;
+
 // Rasterizer Interface
 extern CRasterizer  * g_pRast;
 //The World

@@ -77,7 +77,7 @@ public:
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	void HandleCommand(int cmdId, const CParms &parms);
 
 private:
 

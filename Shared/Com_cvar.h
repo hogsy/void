@@ -11,10 +11,8 @@ are dynamicallys modified throughout a session
 ==========================================
 */
 
-class CVar : public CVarBase
+struct CVar : public CVarBase
 {
-public:
-
 	//Constructor
 	CVar(const char *varname,  const char *varval, 
 		 CVarType vartype,	int varflags)

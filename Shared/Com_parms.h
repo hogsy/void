@@ -1,19 +1,54 @@
 #ifndef VOID_COM_PARMS
 #define VOID_COM_PARMS
 
+const int COM_INVALID_VALUE = -1;
+
 /*
-======================================
+================================================
+Very basic const char* wrapper for CVar
+validation funcs etc
+================================================
+*/
+class CStringVal
+{
+public:
+	CStringVal() {}
+	~CStringVal() { szString = 0; }
+
+	void SetString(const char * pString) { szString = pString; }
+
+	int IntVal() const 
+	{
+		int i = atoi(szString);
+		if(!i)
+			return COM_INVALID_VALUE;
+		return i;
+	}
+
+	float FloatVal() const
+	{
+		float f = atof(szString);
+		if(f = 0.0f)
+			return COM_INVALID_VALUE;
+		return f;
+	}
+
+	const char * String() const { return szString; }
+
+private:
+	const char * szString;
+};
+
+
+/*
+================================================
 Util class which can parse a 
 string for arguments
-======================================
+================================================
 */
 class CParms
 {
 public:
-
-	enum
-	{	INVALID_VALUE = -1
-	};
 
 	explicit CParms(int len);	
 	CParms(const CParms &parms);

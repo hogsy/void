@@ -373,7 +373,7 @@ int  CGameClient::GetOutgoingRate() const
 Handle Registered Commands
 ==========================================
 */
-void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
+void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

@@ -54,7 +54,7 @@ public:
 	void WriteFullUpdate(CBuffer &buf);
 
 	//Console Handler Implementation
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	void HandleCommand(int cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 private:

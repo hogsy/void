@@ -49,10 +49,10 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	g_pTex     = new CTextureManager();
 	g_pClient  = new CClientRenderer();
 	
-	g_pConsole->RegisterCVar(&m_cRast, this);
-	g_pConsole->RegisterCVar(&m_cFull,this);
-	g_pConsole->RegisterCVar(&m_cBpp,this);
-	g_pConsole->RegisterCVar(&m_cRes,this);
+	I_Console::GetConsole()->RegisterCVar(&m_cRast, this);
+	I_Console::GetConsole()->RegisterCVar(&m_cFull,this);
+	I_Console::GetConsole()->RegisterCVar(&m_cBpp,this);
+	I_Console::GetConsole()->RegisterCVar(&m_cRes,this);
 
 	if (_stricmp(m_cRast.string, "gl")==0)
 		g_pRast = new COpenGLRast();

@@ -1,8 +1,9 @@
 #include "Standard.h"
 #include "Ren_exp.h"
 
-I_Console	  *	g_pConsole=0;
-VoidExports	  *	g_pVoidExp=0;
+static I_Console	  *	g_pConsole=0;
+static VoidExports	  *	g_pVoidExp=0;
+
 I_HunkManager * g_pHunkManager=0;
 CRenExp		  * g_pRenExp=0;
 
@@ -61,6 +62,11 @@ Return current renderering parms
 */
 RENDERER_API RenderInfo_t * RENDERER_GetParms()
 {	return &g_rInfo;
+}
+
+
+I_Console * I_Console::GetConsole()
+{	return g_pConsole;
 }
 
 //======================================================================================

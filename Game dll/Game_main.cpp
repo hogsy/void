@@ -26,6 +26,9 @@ CGame::CGame()
 
 CGame::~CGame()
 {
+
+	I_Console::GetConsole()->UnregisterHandler(this);
+
 	if(entities)
 	{
 		for(int i=0;i<GAME_MAXENTITIES; i++)

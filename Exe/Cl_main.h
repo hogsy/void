@@ -30,7 +30,7 @@ public:
 	void SetInputState(bool on);
 
 	//Console Interface
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	void HandleCommand(int cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
 private:

@@ -38,15 +38,15 @@ public:
 	void ClientCommand(int clNum, CBuffer &command);
 
 	//Console Handler
-	void HandleCommand(HCMD cmdId, const CParms &parms);
+	void HandleCommand(int cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 
 private:
 
 	I_World * m_pWorld;
+	
 	void InitializeVars();
-
 };
 
 

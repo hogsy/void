@@ -40,7 +40,6 @@ namespace
 	};
 }
 
-
 extern CVoid*	g_pVoid;
 
 /*
@@ -460,7 +459,7 @@ void CVoid::ToggleConsole()
 Handle Commands
 ==========================================
 */
-void CVoid::HandleCommand(HCMD cmdId, const CParms &parms)
+void CVoid::HandleCommand(int cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{

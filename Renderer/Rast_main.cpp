@@ -18,8 +18,8 @@ Constructor
 CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
 								m_cWndY("r_wndy","40",CVAR_INT,CVAR_ARCHIVE)
 {	
-	g_pConsole->RegisterCVar(&m_cWndX);
-	g_pConsole->RegisterCVar(&m_cWndY);
+	I_Console::GetConsole()->RegisterCVar(&m_cWndX);
+	I_Console::GetConsole()->RegisterCVar(&m_cWndY);
 
 	mMaxElements = mNumElements = 0;
 	mMaxIndices = mNumIndices = 0;
