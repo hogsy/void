@@ -43,6 +43,8 @@ public:
 
 	bool	mIsLight;
 
+	bool	mbMipMap;	// create mipmaps
+
 	int mNumTextures;	// number of textures in this layer - 1 except for animations
 	texname_t *mTextureNames;	// the names of the textures
 
@@ -75,6 +77,9 @@ public:
 	bool IsShader(const char *s) { return (_stricmp(s, mName)==0); }
 	void GetDims(int &width, int &height);	// get width & height of first non-lightmap layer of shader
 
+	unsigned int GetContentFlags(void)	{	return	mContentFlags;	}
+	unsigned int GetSurfaceFlags(void)	{	return	mSurfaceFlags;	}
+
 	void AddRef(void);
 	void Release(void);
 
@@ -93,6 +98,8 @@ private:
 	int		mNumLayers;
 	CShaderLayer *mLayers[MAX_SHADER_LAYERS];
 
+	unsigned int mSurfaceFlags;
+	unsigned int mContentFlags;
 
 	int mNumTextures;	// total number of textures for all layers
 	int mTextureBin;	// rasterizer texture bin

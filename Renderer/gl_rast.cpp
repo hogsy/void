@@ -700,6 +700,8 @@ void COpenGLRast::TextureBinDestroy(int bin)
 
 void COpenGLRast::TextureSet(int bin, int texnum)
 {
+	if (texnum == -1)
+		return;
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
 }
 

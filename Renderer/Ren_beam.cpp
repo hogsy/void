@@ -370,7 +370,7 @@ sil_t* sil_build(bspf_brush_t *b)
 				sil->area -= world->sides[s+b->first_side].area * d;
 
 //			// use sky polys instead if it's a sky brush
-			if (world->sides[s+b->first_side].flags & SURF_SKY)
+			if (world->sides[s+b->first_side].flags & SURF_SKYVIEW)
 				sil->sky = true;
 
 			else

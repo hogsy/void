@@ -53,6 +53,8 @@ public:
 
 	void LoadShader(int bin, int index, const char *name);	// loads a specific shader, creates the default if it isn't found
 	void GetDims(char *name, int &width, int &height);	// get width & height of first non-lightmap layer of shader
+	unsigned int GetContentFlags(char *name);
+	unsigned int GetSurfaceFlags(char *name);
 
 	
 	void CacheAdd(cpoly_t *p);

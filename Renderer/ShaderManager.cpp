@@ -148,6 +148,56 @@ void CShaderManager::LoadShader(int bin, int index, const char *name)
 
 /*
 ===========
+GetContentFlags
+===========
+*/
+unsigned int CShaderManager::GetContentFlags(char *name)
+{
+	// find it if we already have it loaded
+	for (int s=0; s<mNumShaders; s++)
+	{
+		if (mShaders[s]->IsShader(name))
+			return mShaders[s]->GetContentFlags();
+	}
+
+	// create the default
+	if (mNumShaders == MAX_SHADERS)
+		FError("too many shaders - tell js\n");
+
+	mShaders[mNumShaders] = new CShader(name);
+	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->AddRef();
+	return mShaders[mNumShaders]->GetContentFlags();
+}
+
+
+/*
+===========
+GetSurfaceFlags
+===========
+*/
+unsigned int CShaderManager::GetSurfaceFlags(char *name)
+{
+	// find it if we already have it loaded
+	for (int s=0; s<mNumShaders; s++)
+	{
+		if (mShaders[s]->IsShader(name))
+			return mShaders[s]->GetSurfaceFlags();
+	}
+
+	// create the default
+	if (mNumShaders == MAX_SHADERS)
+		FError("too many shaders - tell js\n");
+
+	mShaders[mNumShaders] = new CShader(name);
+	mShaders[mNumShaders]->Default();
+	mShaders[mNumShaders]->AddRef();
+	return mShaders[mNumShaders]->GetSurfaceFlags();
+}
+
+
+/*
+===========
 GetDims
 ===========
 */

@@ -13,6 +13,7 @@
 #include "I_file.h"
 #include "Shader.h"
 #include "Tex_image.h"
+#include "Com_trace.h"
 
 
 /*
@@ -31,6 +32,7 @@ CShaderLayer::CShaderLayer()
 	mAnimFreq = 0;
 	mTexGen = TEXGEN_BASE;
 	mIsLight = false;
+	mbMipMap = true;
 }
 
 
@@ -93,7 +95,7 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 
 
 		// only 1 texture for this layer
-		if (_stricmp(token, "map") == 0)
+		else if (_stricmp(token, "map") == 0)
 		{
 			mNumTextures = 1;
 			mTextureNames = new texname_t[1];
@@ -230,6 +232,10 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		else if (_stricmp(token, "depthwrite") == 0)
 			mDepthWrite = true;
 
+		// dont create mipmaps
+		else if (_stricmp(token, "nomipmap") == 0)
+			mbMipMap = false;
+
 		// end of layer def
 		else if (_stricmp(token, "}") == 0)
 			break;
@@ -303,6 +309,8 @@ CShader::CShader(const char *name)
 	mNumLayers = 0;
 	mRefCount = 0;
 	mPass = CACHE_PASS_ZFILL;
+	mSurfaceFlags = 0;
+	mContentFlags = CONTENTS_SOLID;
 }
 
 
@@ -338,9 +346,31 @@ void CShader::Parse(CFileBuffer *shader)
 			mNumLayers++;
 		}
 
-		else if (_stricmp(token, "sky") == 0)
+		// sky brushes move with the eyepoint
+		else if ((_stricmp(token, "sky") == 0) || (_stricmp(token, "skybrush") ==0))
 		{
 			mPass = CACHE_PASS_SKY;
+			mContentFlags |= CONTENTS_SKY;
+		}
+
+		// surface allows viewing of the sky - makes whole brush be able to view sky
+		else if (_stricmp(token, "skyview") == 0)
+		{
+			mSurfaceFlags |= SURF_SKYVIEW;
+			mContentFlags |= CONTENTS_SKYVIEW;
+		}
+
+
+		else if (_stricmp(token, "invisible") == 0)
+		{
+			// doesnt effect contents
+			mSurfaceFlags |= CONTENTS_INVISIBLE;
+		}
+
+		else if (_stricmp(token, "nonsolid") == 0)
+		{
+			// brushes must be explicitly made nonsolid
+			mContentFlags &= ~CONTENTS_SOLID;
 		}
 
 		// end of shader def
@@ -357,8 +387,10 @@ void CShader::Parse(CFileBuffer *shader)
 	// FIXME - check for alphagen funcs too
 	if ((mLayers[0]->mSrcBlend != VRAST_SRC_BLEND_NONE) ||
 		(mLayers[0]->mDstBlend != VRAST_DST_BLEND_NONE))
+	{
+		mSurfaceFlags |= CONTENTS_TRANSPARENT;
 		mPass = CACHE_PASS_TRANSPARENT;
-
+	}
 }
 
 
@@ -421,7 +453,7 @@ void CShader::LoadTextures(void)
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
-	static char texname[COM_MAXPATH];
+	char texname[COM_MAXPATH];
 
 
 	int t=0;
@@ -432,6 +464,9 @@ void CShader::LoadTextures(void)
 			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
 				sprintf(texname,"%s/%s","textures",mLayers[l]->mTextureNames[tex].filename);
+
+				tData.bMipMaps = mLayers[l]->mbMipMap;
+
 
 				if (!CImageReader::GetReader().Read(texname, tData))
 					CImageReader::GetReader().DefaultTexture(tData);
@@ -474,9 +509,6 @@ void CShader::Default(void)
 	mLayers[0]->Default(mName, mNumTextures);
 	mLayers[1]->Default("$lightmap", mNumTextures);
 }
-
-
-
 
 
 
