@@ -36,8 +36,7 @@ public:
 	float GetVolume();
 	void  SetVolume(float vol);
 
-//	hSnd		soundIndex;
-//	CacheType	soundCache;
+	float m_muteDist;
 	const ClEntity * m_pEntity;
 
 private:

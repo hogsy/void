@@ -15,6 +15,8 @@ namespace VoidSound {
 LPDIRECTSOUND  GetDirectSound();
 CWaveManager * GetWaveManager();
 
+float GetMuteDist(float volume, int attenuation);
+
 void PrintDSErrorMessage(HRESULT hr, char * prefix);
 
 }

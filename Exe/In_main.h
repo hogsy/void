@@ -30,6 +30,9 @@ public:
 	bool Init();				//Initialize the Input System
 	void Shutdown();			//Shutdown the Input System
 
+	bool SetExclusive(bool on);
+	bool GetExclusiveVar();
+
 	void Acquire();				//Acquire all devices
 	bool AcquireMouse();		//Unacquire Mouse
 	bool AcquireKeyboard();		//Unacquire KB

@@ -14,8 +14,6 @@ namespace
 		CMD_STOP  = 2,
 		CMD_INFO  = 5,
 		CMD_LIST  = 6,
-		MAX_CHANNELS = 16,
-		MAX_WAVEFILES = 512
 	};
 	//Direct sound object.
 	IDirectSound	*	m_pDSound = 0;	
@@ -241,31 +239,6 @@ bool CSoundManager::Init()
 //======================================================================================
 
 static vector_t listPos;
-
-/*
-==========================================
-check for streameable data ?
-Check playing channels to see which ones are out
-of range now, and silence them
-==========================================
-*/
-void CSoundManager::RunFrame()
-{	
-	for(int i=0; i<MAX_CHANNELS; i++)
-	{
-		if(m_Channels[i].IsPlaying() &&
-		   m_Channels[i].m_pEntity)
-		{
-			if(Void3d::VectorDistance(listPos, m_Channels[i].m_pEntity->origin) > 500.0f)
-			{
-				m_Channels[i].Stop();
-				m_Channels[i].Destroy();
-			}
-		}
-	}
-	m_pListener->m_pDS3dListener->CommitDeferredSettings();
-}
-
 /*
 ======================================
 Update Listener pos
@@ -277,12 +250,110 @@ void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &up)
 {	
 	Void3d::VectorSet(listPos,pos);
-
 	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
+//	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
 												 up.x,up.y, up.z, DS3D_DEFERRED);
 }
+
+
+/*
+==========================================
+check for streameable data ?
+Check playing channels to see which ones are out
+of range now, and silence them
+==========================================
+*/
+void CSoundManager::RunFrame()
+{
+	int i = 0;
+	float muteDist = 0.0f;
+	
+	//stop any 3dchannels that should be muted now
+	for(i=0; i<MAX_CHANNELS; i++)
+	{
+		if(m_Channels[i].m_pEntity &&
+		   m_Channels[i].IsPlaying())
+		{
+			if(Void3d::VectorDistance(listPos, m_Channels[i].m_pEntity->origin) 
+						> m_Channels[i].m_muteDist)
+			{
+				m_Channels[i].Stop();
+				m_Channels[i].Destroy();
+			}
+		}
+	}
+
+	//Go through static sources to play them
+	for(i=0;i< MAX_STATICSOURCES; i++)
+	{
+		if(m_sndSources[i].ent && !m_sndSources[i].channel)
+		{
+			//Calc mute distance. then start playing if in range
+			muteDist = GetMuteDist(m_sndSources[i].ent->volume, 
+								   m_sndSources[i].ent->attenuation);
+
+			if(Void3d::VectorDistance(listPos, m_sndSources[i].ent->origin) < muteDist)
+			{
+				PlaySnd(m_sndSources[i].ent, m_sndSources[i].ent->soundIndex,
+						m_sndSources[i].ent->sndCache,
+					    m_sndSources[i].ent->volume, 
+						m_sndSources[i].ent->attenuation);
+			}
+		}
+	}
+	m_pListener->m_pDS3dListener->CommitDeferredSettings();
+}
+
+/*
+======================================
+
+======================================
+*/
+void CSoundManager::AddStaticSource(const ClEntity * ent)
+{
+	if(!m_bufferCache[ent->sndCache][ent->soundIndex].InUse())
+	{
+		ComPrintf("CSoundManager::AddStaticSource: no sound at index %d, cache %d\n", 
+			ent->soundIndex, ent->sndCache);
+		return;
+	}
+
+	//make sure we dont add duplicate sources
+	int freeIndex = -1;
+	for(int i=0; i< MAX_STATICSOURCES; i++)
+	{
+		if(freeIndex == -1 && !m_sndSources[i].ent)
+			freeIndex = 0;
+		else if(m_sndSources[i].ent == ent)
+			return;
+	}
+	m_sndSources[i].Reset();
+	m_sndSources[i].ent = ent;
+}
+
+/*
+======================================
+
+======================================
+*/
+void CSoundManager::RemoveStaticSource(const ClEntity * ent)
+{
+	for(int i=0; i< MAX_STATICSOURCES; i++)
+	{
+		if(m_sndSources[i].ent == ent)
+			break;
+	}
+	//didnt find source
+	if(i == MAX_STATICSOURCES)
+		return;
+
+	//First make sure that source isn't being played
+	if(m_sndSources[i].channel != -1)
+		m_Channels[m_sndSources[i].channel].Destroy();
+	m_sndSources[i].Reset();
+}
+
 
 /*
 ======================================
@@ -292,7 +363,7 @@ Play sound at given cache and index on given channel
 void CSoundManager::PlaySnd(const ClEntity * ent,
 							int index, CacheType cache,
 							int volume, int attenuation,
-							int channel)
+							int chantype)
 {
 	if(!m_bufferCache[cache][index].InUse())
 	{
@@ -315,7 +386,7 @@ void CSoundManager::PlaySnd(const ClEntity * ent,
 	m_Channels[i].Create(m_bufferCache[cache][index], ent, volume, attenuation);
 
 	bool loop = false;
-	channel & CHAN_LOOPING ? loop = true : loop = false;
+	chantype & CHAN_LOOPING ? loop = true : loop = false;
 	if(!m_Channels[i].Play(loop))
 	{
 		ComPrintf("Error playing sound %s at index %d\n", 
@@ -331,7 +402,7 @@ void CSoundManager::PlaySnd(const ClEntity * ent,
 */
 void CSoundManager::PlaySnd(int index, CacheType cache,
 							int volume,
-							int channel)
+							int chantype)
 {
 	if(!m_bufferCache[cache][index].InUse())
 	{
@@ -351,7 +422,7 @@ void CSoundManager::PlaySnd(int index, CacheType cache,
 
 	m_Channels[i].Create(m_bufferCache[cache][index],volume);
 	bool loop = false;
-	channel & CHAN_LOOPING ? loop = true : loop = false;
+	chantype & CHAN_LOOPING ? loop = true : loop = false;
 	if(!m_Channels[i].Play(loop))
 		ComPrintf("Error playing sound %s at index %d\n", 
 					index, m_bufferCache[cache][index].GetFilename());
@@ -796,6 +867,10 @@ namespace VoidSound
 			break;
 		}
 		ComPrintf("%s\n",error);
+	}
+
+	float GetMuteDist(float volume, int attenuation)
+	{	return 0.0f;
 	}
 }
 

@@ -315,6 +315,12 @@ void CVoid::Resize(bool focus, int x, int y, int w, int h)
 
 	m_pRParms->active = true;
 
+	//If changing to fullscreem, /./then make sure the input is exclusive
+	if(m_pRParms->rflags & RFLAG_FULLSCREEN)
+		m_pInput->SetExclusive(true);
+	else if(!m_pInput->GetExclusiveVar())
+		m_pInput->SetExclusive(false);
+		
 	//Change the size of the rendering window
 	if (m_pRender && !(m_pRParms->rflags & RFLAG_FULLSCREEN))
 		m_pRender->Resize();

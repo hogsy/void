@@ -2,11 +2,11 @@
 EXE
 ==============================================================
 
--Finish 3d sounds
+-Get 3d sound system working
 -Seperate client / client game code
 -Seperate server/ server game code
--Fix input at low framerates
 -Move client movement to server
+-Associate void worlds with exe and add opening by doubleclick
 
 headers
 Client/ClGame header
@@ -26,9 +26,15 @@ Defs, vectors, com_bufs
 
 
 
-
-
 RENDERER
 ==============================================================
 setup jpeg reading and writing
 gl driver issues with 3dfx cards? 
+
+
+
+TOOLS
+==========
+Create an MFC LogCtrl
+Create dialog based app to compile maps
+

@@ -172,6 +172,18 @@ void CClient::BeginGame()
 	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
+
+	//Register static sound sources with SoundManager
+	for(int i=0; i< GAME_MAXENTITIES; i++)
+	{
+		if(m_entities[i].inUse && m_entities[i].soundIndex > -1)
+		{
+			m_entities[i].sndCache = CACHE_GAME;
+			m_entities[i].volume = 10;
+			m_entities[i].attenuation = 5;
+			m_pSound->AddStaticSource(&m_entities[i]);
+		}
+	}
 	
 	
 	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angle, m_screenBlend);
@@ -213,7 +225,11 @@ void CClient::UnloadWorld()
 
 	for(i=0; i< GAME_MAXENTITIES; i++)
 		if(m_entities[i].inUse)
+		{
+			if(m_entities[i].soundIndex > -1)
+				m_pSound->RemoveStaticSource(&m_entities[i]);
 			m_entities[i].Reset();
+		}
 	
 	world_destroy(g_pWorld);
 	g_pWorld = 0;
@@ -266,7 +282,7 @@ void CClient::RunFrame()
 		//Print Networking stats
 		const NetChanState & chanState = m_pNetCl->GetChanState();
 
-		m_pHud->HudPrintf(0,390,0, "Latency %f", chanState.latency);
+		m_pHud->HudPrintf(0,390,0, "Latency %.2f", chanState.latency * 100);
 		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
 							chanState.dropCount + chanState.goodCount, chanState.numChokes);
 		m_pHud->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
@@ -451,9 +467,12 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
-	static ClEntity entHowl;
+	
+
+/*	static ClEntity entHowl;
 	
 	entHowl.soundIndex = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
 	Void3d::VectorSet(entHowl.origin,0,0,48);
 	m_pSound->PlaySnd(&entHowl, entHowl.soundIndex, CACHE_LOCAL, 0,0, CHAN_WORLD | CHAN_LOOPING);
+*/
 }

@@ -17,7 +17,9 @@ CSoundChannel::CSoundChannel()
 {
 	m_pDSBuffer= 0;
 	m_pDS3dBuffer = 0;
+	
 	m_pEntity  = 0;
+	m_muteDist = 0.0f;
 	m_bInUse  = false;
 }
 
@@ -34,6 +36,7 @@ void CSoundChannel::Destroy()
 {
 	if(m_pDSBuffer)
 	{
+//Stop ?
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
 	}
@@ -43,6 +46,7 @@ void CSoundChannel::Destroy()
 		m_pDS3dBuffer = 0;
 	}
 	m_pEntity =0;
+	m_muteDist = 0.0f;
 	m_bInUse = false;
 }
 
@@ -132,6 +136,8 @@ bool CSoundChannel::Create(const CSoundBuffer &buffer,
 							   m_pEntity->origin.z, 
 							   DS3D_DEFERRED); //DS3D_DEFERRED);
 //	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_IMMEDIATE);
+
+	//Calculate mute distance
 
 	m_bInUse = true;
 	return true;

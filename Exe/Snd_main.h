@@ -19,7 +19,6 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
-
 /*
 ======================================
 Main Sound manager
@@ -29,6 +28,16 @@ Main Sound manager
 class CSoundManager : public I_ConHandler 
 {
 public:
+
+	enum
+	{
+		DEFAULT_VOLUME = 10,
+		MIN_VOLUME = 0,
+		MAX_VOLUME = 10,
+		MAX_STATICSOURCES = 64,
+		MAX_WAVEFILES = 512,
+		MAX_CHANNELS = 16
+	};
 
 	CSoundManager();
 	~CSoundManager();
@@ -44,6 +53,13 @@ public:
 	//Run a Sound Frame
 	void RunFrame();
 
+	//Add a static soundSource which will be automatically played
+	//when the client gets in range, and stopped when out of range.
+	void AddStaticSource(const ClEntity * ent);
+	void RemoveStaticSource(const ClEntity * ent);
+	//just tell system to recalculate vars cause the ent has changed.
+	void UpdateStaticSource(const ClEntity * ent);
+
 	//update pos CCamera
 	void UpdateListener(const vector_t &pos,
 						const vector_t &velocity,
@@ -55,12 +71,12 @@ public:
 	void PlaySnd(const ClEntity * ent,
 				 int index, CacheType cache,
 				 int volume = 10, int attenuation =0,
-				 int channel = CHAN_AUTO);
+				 int chantype = CHAN_AUTO);
 	
 	//Play a 2d-UI sound at given volume
 	void PlaySnd(int index, CacheType cache,
 				 int volume = 10,
-				 int channel = CHAN_AUTO);
+				 int chantype = CHAN_AUTO);
 
 	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
@@ -76,6 +92,19 @@ private:
 	
 	//Channels which are actually played
 	VoidSound::CSoundChannel *	m_Channels;			
+
+	//Keep track of static sources
+	struct SndSource
+	{
+		SndSource() { Reset(); }
+		void Reset() { channel = -1; ent = 0; }  //muteDist =0.0f; 
+		~SndSource() { Reset(); }
+
+//		float muteDist;
+		int   channel;
+		const ClEntity * ent;
+	};
+	SndSource m_sndSources[MAX_STATICSOURCES];
 	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;

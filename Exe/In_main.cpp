@@ -217,8 +217,26 @@ need it
 =====================================
 */
 void CInput::Resize(int x, int y, int w, int h)
+{	m_pMouse->Resize(x,y,w,h);
+}
+
+
+bool CInput::SetExclusive(bool on)
 {
-	m_pMouse->Resize(x,y,w,h);
+	if(FAILED(m_pMouse->SetExclusive(on)) ||
+	   FAILED(m_pKb->SetExclusive(on)))
+	{
+		if(on)
+			ComPrintf("Failed to change Input mode to Exclusive\n");
+		else
+			ComPrintf("Failed to change Input mode to NonExclusive\n");
+		return false;
+	}
+	return true;
+}
+
+bool CInput::GetExclusiveVar()
+{	return m_pVarExclusive.bval;
 }
 
 
@@ -271,7 +289,10 @@ bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 		if(temp >= 0)
 		{
 			if(temp)
-			{
+				return SetExclusive(true);
+			else
+				return SetExclusive(false);
+/*			{
 				if(FAILED(m_pMouse->SetExclusive(true)) ||
 				   FAILED(m_pKb->SetExclusive(true)))
 				{
@@ -289,6 +310,7 @@ bool CInput::CSetExclusive(const CVar * var, const CParms &parms)
 				}
 			}
 			return true;
+*/
 		}
 	}
 	if(m_pVarExclusive.ival)
