@@ -194,19 +194,15 @@ Maintain frame animation state
 */
 struct AnimState
 {
-	explicit AnimState(int frame) 
-		: frameBegin(frame), frameEnd(frame), totalFrames(0),
+	AnimState() 
+		: frameBegin(0), frameEnd(0), totalFrames(0),
 		  animFrac(0.0f), currentFrame (0)	{}
 
-	AnimState(int begin, int end) 
-		: frameBegin(begin), frameEnd(end) , totalFrames(0)
-		  animFrac(0.0f), currentFrame (0)	{}
-	
 	AnimState(const AnimState &anim)
 		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
 		  animFrac(0.0f), currentFrame (0)	{}
 	
-	AnimState & operator = (const AnimSeq &anim)
+	AnimState & operator = (const AnimState &anim)
 	{
 		frameBegin = anim.frameBegin;
 		frameEnd = anim.frameEnd;
@@ -214,6 +210,15 @@ struct AnimState
 		currentFrame = 0;
 		animFrac = 0;
 		return *this;
+	}
+
+	void Set(int begin, int end, int totFrames=0) 
+	{
+		frameBegin = begin;
+		frameEnd = end;
+		totalFrames = totFrames;
+		animFrac =0.0f;
+		currentFrame=0;
 	}
 
 	int frameBegin;

@@ -1,6 +1,32 @@
 #ifndef VOID_GAME_ANIM_SEQUENCES
 #define VOID_GAME_ANIM_SEQUENCES
 
+enum EPlayerAnims
+{
+	STAND,
+	RUN,
+	ATTACK,
+	PAIN1,
+	PAIN2,
+	PAIN3
+	JUMP,
+	FLIP,
+	SALUTE,
+	TAUNT,
+	WAVE,
+	POINT,
+	CROUCH_STAND,
+	CROUCH_WALK,
+	CROUCH_ATTACK,
+	CROUCH_PAIN,
+	CROUCH_DEATH,
+	DEATH1,
+	DEATH2,
+	DEATH3
+};
+
+namespace AnimSeq {
+
 enum
 {
 	STAND_BEGIN = 0,
@@ -18,8 +44,8 @@ enum
 	PAIN2_BEGIN = 58,
 	PAIN2_END = 61,
 
-	PAIN2_BEGIN = 62,
-	PAIN2_END = 65,
+	PAIN3_BEGIN = 62,
+	PAIN3_END = 65,
 
 	JUMP_BEGIN = 66,
 	JUMP_END = 71,
@@ -63,5 +89,56 @@ enum
 	DEATH3_BEGIN = 190,
 	DEATH3_END = 197,
 };
+
+
+void SetPlayerAnim(EPlayerAnims anim, AnimState &animState)
+{
+	switch(anim)
+	{
+	case STAND:
+		animState.Set(STAND_BEGIN,STAND_END);
+	case RUN:
+		animState.Set(RUN_BEGIN,RUN_END);
+	case ATTACK:
+		animState.Set(ATTACK_BEGIN,ATTACK_END);
+	case PAIN1:
+		animState.Set(PAIN1_BEGIN,PAIN1_END);
+	case PAIN2:
+		animState.Set(PAIN2_BEGIN,PAIN2_END);
+	case PAIN3:
+		animState.Set(PAIN3_BEGIN,PAIN3_END);
+	case JUMP:
+		animState.Set(JUMP_BEGIN,JUMP_END);
+	case FLIP:
+		animState.Set(FLIP_BEGIN,FLIP_END);
+	case SALUTE:
+		animState.Set(SALUTE_BEGIN,SALUTE_END);
+	case TAUNT:
+		animState.Set(TAUNT_BEGIN,TAUNT_END);
+	case WAVE:
+		animState.Set(WAVE_BEGIN,WAVE_END);
+	case POINT:
+		animState.Set(POINT_BEGIN,POINT_END);
+	case CROUCH_STAND:
+		animState.Set(CROUCH_STAND_BEGIN,CROUCH_STAND_END);
+	case CROUCH_WALK:
+		animState.Set(CROUCH_WALK_BEGIN,CROUCH_WALK_END);
+	case CROUCH_ATTACK:
+		animState.Set(CROUCH_ATTACK_BEGIN,CROUCH_ATTACK_END);
+	case CROUCH_PAIN:
+		animState.Set(CROUCH_PAIN_BEGIN,CROUCH_PAIN_END);
+	case CROUCH_DEATH:
+		animState.Set(CROUCH_DEATH_BEGIN,CROUCH_DEATH_END);
+	case DEATH1:
+		animState.Set(DEATH1_BEGIN,DEATH1_END);
+	case DEATH2:
+		animState.Set(DEATH2_BEGIN,DEATH2_END);
+	case DEATH3:
+		animState.Set(DEATH3_BEGIN,DEATH3_END);
+	}
+}
+
+
+}
 
 #endif
