@@ -19,11 +19,7 @@ CFileBuffer::CFileBuffer()
 }
 
 CFileBuffer::~CFileBuffer()
-{	
-	if(m_filename)
-		delete [] m_filename;
-	if(m_buffer)
-		g_pHunkManager->HunkFree(m_buffer);
+{	Close();
 }
 
 /*
@@ -68,10 +64,10 @@ Close file
 */
 void CFileBuffer::Close()
 {
-	//Don't release the buffer is using it statically
 	if(m_buffer)
 	{
 		g_pHunkManager->HunkFree(m_buffer);
+		m_buffersize = 0;
 		m_buffer = 0;
 	}
 
@@ -140,6 +136,9 @@ Get current character
 */
 void CFileBuffer::GetToken(char *buff, bool newline)
 {
+	if(!m_size)
+		return;
+
 	char tmp;
 
 	// if we want a new line, find the first '\n'
@@ -212,6 +211,7 @@ bool CFileBuffer::Seek(int offset, int origin)
 {
 	if(!m_size)
 		return false;
+
 	switch(origin)
 	{
 	case SEEK_SET:
@@ -226,8 +226,8 @@ bool CFileBuffer::Seek(int offset, int origin)
 		break;
 	case SEEK_END:
 		//Offset should be negative for this
-		if(offset)
-			offset = 0;
+		if(offset > 0)
+			return false;
 		m_curpos = m_size + offset;
 		break;
 	}

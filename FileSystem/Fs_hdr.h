@@ -8,6 +8,7 @@
 #include "Com_mem.h"
 #include "I_hunkmem.h"
 #include "Com_util.h"
+#include "Com_file.h"
 
 //======================================================================================
 //======================================================================================
@@ -36,10 +37,8 @@ public:
 	virtual uint GetPos(HFS handle) = 0;
 	virtual uint GetSize(HFS handle) = 0;
 
-	//Open file at this path, fill buffer
-	virtual uint LoadFile(byte ** ibuffer, 
-						  uint buffersize, 
-						  const char *ifilename)=0;
+	//Open file at this path, alloc and fill buffer
+	virtual uint LoadFile(byte ** ibuffer, const char *ifilename)=0;
 
 	//Check for presence of given file
 	virtual bool FindFile(char * buf, int buflen, const char * filename)=0;

@@ -509,11 +509,9 @@ bool CZipFile::BinarySearchForEntry(const char *name,
 Load the requested file into the given buffer
 ==========================================
 */
-uint CZipFile::LoadFile(byte ** ibuffer, 
-						uint buffersize, 
-						const char *ifilename)
+uint CZipFile::LoadFile(byte ** ibuffer, const char *ifilename)
 {
-	if(!buffersize && *ibuffer)
+	if(*ibuffer)
 	{
 		ComPrintf("CZipFile::OpenFile: Expecting empty file pointer %s\n", ifilename);
 		return 0;
@@ -522,19 +520,7 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	ZipEntry_t * entry=0;
 	if(BinarySearchForEntry(ifilename,&entry,0,m_numFiles))
 	{
-		if(!buffersize)
-		{
-			*ibuffer = (byte*)g_pHunkManager->HunkAlloc(entry->filelen);
-		}
-		else
-		{
-			if(entry->filelen > buffersize)
-			{
-				ComPrintf("CZipFile::LoadFile: Buffer is smaller than size of file %s, %d>%d\n", 
-						ifilename, entry->filelen, buffersize);
-				return 0;
-			}
-		}
+		*ibuffer = (byte*)g_pHunkManager->HunkAlloc(entry->filelen);
 		fseek(m_fp,entry->filepos,SEEK_SET);
 		fread(*ibuffer, entry->filelen, 1, m_fp);
 		return entry->filelen;

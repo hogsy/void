@@ -240,8 +240,7 @@ uint CFileSystem::OpenFileReader(CFileBuffer * pFile, const char *ifilename)
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			size = iterator->archive->LoadFile(&(pFile->m_buffer), pFile->m_buffersize,
-											   ifilename);
+			size = iterator->archive->LoadFile(&(pFile->m_buffer),ifilename);
 			if(size)
 				return size;
 		}
