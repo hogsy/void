@@ -1,7 +1,6 @@
 #include "Standard.h"
 #include "Hud_hdr.h"
 #include "Hud_main.h"
-#include "Tex_hdr.h"
 #include "ShaderManager.h"
 
 

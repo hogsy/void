@@ -95,22 +95,6 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Ren_beam.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Ren_beam.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Ren_cache.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Ren_cache.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Ren_exp.cpp
 # End Source File
 # Begin Source File
@@ -145,10 +129,6 @@ SOURCE=.\Con_main.h
 # Begin Group "Textures"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Tex_hdr.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\Tex_image.cpp

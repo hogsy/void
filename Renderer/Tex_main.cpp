@@ -1,5 +1,4 @@
 #include "Standard.h"
-#include "Tex_hdr.h"
 #include "Tex_main.h"
 #include "Tex_image.h"
 

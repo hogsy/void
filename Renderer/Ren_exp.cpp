@@ -2,8 +2,6 @@
 #include "Com_parms.h"
 #include "Ren_exp.h"
 #include "Ren_main.h"
-#include "Ren_cache.h"
-#include "Ren_beam.h"
 #include "Tex_main.h"
 #include "Tex_image.h"
 #include "Con_main.h"
@@ -186,8 +184,6 @@ bool CRenExp::Shutdown(void)
 	g_pRast->SetFocus();
 
 	//Destroy Subsystems
-	beam_shutdown();
-
 	g_pClient->UnLoadTextures();
 	g_pClient->UnLoadSkins();
 	g_pShaders->UnLoadBase();

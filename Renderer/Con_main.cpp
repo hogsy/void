@@ -1,6 +1,5 @@
 #include "Standard.h"
 #include "Con_main.h"
-#include "Tex_hdr.h"
 #include "ShaderManager.h"
 
 //======================================================================================

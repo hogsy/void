@@ -1,8 +1,7 @@
 #include "Standard.h"
 #include "Ren_main.h"
-//#include "Ren_beam.h"
-#include "Ren_cache.h"
 #include "ShaderManager.h"
+#include "Shader.h"
 #include "Client.h"
 
 
@@ -15,7 +14,7 @@ int			eye_leaf;
 //extern model_cache_t *tmodel;	// where model info is put so it can be rendered - FIXME
 plane_t frust[5];	// 4 sides + near-z
 
-extern	const vector_t *fullblend;
+const vector_t *fullblend;
 
 //====================================================================================
 
@@ -56,27 +55,8 @@ Renderer Initiation - set up initial render state
 ***********************/
 void r_init(void)
 {
-//	glClearColor(.1, .1, .1, 1);
-
 	/* set viewing projection */
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
-
-/*
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	glBindTexture(GL_TEXTURE_2D, tex->base_names[0]);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glEnable(GL_DITHER);
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_ALWAYS);
-
-	glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
-*/
 
 	// reset last r_vidsynch
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
@@ -89,6 +69,138 @@ void r_init(void)
 	}
 
 	g_rInfo.ready = true;
+}
+
+
+/***********************
+r_getsky - make a set of polys from the sky
+***********************/
+cpoly_t* r_getsky(bspf_side_t *side)
+{
+	int		 num_clipverts;
+	int		 sides[33];		// for clipping
+	float	 dists[33];		// 
+	vector_t verts[33];		// verts used in creating planes and clipping
+	vector_t planes[33];	// dont need dists cause they all go through the origin
+	cpoly_t *ret = NULL;	// poly list to be returned
+
+	// create list of planes to clip sky polys to
+	int v, nv;
+	for (v=0; v<side->num_verts; v++)
+		verts[v] = world->verts[world->iverts[v+side->first_vert]] - camera->origin;
+
+	for (v=0; v<side->num_verts; v++)
+	{
+		nv = (v+1) % side->num_verts;
+
+		CrossProduct(verts[v], verts[nv], planes[v]);
+		planes[v].Normalize();
+	}
+
+	// add every sky poly to the list and clip to all planes
+	// sky brushes are always brush 0
+	int endside = world->brushes[0].first_side + world->brushes[0].num_sides;
+	for (int s=world->brushes[0].first_side; s<endside; s++)
+	{
+		cpoly_t *npoly = g_pShaders->GetPoly();
+		npoly->num_vertices = world->sides[s].num_verts;
+		npoly->texdef            = world->sides[s].texdef;
+		npoly->lightdef          = world->sides[s].lightdef;
+
+		for (v=0; v<npoly->num_vertices; v++)
+			npoly->vertices[v] = world->verts[world->iverts[world->sides[s].first_vert+v]];
+
+		for (int p=0; p<side->num_verts; p++)
+		{
+
+			bool allfront = true;
+			bool allback = true;
+
+			for (int i=0; i<npoly->num_vertices; i++)
+			{
+				dists[i] = dot(planes[p], npoly->vertices[i]);
+                                
+				if (dists[i] > 0.01f)
+				{
+					sides[i] = 1;
+					allback = false;
+				}
+				else if (dists[i] < -0.01f)
+				{
+					sides[i] = -1;
+					allfront = false;
+				}
+				else
+					sides[i] = 0;
+			}
+
+			// side not clipped by this plane
+			if (allfront)
+				continue;
+			// side completely clipped out by this plane
+			if (allback)
+			{
+				npoly->num_vertices = 0;
+				break;
+			}
+
+			num_clipverts = 0;
+
+			dists[i] = dists[0];
+			sides[i] = sides[0];
+
+			for (i=0; i<npoly->num_vertices; i++)
+			{
+				if (sides[i] == 0)
+				{
+					verts[num_clipverts] = npoly->vertices[i];
+					verts[num_clipverts] = npoly->vertices[i];
+					num_clipverts++;
+					continue;
+				}
+
+				if (sides[i] == 1)
+				{
+					verts[num_clipverts] = npoly->vertices[i];
+					num_clipverts++;
+				}
+
+				if ((sides[i+1] == 0) || (sides[i] == sides[i+1]))
+					continue;
+
+				vector_t *nextvert = &npoly->vertices[(i+1)%npoly->num_vertices];
+				double frac = dists[i] / (dists[i]-dists[i+1]);
+				verts[num_clipverts].x = (float)(npoly->vertices[i].x + frac*(nextvert->x - npoly->vertices[i].x));
+				verts[num_clipverts].y = (float)(npoly->vertices[i].y + frac*(nextvert->y - npoly->vertices[i].y));
+				verts[num_clipverts].z = (float)(npoly->vertices[i].z + frac*(nextvert->z - npoly->vertices[i].z));
+				num_clipverts++;
+			}
+
+			// copy everything back
+			if (num_clipverts > 32)
+					num_clipverts = 32;
+			memcpy(npoly->vertices, verts, sizeof(vector_t) * num_clipverts);
+			npoly->num_vertices = num_clipverts;
+
+		}
+
+		if (npoly->num_vertices < 3)
+		{
+			npoly->next = NULL;
+			g_pShaders->ReturnPoly(npoly);
+		}
+		else
+		{
+			// translate so it follows the view origin
+			// add to list
+			for (v=0; v<npoly->num_vertices; v++)
+				npoly->vertices[v] += camera->origin;
+			npoly->next = ret;
+			ret = npoly;
+		}
+	}
+
+	return ret;
 }
 
 
@@ -137,19 +249,33 @@ void r_draw_leaf(int l)
 			if ((DotProduct(world->planes[side->plane].norm, camera->origin) - world->planes[side->plane].d) < 0)
 				continue;
 
+			// get polys from sky leaf if we need to
+			if (g_pShaders->GetShader(g_pShaders->mWorldBin, world->texdefs[side->texdef].texture)->GetContentFlags() & CONTENTS_SKYVIEW)
+			{
+				cpoly_t *p = r_getsky(side);
+				while (p)
+				{
+					cpoly_t *add = p;
+					p = p->next;
+					g_pShaders->CacheAdd(add);
+				}
+			}
 
-			cpoly_t *p = g_pShaders->GetPoly();
+			else
+			{
 
-			p->forcez = true;
-			p->lightdef = side->lightdef;
-			p->next = NULL;
-			p->num_vertices = side->num_verts;
-			p->texdef = side->texdef;
+				cpoly_t *p = g_pShaders->GetPoly();
 
-			for (int v=0; v<p->num_vertices; v++)
-				p->vertices[v] = world->verts[world->iverts[side->first_vert+v]];
+				p->lightdef = side->lightdef;
+				p->next = NULL;
+				p->num_vertices = side->num_verts;
+				p->texdef = side->texdef;
 
-			g_pShaders->CacheAdd(p);
+				for (int v=0; v<p->num_vertices; v++)
+					p->vertices[v] = world->verts[world->iverts[side->first_vert+v]];
+
+				g_pShaders->CacheAdd(p);
+			}
 		}
 	}
 }

@@ -29,8 +29,6 @@ struct cpoly_t
 	int			texdef;
 	int			lightdef;
 
-	bool		forcez;	// forces a ztest
-
 	cpoly_t *next;
 };
 
