@@ -114,7 +114,7 @@ struct I_Game
 	virtual bool LoadWorld(I_World * pWorld)=0;
 	virtual void UnloadWorld()=0;
 
-	virtual void RunFrame(float curTime)=0;
+	virtual void RunFrame(float curTime, float frameTime)=0;
 
 	virtual bool SpawnEntity(CBuffer &buf)=0;
 

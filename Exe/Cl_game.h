@@ -61,7 +61,7 @@ private:
 
 	//==================================================
 	//Movement
-	void UpdatePosition(vector_t &dir, float time);
+	void UpdatePosition(float time);
 	void UpdateAngles(const vector_t &angles, float time);
 		
 	void MoveForward();

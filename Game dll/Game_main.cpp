@@ -80,10 +80,11 @@ void CGame::ShutdownGame()
 	EntSpawner::DestroyMakers();
 }
 
-void CGame::RunFrame(float curTime)
+void CGame::RunFrame(float curTime, float frameTime)
 {
-	vector_t desiredMove;
+	vector_t desiredMove;	// only the new move from input
 	vector_t forward, right, up;
+	vector_t f, r;
 
 	//Run entities
 	for(int i=0; i<numEnts; i++)
@@ -104,15 +105,56 @@ void CGame::RunFrame(float curTime)
 			right.Normalize();
 			up.Normalize();
 
-			desiredMove.Set(0,0,0);
-			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.forwardmove, forward);
-			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, right);
-			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.upmove, up);
+			// find forward and right vectors that lie in the xy plane
+			f = forward;
+			f.z = 0;
+			if (f.Normalize() < 0.3)
+			{
+				if (forward.z < 0)
+					f = up;
+				else
+					up.Scale(f, -1);
 
-			desiredMove.z -= 200.0f;
+				f.z = 0;
+				f.Normalize();
+			}
+
+			r = right;
+			r.z = 0;
+			if (r.Normalize() < 0.3)
+			{
+				if (right.z > 0)
+					r = up;
+				else
+					up.Scale(r, -1);
+
+				r.z = 0;
+				r.Normalize();
+			}
+
+
+
+			desiredMove.Set(0,0,0);
+			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.forwardmove, f);
+			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, r);
+			desiredMove.z = clients[i]->clCmd.upmove;
+			desiredMove.z -= 800 * frameTime;
+
+
+
+		// gradually slow down (friction)
+			clients[i]->velocity.x *= 0.9f * frameTime;
+			clients[i]->velocity.y *= 0.9f * frameTime;
+			if (clients[i]->velocity.x < 0.01f)
+				clients[i]->velocity.x = 0;
+			if (clients[i]->velocity.y < 0.01f)
+				clients[i]->velocity.y = 0;
+
+
+			clients[i]->velocity += desiredMove;
 
 			//Perform the actual move and update angles
-			EntMove::ClientMove(clients[i], desiredMove, clients[i]->clCmd.time);
+			EntMove::ClientMove(clients[i], frameTime);
 
 			clients[i]->clCmd.Reset();
 		}
@@ -166,6 +208,7 @@ void CGame::ClientBegin(int clNum)
 	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&clients[clNum]->angles, 0.0f, 0.0f, 0.0f);
+	VectorSet(&clients[clNum]->velocity, 0.0f, 0.0f, 0.0f);
 
 	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
 	clients[clNum]->spawned = true;

@@ -107,7 +107,7 @@ Perform the actual move
 */
 //void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
 
-void CGameClient::UpdatePosition(vector_t &dir, float time)
+void CGameClient::UpdatePosition(float time)
 {
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)
@@ -115,7 +115,7 @@ void CGameClient::UpdatePosition(vector_t &dir, float time)
 
 	//Clipping should be on by default
 //	if (m_cvClip.ival)
-		EntMove::ClientMove(m_pGameClient, dir, time);
+	EntMove::ClientMove(m_pGameClient, time);
 ///	else
 //		EntMove::NoClipMove(m_pGameClient, dir, time);
 }

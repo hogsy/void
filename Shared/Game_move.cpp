@@ -20,7 +20,7 @@ void EntMove::NoClipMove(BaseEntity *ent, vector_t &dir, float time)
 {	VectorMA(&ent->origin, time, &dir, &ent->origin);
 }
 
-void EntMove::ClientMove(BaseEntity *ent, vector_t &dir, float time)
+void EntMove::ClientMove(BaseEntity *ent, float time)
 {
 	// all the normals of the planes we've hit
 	vector_t	hitplanes[MAX_CLIP_PLANES];	
@@ -29,6 +29,8 @@ void EntMove::ClientMove(BaseEntity *ent, vector_t &dir, float time)
 	vector_t	primal_dir;			// dir we originally wanted
 	TraceInfo	tr;
 	float d;
+
+	vector_t dir = ent->velocity;
 
 	dir.Scale(time);
 	primal_dir = dir;
@@ -72,5 +74,8 @@ void EntMove::ClientMove(BaseEntity *ent, vector_t &dir, float time)
 			break;
 		}
 	}
+
+	dir.Scale(1/time);
+	ent->velocity = dir;
 }
 

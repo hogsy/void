@@ -144,25 +144,25 @@ void CGameClient::RunFrame(float frameTime)
 	//Get desired move
 	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.forwardmove, f);
 	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, r);
-
-// gradually slow down (friction)
-	m_vecVelocity.x *= 0.9f * frameTime;
-	m_vecVelocity.y *= 0.9f * frameTime;
-	if (m_vecVelocity.x < 0.01f)
-		m_vecVelocity.x = 0;
-	if (m_vecVelocity.y < 0.01f)
-		m_vecVelocity.y = 0;
-
-//	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.upmove, m_vecUp);
 	m_vecDesiredMove.z += m_cmd.upmove;
-
+	// FIXME - use gravity cvar
 	m_vecDesiredMove.z -= 800 * frameTime;
 
-	m_vecVelocity.VectorMA(m_vecVelocity, frameTime, m_vecDesiredMove);
+
+// gradually slow down (friction)
+	m_pGameClient->velocity.x *= 0.9f * frameTime;
+	m_pGameClient->velocity.y *= 0.9f * frameTime;
+	if (m_pGameClient->velocity.x < 0.01f)
+		m_pGameClient->velocity.x = 0;
+	if (m_pGameClient->velocity.y < 0.01f)
+		m_pGameClient->velocity.y = 0;
+
+
+	m_pGameClient->velocity += m_vecDesiredMove;
 
 
 	//Perform the actual move and update angles
-	UpdatePosition(m_vecVelocity, 1); //frameTime);
+	UpdatePosition(frameTime);
 	UpdateAngles(m_vecDesiredAngles,frameTime);
 
 	//Save current view to send to the server

@@ -30,7 +30,7 @@ public:
 	void UnloadWorld();
 
 
-	void RunFrame(float curTime);
+	void RunFrame(float curTime, float frameTime);
 
 	bool SpawnEntity(CBuffer &buf);
 
