@@ -7,9 +7,15 @@
 
 //Include proper project header
 #ifdef _VOID_EXE_
+
 	#include "../Exe/Sys_hdr.h"
 	#include "I_file.h"
 	#define PRINT ComPrintf
+
+	//Keep track of last world loaded for the exe
+	static CFileStream  * m_pFile=0;
+	static world_t		* m_pWorld = 0;
+	static char			  m_worldName[64];
 
 #elif defined _VVIS
 	#include "../vvis/source/std_lib.h"
@@ -21,13 +27,11 @@
 
 #endif
 
-
 /**************************************************************
 print all info about the world
 **************************************************************/
 void world_print(world_t *world)
 {
-
 }
 
 
@@ -86,26 +90,26 @@ void world_destroy(world_t *world)
 
 	delete world;
 	world = NULL;
+
+#ifdef _VOID_EXE_
+	m_pWorld = 0;
+#endif
 }
-
-
 
 
 
 /**************************************************************
 Read a world file from disk
 **************************************************************/
+
+static bspf_header_t header;
+
 /*
 ===========
 load_lump
 ===========
 */
-static bspf_header_t header;
-
 #ifdef _VOID_EXE_
-
-static CFileStream  * m_pFile=0;
-
 int load_lump(int l, void **data)
 {
 	*data = MALLOC(header.lumps[l].length+1);
@@ -116,11 +120,9 @@ int load_lump(int l, void **data)
 
 	return header.lumps[l].length;
 }
-
 #else
 
 static FILE *bsp_file;
-
 int load_lump(int l, void **data)
 {
 	*data = (void*) new unsigned char[header.lumps[l].length+1];
@@ -131,13 +133,20 @@ int load_lump(int l, void **data)
 	return header.lumps[l].length;
 }
 
-
 #endif
 
-
+/*
+======================================
+Read the world
+======================================
+*/
 world_t* world_read(char *filename)
 {
 #ifdef _VOID_EXE_
+
+	// or return cached pointer to client if the local server has alreadly loaded it
+	if(!strcmp(filename,m_worldName) && m_pWorld)
+		return m_pWorld;
 	
 	m_pFile = new CFileStream();
 
@@ -168,7 +177,6 @@ world_t* world_read(char *filename)
 		return 0;
 	}
 
-	//world_t *w = (world_t*)MALLOC(sizeof(world_t));
 	world_t *w = new world_t;
 
 	// read in all the lumps
@@ -190,7 +198,11 @@ world_t* world_read(char *filename)
 
 	m_pFile->Close();
 	delete m_pFile;
-	m_pFile = 0;
+
+	//Cache pointer to the last loaded world
+	strcpy(m_worldName,filename);
+	m_pWorld = w;
+
 	return w;
 
 #else
