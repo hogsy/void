@@ -9,12 +9,13 @@ Constructor Destructor
 ==========================================
 */
 
-CNetSocket::CNetSocket(CNetBuffer **buffer)
+CNetSocket::CNetSocket(CNetBuffer * buffer)
 {
 	m_socket = INVALID_SOCKET;
-	m_pBuffer = *buffer;
+	m_pBuffer = buffer;
 
-	memset(&m_srcAddr,0,sizeof(SOCKADDR_IN));
+	memset(&m_srcSockAddr,0,sizeof(SOCKADDR_IN));
+	memset(&m_destSockAddr,0,sizeof(SOCKADDR_IN));
 }
 
 CNetSocket::~CNetSocket()
@@ -56,7 +57,7 @@ void CNetSocket::Close()
 Bind the socket
 ==========================================
 */
-bool CNetSocket::Bind(const char * ipaddr, short port, bool blocking)
+bool CNetSocket::Bind(const CNetAddr &addr, bool blocking)
 {
 	ulong val = 1;
 
@@ -69,21 +70,12 @@ bool CNetSocket::Bind(const char * ipaddr, short port, bool blocking)
 		}
 	}
 
-	SOCKADDR_IN addr;
-	addr.sin_family = AF_INET;
+	SOCKADDR_IN sockAddr;
+	addr.ToSockAddr(sockAddr);
 	
-	if(ipaddr == 0)
-		addr.sin_addr.s_addr = INADDR_ANY;
-	else if(!strcmp(ipaddr,"loopback"))
-		addr.sin_addr.s_addr = INADDR_LOOPBACK;
-	else
-	{
-		ComPrintf("CNetSocket::Bind: binding to %s\n", ipaddr);
-		addr.sin_addr.s_addr = inet_addr(ipaddr);
-	}
-	addr.sin_port = htons((short)port);
-
-	if(bind(m_socket,(SOCKADDR*)&addr, sizeof(addr)) == SOCKET_ERROR)
+	ComPrintf("CNetSocket::Bind: binding to %s\n", addr.ToString());
+	
+	if(bind(m_socket,(SOCKADDR*)&sockAddr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR)
 	{
 		PrintSockError(WSAGetLastError(),"CNetSocket::Bind:");
 		return false;
@@ -125,10 +117,10 @@ Try to receive data
 bool CNetSocket::Recv()
 {
 	int srcLen=  sizeof(SOCKADDR_IN);
-	m_pBuffer->Reset();
 	
-	int ret = recvfrom(m_socket,(char*)m_pBuffer->GetWritePointer(), m_pBuffer->FreeBytes(), 
-					   0, (SOCKADDR*)&m_srcAddr, &srcLen);
+	m_pBuffer->Reset();
+	int ret = recvfrom(m_socket,(char*)m_pBuffer->GetData(), m_pBuffer->GetMaxSize(), 
+					   0, (SOCKADDR*)&m_srcSockAddr, &srcLen);
 	
 	if(ret == SOCKET_ERROR)
 	{
@@ -137,18 +129,20 @@ bool CNetSocket::Recv()
 			return false;
 		if(err == WSAEMSGSIZE)
 		{
-			ComPrintf("CNetSocket::Recv: Oversize packet from %s\n", inet_ntoa (m_srcAddr.sin_addr));
+			ComPrintf("CNetSocket::Recv: Oversize packet from %s\n", inet_ntoa (m_srcSockAddr.sin_addr));
 			return false;
 		}
 		PrintSockError(err,"CNetSocket::Recv:");
 		return false;
 	}
 
-	if(ret == m_pBuffer->MaxSize())
+	if(ret == m_pBuffer->GetMaxSize())
 	{
-		ComPrintf("CNetSocket::Recv: Oversize packet from %s\n",inet_ntoa (m_srcAddr.sin_addr));
+		ComPrintf("CNetSocket::Recv: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
 		return false;
 	}
+
+	m_srcAddr = m_srcSockAddr;
 	m_pBuffer->SetCurSize(ret);
 	return true;
 }
@@ -159,31 +153,24 @@ bool CNetSocket::Recv()
 Try to send data
 ==========================================
 */
-void CNetSocket::Send(const char *ipaddr, const byte *data, int length)
+void CNetSocket::Send(const CNetAddr &addr, const byte * data, int length)
 {
-	SOCKADDR_IN sAddr;
-	
-/*	if(!StringToSockAddr(ipaddr,sAddr))
-	{
-		ComPrintf("CNetSocket::Send:Invalid address %s\n", ipaddr);
-		return;
-	}
-*/
-	Send(sAddr,data,length);
-}
+	addr.ToSockAddr(m_destSockAddr);
 
-void CNetSocket::Send(SOCKADDR_IN &addr, const byte *data, int length)
-{
-	if(sendto (m_socket, (char*)data, length,0, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR)
+	int ret = sendto (m_socket, (char*)data, length,0, (SOCKADDR *)&m_destSockAddr, sizeof(SOCKADDR_IN));
+
+	if(ret == SOCKET_ERROR)
 	{
 		int err = WSAGetLastError();
 		if(err == WSAEWOULDBLOCK)
 		{
-			ComPrintf("CNetSocket::Send: to %s, WSAEWOULDBLOCK\n", inet_ntoa(addr.sin_addr));
+			ComPrintf("CNetSocket::Send: to %s, WSAEWOULDBLOCK\n", inet_ntoa(m_destSockAddr.sin_addr));
 			return;
 		}
 		PrintSockError(err,"CNetSocket::Send:");
+		return;
 	}
+	ComPrintf("Sent %d bytes to %s\n", length, addr.ToString());
 /*
 // wouldblock is silent
         if (err == WSAEWOULDBLOCK)
@@ -197,8 +184,9 @@ void CNetSocket::Send(SOCKADDR_IN &addr, const byte *data, int length)
 			Con_Printf ("NET_SendPacket ERROR: %i\n", errno);
 	}
 */
-
 }
+
+
 
 
 

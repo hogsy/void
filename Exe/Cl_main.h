@@ -3,6 +3,8 @@
 
 #include "Sys_hdr.h"
 #include "I_renderer.h"
+#include "Net_defs.h"
+#include "Net_util.h"
 
 //======================================================================================
 //======================================================================================
@@ -46,14 +48,10 @@ public:
 
 private:
 
-	bool m_active;
-	bool m_connected;
-	bool m_ingame;
+	//==================================================
 
-	eyepoint_t  eye;
-
-	bool ConnectTo(char *ipaddr, int port);
-	bool Disconnect();
+	void ConnectTo(const char * ipaddr);
+	void Disconnect();
 
 	//Movement
 	void Move(vector_t *dir, float time);
@@ -69,31 +67,37 @@ private:
 	//Console funcs
 	void CamPath(int argc,char **argv);
 
-	CVar	m_clport;
-	CVar 	m_clname;
-	CVar 	m_clrate;
-	CVar 	m_noclip;
+	//==================================================
 
-//	world_t    *m_pWorld;
+	//Client CVars
+	CVar		m_clport;
+	CVar 		m_clname;
+	CVar 		m_clrate;
+	CVar 		m_noclip;
 
+	//Command Handler
 	friend class VoidClient::CClientCmdHandler;
 	VoidClient::CClientCmdHandler * m_pCmdHandler;
 
+	//Renderer and HUD interfaces
 	I_Renderer* m_pRender;
 	I_RHud    *	m_pHud;
 
-//	CSocket	 	m_sock;
+	//Network Specific Stuff
+	VoidNet::CNetBuffer   m_buffer;
+	VoidNet::CNetSocket * m_pSock;
 	
-	char		m_svipaddr[16];		//addr we are currently connected to
-	int			m_svport;
+	char m_svServerAddr[24];
 
+//	world_t    *m_pWorld;
 
-	vector_t	desired_movement;
+	bool m_connected;
+	bool m_ingame;
 
-	void RegCommands();		//register commmands
+	eyepoint_t  eye;
+	vector_t desired_movement;
 	
 	//the following should be accessible by the game dll
-	
 	int		m_campath;
 	float	m_camtime;
 	float	m_acceleration;

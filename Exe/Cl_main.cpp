@@ -1,7 +1,10 @@
+#include "Net_hdr.h"
+#include "Net_sock.h"
 #include "Cl_main.h"
 #include "Cl_cmds.h"
 
 using namespace VoidClient;
+using namespace VoidNet;
 
 
 //======================================================================================
@@ -10,14 +13,14 @@ using namespace VoidClient;
 world_t	*g_pWorld;
 int PointContents(vector_t &v);
 
-
 /*
 ======================================
 Constructor
 ======================================
 */
 
-CClient::CClient(I_Renderer * prenderer):	
+CClient::CClient(I_Renderer * prenderer):
+					m_buffer(CNetBuffer::DEFAULT_BUFFER_SIZE),	
 					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
 					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
@@ -26,9 +29,10 @@ CClient::CClient(I_Renderer * prenderer):
 
 	m_pCmdHandler = new CClientCmdHandler(this);
 
+	m_pSock = new CNetSocket(&m_buffer);
+
 	m_connected=false;
 	m_ingame = false;
-	m_active = false;
 
 	m_campath = -1;
 	m_acceleration = 400.0f;
@@ -71,6 +75,8 @@ CClient::CClient(I_Renderer * prenderer):
 	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
 	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
+	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 }
 
 /*
@@ -84,7 +90,8 @@ CClient::~CClient()
 	m_pHud = 0;
 
 	g_pWorld = 0;
-	
+
+	delete m_pSock;
 	delete m_pCmdHandler;
 }
 
@@ -163,7 +170,7 @@ bool CClient::UnloadWorld()
 		ComPrintf("CClient::UnloadWorld - Renderer couldnt unload world\n");
 		return false;
 	}
-
+	
 	g_pWorld = 0;
 
 	m_ingame = false;
@@ -181,6 +188,8 @@ RunClient
 */
 void CClient::RunFrame()
 {
+	static float frametime=0.0f;
+
 	if(m_ingame)
 	{
 		m_pCmdHandler->RunCommands();
@@ -197,7 +206,11 @@ void CClient::RunFrame()
 		//Print Stats
 		if(m_pHud)
 		{
-		m_pHud->HudPrintf(0, 70,0, "%.2f", 1 / System::g_fframeTime);
+		//m_pHud->HudPrintf(0, 70,0, "%.2f", 1 / System::g_fframeTime);
+			m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - frametime));
+			frametime = System::g_fcurTime;
+
+
 		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, 
 											    eye.origin.y, 
 												eye.origin.z);
@@ -223,6 +236,7 @@ void CClient::RunFrame()
 		}
 
 		m_pRender->DrawFrame(&eye.origin,&eye.angles, &screenblend);
+
 	}
 	else
 	{
@@ -404,51 +418,50 @@ void CClient::RunFrame()
 
 /*
 =======================================
-Disconnect all current connections
-and initiate a new connection
-to the specified address
-
-
-assumes its a vaild IP address
+Disconnect any current connection and 
+initiates a new connection to the specified 
+address
 =======================================
 */
 
-bool CClient::ConnectTo(char *ipaddr, int port)
+void CClient::ConnectTo(const char * ipaddr)
 {
-#ifndef __VOIDALPHA
-	if(m_ingame)
+	if(!ipaddr)
 	{
-		Disconnect();
+		ComPrintf("usage - connect ipaddr(:port)\n");
+		return;
 	}
 
-	if(!m_active)
+//	if(m_connected)
+//		Disconnect();
+
+	if(!m_pSock->ValidSocket())
 	{
-		ComPrintf("CClient::Connect To- client is inactive\n");
-		InitNet();
+		if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
+		{
+			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt create socket");
+			return;
+		}
 	}
 
-	if(m_sock.bcansend)
-		m_sock.Close();
-
-	char ip[16];
-
-	if(!strcmp(ipaddr,"loopback"))
-		strcpy(ip,g_ipaddr);
-	else
-		strcpy(ip,ipaddr);
-
-	if(m_sock.Connect(ip,port))
+	//Send a connection request
+	CNetAddr netAddr(ipaddr);
+	if(!netAddr.IsValid())
 	{
-		m_sendBuf.WriteString("getchallenge");
-		m_sock.bsend = true;
-		strcpy(m_svipaddr,ip);
-		ComPrintf("CClient::connecting to %s:%d\n",ip,port);
-		return true;
+		ComPrintf("CClient::ConnectTo: Invalid address\n");
+		return;
 	}
-	ComPrintf("CClient::Unable to connect to  %s:%d\n",ip,port);
-	return false;
-#endif
-	return true;
+
+	//Now initiate a connection request
+
+	//Create Connection less packet
+	m_buffer.Reset();
+	m_buffer.WriteInt(-1);
+	m_buffer.WriteString(C2S_GETCHALLENGE);
+
+	m_pSock->Send(netAddr, m_buffer.GetData(), m_buffer.GetSize());
+
+	strcpy(m_svServerAddr, netAddr.ToString());
 }
 
 
@@ -457,22 +470,11 @@ bool CClient::ConnectTo(char *ipaddr, int port)
 Disconnect if connected to a server
 =====================================
 */
-
-bool CClient::Disconnect()
+void CClient::Disconnect()
 {
 	if(m_ingame)
 		UnloadWorld();
-	System::SetGameState(INCONSOLE);
-//	g_pWorld = 0;
-	return true;
 }
-
-
-void CClient::Spawn(vector_t	*origin, vector_t *angles)
-{
-}
-
-
 
 /*
 =====================================
@@ -531,7 +533,7 @@ void Talk(int argc,char **argv)
 
 /*
 ==========================================
-
+Allow System to tell the client not to handle input
 ==========================================
 */
 
@@ -539,10 +541,20 @@ void CClient::SetInputState(bool on)
 {	m_pCmdHandler->SetListenerState(on);
 }
 
+/*
+======================================
+Writes the current Bind table to a config file
+called from the Console Shutdown func
+======================================
+*/
+void CClient::WriteBindTable(FILE *fp)
+{	m_pCmdHandler->WriteBindTable(fp);
+}
+
 
 /*
 ==========================================
-
+Handle Registered Commands
 ==========================================
 */
 void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
@@ -588,22 +600,28 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 	case CMD_CAM:
 		CamPath(numArgs,szArgs);
 		break;
+	case CMD_CONNECT:
+		ConnectTo(szArgs[1]);
+		break;
+	case CMD_DISCONNECT:
+		Disconnect();
+		break;
 	}
 }
 
 /*
-======================================
-Writes the current Bind table to a config file
-called from the Console Shutdown func
-======================================
+==========================================
+Validate/Handle any CVAR changes
+==========================================
 */
-
-void CClient::WriteBindTable(FILE *fp)
-{	m_pCmdHandler->WriteBindTable(fp);
-}
-
-
 bool CClient::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
 	return false;
+}
+
+
+
+
+void CClient::Spawn(vector_t * origin, vector_t *angles)
+{
 }

@@ -1,57 +1,9 @@
-#ifndef VOID_NETWORK_HDR
-#define VOID_NETWORK_HDR
+#ifndef VOID_NETWORK_UTIL
+#define VOID_NETWORK_UTIL
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include "Com_defs.h"
 
 namespace VoidNet {
-
-void PrintSockError(int err=0,const char *msg=0);
-
-/*
-==========================================
-Internal network address
-==========================================
-*/
-class  CNetAddr
-{
-public:
-	CNetAddr();
-
-	//Assignment operators
-	VoidNet::CNetAddr & operator = (const SOCKADDR_IN &saddr);
-	VoidNet::CNetAddr & operator = (const VoidNet::CNetAddr &addr);
-	VoidNet::CNetAddr & operator = (const char * szaddr);
-
-//FIX ME ! How the hell do I get this to link outside ??
-	//Equality check
-	friend bool operator == (const VoidNet::CNetAddr &laddr, const VoidNet::CNetAddr &raddr)
-	{
-		if((laddr.ip[0] == raddr.ip[0]) &&
-		   (laddr.ip[1] == raddr.ip[1]) &&
-		   (laddr.ip[2] == raddr.ip[2]) &&
-		   (laddr.ip[3] == raddr.ip[3]) &&
-		   (laddr.port  == raddr.port))
-			return true;
-		return false;
-	}
-
-	//Conversion
-	const char * ToString();
-	void ToSockAddr(SOCKADDR_IN &saddr);
-	
-	//Util
-	void Print()   const;
-	bool IsValid() const;
-
-private:
-	int		ip[4];
-	short	port;
-	bool	valid;
-};
-
-//======================================================================================
-//======================================================================================
 
 /*
 ==========================================
@@ -68,11 +20,17 @@ public:
 		SIZE_SHORT = 2, 
 		SIZE_INT   = 4,
 		SIZE_FLOAT = 4,
-		DEFAULT_BUFFER_SIZE = 4096,
-		MAX_BUFFER_SIZE = 8192
+
+		PACKET_HEADER =	8,
+		MAX_MSGLEN	  = 1450,
+		MAX_DATAGRAM  =	1450,
+
+		DEFAULT_BUFFER_SIZE = 2900,
+
+		MAX_BUFFER_SIZE = 4192
 	};
 
-	CNetBuffer(int size= DEFAULT_BUFFER_SIZE);
+	CNetBuffer(int size);
 	~CNetBuffer();
 
 	//Writing funcs
@@ -81,6 +39,7 @@ public:
 	void WriteShort(short s);
 	void WriteInt(int i);
 	void WriteFloat(float f);
+
 	void WriteAngle(float f);
 	void WriteCoord(float f);
 	void WriteString(const char *s);
@@ -91,19 +50,21 @@ public:
 	short ReadShort();
 	int   ReadInt();
 	float ReadFloat();
+
 	float ReadAngle();
 	float ReadCoord();
 	char* ReadString(char delim=0);
 
 	//Other util
-	int   UnreadBytes() const { return m_curSize - m_readCount; }
-	int   FreeBytes()   const { return m_maxSize - m_curSize;   }
-	bool  BadRead()		const { return m_badRead; }
-	int   MaxSize()		const { return m_maxSize; }
-	void  Reset();
 	
-	//To enable the socket to write to the buffer directly
-	byte* GetWritePointer() const;
+	bool  BadRead()	const { return m_badRead; }
+	byte* GetData() const { return m_buffer;  }
+	int   GetSize() const { return m_curSize; }
+	
+	int   GetMaxSize()  const { return m_maxSize; }
+	int   UnreadBytes() const { return m_curSize - m_readCount; }
+
+	void  Reset();
 	void  SetCurSize(int size){ m_curSize = size; }
 
 private:

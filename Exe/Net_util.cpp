@@ -1,5 +1,5 @@
+#include "Net_hdr.h"
 #include "Net_util.h"
-#include "Com_defs.h"
 
 using namespace VoidNet;
 
@@ -12,6 +12,10 @@ CNetAddr::CNetAddr()
 	ip[0] = ip[1] = ip[2] = ip[3] =0;
 	port = 0;
 	valid = true;
+}
+
+CNetAddr::CNetAddr(const char * szaddr)
+{	Set(szaddr);
 }
 
 //Assignment operators
@@ -37,23 +41,34 @@ CNetAddr & CNetAddr::operator = (const CNetAddr &addr)
 
 CNetAddr & CNetAddr::operator = (const char * szaddr)
 {
+	Set(szaddr);
+	return (*this);
+}
+
+void CNetAddr::Set(const char * szaddr)
+{
 	char		stringaddr[128];
 	SOCKADDR_IN sockAddr;
 	
 	strcpy (stringaddr,szaddr);
 
 	//Strip port number if specified
+	sockAddr.sin_port = 0;
 	for (char * colon = stringaddr ; *colon ; colon++)
 	{
 		if (*colon == ':')
 		{
 			*colon = 0;
-			sockAddr.sin_port = htons((short)atoi(colon+1));	
+			short sport = (short)atoi(colon+1);
+			sockAddr.sin_port = htons(sport);	
 		}
 	}
-	
-	//If an ip address was given then just convert to inetaddr
-	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
+
+	if(!szaddr)
+		sockAddr.sin_addr.s_addr = INADDR_ANY;
+	else if(!strcmp(szaddr,"loopback"))
+		sockAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	else if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
 	{
 		*(int *)&sockAddr.sin_addr = inet_addr(stringaddr);
 	}
@@ -64,7 +79,7 @@ CNetAddr & CNetAddr::operator = (const char * szaddr)
 		if ((host = gethostbyname(stringaddr)) == 0)
 		{
 			valid = false;
-			return (*this);
+			return;
 		}
 		*(int *)&sockAddr.sin_addr = *(int *)host->h_addr_list[0];
 	}
@@ -73,23 +88,22 @@ CNetAddr & CNetAddr::operator = (const char * szaddr)
 	*(int *)&ip = *(int *)&sockAddr.sin_addr;
 	port = sockAddr.sin_port;
 	valid = true;
-	return (*this);
 }
 
 //Utility
-const char * CNetAddr::ToString()
+const char * CNetAddr::ToString() const
 {
 	static char stringaddr[64];
 	
 	if(port > 0)
-		sprintf(stringaddr,"%d.%d.%d.%d:%d\n", ip[0],ip[1],ip[2],ip[3], port);
+		sprintf(stringaddr,"%i.%i.%i.%i:%i", ip[0],ip[1],ip[2],ip[3], ntohs(port));
 	else
-		sprintf(stringaddr,"%d.%d.%d.%d\n", ip[0],ip[1],ip[2],ip[3]);
+		sprintf(stringaddr,"%i.%i.%i.%i", ip[0],ip[1],ip[2],ip[3]);
 	return stringaddr;
 }
 
 //Set the sockADDR struct to self
-void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr)
+void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr) const
 {
 	saddr.sin_port = port;
 	saddr.sin_family  = AF_INET;
@@ -100,26 +114,15 @@ void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr)
 void CNetAddr::Print() const
 {	
 	if(port > 0)
-		ComPrintf("%d.%d.%d.%d:%d\n", ip[0],ip[1],ip[2],ip[3], port);
+		ComPrintf("%i.%i.%i.%i:%i\n", ip[0],ip[1],ip[2],ip[3], ntohs(port));
 	else
-		ComPrintf("%d.%d.%d.%d\n", ip[0],ip[1],ip[2],ip[3]);
+		ComPrintf("%i.%i.%i.%i\n", ip[0],ip[1],ip[2],ip[3]);
 }
 
 bool CNetAddr::IsValid() const
 {	return valid;
 }
 
-//Equality check
-/*bool operator == (const CNetAddr &laddr, const CNetAddr &raddr)
-{
-	if((laddr.ip[0] == raddr.ip[0]) &&
-	   (laddr.ip[1] == raddr.ip[1]) &&
-	   (laddr.ip[2] == raddr.ip[2]) &&
-	   (laddr.ip[3] == raddr.ip[3]) &&
-	   (laddr.port  == raddr.port))
-	   return true;
-	return false;
-}*/
 
 //======================================================================================
 //omrafi@hotmail.com
@@ -136,7 +139,7 @@ CNetBuffer::CNetBuffer(int size)
 		size = MAX_BUFFER_SIZE;
 
 	m_buffer = new byte[size];
-	m_maxSize = 0;
+	m_maxSize = size;
 	m_curSize = 0;
 
 	m_readCount = 0;
@@ -164,12 +167,10 @@ byte* CNetBuffer::GetSpace(int size)
 		m_curSize = 0;
 	}
 	byte * data = m_buffer + m_curSize;
+	m_curSize += size;
 	return data;
 }
 
-byte * CNetBuffer::GetWritePointer() const
-{	return(m_buffer + m_curSize);
-}
 
 /*
 ==========================================

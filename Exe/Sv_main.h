@@ -2,6 +2,8 @@
 #define VOID_NETWORK_SERVER
 
 #include "Sys_hdr.h"
+#include "Net_util.h"
+
 #include "Cl_main.h"		//HACK
 #include "World.h"
 
@@ -13,8 +15,7 @@ Public defs
 namespace VoidNet
 {
 	class CNetSocket;
-	class CNetBuffer;
-
+	
 	bool InitNetwork();
 	void ShutdownNetwork();
 }
@@ -66,10 +67,11 @@ private:
 	void ProcessQueryPacket();
 	void ReadPackets();
 
-	
 	//private data
 	VoidNet::CNetSocket  * m_pSock;
-	VoidNet::CNetBuffer  * m_pBuffer;
+	
+	VoidNet::CNetBuffer  m_recvBuf;
+	VoidNet::CNetBuffer  m_sendBuf;
 
 	//world data currently loaded by the server.
 	world_t	* m_pWorld;

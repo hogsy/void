@@ -314,6 +314,10 @@ SOURCE=.\Net_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Net_hdr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Net_sock.cpp
 # End Source File
 # Begin Source File

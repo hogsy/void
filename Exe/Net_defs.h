@@ -4,6 +4,10 @@
 namespace VoidNet
 {
 
+//just declarations so the client can get away with only including this header
+class CNetSocket;
+class CNetAddr;
+
 //Connnectionless client to Server messages
 const char C2S_PING[]			= "ping";
 const char C2S_STATUS[]			= "status";

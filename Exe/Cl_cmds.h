@@ -1,9 +1,9 @@
 #ifndef VOID_CLIENT_COMMANDS
 #define VOID_CLIENT_COMMANDS
 
-#include "Sys_hdr.h"
-#include "Sys_cons.h"
 #include "In_defs.h"
+
+struct CCommand;
 
 namespace VoidClient {
 

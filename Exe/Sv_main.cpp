@@ -35,7 +35,9 @@ using namespace VoidNet;
 Constructor/Destructor
 ==========================================
 */
-CServer::CServer(CClient * client) : 
+CServer::CServer(CClient * client) :
+					 m_recvBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
+					 m_sendBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
 					 m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
@@ -50,8 +52,7 @@ CServer::CServer(CClient * client) :
 
 	m_pClient = client;
 	
-	m_pBuffer = new CNetBuffer();
-	m_pSock = new CNetSocket(&m_pBuffer);
+	m_pSock = new CNetSocket(&m_recvBuf);
 
 	m_active = false;
 
@@ -76,7 +77,6 @@ CServer::~CServer()
 	delete [] m_challenges;
 	
 	delete m_pSock;
-	delete m_pBuffer;
 }
 
 
@@ -135,8 +135,14 @@ bool CServer::Init()
 
 	if(m_boundAddr[0] == '\0')
 		strcpy(m_boundAddr,szLOOPBACKADDR);
+	strcat(m_boundAddr,":");
+	strcat(m_boundAddr, m_cPort.string);
 
-	if(!m_pSock->Bind(m_boundAddr,(short)m_cPort.ival,false))
+	CNetAddr netaddr;
+	netaddr= (const char*)m_boundAddr;
+	//netaddr= "127.0.0.1:20010";
+
+	if(!m_pSock->Bind(netaddr,false))
 	{
 		ComPrintf("CServer::Init:Unable to bind socket\n");
 		memset(m_boundAddr,0,sizeof(m_boundAddr));
@@ -227,29 +233,65 @@ void CServer::HandleConnectREQ()
 {
 }
 
+/*
+==========================================
+Respond to challenge request
+==========================================
+*/
 void CServer::HandleChallengeREQ()
 {
-	float oldestchallenge = 0.0f;
+	int	  oldestchallenge = 0;
+	float oldesttime  = 0.0f;
 
 	for(int i=0; i< MAX_CHALLENGES; i++)
 	{
+		//Found a match, we already got a request from this guy
+		if(m_challenges[i].addr == m_pSock->m_srcAddr)
+			break;
+		
+		//Keep a track of what the oldest challenge is
+		if(m_challenges[i].time > oldesttime)
+		{
+			oldestchallenge = i;
+			oldesttime = m_challenges[i].time;
+		}
 	}
+
+	//Didn't find any old challenges from the same addy
+	if (i == MAX_CHALLENGES)
+	{
+		// overwrite the oldest
+		i = oldestchallenge;
+		m_challenges[i].challenge = (rand() << 16) ^ rand();
+		m_challenges[i].addr = m_pSock->m_srcAddr;
+		m_challenges[i].time = System::g_fcurTime;
+	}
+
+	m_sendBuf.Reset();
+	m_sendBuf.WriteInt(-1);
+	m_sendBuf.WriteString(" challenge ");
+	m_sendBuf.WriteInt(m_challenges[i].challenge);
+
+	//Send response packet
+	m_pSock->Send(m_challenges[i].addr, m_sendBuf.GetData(), m_sendBuf.GetSize());
 }
 
 
+/*
+==========================================
+Process an OOB Server Query message
+==========================================
+*/
 void CServer::ProcessQueryPacket()
 {
-	ComPrintf("Query from %s:%d\n", inet_ntoa(m_pSock->m_srcAddr.sin_addr), 
-								    m_pSock->m_srcAddr.sin_port);
+	ComPrintf("Query from %s:%d\n", m_pSock->m_srcAddr.ToString());
 
-//	m_pSock->m_srcAddr.sin_addr
-
-	char * msg = m_pBuffer->ReadString();
-
+	char * msg = m_recvBuf.ReadString();
+	
 	//Ping Request
 	if(strcmp(msg, C2S_PING) == 0)
 	{
-//		m_pSock->Send(m_pSock->m_srcAddr, C2S_PING, strlen(C2S_PING));
+		m_pSock->Send(m_pSock->m_srcAddr, (byte*)C2S_PING, strlen(C2S_PING));
 	}
 	else if(strcmp(msg, C2S_STATUS) == 0)
 	{
@@ -266,7 +308,7 @@ void CServer::ProcessQueryPacket()
 
 /*
 ==========================================
-
+Read any waiting packets
 ==========================================
 */
 void CServer::ReadPackets()
@@ -275,7 +317,9 @@ void CServer::ReadPackets()
 	
 	while(m_pSock->Recv())
 	{
-		packetId = m_pBuffer->ReadInt();
+		ComPrintf("Got Data\n");
+
+		packetId = m_recvBuf.ReadInt();
 
 		if(packetId == -1)
 		{
@@ -294,6 +338,9 @@ void CServer::RunFrame()
 {
 	if(m_active== false)
 		return;
+
+	//Re-seed current time
+	srand((uint)System::g_fcurTime);
 
 	//Process messages
 	ReadPackets();
