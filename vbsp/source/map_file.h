@@ -11,6 +11,9 @@
 #define MAX_MAP_TEXINFOS		16384
 #define MAX_MAP_KEYS			8192
 
+#define MAX_MAP_PLANES			65536
+#define MAX_MAP_NODES			65536
+
 
 
 typedef struct				// same fields as in qbsp3
@@ -26,7 +29,7 @@ typedef struct				// same fields as in qbsp3
 
 typedef struct
 {
-	plane_t		plane;
+	int 		plane;
 	int			texinfo;
 } map_brush_side_t;
 

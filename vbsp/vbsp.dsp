@@ -82,6 +82,9 @@ LINK32=link.exe
 
 # Name "vbsp - Win32 Release"
 # Name "vbsp - Win32 Debug"
+# Begin Group "Shared"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\Shared\3dmath.cpp
@@ -92,15 +95,24 @@ SOURCE=..\Shared\3dmath.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\bsp_file.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\std_lib.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\std_lib.h
+# End Source File
+# End Group
+# Begin Source File
+
 SOURCE=.\source\bsp.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\source\bsp.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\bsp_file.h
 # End Source File
 # Begin Source File
 
@@ -145,14 +157,6 @@ SOURCE=.\source\portal.cpp
 # Begin Source File
 
 SOURCE=.\source\portal.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\std_lib.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\std_lib.h
 # End Source File
 # Begin Source File
 

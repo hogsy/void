@@ -116,55 +116,6 @@ bsp_node_t* new_bsp_node(void)
 }
 
 
-
-//=======================================================
-
-/*
-==============
-plane_test
-==============
-*/
-#define PTEST_NORM_EPSILON	0.00001
-#define PTEST_D_EPSILON		0.01
-bool plane_test(plane_t &p1, plane_t &p2)
-{
-	if ((fabs(p1.d - p2.d) < PTEST_D_EPSILON) &&
-		(fabs(p1.norm.x - p2.norm.x) < PTEST_NORM_EPSILON) &&
-		(fabs(p1.norm.y - p2.norm.y) < PTEST_NORM_EPSILON) &&
-		(fabs(p1.norm.z - p2.norm.z) < PTEST_NORM_EPSILON))
-		return true;
-	return false;
-}
-
-
-/*
-=============
-get_plane - like q2, # and #^1 are opposites
-=============
-*/
-int get_plane(plane_t plane)
-{
-	// do we already have a close one?
-	for (int p=0; p<num_planes; p++)
-	{
-		if (plane_test(plane, planes[p]))
-			return p;
-	}
-
-	// make a new one
-	if (num_planes >= MAX_MAP_PLANES-1)
-		Error("too many planes!");
-	planes[num_planes] = plane;
-	num_planes++;
-
-	// make opposing one
-	VectorScale(&plane.norm, -1, &planes[num_planes].norm);
-	planes[num_planes].d = -plane.d;
-	num_planes++;
-
-	return p;
-}
-
 //=======================================================
 
 
@@ -289,7 +240,21 @@ int clip_side_p(bsp_brush_side_t *s, plane_t *p)
 
 	for (int i=0; i<s->num_verts; i++)
 	{
-		dists[i] = dot(p->norm, s->verts[i]) - p->d;
+		if (p->norm.x == 1)
+			dists[i] =  s->verts[i].x - p->d;
+		else if (p->norm.x == -1)
+			dists[i] = -s->verts[i].x - p->d;
+		else if (p->norm.y == 1)
+			dists[i] =  s->verts[i].y - p->d;
+		else if (p->norm.y == -1)
+			dists[i] =  -s->verts[i].y - p->d;
+		else if (p->norm.z == 1)
+			dists[i] =  s->verts[i].z - p->d;
+		else if (p->norm.z == -1)
+			dists[i] =  -s->verts[i].z - p->d;
+
+		else
+			dists[i] = dot(p->norm, s->verts[i]) - p->d;
 		
 		if (dists[i] > CLIP_EPSILON)
 		{
@@ -315,7 +280,7 @@ int clip_side_p(bsp_brush_side_t *s, plane_t *p)
 
 	dists[i] = dists[0];
 	sides[i] = sides[0];
-	
+
 	for (i=0; i<s->num_verts; i++)
 	{
 		if (sides[i] == PLANE_ON)
@@ -361,29 +326,48 @@ int clip_side(bsp_brush_side_t *s, int plane)
 clip_brush
 =============
 */
-void clip_brush(bsp_brush_t *b, plane_t *plane)
+void clip_brush(bsp_brush_t *b, int plane)
 {
 // add this plane to the list if it clips
 	bsp_brush_side_t *s;
-	if (bsp_test_brush(b, get_plane(*plane)) == 0)
+	int side = bsp_test_brush(b, plane);
+
+	// front gets clipped away
+	if (side == 1)
 	{
-		s = new_bsp_brush_side();
-		s->texinfo = 0;
-		s->flags = SURF_INVISIBLE;
-		s->plane = get_plane(*plane);
-
-		make_base_side(s);
-		for (bsp_brush_side_t *s1=b->sides; s1; s1=s1->next)
-			if (s->plane != s1->plane)
-				clip_side(s, s1->plane);
-
-		s->next = b->sides;
-		b->sides = s;
+		bsp_brush_side_t *next;
+		for ( ; b->sides; b->sides = next)
+		{
+			next = b->sides->next;
+			free_bsp_brush_side(b->sides);
+		}
+		return;
 	}
 
-// clip all sides
+	// completely on backside - no effect
+	else if (side == -1)
+		return;
+
+	// else we have to add it and do clipping
+
+	s = new_bsp_brush_side();
+	s->texinfo = 0;
+	s->flags = SURF_INVISIBLE;
+	s->plane = plane;
+
+	// clip the new side to all the other sides
+	make_base_side(s);
+	for (bsp_brush_side_t *s1=b->sides; s1; s1=s1->next)
+		if (s->plane != s1->plane)
+			clip_side(s, s1->plane);
+
+	s->next = b->sides;
+	b->sides = s;
+
+
+	// clip all other sides to the new one
 	for (s=b->sides; s; s=s->next)
-		clip_side_p(s, plane);
+		clip_side(s, plane);
 
 // remove any faces that where clipped out
 	bsp_brush_side_t *prev = NULL, *remove;
@@ -417,6 +401,7 @@ void clip_brush(bsp_brush_t *b, plane_t *plane)
 bsp_build_volume
 ============
 */
+int get_plane(plane_t plane);
 bsp_brush_t* bsp_build_volume(void)
 {
 	bsp_brush_t *vol = new_bsp_brush();
@@ -490,8 +475,10 @@ build_bsp_brushes
 void build_bsp_brushes(entity_t *ent)
 {
 	ent->root = new_bsp_node();
+	ent->root->portals = NULL;
 	ent->root->brushes = NULL;
 	ent->root->parent = NULL;
+	ent->root->outside = false;
 	ent->root->volume = bsp_build_volume();
 
 // only copy over the most basic info
@@ -511,7 +498,7 @@ void build_bsp_brushes(entity_t *ent)
 			ent->root->brushes->sides = new_bsp_brush_side();
 			ent->root->brushes->sides->next = ts;
 
-			ent->root->brushes->sides->plane = get_plane(map_brush_sides[s].plane);
+			ent->root->brushes->sides->plane = map_brush_sides[s].plane;
 			ent->root->brushes->sides->texinfo = map_brush_sides[s].texinfo;
 			ent->root->brushes->sides->num_verts = 0;
 		}
@@ -635,13 +622,13 @@ int bsp_test_brush(bsp_brush_t *b, int plane)
 
 
 			d = dot(planes[plane].norm, s->verts[v]) - planes[plane].d;
-			if (d > 0.001)
+			if (d > 0.01)
 			{
 				if (back)
 					return 0;
 				front = true;
 			}
-			else if (d < -0.001)
+			else if (d < -0.01)
 			{
 				if (front)
 					return 0;
@@ -651,6 +638,9 @@ int bsp_test_brush(bsp_brush_t *b, int plane)
 	}
 
 	if (front && back)
+		return 0;
+
+	if (!front && !back)
 		return 0;
 
 	if (back)
@@ -688,8 +678,24 @@ void bsp_brush_split(bsp_brush_t *b, bsp_brush_t **front, bsp_brush_t **back, in
 	*back  = copy_brush(b);
 	(*front)->next = (*back)->next = NULL;
 
-	clip_brush(*back,  &planes[plane]);
-	clip_brush(*front, &planes[plane^1]);
+	clip_brush(*back,  plane);
+	clip_brush(*front, plane^1);
+}
+
+
+/*
+============
+bsp_test_to_parents
+============
+*/
+bool bsp_test_to_parents(bsp_node_t *n, int plane)
+{
+	if (!n)
+		return false;
+
+	if ((n->plane|1) == (plane|1))
+		return true;
+	return bsp_test_to_parents(n->parent, plane);
 }
 
 
@@ -728,6 +734,9 @@ int bsp_select_plane(bsp_node_t *n)
 			if (bsp_test_brush(n->volume, s->plane) != 0)
 				continue;
 
+			if (bsp_test_to_parents(n, best_plane))
+				continue;
+
 			splits = front = back = 0;
 
 			for (b2=n->brushes; b2; b2=b2->next)
@@ -745,8 +754,15 @@ int bsp_select_plane(bsp_node_t *n)
 		// how good of a splitter is it?
 			v = splits*5 + abs(front-back);
 
-//			if (!splits && (!front || !back))	// all brushes are on the same side - doesn't do any good
-//				v = 9999999;
+			// axial plane == good
+			if (!(( (planes[s->plane].norm.x == -1) || 
+					(planes[s->plane].norm.x ==  1) ||
+					(planes[s->plane].norm.y == -1) ||
+					(planes[s->plane].norm.y ==  1) ||
+					(planes[s->plane].norm.z == -1) ||
+					(planes[s->plane].norm.z ==  1))))
+					v *= 10;
+
 
 			if (v < best_val)
 			{
@@ -791,7 +807,9 @@ void bsp_partition(bsp_node_t *n)
 	n->plane = best_plane;
 	n->children[0] = new_bsp_node();
 	n->children[1] = new_bsp_node();
+	n->children[0]->outside = n->children[1]->outside = false;
 	n->children[0]->brushes = n->children[1]->brushes = NULL;
+	n->children[0]->portals = n->children[1]->portals = NULL;
 	n->children[0]->parent  = n->children[1]->parent  = n;
 
 	// split current volume into it's 2 child volumes

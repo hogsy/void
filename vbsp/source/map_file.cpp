@@ -34,7 +34,97 @@ map_texinfo_t		map_texinfos[MAX_MAP_TEXINFOS];
 int					num_keys;
 key_t				keys[MAX_MAP_KEYS];
 
+extern	int					num_planes;
+extern	plane_t				planes[MAX_MAP_PLANES];
+
 //=======================================================
+
+
+
+/*
+==============
+plane_test
+==============
+*/
+#define PTEST_NORM_EPSILON	0.00001
+#define PTEST_D_EPSILON		0.01
+bool plane_test(plane_t &p1, plane_t &p2)
+{
+	if ((fabs(p1.d - p2.d) < PTEST_D_EPSILON) &&
+		(fabs(p1.norm.x - p2.norm.x) < PTEST_NORM_EPSILON) &&
+		(fabs(p1.norm.y - p2.norm.y) < PTEST_NORM_EPSILON) &&
+		(fabs(p1.norm.z - p2.norm.z) < PTEST_NORM_EPSILON))
+		return true;
+	return false;
+}
+
+
+/*
+=============
+get_plane - like q2, # and #^1 are opposites
+=============
+*/
+#define PLANE_NORM_SNAP 0.00001
+int get_plane(plane_t plane)
+{
+
+	if ((1 - fabs(plane.norm.x)) < PLANE_NORM_SNAP)
+	{
+		if (plane.norm.x > 0)
+			plane.norm.x = 1;
+		else
+			plane.norm.x = -1;
+
+		plane.norm.y = 0;
+		plane.norm.z = 0;
+	}
+
+	else if ((1 - fabs(plane.norm.y)) < PLANE_NORM_SNAP)
+	{
+		if (plane.norm.y > 0)
+			plane.norm.y = 1;
+		else
+			plane.norm.y = -1;
+
+		plane.norm.x = 0;
+		plane.norm.z = 0;
+	}
+
+	else if ((1 - fabs(plane.norm.z)) < PLANE_NORM_SNAP)
+	{
+		if (plane.norm.z > 0)
+			plane.norm.z = 1;
+		else
+			plane.norm.z = -1;
+
+		plane.norm.x = 0;
+		plane.norm.y = 0;
+	}
+
+	// do we already have a close one?
+	for (int p=0; p<num_planes; p++)
+	{
+		if (plane_test(plane, planes[p]))
+			return p;
+	}
+
+	// make a new one
+	if (num_planes >= MAX_MAP_PLANES-1)
+		Error("too many planes!");
+	planes[num_planes] = plane;
+	num_planes++;
+
+	// make opposing one
+	VectorScale(&plane.norm, -1, &planes[num_planes].norm);
+	planes[num_planes].d = -plane.d;
+	num_planes++;
+
+	return p;
+}
+
+
+//=======================================================
+
 
 
 /*
@@ -197,11 +287,14 @@ int parse_brush_side(void)
 	}
 
 	// build our plane
+	plane_t p;
 	VectorSub(ppts[2], ppts[0], ppts[2]);
 	VectorSub(ppts[1], ppts[0], ppts[1]);
-	_CrossProduct(&ppts[2], &ppts[1], &map_brush_sides[num_map_brush_sides].plane.norm);
-	VectorNormalize(&map_brush_sides[num_map_brush_sides].plane.norm);
-	map_brush_sides[num_map_brush_sides].plane.d = dot(map_brush_sides[num_map_brush_sides].plane.norm, ppts[0]);
+	_CrossProduct(&ppts[2], &ppts[1], &p.norm);
+	VectorNormalize(&p.norm);
+	p.d = dot(p.norm, ppts[0]);
+
+	map_brush_sides[num_map_brush_sides].plane = get_plane(p);
 
 	// read the texdef
 	map_brush_sides[num_map_brush_sides].texinfo = num_map_texinfos;

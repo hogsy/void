@@ -274,9 +274,6 @@ int fill_sides(bsp_brush_side_t *si)
 {
 	int num = 0;
 
-	if (planes[si->plane].norm.z == 1)
-		si->num_verts = si->num_verts;
-
 	for (bsp_brush_side_t *s = si; s; s=s->next, num++)
 	{
 		if (num_sides == MAX_MAP_BRUSH_SIDES)
@@ -677,7 +674,7 @@ void write_bsp(entity_t *ents, char *file)
 	fleafs[0].mins[2] = 99999;
 	fleafs[0].maxs[0] = -99999;
 	fleafs[0].maxs[1] = -99999;
-	fleafs[0].maxs[2] = 0;
+	fleafs[0].maxs[2] = -99999;
 	fleafs[0].contents= CONTENTS_SOLID;
 	fleafs[0].vis	  = 0;
 
