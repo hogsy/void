@@ -6,7 +6,7 @@
 #include "clip.h"
 
 
-
+/*
 
 typedef struct
 {
@@ -15,7 +15,7 @@ typedef struct
 	vector_t	end;	// where the trace ended (intersection or full dist 
 } rayhit_t;
 
-
+*/
 
 
 

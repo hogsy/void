@@ -8,6 +8,37 @@
 
 extern world_t *g_pWorld;
 
+
+
+
+
+int PointContents(vector_t &v)
+{
+	int n=0;
+	float d;
+
+	do
+	{
+		// test to this nodes plane
+		d = dot(g_pWorld->planes[g_pWorld->nodes[n].plane].norm, v) - g_pWorld->planes[g_pWorld->nodes[n].plane].d;
+
+		if (d>=0)
+			n = g_pWorld->nodes[n].children[0];
+		else
+			n = g_pWorld->nodes[n].children[1];
+
+		// if we found a leaf, it's what we want
+		if (n<=0)
+			return g_pWorld->leafs[-n].contents;
+
+	} while (1);
+
+	return 0;
+}
+
+
+
+
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)
 {
 	t /= 2.0f;
@@ -74,6 +105,10 @@ void CClient::Move(vector_t *dir, float time)
 		return;
 	}
 
+	if (PointContents(eye.origin) & CONTENTS_SOLID)
+		m_rHud->HudPrintf(0, 10, 0, "Solid");
+
+
 	// regular collision
 	vector_t	hitplanes[MAX_CLIP_PLANES];	// all the normals of the planes we've hit
 	int			bumps, hits=0;				// number of planes we've hit, and number we're touching
@@ -101,6 +136,9 @@ void CClient::Move(vector_t *dir, float time)
 		// we're done moving
 		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
 			break;
+
+		m_rHud->HudPrintf(0, 0, 0, "%f", dot(tr.plane->norm, eye.origin) - tr.plane->d);
+
 
 		VectorCopy(tr.plane->norm, hitplanes[hits]);
 		hits++;

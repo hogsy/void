@@ -8,6 +8,136 @@ extern world_t	 *g_pWorld;
 // against the player, then against the walls and ???walls against player???
 // since it's just a single ray, and no objects, just collide against walls right now
 
+
+#define ON_EPSILON 0.03125f
+
+
+/**************************************************************
+collide a ray with everything in the world
+**************************************************************/
+plane_t* ray(int node, vector_t *start, vector_t *end, vector_t *endpos)
+{
+	plane_t *hitplane;
+	float dstart, dend;
+	plane_t *plane;
+
+	if (dot((*start), g_pWorld->planes[g_pWorld->nodes[node].plane].norm) - g_pWorld->planes[g_pWorld->nodes[node].plane].d >= 0)
+		plane = &g_pWorld->planes[g_pWorld->nodes[node].plane];
+	else
+		plane = &g_pWorld->planes[g_pWorld->nodes[node].plane^1];
+
+	dstart = dot((*start), plane->norm) - plane->d;
+	dend   = dot((*end)  , plane->norm) - plane->d;
+
+	float frac = dstart/(dstart-dend);
+	int n;
+
+	if (dstart >= 0)
+		n = 0;
+	else
+		n = 1;
+
+	int nnode;
+
+	// we're going to hit a plane that separates 2 child nodes
+	if (0<frac && frac<1)
+	{
+		vector_t inter;
+		inter.x = start->x + frac*(end->x - start->x);
+		inter.y = start->y + frac*(end->y - start->y);
+		inter.z = start->z + frac*(end->z - start->z);
+
+	// collide through near node
+		nnode = g_pWorld->nodes[node].children[n];
+		// node
+		if (nnode>0)
+		{
+			hitplane = ray(nnode, start, &inter, endpos);
+			// if we're not at the intersection, we hit something - return
+			if (hitplane)
+				return hitplane;
+		}
+
+		// leaf
+		else
+		{
+			// stop at beginning
+			if (g_pWorld->leafs[-nnode].contents & CONTENTS_SOLID)
+			{
+				VectorCopy((*start), (*endpos));
+					return plane;
+
+			}
+
+			// else we can move all the way through it - FIXME add contents??
+		}
+
+
+		// we made it through near side - collide with far side
+		nnode = g_pWorld->nodes[node].children[1-n];
+
+		// node
+		if (nnode>0)
+		{
+			hitplane = ray(nnode, &inter, end, endpos);
+			if (hitplane)
+				return hitplane;
+		}
+
+		// leaf
+		else
+		{
+			if (g_pWorld->leafs[-nnode].contents & CONTENTS_SOLID)
+			{
+				VectorCopy(inter, (*endpos));
+				if (n == 0)
+					return plane;
+			}
+		}
+
+		// if we're here, we didn't hit anything
+		VectorCopy((*end), (*endpos));
+		return NULL;
+	}
+
+	// else we're entirely in the near node
+	nnode = g_pWorld->nodes[node].children[n];
+
+	// node
+	if (nnode>0)
+	{
+		hitplane = ray(nnode, start, end, endpos);
+		return hitplane;
+	}
+
+	// leaf
+//	if (g_pWorld->leafs[-nnode].contents & CONTENTS_SOLID)
+//	{
+//		VectorCopy((*start), (*endpos));
+//	}
+//	else
+	{
+		VectorCopy((*end), (*endpos));
+	}
+
+	return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+
+
 #define ON_EPSILON 0.03125f
 
 
@@ -84,7 +214,7 @@ void ray_leaf(int leaf, rayhit_t *rhit, vector_t *start, vector_t *end)
 
 /**************************************************************
 collide a ray with everything in the world
-**************************************************************/
+**************************************************************
 rayhit_t ray(int node, vector_t *start, vector_t *end)
 {
 	rayhit_t rhit;
@@ -99,13 +229,6 @@ rayhit_t ray(int node, vector_t *start, vector_t *end)
 
 //	VectorMA(start, len, dir, &rhit.end);
 
-/*	// if we're in a leaf
-	if (g_pWorld->nodes[node].num_brushes)
-	{
-		ray_leaf(node, &rhit, start, end);
-		return rhit;
-	}
-*/
 	dstart = dot((*start), g_pWorld->planes[g_pWorld->nodes[node].plane].norm) - g_pWorld->planes[g_pWorld->nodes[node].plane].d;
 	dend   = dot((*end)  , g_pWorld->planes[g_pWorld->nodes[node].plane].norm) - g_pWorld->planes[g_pWorld->nodes[node].plane].d;
 
@@ -153,6 +276,9 @@ rayhit_t ray(int node, vector_t *start, vector_t *end)
 	ray_leaf(-nnode, &rhit, start, end);
 	return rhit;
 }
+*/
+
+
 
 
 
@@ -164,22 +290,23 @@ trace_t trace(vector_t *start, vector_t *end, vector_t *mins, vector_t *maxs)
 	trace_t trace;
 	trace.fraction = 1;
 	trace.plane = NULL;
-	VectorCopy((*start), trace.endpos);
+	VectorCopy((*end), trace.endpos);
 
 	if (VectorCompare2(start, end, 0.01f))
 		return trace;
 
 	// find the length/direction of a full trace
-	vector_t dir;
+	vector_t dir, endpos;
 	VectorSub((*end), (*start), dir);
 	float want_length = VectorLength(&dir);
 
 	float	shortest = want_length;
-	int		side = -1;
-	rayhit_t rhit;
+	plane_t*	hitplane;
+//	rayhit_t rhit;
 	vector_t bend;	// where this box corner should end
 
-	if (mins && maxs)
+//	if (mins && maxs)
+	if (0)
 	{
 		vector_t bbox[8];
 		bbox[0].x = mins->x;	bbox[0].y = mins->y;	bbox[0].z = mins->z;
@@ -198,16 +325,16 @@ trace_t trace(vector_t *start, vector_t *end, vector_t *mins, vector_t *maxs)
 			VectorAdd(bbox[i], (*start), bbox[i]);
 			VectorAdd(bbox[i], dir, bend);
 
-			rhit = ray(0, &bbox[i], &bend);
+			hitplane = ray(0, &bbox[i], &bend, &endpos);
 
 			// find the length this corner went
-			VectorSub(rhit.end, bbox[i], bend);
+			VectorSub(endpos, bbox[i], bend);
 			float len = VectorLength(&bend);
 
-			if ((shortest > len) && (rhit.side != -1))
+			if ((shortest > len) && hitplane)
 			{
 				shortest = len;
-				side = rhit.side;
+				trace.plane = hitplane;
 
 				if (shortest==0)
 					break;
@@ -218,10 +345,9 @@ trace_t trace(vector_t *start, vector_t *end, vector_t *mins, vector_t *maxs)
 	// just trace a line
 	else
 	{
-		rhit = ray(0, start, end);
-		VectorSub(rhit.end, (*start), bend);
+		trace.plane = ray(0, start, end, &endpos);
+		VectorSub(endpos, (*start), bend);
 		shortest = VectorLength(&bend);
-		side = rhit.side;
 	}
 
 
@@ -230,61 +356,9 @@ trace_t trace(vector_t *start, vector_t *end, vector_t *mins, vector_t *maxs)
 	if (trace.fraction < 0) trace.fraction = 0;
 	if (trace.fraction > 1) trace.fraction = 1;
 
-	if (side != -1)
-		trace.plane = &g_pWorld->planes[g_pWorld->sides[side].plane];
+	if (trace.fraction < 1)
+		trace.fraction *= 0.5f;
 
 	VectorMA(start, trace.fraction, &dir, &trace.endpos);
 	return trace;
-
-
-/*
-	int i;
-	trace.fraction = 1;
-	trace.face = NULL;
-	trace.endpos.sector = start->sector;
-
-
-	location_t bbox[8];	// the box that will be traced
-
-//
-// set up the box
-//
-
-
-//
-// find the smallest dist we could go
-//
-	rayhit_t rhit;
-
-	vector_t direction;	// dir of the move
-	VectorSub((*end), start->point, direction);
-
-// FIXME - wont have to trace all corners!
-	for (i = 0; i < 8; i++)
-	{
-		bbox[i].sector = start->sector;
-		bbox[i].sector = (ray(*start, &bbox[i].point)).sector;
-
-		VectorAdd(bbox[i].point, start->point, bbox[i].point);
-		rhit = ray(bbox[i], &direction);
-		if (rhit.fraction < trace.fraction)
-		{
-			trace.fraction	= rhit.fraction;
-			trace.face		= rhit.face;
-
-			if (rhit.fraction == 0)
-				break;
-		}
-	}
-
-// trace as far as we (the shortest length we went)
-// have to do all traces over cause they will all be different (except the shortest one)
-	vector_t newdir;
-	VectorScale(&direction, trace.fraction, &newdir);
-
-// do the origin
-	rhit = ray(*start, &newdir);
-	trace.endpos.sector = rhit.sector;
-	VectorAdd(start->point, newdir, trace.endpos.point);
-*/
 }
