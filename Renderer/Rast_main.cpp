@@ -3,7 +3,13 @@
 #include "Shader.h"
 #include "ShaderManager.h"
 
+// to evaluate console alphagen
+#include "Con_main.h"
+
 extern	CVar *	g_pFullbright;
+
+// to get the time for tcmods
+extern	I_Void		  *	g_pVoidExp;
 
 /*
 =======================================
@@ -149,6 +155,28 @@ void CRasterizer::DrawLayer(int l)
 	if (layer->mIsLight)	//  && g_pFullbright->bval)
 		return;
 
+	// generate alpha component
+	switch (mShader->mLayers[l]->mAlphaGen.func)
+	{
+	case ALPHAGEN_IDENTITY:
+		for (i=0; i<mNumElements; i++)
+			mVerts[i].color |= 0xff000000;
+		break;
+
+	case ALPHAGEN_CONSOLE:
+		for (i=0; i<mNumElements; i++)
+		{
+			int a = (int) (mConAlphaTop - (((g_rInfo.height-mVerts[i].pos[1]) * 2.0f / g_rInfo.height) * (mConAlphaTop-mConAlphaBot)));
+			if (a < 0) a = 0;
+			if (a > 255) a = 255;
+
+			mVerts[i].color = (mVerts[i].color & 0x00ffffff) |  (a<<24);
+		}
+		break;
+	}
+
+
+	// create texture coords
 	switch (mShader->mLayers[l]->mTexGen)
 	{
 	case TEXGEN_BASE:
@@ -188,13 +216,26 @@ void CRasterizer::DrawLayer(int l)
 		break;
 	}
 
-	// FIXME - do tcmod's here
+	// tcmod's
+	for (i=0; i<mNumElements; i++)
+		mShader->mLayers[l]->mHeadTCMod->Evaluate(mVerts[i].tex1[0], mVerts[i].tex1[1], g_pVoidExp->GetCurTime());
 
+	// set texture
 	if (layer->mIsLight)
-		TextureSet(g_pShaders->mLightmapBin, layer->mTextureNames->index);
+		TextureSet(g_pShaders->mLightmapBin, layer->mTextureNames[0].index);
 	else
-		TextureSet(mShader->mTextureBin, layer->mTextureNames->index);
+	{
+		if (mShader->mLayers[l]->mNumTextures == 1)
+			TextureSet(mShader->mTextureBin, layer->mTextureNames[0].index);
+		else
+		{
+			int texture = (int)(mShader->mLayers[l]->mAnimFreq * mShader->mLayers[l]->mNumTextures * g_pVoidExp->GetCurTime());
+			texture %= mShader->mLayers[l]->mNumTextures;
+			TextureSet(mShader->mTextureBin, layer->mTextureNames[texture].index);
+		}
+	}
 
+	// blendfunc
 	BlendFunc(layer->mSrcBlend, layer->mDstBlend);
 
 	PolyDraw();

@@ -167,6 +167,8 @@ public:
 
 	virtual void SetFocus(void)=0;
 
+	void ConAlpha(byte t, byte b)	{	mConAlphaTop = t;	mConAlphaBot = b;	}
+
 
 private:
 	void DrawLayer(int l);
@@ -209,6 +211,9 @@ protected:
 
 	int			mMaxElements;
 	int			mMaxIndices;
+
+	byte		mConAlphaTop;	// alpha value used for generating console alpha's
+	byte		mConAlphaBot;
 };
 
 

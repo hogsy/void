@@ -478,7 +478,7 @@ void CRastD3DX::TextureBinDestroy(int bin)
 
 void CRastD3DX::TextureSet(int bin, int texnum)
 {
-	if (texnum == -1)
+	if (texnum <= -1)
 		return;
 	m_pD3DDevice->SetTexture(0, mTexBins[bin].tex_surfs[texnum]);
 }

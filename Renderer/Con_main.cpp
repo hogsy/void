@@ -155,6 +155,7 @@ void CRConsole::Draw()
 	if (m_alpha > m_conAlpha.ival)
 		top = m_conAlpha.ival;
 
+
 	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
@@ -162,29 +163,32 @@ void CRConsole::Draw()
 	if (bottom > m_conAlpha.ival)
 		bottom = m_conAlpha.ival;
 
-	float ftop = (float)top/255;
-	float fbot = (float)bottom/255;
+
+	if (top < 0)	top = 0;
+	if (top > 255)	top = 255;
+	if (bottom < 0)		bottom = 0;
+	if (bottom > 255)	bottom = 255;
+
+	if(m_fullscreen)
+		top = bottom = 255;
+
+	g_pRast->ConAlpha(top, bottom);
 
 	// transform
 	g_pRast->ProjectionMode(VRAST_ORTHO);
 	
-	if(m_fullscreen)
-		ftop = fbot = 1;
 
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
+
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-//	g_pRast->TextureSet(tex->bin_base, 1);
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 1));
 
 	g_pRast->PolyStart(VRAST_QUADS);
 
-	g_pRast->PolyColor4f(ftop, ftop, ftop, ftop);
 	g_pRast->PolyTexCoord(0, 0);
 	g_pRast->PolyVertexi(0, g_rInfo.height);
 	g_pRast->PolyTexCoord(1, 0);
 	g_pRast->PolyVertexi(g_rInfo.width, g_rInfo.height);
 
-	g_pRast->PolyColor4f(fbot, fbot, fbot, fbot);
 	g_pRast->PolyTexCoord(1, 1);
 	if(m_fullscreen)
 		g_pRast->PolyVertexi(g_rInfo.width, 0);
@@ -200,7 +204,10 @@ void CRConsole::Draw()
 
 	//print all our text over the top
 	PrintBuffer();
+
+	g_pRast->ConAlpha(255, 255);
 }
+
 
 
 /*
@@ -211,13 +218,6 @@ assumes view and tex filter are ok
 */
 void CRConsole::PrintBuffer()
 {
-	//Alpha values
-	float ftop, fbot;
-	float diff;
-	float alpha;
-	int a;
-
-
 	DWORD top = (int) m_alpha;
 	if (m_alpha > 255)
 		top = 255;
@@ -226,29 +226,19 @@ void CRConsole::PrintBuffer()
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
 
-	if (bottom > 255)
-		bottom = 255;
 
-	ftop = (float)top/255;
-	fbot = (float)bottom/255;
+	if (top < 0)	top = 0;
+	if (top > 255)	top = 255;
+	if (bottom < 0)		bottom = 0;
+	if (bottom > 255)	bottom = 255;
 
+	if(m_fullscreen)
+		top = bottom = 255;
 
-
-	diff = float(top - bottom);
-	diff /= m_maxlines;
-
-	alpha = (float)bottom;
-
-	a = (int)alpha;
-	ftop = (float)a / 255;
-
-	alpha += diff;
-	fbot = (float)a / 255;
+	g_pRast->ConAlpha(top, bottom);
 
 
-//	g_pRast->TextureSet(tex->bin_base, 0);
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 0));
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 	g_pRast->PolyStart(VRAST_QUADS);
 
 
@@ -307,19 +297,19 @@ void CRConsole::PrintBuffer()
 				s = (m_statusline[start] % 16) * 0.0625f;
 				t = (m_statusline[start] / 16) * 0.0625f;
 
-				g_pRast->PolyColor4f(1, 1, 1, ftop);
+//				g_pRast->PolyColor4f(1, 1, 1, ftop);
 				g_pRast->PolyTexCoord(s, t);
 				g_pRast->PolyVertexi(x1, y1);
 
-				g_pRast->PolyColor4f(1, 1, 1, ftop);
+//				g_pRast->PolyColor4f(1, 1, 1, ftop);
 				g_pRast->PolyTexCoord(s + 0.0625f, t);
 				g_pRast->PolyVertexi(x2, y1);
 
-				g_pRast->PolyColor4f(1, 1, 1, fbot);
+//				g_pRast->PolyColor4f(1, 1, 1, fbot);
 				g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 				g_pRast->PolyVertexi(x2, y2);
 		
-				g_pRast->PolyColor4f(1, 1, 1, fbot);
+//				g_pRast->PolyColor4f(1, 1, 1, fbot);
 				g_pRast->PolyTexCoord(s, t + 0.0625f);
 				g_pRast->PolyVertexi(x1, y2);
 
@@ -344,19 +334,19 @@ void CRConsole::PrintBuffer()
 		int cy2 = (m_fullscreen ? 0 : g_rInfo.height/2);
 		int cy1 = cy2 + 8;
 
-		g_pRast->PolyColor4f(1, 1, 1, ftop);
+//		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s, t);
 		g_pRast->PolyVertexi(x1, cy1);
 
-		g_pRast->PolyColor4f(1, 1, 1, ftop);
+//		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s + 0.0625f, t);
 		g_pRast->PolyVertexi(x2, cy1);
 
-		g_pRast->PolyColor4f(1, 1, 1, fbot);
+//		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 		g_pRast->PolyVertexi(x2, cy2);
 
-		g_pRast->PolyColor4f(1, 1, 1, fbot);
+//		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s, t + 0.0625f);
 		g_pRast->PolyVertexi(x1, cy2);
 	}
@@ -384,19 +374,19 @@ void CRConsole::PrintBuffer()
 				t = (m_seperatorchar / 16) * 0.0625f;
 			}
 
-			g_pRast->PolyColor4f(1, 1, 1, ftop);
+//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s, t);
 			g_pRast->PolyVertexi(x1, y1);
 
-			g_pRast->PolyColor4f(1, 1, 1, ftop);
+//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s + 0.0625f, t);
 			g_pRast->PolyVertexi(x2, y1);
 
-			g_pRast->PolyColor4f(1, 1, 1, fbot);
+//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 			g_pRast->PolyVertexi(x2, y2);
 	
-			g_pRast->PolyColor4f(1, 1, 1, fbot);
+//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s, t + 0.0625f);
 			g_pRast->PolyVertexi(x1, y2);
 
@@ -420,10 +410,6 @@ void CRConsole::PrintBuffer()
 		x1 = 0;
 		x2 = 8;
 
-	    // find our new interpolated alpha values
-		fbot = ftop;
-		alpha += diff;
-		ftop = (float)a/255;
 
 		for (int c = 0; c < m_lines[l]->length; c++)
 		{
@@ -431,19 +417,19 @@ void CRConsole::PrintBuffer()
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
 
 
-			g_pRast->PolyColor4f(1, 1, 1, ftop);
+//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s, t);
 			g_pRast->PolyVertexi(x1, y1);
 
-			g_pRast->PolyColor4f(1, 1, 1, ftop);
+//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s + 0.0625f, t);
 			g_pRast->PolyVertexi(x2, y1);
 
-			g_pRast->PolyColor4f(1, 1, 1, fbot);
+//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 			g_pRast->PolyVertexi(x2, y2);
 
-			g_pRast->PolyColor4f(1, 1, 1, fbot);
+//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s, t + 0.0625f);
 			g_pRast->PolyVertexi(x1, y2);
 

@@ -33,6 +33,8 @@ CShaderLayer::CShaderLayer()
 	mTexGen = TEXGEN_BASE;
 	mIsLight = false;
 	mbMipMap = true;
+	mAlphaGen.func = ALPHAGEN_IDENTITY;
+	mHeadTCMod = new CTCModHead();
 }
 
 
@@ -42,6 +44,8 @@ CShaderLayer::~CShaderLayer()
 	{
 		delete [] mTextureNames;
 	}
+	
+	delete mHeadTCMod;
 }
 
 
@@ -93,6 +97,36 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 
 		}
 
+		else if (_stricmp(token, "tcmod") == 0)
+		{
+			layer->GetToken(token, false);
+
+			if (_stricmp(token, "scroll") == 0)
+			{
+				float x, y;
+				layer->GetToken(token, false);
+				x = (float)atof(token);
+				layer->GetToken(token, false);
+				y = (float)atof(token);
+
+				mHeadTCMod->Add(new CTCModScroll(x, y));
+			}
+
+			if (_stricmp(token, "scale") == 0)
+			{
+				float x, y;
+				layer->GetToken(token, false);
+				x = (float)atof(token);
+				layer->GetToken(token, false);
+				y = (float)atof(token);
+
+				mHeadTCMod->Add(new CTCModScale(x, y));
+			}
+
+			else
+				ComPrintf("Unsupported tcmod - %s\n", token);
+		}
+
 
 		// only 1 texture for this layer
 		else if (_stricmp(token, "map") == 0)
@@ -109,6 +143,7 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 			{
 				mIsLight = true;
 				mTextureNames[0].index = -1;
+				mTexGen = TEXGEN_LIGHT;
 			}
 			else
 			{
@@ -130,30 +165,31 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		else if (_stricmp(token, "animmap") == 0)
 		{
 			mNumTextures = 0;
-			mTextureNames = new texname_t[8];
+			mTextureNames = new texname_t[MAX_ANIMATION];
 			if (!mTextureNames) FError("mem for texture names");
 
 			layer->GetToken(token, false);
 			mAnimFreq = atof(token);
 
-			for (layer->GetToken(token, false); token[0]!= '\0'; layer->GetToken(token, false))
+			for (layer->GetToken(token, false); token[0]!= '\0' && mNumTextures <= MAX_ANIMATION; )
 			{
 				if (_stricmp(token, "$lightmap") == 0)
 					mTextureNames[mNumTextures].index = -1;
 				else
 				{
 					mTextureNames[mNumTextures].index = texindex++;
-					strcpy(mTextureNames[0].filename, token);
+					strcpy(mTextureNames[mNumTextures].filename, token);
 					// strip the extension off the filename
-					for (int c=strlen(mTextureNames[0].filename); c>=0; c--)
+					for (int c=strlen(mTextureNames[mNumTextures].filename); c>=0; c--)
 					{
-						if (mTextureNames[0].filename[c] == '.')
+						if (mTextureNames[mNumTextures].filename[c] == '.')
 						{
-							mTextureNames[0].filename[c] = '\0';
+							mTextureNames[mNumTextures].filename[c] = '\0';
 							break;
 						}
 					}
 				}
+				layer->GetToken(token, false);
 				mNumTextures++;
 			}
 		}
@@ -174,6 +210,8 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 			{
 				mSrcBlend = VRAST_SRC_BLEND_ONE;
 				mDstBlend = VRAST_DST_BLEND_ONE;
+				mSrcBlend = VRAST_SRC_BLEND_ZERO;
+				mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
 			}
 
 			else if (_stricmp(token, "blend") == 0)
@@ -228,6 +266,17 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 				mDepthFunc = VRAST_DEPTH_EQUAL;
 		}
 
+		// alphagen
+		else if (_stricmp(token, "alphagen") == 0)
+		{
+			layer->GetToken(token, false);
+			if (_stricmp(token, "identity") == 0)
+				mAlphaGen.func = ALPHAGEN_IDENTITY;
+			else if (_stricmp(token, "console") == 0)
+				mAlphaGen.func = ALPHAGEN_CONSOLE;
+		}
+
+
 		// depth write	- must be after the blend func or it will be overriden
 		else if (_stricmp(token, "depthwrite") == 0)
 			mDepthWrite = true;
@@ -267,6 +316,7 @@ void CShaderLayer::Default(const char *name, int &texindex)
 		mSrcBlend = VRAST_SRC_BLEND_ZERO;
 		mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
 		mTexGen = TEXGEN_LIGHT;
+		mIsLight = true;
 	}
 	else
 	{
@@ -337,6 +387,12 @@ void CShader::Parse(CFileBuffer *shader)
 	{
 		shader->GetToken(token, true);
 
+		if (token[0] == '\0')
+		{
+			ComPrintf("unexpected end of shader file\n");
+			break;
+		}
+
 
 		// new layer
 		if (_stricmp(token, "{") == 0)
@@ -384,9 +440,11 @@ void CShader::Parse(CFileBuffer *shader)
 	} while (1);
 
 
-	// FIXME - check for alphagen funcs too
-	if ((mLayers[0]->mSrcBlend != VRAST_SRC_BLEND_NONE) ||
-		(mLayers[0]->mDstBlend != VRAST_DST_BLEND_NONE))
+	// if first layer isn't solid, whole shader is transparent
+	if ((mNumLayers == 0) ||
+		(mLayers[0]->mSrcBlend != VRAST_SRC_BLEND_NONE) ||
+		(mLayers[0]->mDstBlend != VRAST_DST_BLEND_NONE) ||
+		(mLayers[0]->mAlphaGen.func != ALPHAGEN_IDENTITY))
 	{
 		mSurfaceFlags |= CONTENTS_TRANSPARENT;
 		mPass = CACHE_PASS_TRANSPARENT;

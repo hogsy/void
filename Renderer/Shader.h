@@ -14,12 +14,101 @@
 class CFileBuffer;
 
 
+// where texture coords come from
 enum ETexGen
 {
 	TEXGEN_BASE,
 	TEXGEN_LIGHT,
 	TEXGEN_VECTOR
 };
+
+
+// tcmod's - modify texture coords
+class CTCModBase
+{
+public:
+	CTCModBase() : mpNext(NULL) {}
+	~CTCModBase()	{	if (mpNext)	delete mpNext;	}	// delete the entire chain
+
+	// add a tcmod to the chain
+	void Add(CTCModBase *mod)
+	{
+		if (mpNext) mpNext->Add(mod);
+		else mpNext = mod;
+	}
+
+	virtual void	Evaluate(float &s, float &t, float time)=0;	// modify the tex coords
+
+	CTCModBase *mpNext;
+};
+
+
+// head - doesnt do anything, just the head of the list
+class CTCModHead : public CTCModBase
+{
+public:
+	CTCModHead() : CTCModBase()	{}
+	void	Evaluate(float &s, float &t, float time)
+	{	if (mpNext) mpNext->Evaluate(s, t, time);	}
+};
+
+
+// scroll
+class CTCModScroll : public CTCModBase
+{
+public:
+	CTCModScroll(float x, float y) : CTCModBase(), mX(x), mY(y) {}
+	void	Evaluate(float &s, float &t, float time)
+	{
+		float _t = time; // - floorf(time);
+		float add;
+
+		add = _t*mX;
+		s += add - floorf(add);
+
+		add = _t*mY;
+		t += add - floorf(add);
+
+
+		if (mpNext) mpNext->Evaluate(s, t, time);
+	}
+
+private:
+	float	mX, mY;
+};
+
+
+// scale
+class CTCModScale : public CTCModBase
+{
+public:
+	CTCModScale(float x, float y) : CTCModBase(), mX(x), mY(y) {}
+	void	Evaluate(float &s, float &t, float time)
+	{
+		s /= mX;
+		t /= mY;
+		if (mpNext) mpNext->Evaluate(s, t, time);
+	}
+private:
+	float	mX, mY;
+};
+
+
+
+
+// where alpha values come from
+enum EAlphaGen
+{
+	ALPHAGEN_IDENTITY,
+	ALPHAGEN_CONSOLE
+};
+
+
+typedef struct
+{
+	EAlphaGen	func;
+} alphagen_t;
+
 
 
 class CShaderLayer
@@ -61,6 +150,12 @@ public:
 	// tex coord generation
 	ETexGen			mTexGen;
 	vector_t		mTexVector[2];
+
+	CTCModBase		*mHeadTCMod;
+
+	// alpha component generation
+	alphagen_t		mAlphaGen;
+
 };
 
 
