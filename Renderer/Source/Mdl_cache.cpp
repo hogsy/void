@@ -76,7 +76,7 @@ destroy the model cache
 void model_cache_destroy(void)
 {
 	if (model_cache)
-		free (model_cache);
+		delete [] model_cache;
 	model_cache = NULL;
 }
 

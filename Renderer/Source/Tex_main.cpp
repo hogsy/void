@@ -336,7 +336,7 @@ bool CTextureManager::UnloadWorldTextures()
 
 //	free (tex->cache);
 //	tex->cache = NULL;
-	free (tex->polycaches);
+	delete [] tex->polycaches;
 	tex->polycaches = NULL;
 
 	// free lightmaps
