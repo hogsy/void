@@ -254,6 +254,12 @@ bool CVoid::Init()
 	//Timer
 	g_pTime->Init();
 
+
+	//================================
+	//Update and Show window
+	ShowWindow(g_hWnd, SW_NORMAL); 
+	UpdateWindow(g_hWnd);
+
 	//================================
 	//Input
 	if(!g_pInput->Init()) 
@@ -309,10 +315,6 @@ bool CVoid::Init()
 		return false;
 	}
 #endif
-
-	//Update and Show window
-	ShowWindow(g_hWnd, SW_NORMAL); 
-	UpdateWindow(g_hWnd);
 
 	//Start timer
 	g_pTime->Reset();
