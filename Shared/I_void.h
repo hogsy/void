@@ -8,18 +8,34 @@
 This is what the exe exports
 ==========================================
 */
-typedef struct VoidExport_s
+struct VoidExport_t
 {
-	 char * basedir;
-	 char * gamedir;
+	 VoidExport_t(const char * pbasedir,
+				  const char * pgamedir,
+				  float * icurtime,
+				  float * iframetime) : basedir(pbasedir), gamedir(pgamedir),
+										curtime(icurtime), frametime(iframetime)
+	 {}
+
+	 ~VoidExport_t()
+	 {
+		 basedir = 0;
+		 gamedir = 0;
+		 curtime = 0;
+		 frametime = 0;
+		 vconsole = 0;
+	 }
+	
+	 //FIXME, remove these, delegate to filesystem
+	 const char * basedir;
+	 const char * gamedir;
 
 	 float* curtime;
 	 float* frametime;
 
 	 //Add interfaces here
 	 I_ExeConsole * vconsole;
-
-}VoidExport_t;
+};
 
 
 #endif

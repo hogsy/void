@@ -12,19 +12,35 @@
 #define RENDERER_API __declspec(dllimport)
 #endif
 
-/*
-==========================================
-Renderer info struct
-==========================================
-*/
+
 #define RFLAG_FULLSCREEN	0x00000001
 #define RFLAG_FULLBRIGHT	0x00000002
 #define RFLAG_MULTITEXTURE	0x00000004
 #define RFLAG_SWAP_CONTROL	0x00000008
 
+/*
+==========================================
+Renderer info struct
+==========================================
+*/
 
 typedef struct RenderInfo_t
 {
+	RenderInfo_t(HINSTANCE hinst) : hInst(hinst)
+	{
+		width = 640;
+		height = 480;
+		bpp = 16;
+		zdepth = 16;
+		stencil = 0;
+		active = false;
+		ready = false;
+		fov = PI/2;
+		rflags = 0;
+	}
+
+	//==========================================
+
 	HWND		hWnd;		//Window information
 	HINSTANCE	hInst;		//Why is this here ? 
 
@@ -34,6 +50,7 @@ typedef struct RenderInfo_t
 	bool		active;		//in the window active?
 	bool		ready;
 
+	//==========================================
 	//Renderering Information
 	
 	float			fov;	//fov in radians
@@ -77,7 +94,7 @@ struct I_Renderer
 
 
 RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo, VoidExport_t * vexp);
-RENDERER_API bool FreeRenderer();
+RENDERER_API void FreeRenderer();
 
 #endif
 
