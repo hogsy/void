@@ -4,10 +4,10 @@
 #include "std_lib.h"
 #include "vlight.h"
 #include "light.h"
-#include "world.h"
+#include "Com_world.h"
 
 
-extern	world_t		*world;
+extern	CWorld		*world;
 extern	lightmap_t	*lightmaps[65536];	// max brush sides
 extern	int			num_lightmaps;
 

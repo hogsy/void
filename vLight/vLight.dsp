@@ -65,7 +65,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_VLIGHT_" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\Shared" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_VLIGHT_" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -96,6 +96,14 @@ SOURCE=..\Shared\Com_vector.cpp
 # Begin Source File
 
 SOURCE=..\Shared\Com_vector.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_world.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_world.h
 # End Source File
 # Begin Source File
 
@@ -132,14 +140,6 @@ SOURCE=.\source\vlight.cpp
 # Begin Source File
 
 SOURCE=.\source\vlight.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\World.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\world.h
 # End Source File
 # End Target
 # End Project

@@ -1,10 +1,10 @@
 
 #include "std_lib.h"
 #include "trace.h"
-#include "world.h"
+#include "Com_world.h"
 
 
-extern world_t	 *world;
+extern CWorld	 *world;
 
 
 // FIXME - should collide with all objects in the sector first, then objects

@@ -18,7 +18,10 @@ void v_printf(char *msg, ...)
 	va_end(args);
 
 	if (flog)
+	{
 		fprintf(flog, "%s", buff);
+		fflush(flog);
+	}
 
 	if (verbose)
 		printf("%s", buff);

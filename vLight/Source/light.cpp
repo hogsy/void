@@ -5,14 +5,14 @@
 #include "std_lib.h"
 #include "vlight.h"
 #include "light.h"
-#include "world.h"
+#include "Com_world.h"
 #include "trace.h"
 
 
 bspf_texdef_t	lightdefs[16384];	// MAX_MAP_TEXINFOS
 int				nlightdefs;
 
-world_t		*world;
+CWorld		*world;
 int			samples=1;	// samples per lumel
 
 lightmap_t	*lightmaps[65536];	// max brush sides
@@ -30,7 +30,13 @@ unsigned char	ambient[3] = { 0, 0, 0 };
 light_fill_defs
 ========
 */
-vector_t baseaxis[6] =
+// nasty ass hack to get around vector class
+typedef struct
+{
+	float x, y, z;
+} vec_t;
+
+vec_t baseaxis[6] =
 {
 	{0, 1, 0},  {0, 0, 1},
 	{1, 0, 0},  {0, 0, 1},
@@ -191,46 +197,26 @@ int light_assemble(unsigned char **data)
 light_write - rewrite the bsp file with light data
 ========
 */
-void light_write(char *file)
+void light_write(void)
 {
 	v_printf("Writing bsp with light info: ");
 
-	FILE *f = fopen(file, "r+b");
-	if (!f)
-		Error("couldn't open %s for light info!", file);
 
 	light_fill_defs();
-
-	bspf_header_t header;
-	fread(&header, 1, sizeof(bspf_header_t), f);
 
 
 	// assemble all the lightmap data
 	unsigned char *data;
-	header.lumps[LUMP_LIGHTMAP].length = light_assemble(&data);
 
-	// write lightmap data at the end
-	fseek(f, 0, SEEK_END);
-	header.lumps[LUMP_LIGHTMAP].offset = ftell(f);
-	fwrite(data, 1, header.lumps[LUMP_LIGHTMAP].length, f);
+	// add lightmap data to the world
+	world->light_size = light_assemble(&data);
+	world->lightdata = data;
 
-	// write lightdef data
-	header.lumps[LUMP_LIGHTDEF].offset = ftell(f);
-	header.lumps[LUMP_LIGHTDEF].length = nlightdefs * sizeof(bspf_texdef_t);
-	fwrite(lightdefs, nlightdefs, sizeof(bspf_texdef_t), f);
+	// add lightdef data
+	world->lightdefs = lightdefs;
+	world->nlightdefs = nlightdefs;
 
-	// rewrite sides with lightdef indices
-	fseek(f, header.lumps[LUMP_SIDES].offset, SEEK_SET);
-	fwrite(world->sides, 1, header.lumps[LUMP_SIDES].length, f);
-
-
-	// rewrite the header with light offset info
-	fseek(f, 0, SEEK_SET);
-	fwrite(&header, 1, sizeof(bspf_header_t), f);
-	fclose(f);
-
-	free (data);
-
+	world->WriteToFile();
 	v_printf("OK\n");
 }
 
@@ -267,16 +253,16 @@ void light_find(void)
 
 	for (int e=0; e<world->nentities; e++)
 	{
-		if (strcmp(key_get_value(world, e, "classname"), "light") != 0)
+		if (strcmp(world->GetKeyString(e, "classname"), "light") != 0)
 			continue;
 
-		key_get_vector(world, e, "origin", lights[num_lights].origin);
-		key_get_vector(world, e, "_color", lights[num_lights].color);
+		world->GetKeyVector(e, "origin", lights[num_lights].origin);
+		world->GetKeyVector(e, "_color", lights[num_lights].color);
 		ColorNormalize(&lights[num_lights].color);
 
-		lights[num_lights].intensity = key_get_float(world, e, "light");
+		lights[num_lights].intensity = world->GetKeyFloat(e, "light");
 		if (!lights[num_lights].intensity)
-			lights[num_lights].intensity = key_get_float(world, e, "_light");
+			lights[num_lights].intensity = world->GetKeyFloat(e, "_light");
 		if (!lights[num_lights].intensity)
 			lights[num_lights].intensity = 300;
 
@@ -468,16 +454,19 @@ void light_all(void)
 light_run - light the given file
 ========
 */
-void light_run(char *file)
+bool light_run(CWorld *w)
 {
-	world = world_create(file);
-	if (!world)
-		Error("Couldn't load %s", file);
+//	world = CWorld::CreateWorld(file);
+
+	if (!w)
+		return false;
+
+	world = w;
 	if (world->light_size)
 	{
-		v_printf("%s already contains light data.");
-		world_destroy(world);
-		return;
+		v_printf("world already contains light data.\n");
+		CWorld::DestroyWorld(world);
+		return false;
 	}
 
 
@@ -485,8 +474,9 @@ void light_run(char *file)
 	lightmap_build(0);
 	if (num_lightmaps == 0)
 	{
-		world_destroy(world);
+		CWorld::DestroyWorld(world);
 		Error("no lightmaps!");
+		return false;
 	}
 
 	light_find();
@@ -494,13 +484,13 @@ void light_run(char *file)
 	{
 		for (int l=0; l<num_lightmaps; l++)
 			free(lightmaps[l]);
-		world_destroy(world);
+		CWorld::DestroyWorld(world);
 		Error("no lights!");
+		return false;
 	}
 
 	light_all();
 
-	light_write(file);
-	world_destroy(world);
+	return true;
 }
 

@@ -2,7 +2,7 @@
 #ifndef LIGHTMAP_H
 #define LIGHTMAP_H
 
-#include "world.h"
+#include "Com_world.h"
 #include "Com_vector.h"
 
 /*
