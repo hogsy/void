@@ -228,7 +228,7 @@ int parse_brush_side(void)
 	get_token(false);
 	contents |= atoi(token);
 	get_token(false);
-	contents |= atoi(token);
+	contents |= atoi(token) << 16;
 	get_token(false);
 
 
