@@ -1,11 +1,26 @@
+
+#ifdef RENDERER
 #include "Standard.h"
+#include "Tex_image.h"
+#else
+#include "Com_defs.h"
+#include "Com_Vector.h"
+#include "Rast_main.h"
+#include "../vbsp/source/std_lib.h"
+#include "I_file.h"
+#endif
+
 #include "ShaderManager.h"
 #include "Shader.h"
-#include "Tex_image.h"
+
+
+
 
 CShaderManager	*g_pShaders=0;
-extern const char * BaseTextureList[];
 
+#ifdef RENDERER
+extern const char * BaseTextureList[];
+#endif
 
 
 /*
@@ -120,9 +135,9 @@ void CShaderManager::LoadShader(int bin, int index, const char *name)
 LoadWorld
 ===========
 */
+#ifdef RENDERER
 void CShaderManager::LoadWorld(CWorld *map)
 {
-
 	// load lightmaps
 	if (map->nlightdefs && map->light_size)
 	{
@@ -213,6 +228,7 @@ void CShaderManager::UnLoadBase(void)
 		BinDestroy(mBaseBin);
 	mBaseBin = -1;
 }
+#endif
 
 
 /*

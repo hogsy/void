@@ -1,7 +1,17 @@
+
+
+#ifdef RENDERER
 #include "Standard.h"
-#include "Shader.h"
-#include "I_file.h"
 #include "Tex_image.h"
+#else
+#include "Com_defs.h"
+#include "Com_Vector.h"
+#include "Rast_main.h"
+#include "../vbsp/source/std_lib.h"
+#endif
+
+#include "I_file.h"
+#include "Shader.h"
 
 
 /*
@@ -86,7 +96,7 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		{
 			mNumTextures = 1;
 			mTextureNames = new texname_t[1];
-			if (!mTextureNames) FError("mem for texture names");
+			if (!mTextureNames)	FError("mem for texture names");
 
 			layer->GetToken(token, false);
 			if (token[0] == '\0')
@@ -352,6 +362,7 @@ LoadTextures
 */
 void CShader::LoadTextures(void)
 {
+#ifdef RENDERER
 	if (mTextureBin != -1)
 		return;
 
@@ -381,6 +392,7 @@ void CShader::LoadTextures(void)
 			}
 		}
 	}
+#endif
 }
 
 
@@ -391,9 +403,11 @@ UnLoadTextures
 */
 void CShader::UnLoadTextures(void)
 {
+#ifdef RENDERER
 	if (mTextureBin != -1)
 		g_pRast->TextureBinDestroy(mTextureBin);
 	mTextureBin = -1;
+#endif
 }
 
 

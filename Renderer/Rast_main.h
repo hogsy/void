@@ -101,6 +101,10 @@ enum EPolyType
 	VRAST_QUADS
 };
 
+
+
+#ifdef RENDERER
+
 class CShader;
 
 /*
@@ -211,5 +215,5 @@ protected:
 extern CVar *	g_p32BitTextures;
 extern CVar *	g_pFov;
 
+#endif	// RENDERER
 #endif
-

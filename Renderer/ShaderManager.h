@@ -15,14 +15,14 @@ public:
 	CShaderManager();
 	~CShaderManager();
 
-
+#ifdef RENDERER
 	void LoadWorld(CWorld *map);	// loads shaders needed for world
 									// also loads the lightmaps
 	void UnLoadWorld(void);
 
 	void LoadBase(void);
 	void UnLoadBase(void);
-
+#endif
 
 	void LoadShader(int bin, int index, const char *name);	// loads a specific shader, creates the default if it isn't found
 
