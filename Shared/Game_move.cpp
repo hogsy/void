@@ -32,6 +32,7 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 
 	vector_t dir = ent->velocity;
 
+// scale velocity down to frametime
 	dir.Scale(time);
 	primal_dir = dir;
 	
@@ -63,7 +64,7 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 			vector_t tmp;
 			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
 			d = DotProduct(tmp,dir);
-			dir.Scale(tmp,d);
+			tmp.Scale(dir,d);
 			//Void3d::VectorScale(dir,tmp, d);
 		}
 
@@ -75,6 +76,7 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 		}
 	}
 
+	// scale velocity back to per second
 	dir.Scale(1/time);
 	ent->velocity = dir;
 }
