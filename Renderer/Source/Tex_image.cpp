@@ -446,8 +446,8 @@ void CImageReader::ImageReduce(int m)
 	DWORD color;
 	int r=0, c=0, s=0;
 	
-	int	sfactor = 1;
-	int	tfactor = 1;
+	int	sfactor = 2;
+	int	tfactor = 2;
 
 	if (m==0)
 		return;
@@ -458,13 +458,13 @@ void CImageReader::ImageReduce(int m)
 	if (!w)
 	{
 		w = 1;
-		sfactor = 0;
+		sfactor = 1;
 	}
 
 	if (!h)
 	{
 		h = 1;
-		tfactor = 0;
+		tfactor = 1;
 	}
 
 	int bpp = (int)format;
@@ -475,22 +475,31 @@ void CImageReader::ImageReduce(int m)
 		{
 			for (s = 0; s < bpp; s++)
 			{
-
+/*
                 color =  mipmapdata[m][ ((2*r)	  	   *w*bpp*2) + ((2*c)		  *bpp)+ s];
                 color += mipmapdata[m][ ((2*r)		   *w*bpp*2) + ((2*c)+sfactor)*bpp + s];
                 color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)		  *bpp)+ s];
                 color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)+sfactor)*bpp + s];
-
-/*
-				color = mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
 */
 
+				color  = mipmapdata[m][(tfactor*r*w*bpp*2)     + (sfactor*c*bpp) + s];
+				color += mipmapdata[m][(tfactor*r*w*bpp*2)     + (sfactor*(c+1)*bpp) + s];
+				color += mipmapdata[m][(tfactor*(r+1)*w*bpp*2) + (sfactor*c*bpp) + s];
+				color += mipmapdata[m][(tfactor*(r+1)*w*bpp*2) + (sfactor*(c+1)*bpp) + s];
+/*
+				color  = mipmapdata[m][s];
+				color += mipmapdata[m][s];
+				color += mipmapdata[m][s];
+				color += mipmapdata[m][s];
+*/
                 color /= 4;
 
 				mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
 	}
+
+	memset(mipmapdata[m-1], 100, bpp*w*h);
 }
 
 
@@ -542,7 +551,7 @@ void CImageReader::ConfirmMipData(void)
 	for (int m=miplevels-1; m>=0; m--)
 	{
 		if (mipmapdata[m])
-			break;
+			return;
 
 		mipmapdata[m] = (unsigned char*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
 		if (!mipmapdata[m])
@@ -550,12 +559,6 @@ void CImageReader::ConfirmMipData(void)
 			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
 			return;
 		}
-	}
-
-	for (m=miplevels-1; m>=0; m--)
-	{
-		memset(mipmapdata[m], 255, mipdatasizes[m]);
-
 	}
 }
 

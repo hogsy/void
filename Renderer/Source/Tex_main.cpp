@@ -190,8 +190,6 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 			mipcount--;
 		}
 
-		memset(tdata.mipdata[0], 255, mipdatasizes[0]);
-
 		g_pRast->TextureLoad(tex->bin_world, t, &tdata);
 	}
 
