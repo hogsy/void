@@ -365,10 +365,15 @@ void CRasterizer::PolyNormalf(vector_t &norm)
 
 void CRasterizer::PolyNormali(byte i)
 {
+	if (i>162)
+		ComPrintf("shit\n");
+
 	int index = i*3;
 	mVerts[mNumElements].norm[0] = q2norms[index++];
 	mVerts[mNumElements].norm[1] = q2norms[index++];
 	mVerts[mNumElements].norm[2] = q2norms[index];
+
+
 }
 
 
@@ -440,6 +445,7 @@ void CRasterizer::LightOrigin(vector_t *v)
 
 	else
 	{
+		mLightOrigin = *v;
 		// just take first few in the list
 		LightSet(true);	// turn lighting off
 	}

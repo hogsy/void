@@ -102,7 +102,7 @@ typedef struct
 {
 	vector_t origin;
 	vector_t color;
-	int rad;
+	int radius;
 } RastLight_t;
 
 

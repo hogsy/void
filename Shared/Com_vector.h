@@ -105,6 +105,7 @@ struct vector_t //Vec3d
 		return vecString;
 	}
 
+	float ColorNormalize();
 	float Normalize();
 	float Normalize(vector_t &out) const;
 	void  VectorMA (const vector_t &veca, float scale, const vector_t &vecb);

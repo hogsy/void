@@ -1,6 +1,21 @@
 #include "Com_defs.h"
 #include "Com_vector.h"
 
+float vector_t::ColorNormalize()
+{
+	float mag = x;
+	if (x<y) mag = y;
+	if (mag<z) mag=z;
+
+	float imag= FM::INV(mag);
+
+	x *= imag;
+	y *= imag;
+	z *= imag;
+	return mag;
+
+}
+
 
 float vector_t::Normalize()
 {

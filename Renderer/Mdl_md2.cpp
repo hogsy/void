@@ -337,6 +337,7 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 			}
 
 			g_pRast->PolyTexCoord(cmd->s, cmd->t);
+			g_pRast->PolyNormali(frames[fframe][cmd->vertex_index].norm);
 			g_pRast->PolyVertexf(v);
 
 			ptr += 3;

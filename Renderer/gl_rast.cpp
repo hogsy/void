@@ -1017,18 +1017,18 @@ void COpenGLRast::LightSet(bool enable)
 	if (enable && !mLighting)
 		glEnable(GL_LIGHTING);
 
+
 	for (int i=0; i<mLightMax; i++)
 	{
 		// don't have to use all available lights
-		if ((i>=g_varNumLights->ival) || (i>mLightNum))
+		if ((i>=g_varNumLights->ival) || (i>=mLightNum))
 			glDisable(GL_LIGHT0 + i);
 
 		else
 		{
 			glEnable(GL_LIGHT0 + i);
-			
+
 			float v[4];
-			v[3] = 0;
 
 			vector_t diff = mLights[i].origin - mLightOrigin;
 			float dist = diff.Length();
@@ -1036,23 +1036,24 @@ void COpenGLRast::LightSet(bool enable)
 			v[0] = diff.x;
 			v[1] = diff.y;
 			v[2] = diff.z;
+			v[3] = 0;
 			glLightfv(GL_LIGHT0+i, GL_POSITION, v);
 
 
 			vector_t color(mLights[i].color);
-			float scale = dist / mLights[i].rad;
+			color.ColorNormalize();
+			float scale = dist / mLights[i].radius;
 			if (scale < 0) scale = 0;
 			if (scale > 1) scale = 1;
 			color.Scale(1-scale);
-			if (i != 0)
-				color.Scale(0);
 
 			v[0] = color.x;
 			v[1] = color.y;
 			v[2] = color.z;
+			v[3] = 1;
+
 			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, v);
 			glLightfv(GL_LIGHT0+i, GL_SPECULAR, v);
-
 		}
 	}
 
