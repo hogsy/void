@@ -556,7 +556,7 @@ bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
 Console Command Hanlder
 ==========================================
 */
-void CFileSystem::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CFileSystem::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
@@ -572,10 +572,19 @@ void CFileSystem::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		}
 	case CMD_DIRPATH:
 		{
+			int numArgs = parms.NumTokens();
+			char arg1[80], arg2[80];
 			if(numArgs == 2)
-				ListFiles(szArgs[1],0);
+			{
+				strcpy(arg1,parms.StringTok(1));
+				ListFiles(arg1,0);
+			}
 			else if(numArgs == 3)
-				ListFiles(szArgs[1], szArgs[2]);
+			{
+				strcpy(arg1,parms.StringTok(1));
+				strcpy(arg2,parms.StringTok(2));
+				ListFiles(arg1,arg2);
+			}
 			else
 				ListFiles(0,0);
 			break;

@@ -1,6 +1,9 @@
 #include "Fs_hdr.h"
 #include "I_filesystem.h"
 
+//define static var for CParms
+char CParms::szParmBuffer[1024];
+
 /*
 ==========================================
 Local vars
