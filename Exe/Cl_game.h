@@ -144,7 +144,6 @@ private:
 	CCamera	*	m_pCamera;
 	
 	bool		m_bOnGround;
-	vector_t	m_vecBlend;
 	vector_t	m_vecForward,
 				m_vecRight,
 				m_vecUp;

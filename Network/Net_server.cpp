@@ -173,14 +173,6 @@ Send disconnects to clients
 */
 void CNetServer::Shutdown()
 {
-	//Send disconnect messages to clients, if active
-/*	for(int i=0;i<m_pSvState->maxClients;i++)
-	{
-		if(m_clChan[i].m_state != CL_INGAME) 
-			continue;
-		SendDisconnect(i,DR_SVQUIT);
-	}
-*/
 	if(m_clChan)
 	{
 		delete [] m_clChan;

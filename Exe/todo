@@ -1,6 +1,9 @@
-BUGS
-=============
-model too high, doesnt fit bounding box
+BUGS:
+
+Client info doesnt propagate across levels
+Problems when reconnecting sometimes.
+Client Socket should be the same
+
 
 
 GAME
