@@ -49,7 +49,7 @@ FILESYSTEM_API void FILESYSTEM_Free()
 Common print function for the module
 ==========================================
 */
-void ComPrintf(char* text, ...)
+void ComPrintf(const char* text, ...)
 {
 	static char buff[1024];
 

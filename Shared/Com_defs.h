@@ -14,9 +14,6 @@
 #include <string>
 #include <vector>
 
-//The apps common print function
-void ComPrintf(char* text, ...);
-
 const int COM_MAXPATH	  = 256;
 const int COM_MAXFILENAME = 128;
 
@@ -30,5 +27,8 @@ typedef unsigned long ulong;
 typedef unsigned int  uint;
 typedef unsigned short ushort;
 typedef unsigned word;
+
+//Every apps common print function
+void ComPrintf(const char* text, ...);
 
 #endif
