@@ -292,15 +292,11 @@ void CGameClient::UnloadWorld()
 	if(!m_ingame)
 		return;
 
-/*	m_pClGame->UnregisterModelCache(CACHE_GAME);
-	m_pClGame->UnregisterImageCache(CACHE_GAME);
-	m_pClGame->UnregisterSoundCache(CACHE_GAME);
-*/
-
 	EntMove::SetWorld(0);
 
 	delete m_pCamera;
 	m_pCamera = 0;
+	
 	m_pWorld = 0;
 
 	m_clNum = -1;
@@ -315,7 +311,7 @@ void CGameClient::UnloadWorld()
 		{
 			if(m_entities[i].sndIndex > -1)
 			{
-ComPrintf("CLGAME: removed sound %d\n", i);
+//ComPrintf("CLGAME: removed sound %d\n", i);
 				m_pClGame->RemoveSoundSource(&m_entities[i]);
 			}
 		}

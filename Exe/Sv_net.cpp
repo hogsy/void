@@ -173,8 +173,7 @@ Handle Map change on client ?
 ======================================
 */
 void CServer::OnLevelChange(int clNum)
-{
-	m_clients[clNum]->bSpawned = false;
+{	m_clients[clNum]->bSpawned = false;
 }
 
 /*
@@ -218,7 +217,7 @@ Write the requested config string to
 the given buffer
 ======================================
 */
-bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
+bool CServer::WriteConfigString(int clNum, CBuffer &buffer, int stringId, int numBuffer)
 {
 	switch(stringId)
 	{
@@ -263,7 +262,7 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 
 			for(int i=0; i< m_svState.numClients; i++)
 			{
-				if(!m_clients[i] ||!m_clients[i]->bSpawned)
+				if(!m_clients[i]  || i==clNum  ) // ||!m_clients[i]->bSpawned)
 					continue;
 
 				buffer.WriteByte(SV_CLFULLINFO);

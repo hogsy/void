@@ -59,7 +59,7 @@ struct I_Server
 
 	//Have the game server write a configString to the given buffer
 	//shouldnt be more than the max size, return false if invalid parms are given
-	virtual bool WriteConfigString(CBuffer &buffer, int stringId, int numBuffer=0)=0;
+	virtual bool WriteConfigString(int clNum, CBuffer &buffer, int stringId, int numBuffer=0)=0;
 
 	//Add more as needed
 };

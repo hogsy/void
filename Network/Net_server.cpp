@@ -293,6 +293,9 @@ void CNetServer::HandleChallengeReq()
 		m_challenges[i].time = System::GetCurTime();
 	}
 
+ComPrintf("SVNet: Sent challenge %d to %s\n", m_challenges[i].challenge,
+		  m_challenges[i].addr.ToString());
+
 	//Send response packet
 	m_sendBuf.Reset();
 	m_sendBuf.WriteInt(-1);
@@ -460,7 +463,8 @@ void CNetServer::SendSpawnParms(int chanId)
 			lastInSeq = 1;
 
 		m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
-		if(!m_pServer->WriteConfigString(m_clChan[chanId].m_netChan.m_buffer, 
+		if(!m_pServer->WriteConfigString(chanId,
+										 m_clChan[chanId].m_netChan.m_buffer, 
 										 m_clChan[chanId].m_spawnLevel,
 										 reqNum))
 			error = true;

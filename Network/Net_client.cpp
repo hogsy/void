@@ -84,8 +84,7 @@ void CNetClient::ReadPackets()
 	//Look for OOB unconnected messages
 	while(m_pSock->RecvFrom())
 	{
-		if((m_netState == CL_INUSE) &&
-		   (m_buffer.ReadInt() == -1))
+		if((m_netState == CL_INUSE) && (m_buffer.ReadInt() == -1))
 		{
 			m_pNetChan->m_lastReceived = System::GetCurTime();
 			HandleOOBMessage();
@@ -268,6 +267,7 @@ void CNetClient::HandleOOBMessage()
 
 		//Got challenge, now send connection request
 		SendConnectReq();
+		
 		m_pClient->Print("CL: Got challenge %d\n", m_challenge);
 		return;
 	}
@@ -372,7 +372,7 @@ void CNetClient::ConnectTo(const char * ipaddr)
 {
 	if(!ipaddr)
 	{
-		m_pClient->Print("Usage - connect address(:port)\n");
+		m_pClient->Print("Usage: connect address(:port)\n");
 		return;
 	}
 
@@ -440,6 +440,7 @@ m_pClient->Print("CL: Telling server we disconnect %s\n", m_pNetChan->GetAddrStr
 	memset(m_szServerAddr,0, NET_IPADDRLEN);
 	m_bLocalServer = false;
 	
+	m_challenge = 0;
 	m_levelId = 0;
 	m_netState = CL_FREE;
 	
@@ -464,8 +465,9 @@ void CNetClient::Reconnect(bool serverPrompted)
 	strcpy(svaddr,m_szServerAddr);
 	Disconnect(serverPrompted);
 
-	ConnectTo(svaddr);
 	m_pClient->Print("CL: Reconnecting ...\n");
+
+	ConnectTo(svaddr);
 }
 
 

@@ -730,11 +730,12 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 			{
 				//Send Reconnects if active right now
 				m_net.SendReconnectToAll();
-
-				//FIXME. check for dedicated
-				System::GetConsole()->ExecString("reconnect");
-
 				Shutdown();
+
+				//FIXME, Check for dedicated
+				//We need this so the local client can unref the world
+				//So we can free it and load another one
+				System::GetConsole()->ExecString("reconnect");
 			}
 
 			if(Init())
@@ -770,11 +771,13 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 			}
 
 			m_net.SendReconnectToAll();
-			
-			//FIXME. check for dedicated
+			UnloadWorld();
+
+			//FIXME, Check for dedicated
+			//We need this so the local client can unref the world
+			//So we can free it and load another one
 			System::GetConsole()->ExecString("reconnect");
 
-			UnloadWorld();
 			if(!LoadWorld(mapname))
 			{
 				ComPrintf("CServer::Error changing map. Shutting down\n");

@@ -90,7 +90,7 @@ public:
 	void OnLevelChange(int clNum);
 	void WriteGameStatus(CBuffer &buffer);
 	int  NumConfigStringBufs(int stringId) const;
-	bool WriteConfigString(CBuffer &buffer, int stringId, int numBuffer=0);
+	bool WriteConfigString(int clNum, CBuffer &buffer, int stringId, int numBuffer=0);
 
 	//Game Handler
 	I_World * GetWorld();

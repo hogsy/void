@@ -21,6 +21,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 	while(msgId != 255)
 	{
 		msgId= buffer.ReadByte();
+		
 		//bad message
 		if(msgId == 255)
 		{	break;
@@ -76,7 +77,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				int  num = buffer.ReadByte();
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
-
+				
 				//Unregister model/skin
 
 				m_clients[num].Reset();
@@ -112,25 +113,9 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 				
 				if(!m_cvLocalMove.bval)
 				{
-/*					x -= m_pGameClient->origin.x;
-					y -= m_pGameClient->origin.y;
-					z -= m_pGameClient->origin.z;
-
-					if((m_pClGame->GetCurTime() - m_fLastUpdate) > (GAME_FRAMETIME * 20.0f))
-					{
-ComPrintf("Updated");
-						m_pGameClient->origin.x=x;
-						m_pGameClient->origin.y=y;
-						m_pGameClient->origin.z=z;
-						m_fLastUpdate = m_pClGame->GetCurTime();
-					}
-					else
-					{
-*/
-						m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
-						m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
-						m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
-//					}
+					m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
+					m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
+					m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
 				}
 				break;
 			}
@@ -140,8 +125,6 @@ ComPrintf("Updated");
 				int num = buffer.ReadByte();
 				if(m_clients[num].inUse && num != m_clNum)
 				{
-//					byte  b = buffer.ReadByte();
-
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
 					m_clients[num].origin.z = buffer.ReadCoord();
@@ -149,19 +132,6 @@ ComPrintf("Updated");
 					m_clients[num].angles.x = buffer.ReadCoord();
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
-
-/*					if(b)
-					{
-						//Order matters
-						if(b & SVU_GRAVITY)
-							m_clients[num].gravity = buffer.ReadFloat();
-						if(b & SVU_FRICTION)
-							m_clients[num].friction = buffer.ReadFloat();
-						if(b & SVU_MAXSPEED)
-							m_clients[num].maxSpeed = buffer.ReadFloat();
-					}
-*/
-
 				}
 				break;
 			}
