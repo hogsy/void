@@ -515,7 +515,7 @@ bool CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
 	int len = 0;
 	char c = fgetc(fp);
 
-	if(c == EOF)
+	if(c == EOF || c == '\0')
 		return false;
 
 	while(c && (c != '\n') && (c != EOF) && (len < CON_MAXARGSIZE))
@@ -524,7 +524,9 @@ bool CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
 		c = fgetc(fp);
 	}
 	buf[len] = '\0';
-	return true;
+	if(len)
+		return true;
+	return false;
 }
 
 /*
