@@ -2,7 +2,6 @@
 #define VOID_SOUND_INTERFACE
 
 #include "Sys_hdr.h"
-//#include "3dmath.h"
 #include "Com_vector.h"
 #include "Game_defs.h"
 #include "Clgame_defs.h"
@@ -33,9 +32,10 @@ public:
 	enum
 	{
 		DEFAULT_VOLUME = 10,
+		DEFAULT_ATTENUATION = 5,
 		MIN_VOLUME = 0,
 		MAX_VOLUME = 10,
-		MAX_STATICSOURCES = 64,
+		MAX_SOUNDSOURCES = 128,
 		MAX_WAVEFILES = 512,
 		MAX_CHANNELS = 16
 	};
@@ -44,6 +44,7 @@ public:
 	~CSoundManager();
 
 	bool Init();
+	void RunFrame();
 
 	//finds id, or creates new one, if index = -1, otherwise loads sound at give index
 	hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1);
@@ -51,14 +52,12 @@ public:
 	void UnregisterCache(CacheType cache);
 	void UnregisterAll();
 
-	//Run a Sound Frame
-	void RunFrame();
-
-	//Add a static soundSource which will be automatically played
-	//when the client gets in range, and stopped when out of range.
+	//Add a static soundSource which will be automatically played when the listener
+	//gets in range, and stopped when out of range.. Update func 
+	//just tells the system to recalculate vars cause the ent has changed.
+	//NOTE: there can only be ONE static Source per entity
 	void AddStaticSource(const ClEntity * ent);
 	void RemoveStaticSource(const ClEntity * ent);
-	//just tell system to recalculate vars cause the ent has changed.
 	void UpdateStaticSource(const ClEntity * ent);
 
 	//update pos CCamera
@@ -70,13 +69,14 @@ public:
 	//Play a sound originating from an entity
 	//If volume and attenuation are 0 then it uses the ones set to the entitiy
 	void PlaySnd3d(const ClEntity * ent,
-				 int index, CacheType cache,
-				 int volume = 10, int attenuation =0,
-				 int chantype = CHAN_AUTO);
+				   int index, CacheType cache,
+				   int volume = DEFAULT_VOLUME, 
+				   int attenuation =DEFAULT_ATTENUATION,
+				   int chantype = CHAN_AUTO);
 	
 	//Play a 2d-UI sound at given volume
 	void PlaySnd2d(int index, CacheType cache,
-				 int volume = 10,
+				 int volume = DEFAULT_VOLUME,
 				 int chantype = CHAN_AUTO);
 
 	//Console handler
@@ -94,25 +94,35 @@ private:
 	//Channels which are actually played
 	VoidSound::CSoundChannel *	m_Channels;			
 
-	//Keep track of static sources
-
-
+	/*
+	======================================
+	A Sound Source
+	======================================
+	*/
 	struct SndSource
 	{
 		SndSource() { Reset(); }
-		void Reset() { channel = -1; ent = 0; }  //muteDist =0.0f; 
 		~SndSource() { Reset(); }
-		
-		int   channel;
-		const ClEntity * ent;
-	};
-	SndSource m_sndSources[MAX_STATICSOURCES];
 
-	void PlayStaticSound(SndSource &source);
+		void Reset() { bStatic = false; 
+					   channel = 0; 
+					   ent = 0; 
+					   flags = 0;
+					   muteDist =0.0f; }
+		int   flags;
+		float muteDist;
+		const ClEntity * ent;
+		bool  bStatic;
+		VoidSound::CSoundChannel * channel;
+	};
+	SndSource m_sndSources[MAX_SOUNDSOURCES];
+
+	void PlaySoundSource(SndSource &source);
 	
 	bool m_bHQSupport;
 	bool m_bStereoSupport;
-	
+	vector_t m_listenerPos;		//HACK ?
+
 	CVar m_cVolume;			//Master Volume 
 	CVar m_cHighQuality;	//16bit buffer if on.
 	CVar m_cRollOffFactor;

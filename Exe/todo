@@ -1,6 +1,5 @@
 EXE
 ==============================================================
--Get 3d sound system working
 -Seperate client / client game code
 -Seperate server/ server game code
 -Move client movement to server
@@ -21,6 +20,10 @@ server/svgame interfaces
 Common stuff
 Resource IDs, limits
 Defs, vectors, com_bufs
+
+
+-Add free/in use SoundSource lists in 3dsound manager
+-Add proper channel allocation with channel properties ?
 
 
 

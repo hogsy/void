@@ -3,11 +3,6 @@
 using namespace VoidSound;
 
 /*
-======================================================================================
-Sound channel
-======================================================================================
-*/
-/*
 ==========================================
 Constructor/Destructor
 ==========================================
@@ -17,9 +12,6 @@ CSoundChannel::CSoundChannel()
 {
 	m_pDSBuffer= 0;
 	m_pDS3dBuffer = 0;
-	
-	m_pEntity  = 0;
-	m_muteDist = 0.0f;
 	m_bInUse  = false;
 }
 
@@ -36,7 +28,7 @@ void CSoundChannel::Destroy()
 {
 	if(m_pDSBuffer)
 	{
-//Stop ?
+		Stop();
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
 	}
@@ -45,8 +37,6 @@ void CSoundChannel::Destroy()
 		m_pDS3dBuffer->Release();
 		m_pDS3dBuffer = 0;
 	}
-	m_pEntity =0;
-	m_muteDist = 0.0f;
 	m_bInUse = false;
 }
 
@@ -105,44 +95,23 @@ ComPrintf("Unable to get 3d interface\n");
 }
 
 /*
-attenuation, 0 to 10
-min =  attention * 50
-max =  min * volume;
-*/
-
-/*
 ==========================================
 Create a sound sourced from an entitiy
 ==========================================
 */
 bool CSoundChannel::Create3d(const CSoundBuffer &buffer,
-						   const ClEntity * ent,
-						   int volume,
-						   int attenuation)
+									 const vector_t &origin,
+									 float muteDist)
+
 {
 
 	if(!CreateBuffer(buffer))
 		return false;
 
-	//HRESULT hr;
-
-	//Calculate mute distance
-	m_muteDist = GetMuteDist(volume,attenuation);
-
-	//Get a 3d Interface if its a 3d sound
-	m_pEntity = ent;
-
-	m_pDS3dBuffer->SetMinDistance(m_muteDist * 0.25, DS3D_DEFERRED);
-//	m_pDS3dBuffer->SetMaxDistance(m_muteDist * 0.75, DS3D_DEFERRED);
-
-	m_pDS3dBuffer->SetPosition(m_pEntity->origin.x, 
-							   m_pEntity->origin.y, 
-							   m_pEntity->origin.z, 
-							   DS3D_DEFERRED); //DS3D_DEFERRED);
+	m_pDS3dBuffer->SetMinDistance(muteDist * 0.25, DS3D_IMMEDIATE);
+	m_pDS3dBuffer->SetPosition(origin.x,origin.y, origin.z, 
+							   DS3D_IMMEDIATE);
 //	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_IMMEDIATE);
-
-	
-	
 
 	m_bInUse = true;
 	return true;
@@ -203,7 +172,7 @@ bool CSoundChannel::Play(bool looping)
 		}
 		return false;
 	}
-	ComPrintf("Chan : Volume : %d\n", GetVolume());
+//	ComPrintf("Chan : Volume : %d\n", GetVolume());
 	return true;
 }
 

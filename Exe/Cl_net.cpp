@@ -114,9 +114,9 @@ void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 			int slotNum = buffer.ReadInt();
 
 			char * game = buffer.ReadString();
-//ComPrintf("CL: Game: %s\n", game);
+ComPrintf("CL: Game: %s\n", game);
 			char * map = buffer.ReadString();
-//ComPrintf("CL: Map: %s\n", map);
+ComPrintf("CL: Map: %s\n", map);
 			if(!LoadWorld(map))
 				m_pNetCl->Disconnect(false);
 			break;

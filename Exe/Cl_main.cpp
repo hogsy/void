@@ -1,6 +1,5 @@
 #include "Cl_main.h"
 #include "I_renderer.h"
-//#include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
 #include "Cl_cmds.h"
@@ -33,11 +32,6 @@ CClient::CClient(I_Renderer * prenderer,
 					m_pSound(psound),
 					m_pMusic(pmusic)
 {
-/*
-	m_pHud   = m_pRender->GetHud();
-	m_pModel = m_pRender->GetModel();
-	m_pImage = m_pRender->GetImage();
-*/
 	m_pClRen = m_pRender->GetClient();
 
 	m_pCmdHandler = new CClientCmdHandler(*this);
@@ -218,6 +212,7 @@ void CClient::UnloadWorld()
 		return;
 	}
 
+ComPrintf("CL :UNLOADED MODELS\n");
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 
 	delete m_pCamera;

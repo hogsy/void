@@ -289,6 +289,11 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	CBuffer buffer;
 	int numBufs, i;
 
+	//=================================
+	//Write game info
+	signOnBuf.gameInfo.WriteString(m_svState.gameName);
+	signOnBuf.gameInfo.WriteString(m_svState.worldname);
+
 	//==================================
 	//Write	imagelist
 	numBufs = 0;
@@ -462,12 +467,24 @@ void CServer::LoadWorld(const char * mapname)
 	LoadEntities();
 
 
-	NetSignOnBufs & signOnbuf = m_net.GetSignOnBufs();
-	
-	WriteSignOnBuffer(signOnbuf);
+	NetSignOnBufs & signOnBuf = m_net.GetSignOnBufs();
 
-	signOnbuf.gameInfo.WriteString(m_svState.gameName);
-	signOnbuf.gameInfo.WriteString(m_svState.worldname);
+	//first reset all the signON buffers
+	signOnBuf.gameInfo.Reset();
+	signOnBuf.numImageBufs = 0;
+	for(int i=0; i< NetSignOnBufs::MAX_IMAGE_BUFS; i++)
+		signOnBuf.imageList[i].Reset();
+	signOnBuf.numSoundBufs = 0;
+	for(i=0; i< NetSignOnBufs::MAX_SOUND_BUFS; i++)
+		signOnBuf.soundList[i].Reset();
+	signOnBuf.numModelBufs = 0;
+	for(i=0; i< NetSignOnBufs::MAX_MODEL_BUFS; i++)
+		signOnBuf.modelList[i].Reset();
+	signOnBuf.numEntityBufs = 0;
+	for(i=0; i< NetSignOnBufs::MAX_ENTITY_BUFS; i++)
+		signOnBuf.entityList[i].Reset();
+
+	WriteSignOnBuffer(signOnBuf);
 
 	//update state
 	m_svState.levelId ++;

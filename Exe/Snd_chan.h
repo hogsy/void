@@ -2,9 +2,8 @@
 #define VOID_SOUND_CHANNEL
 
 #include "Snd_buf.h"
-//#include "3dmath.h"
 #include "Com_vector.h"
-#include "Clgame_defs.h"
+//#include "Clgame_defs.h"
 
 namespace VoidSound {
 
@@ -21,13 +20,11 @@ public:
 
 	//Create a duplicate buffer. then get a 3dinterface from it
 	bool Create2d(const CSoundBuffer &buffer,
-				int volume);
+				  int volume);
 
 	bool Create3d(const CSoundBuffer &buffer,
-				  const ClEntity * ent, 
-				  int volume,
-				  int attenuation);	
-	
+				  const vector_t &origin, 
+				  float muteDist);	
 	void Destroy();
 	
 	bool Play(bool looping = false);
@@ -36,9 +33,6 @@ public:
 
 	float GetVolume();
 	void  SetVolume(float vol);
-
-	float m_muteDist;
-	const ClEntity * m_pEntity;
 
 private:
 
