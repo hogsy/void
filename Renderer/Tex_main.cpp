@@ -116,7 +116,6 @@ bool CTextureManager::Shutdown()
 	return true;
 }
 
-
 /*
 ==========================================
 LoadWorld Textures

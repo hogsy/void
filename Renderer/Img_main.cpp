@@ -1,10 +1,4 @@
-
 #include "Img_main.h"
-
-//CImageManager	*g_pImage=0;
-
-
-
 
 /*
 =======================================
@@ -14,13 +8,11 @@ Constructor
 CImageManager::CImageManager()
 {
 	ready = true;
-
 	// reset
-	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<IMAGE_CACHE_SIZE; e++)
-		{
-			caches[c][e] = NULL;
+		for (int e=0; e<CACHE_NUMIMAGES; e++)
+		{	caches[c][e] = NULL;
 		}
 	}
 }
@@ -32,9 +24,9 @@ Destructor
 */
 CImageManager::~CImageManager()
 {
-	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<IMAGE_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMIMAGES; e++)
 		{
 			if (caches[c][e])
 			{
@@ -56,7 +48,7 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 	// find the first available spot in this cache
 	if (index == -1)
 	{
-		for (int i=0; i<IMAGE_CACHE_SIZE; i++)
+		for (int i=0; i<CACHE_NUMIMAGES; i++)
 		{
 			if (!caches[cache][i])
 			{
@@ -65,9 +57,9 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 			}
 		}
 
-		if (i==IMAGE_CACHE_SIZE)
+		if (i==CACHE_NUMIMAGES)
 		{
-			ComPrintf("no available cache entries for image %s\n", image);
+			ComPrintf("CImageManager::LoadImage: no available cache entries for  %s\n", image);
 			return -1;
 		}
 	}
@@ -80,9 +72,9 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 	}
 
 	// search all caches to see if it is already loaded somewhere
-	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int i=0; i<IMAGE_CACHE_SIZE; i++)
+		for (int i=0; i<CACHE_NUMIMAGES; i++)
 		{
 			if (caches[c][i] && caches[c][i]->IsFile(image))
 			{
@@ -92,12 +84,10 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 			}
 		}
 	}
-
 	// else create a new one
 	caches[cache][index] =  new CImageCacheEntry(image);
 	return index;
 }
-
 
 /*
 =======================================
@@ -107,8 +97,7 @@ UnloadImage
 void CImageManager::UnloadImage(CacheType cache, hImg index)
 {
 	if (!caches[cache][index])
-		ComPrintf("CImageManager::UnloadImage - image not loaded\n");
-
+		ComPrintf("CImageManager::UnloadImage: Image not loaded\n");
 	else
 	{
 		if (caches[cache][index]->Release() == 0)
@@ -117,8 +106,6 @@ void CImageManager::UnloadImage(CacheType cache, hImg index)
 	}
 }
 
-
-
 /*
 =======================================
 UnloadImageCache 
@@ -126,15 +113,12 @@ UnloadImageCache
 */
 void CImageManager::UnloadImageCache(CacheType cache)
 {
-	for (int i=0; i<MODEL_CACHE_SIZE; i++)
+	for (int i=0; i<CACHE_NUMIMAGES; i++)
 	{
 		if (caches[cache][i])
 			UnloadImage(cache, i);
 	}
-
 }
-
-
 
 /*
 =======================================
@@ -143,10 +127,9 @@ UnloadImageAll
 */
 void CImageManager::UnloadImageAll(void)
 {
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 		UnloadImageCache((CacheType)c);
 }
-
 
 /*
 =======================================
@@ -155,15 +138,14 @@ LoadTextures
 */
 void CImageManager::LoadTextures(void)
 {
-	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<IMAGE_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMIMAGES; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->LoadTexture();
 		}
 	}
-
 	ready = true;
 }
 
@@ -175,18 +157,16 @@ UnLoadTextures
 */
 void CImageManager::UnLoadTextures(void)
 {
-	for (int c=0; c<IMAGE_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<IMAGE_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMIMAGES; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->UnLoadTexture();
 		}
 	}
-
 	ready = false;
 }
-
 
 
 

@@ -443,14 +443,14 @@ Used for mip maps
 */
 void CImageReader::ImageReduce(int m)
 {
+	if (m==0)
+		return;
+
 	DWORD color;
 	int r=0, c=0, s=0;
 	
 	int	sfactor = 2;
 	int	tfactor = 2;
-
-	if (m==0)
-		return;
 
 	w /=2;
 	h /=2;
@@ -487,9 +487,29 @@ void CImageReader::ImageReduce(int m)
 	}
 }
 
+/*
+==========================================
+allocate / make sure we already have allocated
+all the memory we will need for all mipmaps
+==========================================
+*/
+void CImageReader::ConfirmMipData(void)
+{
+	GetMipCount();
 
-//======================================================================================
-//======================================================================================
+	for (int m=miplevels-1; m>=0; m--)
+	{
+		if (mipmapdata[m])
+			continue;
+
+		mipmapdata[m] = (byte*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
+		if (!mipmapdata[m])
+		{
+			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
+			return;
+		}
+	}
+}
 
 /*
 ==========================================
@@ -517,34 +537,6 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 	}
 	format = IMG_RGB;
 	return true;
-}
-
-//======================================================================================
-//======================================================================================
-
-
-/*
-==========================================
-allocate / make sure we already have allocated
-all the memory we will need for all mipmaps
-==========================================
-*/
-void CImageReader::ConfirmMipData(void)
-{
-	GetMipCount();
-
-	for (int m=miplevels-1; m>=0; m--)
-	{
-		if (mipmapdata[m])
-			return;
-
-		mipmapdata[m] = (unsigned char*)g_pHunkManager->HunkAlloc(mipdatasizes[m]);
-		if (!mipmapdata[m])
-		{
-			FError("CImageReader::ConfirmMipData: Failed to alloc %d\n", mipdatasizes);
-			return;
-		}
-	}
 }
 
 

@@ -66,7 +66,7 @@ private:
 	bool ready;
 
 
-	CModelCacheEntry *caches[MODEL_CACHE_NUM][MODEL_CACHE_SIZE];
+	CModelCacheEntry *caches[CACHE_NUMCACHES][CACHE_NUMMODELS];
 };
 
 

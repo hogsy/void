@@ -1,9 +1,6 @@
 #include "Standard.h"
 #include "Hud_main.h"
-//#include "Tex_main.h"
 #include "Tex_hdr.h"
-
-//CRHud	  * g_prHud=0;
 
 /*
 ====================================================================================
@@ -199,7 +196,7 @@ Parse and add a message to the hud
 ==========================================
 */
 
-void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg)
+void CRHud::HudPrintf(int x, int y, float time, char *msg)
 {
 	for(int i=0;i<MAX_MESSAGES;i++)
 		if(m_hmessages[i].inuse == false)
@@ -218,7 +215,7 @@ void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg)
 Just add a message to the hud
 ==========================================
 */
-void __stdcall CRHud::HudPrint(char *msg, int x, int y, float time, int color)
+void CRHud::HudPrint(char *msg, int x, int y, float time, int color)
 {
 	for(int i=0;i<MAX_MESSAGES;i++)
 		if(m_hmessages[i].inuse == false)
@@ -238,7 +235,7 @@ Print a message, used for Console type
 that appear at the top of the screen
 ==========================================
 */
-void __stdcall CRHud::PrintMessage(char *msg, int color, float time)
+void CRHud::PrintMessage(char *msg, int color, float time)
 {
 }
 

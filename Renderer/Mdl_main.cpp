@@ -1,9 +1,6 @@
-
 #include "Mdl_main.h"
 #include "Mdl_md2.h"
 #include "Mdl_sp2.h"
-
-
 
 /*
 =======================================
@@ -18,11 +15,10 @@ CModelManager::CModelManager()
 	ready = true;
 
 	// reset
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<MODEL_CACHE_SIZE; e++)
-		{
-			caches[c][e] = NULL;
+		for (int e=0; e<CACHE_NUMMODELS; e++)
+		{	caches[c][e] = NULL;
 		}
 	}
 }
@@ -34,9 +30,9 @@ Destructor
 */
 CModelManager::~CModelManager()
 {
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMMODELS; e++)
 		{
 			if (caches[c][e])
 			{
@@ -62,7 +58,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 	// find the first available spot in this mdlCache
 	if (mdlIndex == -1)
 	{
-		for (int i=0; i<MODEL_CACHE_SIZE; i++)
+		for (int i=0; i<CACHE_NUMMODELS; i++)
 		{
 			if (!caches[mdlCache][i])
 			{
@@ -71,7 +67,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 			}
 		}
 
-		if (i==MODEL_CACHE_SIZE)
+		if (i==CACHE_NUMMODELS)
 		{
 			ComPrintf("no available mdlCache entries for model %s\n", model);
 			return -1;
@@ -87,9 +83,9 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 
 
 	// search all caches to see if it is already loaded somewhere
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int i=0; i<MODEL_CACHE_SIZE; i++)
+		for (int i=0; i<CACHE_NUMMODELS; i++)
 		{
 			if (caches[c][i] && caches[c][i]->IsFile(model))
 			{
@@ -153,15 +149,13 @@ UnloadModelCache
 */
 void CModelManager::UnloadModelCache(CacheType mdlCache)
 {
-	for (int i=0; i<MODEL_CACHE_SIZE; i++)
+	for (int i=0; i<CACHE_NUMMODELS; i++)
 	{
 		if (caches[mdlCache][i])
 			UnloadModel(mdlCache, i);
 	}
 
 }
-
-
 
 /*
 =======================================
@@ -170,7 +164,7 @@ UnloadModelAll
 */
 void CModelManager::UnloadModelAll(void)
 {
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 		UnloadModelCache((CacheType)c);
 }
 
@@ -238,9 +232,9 @@ LoadSkins
 */
 void CModelManager::LoadSkins(void)
 {
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMMODELS; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->LoadSkins();
@@ -258,9 +252,9 @@ UnLoadSkins
 */
 void CModelManager::UnLoadSkins(void)
 {
-	for (int c=0; c<MODEL_CACHE_NUM; c++)
+	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<MODEL_CACHE_SIZE; e++)
+		for (int e=0; e<CACHE_NUMMODELS; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->UnLoadSkins();
@@ -269,8 +263,6 @@ void CModelManager::UnLoadSkins(void)
 
 	ready = false;
 }
-
-
 
 
 
@@ -318,7 +310,3 @@ void CModelManager::drawmodelRelease(drawmodel_t *d)
 	d->next = free_drawmodels;
 	free_drawmodels = d;
 }
-
-
-
-

@@ -4,11 +4,15 @@
 
 /*
 ==========================================
-Hack
 Extension of the Renderer Console to manage
 initialization/registration of global commands/objects
 ==========================================
 */
+enum
+{
+	CMD_TGASHOT = 0,
+	CMD_PCXSHOT = 1
+};
 
 CVar *	g_pFullbright=0;
 CVar *	g_pFov=0;
@@ -16,7 +20,6 @@ CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
 CVar *	g_p32BitTextures=0;
 CVar *	g_pBeamTolerance=0;
-
 
 //======================================================================================
 //Command Handling routines
@@ -90,11 +93,43 @@ void ScreenShot(const char *name, EImageFileFormat type)
 	g_pHunkManager->HunkFree(data);
 }
 
-//======================================================================================
-//CVar Handling funcs
-//======================================================================================
+/*
+==========================================
+Handle Global Commands
+==========================================
+*/
+void CRConsole::HandleCommand(HCMD cmdId, const CParms &parms)
+{
+	switch(cmdId)
+	{
+	case CMD_TGASHOT:
+		{
+			char fileName[80];
+			parms.StringTok(1,fileName,80);
+			if(strlen(fileName))
+				ScreenShot(fileName,FORMAT_TGA);
+			else
+				ScreenShot(0,FORMAT_TGA);
+			break;
+		}
+	case CMD_PCXSHOT:
+		{
+			char fileName[80];
+			parms.StringTok(1,fileName,80);
+			if(strlen(fileName))
+				ScreenShot(fileName,FORMAT_PCX);
+			else
+				ScreenShot(0,FORMAT_PCX);
+			break;
+		}
+	}
+}
 
-//RETURN TRUE ONLY IF YOU WANT THE CVAR TO BE SET TO A THE NEW VALUE
+/*
+======================================================================================
+CVar Handling funcs
+======================================================================================
+*/
 
 /*
 =======================================
@@ -104,11 +139,8 @@ switch fullbright (light) rendering
 bool CVar_FullBright(const CVar * var, int val)
 {
 	//There was no second parm 
-	if(val == CParms::INVALID_VALUE) // or -1
-	{
-		ComPrintf("r_fullbright = %d\n", var->ival);
+	if(val == CParms::INVALID_VALUE)
 		return false;
-	}
 
 	if (val)
 		g_rInfo.rflags |= RFLAG_FULLBRIGHT;
@@ -128,12 +160,10 @@ bool CVar_MultiTexture(const CVar * var, int val)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ComPrintf("Your video card does not support ARB multitexturing.\n");
-		ComPrintf("multitexturing is %d\n", var->ival);
 		return false;
 	}
 	return true;
 }
-
 
 /*
 =======================================
@@ -143,10 +173,7 @@ switch fullbright (light) rendering
 bool CVar_Fov(const CVar * var, int val)
 {
 	if(val == CParms::INVALID_VALUE)
-	{
-		ComPrintf("r_fov = %d\n", var->ival);
 		return false;
-	}
 
 	if (val>=10 && val<= 170)
 	{
@@ -164,10 +191,7 @@ toggle vid synch
 bool CVar_VidSynch(const CVar * var, int val)
 {
 	if(val == CParms::INVALID_VALUE)
-	{
-		ComPrintf("r_vidsynch = %d\n", var->ival);
 		return false;
-	}
 
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
@@ -185,7 +209,6 @@ bool CVar_VidSynch(const CVar * var, int val)
 /*
 =======================================
 16 / 32 bit textures
-FIXME, why is this even needed ?
 =======================================
 */
 bool CVar_32BitTextures(const CVar * var, int val)
@@ -231,35 +254,6 @@ bool CVar_BeamTolerance(const CVar * var, const CParms &parms)
 
 //======================================================================================
 //======================================================================================
-
-#define CMD_TGASHOT	0
-#define CMD_PCXSHOT	1
-
-/*
-==========================================
-Handle Global Commands
-==========================================
-*/
-void CRConsole::HandleCommand(HCMD cmdId, const CParms &parms)
-{
-	switch(cmdId)
-	{
-	case CMD_TGASHOT:
-		{
-			char fileName[80];
-			parms.StringTok(1,fileName,80);
-			ScreenShot(fileName,FORMAT_TGA);
-			break;
-		}
-	case CMD_PCXSHOT:
-		{
-			char fileName[80];
-			parms.StringTok(1,fileName,80);
-			ScreenShot(fileName,FORMAT_PCX);
-			break;
-		}
-	}
-}
 
 /*
 ==========================================

@@ -1,4 +1,3 @@
-
 #ifndef IMG_MAIN_H
 #define IMG_MAIN_H
 
@@ -33,11 +32,7 @@ public:
 private:
 
 	bool ready;
-	CImageCacheEntry *caches[IMAGE_CACHE_NUM][IMAGE_CACHE_SIZE];
+	CImageCacheEntry *caches[CACHE_NUMCACHES][CACHE_NUMIMAGES];
 };
 
-
-
 #endif
-
-

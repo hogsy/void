@@ -1,10 +1,7 @@
-
 #ifndef IMG_ENTRY_H
 #define IMG_ENTRY_H
 
 #include <string.h>
-//#include "3dmath.h"
-
 
 class CImageCacheEntry
 {
@@ -29,6 +26,4 @@ private:
 	char *imagefile;	// text texture name
 };
 
-
 #endif
-

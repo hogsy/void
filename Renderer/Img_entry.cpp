@@ -2,7 +2,6 @@
 #include "Img_entry.h"
 #include "Tex_image.h"
 
-
 /*
 =======================================
 Constructor 
@@ -17,7 +16,6 @@ CImageCacheEntry::CImageCacheEntry(const char *file)
 	LoadTexture();
 }
 
-
 /*
 =======================================
 Destructor 
@@ -31,7 +29,6 @@ CImageCacheEntry::~CImageCacheEntry()
 	if (tex_bin != -1)
 		g_pRast->TextureBinDestroy(tex_bin);
 }
-
 
 /*
 =======================================
@@ -69,8 +66,6 @@ void CImageCacheEntry::LoadTexture(void)
 	}
 
 	g_pRast->TextureLoad(tex_bin, 0, &tdata);
-
-
 	delete texReader;
 }
 
@@ -85,4 +80,3 @@ void CImageCacheEntry::UnLoadTexture(void)
 		g_pRast->TextureBinDestroy(tex_bin);
 	tex_bin = -1;
 }
-
