@@ -19,7 +19,7 @@ enum
 	CMD_KICK = 5
 };
 
-const float GAME_FRAMETIME = 1/20;
+const float GAME_FRAMETIME = 0.05f;	// 1/20
 
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
