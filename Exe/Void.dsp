@@ -148,6 +148,10 @@ SOURCE=.\Source\Sys_time.cpp
 
 SOURCE=.\Source\Sys_time.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Source\Sys_win.cpp
+# End Source File
 # End Group
 # Begin Group "Shared"
 
