@@ -126,14 +126,18 @@ into given buffer
 */
 uint CFileStream::Read(void *buf,uint size, uint count)
 {
-	if(!size || !count)
-		return 0;
-
 	if(!buf)
 	{
-		ComPrintf("CFileStream::Read: Invalid parameters :%s\n",m_filename);
+		ComPrintf("CFileReader::Read: Invalid parameters :%s\n",m_filename);
 		return 0;
 	}
+
+	if(!size || !count)
+	{
+		ComPrintf("CFileReader::Read: Can't read 0 bytes. Size(%d), Count(%d) :%s\n", size,count,m_filename);
+		return 0;
+	}
+
 	if(m_fp)
 		return ::fread(buf,size,count,m_fp);
 	if(m_archive)

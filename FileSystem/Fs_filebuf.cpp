@@ -93,9 +93,15 @@ into given buffer
 */
 uint CFileBuffer::Read(void *buf,uint size, uint count)
 {
-	if(!buf || !size || !count)
+	if(!buf)
 	{
 		ComPrintf("CFileReader::Read: Invalid parameters :%s\n",m_filename);
+		return 0;
+	}
+
+	if(!size || !count)
+	{
+		ComPrintf("CFileReader::Read: Can't read 0 bytes. Size(%d), Count(%d) :%s\n", size,count,m_filename);
 		return 0;
 	}
 	

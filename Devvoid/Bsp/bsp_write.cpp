@@ -99,20 +99,14 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 	// find the right & up vectors
 	//
 
-	// total hack to avoid using the vector class
-	typedef struct
+	vector_t	baseaxis[18] =
 	{
-		float x, y, z;
-	} vec_t;
-
-	vec_t	baseaxis[18] =
-	{
-	{ 0, 0, 1}, {1,0,0}, {0,-1, 0},			// floor
-	{ 0, 0,-1}, {1,0,0}, {0,-1, 0},		// ceiling
-	{ 1, 0, 0}, {0,1,0}, {0, 0,-1},			// west wall
-	{-1, 0, 0}, {0,1,0}, {0, 0,-1},		// east wall
-	{ 0, 1, 0}, {1,0,0}, {0, 0,-1},			// south wall
-	{ 0,-1, 0}, {1,0,0}, {0, 0,-1}			// north wall
+	vector_t( 0, 0, 1), vector_t(1,0,0), vector_t(0,-1, 0),		// floor
+	vector_t( 0, 0,-1), vector_t(1,0,0), vector_t(0,-1, 0),		// ceiling
+	vector_t( 1, 0, 0), vector_t(0,1,0), vector_t(0, 0,-1),		// west wall
+	vector_t(-1, 0, 0), vector_t(0,1,0), vector_t(0, 0,-1),		// east wall
+	vector_t( 0, 1, 0), vector_t(1,0,0), vector_t(0, 0,-1),		// south wall
+	vector_t( 0,-1, 0), vector_t(1,0,0), vector_t(0, 0,-1)		// north wall
 	};
 
 

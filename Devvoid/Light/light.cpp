@@ -28,17 +28,11 @@ byte g_ambient[3] = {0,0,0};
 light_fill_defs
 ========
 */
-// nasty ass hack to get around vector class
-typedef struct
+vector_t baseaxis[6] =
 {
-	float x, y, z;
-} vec_t;
-
-vec_t baseaxis[6] =
-{
-	{0, 1, 0},  {0, 0, 1},
-	{1, 0, 0},  {0, 0, 1},
-	{1, 0, 0},  {0, 1, 0}
+	vector_t(0, 1, 0),  vector_t(0, 0, 1),
+	vector_t(1, 0, 0),  vector_t(0, 0, 1),
+	vector_t(1, 0, 0),  vector_t(0, 1, 0)
 };
 
 int	comps[6] = 
@@ -457,8 +451,6 @@ light_run - light the given file
 */
 bool light_run(CWorld *w)
 {
-//	world = CWorld::CreateWorld(file);
-
 	if (!w)
 		return false;
 
