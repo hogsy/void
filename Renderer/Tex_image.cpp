@@ -621,6 +621,18 @@ bool CImageReader::ReadLightMap(unsigned char **stream, TextureData &imgData)
 	imgData.data = &m_mipmapdata[0];
 	imgData.numMipMaps = m_miplevels;
 
+
+	//Create mipmaps if needed
+	if(imgData.bMipMaps)
+	{
+		int mipcount = imgData.numMipMaps - 1;
+		while (mipcount > 0)
+		{
+			ImageReduce(mipcount);
+			mipcount--;
+		}
+	}
+
 	return true;
 }
 

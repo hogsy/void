@@ -209,11 +209,11 @@ Maintain frame animation state
 struct AnimState
 {
 	AnimState() 
-		: frameBegin(0), frameEnd(0), totalFrames(0),  currentFrame (0)	{}
+		: frameBegin(0), frameEnd(0), totalFrames(0),  currentFrame (0), frac(0) {}
 
 	AnimState(const AnimState &anim)
 		: frameBegin(anim.frameBegin), frameEnd(anim.frameEnd), totalFrames(anim.totalFrames),
-		  currentFrame (0)	{}
+		  currentFrame (0), frac (0)	{}
 	
 	AnimState & operator = (const AnimState &anim)
 	{
@@ -221,6 +221,7 @@ struct AnimState
 		frameEnd = anim.frameEnd;
 		totalFrames = anim.totalFrames;
 		currentFrame = 0;
+		frac = 0;
 		return *this;
 	}
 
@@ -230,6 +231,7 @@ struct AnimState
 		frameEnd = end;
 		totalFrames = totFrames;
 		currentFrame=0;
+		frac = 0;
 	}
 
 	int frameBegin;
@@ -237,6 +239,8 @@ struct AnimState
 	
 	int	currentFrame;
 	int totalFrames;
+
+	float frac;	// should never be touched outside of here or renderer
 };
 
 #endif

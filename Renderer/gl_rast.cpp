@@ -1,5 +1,6 @@
 #include "Standard.h"
 #include "gl_rast.h"
+#include <gl/glu.h>
 
 extern 	CVar g_varGLExtensions;
 

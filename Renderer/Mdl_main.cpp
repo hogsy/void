@@ -193,6 +193,7 @@ void CModelManager::Purge(void)
 		g_pRast->MatrixRotateY(-walk->state->angles.PITCH  * 180/PI);
 		g_pRast->MatrixRotateX(walk->state->angles.ROLL * 180/PI);
 
+//		walk->state->animInfo.
 		int nextframe = walk->state->animInfo.currentFrame + 1;
 		if (nextframe > walk->state->animInfo.frameEnd)
 			nextframe = walk->state->animInfo.frameBegin;
