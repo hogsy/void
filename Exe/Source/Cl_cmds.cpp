@@ -59,7 +59,6 @@ void CClient::HandleKeyEvent	(const KeyEvent_t &kevent)
 	{
 		//if the command is supposed to be executed everyframe
 		//until its is released
-
 		if(m_clientkeys[(kevent.id)].szCommand[0] == '+')
 		{
 			//if its a keydown event
@@ -80,29 +79,6 @@ void CClient::HandleKeyEvent	(const KeyEvent_t &kevent)
 			//Send over to the console for execution
 			g_pConsole->ExecString(m_clientkeys[(kevent.id)].szCommand);
 		}
-	
-/*		if(m_clientkeys[(kevent.id)].bBuffered)
-		{
-			//if its a keydown event
-			if(kevent.state == BUTTONDOWN)
-			{
-				//add to command buffer
-				AddToCommandBuffer(&m_clientkeys[(kevent.id)]);
-			}
-			else if(kevent.state == BUTTONUP)
-			{
-				//otherwise remove from buffer
-				RemoveFromCommandBuffer(&m_clientkeys[(kevent.id)]);
-			}
-		}
-		//if its regular function and if its a keydown event,
-		else 
-		if(kevent.state == BUTTONDOWN)
-		{
-			//Send over to the console for execution
-			g_pConsole->ExecString(m_clientkeys[(kevent.id)].szCommand);
-		}
-*/
 	}
 }
 
@@ -219,24 +195,7 @@ void CClient::BindFuncToKey(int argc, char** argv)
 		return;
 	}
 	m_clientkeys[keynum].pCmd = pCmd;
-
-/*	if(argc == 2)
-	{
-		if(m_clientkeys[keynum].szCommand && m_clientkeys[keynum].pFunc)
-			ComPrintf("\"%s\" = \"%s\"\n",argv[1],m_clientkeys[keynum].szCommand);
-		else
-			ComPrintf("\"%s\" = \"\"\n",argv[1]);
-		return;
-	}
-
-	//Get the requested function, and bind it to the key
-	m_clientkeys[keynum].pFunc = g_pConsole->GetFuncByName(argv[2]);
-	if(!m_clientkeys[keynum].pFunc)
-	{
-		ComPrintf("%s is not a valid command\n",argv[2]);
-		return;
-	}
-*/	
+	
 	//If there are more arguments then just the functions name
 	//then they will be used as function paramters
 	
@@ -274,12 +233,6 @@ void CClient::BindFuncToKey(int argc, char** argv)
 		p++;
 	}
 
-	//Set buffered flag if the command starts with a +/-
-/*	
-	if((m_clientkeys[keynum].szCommand[0] == '+') || 
-	   (m_clientkeys[keynum].szCommand[0] == '-'))
-		m_clientkeys[keynum].bBuffered = true;
-*/
 	ComPrintf("\"%s\"(%d) = \"%s\"\n",argv[1],keynum, m_clientkeys[keynum].szCommand);
 }	
 
@@ -295,7 +248,6 @@ void CClient::BindList(int argc, char** argv)
 	
 	for(unsigned int i=0;i<256;i++)
 	{
-//		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		if(m_clientkeys[i].szCommand && m_clientkeys[i].pCmd)
 		{
 			char keyname[16];
@@ -329,13 +281,11 @@ void CClient::Unbindall(int argc, char** argv)
 {
 	for(int i=0;i<256;i++)
 	{
-//		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		if(m_clientkeys[i].szCommand && m_clientkeys[i].pCmd)
 		{
 			delete [] m_clientkeys[i].szCommand;
 			m_clientkeys[i].szCommand=0;
 			m_clientkeys[i].pCmd = 0;
-//			m_clientkeys[i].pFunc = 0;
 		}
 	}
 	ComPrintf("CClient::Unbindall OK\n");
@@ -381,7 +331,6 @@ void CClient::Unbind(int argc, char** argv)
 		}
 	}
 		
-//	if(m_clientkeys[keynum].pFunc && m_clientkeys[keynum].szCommand)
 	if(m_clientkeys[keynum].szCommand && m_clientkeys[keynum].pCmd)
 	{
 		m_clientkeys[keynum].pCmd = 0;
@@ -447,16 +396,16 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		MoveRight(numArgs,szArgs);
 		break;
 	case CMD_ROTATE_LEFT:
-		KRotateLeft(numArgs,szArgs);
+		RotateLeft();
 		break;
 	case CMD_ROTATE_RIGHT:
-		KRotateRight(numArgs,szArgs);
+		RotateRight();
 		break;
 	case CMD_ROTATE_UP:
-		KRotateUp(numArgs,szArgs);
+		RotateUp();
 		break;
 	case CMD_ROTATE_DOWN:
-		KRotateDown(numArgs,szArgs);
+		RotateDown();
 		break;
 	case CMD_BIND:
 		BindFuncToKey(numArgs,szArgs);
@@ -488,7 +437,6 @@ void CClient::WriteBindTable(FILE *fp)
 	for(unsigned int i=0;i<256;i++)
 	{
 		//there is a binding for this key
-//		if(m_clientkeys[i].pFunc && m_clientkeys[i].szCommand)
 		if(m_clientkeys[i].szCommand && m_clientkeys[i].pCmd)
 		{
 			char line[80];

@@ -28,15 +28,21 @@ struct ClientKey
 	ClientKey()
 	{ 	
 		szCommand = 0;
+		pHandler = 0;
 		pCmd = 0;
+		id = 0;
 	}
 	
 	~ClientKey()
 	{
-		if(szCommand) delete [] szCommand;
+		if(szCommand) 
+			delete [] szCommand;
 		pCmd = 0;
 	}
-	char	 * szCommand;
+	char *	szCommand;
+	HCMD	id;	
+	I_CmdHandler * pHandler;
+	
 	CCommand * pCmd;
 };
 

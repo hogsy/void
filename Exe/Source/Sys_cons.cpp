@@ -14,26 +14,6 @@ I_Console * Sys_GetConsole()
 {	return g_pConsole;
 }
 
-
-void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
-{
-	switch(cmdId)
-	{
-	case CMD_CVARLIST:
-		CVarlist(numArgs,szArgs);
-		break;
-	case CMD_CMDLIST:
-		CCmdList(numArgs,szArgs);
-		break;
-	case CMD_TOGGLECONS:
-		CToggleConsole(numArgs,szArgs);
-		break;
-	case CMD_TEST:
-		CFunctest(numArgs,szArgs);
-		break;
-	}
-}
-
 /*
 ======================================
 Constructor
@@ -431,6 +411,27 @@ void CConsole::ExecConfig(const char *filename)
 	}
 	fclose(fpcfg);
 	ComPrintf("CConsole::Exec'ed %s\n",file);
+}
+
+
+
+void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_CVARLIST:
+		CVarlist(numArgs,szArgs);
+		break;
+	case CMD_CMDLIST:
+		CCmdList(numArgs,szArgs);
+		break;
+	case CMD_TOGGLECONS:
+		CToggleConsole(numArgs,szArgs);
+		break;
+	case CMD_TEST:
+		CFunctest(numArgs,szArgs);
+		break;
+	}
 }
 
 

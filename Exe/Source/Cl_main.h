@@ -49,7 +49,6 @@ public:
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
-
 	//run local stuff, 
 	//messages received from the server would be handled here
 	void RunFrame();
@@ -92,14 +91,16 @@ public:
 
 	world_t    *m_world;
 
+	void Move(vector_t *dir, float time);
+
+private:
+
+
 	void RotateRight(float val=5.0);
 	void RotateLeft(float val=5.0);
 	void RotateUp(float val=5.0);
 	void RotateDown(float val=5.0);
 
-	void Move(vector_t *dir, float time);
-
-private:
 
 	class CClientCommandHandler;
 

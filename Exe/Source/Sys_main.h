@@ -40,8 +40,6 @@ class CVoid : public I_CmdHandler
 		void OnFocus();
 		void LostFocus();
 
-		void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
-
 	private:
 	
 		CTime		* g_pTime;			//Timer Class
@@ -51,11 +49,16 @@ class CVoid : public I_CmdHandler
 		VoidExport_t * g_pExport;		//Exported struct
 		
 		//Windows	
-		bool	RegisterWindow();				//Register Window
-		void	ParseCmdLine(LPSTR lpCmdLine);	//Parse Cmd Line
+		bool RegisterWindow();				//Register Window
+		void ParseCmdLine(LPSTR lpCmdLine);	//Parse Cmd Line
 
 		//Write configuration file
-		void    WriteConfig(char *config);
+		void WriteConfig(char *config);
+
+		void CFuncQuit(int argc, char** argv);		//quit game
+		void CFuncMap(int argc, char** argv);		//start local server with map + connect to it
+
+		void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 };
 
 extern CVoid * g_pVoid;
