@@ -6,6 +6,7 @@ Contains common definitions needed by both the Network library
 and the game code.
 ======================================================================================
 */
+
 //Connnectionless client to Server messages
 const char C2S_GETSTATUS[]		= "getstatus";
 const char C2S_CONNECT[]		= "connect";
@@ -20,6 +21,7 @@ const char S2C_ACCEPT[]			= "accept";
 //Common connectionless messages
 const char VNET_PING[]			= "ping";
 
+
 /*
 ======================================================================================
 Connection spawning protocol
@@ -30,6 +32,7 @@ Once the client has received and acked all the messages it switches to Ingame mo
 once the server has received all the acks it switches its netclient to Ingame mode
 ======================================================================================
 */
+
 const byte SVC_INITCONNECTION= 1;	//Send the server vars, map info
 const byte SVC_MODELLIST	 = 2;	//Sequenced list of models in use
 const byte SVC_SOUNDLIST	 = 3;	//Sequenced list of sounds in use 
@@ -42,6 +45,7 @@ const byte SVC_BEGIN		 = 6;	//ready to spawnDynamic Spawning info. client is ass
 The Game Protocol
 ======================================================================================
 */
+
 //Client to server
 const byte CL_BAD			= 0;	//Drop me
 const byte CL_NOP			= 1;	//Nothing doing. Keep alive
@@ -68,7 +72,6 @@ const byte SV_RECONNECT		= 10;	// Server is changing maps, tell all clients to r
 Other common definitions
 ======================================================================================
 */
-
 /*
 ======================================
 Stats of a Network comm channel
@@ -121,6 +124,7 @@ namespace System
 Other misc shared definitions
 ======================================
 */
+
 const char szWORLDDIR[]     = "Worlds/";
 
 const int  SV_DEFAULT_PORT = 20010;
@@ -133,6 +137,16 @@ const int  MAX_BUFFER_SIZE	  = 2900;
 const int  SV_TIMEOUT_INTERVAL= 10;			//10 seconds of silence
 
 const int  VOID_PROTOCOL_VERSION = 1;		//Current protcol version
+
+
+
+
+
+
+
+
+
+
 
 
 /*

@@ -2,6 +2,14 @@
 #define  VOID_NETWORK_SERVER
 
 #include "Com_buffer.h"
+#include "Net_defs.h"
+
+//Predeclarations
+namespace VoidNet 
+{	
+	class CNetSocket;
+	class CNetChan;
+}
 
 /*
 ======================================
@@ -11,8 +19,7 @@ Server State Struct
 struct ServerState
 {
 	ServerState()
-	{
-		port = 0;
+	{	port = 0;
 		maxClients = numClients = levelId = 0;
 		memset(hostName,0,sizeof(hostName));
 		memset(gameName,0,sizeof(gameName));
@@ -33,15 +40,63 @@ struct ServerState
 	char	gameName[32];	//Game name
 };
 
+/*
+======================================
+The "Game" Server needs to be able
+to write to client channels.
+======================================
+*/
+class CClientChan
+{
+public:
+	CClientChan();
+	virtual ~CClientChan();
 
-//Predeclarations
-namespace VoidNet 
-{	class CNetSocket;
-}
-//FIXME : this should be changed 
-//to a base GameClient so that the game
-//code can access is
-class SVClient;
+	void BeginMessage(byte msgid, int estSize);
+	void WriteByte(byte b);
+	void WriteChar(char c);
+	void WriteShort(short s);
+	void WriteInt(int i);
+	void WriteFloat(float f);
+	void WriteCoord(float c);
+	void WriteAngle(float a);
+	void WriteString(const char *string);
+	void WriteData(byte * data, int len);
+
+	const NetChanState & GetChanState() const;
+
+private:
+	
+	friend class CNetServer;
+	enum
+	{	MAX_BACKBUFFERS = 4
+	};
+
+	void MakeSpace(int maxsize);
+	void ValidateBuffer();
+	void Reset();
+	bool ReadyToSend();
+
+	VoidNet::CNetChan *	m_pNetChan;
+
+	//Flags and States
+	bool	m_bDropClient;	//drop client if this is true
+	bool	m_bSend;
+
+	//keep track of how many spawn messages have been sent
+	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
+	byte	m_spawnState;
+	int		m_state;
+
+	//back buffers for client reliable data
+	bool	m_bBackbuf;
+	int		m_numBuf;
+	CBuffer	m_backBuffer[MAX_BACKBUFFERS];
+
+	//Game specifc
+	int		m_id;
+	char	m_name[32];
+};
 
 /*
 ======================================
@@ -86,27 +141,26 @@ protected:
 	void HandleChallengeReq();
 
 	//Parse message received
-	void ProcessQueryPacket();					//Query packet
-	void ParseClientMessage(SVClient &client);	//Client is in game
-	void ParseSpawnMessage(SVClient &client);	//Client hasn't spawned yet
+	void ProcessQueryPacket();						//Query packet
+	void ParseClientMessage(CClientChan &client);	//Client is in game
+	void ParseSpawnMessage(CClientChan &client);	//Client hasn't spawned yet
 
 	//Broadcast print message to all except
-	void ClientPrintf(SVClient &client, const char * message, ...);
-	void BroadcastPrintf(const SVClient * client, const char* message, ...);
+	void ClientPrintf(CClientChan &client, const char * message, ...);
+	void BroadcastPrintf(const CClientChan * client, const char* message, ...);
 	
 	//Send Info to client
-	void SendRejectMsg(const char * reason);	//Only for unconnected clients
-	void SendSpawnParms(SVClient &client);
-	void SendReconnect(SVClient &client);
-	void SendDisconnect(SVClient &client, const char * reason);
+	void SendRejectMsg(const char * reason);		//Only for unconnected clients
+	void SendSpawnParms(CClientChan &client);
+	void SendReconnect(CClientChan &client);
+	void SendDisconnect(CClientChan &client, const char * reason);
 
 	//===================================================
-
 	//Server Statue
 	ServerState m_svState;
 
 	//Game clients
-	SVClient *	m_clients;
+	CClientChan	m_clChan[MAX_CLIENTS];
 
 	//Used to stores Entity baselines etc which
 	//are transmitted to the client on connection
