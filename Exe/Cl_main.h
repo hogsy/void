@@ -100,6 +100,7 @@ private:
 	int			m_numResends;		//Max number of resends
 	const char* m_szLastOOBMsg;		//Keep Track of the last OOB message sent
 	
+	bool		m_canSend;
 	int			m_spawnState;
 	int			m_state;
 

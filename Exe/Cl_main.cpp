@@ -41,6 +41,7 @@ CClient::CClient(I_Renderer * prenderer):
 	m_challenge= 0;
 	m_levelId = 0;
 	m_spawnState = 0;
+	m_canSend = false;
 	
 	m_pHud = 0;
 	m_pRender = prenderer;

@@ -117,7 +117,7 @@ bool CServer::Init()
 		if (addrFlags & IFF_UP)
 		{
 			//if(!(addrFlags & IFF_LOOPBACK))
-			if(!(addrFlags & IFF_LOOPBACK) && pAddrString[0] != 0)
+			if(!(addrFlags & IFF_LOOPBACK) && pAddrString[0] != '0')
 			{
 				strcpy(boundAddr,pAddrString);
 				ComPrintf(": Active\n");
@@ -497,18 +497,19 @@ void CServer::ParseClientMessage(SVClient &client)
 	{
 	case CL_TALK:
 		{
-			char msg[128];
+			char msg[256];
 			strcpy(msg,m_recvBuf.ReadString());
 			int len = strlen(msg);
 			msg[len] = 0;
 			len += strlen(client.m_name);
+
+//ComPrintf("SV:%s : %s\n", client.m_name, msg);
 		
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0; i<m_cMaxClients.ival;i++)
 			{
 				if(&m_clients[i] == &client)
 					continue;
-				
 				if(m_clients[i].m_state == CL_SPAWNED)
 				{
 					m_clients[i].BeginMessage(SV_TALK,len);
@@ -516,7 +517,6 @@ void CServer::ParseClientMessage(SVClient &client)
 					m_clients[i].WriteString(msg);
 				}
 			}
-//ComPrintf("SV: %s : %s\n", client.m_name, msg);
 			break;	
 		}
 	}
@@ -674,7 +674,7 @@ void CServer::WritePackets()
 			m_clients[i].m_netChan.PrepareTransmit();
 			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
 			//m_clients[i].m_bSend = false;
-//ComPrintf("SV:: Sending spawned message\n");
+//ComPrintf("SV:: writing to spawned client\n");
 			continue;
 		}
 		

@@ -69,7 +69,7 @@ make space for a data chunk of the given size
 void SVClient::MakeSpace(int maxsize)
 {
 	//a message of this size will overflow the buffer
-	if(m_netChan.m_buffer.GetSize() + (maxsize >= m_netChan.m_buffer.GetMaxSize()))
+	if((m_netChan.m_buffer.GetSize() + maxsize) >= m_netChan.m_buffer.GetMaxSize())
 	{
 		//havent been using any backbuffers until now
 		if(!m_bBackbuf)
@@ -106,15 +106,19 @@ bool SVClient::ReadyToSend()
 		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf]->GetSize() <
 		   m_netChan.m_buffer.GetMaxSize())
 		{
+ComPrintf("SV Writing to backbuffer\n");
+
 			//Write to sock buffer
-			m_netChan.m_buffer += *m_backBuffer[m_numBuf];
+			m_netChan.m_buffer += (*m_backBuffer[m_numBuf]);
 
 			//rotate buffers
 			m_backBuffer[m_numBuf]->Reset();
 			CNetBuffer * temp = m_backBuffer[m_numBuf];
+
 			for(int i=1;i<MAX_BACKBUFFERS;i++)
 				m_backBuffer[i-1] = m_backBuffer[i];
 			m_backBuffer[i] = temp;
+			temp = 0;
 
 			if(m_numBuf == 0)		
 				m_bBackbuf = false;	//No more backbuffers
@@ -166,7 +170,7 @@ void SVClient::WriteByte(byte b)
 		m_netChan.m_buffer += b;
 	else
 	{
-		m_backBuffer[m_numBuf] += b;
+		(*m_backBuffer[m_numBuf]) += b;
 		ValidateBuffer();
 	}
 }
@@ -177,7 +181,7 @@ void SVClient::WriteChar(char c)
 		m_netChan.m_buffer += c;
 	else
 	{
-		m_backBuffer[m_numBuf] += c;
+		(*m_backBuffer[m_numBuf]) += c;
 		ValidateBuffer();
 	}
 }
@@ -188,7 +192,7 @@ void SVClient::WriteShort(short s)
 		m_netChan.m_buffer += s;
 	else
 	{
-		m_backBuffer[m_numBuf] += s;
+		(*m_backBuffer[m_numBuf]) += s;
 		ValidateBuffer();
 	}
 }
@@ -199,7 +203,7 @@ void SVClient::WriteInt(int i)
 		m_netChan.m_buffer += i;
 	else
 	{
-		m_backBuffer[m_numBuf] += i;
+		(*m_backBuffer[m_numBuf]) += i;
 		ValidateBuffer();
 	}
 }
@@ -210,7 +214,7 @@ void SVClient::WriteFloat(float f)
 		m_netChan.m_buffer += f;
 	else
 	{
-		*m_backBuffer[m_numBuf] += f;
+		(*m_backBuffer[m_numBuf]) += f;
 		ValidateBuffer();
 	}
 }
@@ -221,7 +225,7 @@ void SVClient::WriteString(const char *string)
 		m_netChan.m_buffer += string;
 	else
 	{
-		*m_backBuffer[m_numBuf] += string;
+		(*m_backBuffer[m_numBuf]) += string;
 		ValidateBuffer();
 	}
 }

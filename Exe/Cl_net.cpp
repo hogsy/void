@@ -154,6 +154,7 @@ void CClient::ReadPackets()
 					strcpy(name,m_buffer.ReadString());
 ComPrintf("%s: %s\n", name , m_buffer.ReadString());
 System::GetSoundManager()->Play(m_hsTalk);
+					m_canSend = true;
 					break;
 				}
 			case SV_DISCONNECT:
@@ -197,7 +198,7 @@ void CClient::SendUpdates()
 	//we have spawned. send update packet
 	if(m_state == CL_SPAWNED)
 	{
-		if(m_netChan.CanSend() && m_netChan.m_buffer.GetSize())
+		if(m_netChan.CanSend() &&  m_canSend) // m_netChan.m_buffer.GetSize())
 		{
 			m_netChan.PrepareTransmit();
 			m_pSock->Send(m_netChan.m_sendBuffer);
@@ -401,6 +402,7 @@ ComPrintf("CL: Disconnected\n");
 	m_levelId = 0;
 	m_state = CL_FREE;
 	m_spawnState = 0;
+	m_canSend = false;
 
 	//Flow Control
 	m_fNextSendTime = 0.0f;
@@ -434,4 +436,5 @@ void CClient::Talk(const char *string)
 	//Send this reliably
 	m_netChan.m_buffer += CL_TALK;
 	m_netChan.m_buffer += msg;
+	m_canSend = true;
 }
