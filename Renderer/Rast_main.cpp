@@ -114,15 +114,15 @@ void CRasterizer::PolyEnd(void)
 	{
 		for (int i=0; i<mNumElements; i++)
 		{
-			mTexCoords[i][0] =	mVerts[i].pos[0] * mTexDef->vecs[0][0] +
+			mTexCoords[i][0] =	 mVerts[i].pos[0] * mTexDef->vecs[0][0] +
 								-mVerts[i].pos[2] * mTexDef->vecs[0][1] +
-								mVerts[i].pos[1] * mTexDef->vecs[0][2] +
-								mTexDef->vecs[0][3];
+								 mVerts[i].pos[1] * mTexDef->vecs[0][2] +
+								 mTexDef->vecs[0][3];
 
-			mTexCoords[i][1] =	mVerts[i].pos[0] * mTexDef->vecs[1][0] +
+			mTexCoords[i][1] =	 mVerts[i].pos[0] * mTexDef->vecs[1][0] +
 								-mVerts[i].pos[2] * mTexDef->vecs[1][1] +
-								mVerts[i].pos[1] * mTexDef->vecs[1][2] +
-								mTexDef->vecs[1][3];
+								 mVerts[i].pos[1] * mTexDef->vecs[1][2] +
+								 mTexDef->vecs[1][3];
 		}
 	}
 
@@ -130,15 +130,15 @@ void CRasterizer::PolyEnd(void)
 	{
 		for (int i=0; i<mNumElements; i++)
 		{
-			mTexCoords[i][0] =	mVerts[i].pos[0] * mLightDef->vecs[0][0] +
-								mVerts[i].pos[2] * mLightDef->vecs[0][1] +
-								mVerts[i].pos[1] * mLightDef->vecs[0][2] +
-								mTexDef->vecs[0][3];
+			mLightCoords[i][0] =	 mVerts[i].pos[0] * mLightDef->vecs[0][0] +
+									-mVerts[i].pos[2] * mLightDef->vecs[0][1] +
+									 mVerts[i].pos[1] * mLightDef->vecs[0][2] +
+									 mLightDef->vecs[0][3];
 
-			mTexCoords[i][1] =	mVerts[i].pos[0] * mLightDef->vecs[1][0] +
-								mVerts[i].pos[2] * mLightDef->vecs[1][1] +
-								mVerts[i].pos[1] * mLightDef->vecs[1][2] +
-								mTexDef->vecs[1][3];
+			mLightCoords[i][1] =	 mVerts[i].pos[0] * mLightDef->vecs[1][0] +
+									-mVerts[i].pos[2] * mLightDef->vecs[1][1] +
+									 mVerts[i].pos[1] * mLightDef->vecs[1][2] +
+									 mLightDef->vecs[1][3];
 		}
 	}
 
@@ -155,7 +155,7 @@ void CRasterizer::DrawLayer(int l)
 	CShaderLayer *layer = mShader->mLayers[l];
 	int i;
 
-	if (layer->mIsLight)	//  && g_pFullbright->bval)
+	if (layer->mIsLight && (g_pFullbright->bval || !world->light_size))
 		return;
 
 	if (!layer->mNumTextures)

@@ -432,10 +432,15 @@ void CShaderManager::CachePurge(void)
 				if (shader->mPass != p)
 					continue;
 
+				g_pRast->PolyColor4f(1, 1, 1, 1);
+
 				g_pRast->ShaderSet(shader);
 				while (poly)
 				{
+					if (world->light_size)
+						g_pRast->TextureLightDef(&world->lightdefs[poly->lightdef]);
 					g_pRast->TextureTexDef(&world->texdefs[poly->texdef]);
+
 					g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 					for (int v = 0; v < poly->num_vertices; v++)
 					{

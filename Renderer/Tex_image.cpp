@@ -396,7 +396,7 @@ bool CImageReader::Read_JPG(TextureData &imgData)
 	image.DIBWidth = m_width;
 	image.DIBHeight = m_height; // Implies a bottom-up DIB.
 	image.DIBChannels = 3;
-	image.DIBColor = IJL_BGR;
+	image.DIBColor = IJL_RGB;
 	image.DIBPadBytes = 0;
 	image.DIBBytes = m_mipmapdata[m_miplevels-1];
 
