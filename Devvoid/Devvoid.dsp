@@ -306,14 +306,6 @@ SOURCE=.\Light\lightmap.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Light\trace.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Light\trace.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Light\vlight.cpp
 # End Source File
 # End Group

@@ -2,7 +2,7 @@
 #include "Com_vector.h"
 #include "Com_trace.h"
 #include "../Std_lib.h"
-#include "trace.h"
+//#include "trace.h"
 #include "Com_world.h"
 
 

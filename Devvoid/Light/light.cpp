@@ -146,6 +146,18 @@ void light_fill_defs(void)
 
 /*
 ========
+========
+*/
+bool light_blend_lumels(unsigned char *pixel)
+{
+	return	((pixel[0] == g_ambient[0]) &&
+			 (pixel[1] == g_ambient[1]) &&
+			 (pixel[2] == g_ambient[2]));
+}
+
+
+/*
+========
 light_assemble - assemble all the lightmap data into one chunk - also free's other lightmaps
 ========
 */
@@ -165,7 +177,81 @@ int light_assemble(unsigned char **data)
 		*p = (unsigned char)lightmaps[l]->height;
 		p++;
 
-		memcpy(p, &lightmaps[l]->data, lightmaps[l]->width*lightmaps[l]->height*3);
+
+		// dont just copy straight over.  we have to find where we have to blend outward to avoid bilinear filtering artifacts
+//		memcpy(p, &lightmaps[l]->data, lightmaps[l]->width*lightmaps[l]->height*3);
+		for (int r=0; r<lightmaps[l]->height; r++)
+		{
+			for (int c=0; c<lightmaps[l]->width; c++)
+			{
+				if (light_blend_lumels(&lightmaps[l]->data[(r*lightmaps[l]->width + c)*3]))
+				{
+					int div = 0;
+					int blend[3] = { 0, 0, 0 };
+
+					// the lumel above
+					if (r!=0 && (light_blend_lumels(&lightmaps[l]->data[((r-1)*lightmaps[l]->width + c)*3])))
+					{
+						blend[0] += lightmaps[l]->data[((r-1)*lightmaps[l]->width + c)*3 + 0];
+						blend[1] += lightmaps[l]->data[((r-1)*lightmaps[l]->width + c)*3 + 1];
+						blend[2] += lightmaps[l]->data[((r-1)*lightmaps[l]->width + c)*3 + 2];
+						div++;
+					}
+
+					// lumel below
+					if (r!=(lightmaps[l]->width-1) && (light_blend_lumels(&lightmaps[l]->data[((r+1)*lightmaps[l]->width + c)*3])))
+					{
+						blend[0] += lightmaps[l]->data[((r+1)*lightmaps[l]->width + c)*3 + 0];
+						blend[1] += lightmaps[l]->data[((r+1)*lightmaps[l]->width + c)*3 + 1];
+						blend[2] += lightmaps[l]->data[((r+1)*lightmaps[l]->width + c)*3 + 2];
+						div++;
+					}
+
+					// the lumel to the left
+					if (c!=0 && (light_blend_lumels(&lightmaps[l]->data[(r*lightmaps[l]->width + (c-1))*3])))
+					{
+						blend[0] += lightmaps[l]->data[(r*lightmaps[l]->width + c-1)*3 + 0];
+						blend[1] += lightmaps[l]->data[(r*lightmaps[l]->width + c-1)*3 + 1];
+						blend[2] += lightmaps[l]->data[(r*lightmaps[l]->width + c-1)*3 + 2];
+						div++;
+					}
+
+					// the lumel to the right
+					if (c!=(lightmaps[l]->height-1) && (light_blend_lumels(&lightmaps[l]->data[(r*lightmaps[l]->width + (c+1))*3])))
+					{
+						blend[0] += lightmaps[l]->data[(r*lightmaps[l]->width + c+1)*3 + 0];
+						blend[1] += lightmaps[l]->data[(r*lightmaps[l]->width + c+1)*3 + 1];
+						blend[2] += lightmaps[l]->data[(r*lightmaps[l]->width + c+1)*3 + 2];
+						div++;
+					}
+
+					if (div == 0)
+					{
+						div = 1;
+						blend[0] = g_ambient[0];
+						blend[1] = g_ambient[1];
+						blend[2] = g_ambient[2];
+					}
+
+					blend[0] /= div;
+					blend[1] /= div;
+					blend[2] /= div;
+
+					p[(r*lightmaps[l]->width + c)*3 + 0] = (unsigned char) blend[0];
+					p[(r*lightmaps[l]->width + c)*3 + 1] = (unsigned char) blend[1];
+					p[(r*lightmaps[l]->width + c)*3 + 2] = (unsigned char) blend[2];
+				}
+
+				// no blending needed
+				else
+				{
+					p[(r*lightmaps[l]->width + c)*3 + 0] = lightmaps[l]->data[(r*lightmaps[l]->width + c)*3 + 0];
+					p[(r*lightmaps[l]->width + c)*3 + 1] = lightmaps[l]->data[(r*lightmaps[l]->width + c)*3 + 1];
+					p[(r*lightmaps[l]->width + c)*3 + 2] = lightmaps[l]->data[(r*lightmaps[l]->width + c)*3 + 2];
+				}
+			}
+		}
+
 		p += lightmaps[l]->width*lightmaps[l]->height*3;
 
 		free(lightmaps[l]);
@@ -390,7 +476,9 @@ void light_do(int map, int l)
 				if (!point_in_side(test, lmap->side))
 					continue;
 
-				trace_t tr = trace(light->origin, test);
+				TraceInfo tr;
+				world->Trace(tr, light->origin, test);
+//				trace_t tr = trace(light->origin, test);
 				if (tr.fraction < 1)
 					continue;
 
