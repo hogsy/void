@@ -59,9 +59,6 @@ int EntMove::ClientMove(BaseEntity *ent, float time)
 		if (hits==1)
 			MakeVectorPlanar(&dir, &dir, &hitplanes[0]);
 		// we have to set velocity along crease
-		else if((hits == 2) && (tr.plane->norm.z))
-		{	return 2;
-		}
 		else
 		{
 			vector_t tmp;

@@ -339,21 +339,20 @@ void CSoundManager::RunFrame()
 			
 			//is it/was it being played by a channel, and
 			//is out of range now, then stop it
-			if((m_sndSources[i].channel) && 
-			   (listenerDist > m_sndSources[i].muteDist))
+			if((m_sndSources[i].channel) && (listenerDist >= m_sndSources[i].muteDist))
 			{
-//ComPrintf("SND: STOPPING %d\n", i);
+ComPrintf("SND: STOPPING %d\n", i);
 				m_sndSources[i].channel->Stop();
 				m_sndSources[i].channel->Destroy();
 				m_sndSources[i].channel = 0;
 				if(!m_sndSources[i].bStatic)
 					m_sndSources[i].Reset();
 			}
+			
 			//Play sounds which are back in range
-			else if((!m_sndSources[i].channel) && 
-					(listenerDist < m_sndSources[i].muteDist))
+			if((!m_sndSources[i].channel) && (listenerDist < m_sndSources[i].muteDist))
 			{
-//ComPrintf("SND: PLAYING %d\n", i);
+ComPrintf("SND: PLAYING %d\n", i);
 				//Start playing it
 				PlaySoundSource(m_sndSources[i]);
 			}
@@ -538,10 +537,11 @@ void CSoundManager::AddStaticSource(const ClEntity * ent)
 	for(int i=0; i< MAX_SOUNDSOURCES; i++)
 	{
 		if(freeIndex == -1 && !m_sndSources[i].ent)
-			freeIndex = 0;
+			freeIndex = i;
 		else if(m_sndSources[i].ent == ent)
 			return;
 	}
+	
 	m_sndSources[freeIndex].Reset();
 	m_sndSources[freeIndex].bStatic = true;
 	m_sndSources[freeIndex].ent = ent;

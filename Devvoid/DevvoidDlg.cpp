@@ -294,6 +294,10 @@ void CDevvoidDlg::OnSelchangeFilelist()
 		pButton = (CButton*)GetDlgItem(IDC_COMPILE);
 		if(pButton)
 			pButton->EnableWindow(TRUE);
+
+		pButton = (CButton*)GetDlgItem(IDC_BSPLIGHT);
+		if(pButton)
+			pButton->EnableWindow(TRUE);
 		return;
 	}
 	
@@ -304,6 +308,10 @@ void CDevvoidDlg::OnSelchangeFilelist()
 			pButton->EnableWindow(TRUE);
 
 		pButton = (CButton*)GetDlgItem(IDC_COMPILE);
+		if(pButton)
+			pButton->EnableWindow(FALSE);
+
+		pButton = (CButton*)GetDlgItem(IDC_BSPLIGHT);
 		if(pButton)
 			pButton->EnableWindow(FALSE);
 		return;

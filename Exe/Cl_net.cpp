@@ -171,7 +171,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 		}
 	case SVC_MODELLIST:
 		{
-			char modelName[32];
+			char modelName[128];
 			int  modelId=0;
 
 			int numModels = buffer.ReadShort();
@@ -180,7 +180,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 			for(int i=0; i<numModels;i++)
 			{
 				modelId = buffer.ReadShort();
-				buffer.ReadString(modelName,32);
+				buffer.ReadString(modelName,128);
 
 				if(modelId == -1 || !modelName[0])
 					continue;
@@ -190,7 +190,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 		}
 	case SVC_SOUNDLIST:
 		{
-			char soundName[32];
+			char soundName[128];
 			int  soundId=0;
 
 			int numSounds = buffer.ReadShort();
@@ -199,7 +199,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 			for(int i=0; i<numSounds;i++)
 			{
 				soundId = buffer.ReadShort();
-				buffer.ReadString(soundName,32);
+				buffer.ReadString(soundName,128);
 
 				if(soundId == -1 || !soundName[0])
 						continue;
@@ -209,7 +209,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 		}
 	case SVC_IMAGELIST:
 		{
-			char imgName[32];
+			char imgName[128];
 			int imgId=0;
 			int numImages = buffer.ReadShort();
 
@@ -218,7 +218,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 			for(int i=0; i<numImages;i++)
 			{
 				imgId = buffer.ReadShort();
-				buffer.ReadString(imgName,32);
+				buffer.ReadString(imgName,128);
 
 				if(imgId == -1 || !imgName[0])
 						continue;
@@ -566,7 +566,7 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	//Setup Game client info
 	m_pGameClient->moveType = MOVETYPE_STEP;
 	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
-	m_pGameClient->origin.Set(0.0f,0.0f,30.0f);
+	m_pGameClient->origin.Set(0.0f,0.0f,48.0f);
 	m_pGameClient->mins = VEC_CLIENT_MINS;
 	m_pGameClient->maxs = VEC_CLIENT_MAXS;
 
@@ -581,6 +581,9 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;
+
+ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
+
 			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}
