@@ -11,6 +11,9 @@
 class CClientRenderer : public I_ClientRenderer
 {
 public:
+	CClientRenderer() {}
+	virtual ~CClientRenderer() { }
+
 	/* Model Interface */
 	inline hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1)
 		{	return mModel.LoadModel(model, cache, index);	}
@@ -36,7 +39,7 @@ public:
 		{	mImage.UnloadImageAll();	}
 
 	/* Hud Interface */
-	inline void __stdcall HudPrintf(int x, int y, float time,char *msg,...)
+	inline void  HudPrintf(int x, int y, float time,char *msg,...)
 		{	
 			char buff[256];
 			va_list args;
@@ -45,9 +48,9 @@ public:
 			va_end(args);
 			mHud.HudPrintf(x, y, time, buff);	
 		}
-	inline void __stdcall HudPrint(char *msg, int x, int y, float time =0.0, int color=0)
+	inline void  HudPrint(char *msg, int x, int y, float time =0.0, int color=0)
 		{	mHud.HudPrint(msg, x, y, time, color);	}
-	inline void __stdcall PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME)
+	inline void  PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME)
 		{	mHud.PrintMessage(msg, color, time);	}
 
 

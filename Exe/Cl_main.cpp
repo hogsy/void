@@ -32,10 +32,12 @@ CClient::CClient(I_Renderer * prenderer,
 					m_pSound(psound),
 					m_pMusic(pmusic)
 {
-
+/*
 	m_pHud   = m_pRender->GetHud();
 	m_pModel = m_pRender->GetModel();
 	m_pImage = m_pRender->GetImage();
+*/
+	m_pClRen = m_pRender->GetClient();
 
 	m_pCmdHandler = new CClientCmdHandler(*this);
 
@@ -98,18 +100,21 @@ CClient::~CClient()
 	if(m_pCamera)
 		delete m_pCamera;
 
-	if(m_pModel)
-		m_pModel->UnloadModelAll();
+//	if(m_pModel)
+//		m_pModel->UnloadModelAll();
 	
 //	if(m_pImage)
 //		m_pImage->UnloadImageAll();
 
 
 	m_pRender = 0;
-	m_pHud = 0;
+	if(m_pClRen)
+		m_pClRen->UnloadModelAll();
+	m_pClRen = 0;
+/*	m_pHud = 0;
 	m_pModel = 0;
 	m_pImage =0;
-
+*/
 	m_pSound = 0;
 	m_pMusic = 0;
 
@@ -212,7 +217,7 @@ void CClient::UnloadWorld()
 		return;
 	}
 
-	m_pModel->UnloadModelCache(CACHE_GAME);
+	m_pClRen->UnloadModelCache(CACHE_GAME);
 
 	delete m_pCamera;
 	m_pCamera = 0;
@@ -264,11 +269,11 @@ void CClient::RunFrame()
 		}
 
 		//Print Stats
-		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", m_gameClient.origin.x,
+		m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", m_gameClient.origin.x,
 													   m_gameClient.origin.y,
 													   m_gameClient.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
+		m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
 			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
 		m_fFrameTime = System::g_fcurTime;
 
@@ -276,19 +281,19 @@ void CClient::RunFrame()
 		vector_t forward, up, velocity;
 		VectorSet(&velocity, 0,0,0);
 		AngleToVector(&m_gameClient.angle, &forward, 0, &up);
-		m_pHud->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-		m_pHud->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
+		m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
+		m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
 		//Print Networking stats
 		const NetChanState & chanState = m_pNetCl->GetChanState();
 
-		m_pHud->HudPrintf(0,390,0, "Latency %.2f", chanState.latency * 100);
-		m_pHud->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
+		m_pClRen->HudPrintf(0,390,0, "Latency %.2f", chanState.latency * 100);
+		m_pClRen->HudPrintf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
 							chanState.dropCount + chanState.goodCount, chanState.numChokes);
-		m_pHud->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
-		m_pHud->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
-		m_pHud->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
-		m_pHud->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+		m_pClRen->HudPrintf(0,410,0, "In      %d", chanState.inMsgId);
+		m_pClRen->HudPrintf(0,420,0, "In  Ack %d", chanState.inAckedId);
+		m_pClRen->HudPrintf(0,430,0, "Out     %d", chanState.outMsgId);
+		m_pClRen->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
 		// FIXME - put this in game dll
 		int contents = PointContents(m_gameClient.origin);
@@ -310,7 +315,7 @@ void CClient::RunFrame()
 			{
 				if(m_entities[i].index >= 0)
 				{
-					m_pModel->DrawModel(m_entities[i]);	
+					m_pClRen->DrawModel(m_entities[i]);	
 				}
 				//Play sounds in RANGE
 /*				else if(m_entities[i].soundIndex >= 0)
@@ -325,7 +330,7 @@ void CClient::RunFrame()
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
 			if(m_clients[i].inUse && m_clients[i].index >=0)
-				m_pModel->DrawModel(m_clients[i]);
+				m_pClRen->DrawModel(m_clients[i]);
 		}
 
 		m_pRender->Draw(m_pCamera);

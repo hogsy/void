@@ -181,9 +181,9 @@ struct I_ClientRenderer
 	virtual void UnloadImageAll(void)=0;
 
 	/* Hud Interface */
-	virtual void __stdcall HudPrintf(int x, int y, float time,char *msg,...) =0;
-	virtual void __stdcall HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
-	virtual void __stdcall PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
+	virtual void  HudPrintf(int x, int y, float time,char *msg,...) =0;
+	virtual void  HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
+	virtual void  PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
 };
 
 

@@ -16,16 +16,11 @@ public:
 	bool Shutdown();
 
 	void Draw(const CCamera * camera);
-///	void Draw(vector_t *origin,vector_t *angles, vector_t *blend);
 	void DrawConsole();
 
 	I_ConsoleRenderer * GetConsole();
 	I_ClientRenderer  * GetClient();
-/*
-	I_RHud *			GetHud();
-	I_Model *			GetModel();
-	I_Image *			GetImage();
-*/
+
 	//Windowing
 	void MoveWindow(int x, int y);
 	void Resize();

@@ -164,7 +164,12 @@ public:
 
 	CCamera(vector_t & rorigin,
 			vector_t & rangles,
-			vector_t & rblend): origin(rorigin), angles(rangles), blend(rblend)
+			vector_t & rblend
+//			,vector_t & rforward,
+//			vector_t & rright,
+			//vector_t & rup
+			): origin(rorigin), angles(rangles), blend(rblend)
+							 //,forward(rforward), right(rright), up(rup)
 	{}
 	
 	~CCamera() {} 

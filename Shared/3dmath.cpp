@@ -4,9 +4,9 @@
 
 ***************************************************************************/
 
-
 #include "3dmath.h"
 #include <memory.h>
+
 
 // doesn't keep the length the same! - just projects it onto the plane
 void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm)

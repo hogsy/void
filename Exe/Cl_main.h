@@ -14,9 +14,11 @@ class  CCamera;
 class  CSoundManager;
 class  CMusic;
 struct I_Renderer;
+/*
 struct I_RHud;
 struct I_Model;
 struct I_Image;
+*/
 
 /*
 =====================================
@@ -106,10 +108,12 @@ private:
 	friend class CClientCmdHandler;
 	
 	I_Renderer		  * m_pRender;
+	I_ClientRenderer  * m_pClRen;
+/*
 	I_RHud		 	  *	m_pHud;
 	I_Model			  * m_pModel;
 	I_Image			  * m_pImage;
-
+*/
 
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;

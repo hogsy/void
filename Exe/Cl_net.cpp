@@ -66,11 +66,11 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				sprintf(path,"Players/%s/%s", model, buffer.ReadString());
 
 				m_clients[num].cache = CACHE_GAME;
-				m_clients[num].skinnum = m_pImage->LoadImage(path, sindex, CACHE_GAME);
+				m_clients[num].skinnum = m_pClRen->LoadImage(path, CACHE_GAME, sindex);
 				m_clients[num].skinnum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
-				m_clients[num].index = m_pModel->LoadModel(path, mindex, CACHE_GAME);
+				m_clients[num].index = m_pClRen->LoadModel(path, CACHE_GAME,mindex);
 				m_clients[num].cache = CACHE_GAME;
 
 				m_clients[num].inUse = true;
@@ -138,7 +138,7 @@ void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 				{
 					continue;
 				}
-				m_pModel->LoadModel(modelName,modelId,CACHE_GAME);
+				m_pClRen->LoadModel(modelName,CACHE_GAME,modelId);
 			}
 			break;
 		}
