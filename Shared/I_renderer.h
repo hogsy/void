@@ -1,7 +1,6 @@
 #ifndef INC_RENDERER_INTERFACE
 #define INC_RENDERER_INTERFACE
 
-#include "I_console.h"
 #include "I_hud.h"
 #include "I_void.h"
 #include "World.h"
@@ -62,6 +61,22 @@ typedef struct RenderInfo_t
 					stencil;
 }RenderInfo_t;
 
+/*
+==========================================
+Renderer Console Interface
+==========================================
+*/
+struct I_ConsoleRenderer
+{
+	virtual void Toggle(bool down) = 0;
+	virtual void ToggleFullscreen(bool full) = 0;
+	virtual void Lineup() = 0;
+	virtual void Linedown() = 0;
+	virtual void Statusline(const char  *status_line, const int &len) = 0;
+	virtual void AddLine(char *line, int color=0, int size=0) = 0;
+};
+
+
 
 /*
 ==========================================
@@ -92,7 +107,6 @@ struct I_Renderer
 };
 
 
-//RENDERER_API I_Renderer   * RENDERER_Create(VoidExport_t * vexp);
 RENDERER_API I_Renderer   * RENDERER_Create(I_Void * vexp);
 RENDERER_API RenderInfo_t * RENDERER_GetParms();
 RENDERER_API void RENDERER_Free();

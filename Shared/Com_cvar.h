@@ -1,68 +1,20 @@
 #ifndef VOID_CVARS_AND_CMDS
 #define VOID_CVARS_AND_CMDS
 
-#include "Com_defs.h"
+#include "I_console.h"
 
-//======================================================================================
-//======================================================================================
+/*
+==========================================
+Each module has its a implementation of CVarBase
+This gets rid of nasty memory problems as the CVars
+are dynamicallys modified throughout a session
+==========================================
+*/
 
-struct CVar;
-struct I_CVarHandler
-{	virtual bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)=0;
-};
-
-//======================================================================================
-//======================================================================================
-
-struct CVar
+class CVar : public CVarBase
 {
-	/*
-	==========================================
-	Constants
-	==========================================
-	*/
-	enum
-	{
-		CVAR_MAXSTRINGLEN =	512,
-		CVAR_MAXARGS	  =	5
-	};
+public:
 
-	enum CVarFlags
-	{
-		CVAR_ARCHIVE = 1,
-		CVAR_LATCH = 2,
-		CVAR_READONLY = 4
-	};
-
-	enum CVarType
-	{
-		CVAR_UNDEFINED,
-		CVAR_INT,
-		CVAR_FLOAT,
-		CVAR_STRING,
-		CVAR_BOOL
-	};
-
-	/*
-	==========================================
-	Public vars
-	==========================================
-	*/
-	char * name;
-	char * string;
-	char * latched_string;
-	char * default_string;
-
-	float		value;
-	int			flags;		//CVar characteristics
-	CVarType	type;
-	I_CVarHandler * handler;
-
-	/*
-	==========================================
-	Constructor
-	==========================================
-	*/
 	CVar(const char *varname, 
 		 const char *varval,
 		 CVarType vartype,	
@@ -83,11 +35,7 @@ struct CVar
 		ForceSet(varval);
 	}
 
-	/*
-	==========================================
-	Desctructor
-	==========================================
-	*/
+	//Destructor
 	~CVar()
 	{	
 		handler = 0;
@@ -109,7 +57,7 @@ struct CVar
 			delete [] string;
 			string = 0;
 		}
-	
+
 		switch(type)
 		{
 		case CVAR_INT:
@@ -158,7 +106,6 @@ struct CVar
 		}
 	}
 
-
 	void ForceSet(float val)
 	{
 		char buffer[8];
@@ -178,7 +125,7 @@ struct CVar
 		//Return if its a latched var
 		if(flags & CVAR_LATCH)		
 			return;
-	
+
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
@@ -190,7 +137,7 @@ struct CVar
 		//Return if its a latched var
 		if(flags & CVAR_LATCH)		
 			return;
-	
+
 		//Read only funcs can only be set once
 		if((flags & CVAR_READONLY) && default_string)
 			return;
@@ -198,38 +145,5 @@ struct CVar
 	}
 };
 
-
-//======================================================================================
-//======================================================================================
-
-typedef int HCMD;
-
-struct I_CmdHandler
-{	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
-};
-
-//======================================================================================
-//======================================================================================
-
-struct CCommand
-{
-	CCommand(const char * iname,
-			 HCMD iid, 
-			 I_CmdHandler * ihandler) : handler(ihandler), id(iid)
-	{
-		name = new char[strlen(iname)+1];
-		strcpy(name,iname);
-	}
-
-	~CCommand()
-	{
-		delete [] name;
-		handler = 0;
-	}
-
-	HCMD	id;
-	char *	name;
-	I_CmdHandler * handler;
-};
 
 #endif
