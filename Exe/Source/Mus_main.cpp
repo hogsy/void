@@ -57,7 +57,6 @@ CMusic::CMusic()
 	Sys_GetConsole()->RegisterCFunc("mpause",&MusPause);
 	Sys_GetConsole()->RegisterCFunc("mresume",&MusResume);
 	
-//	g_pCons->RegisterCVar(&m_pvolume,"mvol","0",CVar::CVAR_INT,0,&MusVolume);
 	m_pvolume = Sys_GetConsole()->RegisterCVar("mvol","0",CVar::CVAR_INT,0,&MusVolume);
 }
 
@@ -79,8 +78,6 @@ Init the music system
 
 bool CMusic::Init() 
 {
-//	sprintf(muspath,"%s/%s/%s",
-//			g_exedir,g_gamedir,MUS_PATH);
 	sprintf(muspath,"%s/%s", CFileSystem::GetCurrentPath(), MUS_PATH);
 	
 	FSOUND_SetOutput(FSOUND_OUTPUT_WINMM);

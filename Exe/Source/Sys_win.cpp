@@ -3,7 +3,9 @@
 #include "resources.h"	
 
 
-static bool RegisterWindow();
+extern HWND	g_hWnd;
+
+static bool RegisterWindow(HINSTANCE hInst);
 
 /*
 ==========================================
@@ -17,7 +19,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 {
 	InitMemReporting();
 
-	if(!RegisterWindow())
+	if(!RegisterWindow(hInst))
 	{
 		MessageBox(NULL,"Error Registering Window\n","Error",MB_OK);
 		return -1;
@@ -156,19 +158,19 @@ Register the Window
 ==========================================
 */
 
-static bool RegisterWindow()
+static bool RegisterWindow(HINSTANCE hInst)
 {
 	WNDCLASSEX wcl;
 	
 	wcl.cbSize = sizeof(WNDCLASSEX);
 	wcl.style = CS_OWNDC | CS_HREDRAW|CS_VREDRAW;
-	wcl.hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_APPLICATION));
-	wcl.hIconSm = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_APPLICATION));
+	wcl.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APPLICATION));
+	wcl.hIconSm = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APPLICATION));
 	wcl.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcl.lpszMenuName = NULL;
 	wcl.cbClsExtra = 0;
 	wcl.cbWndExtra = 0;
-	wcl.hInstance = g_hInst;
+	wcl.hInstance = hInst;
 	wcl.lpszClassName = VOID_MAINWINDOWCLASS;
 	wcl.lpfnWndProc = MainWndProc;
 	wcl.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);

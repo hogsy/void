@@ -3,6 +3,7 @@
 
 #include "Sys_hdr.h"
 #include "Sys_time.h"
+#include "I_renderer.h"
 
 //========================================================================================
 #define VOID_MAINWINDOWCLASS "Void"
@@ -41,8 +42,11 @@ class CVoid
 
 	private:
 	
-		CTime		* g_pTime;
-		CFileSystem * g_pFileSystem;
+		CTime		* g_pTime;			//Timer Class
+		CFileSystem * g_pFileSystem;	//FileSystem
+
+		RenderInfo_t * g_pRinfo;		//Current Renderering info
+		VoidExport_t * g_pExport;		//Exported struct
 		
 		//Windows	
 		bool	RegisterWindow();				//Register Window

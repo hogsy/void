@@ -12,11 +12,10 @@ CKeyboard	  *			g_pKb=0;	//Keyboard object
 
 extern CInput *			g_pInput;	//The Input object, Need this here for Cvar funcs, and getfocusmanager
 
-static LPDIRECTINPUT7	m_pDInput=0;	//The direct input object
+static LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 
 static CVar	 *			m_pVarExclusive=0;
 static bool	CSetExclusive(const CVar * var, int argc, char** argv);	
-
 
 bool g_bDIAvailable = false;
 
@@ -36,7 +35,6 @@ CInput::CInput()
 	m_pDInput = 0;
 
 	//Register CVars
-//	g_pCons->RegisterCVar(&m_pVarExclusive,"in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
 	m_pVarExclusive = Sys_GetConsole()->RegisterCVar("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
 }
 
@@ -73,7 +71,7 @@ bool CInput::Init()
 		return true;
 	}
 
-	HRESULT hr = DirectInputCreateEx(g_hInst,
+	HRESULT hr = DirectInputCreateEx(Sys_GetHInstance(),
 									 DIRECTINPUT_VERSION, 
 									 IID_IDirectInput7, 
 									 (void**)&m_pDInput, NULL); 
@@ -385,7 +383,6 @@ i.e The Input object
 I_InputFocusManager * GetInputFocusManager()
 { return g_pInput; 
 }
-
 
 
 

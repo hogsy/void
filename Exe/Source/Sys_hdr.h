@@ -12,13 +12,8 @@
 #include <mmsystem.h>
 #include <direct.h>
 
-
-#define _VOID_EXE_ 1				// used by shared files
-
 #define __VOIDALPHA	1
-
 #define INCLUDE_MUSIC	1
-
 
 #include "Com_defs.h"
 #include "Com_mem.h"
@@ -31,7 +26,7 @@
 
 #define INITGUID
 
-
+//Game States
 enum eGameState
 {
 	INCONSOLE,
@@ -40,17 +35,17 @@ enum eGameState
 	INGAME
 };
 
-I_Console *	Sys_GetConsole();
-
-extern HWND			g_hWnd;
-extern HINSTANCE	g_hInst;
-extern char			g_exedir[COM_MAXPATH];
+//Current Game State
+extern eGameState	g_gameState;
 
 //Current Time
 extern float		g_fframeTime;
 extern float		g_fcurTime;
 
-//Current Game State
-extern eGameState	g_gameState;
+//Common System functions
+I_Console *	Sys_GetConsole();
+HINSTANCE	Sys_GetHInstance();
+HWND		Sys_GetHwnd();
+const char* Sys_GetExeDir();
 
 #endif

@@ -5,18 +5,22 @@
 #include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
-#include "I_renderer.h"
 
-//Global vars 
+
 //========================================================================================
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
 char		g_exedir[COM_MAXPATH];
-
 eGameState	g_gameState;
 
-//pointers to subsystems
 //========================================================================================
+CVoid		* g_pVoid =0;		//The game
+world_t		* g_pWorld=0;		//The World
+
+//Subsystems
+//======================================================================================
+
+I_Renderer  * g_pRender=0;		//Renderer
 CConsole	* g_pConsole =0;	//Console
 CInput		* g_pInput   =0;	//Input 
 CClient		* g_pClient  =0;	//Client and UI
@@ -24,41 +28,37 @@ CClient		* g_pClient  =0;	//Client and UI
 #ifdef INCLUDE_SOUND
 CSound		* g_pSound=0;		//Sound Subsystem
 #endif
-
 #ifdef INCLUDE_MUSIC
 CMusic		* g_pMusic=0;		//Music Subsystem
 #endif
-
 #ifndef __VOIDALPHA
 CServer		* g_pServer=0;		//Network Server
 #endif
 
-//Rendering info, and API
-//========================================================================================
-I_Renderer   * g_pRender=0;
+//======================================================================================
+//Global access functions for private data
+//======================================================================================
+HINSTANCE	Sys_GetHInstance(){ return g_hInst; }
+HWND		Sys_GetHwnd()	  { return g_hWnd;  }
+const char* Sys_GetExeDir()	  { return g_exedir;}
 
-static RenderInfo_t * g_pRinfo =0;		//holds current renderering info
-static VoidExport_t * g_pExport=0;
 
-//========================================================================================
-CVoid		 * g_pVoid =0;		//The game
-world_t		 * g_pWorld=0;		//The World
+//======================================================================================
+//Console loopback func
+//======================================================================================
 
-//console loopback func
 static void CFuncQuit(int argc, char** argv);		//quit game
 static void CFuncMap(int argc, char** argv);		//start local server with map + connect to it
 static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
 
+
 /*
 ==========================================
-CVoid::Void(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
-		   LPSTR lpCmdLine, int nCmdShow)
 Constructor
 ==========================================
 */
-
 CVoid::CVoid(HINSTANCE hInstance, 
 			 HINSTANCE hPrevInstance, 
 		     LPSTR lpCmdLine)
@@ -168,10 +168,8 @@ CVoid::~CVoid()
 		g_pExport = 0;
 	}
 
-
 	FILESYSTEM_Free();
 
-	
 	if(g_pConsole)
 	{		delete g_pConsole;
 		g_pConsole = 0;
@@ -184,35 +182,12 @@ CVoid::Init
 Intializes all the subsystems
 ==========================================
 */
-
 bool CVoid::Init()
 {
-	HRESULT hr;
 
 	//================================
-	//Init COM librarry
-	hr = CoInitialize(NULL);
-	if(FAILED(hr))
-	{
-		Error("CVoid::Init:Error Initializing COM library\n");
-		return false;
-	}
-
-	//================================
-	//Initialize FileSystem
-	if(!g_pFileSystem->Init(g_exedir,VOID_DEFAULTGAMEDIR))
-	{
-		Error("CVoid::Init:Error Initializing File System\n");
-		return false;
-	}
-
-	//================================
-	//Initialize Renderer
-	
-
-	//================================
-	//We parse the command line and exec configs now since
-	//the renderer has been activated and its cvars have been registered
+	//We parse the command line and exec configs now
+	//once all the subsystems have registers their vars
 
 	//parse Command line
 //	ParseCmdLine(lpCmdLine);
@@ -220,13 +195,9 @@ bool CVoid::Init()
 	g_pConsole->ExecConfig("default.cfg");
 	g_pConsole->ExecConfig("void.cfg");
 
-	if(!g_pConsole->Init(g_pRender->GetConsole()))
-	{
-		Error("CVoid::Init: Could not Intialize the console");
-		return false;
-	}
 
-	//create the window
+	//================================
+	//Create the window
 	g_hWnd = CreateWindow(VOID_MAINWINDOWCLASS, 
 						  VOID_MAINWINDOWTITLE,
 						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
@@ -245,15 +216,45 @@ bool CVoid::Init()
 	}
 	g_pRinfo->hWnd = g_hWnd;
 
+
+	//================================
+	//Init COM librarry
+	HRESULT hr = CoInitialize(NULL);
+	if(FAILED(hr))
+	{
+		Error("CVoid::Init:Error Initializing COM library\n");
+		return false;
+	}
+
+	//================================
+	//Initialize FileSystem
+	if(!g_pFileSystem->Init(g_exedir,VOID_DEFAULTGAMEDIR))
+	{
+		Error("CVoid::Init:Error Initializing File System\n");
+		return false;
+	}
+
+	//================================
+	//Initialize Console
+	if(!g_pConsole->Init(g_pRender->GetConsole()))
+	{
+		Error("CVoid::Init: Could not Intialize the console");
+		return false;
+	}
+
+	//================================
+	//Initialize the Renderer
 	if(!g_pRender->InitRenderer())
 	{
 		Error("Void::Init:Error Intializing Renderer\n");	
 		return false;
 	}
 
-	//timer
+	//================================
+	//Timer
 	g_pTime->Init();
 
+	//================================
 	//Input
 	if(!g_pInput->Init()) 
 	{
@@ -267,7 +268,7 @@ bool CVoid::Init()
 		Error("CVoid::Init: Couldnt init Winsock");
 		return false;
 	}
-
+	//================================
 	//Server
 	if(!g_pServer->Init())
 	{
@@ -277,6 +278,7 @@ bool CVoid::Init()
 #endif
 
 #ifdef INCLUDE_SOUND
+	//================================
 	//Sound 
 	if(!g_pSound->Init())
 	{
@@ -287,6 +289,7 @@ bool CVoid::Init()
 #endif
 
 #ifdef INCLUDE_MUSIC
+	//================================
 	//Music
 	if(!g_pMusic->Init())
 	{
@@ -298,6 +301,7 @@ bool CVoid::Init()
 
 
 #ifndef __VOIDALPHA
+	//================================
 	//Client, create the client last
 	if(!g_pClient->InitNet())
 	{
@@ -306,14 +310,18 @@ bool CVoid::Init()
 	}
 #endif
 
-	GetInputFocusManager()->SetKeyListener(g_pConsole,true);
-
-	g_pTime->Reset();
-	
-	g_pConsole->ExecConfig("autoexec.cfg");
-
+	//Update and Show window
 	ShowWindow(g_hWnd, SW_NORMAL); 
 	UpdateWindow(g_hWnd);
+
+	//Start timer
+	g_pTime->Reset();
+
+	//Set focus to console
+	GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+
+	//Exec any autoexec file
+	g_pConsole->ExecConfig("autoexec.cfg");
 	return true;
 }
 
@@ -330,6 +338,8 @@ bool CVoid :: Shutdown()
 
 	if(g_pClient && g_pClient->m_ingame)
 		g_pClient->Disconnect();
+	
+	ShutdownServer();
 
 #ifndef __VOIDALPHA
 	if(g_pServer && g_pServer->m_active)
@@ -359,8 +369,6 @@ bool CVoid :: Shutdown()
 	if(g_pInput)
 		g_pInput->Shutdown();
 
-//	ShutdownZip();
-
 	//Renderer
 	if(g_pRender)
 		g_pRender->Shutdown();
@@ -375,7 +383,6 @@ bool CVoid :: Shutdown()
 
 	//Release COM library
 	CoUninitialize();
-	
 	return true;
 }
 
@@ -393,12 +400,7 @@ void CVoid::RunFrame()
 	//Run Input frame
 	g_pInput->UpdateCursor();
 	g_pInput->UpdateKeys();
-/*	if(g_fcurTime > (lastinput + 0.05f))
-	{
-		g_pInput->UpdateKeys();
-		lastinput = g_fcurTime;
-	}
-*/
+
 	//Run Server
 #ifndef __VOIDALPHA
 	if(g_pServer->m_active)
@@ -410,10 +412,7 @@ void CVoid::RunFrame()
 	if(g_pClient->m_ingame)
 	//if(g_pClient->m_active)
 	{
-//		g_pTime->Update();
-		
 		g_pClient->RunFrame();
-
 		//draw the scene
 		g_pRender->DrawFrame(&g_pClient->eye.origin,&g_pClient->eye.angles);
 	}
@@ -453,7 +452,7 @@ bool CVoid::InitServer(char *map)
 	if(g_pWorld != 0)
 	{
 		g_pClient->UnloadWorld();
-		world_destroy(g_pWorld);
+		UnloadWorld();
 	}
 
 	g_pWorld = 0;
@@ -508,6 +507,7 @@ bool CVoid::InitServer(char *map)
 	ComPrintf("CVoid::InitGame: OK\n");
 	return true;
 }
+
 
 /*
 ======================================
@@ -585,6 +585,100 @@ bool CVoid::UnloadWorld()
 	return true;
 }
 
+//======================================================================================
+//Window Event Handlers
+//======================================================================================
+
+/*
+==========================================
+Move Window Event
+==========================================
+*/
+void CVoid::Move(int x, int y)
+{
+	if(g_pRender)	
+		g_pRender->MoveWindow(x,y);
+}
+
+/*
+==========================================
+Resize Window Event
+==========================================
+*/
+void CVoid::Resize(bool focus, int x, int y, int w, int h)
+{
+	if(focus==false)
+	{
+		g_pRinfo->active = false;
+		return;
+	}
+
+	g_pRinfo->active = true;
+
+	//Change the size of the rendering window
+	if (g_pRender && !(g_pRinfo->rflags & RFLAG_FULLSCREEN))
+		g_pRender->Resize();
+
+	//Set Window extents for input if full screen
+	if(g_pInput)
+		g_pInput->Resize(x,y,w,h);
+}
+
+/*
+==========================================
+Activiate window Event
+==========================================
+*/
+void CVoid::Activate(bool focus)
+{
+	if (focus == false)
+	{
+		g_pRinfo->active = false;
+//		if(g_pInput)
+//			g_pInput->UnAcquire();
+	}
+	else 
+	{
+		g_pRinfo->active = true;
+		if(g_pInput)
+			g_pInput->Acquire();
+
+		if (g_pRender && (g_pRinfo->rflags & RFLAG_FULLSCREEN))
+			g_pRender->Resize();
+	}
+}
+
+/*
+==========================================
+Get Focus Event
+==========================================
+*/
+void CVoid::OnFocus()
+{
+	if (g_pRinfo)
+		g_pRinfo->active = true;
+	
+	//Input Focus
+	if(g_pInput)
+		g_pInput->Acquire();
+}
+
+
+/*
+==========================================
+Lose Focus Event
+==========================================
+*/
+void CVoid::LostFocus()
+{
+	//Input loses Focus
+	if(g_pInput)
+		g_pInput->UnAcquire();
+	
+	//stop rendering
+	if (g_pRinfo)
+		g_pRinfo->active = false;
+}
 
 
 //==============================================================================================
@@ -649,10 +743,11 @@ void CVoid::WriteConfig(char *config)
 	}
 }
 
-//==============================================================================================
+//======================================================================================
+//Console loopback functions
+//======================================================================================
 /*
 ===============================================
-Console "Quit" loopback func
 quit game - 
 disconnect client + shutdown server + exit game
 ===============================================
@@ -765,81 +860,3 @@ void CToggleConsole(int argc, char** argv)
 		g_pConsole->Toggle(true);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-void CVoid::Move(int x, int y)
-{
-	if(g_pRender)
-		g_pRender->MoveWindow(x,y);
-}
-
-//void CVoid::Resize(bool focus)
-void CVoid::Resize(bool focus, int x, int y, int w, int h)
-{
-	if(focus==false)
-	{
-		g_pRinfo->active = false;
-		return;
-	}
-
-	g_pRinfo->active = true;
-
-	//Change the size of the rendering window
-	if (g_pRender && !(g_pRinfo->rflags & RFLAG_FULLSCREEN))
-		g_pRender->Resize();
-
-	//Set Window extents for input if full screen
-	if(g_pInput)
-		g_pInput->Resize(x,y,w,h);
-}
-
-void CVoid::Activate(bool focus)
-{
-	if (focus == false)
-	{
-		g_pRinfo->active = false;
-//		if(g_pInput)
-//			g_pInput->UnAcquire();
-	}
-	else 
-	{
-		g_pRinfo->active = true;
-		if(g_pInput)
-			g_pInput->Acquire();
-
-		if (g_pRender && (g_pRinfo->rflags & RFLAG_FULLSCREEN))
-			g_pRender->Resize();
-	}
-}
-
-void CVoid::OnFocus()
-{
-	if (g_pRinfo)
-		g_pRinfo->active = true;
-	
-	//Input Focus
-	if(g_pInput)
-		g_pInput->Acquire();
-}
-
-
-void CVoid::LostFocus()
-{
-	//Input loses Focus
-	if(g_pInput)
-		g_pInput->UnAcquire();
-	
-	//stop rendering
-	if (g_pRinfo)
-		g_pRinfo->active = false;
-}
-
-

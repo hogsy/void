@@ -212,10 +212,6 @@ CSound::CSound()
 	Sys_GetConsole()->RegisterCFunc("spause",&SPause);
 	Sys_GetConsole()->RegisterCFunc("sresume",&SResume);
 
-/*
-	g_pCons->RegisterCVar(&m_pvolume,"s_vol","0",CVar::CVAR_INT,0,&SVolume);
-	g_pCons->RegisterCVar(&m_pChannels,"s_chans","8",CVar::CVAR_INT,CVar::CVAR_ARCHIVE|CVar::CVAR_LATCH);
-*/
 	m_pvolume  = Sys_GetConsole()->RegisterCVar("s_vol","0",CVar::CVAR_INT,0,&SVolume);
 	m_pChannels= Sys_GetConsole()->RegisterCVar("s_chans","8",CVar::CVAR_INT,CVar::CVAR_ARCHIVE|CVar::CVAR_LATCH);
 }
@@ -282,7 +278,7 @@ bool CSound::Init()//int maxchannels)
 	}
 
 	// Set the cooperative level.
-	hr = m_pdSound->SetCooperativeLevel(g_hWnd,DSSCL_NORMAL);//DSSCL_PRIORITY
+	hr = m_pdSound->SetCooperativeLevel(Sys_GetHwnd(),DSSCL_NORMAL);//DSSCL_PRIORITY
 	if (FAILED(hr)) 
 	{ 
 		ComPrintf("CSound::Init Failed SetCoopLevel\n");

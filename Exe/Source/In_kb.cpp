@@ -114,7 +114,6 @@ CKeyboard::CKeyboard()
 	//Default to self as listener
 	SetKeyListener(this,false,IN_DEFAULTREPEATRATE);
 
-//	g_pCons->RegisterCVar(&m_pVarKbMode,"kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
 	m_pVarKbMode = Sys_GetConsole()->RegisterCVar("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
 }
 
@@ -125,6 +124,8 @@ Destructor
 */
 CKeyboard::~CKeyboard()
 {
+	Shutdown();
+
 	PollKeyboard = 0;
 	m_pDIKb = 0;
 	m_pKeyHandler = 0;
@@ -249,9 +250,11 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 
 	//Set coop level depending on exclusive flag
 	if(!m_bExclusive)
-		hr = m_pDIKb->SetCooperativeLevel(g_hWnd,DISCL_FOREGROUND | DISCL_NONEXCLUSIVE); 
+		hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(),
+										  DISCL_FOREGROUND | DISCL_NONEXCLUSIVE); 
 	else
-		hr = m_pDIKb->SetCooperativeLevel(g_hWnd,DISCL_FOREGROUND | DISCL_EXCLUSIVE); 
+		hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(),
+										  DISCL_FOREGROUND | DISCL_EXCLUSIVE); 
 	
 	if (FAILED(hr)) 
 	{
@@ -415,7 +418,7 @@ HRESULT CKeyboard :: Acquire()
 	{
 		hWinKbHook = SetWindowsHookEx(WH_KEYBOARD,  // type of hook to install
 					 &Win32_KeyboardProc,			// address of hook procedure
-					 g_hInst,						// handle to application instance
+					 Sys_GetHInstance(),			// handle to application instance
 					 ::GetCurrentThreadId());		// identity of thread to install hook for
 	
 		if(hWinKbHook == 0)
@@ -486,7 +489,8 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 		{
 			//Try changing to DI Exclusive mode is using DirectInput
 			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_EXCLUSIVE);
+			HRESULT hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(), 
+													DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
 			ComPrintf("CKeyboard::SetExclusive, Now in Exclusive Mode");
@@ -497,7 +501,8 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 		else if(!exclusive && m_bExclusive)
 		{
 			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
+			HRESULT hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(), 
+														DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
 			ComPrintf("CKeyboard::SetExclusive, Now in Non-Exclusive Mode");

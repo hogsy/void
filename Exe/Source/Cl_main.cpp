@@ -1,15 +1,12 @@
 #include "Cl_main.h"
 #include "I_renderer.h"
 #include "Cl_cmds.h"
-#include "Sys_main.h"
 #include "Sys_hdr.h"
-
 #include "Sys_cons.h"
 
-extern CVoid		*g_pVoid;
+
 extern world_t		*g_pWorld;
 extern I_Renderer   *g_pRender;
-
 
 CVar *		CClient::m_clport;
 CVar *		CClient::m_clname;
@@ -61,12 +58,6 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 
 	m_rHud = 0;
 
-/*
-	g_pCons->RegisterCVar(&m_clport,"cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	g_pCons->RegisterCVar(&m_clrate,"cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	g_pCons->RegisterCVar(&m_clname,"cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
-	g_pCons->RegisterCVar(&m_noclip,"cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
-*/
 	m_clport = Sys_GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	m_clrate = Sys_GetConsole()->RegisterCVar("cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	m_clname = Sys_GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
@@ -286,8 +277,8 @@ bool CClient::UnloadWorld()
 
 	g_pConsole->ToggleFullscreen(true);
 	g_pConsole->Toggle(true);
-	return g_pVoid->UnloadWorld();
-//	return true;
+//	return g_pVoid->UnloadWorld();
+	return true;
 }
 
 
@@ -579,7 +570,7 @@ bool CClient::Disconnect()
 		UnloadWorld();
 	CloseNet();
 	g_gameState = INCONSOLE;
-	g_pWorld = 0;
+//	g_pWorld = 0;
 	return true;
 }
 
