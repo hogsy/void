@@ -1,13 +1,15 @@
-#include "Fs_pakfile.h"
-#include "Fs_zipfile.h"
+#include "Fs_hdr.h"
 #include "I_file.h"
 #include "I_filesystem.h"
-#include <string>
+#include "Fs_pakfile.h"
+#include "Fs_zipfile.h"
 
 //======================================================================================
 #define CMD_LISTFILES	0
 #define CMD_LISTPATHS	1
 #define CMD_DIRPATH		2
+
+extern I_Console * g_pConsole;		//pointer to console
 
 //======================================================================================
 
@@ -61,11 +63,10 @@ CFileSystem::CFileSystem()
 	m_searchpaths = new SearchPath_t();
 	m_lastpath = m_searchpaths;
 
-	g_pConsole->RegisterCommand("fs_list",CMD_LISTFILES,this);
+	g_pConsole->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
 	g_pConsole->RegisterCommand("fs_path",CMD_LISTPATHS,this);
 	g_pConsole->RegisterCommand("fs_dir",CMD_DIRPATH,this);
 }
-
 
 CFileSystem::~CFileSystem()
 {
@@ -172,43 +173,40 @@ bool CFileSystem::AddGameDir(const char *dir)
 
 	//Directoy is Valid. Reset the current GAME directoy before changing to new one
 	ResetGameDir();
-
 	//Add to SearchPath
 	AddSearchPath(gamedir);
 
 	//Add any archive files into the search path as well
-//	CStringList	archives;
-	//list<string> archives;
-	StringList archives;
+	char		archivepath[COM_MAXPATH];
+	StringList	archivelist;
 
-	char archivepath[COM_MAXPATH];
+	for(int i=0; archive_exts[i]; i++)
+		GetFilesInPath(archivelist,gamedir,archive_exts[i]);
 	
-	if(GetArchivesInPath(gamedir,archives))
+	archivelist.sort();
+	
+	for(std::list<std::string>::iterator itor = archivelist.begin(); itor != archivelist.end(); itor++)
 	{
-		//CStringList * iterator = &archives;
-		for(std::list<std::string>::iterator itor = archives.begin(); itor != archives.end(); itor++)
-//		while(iterator->next)
+		if(CompareExts(itor->c_str(),"zip"))
 		{
-			if(CompareExts(itor->c_str(),"zip"))
-			{
-				CZipFile * zipfile = new CZipFile();
-sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
-				if(zipfile->Init(archivepath, m_exepath))
-					AddSearchPath(gamedir,(CArchive*)zipfile);
-				else
-					delete zipfile;
-			}
-			//Found a Pak file, try adding
-			if(CompareExts(itor->c_str(),"pak"))
-			{
-				CPakFile * pakfile = new CPakFile();
-sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
-				if(pakfile->Init(archivepath, m_exepath))
-					AddSearchPath(gamedir,(CArchive*)pakfile);
-				else
-					delete pakfile;
-			}
-			//iterator = iterator->next;
+			CZipFile * zipfile = new CZipFile();
+			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
+
+			if(zipfile->Init(archivepath, m_exepath))
+				AddSearchPath(gamedir,(CArchive*)zipfile);
+			else
+				delete zipfile;
+		}
+		//Found a Pak file, try adding
+		if(CompareExts(itor->c_str(),"pak"))
+		{
+			CPakFile * pakfile = new CPakFile();
+			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
+
+			if(pakfile->Init(archivepath, m_exepath))
+				AddSearchPath(gamedir,(CArchive*)pakfile);
+			else
+				delete pakfile;
 		}
 	}
 	return true;
@@ -228,7 +226,7 @@ void CFileSystem::ResetGameDir()
 	//Remove all search paths associated with the current game dir
 	//including the archive files
 	SearchPath_t * iterator = m_lastpath;
-	while(iterator)
+	while(iterator->prev)
 	{
 		//remove this entry if it doesnt match the base dir
 		if(strcmp(iterator->path,m_basedir))
@@ -248,7 +246,7 @@ void CFileSystem::ResetGameDir()
 Returns current path
 ==========================================
 */
-const char * CFileSystem::GetCurrentPath()
+const char * CFileSystem::GetCurrentPath() const
 {	return m_curpath;
 }
 
@@ -367,7 +365,6 @@ uint CFileSystem::OpenFileStream(FILE ** ifp,
 	return 0;
 }
 
-
 /*
 ===========================================
 Lists Added search paths
@@ -422,65 +419,150 @@ void CFileSystem::ListArchiveFiles()
 }
 
 /*
+==========================================
+Print out files matching the criteria
+==========================================
+*/
+void CFileSystem::ListFiles(const char *path, const char *ext)
+{
+	if(!m_lastpath)
+	{
+		ComPrintf("CFileSystem::ListFiles: File System is uninitialized\n");
+		return;
+	}
+
+	int pathlen = 0;
+	StringList		strlist;
+	std::list<std::string>::iterator itor;
+
+	char			searchPath[COM_MAXPATH];
+	SearchPath_t *	iterator = m_lastpath;
+	
+	if(path)
+		pathlen = strlen(path) + 1;
+
+	//Sort of a hack to get file names right
+	//First just go through normal dir paths
+	while(iterator->prev)
+	{
+		iterator = iterator->prev;
+
+		if(iterator->archive)
+		{
+			iterator->archive->GetFileList(strlist,path,ext);
+			if(strlist.size())
+			{
+				if(ext)
+					ComPrintf("%s/*.%s",iterator->archive->m_archiveName,ext);
+				else
+					ComPrintf("%s/*.*",iterator->archive->m_archiveName);
+				ComPrintf("===================================\n");
+
+				for(itor = strlist.begin(); itor != strlist.end(); itor++)
+					ComPrintf("%s\n",itor->c_str() + pathlen);
+				ComPrintf("\n");
+				strlist.clear();
+			}
+		}
+		else
+		{	
+			if(path)
+			{
+				sprintf(searchPath,"%s/%s",iterator->path,path);
+				GetFilesInPath(strlist,searchPath,ext);
+			}
+			else
+			{	
+				strcpy(searchPath,iterator->path);
+				GetFilesInPath(strlist,searchPath,ext);
+			}
+			if(strlist.size())
+			{
+				if(ext)
+					ComPrintf("%s/*.%s",searchPath,ext);
+				else
+					ComPrintf("%s/*.*",searchPath);
+				ComPrintf("===================================\n");
+
+				for(itor = strlist.begin(); itor != strlist.end(); itor++)
+					ComPrintf("%s\n",itor->c_str());
+
+			}
+			ComPrintf("\n");
+			strlist.clear();
+		}
+		
+	}
+}
+
+/*
+==========================================
+Console Command Hanlder
+==========================================
+*/
+void CFileSystem::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_LISTFILES:
+		{
+			ListArchiveFiles();
+			break;
+		}
+	case CMD_LISTPATHS:
+		{
+			ListSearchPaths();
+			break;
+		}
+	case CMD_DIRPATH:
+		{
+			if(numArgs == 2)
+				ListFiles(szArgs[1],0);
+			else if(numArgs == 3)
+				ListFiles(szArgs[1], szArgs[2]);
+			else
+				ListFiles(0,0);
+			break;
+		}
+	}
+}
+
+/*
 ===========================================
 Scan a directory for supported archive types
 ===========================================
 */
-bool CFileSystem::GetArchivesInPath(const char *path, StringList &strlist)
-{
-	int	 num=0;
-	char searchpath[COM_MAXPATH];
-
-	for(int i=0; archive_exts[i]; i++)
-	{
-		WIN32_FIND_DATA	finddata;
-		HANDLE	hsearch;
-		bool	finished = false;
-
-		sprintf(searchpath,"%s/%s/*.%s",m_exepath,path,archive_exts[i]);
-
-		hsearch = FindFirstFile(searchpath,&finddata);
-		if(hsearch == INVALID_HANDLE_VALUE)
-		{
-			ComPrintf("CFileSystem::GetArchivesInPath:Couldnt find %s\n",searchpath);
-			continue;
-		}
-
-		while(!finished)
-		{
-			if(!(finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-			{
-				strlist.push_back(std::string(finddata.cFileName));
-				num++;
-			}
-			if (!FindNextFile(hsearch, &finddata))
-			{
-				if (GetLastError() == ERROR_NO_MORE_FILES) 
-					finished = true;
-			}
-		}
-		if(FindClose(hsearch) == FALSE)   // file search handle
-			ComPrintf("CFileSystem::Win32_DirectoryList:Unable to close search handle\n");
-	}
-	strlist.sort();
-	return true;
-}
-
-
-/*
-===========================================
-Check if given directoy exists
-===========================================
-*/
-bool CFileSystem::PathExists(const char *path)
+bool CFileSystem::GetFilesInPath(StringList &strlist, const char *path, const char *ext)
 {
 	WIN32_FIND_DATA	finddata;
-	HANDLE hsearch = FindFirstFile(path,&finddata);
-	if(hsearch == INVALID_HANDLE_VALUE)
-		return false;
+	char	searchpath[COM_MAXPATH];
+	bool	finished = false;
 
-	if(FindClose(hsearch) == FALSE)
-		ComPrintf("CFileSystem::PathExists:Unable to close search handle\n");
+	if(ext)
+		sprintf(searchpath,"%s/%s/*.%s",m_exepath,path,ext);
+	else
+		sprintf(searchpath,"%s/%s/*.*",m_exepath,path);
+
+	HANDLE hsearch = FindFirstFile(searchpath,&finddata);
+	if(hsearch == INVALID_HANDLE_VALUE)
+	{
+		ComPrintf("CFileSystem::GetArchivesInPath: Couldnt find %s\n",searchpath);
+		return false;
+	}
+
+	while(!finished)
+	{
+//		if(!(finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		strlist.push_back(std::string(finddata.cFileName));
+
+		if (!FindNextFile(hsearch, &finddata))
+		{
+			if (GetLastError() == ERROR_NO_MORE_FILES) 
+				finished = true;
+		}
+	}
+	if(FindClose(hsearch) == FALSE)   // file search handle
+		ComPrintf("CFileSystem::Win32_DirectoryList:Unable to close search handle\n");
 	return true;
 }
 
@@ -526,63 +608,4 @@ void CFileSystem::RemoveSearchPath(const char *path)
 		else
 			iterator = iterator->prev;
 	}
-}
-
-
-/*
-==========================================
-
-==========================================
-*/
-void CFileSystem::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
-{
-	switch(cmdId)
-	{
-	case CMD_LISTFILES:
-		ListArchiveFiles();
-		break;
-	case CMD_LISTPATHS:
-		ListSearchPaths();
-		break;
-	case CMD_DIRPATH:
-		{
-			break;
-		}
-	}
-}
-
-
-/*
-===========================================
-Create a listing of files with the given
-characteristics
-===========================================
-*/
-
-int CFileSystem::FindFiles(StringList &filelist,	//File List to fill
-							const char  *ext,		//Extension		  
-							const char  *path)		//Search in a specific path
-{
-	return 0;
-}
-
-
-/*
-==========================================
-Compare file Extensions
-return true if equa
-==========================================
-*/
-bool CFileSystem::CompareExts(const char *file, const char *ext)		
-{
-	const char *p = file;
-	while(*p && *p!='.' && *p!='\0')
-		p++;
-
-	if(*p=='.')
-	{
-		if(!_stricmp(++p,ext))
-			return true;
-	}
-	return false;
 }

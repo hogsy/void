@@ -1,99 +1,108 @@
 #include "Fs_zipfile.h"
 
+/*======================================================================================
+Private Declarations and definitions
 
-//======================================================================================
-//Private Definitions
-//======================================================================================
+Zip extraction code was intiallly based on the zlib sources
+
+Questions about zlib should be sent to <zlib@quest.jpl.nasa.gov>, or to
+Gilles Vollant <info@winimage.com> for the Windows DLL version.
+The zlib home page is http://www.cdrom.com/pub/infozip/zlib/
+The official zlib ftp site is ftp://ftp.cdrom.com/pub/infozip/zlib/
+
+======================================================================================*/
 
 #define CENTRAL_HDR_SIG	'\001','\002'	/* the infamous "PK" signature bytes, */
 #define LOCAL_HDR_SIG	'\003','\004'	/*  sans "PK" (so unzip executable not */
 #define END_CENTRAL_SIG	'\005','\006'	/*  mistaken for zipfile itself) */
 #define EXTD_LOCAL_SIG	'\007','\010'	/* [ASCII "\113" == EBCDIC "\080" ??] */
 
-#define MAXCOMMENTBUFFERSIZE			1024
-#define ZIP_LOCAL_FILE_HEADER_SIZE      26
-
-typedef struct ZIP_local_file_header_s 
+//Use an unnnamed namespace to keep this private
+namespace
 {
-	byte	version_needed_to_extract[2];
-	ushort	general_purpose_bit_flag;
-	ushort	compression_method;
-	ushort	last_mod_file_time;
-	ushort	last_mod_file_date;
-	ulong	crc32;
-	ulong	csize;
-	ulong	ucsize;
-	ushort	filename_length;
-	ushort	extra_field_length;
-} ZIP_local_file_header;
+	enum
+	{
+		MAXCOMMENTBUFFERSIZE		= 1024,
+		ZIP_LOCAL_FILE_HEADER_SIZE  = 26
+	};
 
-typedef struct ZIP_central_directory_file_header_s 
-{
-	byte	version_made_by[2];
-	byte	version_needed_to_extract[2];
-	ushort	general_purpose_bit_flag;
-	ushort	compression_method;
-	ushort	last_mod_file_time;
-	ushort	last_mod_file_date;
-	ulong	crc32;
-	ulong	csize;
-	ulong	ucsize;
-	ushort	filename_length;
-	ushort  extra_field_length;
-	ushort  file_comment_length;
-	ushort  disk_number_start;
-	ushort  internal_file_attributes;
-	ulong	external_file_attributes;
-	ulong	relative_offset_local_header;
-} ZIP_central_directory_file_header;
+	typedef struct ZIP_local_file_header_s 
+	{
+		byte	version_needed_to_extract[2];
+		ushort	general_purpose_bit_flag;
+		ushort	compression_method;
+		ushort	last_mod_file_time;
+		ushort	last_mod_file_date;
+		ulong	crc32;
+		ulong	csize;
+		ulong	ucsize;
+		ushort	filename_length;
+		ushort	extra_field_length;
+	} ZIP_local_file_header;
 
-typedef struct ZIP_end_central_dir_record_s 
-{
-	ushort	number_this_disk;
-	ushort	num_disk_start_cdir;
-	ushort	num_entries_centrl_dir_ths_disk;
-	ushort	total_entries_central_dir;
-	ulong	size_central_directory;
-	ulong	offset_start_central_directory;
-	ushort	zipfile_comment_length;
+	typedef struct ZIP_central_directory_file_header_s 
+	{
+		byte	version_made_by[2];
+		byte	version_needed_to_extract[2];
+		ushort	general_purpose_bit_flag;
+		ushort	compression_method;
+		ushort	last_mod_file_time;
+		ushort	last_mod_file_date;
+		ulong	crc32;
+		ulong	csize;
+		ulong	ucsize;
+		ushort	filename_length;
+		ushort  extra_field_length;
+		ushort  file_comment_length;
+		ushort  disk_number_start;
+		ushort  internal_file_attributes;
+		ulong	external_file_attributes;
+		ulong	relative_offset_local_header;
+	} ZIP_central_directory_file_header;
 
-} ZIP_end_central_dir_record;
+	typedef struct ZIP_end_central_dir_record_s 
+	{
+		ushort	number_this_disk;
+		ushort	num_disk_start_cdir;
+		ushort	num_entries_centrl_dir_ths_disk;
+		ushort	total_entries_central_dir;
+		ulong	size_central_directory;
+		ulong	offset_start_central_directory;
+		ushort	zipfile_comment_length;
 
+	} ZIP_end_central_dir_record;
 
-//======================================================================================
-//Private Declarations
-//======================================================================================
+	//Zip header signitures
+	const char zip_hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
+	const char zip_hdr_local[4] = { 'P', 'K', LOCAL_HDR_SIG };
+	const char zip_hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
+	const char zip_hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
 
-//Zip header signitures
-static const char zip_hdr_central[4] = { 'P', 'K', CENTRAL_HDR_SIG };
-static const char zip_hdr_local[4] = { 'P', 'K', LOCAL_HDR_SIG };
-static const char zip_hdr_endcentral[4] = { 'P', 'K', END_CENTRAL_SIG };
-static const char zip_hdr_extlocal[4] = { 'P', 'K', EXTD_LOCAL_SIG };
+	//Utility funcs to read ZipHeader data in correcy byte order
+	inline void getShort (FILE* fin, ushort &is)
+	{
+		static int ix=0;
+		ix = fgetc(fin);
+		ix += (((ulong)fgetc(fin)) << 8);
+		is = ix;
+	}
 
-//Utility funcs to read ZipHeader data in correcy byte order
-static void getShort (FILE* fin, ushort &is)
-{
-    int ix=0;
-    ix = fgetc(fin);
-	ix += (((ulong)fgetc(fin)) << 8);
-	is = ix;
-}
-
-static void getLong (FILE* fin, ulong &ix)
-{
-    int i;
+	inline void getLong (FILE* fin, ulong &ix)
+	{
+		static int i=0;
     
-	i = fgetc(fin);
-    ix = (ulong)i;
+		i = fgetc(fin);
+		ix = (ulong)i;
     
-    i = fgetc(fin);
-    ix += ((ulong)i)<<8;
+		i = fgetc(fin);
+		ix += ((ulong)i)<<8;
 
-    i = fgetc(fin);
-    ix += ((ulong)i)<<16;
+		i = fgetc(fin);
+		ix += ((ulong)i)<<16;
 
-    i = fgetc(fin);
-    ix += ((ulong)i)<<24;
+		i = fgetc(fin);
+		ix += ((ulong)i)<<24;
+	}
 }
 
 //======================================================================================
@@ -109,7 +118,7 @@ CZipFile::CZipFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
-	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 }
 
@@ -118,7 +127,7 @@ CZipFile::~CZipFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)
@@ -228,7 +237,6 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 	ulong uMaxBack =0xffff; /* maximum size of global comment */
 	ulong uPosFound=0;
 
-	
 	if (fseek(fin,0,SEEK_END) != 0)
 		return 0;
 
@@ -254,7 +262,6 @@ ulong CZipFile::GetLastRecordOffset(FILE * fin)
 		
 		uReadPos = uSizeFile-uBackRead;
 		
-
 		uReadSize = ((MAXCOMMENTBUFFERSIZE+4) < (uSizeFile-uReadPos)) ? 
 					 (MAXCOMMENTBUFFERSIZE+4) : (uSizeFile-uReadPos);
 		
@@ -354,16 +361,6 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 							   cdfh.filename_length + 
 							   cdfh.extra_field_length;
 
-/*			m_files[m_numFiles] = new ZipEntry_t();
-			strcpy(m_files[m_numFiles]->filename,bufname);
-			m_files[m_numFiles]->filelen = cdfh.ucsize;
-			m_files[m_numFiles]->filepos = cdfh.relative_offset_local_header + 
-								 sizeof(zip_hdr_local) + 
-								 ZIP_LOCAL_FILE_HEADER_SIZE +
-								 cdfh.filename_length + 
-								 cdfh.extra_field_length;
-*/
-
 			//Find a place to insert the new entry
 			destIndex = m_numFiles;	//default to last position
 
@@ -444,26 +441,41 @@ void  CZipFile::ListFiles()
 Get a list of files
 ==========================================
 */
-bool  CZipFile::GetFileList (CStringList * list)
+int  CZipFile::GetFileList (StringList &strlst, 
+							const char * path,
+							const char *ext)
 {
-	if(list)
-	{
-		ComPrintf("CZipFile::GetFileList: List needs to be deleted!, %s\n", m_archiveName);
-		return false;
-	}
-	
 	if(!m_files)
-		return false;
+		return 0;
+	int matched = 0;
 
-	CStringList  *iterator = list;
-	for(int i = 0; i< m_numFiles; i++)
+	if(path)
 	{
-		strcpy(iterator->string,m_files[i]->filename);
-		iterator->next = new CStringList;
-		iterator = iterator->next;
+		int plen = strlen(path);
+		for(int i=0;i<m_numFiles;i++)
+		{
+			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
+			   (!ext || CompareExts(m_files[i]->filename,ext)))
+			{
+				strlst.push_back(std::string(m_files[i]->filename));
+				matched ++;
+			}
+		}
 	}
-	return true;
+	else
+	{
+		for(int i=0;i<m_numFiles;i++)
+		{
+			if(!ext || CompareExts(m_files[i]->filename,ext))
+			{
+				strlst.push_back(std::string(m_files[i]->filename));
+				matched ++;
+			}
+		}
+	}
+	return matched;
 }
+
 
 /*
 ==========================================
@@ -564,14 +576,14 @@ Open a file and return a handle
 */
 HFS CZipFile::OpenFile(const char *ifilename)
 {
-	if(m_numOpenFiles >= ARCHIVEMAXOPENFILES)
+	if(m_numOpenFiles >= CArchive::ARCHIVEMAXOPENFILES)
 	{
 		ComPrintf("CZipFile::OpenFile: Max files opened in %s\n", m_archiveName);
 		return -1;
 	}
 
 	//Find free space
-	for(int i=0;i<ARCHIVEMAXOPENFILES;i++)
+	for(int i=0;i<CArchive::ARCHIVEMAXOPENFILES;i++)
 	{
 		if(m_openFiles[i].file == 0)
 			break;
@@ -705,9 +717,6 @@ Get size of file for this handle
 uint CZipFile::GetSize(HFS handle)
 {	return m_openFiles[handle].file->filelen;
 }
-
-
-
 
 
 #if 0

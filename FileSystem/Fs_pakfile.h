@@ -1,5 +1,5 @@
-#ifndef VOID_COM_PAK_FILE
-#define VOID_COM_PAK_FILE
+#ifndef FS_PAKREADER_H
+#define FS_PAKREADER_H
 
 #include "Fs_hdr.h"
 
@@ -23,11 +23,18 @@ public:
 	uint LoadFile(byte ** ibuffer, 
 				  uint buffersize, 
 				  const char *ifilename);
+	
 	bool HasFile(const char * filename);
 	void ListFiles();
-	bool GetFileList (CStringList * list);
+	int  GetFileList (StringList &strlst, 
+					  const char * path,
+					  const char *ext);
 
 private:
+
+	enum 
+	{	PAKENTRYSIZE =	64
+	};
 	
 	struct PakEntry_t
 	{
@@ -49,14 +56,13 @@ private:
 	PakEntry_t **   m_files;
 	FILE	   *	m_fp;
 
-	PakOpenFile_t   m_openFiles[ARCHIVEMAXOPENFILES];
+	PakOpenFile_t   m_openFiles[CArchive::ARCHIVEMAXOPENFILES];
 	int				m_numOpenFiles;
 
 	bool BinarySearchForEntry(const char *name,	
 							  PakEntry_t ** array, 
 							  PakEntry_t ** item,
 							  int low, int high);
-	void QuickSortFileEntries(PakEntry_t ** list, const int numitems);
 };
 
 #endif

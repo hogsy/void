@@ -99,3 +99,47 @@ void ComPrintf(char* text, ...)
 
 	g_pConsole->ConPrint(buff);
 }
+
+
+//======================================================================================
+//======================================================================================
+
+
+/*
+==========================================
+Shared utility funcs
+Compare file Extensions
+return true if equa
+==========================================
+*/
+bool CompareExts(const char *file, const char *ext)		
+{
+	const char *p = file;
+	while(*p && *p!='.' && *p!='\0')
+		p++;
+
+	if(*p=='.')
+	{
+		if(!_stricmp(++p,ext))
+			return true;
+	}
+	return false;
+}
+
+
+/*
+===========================================
+Check if given directoy exists
+===========================================
+*/
+bool PathExists(const char *path)
+{
+	WIN32_FIND_DATA	finddata;
+	HANDLE hsearch = FindFirstFile(path,&finddata);
+	if(hsearch == INVALID_HANDLE_VALUE)
+		return false;
+
+	if(FindClose(hsearch) == FALSE)
+		ComPrintf("CFileSystem::PathExists:Unable to close search handle\n");
+	return true;
+}

@@ -1,5 +1,5 @@
-#ifndef COM_ZIPREADER_H
-#define COM_ZIPREADER_H
+#ifndef FS_ZIPREADER_H
+#define FS_ZIPREADER_H
 
 #include "Fs_hdr.h"
 
@@ -28,7 +28,9 @@ public:
 	
 	void ListFiles();
 	
-	bool GetFileList (CStringList * list);
+	int  GetFileList (StringList &strlst, 
+					  const char * path,
+					  const char *ext);
 
 private:
 
@@ -51,7 +53,7 @@ private:
 	};
 
 	ZipEntry_t	 ** m_files;
-	ZipOpenFile_t	m_openFiles[ARCHIVEMAXOPENFILES];
+	ZipOpenFile_t	m_openFiles[CArchive::ARCHIVEMAXOPENFILES];
 
 	int m_numOpenFiles;
 	int m_numFiles;

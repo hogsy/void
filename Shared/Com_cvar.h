@@ -14,8 +14,6 @@ typedef bool (*CVAR_FUNC)(const CVar *, int,  char**);
 
 //==============================================================
 
-
-
 struct CVar
 {
 	enum CVarFlags
@@ -69,8 +67,7 @@ struct CVar
 typedef int HCMD;
 
 struct I_CmdHandler
-{
-	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
+{	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
 };
 
 struct CCommand

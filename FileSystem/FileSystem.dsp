@@ -145,10 +145,6 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_list.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File

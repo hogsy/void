@@ -5,6 +5,10 @@
 #include <string.h>
 #include <windows.h>
 
+//STL
+#include <list>
+#include <string>
+
 #ifdef _DEBUG
 
 #include <crtdbg.h>
@@ -20,6 +24,7 @@ void ComPrintf(char* text, ...);
 #define COM_MAXPATH		256
 #define COM_MAXFILENAME 128
 
+typedef std::list<std::string> StringList;
 
 #ifndef byte
 typedef unsigned char byte;

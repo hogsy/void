@@ -4,8 +4,6 @@
 //Private definations
 //======================================================================================
 
-#define PAKENTRYSIZE	64
-
 //Pak file header
 typedef struct
 {
@@ -13,7 +11,6 @@ typedef struct
 	int		dirofs;
 	int		dirlen;
 }PakHeader_t;
-
 
 //======================================================================================
 //======================================================================================
@@ -29,7 +26,7 @@ CPakFile::CPakFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
-	memset(m_openFiles,0, sizeof(PakOpenFile_t) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 }
 
@@ -38,7 +35,7 @@ CPakFile::~CPakFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	memset(m_openFiles,0, sizeof(PakOpenFile_t) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t) * CArchive::ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)
@@ -192,25 +189,40 @@ uint CPakFile::LoadFile(byte ** ibuffer,
 Build a StringList and return
 ===========================================
 */
-bool CPakFile::GetFileList (CStringList * list)
+int  CPakFile::GetFileList (StringList &strlst, 
+							const char * path,
+							const char *ext)
 {
-	if(list)
-	{
-		ComPrintf("CPakFile::GetFileList: List needs to be deleted!, %s\n", m_archiveName);
-		return false;
-	}
-	
 	if(!m_files)
-		return false;
+		return 0;
+	int matched = 0;
 
-	CStringList  *iterator = list;
-	for(int i = 0; i< m_numFiles; i++)
+	if(path)
 	{
-		strcpy(iterator->string,m_files[i]->filename);
-		iterator->next = new CStringList();
-		iterator = iterator->next;
+		int plen = strlen(path);
+		for(int i=0;i<m_numFiles;i++)
+		{
+			//Win32 specific
+			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
+			   (!ext || CompareExts(m_files[i]->filename,ext)))
+			{
+				strlst.push_back(std::string(m_files[i]->filename));
+				matched ++;
+			}
+		}
 	}
-	return true;
+	else
+	{
+		for(int i=0;i<m_numFiles;i++)
+		{
+			if(!ext || CompareExts(m_files[i]->filename,ext))
+			{
+				strlst.push_back(std::string(m_files[i]->filename));
+				matched ++;
+			}
+		}
+	}
+	return matched;
 }
 
 /*
@@ -272,14 +284,14 @@ bool CPakFile::BinarySearchForEntry(const char *name,
 
 HFS CPakFile::OpenFile(const char *ifilename)
 {
-	if(m_numOpenFiles >= ARCHIVEMAXOPENFILES)
+	if(m_numOpenFiles >= CArchive::ARCHIVEMAXOPENFILES)
 	{
 		ComPrintf("CPakFile::OpenFile: Max files opened in %s\n", m_archiveName);
 		return -1;
 	}
 
 	//Find free space
-	for(int i=0;i<ARCHIVEMAXOPENFILES;i++)
+	for(int i=0;i<CArchive::ARCHIVEMAXOPENFILES;i++)
 	{
 		if(m_openFiles[i].file == 0)
 			break;
@@ -420,56 +432,3 @@ uint CPakFile::GetSize(HFS handle)
 }
 
 
-
-
-
-/*
-===========================================
-QuickSort PakEntry array
-===========================================
-*/
-void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
-{
-/*	if(numitems < 2)
-		return;
-
-	int maxindex = numitems-1;
-	int left=0;
-	int right = maxindex; 
-	PakEntry_t ** sorted = new PakEntry_t * [numitems];
-
-	for(int i=1,comp=0;i<=maxindex;i++)
-	{
-		comp = _stricmp(list[i]->filename,list[0]->filename);
-
-		totalCOMPS++;
-
-		
-		if(comp < 0)
-		{
-			sorted[left] = list[i];
-			left++;
-		}
-		else if(comp >= 0)
-		{
-			sorted[right] = list[i];
-			right--;
-		}
-	}
-
-	//Copy the pivot point in the empty space
-	sorted[left] = list[0];
-	if(left > 1) 
-		QuickSortFileEntries(sorted,left);								
-	//starting from the one right after the pivot
-	if((numitems - (right+1)) > 1)
-		QuickSortFileEntries(&sorted[left+1],(numitems - (right+1)));		
-
-	for(i=0;i<numitems;i++)
-	{
-		list[i] = sorted[i];
-		sorted[i] = 0;
-	}
-	delete [] sorted;
-*/
-}

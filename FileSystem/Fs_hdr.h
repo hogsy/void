@@ -1,15 +1,20 @@
 #ifndef FILESYSTEM_HEADER
 #define FILESYSTEM_HEADER
 
-
-#include "Com_defs.h"
-#include "Com_list.h"
-#include "I_console.h"
-
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4786)		// bleh, template names expand to more than what vc can handle
 
-extern I_Console * g_pConsole;
+#include "Com_defs.h"
+
+//======================================================================================
+//======================================================================================
+
+typedef int HFS;
+
+
+//Shared Utility funcs. fs_main.cpp
+bool CompareExts(const char *file, const char *ext);		
+bool PathExists(const char * path);
 
 /*
 ===========================================
@@ -17,11 +22,6 @@ Abstract Base class defining interface
 for other Archive handling classes
 ===========================================
 */
-
-#define ARCHIVEMAXOPENFILES 32
-
-typedef int HFS;
-
 class CArchive
 {
 public:
@@ -29,7 +29,8 @@ public:
 	//Load a listing of files in the archive, and order them
 	virtual bool Init(const char * archivepath, const char * basepath)=0;
 
-	virtual HFS OpenFile(const char *ifilename) =0;
+	//File Stream Reading funcs
+	virtual HFS  OpenFile(const char *ifilename) =0;
 	virtual void CloseFile(HFS handle) =0;
 	virtual uint Read(void * buf, uint size, uint count, HFS handle) =0;
 	virtual int  GetChar(HFS handle) =0;
@@ -48,16 +49,21 @@ public:
 	//Print file listing
 	virtual void ListFiles()=0;
 
-	//Return list of files
-	virtual bool GetFileList (CStringList * list) = 0;
+	//append any files matching the criteria to the given list
+	virtual int  GetFileList (StringList &list, 
+							  const char * path,
+							  const char *ext)=0;
 
 	virtual	~CArchive() { }
 
 	char	m_archiveName[COM_MAXPATH];
 	int		m_numFiles;
+
+protected:
+
+	enum
+	{	ARCHIVEMAXOPENFILES = 32
+	};
 };
 
-
 #endif
-
-
