@@ -137,6 +137,10 @@ SOURCE=.\Net_util.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\Shared\3dmath.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_buffer.cpp
 # End Source File
 # Begin Source File

@@ -41,7 +41,6 @@ namespace VoidNet
 Responsible for handling all network communication for the client
 ======================================================================================
 */
-
 class CNetClient
 {
 public:
@@ -83,7 +82,10 @@ private:
 	int		m_levelId;
 	int		m_challenge;
 
+	//Spawning Info
 	byte	m_spawnState;
+	int		m_spawnLevel;
+
 	int		m_netState;
 
 	//Flow Control for an Unspawned client

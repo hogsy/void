@@ -27,6 +27,10 @@ Reset the client
 void CNetClChan::Reset()
 {
 	m_netChan.Reset();
+	
+	m_spawnLevel = 0;
+	m_spawnState = 0;
+
 	m_state = CL_FREE;
 	m_numBuf=0;
 	m_bBackbuf = false;

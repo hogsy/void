@@ -36,6 +36,14 @@ But making a list doesnt seem worth the hassle
 */
 struct NetSignOnBufs
 {
+	enum
+	{
+		MAX_IMAGE_BUFS = 4
+		MAX_MODEL_BUFS = 4
+		MAX_SOUND_BUFS = 4
+		MAX_ENTITY_BUFS = 4
+	};
+
 	NetSignOnBufs() 
 	{
 		numImageBufs = 0;
@@ -47,16 +55,16 @@ struct NetSignOnBufs
 	CBuffer  gameInfo;
 
 	int		 numImageBufs;
-	CBuffer  imageList[4];
+	CBuffer  imageList[MAX_IMAGE_BUFS];
 	
 	int      numModelBufs;
-	CBuffer  modelList[4];
+	CBuffer  modelList[MAX_MODEL_BUFS];
 
 	int		 numSoundBufs;
-	CBuffer  soundList[4];
+	CBuffer  soundList[MAX_SOUND_BUFS];
 
 	int      numEntityBufs;
-	CBuffer  entityList[4];
+	CBuffer  entityList[MAX_ENTITY_BUFS];
 };
 
 

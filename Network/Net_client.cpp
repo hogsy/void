@@ -31,6 +31,8 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 	m_szLastOOBMsg= 0;
 
 	m_spawnState=0;
+	m_spawnLevel=0;
+
 	m_netState= CL_FREE;
 }
 
@@ -135,9 +137,6 @@ void CNetClient::SendUpdate()
 		}
 		else if(m_netState == CL_CONNECTED)
 		{
-//			if(m_fNextSendTime < System::g_fcurTime)
-//				m_pNetChan->ResetReliable();
-
 			//We have connected. Need to ask server for baselines
 			if(m_pNetChan->CanSendReliable())
 			{
@@ -145,10 +144,10 @@ void CNetClient::SendUpdate()
 				m_pNetChan->m_buffer.Write(m_levelId);
 				m_pNetChan->m_buffer.Write((byte)(m_spawnState + 1));
 			}
-				m_pNetChan->PrepareTransmit();
-				m_pSock->SendTo(m_pNetChan);
-			//	m_fNextSendTime = System::g_fcurTime + 0.5;
-			//}
+
+			m_pNetChan->PrepareTransmit();
+			m_pSock->SendTo(m_pNetChan);
+
 			
 			if(m_spawnState == SVC_BEGIN)
 				m_netState = CL_INGAME;
@@ -163,7 +162,6 @@ void CNetClient::SendUpdate()
 				SendChallengeReq();
 			else if(m_szLastOOBMsg == C2S_CONNECT)
 				SendConnectReq();
-//			return;
 		}
 	}
 }
@@ -190,13 +188,13 @@ m_pClient->Print("CL: Got spawn level %d\n", (int)id);
 	//while we were getting spawn info. start again
 	if(id == SV_DISCONNECT)
 	{
-m_pClient->Print("%s\n", m_buffer.ReadString());
+		m_pClient->Print("%s\n", m_buffer.ReadString());
 		Disconnect();
 		return;
 	}
 	if(id == SV_RECONNECT)
 	{
-m_pClient->Print("CL: Server asked to reconnect\n");
+		m_pClient->Print("CL: Server asked to reconnect\n");
 		Reconnect();
 		return;
 	}
@@ -398,7 +396,9 @@ void CNetClient::Disconnect(bool serverPrompted)
 	
 	m_levelId = 0;
 	m_netState = CL_FREE;
+	
 	m_spawnState = 0;
+	m_spawnLevel=0;
 
 	//Flow Control
 	m_fNextSendTime = 0.0f;

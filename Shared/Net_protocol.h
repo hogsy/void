@@ -30,8 +30,14 @@ const char VNET_PING[]			= "ping";
 ======================================================================================
 Connection spawning protocol
 When the server sends client the S2C_ACCEPT message, the client switches to Spawn mode.
-The client then requests each of the following messages from the server one by one.
-These are reliablly send.
+The client then starts a reliable sequence of requesting the following spawn parms 
+from the server.
+
+The spawnParm request packet is made up of a Parm id, and the number of packets
+already received
+
+  reliably sends each of the following messages to the server one by one.
+
 Once the client has received and acked all the messages it switches to Ingame mode and.
 once the server has received all the acks it switches its netclient to Ingame mode
 ======================================================================================
