@@ -138,10 +138,6 @@ SOURCE=.\Sys_cons.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sys_cvar.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\Sys_exp.h
 # End Source File
 # Begin Source File
@@ -264,6 +260,10 @@ SOURCE=.\Cl_move.cpp
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
+# End Source File
 # Begin Source File
 
 SOURCE=.\icon1.ico
