@@ -3,7 +3,7 @@
 #define LIGHT_H
 
 
-#include "3dmath.h"
+#include "Com_vector.h"
 
 typedef struct
 {

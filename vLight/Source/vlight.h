@@ -3,7 +3,7 @@
 #ifndef VLIGHT_H
 #define VLIGHT_H
 
-#include "3dmath.h"
+#include "Com_vector.h"
 
 // command line options
 extern bool		verbose;

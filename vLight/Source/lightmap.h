@@ -3,7 +3,7 @@
 #define LIGHTMAP_H
 
 #include "world.h"
-#include "3dmath.h"
+#include "Com_vector.h"
 
 /*
 =================================

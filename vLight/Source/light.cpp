@@ -409,8 +409,8 @@ void light_do(int map, int l)
 				if (!point_in_side(test, lmap->side))
 					continue;
 
-				trace_t tr = trace(&light->origin, &test);
-				if (tr.fraction < 0.98f)
+				trace_t tr = trace(light->origin, test);
+				if (tr.fraction < 1)
 					continue;
 
 				// add this trace to the lumel
