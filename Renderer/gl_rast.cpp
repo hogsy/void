@@ -23,7 +23,6 @@ COpenGLRast::COpenGLRast()
 
 	m_nummodes = 0;
 	m_devmodes = 0;
-	m_bInitialized = false;
 
 	glMultiTexCoord2fARB	= NULL;
 	glActiveTextureARB		= NULL;
@@ -187,7 +186,7 @@ Shutdown
 */
 bool COpenGLRast::Shutdown()
 {
-	if (!hRC || !hDC)
+	if (!hRC || !hDC || !m_bInitialized)
 		return true;
 
 	m_bInitialized = false;

@@ -168,6 +168,8 @@ void CTextureManager::LoadAll(void)
 		}
 
 	}
+
+	CImageReader::GetReader().FreeMipData();
 }
 
 
