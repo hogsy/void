@@ -233,26 +233,27 @@ void sil_get_sky_polys(sil_t *s)
 		for (int v=0; v<poly->num_vertices; v++)
 		{
 //			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->vertices[v]);
-			VectorAdd(camera->origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->vertices[v]);
+//			VectorAdd(camera->origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->vertices[v]);
+			poly->vertices[v] = camera->origin + world->verts[world->iverts[world->sides[side].first_vert+v]];
 		}
 
 		// clip to each sil edge
 		for (int edge=0; edge<s->nedges; edge++)
 		{
 			plane_t plane;
-			vector_t a, b;
-			VectorSub(s->edges[edge][0], camera->origin, a);
-			VectorSub(s->edges[edge][1], camera->origin, b);
+			vector_t a = s->edges[edge][0] - camera->origin;
+			vector_t b = s->edges[edge][1] - camera->origin;
 
-			_CrossProduct(&a, &b, &plane.norm);
-			VectorNormalize(&plane.norm);
+
+			CrossProduct(a, b, plane.norm);
+			plane.norm.Normalize();
 //			plane.d = dot(plane.norm, eye.origin);
 			plane.d = dot(plane.norm, camera->origin);
 
 			if ((dot(plane.norm, s->center) - plane.d) <0)
 			{
 				plane.d = -plane.d;
-				VectorScale(&plane.norm, -1, &plane.norm);
+				plane.norm.Inverse();
 			}
 
 			bool allfront = true;
@@ -294,14 +295,15 @@ void sil_get_sky_polys(sil_t *s)
 			{
 				if (sides[i] == 0)
 				{
-					VectorCopy(poly->vertices[i], clipverts[num_clipverts]);
+					clipverts[num_clipverts] = poly->vertices[i];
+					clipverts[num_clipverts] = poly->vertices[i];
 					num_clipverts++;
 					continue;
 				}
 
 				if (sides[i] == 1)
 				{
-					VectorCopy(poly->vertices[i], clipverts[num_clipverts]);
+					clipverts[num_clipverts] = poly->vertices[i];
 					num_clipverts++;
 				}
 
@@ -345,7 +347,7 @@ sil_t* sil_build(bspf_brush_t *b)
 	sil->sky = false;
 	sil->polys = NULL;
 	sil->next = NULL;
-	VectorSet(&sil->center, 0, 0, 0);
+	sil->center.Set(0, 0, 0);
 
 	cpoly_t *poly;
 
@@ -382,9 +384,8 @@ sil_t* sil_build(bspf_brush_t *b)
 				poly->lightdef		= world->sides[s+b->first_side].lightdef;
 
 				for (int v=0; v<poly->num_vertices; v++)
-				{
-					VectorCopy(world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]], poly->vertices[v]);
-				}
+					poly->vertices[v] = world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]];
+
 				poly->next = sil->polys;
 				sil->polys = poly;
 			}
@@ -397,7 +398,7 @@ sil_t* sil_build(bspf_brush_t *b)
 
 	// if our sil area is small enough, just add it to the zbuffer list 
 	// would take longer to pass through the beam tree
-	if (!sil->sky && (sil->area < g_varBeamTolerance.fval))
+	if (!sil->sky)// && (sil->area < g_varBeamTolerance.fval))
 	{
 		cpoly_t *next;
 		for (; sil->polys; sil->polys = next)
@@ -430,12 +431,13 @@ sil_t* sil_build(bspf_brush_t *b)
 			add = true;
 		if (add)
 		{
-			VectorCopy(world->verts[edge->verts[0]], sil->edges[sil->nedges][0]);
-			VectorCopy(world->verts[edge->verts[1]], sil->edges[sil->nedges][1]);
+			sil->edges[sil->nedges][0] = world->verts[edge->verts[0]];
+			sil->edges[sil->nedges][1] = world->verts[edge->verts[1]];
+
 			sil->nedges++;
 
-			VectorAdd(sil->center, world->verts[edge->verts[0]], sil->center);
-			VectorAdd(sil->center, world->verts[edge->verts[1]], sil->center);
+			sil->center += world->verts[edge->verts[0]];
+			sil->center += world->verts[edge->verts[1]];
 		}
 	}
 
@@ -444,7 +446,7 @@ sil_t* sil_build(bspf_brush_t *b)
 
 	if (sil->nedges)
 	{
-		VectorScale(&sil->center, 1.0f/(2*sil->nedges), &sil->center);
+		sil->center.Scale(1.0f/(2*sil->nedges));
 
 		// if any one of the polys was a sky surf make this sil a sky sil
 		if (sil->sky)
@@ -536,8 +538,8 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 	{
 		if (sides[v] == 0)
 		{
-			VectorCopy(base->vertices[v], (*front)->vertices[(*front)->num_vertices]);
-			VectorCopy(base->vertices[v], (*back )->vertices[(*back )->num_vertices]);
+			(*front)->vertices[(*front)->num_vertices] = base->vertices[v];
+			(*back )->vertices[(*back )->num_vertices] = base->vertices[v];
 			(*front)->num_vertices++;
 			(*back )->num_vertices++;
 			continue;
@@ -545,13 +547,13 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 
 		if (sides[v] == 1)
 		{
-			VectorCopy(base->vertices[v], (*front)->vertices[(*front)->num_vertices]);
+			(*front)->vertices[(*front)->num_vertices] = base->vertices[v];
 			(*front)->num_vertices++;
 		}
 
 		else if (sides[v] == -1)
 		{
-			VectorCopy(base->vertices[v], (*back )->vertices[(*back )->num_vertices]);
+			(*back )->vertices[(*back )->num_vertices] = base->vertices[v];
 			(*back )->num_vertices++;
 		}
 
@@ -567,8 +569,8 @@ void sil_split_polys(cpoly_t *base, plane_t *p, cpoly_t **front, cpoly_t **back)
 		inter.y = base->vertices[v].y + frac*(base->vertices[nv].y - base->vertices[v].y);
 		inter.z = base->vertices[v].z + frac*(base->vertices[nv].z - base->vertices[v].z);
 
-		VectorCopy(inter, (*front)->vertices[(*front)->num_vertices]);
-		VectorCopy(inter, (*back )->vertices[(*back )->num_vertices]);
+		(*front)->vertices[(*front)->num_vertices] = inter;
+		(*back )->vertices[(*back )->num_vertices] = inter;
 		(*front)->num_vertices++;
 		(*back )->num_vertices++;
 	}
@@ -650,8 +652,9 @@ void sil_split(sil_t *base, plane_t *p, sil_t **front, sil_t **back)
 	(*back )->polys  = NULL; //bpoly;
 	(*front)->sky = base->sky;
 	(*back)->sky = base->sky;
-	VectorCopy(base->center, (*front)->center);
-	VectorCopy(base->center, (*back )->center);
+
+	(*front)->center = base->center;
+	(*back )->center = base->center;
 
 	for (e=0; e<base->nedges; e++)
 	{
@@ -672,19 +675,19 @@ void sil_split(sil_t *base, plane_t *p, sil_t **front, sil_t **back)
 			inter.z = base->edges[e][0].z + frac * (base->edges[e][1].z - base->edges[e][0].z);
 
 			// doesn't matter which direction the edges go
-			VectorCopy(inter, (*front)->edges[(*front)->nedges][0]);
-			VectorCopy(inter, (*back )->edges[(*back )->nedges][0]);
+			(*front)->edges[(*front)->nedges][0] = inter;
+			(*back )->edges[(*back )->nedges][0] = inter;
 
 			if (sides[e][0] == 1)
 			{
-				VectorCopy(base->edges[e][0], (*front)->edges[(*front)->nedges][1]);
-				VectorCopy(base->edges[e][1], (*back )->edges[(*back )->nedges][1]);
+				(*front)->edges[(*front)->nedges][1] = base->edges[e][0];
+				(*back )->edges[(*back )->nedges][1] = base->edges[e][1];
 			}
 
 			else
 			{
-				VectorCopy(base->edges[e][1], (*front)->edges[(*front)->nedges][1]);
-				VectorCopy(base->edges[e][0], (*back )->edges[(*back )->nedges][1]);
+				(*front)->edges[(*front)->nedges][1] = base->edges[e][1];
+				(*back )->edges[(*back )->nedges][1] = base->edges[e][0];
 			}
 
 			(*front)->nedges++;
@@ -694,16 +697,16 @@ void sil_split(sil_t *base, plane_t *p, sil_t **front, sil_t **back)
 		// all on backside
 		else if ((sides[e][0] == -1) || (sides[e][1] == -1))
 		{
-			VectorCopy(base->edges[e][0], (*back)->edges[(*back)->nedges][0]);
-			VectorCopy(base->edges[e][1], (*back)->edges[(*back)->nedges][1]);
+			(*back)->edges[(*back)->nedges][0] = base->edges[e][0];
+			(*back)->edges[(*back)->nedges][1] = base->edges[e][1];
 			(*back)->nedges++;
 		}
 
 		// all on frontside
 		else
 		{
-			VectorCopy(base->edges[e][0], (*front)->edges[(*front)->nedges][0]);
-			VectorCopy(base->edges[e][1], (*front)->edges[(*front)->nedges][1]);
+			(*front)->edges[(*front)->nedges][0] = base->edges[e][0];
+			(*front)->edges[(*front)->nedges][1] = base->edges[e][1];
 			(*front)->nedges++;
 		}
 	}
@@ -746,28 +749,28 @@ void beam_reset(void)
 	beam_head = get_beam();
 	walk = beam_head;
 	walk->children[1] = NULL;
-	VectorCopy(frust[0].norm, walk->p.norm);
+	walk->p.norm = frust[0].norm;
 	walk->p.d = frust[0].d;
 	walk->stat = BEAM_SOLID_BACK;
 
 	walk = walk->children[0];
 	walk->children[0] = get_beam();
 	walk->children[1] = NULL;
-	VectorCopy(frust[1].norm, walk->p.norm);
+	walk->p.norm = frust[1].norm;
 	walk->p.d = frust[1].d;
 	walk->stat = BEAM_SOLID_BACK;
 
 	walk = walk->children[0];
 	walk->children[0] = get_beam();
 	walk->children[1] = NULL;
-	VectorCopy(frust[2].norm, walk->p.norm);
+	walk->p.norm = frust[2].norm;
 	walk->p.d = frust[2].d;
 	walk->stat = BEAM_SOLID_BACK;
 
 	walk = walk->children[0];
 	walk->children[0] = NULL;
 	walk->children[1] = NULL;
-	VectorCopy(frust[3].norm, walk->p.norm);
+	walk->p.norm = frust[3].norm;
 	walk->p.d = frust[3].d;
 	walk->stat = BEAM_SOLID_BACK;
 
@@ -811,24 +814,21 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 
 	// build the plane
 	sil->nedges--;
-	vector_t a, b;
-	VectorSub(sil->edges[sil->nedges][0], sil->edges[sil->nedges][1], a);
-	VectorSub(sil->edges[sil->nedges][0], camera->origin, b);
-
+	vector_t a = sil->edges[sil->nedges][0] - sil->edges[sil->nedges][1];
+	vector_t b = sil->edges[sil->nedges][0] - camera->origin;
 
 	
 	// copy this sil's sides to the line list
 	if (num_lines < 1024)
 	{
-		VectorCopy(sil->edges[sil->nedges][0], lines[num_lines][0]);
-		VectorCopy(sil->edges[sil->nedges][1], lines[num_lines][1]);
+		lines[num_lines][0] = sil->edges[sil->nedges][0];
+		lines[num_lines][1] = sil->edges[sil->nedges][1];
 		num_lines++;
 	}
 
 
-
-	_CrossProduct(&a, &b, &child->p.norm);
-	VectorNormalize(&child->p.norm);
+	CrossProduct(a, b, child->p.norm);
+	child->p.norm.Normalize();
 //	child->p.d = dot(eye.origin, child->p.norm);
 	child->p.d = dot(camera->origin, child->p.norm);
 
@@ -924,9 +924,7 @@ void beam_insert(bspf_brush_t *br, int contents)
 			poly->forcez = true;
 
 			for (int v=0; v<poly->num_vertices; v++)
-			{
-				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->vertices[v]);
-			}
+				poly->vertices[v] = world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]];
 
 			g_pShaders->CacheAdd(poly);
 		}

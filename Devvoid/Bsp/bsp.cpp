@@ -186,26 +186,26 @@ void make_base_side(bsp_brush_side_t *side)
 	vector_t other[2];
 	if (best_axis == 0)
 	{
-		VectorSet(&other[0], 0, 0, 1);
-		VectorSet(&other[1], 0, (planes[side->plane].norm.x < 0) ? 1 : -1.0f, 0);
+		other[0].Set(0, 0, 1);
+		other[1].Set(0, (planes[side->plane].norm.x < 0) ? 1 : -1.0f, 0);
 	}
 	else if (best_axis == 1)
 	{
-		VectorSet(&other[0], 0, 0, 1);
-		VectorSet(&other[1], (planes[side->plane].norm.y < 0) ? -1.0f : 1, 0, 0);
+		other[0].Set(0, 0, 1);
+		other[1].Set((planes[side->plane].norm.y < 0) ? -1.0f : 1, 0, 0);
 	}
 	else
 	{
-		VectorSet(&other[0], 0, 1, 0);
-		VectorSet(&other[1], (planes[side->plane].norm.z < 0) ? 1 : -1.0f, 0, 0);
+		other[0].Set(0, 1, 0);
+		other[1].Set((planes[side->plane].norm.z < 0) ? 1 : -1.0f, 0, 0);
 	}
 
 	// make sure our right/up vectors are planar
 	for (int i=0; i<2; i++)
 	{
 		float d = dot(planes[side->plane].norm, other[i]);
-		VectorMA(&other[i], -d, &planes[side->plane].norm, &other[i]);
-		VectorNormalize(&other[i]);
+		other[i].VectorMA(other[i], -d, planes[side->plane].norm);
+		other[i].Normalize();
 	}
 
 
@@ -299,14 +299,14 @@ int clip_side_p(bsp_brush_side_t *s, plane_t *p)
 	{
 		if (sides[i] == PLANE_ON)
 		{
-			VectorCopy(s->verts[i], clipverts[num_cverts]);
+			clipverts[num_cverts] = s->verts[i];
 			num_cverts++;
 			continue;
 		}
 
 		if (sides[i] == PLANE_BACK)
 		{
-			VectorCopy(s->verts[i], clipverts[num_cverts]);
+			clipverts[num_cverts] = s->verts[i];
 			num_cverts++;
 		}
 
@@ -429,10 +429,9 @@ bsp_brush_side_t* bsp_sky_side_clip(bsp_brush_side_t *clipper, bsp_brush_side_t 
 	{
 		int nv = (v+1) % clipper->num_verts;
 
-		vector_t a;
-		VectorSub(clipper->verts[v], clipper->verts[nv], a);
-		_CrossProduct(&clipper->verts[nv], &a, &clipplanes[v].norm);
-		VectorNormalize(&clipplanes[v].norm);
+		vector_t a = clipper->verts[v] = clipper->verts[nv];
+		CrossProduct(clipper->verts[nv], a, clipplanes[v].norm);
+		clipplanes[v].norm.Normalize();
 		clipplanes[v].d = 0;
 	}
 
@@ -468,7 +467,7 @@ bsp_brush_side_t* bsp_sky_side_clip(bsp_brush_side_t *clipper, bsp_brush_side_t 
 
 		clip_side_p(side, &p);
 
-		VectorScale(&p.norm, -1, &p.norm);
+		p.norm.Inverse();
 		p.d = -p.d;
 
 		clip_side_p(front, &p);
@@ -607,7 +606,7 @@ bsp_brush_t* bsp_build_volume(void)
 	{
 		nside = new_bsp_brush_side();
 
-		VectorSet(&pl.norm, 0, 0, 0);
+		pl.norm.Set(0, 0, 0);
 
 		switch (i)
 		{

@@ -17,6 +17,9 @@ start memory logging if in debug mode
 */
 RENDERER_API I_Renderer * RENDERER_Create(VoidExports * vexp)
 {
+	// must be very first thing
+	build_sqrt_table();
+
 	g_pVoidExp    = vexp;
 	g_pHunkManager= vexp->pHunkManager;
 	g_pConsole	  = vexp->pConsole;

@@ -127,8 +127,8 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 	}
 
 	vector_t base[2];
-	VectorCopy (baseaxis[bestaxis*3+1], base[0]);
-	VectorCopy (baseaxis[bestaxis*3+2], base[1]);
+	base[0] = baseaxis[bestaxis*3+1];
+	base[1] = baseaxis[bestaxis*3+2];
 
 
 	// we dont do any shifting - maybe in the future
@@ -258,7 +258,7 @@ int get_vert(vector_t &v)
 	// else we have to add a new one
 	if (num_verts == MAX_MAP_VERTS)
 		Error("too many verts");
-	VectorCopy(v, verts[num_verts]);
+	verts[num_verts] = v;
 	num_verts++;
 	return i;
 }
@@ -276,12 +276,12 @@ float side_area(bsp_brush_side_t *si)
 
 	for (int p=1; p<si->num_verts-1; p++)
 	{
-		VectorSub(si->verts[p  ], si->verts[0], a);
-		VectorSub(si->verts[p+1], si->verts[0], b);
+		a = si->verts[p  ] - si->verts[0];
+		b = si->verts[p+1] - si->verts[0];
 
-		_CrossProduct(&a, &b, &cross);
+		CrossProduct(a, b, cross);
 
-		area += VectorLength(&cross) / 2;
+		area += cross.Length() / 2;
 	}
 	return area;
 }

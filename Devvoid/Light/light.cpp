@@ -53,8 +53,8 @@ void light_fill_defs(void)
 	{
 		lightdefs[l].texture = l;
 
-		VectorMA(&lightmaps[l]->origin, lightmaps[l]->lwidth,  &lightmaps[l]->right, &br);
-		VectorMA(&br, lightmaps[l]->lheight, &lightmaps[l]->down,  &br);
+		br.VectorMA(lightmaps[l]->origin, lightmaps[l]->lwidth,  lightmaps[l]->right);
+		br.VectorMA(br, lightmaps[l]->lheight, lightmaps[l]->down);
 
 
 		// create our transformation
@@ -85,16 +85,16 @@ void light_fill_defs(void)
 		{
 			if (i==0)
 			{
-				VectorCopy(lightmaps[l]->right, dir);
+				dir = lightmaps[l]->right;
 			}
 			else
 			{
-				VectorCopy(lightmaps[l]->down, dir);
+				dir = lightmaps[l]->down;
 			}
 
 			// project dir onto base plane
 			((float*)&dir)[axis] = 0;
-			len = VectorNormalize(&dir);
+			len = dir.Normalize();
 
 			if (i==0)
 				len *= lightmaps[l]->lwidth;
@@ -316,10 +316,10 @@ void ColorNormalize(vector_t *v)
 
 	if (max <= 0)
 	{
-		VectorSet(v, 1, 1, 1);
+		v->Set(1, 1, 1);
 		return;
 	}
-	VectorScale(v, 1/max, v);
+	v->Scale(1/max);
 }
 
 
@@ -400,9 +400,9 @@ bool point_in_side(vector_t &vert, int s)
 		nv = (v+1)%side->num_verts;
 
 		// build a plane that points inward
-		VectorSub(world->verts[world->iverts[nv+side->first_vert]], world->verts[world->iverts[v+side->first_vert]], tmp);
-		_CrossProduct(&tmp, &world->planes[side->plane].norm, &plane.norm);
-		VectorNormalize(&plane.norm);
+		tmp = world->verts[world->iverts[nv+side->first_vert]] - world->verts[world->iverts[v+side->first_vert]];
+		CrossProduct(tmp, world->planes[side->plane].norm, plane.norm);
+		plane.norm.Normalize();
 		plane.d = dot(plane.norm, world->verts[world->iverts[v+side->first_vert]]);
 
 		// only need to be outside of one plane
@@ -458,18 +458,18 @@ void light_do(int map, int l)
 		{
 			traces=0;
 
-			VectorMA(&lmap->origin, h*tw, &lmap->right, &tl);
-			VectorMA(&tl, v*th, &lmap->down, &tl);
+			tl.VectorMA(lmap->origin, h*tw, lmap->right);
+			tl.VectorMA(tl, v*th, lmap->down);
 
-			VectorSet(&accum, 0, 0, 0);
+			accum.Set(0, 0, 0);
 
 			for (int s=1; s<=g_dSamples; s++)
 			{
-				VectorMA(&tl,   s*sw, &lmap->right, &test);
-				VectorMA(&test, s*sh, &lmap->down,  &test);
+				test.VectorMA(tl,   s*sw, lmap->right);
+				test.VectorMA(test, s*sh, lmap->down);
 
-				VectorSub(test, light->origin, tmp);
-				len = VectorLength(&tmp);
+				tmp = test - light->origin;
+				len = tmp.Length();
 				if (len > light->intensity)
 					continue;
 
@@ -483,14 +483,14 @@ void light_do(int map, int l)
 					continue;
 
 				// add this trace to the lumel
-				VectorMA(&accum, light->intensity - len, &light->color, &accum);
+				accum.VectorMA(accum, light->intensity - len, light->color);
 				traces++;
 			}
 
 			// average our traces
 			if (traces > 0)
 			{
-				VectorScale(&accum, 1.0f/traces, &accum);
+				accum.Scale(1.0f/traces);
 
 				// round and clamp and add to total
 				for (int i=0; i<3; i++)

@@ -17,7 +17,8 @@ void EntMove::SetWorld(I_World * pWorld)
 }
 
 void EntMove::NoClipMove(BaseEntity *ent, vector_t &dir, float time)
-{	VectorMA(&ent->origin, time, &dir, &ent->origin);
+{
+	ent->origin.VectorMA(ent->origin, time, dir);
 }
 
 void EntMove::ClientMove(BaseEntity *ent, float time)
@@ -38,7 +39,8 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 	
 	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
-		VectorAdd(ent->origin, dir, end);
+		end = ent->origin + dir;
+//		VectorAdd(ent->origin, dir, end);
 
 		m_pWorld->Trace(tr, ent->origin, end, ent->mins, ent->maxs);
 		if (tr.fraction > 0)
@@ -62,7 +64,7 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 		else
 		{
 			vector_t tmp;
-			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
+			CrossProduct(hitplanes[0], hitplanes[1], tmp);
 			d = DotProduct(tmp,dir);
 			tmp.Scale(dir,d);
 			//Void3d::VectorScale(dir,tmp, d);

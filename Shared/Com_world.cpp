@@ -190,7 +190,7 @@ void  CWorld::GetKeyVector(int ent, const char * keyName, vector_t &vec) const
 {
 	const char * val = GetKeyString(ent,keyName);
 	if (!val)
-		VectorSet(&vec, 0, 0, 0);
+		vec.Set(0, 0, 0);
 	else
 		sscanf(val, "%f %f %f", &vec.x, &vec.y, &vec.z);
 }
@@ -331,11 +331,10 @@ void CWorld::Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &
 {
 	traceInfo.fraction = 1;
 	traceInfo.plane = 0;
-	VectorCopy(end, traceInfo.endpos);
+	traceInfo.endpos = end;
 
 	// find the length/direction of a full trace
-	vector_t dir;
-	VectorSub(end, start, dir);
+	vector_t dir = end - start;
 
 	float	 frac;
 	plane_t* hitplane;
@@ -355,8 +354,8 @@ void CWorld::Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &
 	// FIXME - leave out one of the corners based on direction??
 	for (int i=0; i<8; i++)
 	{
-		VectorAdd(bbox[i], start, bbox[i]);
-		VectorAdd(bbox[i], dir, bend);
+		bbox[i] += start;
+		bend = bbox[i] + dir;
 
 		frac = 0;
 		hitplane = Ray(0, bbox[i], bend, &frac, 0);
@@ -371,22 +370,21 @@ void CWorld::Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &
 				break;
 		}
 	}
-	VectorMA(&start, traceInfo.fraction, &dir, &traceInfo.endpos);
+	traceInfo.endpos.VectorMA(start, traceInfo.fraction, dir);
 }
 
 void CWorld::Trace(TraceInfo &traceInfo, const vector_t &start, const vector_t &end)
 {
 	traceInfo.fraction = 1;
 	traceInfo.plane = 0;
-	VectorCopy(end, traceInfo.endpos);
+	traceInfo.endpos = end;
 
 	// find the length/direction of a full trace
-	vector_t dir;
-	VectorSub(end, start, dir);
+	vector_t dir = end - start;
 
 	traceInfo.fraction = 0;
 	traceInfo.plane = Ray(0, start, end, &traceInfo.fraction, 0);
-	VectorMA(&start, traceInfo.fraction, &dir, &traceInfo.endpos);
+	traceInfo.endpos.VectorMA(start, traceInfo.fraction, dir);
 }
 
 //======================================================================================

@@ -122,7 +122,8 @@ void r_draw_leaf(int l)
 		point.z = (float)((frust[p].norm.z > 0) ? (world->leafs[l].maxs[2]) : (world->leafs[l].mins[2]));
 
 		if ((dot(point, frust[p].norm) - frust[p].d) < 0)
-			return;
+//			return;
+break;
 	}
 
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
@@ -183,7 +184,8 @@ void r_draw_node(int n, bool testfrust)
 
 			// if the one closest to the inside is outside, the box is completely out
 			if ((dot(in, frust[p].norm) - frust[p].d) < 0)
-				return;
+				break;
+//				return;
 
 			if ((dot(out, frust[p].norm) - frust[p].d) < 0)
 				testfrust = true;
@@ -219,12 +221,11 @@ build initial view frustrum
 // build a plane using 3 arbitrary points
 void build_plane3(vector_t &a, vector_t &b, vector_t &c, plane_t &p)
 {
-	vector_t u, v;
-	VectorSub(c, a, u);
-	VectorSub(b, a, v);
+	vector_t u = c - a;
+	vector_t v = b - a;
 
-	_CrossProduct(&u, &v, &p.norm);
-	VectorNormalize (&p.norm);
+	CrossProduct(u, v, p.norm);
+	p.norm.Normalize();
 	p.d = dot(p.norm, a);
 }
 
@@ -237,19 +238,20 @@ void build_frust(void)
 	x = (float) tan(g_varFov.ival * 0.5f * PI/180);
 	z = x * 0.75f;			// always render in a 3:4 aspect ratio
 
-	VectorAdd(camera->origin, forward, center);
+	center = camera->origin + forward;
 
-	VectorMA(&center, -x, &right, &a);
-	VectorMA(&a, z, &up, &a);
+	a.VectorMA(center, -x, right);
+	a.VectorMA(a, z, up);
 
-	VectorMA(&center, x, &right, &b);
-	VectorMA(&b, z, &up, &b);
+	b.VectorMA(center,  x, right);
+	b.VectorMA(b, z, up);
 
-	VectorMA(&center, x, &right, &c);
-	VectorMA(&c, -z, &up, &c);
+	c.VectorMA(center,  x, right);
+	c.VectorMA(c,-z, up);
 
-	VectorMA(&center, -x, &right, &d);
-	VectorMA(&d, -z, &up, &d);
+	d.VectorMA(center, -x, right);
+	d.VectorMA(d,-z, up);
+
 
 // 4 sides
 	build_plane3(camera->origin, b, a, frust[0]);
@@ -258,7 +260,7 @@ void build_frust(void)
 	build_plane3(camera->origin, a, d, frust[3]);
 
 // near-z
-	VectorCopy(forward, frust[4].norm);
+	frust[4].norm = forward;
 	frust[4].d = dot(frust[4].norm, camera->origin);
 }
 
@@ -286,9 +288,10 @@ void r_drawframe(const CCamera * pcamera)
 	
 	fullblend  =  &camera->blend;
 
-	VectorNormalize(&forward);
-	VectorNormalize(&right);
-	VectorNormalize(&up);
+	forward.Normalize();
+	right.Normalize();
+	up.Normalize();
+
 
 	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(camera->origin);

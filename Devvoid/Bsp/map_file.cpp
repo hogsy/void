@@ -122,7 +122,7 @@ int get_plane(plane_t plane)
 	num_planes++;
 
 	// make opposing one
-	VectorScale(&plane.norm, -1, &planes[num_planes].norm);
+	plane.norm.Inverse();
 	planes[num_planes].d = -plane.d;
 	num_planes++;
 
@@ -294,10 +294,10 @@ int parse_brush_side(void)
 
 	// build our plane
 	plane_t p;
-	VectorSub(ppts[2], ppts[0], ppts[2]);
-	VectorSub(ppts[1], ppts[0], ppts[1]);
-	_CrossProduct(&ppts[2], &ppts[1], &p.norm);
-	VectorNormalize(&p.norm);
+	ppts[2] -= ppts[0];
+	ppts[1] -= ppts[0];
+	CrossProduct(ppts[2], ppts[1], p.norm);
+	p.norm.Normalize();
 	p.d = dot(p.norm, ppts[0]);
 
 	map_brush_sides[num_map_brush_sides].plane = get_plane(p);

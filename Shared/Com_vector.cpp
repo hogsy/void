@@ -5,25 +5,28 @@
 float vector_t::Normalize()
 {
 	float mag = Length();
-	x /= mag;
-	y /= mag;
-	z /= mag;
+	float imag;
+
+	FP_INV2(imag, mag);
+
+	x *= imag;
+	y *= imag;
+	z *= imag;
 	return mag;
 }
 
 float vector_t::Normalize(vector_t &out)
 {
-	float	length, ilength;
+	float mag = Length();
+	float imag;
 
-	length = Length();
-	if (length)
-	{
-		ilength = 1/length;
-		out.x = x * ilength;
-		out.y = y * ilength;
-		out.z = z * ilength;
-	}
-	return length;
+	FP_INV2(imag, mag);
+
+	out.x = x * imag;
+	out.y = y * imag;
+	out.z = z * imag;
+
+	return mag;
 }
 
 // Credit to John Carmack for this
@@ -71,7 +74,7 @@ void vector_t::VectorMA (const vector_t &veca, float scale, const vector_t &vecb
 }
 
 //======================================================================================
-//Freidn funcs
+//Freind funcs
 //======================================================================================
 
 int operator == (const vector_t &v1, const vector_t &v2)
@@ -108,148 +111,11 @@ void CrossProduct(const vector_t &a, const vector_t &b, vector_t &normal)
 //======================================================================================
 
 
-
-
-void VectorSet(vector_t *a, float x, float y, float z)
-{ 
-	a->x = x;
-	a->y = y;
-	a->z = z;
-}
-
-
-int VectorCompare (const vector_t *v1, const vector_t *v2)
-{
-	if (v1->x != v2->x || v1->y != v2->y || v1->z != v2->z)
-			return 0;
-
-	return 1;
-}
-
-
-int VectorCompare2 (const vector_t *v1, const vector_t *v2, float thresh)
-{
-	if ((v1->x-v2->x < -thresh) || (v1->x-v2->x > thresh) ||
-		(v1->y-v2->y < -thresh) || (v1->y-v2->y > thresh) ||
-		(v1->z-v2->z < -thresh) || (v1->z-v2->z > thresh))
-		return 0;
-	return 1;
-}
-
-
-
-float VectorNormalize2 (vector_t *v, vector_t *out)
-{
-	float	length, ilength;
-
-	length = v->x*v->x + v->y*v->y + v->z*v->z;
-	length = (float)sqrt (length);
-
-	if (length)
-	{
-		ilength = 1/length;
-		out->x = v->x*ilength;
-		out->y = v->y*ilength;
-		out->z = v->z*ilength;
-	}
-
-	return length;
-}
-
-void VectorMA (const vector_t *veca, float scale, const vector_t *vecb, vector_t *vecc)
-{
-	vecc->x = veca->x + scale*vecb->x;
-	vecc->y = veca->y + scale*vecb->y;
-	vecc->z = veca->z + scale*vecb->z;
-}
-
-
-void _CrossProduct(const vector_t *a,const vector_t *b, vector_t *normal)
-{
-	normal->x = (a->y*b->z - a->z*b->y);
-	normal->y = (a->z*b->x - a->x*b->z);
-	normal->z = (a->x*b->y - a->y*b->x);
-}
-
-
-float VectorLength(const vector_t *v)
-{
-	return (float)sqrt((v->x*v->x)+(v->y * v->y)+(v->z * v->z));
-/*
-	float	length;
-
-	length = (v->x*v->x) + (v->y * v->y) + (v->z * v->z);
-	length = (float)sqrt (length);
-
-	return length;
-*/
-}
-
-
-
-float VectorNormalize(vector_t *v)
-{
-	float mag;
-	mag = VectorLength (v);
-	v->x /= mag;
-	v->y /= mag;
-	v->z /= mag;
-	return mag;
-}
-
-
-void VectorScale (const vector_t *in, float scale, vector_t *out)
-{
-	out->x = in->x*scale;
-	out->y = in->y*scale;
-	out->z = in->z*scale;
-}
-
-/*
-void AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, vector_t *up)
-{
-
-	float		angle;
-	static float		sr, sp, sy, cr, cp, cy;
-
-	angle = -angles->YAW + PI/2;
-	sy = (float)sin(angle);
-	cy = (float)cos(angle);
-	angle = -angles->PITCH;
-	sp = (float)sin(angle);
-	cp = (float)cos(angle);
-	angle = -angles->ROLL;
-	sr = (float)sin(angle);
-	cr = (float)cos(angle);
-
-	if (forward)
-	{
-		forward->x = cp*cy;
-		forward->y = cp*sy;
-		forward->z = -sp;
-	}
-	if (right)
-	{
-		right->x = (-1*sr*sp*cy+-1*cr*-sy);
-		right->y = (-1*sr*sp*sy+-1*cr*cy);
-		right->z = -1*sr*cp;
-	}
-
-	if (up)
-	{
-		up->x = (cr*sp*cy+-sr*-sy);
-		up->y = (cr*sp*sy+-sr*cy);
-		up->z = cr*cp;
-	}
-}
-*/
-
-
 // doesn't keep the length the same! - just projects it onto the plane
 void MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm)
 {
 	float d = dot((*in), (*norm));
-	VectorMA(in, -d, norm, out);
+	out->VectorMA(*in, -d, *norm);
 }
 
 
@@ -304,7 +170,7 @@ void PerpendicularVector(vector_t *dst, vector_t *src)
 		minelem = (float)fabs(src->z);
 	}
 
-	VectorSet(&tempvec, 0, 0, 0);
+	tempvec.Set(0, 0, 0);
 
 	if (pos == 0)
 		tempvec.x = 1;
@@ -316,7 +182,7 @@ void PerpendicularVector(vector_t *dst, vector_t *src)
 		tempvec.z = 1;
 
 	MakeVectorPlanar(&tempvec, dst, src);
-	VectorNormalize(dst);
+	dst->Normalize();
 }
 
 
@@ -334,10 +200,10 @@ void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, floa
 	float	rot[3][3];
 	vector_t vr, vup, vf;
 
-	VectorCopy((*dir), vf);
+	vf = *dir;
 
 	PerpendicularVector(&vr, dir);
-	_CrossProduct(&vr, &vf, &vup);
+	CrossProduct(vr, vf, vup);
 
 	m[0][0] = vr.x;
 	m[1][0] = vr.y;

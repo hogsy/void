@@ -28,8 +28,8 @@ void lightmap_square(lightmap_t *l, bspf_side_t *s)
 	{
 		nv = (v+1) % s->num_verts;
 
-		VectorSub(world->verts[world->iverts[nv+s->first_vert]], world->verts[world->iverts[v+s->first_vert]], side);
-		len = VectorLength(&side);
+		side = world->verts[world->iverts[nv+s->first_vert]] - world->verts[world->iverts[v+s->first_vert]];
+		len = side.Length();
 		if (len > blen)
 		{
 			blen = len;
@@ -42,16 +42,16 @@ void lightmap_square(lightmap_t *l, bspf_side_t *s)
 
 
 	// right vector
-	VectorSub(world->verts[world->iverts[(best+1)%s->num_verts+s->first_vert]], world->verts[world->iverts[best+s->first_vert]], l->right);
+	l->right = world->verts[world->iverts[(best+1)%s->num_verts+s->first_vert]] - world->verts[world->iverts[best+s->first_vert]];
 
 	// down vector
-	_CrossProduct(&l->right, &world->planes[s->plane].norm, &l->down);
+	CrossProduct(l->right, world->planes[s->plane].norm, l->down);
 
-	VectorNormalize(&l->right);
-	VectorNormalize(&l->down);
+	l->right.Normalize();
+	l->down.Normalize();
 
 	l->lheight = l->lwidth = 0;
-	VectorCopy(world->verts[world->iverts[best+s->first_vert]], l->origin);
+	l->origin = world->verts[world->iverts[best+s->first_vert]];
 
 	float dt, ds;
 	dt = dot(l->origin, l->down);
@@ -66,7 +66,7 @@ void lightmap_square(lightmap_t *l, bspf_side_t *s)
 		// move the plane back
 		if (dist < 0)
 		{
-			VectorMA(&l->origin, dist, &l->down, &l->origin);
+			l->origin.VectorMA(l->origin, dist, l->down);
 			dt += dist;
 		}
 		// increase height?
@@ -82,7 +82,7 @@ void lightmap_square(lightmap_t *l, bspf_side_t *s)
 		// move the plane back
 		if (dist < 0)
 		{
-			VectorMA(&l->origin, dist, &l->right, &l->origin);
+			l->origin.VectorMA(l->origin, dist, l->right);
 			ds += dist;
 		}
 		// increase width?
