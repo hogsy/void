@@ -28,13 +28,13 @@
 #define	CONTENTS_SOLID			0x00000001		// an eye is never valid in a solid
 #define	CONTENTS_WINDOW			0x00000002		// translucent, but not watery
 #define	CONTENTS_AUX			0x00000004
+#define CONTENTS_SKY			0x00000004		// my sky contents is same sas q2 AUX
 #define	CONTENTS_LAVA			0x00000008
 #define	CONTENTS_SLIME			0x00000010
 #define	CONTENTS_WATER			0x00000020
 #define	CONTENTS_MIST			0x00000040
 #define	LAST_VISIBLE_CONTENTS	0x00000040
 
-#define CONTENTS_SKY			0x00000080
 
 // remaining contents are non-visible, and don't eat brushes
 #define	CONTENTS_AREAPORTAL		0x00008000
