@@ -8,12 +8,7 @@ fixed frame rate of the server in mind.
 renderer should manage md2s better
 need better way to hook up models with skins
 
-proper animation sequences depending on movement on the server
-add animation cycle flags for clients
-
 add crouch mode (bbox.z/2 and viewheight=0)
-add mp3 playback using directShow
-
 
 game entities
 =====================================

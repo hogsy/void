@@ -88,8 +88,8 @@ void CGameClient::UpdateViewAngles()
 		m_pGameClient->angles.YAW -= 2*PI;
 
 	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
-	if (m_pGameClient->angles.PITCH <= -PI/2)
-		m_pGameClient->angles.PITCH = (-PI/2);
+	if (m_pGameClient->angles.PITCH <= (-PI * 0.4f))
+		m_pGameClient->angles.PITCH = (-PI * 0.4f);
 	if (m_pGameClient->angles.PITCH > PI/2)
 		m_pGameClient->angles.PITCH = PI/2;
 
@@ -137,11 +137,12 @@ Perform the actual move
 */
 void CGameClient::UpdatePosition()
 {
-	if(!m_cvClip.bval)
+/*	if(!m_cvClip.bval)
 	{
 		EntMove::NoClipMove(m_pGameClient, m_pGameClient->velocity, m_fFrameTime);
 		return;
 	}
+*/
 
 	EntMove::ClientMove(m_pGameClient, m_fFrameTime);
 
@@ -161,7 +162,9 @@ void CGameClient::UpdatePosition()
 	if(!(m_cmd.moveFlags & ClCmd::CROUCH))
 		m_pCamera->origin.z += CL_VIEWHEIGHT;
 
-/*	if(EntMove::ClientMove(m_pGameClient, time) == 2)
+
+/*	
+	if(EntMove::ClientMove(m_pGameClient, time) == 2)
 	{
 ComPrintf("Hit step!");
 
