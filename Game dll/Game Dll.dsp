@@ -161,14 +161,6 @@ SOURCE=..\Shared\Com_parms.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_util.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_util.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_vector.cpp
 # End Source File
 # Begin Source File

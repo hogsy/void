@@ -1,3 +1,4 @@
+#include "Net_hdr.h"
 #include "Net_chan.h"
 
 enum

@@ -1,8 +1,8 @@
 #include "Game_main.h"
+#include "Com_buffer.h"
 #include "Game_ents.h"
-#include "Game_defs.h"
+#include "I_console.h"
 
-//CMemManager g_memManager("mem_game.log");
 const char MEM_SZLOGFILE[] = "mem_game.log";
 
 I_GameHandler * g_pImports=0;

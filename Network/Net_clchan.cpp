@@ -1,3 +1,5 @@
+#include "Net_hdr.h"
+#include "Net_chan.h"
 #include "Net_server.h"
 #include "Net_clchan.h"
 

@@ -1,8 +1,6 @@
 #ifndef VOID_NET_UTIL
 #define VOID_NET_UTIL
 
-#include "Com_defs.h"
-#include "Net_defs.h"
 
 struct sockaddr_in;
 
@@ -53,8 +51,6 @@ private:
 	byte	ip[4];
 	ushort	port;
 	bool	valid;
-
-	static char  m_szLocalAddress[NET_IPADDRLEN];
 };
 
 }

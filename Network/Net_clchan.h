@@ -1,8 +1,6 @@
 #ifndef VOID_NET_CLIENTCHAN
 #define VOID_NET_CLIENTCHAN
 
-#include "Net_chan.h"
-
 namespace VoidNet {
 
 /*

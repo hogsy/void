@@ -1,9 +1,10 @@
 #include "Fs_hdr.h"
 #include "I_file.h"
 #include "I_filesystem.h"
+#include "Com_parms.h"
+#include "Com_cvar.h"
 #include "Fs_pakfile.h"
 #include "Fs_zipfile.h"
-#include "Com_cvar.h"
 
 //======================================================================================
 #define CMD_LISTFILES	0

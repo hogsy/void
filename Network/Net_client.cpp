@@ -1,6 +1,8 @@
+#include "Net_hdr.h"
+#include "Net_chan.h"
 #include "Net_sock.h"
-#include "Net_client.h"
 #include "Net_protocol.h"
+#include "Net_client.h"
 
 using namespace VoidNet;
 
@@ -16,7 +18,7 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 {
 	m_pSock = new CNetSocket(&m_buffer);
 	
-	m_pNetChan = new CNetChan();
+	m_pNetChan = new CNetChan;
 	m_pNetChan->Reset();
 
 	memset(m_szServerAddr,0,NET_IPADDRLEN);

@@ -1,10 +1,6 @@
 #ifndef VOID_NET_CHANNEL
 #define VOID_NET_CHANNEL
 
-#include "Com_buffer.h"
-#include "Net_defs.h"
-#include "Net_util.h"
-
 namespace VoidNet {
 /*
 ======================================

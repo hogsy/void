@@ -3,7 +3,10 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+
 #include "Com_defs.h"
+#include "Com_buffer.h"
+#include "Net_defs.h"
 #include "Net_util.h"
 
 namespace VoidNet {

@@ -1,3 +1,5 @@
+#include "Net_hdr.h"
+#include "Net_chan.h"
 #include "Net_sock.h"
 
 using namespace VoidNet;

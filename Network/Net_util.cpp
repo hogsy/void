@@ -1,5 +1,4 @@
 #include "Net_hdr.h"
-#include "Net_defs.h"
 
 using namespace VoidNet;
 
@@ -7,7 +6,8 @@ using namespace VoidNet;
 //Network Address class
 //======================================================================================
 
-char CNetAddr::m_szLocalAddress[NET_IPADDRLEN];
+char m_szLocalAddress[NET_IPADDRLEN];
+
 void CNetAddr::SetLocalServerAddr(const char * localaddy)
 {	strcpy(m_szLocalAddress, localaddy);
 }

@@ -1,10 +1,12 @@
 #ifndef VOID_NET_SOCKET
 #define VOID_NET_SOCKET
 
-#include "Net_hdr.h"
-#include "Net_chan.h"
+
+class CBuffer;
 
 namespace VoidNet {
+
+class CNetChan;
 
 class CNetSocket
 {
