@@ -381,6 +381,10 @@ SOURCE=.\Sv_main.h
 
 SOURCE=.\Sv_net.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\Sv_net.h
+# End Source File
 # End Group
 # Begin Group "Input"
 
@@ -427,6 +431,10 @@ SOURCE=.\In_state.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\Shared\I_client.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
@@ -444,6 +452,10 @@ SOURCE=..\Shared\I_hud.h
 # Begin Source File
 
 SOURCE=..\Shared\I_hunkmem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\I_netclient.h
 # End Source File
 # Begin Source File
 

@@ -168,7 +168,7 @@ ComPrintf("SV:Reconnect from %s\n", m_pSock->GetSource().ToString());
 	m_clients[i].m_state = CL_CONNECTED;
 	m_clients[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
 	m_clients[i].m_netChan.SetRate(m_recvBuf.ReadInt());
-	m_clients[i].m_netChan.m_outMsgId = 1;	//we send packet1 when we receive
+//	m_clients[i].m_netChan.m_outMsgId = 1;	//we send packet1 when we receive
 
 	//This is the last connectionless message
 	//Send the client an accept packet

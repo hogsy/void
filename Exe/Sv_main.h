@@ -17,6 +17,8 @@ namespace VoidNet
 	void ShutdownNetwork();
 }
 
+
+
 /*
 ==========================================
 Game independent network server
@@ -36,6 +38,12 @@ public:
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 private:
+
+	//world data currently loaded by the server.
+	world_t	*	m_pWorld;
+	char		m_worldName[COM_MAXPATH];
+
+	//Net specfic
 
 	enum
 	{
@@ -61,10 +69,6 @@ private:
 	CBuffer		m_sendBuf;
 
 	SVClient	m_clients[MAX_CLIENTS];
-
-	//world data currently loaded by the server.
-	world_t	*	m_pWorld;
-	char		m_worldName[COM_MAXPATH];
 
 	bool		m_active;
 	int			m_numClients;
@@ -99,6 +103,7 @@ private:
 
 	//Called each server frame
 	void ReadPackets();
+	void RunEntities();
 	void WritePackets();
 
 	//Broadcast print message to all except

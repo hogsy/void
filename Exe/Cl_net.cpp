@@ -1,4 +1,5 @@
 #include "Cl_net.h"
+#include "Sys_hdr.h"
 
 using namespace VoidNet;
 
@@ -7,8 +8,8 @@ using namespace VoidNet;
 Constructor/Destructor
 ======================================
 */
-CClientNetHandler::CClientNetHandler(CClient &owner): 
-								m_refClient(owner), 
+CNetClient::CNetClient(I_ClientNetHandler * client): 
+								m_pClient(client),
 								m_buffer(VoidNet::MAX_BUFFER_SIZE),
 								m_sock(&m_buffer)
 {
@@ -16,8 +17,6 @@ CClientNetHandler::CClientNetHandler(CClient &owner):
 	memset(m_szServerAddr,0,24);
 
 	m_bLocalServer = false;
-	m_bCanSend = false;
-	m_bInitialized = false;
 	
 	m_challenge = 0;
 	m_levelId = 0;
@@ -31,10 +30,14 @@ CClientNetHandler::CClientNetHandler(CClient &owner):
 	m_netState= CL_FREE;
 }
 
-CClientNetHandler::~CClientNetHandler()
-{	m_szLastOOBMsg = 0;
+CNetClient::~CNetClient()
+{	
+	m_pClient = 0;
+	m_szLastOOBMsg = 0;
 }
 
+//======================================================================================
+//======================================================================================
 /*
 ======================================
 Process any waiting packets
@@ -42,56 +45,19 @@ fix me, change his to look for multiple messages
 		should only look from messages from the server once connected
 ======================================
 */
-void CClientNetHandler::ReadPackets()
+void CNetClient::ReadPackets()
 {
 	if(m_netState == CL_FREE)
 		return;
 
 	if(m_netState == CL_SPAWNED)
 	{
+		//Look for messages only from the server
 		while(m_sock.Recv())
 		{
-//m_refClient.Print(CClient::DEFAULT,"CL: Reading update\n");
+//m_pClient->Print(CLMSG_DEFAULT,"CLNet:Reading update\n");
 			m_netChan.BeginRead();
-			
-			byte msgId = 0;
-			while(msgId != 255)
-			{
-			msgId= (int)m_buffer.ReadByte();
-
-			//bad message
-			if(msgId == -1)
-				break;
-				//continue;
-
-			switch(msgId)
-			{
-			case SV_TALK:
-				{
-					char name[32];
-					strcpy(name,m_buffer.ReadString());
-					m_refClient.Print(CClient::TALK_MESSAGE,"%s: %s\n",name,m_buffer.ReadString());
-					m_bCanSend = true;
-					break;
-				}
-			case SV_DISCONNECT:
-				{
-					m_refClient.Print(CClient::SERVER_MESSAGE,"Server quit\n");
-					Disconnect(true);
-					break;
-				}
-			case SV_PRINT:	//just a print message
-				{
-					m_refClient.Print(CClient::SERVER_MESSAGE,"%s\n",m_buffer.ReadString());
-					break;
-				}
-			case SV_RECONNECT:
-				{
-					Reconnect();
-					break;
-				}
-			}
-			}
+			m_pClient->HandleGameMsg(m_buffer);
 		}
 	}
 	else 
@@ -111,76 +77,10 @@ void CClientNetHandler::ReadPackets()
 					HandleOOBMessage();
 					continue;
 				}
-	//m_refClient.Print(CClient::DEFAULT"CClient::ReadPacket::Unknown packet from %s\n", m_pSock->GetSource().ToString());
+//m_pClient->Print(CLMSG_DEFAULT,"CLNet:Unknown packet from %s\n", m_pSock->GetSource().ToString());
 			}
 		}	
 	}
-
-
-
-/*
-	if(m_netState == CL_FREE)
-		return;
-	while(m_sock.Recv())
-	{
-		//in game.
-		if(m_netState == CL_SPAWNED)
-		{
-//m_refClient.Print(CClient::DEFAULT,"CL: Reading update\n");
-			m_netChan.BeginRead();
-			byte msgId = m_buffer.ReadByte();
-
-			//bad message
-			if(msgId == -1)
-				continue;
-
-			switch(msgId)
-			{
-			case SV_TALK:
-				{
-					char name[32];
-					strcpy(name,m_buffer.ReadString());
-					m_refClient.Print(CClient::TALK_MESSAGE,"%s: %s\n",name,m_buffer.ReadString());
-					m_bCanSend = true;
-					break;
-				}
-			case SV_DISCONNECT:
-				{
-					m_refClient.Print(CClient::SERVER_MESSAGE,"Server quit\n");
-					Disconnect(true);
-					break;
-				}
-			case SV_PRINT:	//just a print message
-				{
-					m_refClient.Print(CClient::SERVER_MESSAGE,"%s\n",m_buffer.ReadString());
-					break;
-				}
-			case SV_RECONNECT:
-				{
-					Reconnect();
-					break;
-				}
-			}
-			continue;
-		}
-		//in the connection phase, expecting spawn parms
-		else if(m_netState == CL_CONNECTED)
-		{
-			HandleSpawnParms();
-			continue;
-		}
-		//socket is only active. not connected or anything
-		else if(m_netState == CL_INUSE)
-		{
-			if(m_buffer.ReadInt() == -1)
-			{
-				HandleOOBMessage();
-				continue;
-			}
-//m_refClient.Print(CClient::DEFAULT"CClient::ReadPacket::Unknown packet from %s\n", m_pSock->GetSource().ToString());
-		}
-	}	
-*/
 }
 
 /*
@@ -188,12 +88,12 @@ void CClientNetHandler::ReadPackets()
 Send off any messages we need to
 ======================================
 */
-void CClientNetHandler::SendUpdates()
+void CNetClient::SendUpdate()
 {
 	if(!m_sock.ValidSocket())
 		return;
 
-	//we have spawned. send update packet
+	//are we spawned ?
 	if(m_netState == CL_SPAWNED)
 	{
 		//Checks local rate
@@ -202,7 +102,7 @@ void CClientNetHandler::SendUpdates()
 			m_netChan.PrepareTransmit();
 			m_sock.Send(m_netChan.m_sendBuffer);
 			m_netChan.m_buffer.Reset();
-//m_refClient.Print(CClient::DEFAULT"CL: Client sending update\n");
+//m_pClient->Print(CLMSG_DEFAULT"CL: Client sending update\n");
 		}
 		return;
 	}
@@ -210,7 +110,7 @@ void CClientNetHandler::SendUpdates()
 	//If the client has NOT spawned, then limit resends before we decide to fail
 	if(m_numResends >= 4)
 	{
-m_refClient.Print(CClient::DEFAULT,"CL: Timed out\n");
+		m_pClient->Print(CLMSG_DEFAULT,"Timed out\n");
 		Disconnect();
 		return;
 	}
@@ -236,15 +136,14 @@ m_refClient.Print(CClient::DEFAULT,"CL: Timed out\n");
 			//We got all the necessary info. just ack and switch to spawn mode
 			if(m_spawnState == SVC_BEGIN)
 			{
-m_refClient.Print(CClient::DEFAULT,"CL: Client is ready to SPAWN\n");
+m_pClient->Print(CLMSG_DEFAULT,"CL: Client is ready to SPAWN\n");
 				m_netState = CL_SPAWNED;
-
 			}
 			else
 			{
 				m_fNextSendTime = System::g_fcurTime + 1.0f;
 				m_numResends ++;
-//m_refClient.Print(CClient::DEFAULT"CL: Asking for spawnstate %d\n", m_spawnState+1);
+//m_pClient->Print(CLMSG_DEFAULT"CL: Asking for spawnstate %d\n", m_spawnState+1);
 			}
 		}
 	}
@@ -270,7 +169,7 @@ imagelist
 entity baselines
 ======================================
 */
-void CClientNetHandler::HandleSpawnParms()
+void CNetClient::HandleSpawnParms()
 {
 	//We got a response to reset Resend requests
 	m_numResends = 0;
@@ -301,30 +200,7 @@ void CClientNetHandler::HandleSpawnParms()
 		m_spawnState = id;
 		m_fNextSendTime = 0.0f;
 
-		switch(m_spawnState)
-		{
-		case SVC_INITCONNECTION:
-			{
-				char * game = m_buffer.ReadString();
-m_refClient.Print(CClient::DEFAULT,"Game : %s\n", game);
-				char * map = m_buffer.ReadString();
-m_refClient.Print(CClient::DEFAULT,"Map : %s\n", map);
-				m_refClient.LoadWorld(map);
-				break;
-			}
-		case SVC_MODELLIST:
-			break;
-		case SVC_SOUNDLIST:
-			break;
-		case SVC_IMAGELIST:
-			break;
-		case SVC_BASELINES:
-			break;
-		case SVC_BEGIN:
-			{
-				break;
-			}
-		}
+		m_pClient->HandleSpawnMsg(m_spawnState,m_buffer);
 	}
 }
 
@@ -334,7 +210,7 @@ Handle response to any OOB messages
 the client might have sent
 ======================================
 */
-void CClientNetHandler::HandleOOBMessage()
+void CNetClient::HandleOOBMessage()
 {
 	const char * msg = m_buffer.ReadString();
 	
@@ -348,14 +224,14 @@ void CClientNetHandler::HandleOOBMessage()
 
 		//Got challenge, now send connection request
 		SendConnectReq();
-m_refClient.Print(CClient::DEFAULT, "CL: Got challenge %d\n", m_challenge);
+		m_pClient->Print(CLMSG_DEFAULT, "Got challenge %d\n", m_challenge);
 		return;
 	}
 
 	if(!strcmp(msg, S2C_REJECT))
 	{
 		Disconnect();
-m_refClient.Print(CClient::DEFAULT,"CL: Server rejected connection: %s\n", m_buffer.ReadString());
+		m_pClient->Print(CLMSG_SERVER,"Server rejected connection: %s\n", m_buffer.ReadString());
 		return;
 	}
 	
@@ -372,10 +248,11 @@ m_refClient.Print(CClient::DEFAULT,"CL: Server rejected connection: %s\n", m_buf
 		//Setup the network channel. 
 		//Only reliable messages are sent until spawned
 		m_netChan.Setup(m_sock.GetSource(),&m_buffer);
-//		m_netChan.SetRate(m_clrate.ival);
-		m_netChan.m_outMsgId = 1;
+		m_netChan.SetRate(m_pClient->GetUserInfo().rate);
+//		m_netChan.m_outMsgId = 1;
+//		m_netChan.m_bInReliableAcked = true;
 
-m_refClient.Print(CClient::DEFAULT, "CL: Connected\n");
+m_pClient->Print(CLMSG_DEFAULT, "CLNet: Connected\n");
 		return;
 	}
 }
@@ -385,7 +262,7 @@ m_refClient.Print(CClient::DEFAULT, "CL: Connected\n");
 Send connection parms
 ======================================
 */
-void CClientNetHandler::SendConnectReq()
+void CNetClient::SendConnectReq()
 {
 	//Create Connection less packet
 	m_buffer.Reset();
@@ -398,8 +275,8 @@ void CClientNetHandler::SendConnectReq()
 //	m_buffer.Write(m_virtualPort);			//Virtual Port
 	
 	//User Info
-	m_buffer.Write(m_refClient.m_clname.string);
-	m_buffer.Write(m_refClient.m_clrate.ival);
+	m_buffer.Write(m_pClient->GetUserInfo().name);
+	m_buffer.Write(m_pClient->GetUserInfo().rate);
 
 	m_sock.Send(m_buffer);
 
@@ -407,7 +284,7 @@ void CClientNetHandler::SendConnectReq()
 	m_fNextSendTime = System::g_fcurTime + 2.0f;
 	m_numResends ++; 
 
-m_refClient.Print(CClient::DEFAULT,"CL: Attempting to connect to %s\n", m_szServerAddr);
+	m_pClient->Print(CLMSG_DEFAULT,"Attempting to connect to %s\n", m_szServerAddr);
 }
 
 /*
@@ -417,12 +294,12 @@ initiates a new connection request
 to the specified address
 =======================================
 */
-void CClientNetHandler::SendChallengeReq()
+void CNetClient::SendChallengeReq()
 {
 	CNetAddr netAddr(m_szServerAddr);
 	if(!netAddr.IsValid())
 	{
-		m_refClient.Print(CClient::DEFAULT,"CClient::ConnectTo: Invalid address\n");
+		m_pClient->Print(CLMSG_DEFAULT,"CClient::ConnectTo: Invalid address\n");
 		Disconnect();
 		return;
 	}
@@ -439,7 +316,7 @@ void CClientNetHandler::SendChallengeReq()
 	m_fNextSendTime = System::g_fcurTime + 2.0f;
 	m_numResends ++;
 
-m_refClient.Print(CClient::DEFAULT,"CL: Requesting Challenge from %s\n", m_szServerAddr);
+	m_pClient->Print(CLMSG_DEFAULT,"Requesting Challenge from %s\n", m_szServerAddr);
 }
 
 //======================================================================================
@@ -450,11 +327,11 @@ m_refClient.Print(CClient::DEFAULT,"CL: Requesting Challenge from %s\n", m_szSer
 Start Connecting to the given addr
 ======================================
 */
-void CClientNetHandler::ConnectTo(const char * ipaddr)
+void CNetClient::ConnectTo(const char * ipaddr)
 {
 	if(!ipaddr)
 	{
-		m_refClient.Print(CClient::DEFAULT,"usage - connect ipaddr(:port)\n");
+		m_pClient->Print(CLMSG_DEFAULT,"Usage - connect address(:port)\n");
 		return;
 	}
 
@@ -466,7 +343,7 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 	{
 		if(!m_sock.Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
 		{
-			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt create socket");
+			PrintSockError(WSAGetLastError(),"CLNet::Init: Couldnt create socket");
 			return;
 		}
 		//Bind to local addr
@@ -486,7 +363,7 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 	CNetAddr netAddr(ipaddr);
 	if(!netAddr.IsValid())
 	{
-		m_refClient.Print(CClient::DEFAULT,"CClient::ConnectTo: Invalid address\n");
+		m_pClient->Print(CLMSG_DEFAULT,"Aborting connection. Invalid address\n");
 		return;
 	}
 	strcpy(m_szServerAddr, netAddr.ToString());
@@ -494,7 +371,7 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 	CNetAddr localAddr("localhost");
 	if(localAddr == netAddr)
 	{
-m_refClient.Print(CClient::DEFAULT,"CL: Connecting to local Server\n");
+m_pClient->Print(CLMSG_DEFAULT,"CL: Connecting to local Server\n");
 		m_bLocalServer = true;
 	}
 
@@ -508,7 +385,7 @@ m_refClient.Print(CClient::DEFAULT,"CL: Connecting to local Server\n");
 Disconnect if connected to a server
 =====================================
 */
-void CClientNetHandler::Disconnect(bool serverPrompted)
+void CNetClient::Disconnect(bool serverPrompted)
 {
 	if(m_netState >= CL_CONNECTED)
 	{
@@ -520,13 +397,15 @@ void CClientNetHandler::Disconnect(bool serverPrompted)
 			m_netChan.m_buffer.Write(CL_DISCONNECT);
 			m_netChan.PrepareTransmit();
 			m_sock.Send(m_netChan.m_sendBuffer);
-//			m_sock.Disconnect();
-
-			//Kill server if local
-			if(m_bLocalServer)
-				System::GetConsole()->ExecString("killserver");
 		}
-		m_refClient.UnloadWorld();
+		
+		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
+/*			//Kill server if local
+			if(m_bLocalServer)
+				m_pClient->ExecConCmd("killserver");
+		}
+		m_pClient->UnloadWorld();
+*/
 	}
 
 	m_netChan.Reset();
@@ -537,14 +416,13 @@ void CClientNetHandler::Disconnect(bool serverPrompted)
 	m_levelId = 0;
 	m_netState = CL_FREE;
 	m_spawnState = 0;
-	m_bCanSend = false;
 
 	//Flow Control
 	m_fNextSendTime = 0.0f;
 	m_szLastOOBMsg = 0;
 	m_numResends = 0;
 
-m_refClient.Print(CClient::DEFAULT, "CL: Disconnected\n");
+	m_pClient->Print(CLMSG_DEFAULT, "Disconnected\n");
 }
 
 /*
@@ -552,26 +430,26 @@ m_refClient.Print(CClient::DEFAULT, "CL: Disconnected\n");
 Disconnect and reconnect
 ======================================
 */
-void CClientNetHandler::Reconnect()
+void CNetClient::Reconnect()
 {
 	char svaddr[24];
 	strcpy(svaddr,m_szServerAddr);
 	Disconnect(true);
 	ConnectTo(svaddr);
-	m_refClient.Print(CClient::DEFAULT, "Reconnecting ...\n");
+	m_pClient->Print(CLMSG_DEFAULT, "Reconnecting ...\n");
 }
 
 
 //======================================================================================
 //======================================================================================
-
+#if 0
 /*
 =====================================
 Talk message sent to server if 
 we are connected
 =====================================
 */
-void CClientNetHandler::SendTalkMsg(const char *string)
+void CNetClient::SendTalkMsg(const char *string)
 {
 	if(m_netState != CL_SPAWNED)
 		return;
@@ -586,7 +464,7 @@ void CClientNetHandler::SendTalkMsg(const char *string)
 update name on the server
 ======================================
 */
-void CClientNetHandler::UpdateName(const char *name)
+void CNetClient::UpdateName(const char *name)
 {
 	if(m_netState == CL_SPAWNED)
 	{
@@ -595,19 +473,22 @@ void CClientNetHandler::UpdateName(const char *name)
 		m_netChan.m_buffer.Write(name);
 	}
 }
+#endif
 
 /*
 ======================================
 update rate on the server
 ======================================
 */
-void CClientNetHandler::UpdateRate(int rate)
+void CNetClient::SetRate(int rate)
 {
 	m_netChan.SetRate(rate);
-	if(m_netState == CL_SPAWNED)
+	
+/*	if(m_netState == CL_SPAWNED)
 	{
 		m_netChan.m_buffer.Write(CL_UPDATEINFO);
 		m_netChan.m_buffer.Write('r');
 		m_netChan.m_buffer.Write(rate);
 	}
+*/
 }

@@ -31,6 +31,9 @@ void CNetChan::Setup(const CNetAddr &addr, CBuffer * recvBuffer )
 	Reset();
 	m_addr = addr;
 	m_pRecvBuffer = recvBuffer;
+//
+	m_outMsgId = 1;
+	m_bInReliableAcked = true;
 }
 
 void CNetChan::Reset()

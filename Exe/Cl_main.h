@@ -4,6 +4,7 @@
 #include "Sys_hdr.h"
 #include "I_renderer.h"
 #include "Snd_defs.h"
+#include "I_client.h"
 
 /*
 ======================================
@@ -11,12 +12,7 @@ Predeclarations
 ======================================
 */
 class CClientCmdHandler;	//Handles all client command processing
-class CClientNetHandler;	//Handles all client network communication
-
-struct I_Client
-{
-};
-
+class CNetClient;			//Handles all client network communication
 
 /*
 =====================================
@@ -29,7 +25,8 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
-class CClient :	public I_ConHandler
+class CClient :	public I_ConHandler,
+				public I_ClientNetHandler //I_Client
 {
 public:
 	CClient(I_Renderer * prenderer);
@@ -37,29 +34,37 @@ public:
 
 	void RunFrame();
 	
-	//Command Handler Interface
-	void HandleCommand(HCMD cmdId, const CParms &parms);
-
-	//CVar Handler Interface
-	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-	
 	void SetInputState(bool on);
 	void WriteBindTable(FILE *fp);
 
+	//Client Interface
+	void Print(ClMsgType type, const char * msg, ...);
+	bool LoadWorld(const char *worldname);
+	void UnloadWorld();
+//	void ExecConCmd(const char * cmd);
+
+	const ClUserInfo & GetUserInfo() const { return userInfo; }
+
+	//Parse and handle a game message
+	void HandleGameMsg(CBuffer &buffer); 
+	//Parse and handle spawm parms
+	void HandleSpawnMsg(const byte &msgId, CBuffer &buffer); 
+	//Handle disconnect from server
+	void HandleDisconnect(bool listenserver);
+	
+	//Console Interface
+	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	
 private:
 
-	enum ClMsgType
+/*	enum ClMsgType
 	{
 		DEFAULT,
 		SERVER_MESSAGE,
 		TALK_MESSAGE
 	};
-
-	void Print(ClMsgType type, const char * msg, ...);
-
-	bool LoadWorld(const char *worldname);
-	bool UnloadWorld();
-
+*/
 	//==================================================
 	//Movement
 	void Move(vector_t *dir, float time);
@@ -89,10 +94,9 @@ private:
 	//==================================================
 	//Subsystems
 	friend class CClientCmdHandler;
-	friend class CClientNetHandler;
-
 	CClientCmdHandler * m_pCmdHandler;
-	CClientNetHandler * m_pClNet;
+
+	CNetClient * m_pNetCl;
 
 	//Renderer and HUD interfaces
 	I_Renderer* m_pRender;
@@ -105,10 +109,12 @@ private:
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
 
+	bool		m_ingame;
+
 	//==================================================
 	//the following should be accessible by the game dll
 
-	bool		m_ingame;
+	ClUserInfo	userInfo;
 	eyepoint_t  eye;
 	vector_t	desired_movement;
 	
