@@ -81,6 +81,7 @@ private:
 
 	//==================================================
 
+	void UpdateVelocity();
 	void UpdatePosition();
 	void UpdateViewAngles();
 	void UpdateViewBlends();

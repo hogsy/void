@@ -176,13 +176,23 @@ struct ClCmd
 		svFlags = NONE;
 		time = 0.0f;
 		angles.Set(0,0,0);
+
+		forwardMove = rightMove = upMove = 0;
 	}
 
-	vector_t angles;	//Clients view angles
 	float	 time;		//Clients frame Time
 	byte	 moveFlags;	//Move flags
 	byte	 svFlags;	//Server flags
-	
+
+	vector_t angles;	//Clients view angles
+
+	//maintains a counter of the times the client moved
+	//in a given directions between network updates.
+	//moves in opposite directions will cancel out previous stuff
+	short    forwardMove,
+			 rightMove,
+			 upMove;
+			 
 	//add buttons and what not
 };
 

@@ -85,14 +85,11 @@ Run a Client frame
 */
 void CGameClient::RunFrame(float frameTime)
 {
-	assert(m_ingame != false);
-
 	m_fFrameTime = frameTime;
 
-	//Reset move and angles stuff from the old frame
-//	m_vecDesiredAngles.Set(0,0,0);
-//	m_cmd.Reset();
-	
+	//Check
+	assert(m_ingame != false);
+
 	//Run Input
 	if(m_pCmdHandler->CursorChanged())
 	{
@@ -101,84 +98,16 @@ void CGameClient::RunFrame(float frameTime)
 		RotateRight(vecMouseAngles.x);
 		RotateUp(vecMouseAngles.y);
 	}
-//	m_pCmdHandler->RunCommands();
+	m_pCmdHandler->RunCommands();
 
-//	m_pClGame->HudPrintf(0,100,0,"Angle changes: %s", m_vecDesiredAngles.ToString());
-
-	//Process Movement
 	
 	//Get Angle vectors
-	
 	m_pGameClient->angles.AngleToVector(&m_vecForward, &m_vecRight, &m_vecUp);
 	m_vecForward.Normalize();
 	m_vecRight.Normalize();
 	m_vecUp.Normalize();
 
-	//Find forward and right vectors that lie in the xy plane
-	vector_t forward(m_vecForward), 
-			 right(m_vecRight), 
-			 vecDesiredMove;
-	
-	forward.z = 0;
-	if (forward.Normalize() < 0.3f)
-	{
-		if (forward.z < 0)
-			forward = m_vecUp;
-		else
-			m_vecUp.Inverse(forward);
-		forward.z = 0;
-		forward.Normalize();
-	}
-
-	right.z = 0;
-	if (right.Normalize() < 0.3f)
-	{
-		if (right.z > 0)
-			right = m_vecUp;
-		else
-			m_vecUp.Inverse(right);
-		right.z = 0;
-		right.Normalize();
-	}
-
-	//Get desired move
-	if(m_cmd.moveFlags & ClCmd::MOVEFORWARD)
-		vecDesiredMove.VectorMA(vecDesiredMove, m_pGameClient->maxSpeed, forward);
-	if(m_cmd.moveFlags & ClCmd::MOVEBACK)
-		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, forward);
-	if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
-		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, right);
-	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
-		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, right);
-
-	//Scale down x/y velocity if walking or crouching
-	if(m_cmd.moveFlags & ClCmd::WALK || m_cmd.moveFlags & ClCmd::CROUCH)
-		vecDesiredMove.Scale(0.5f);
-
-	if(m_cmd.moveFlags & ClCmd::JUMP)
-		vecDesiredMove.z += 300;
-
-	// always add gravity
-	vecDesiredMove.z -= (m_pGameClient->gravity * frameTime);
-
-	// gradually slow down (friction)
-	m_pGameClient->velocity.x *= (m_pGameClient->friction * frameTime);
-	m_pGameClient->velocity.y *= (m_pGameClient->friction * frameTime);
-	
-	//Clamp velocities
-	if (m_pGameClient->velocity.x < 0.01f)
-		m_pGameClient->velocity.x = 0;
-	else if (m_pGameClient->velocity.x > 200.0f)
-		m_pGameClient->velocity.x = 200.0f;
-
-	if (m_pGameClient->velocity.y < 0.01f)
-		m_pGameClient->velocity.y = 0;
-	else if (m_pGameClient->velocity.y > 200.0f)
-		m_pGameClient->velocity.y = 200.0f;
-
-	m_pGameClient->velocity += vecDesiredMove;
-
-	//Perform the actual move and update angles
+	UpdateVelocity();
 	UpdatePosition();
 	UpdateViewAngles();
 	UpdateViewBlends();
@@ -217,8 +146,6 @@ void CGameClient::RunFrame(float frameTime)
 			m_pClGame->DrawModel(m_clients[i]);
 		}
 	}
-
-	m_pCmdHandler->RunCommands();
 }
 
 /*

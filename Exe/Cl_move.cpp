@@ -24,7 +24,9 @@ been normalized.
 ================================================
 */
 void CGameClient::MoveForward()
-{	m_cmd.moveFlags |= ClCmd::MOVEFORWARD;
+{	
+	m_cmd.moveFlags |= ClCmd::MOVEFORWARD;
+	m_cmd.forwardMove++;
 }
 
 void CGameClient::MoveBackward()
@@ -83,16 +85,10 @@ Update angles. called onces per frame
 */
 void CGameClient::UpdateViewAngles()
 {
-//	m_vecDesiredAngles.YAW *= ;  
-//	m_vecDesiredAngles.PITCH *= m_fFrameTime;  
-
-
-//	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * m_fFrameTime);  
 	m_pGameClient->angles.YAW += m_vecDesiredAngles.YAW;
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
 
-//	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * m_fFrameTime);
 	m_pGameClient->angles.PITCH +=  m_vecDesiredAngles.PITCH;
 	if (m_pGameClient->angles.PITCH <= (-PI * 0.4f))
 		m_pGameClient->angles.PITCH = (-PI * 0.4f);
@@ -133,6 +129,78 @@ void CGameClient::UpdateViewAngles()
 				m_pGameClient->angles.ROLL = 0;
 		}
 	}
+}
+
+
+/*
+================================================
+Update Velocity based on input
+================================================
+*/
+void CGameClient::UpdateVelocity()
+{
+	vector_t forward(m_vecForward), 
+			 right(m_vecRight), 
+			 vecDesiredMove;
+	
+	forward.z = 0;
+	if (forward.Normalize() < 0.3f)
+	{
+		if (forward.z < 0)
+			forward = m_vecUp;
+		else
+			m_vecUp.Inverse(forward);
+		forward.z = 0;
+		forward.Normalize();
+	}
+
+	right.z = 0;
+	if (right.Normalize() < 0.3f)
+	{
+		if (right.z > 0)
+			right = m_vecUp;
+		else
+			m_vecUp.Inverse(right);
+		right.z = 0;
+		right.Normalize();
+	}
+
+	//Get desired move
+	if(m_cmd.moveFlags & ClCmd::MOVEFORWARD)
+		vecDesiredMove.VectorMA(vecDesiredMove, m_pGameClient->maxSpeed, forward);
+	if(m_cmd.moveFlags & ClCmd::MOVEBACK)
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, forward);
+	if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
+		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, right);
+	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, right);
+
+	//Scale down x/y velocity if walking or crouching
+	if(m_cmd.moveFlags & ClCmd::WALK || m_cmd.moveFlags & ClCmd::CROUCH)
+		vecDesiredMove.Scale(0.5f);
+
+	if(m_cmd.moveFlags & ClCmd::JUMP)
+		vecDesiredMove.z += 300;
+
+	// always add gravity
+	vecDesiredMove.z -= (m_pGameClient->gravity * m_fFrameTime);
+
+	// gradually slow down (friction)
+	m_pGameClient->velocity.x *= (m_pGameClient->friction * m_fFrameTime);
+	m_pGameClient->velocity.y *= (m_pGameClient->friction * m_fFrameTime);
+	
+	//Clamp velocities
+	if (m_pGameClient->velocity.x < 0.01f)
+		m_pGameClient->velocity.x = 0;
+	else if (m_pGameClient->velocity.x > 200.0f)
+		m_pGameClient->velocity.x = 200.0f;
+
+	if (m_pGameClient->velocity.y < 0.01f)
+		m_pGameClient->velocity.y = 0;
+	else if (m_pGameClient->velocity.y > 200.0f)
+		m_pGameClient->velocity.y = 200.0f;
+
+	m_pGameClient->velocity += vecDesiredMove;
 }
 
 
