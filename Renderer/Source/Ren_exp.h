@@ -32,7 +32,7 @@ public:
 	bool Restart(void);
 
 	//CVar Handler
-	bool HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 private:
 
@@ -41,10 +41,9 @@ private:
 	CVar   m_cBpp;		//bpp
 
 	//CVar Handlers
-	bool CVar_FullScreen(const CVar * var, int argc, char** argv);
-	bool CVar_Res(const CVar * var, int argc, char** argv);
-	bool CVar_Bpp(const CVar * var, int argc, char** argv);
-
+	bool CVar_FullScreen(const CVar * var, const CParms &parms);
+	bool CVar_Res(const CVar * var, const CParms &parms);
+	bool CVar_Bpp(const CVar * var, const CParms &parms);
 };
 
 #endif

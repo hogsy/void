@@ -36,8 +36,8 @@ public:
 	void UpdateRes();
 	void Draw(); 
 
-	bool HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs);
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 	enum
 	{

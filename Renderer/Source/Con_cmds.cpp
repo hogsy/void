@@ -6,7 +6,6 @@
 Hack
 Extension of the Renderer Console to manage
 initialization/registration of global commands/objects
-shouldnt be any global crap :\
 ==========================================
 */
 
@@ -28,9 +27,8 @@ CVar *	g_pBeamTolerance=0;
 Take a screen shot, write it to disk
 ======================================
 */
-void ScreenShot(char *name, EImageFileFormat type)
+void ScreenShot(const char *name, EImageFileFormat type)
 {
-	
 	char	checkname[260];
 
 	//find a file name to save it to 
@@ -92,72 +90,30 @@ void ScreenShot(char *name, EImageFileFormat type)
 	g_pHunkManager->HunkFree(data);
 }
 
-/*
-==========================================
-Take a PCX screenshot
-==========================================
-*/
-void CFunc_PCXShot(int argc, char** args)
-{
-	if (argc > 1)
-	{
-		if (strlen(args[1]) > 20)
-		{
-			ConPrint("filename too long!\n");
-			ScreenShot(0,FORMAT_PCX);
-		}
-		else
-			ScreenShot(args[1], FORMAT_PCX);
-	}
-	else
-		ScreenShot(NULL,FORMAT_PCX);
-}
-
-/*
-==========================================
-Take a TGA screenshot
-==========================================
-*/
-void CFunc_TGAShot(int argc, char** args)
-{
-	if (argc > 1)
-	{
-		if (strlen(args[1]) > 20)
-		{
-			ConPrint("filename too long!\n");
-			ScreenShot(0, FORMAT_TGA);
-		}
-		else
-			ScreenShot(args[1],FORMAT_TGA);
-	}
-	else
-		ScreenShot(0,FORMAT_TGA);
-}
-
 //======================================================================================
 //CVar Handling funcs
 //======================================================================================
+
+//RETURN TRUE ONLY IF YOU WANT THE CVAR TO BE SET TO A THE NEW VALUE
 
 /*
 =======================================
 switch fullbright (light) rendering
 =======================================
 */
-bool CVar_FullBright(const CVar * var, int argc, char** argv)
+bool CVar_FullBright(const CVar * var, int val)
 {
-	if(argc<=1)
-		ConPrint("r_fullbright = %d\n", var->ival);
-	else
+	//There was no second parm 
+	if(val == CParms::INVALID_VALUE) // or -1
 	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
-		{
-			if (temp)
-				g_rInfo.rflags |= RFLAG_FULLBRIGHT;
-			else
-				g_rInfo.rflags &= ~RFLAG_FULLBRIGHT;
-		}
+		ConPrint("r_fullbright = %d\n", var->ival);
+		return false;
 	}
+
+	if (val)
+		g_rInfo.rflags |= RFLAG_FULLBRIGHT;
+	else
+		g_rInfo.rflags &= ~RFLAG_FULLBRIGHT;
 	return true;
 }
 
@@ -166,9 +122,9 @@ bool CVar_FullBright(const CVar * var, int argc, char** argv)
 toggle multitexture/multipass rendering
 =======================================
 */
-bool CVar_MultiTexture(const CVar * var, int argc, char** argv)
+bool CVar_MultiTexture(const CVar * var, int val)
 {
-	if(argc<=1)
+	if(val == CParms::INVALID_VALUE)
 	{
 		if (!(g_rInfo.rflags & RFLAG_MULTITEXTURE))
 			ConPrint("Your video card does not support ARB multitexturing.\n");
@@ -184,32 +140,27 @@ bool CVar_MultiTexture(const CVar * var, int argc, char** argv)
 switch fullbright (light) rendering
 =======================================
 */
-bool CVar_Fov(const CVar * var, int argc, char** argv)
+bool CVar_Fov(const CVar * var, int val)
 {
-	if(argc<=1)
-		ConPrint("r_fov = %d\n", var->ival);
-	else
+	if(val == CParms::INVALID_VALUE)
 	{
-		int temp=0;
-
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
-		{
-			if (temp && temp>=10 && temp<= 170)
-			{
-				g_rInfo.fov = temp * PI/180;
-				float x = (float) tan(g_rInfo.fov * 0.5f);
-				float z = x * 0.75f;						// always render in a 3:4 aspect ratio
-
-				/* set viewing projection */
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glFrustum(-x, x, -z, z, 1, 10000);
-				return true;
-			}
-		}
+		ConPrint("r_fov = %d\n", var->ival);
 		return false;
 	}
-	return true;
+
+	if (val>=10 && val<= 170)
+	{
+		g_rInfo.fov = val * PI/180;
+		float x = (float) tan(g_rInfo.fov * 0.5f);
+		float z = x * 0.75f;						// always render in a 3:4 aspect ratio
+
+		/* set viewing projection */
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glFrustum(-x, x, -z, z, 1, 10000);
+		return true;
+	}
+	return false;
 }
 
 /*
@@ -217,46 +168,37 @@ bool CVar_Fov(const CVar * var, int argc, char** argv)
 toggle vid synch
 =======================================
 */
-bool CVar_VidSynch(const CVar * var, int argc, char** argv)
+bool CVar_VidSynch(const CVar * var, int val)
 {
-	if(argc<=1)
-		ConPrint("r_vidsynch = %d\n", var->ival);
-	else
+	if(val == CParms::INVALID_VALUE)
 	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
-		{
-			if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
-			{
-				if (temp)
-					wglSwapIntervalEXT(1);
-				else
-					wglSwapIntervalEXT(0);
-			}
-		}
-		else
-			return false;
+		ConPrint("r_vidsynch = %d\n", var->ival);
+		return false;
 	}
-	return true;
+
+	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
+	{
+		if (val)
+			wglSwapIntervalEXT(1);
+		else
+			wglSwapIntervalEXT(0);
+		return true;
+	}
+	ComPrintf("Video card doesnt support VidSynch\n");
+	return false;
 }
 
 
 /*
 =======================================
 16 / 32 bit textures
+FIXME, why is this even needed ?
 =======================================
 */
-bool CVar_32BitTextures(const CVar * var, int argc, char** argv)
+bool CVar_32BitTextures(const CVar * var, int val)
 {
-	if(argc<=1)
-		return true;
-
-	else
-	{
-		int temp=0;
-		if(!argv[1] || !sscanf(argv[1],"%d",&temp))
-			return false;
-	}
+	if(val == CParms::INVALID_VALUE) 
+		return false;
 
 	ConPrint("Change will take effect on next level load.\n");
 	return true;
@@ -268,18 +210,10 @@ bool CVar_32BitTextures(const CVar * var, int argc, char** argv)
 set how much the console will fade in
 =======================================
 */
-bool CVar_ConAlpha(const CVar * var, int argc, char** argv)
+bool CVar_ConAlpha(const CVar * var, int val)
 {
-	if (argc>1)
-	{
-		int temp=0;
-		if(!argv[1] || !sscanf(argv[1],"%d",&temp))
-			return false;
-
-		if (temp<100 || temp>255)
-			return false;
-	}
-
+	if (val<100 || val>255)
+		return false;
 	return true;
 }
 
@@ -289,21 +223,17 @@ bool CVar_ConAlpha(const CVar * var, int argc, char** argv)
 tolerance for caching polys as zfill/beamtree or zbuffer
 =======================================
 */
-bool CVar_BeamTolerance(const CVar * var, int argc, char** argv)
+bool CVar_BeamTolerance(const CVar * var, const CParms &parms)
 {
-	if (argc>1)
+	if (parms.NumTokens() > 1)
 	{
-		int temp=0;
-		if(!argv[1] || !sscanf(argv[1],"%f",&temp))
-			return false;
-
+		int temp= parms.IntTok(1);
 		if (temp<0)
 			return false;
+		return true;
 	}
-
-	return true;
+	return false;
 }
-
 
 
 //======================================================================================
@@ -317,15 +247,15 @@ bool CVar_BeamTolerance(const CVar * var, int argc, char** argv)
 Handle Global Commands
 ==========================================
 */
-void CRConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+void CRConsole::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
 	case CMD_TGASHOT:
-		CFunc_TGAShot(numArgs,szArgs);
+		ScreenShot(parms.StringTok(1),FORMAT_TGA);
 		break;
 	case CMD_PCXSHOT:
-		CFunc_PCXShot(numArgs,szArgs);
+		ScreenShot(parms.StringTok(1),FORMAT_PCX);
 		break;
 	}
 }
@@ -335,23 +265,22 @@ void CRConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 Handle Cvars
 ==========================================
 */
-bool CRConsole::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
+bool CRConsole::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == g_pFullbright)
-		return CVar_FullBright((CVar*)cvar,numArgs,szArgs);
+		return CVar_FullBright((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_pFov)
-		return CVar_Fov((CVar*)cvar,numArgs,szArgs);
+		return CVar_Fov((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_pMultiTexture)
-		return CVar_MultiTexture((CVar*)cvar,numArgs,szArgs);
+		return CVar_MultiTexture((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_pVidSynch)
-		return CVar_VidSynch((CVar*)cvar,numArgs,szArgs);
+		return CVar_VidSynch((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_p32BitTextures)
-		return CVar_32BitTextures((CVar*)cvar,numArgs,szArgs);
+		return CVar_32BitTextures((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_pConAlpha)
-		return CVar_ConAlpha((CVar*)cvar,numArgs,szArgs);
+		return CVar_ConAlpha((CVar*)cvar,parms.IntTok(1));
 	else if(cvar == g_pBeamTolerance)
-		return CVar_BeamTolerance((CVar*)cvar,numArgs,szArgs);
-
+		return CVar_BeamTolerance((CVar*)cvar,parms);
 	return false;
 }
 
@@ -373,7 +302,6 @@ void CRConsole::RegisterConObjects()
 	g_p32BitTextures = new CVar("r_32bittextures","1", CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
 	g_pConAlpha = new CVar("r_conalpha","200", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
-
 
 	g_pConsole->RegisterCVar(g_pFullbright,this);
 	g_pConsole->RegisterCVar(g_pFov,this);
@@ -407,22 +335,4 @@ void CRConsole::DestroyConObjects()
 	g_pConAlpha = 0;
 	g_pBeamTolerance = 0;
 }
-
-
-/*
-FIX ME !!
-why does this leave a leak ?
-the default runtime delete is called in the CVar destructor instead of ours
-WHY ??
-
-class CBlah
-{
-public:
-	CBlah() : g_pFullbright("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE) {}
-	~CBlah() {}
-
-	CVar	g_pFullbright;
-};
-CBlah bha;
-*/
 

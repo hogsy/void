@@ -376,14 +376,14 @@ bool CRenExp::Restart(void)
 CVar Handlers
 ==========================================
 */
-bool CRenExp::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
+bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
 {
 	if(cvar == &m_cFull)
-		return CVar_FullScreen((CVar*)cvar,numArgs,szArgs);
+		return CVar_FullScreen((CVar*)cvar, parms);
 	else if(cvar == &m_cRes)
-		return CVar_Res((CVar*)cvar,numArgs,szArgs);
+		return CVar_Res((CVar*)cvar, parms);
 	else if(cvar == &m_cBpp)
-		return CVar_Bpp((CVar*)cvar,numArgs,szArgs);
+		return CVar_Bpp((CVar*)cvar, parms);
 	return false;
 }
 
@@ -392,19 +392,20 @@ bool CRenExp::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
 CVar validation functions
 ==========================================
 */
-bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
+bool CRenExp::CVar_FullScreen(const CVar * var, const CParms &parms)
 {
-	if(argc<=1)
+	int argc = parms.NumTokens();
+	if(argc ==1)
 	{	if(var->ival ==0)
 			ConPrint("In windowed mode\n");
 		else
 			ConPrint("In fullscreen mode\n");
 	}
-	else if(argc >= 2)
+	else if(argc > 1)
 	{
-		int temp=0;
-		if((argv[1]) && (sscanf(argv[1],"%d",&temp)))
-		{
+		int temp= parms.IntTok(1);
+//		if((argv[1]) && (sscanf(argv[1],"%d",&temp)))
+//		{
 			if(temp <= 0)
 			{
 				if(!(g_rInfo.rflags & RFLAG_FULLSCREEN))
@@ -428,7 +429,7 @@ bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 					ChangeDispSettings(g_rInfo.width, g_rInfo.height, g_rInfo.bpp, true);
 			}
 			return true;
-		}
+//		}
 	}
 	return false;
 }
@@ -438,16 +439,25 @@ bool CRenExp::CVar_FullScreen(const CVar * var, int argc, char** argv)
 Handle Resolution changes
 ==========================================
 */
-bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
+bool CRenExp::CVar_Res(const CVar * var, const CParms &parms)
 {
-	if(argc<=1)
-	{	ConPrint("Running in %s resolution\n", var->string);
-	}
-	else if(argc >=3)
+	int argc = parms.NumTokens();
+	if(argc ==1)
+		ConPrint("Running in %s resolution\n", var->string);
+	else if(argc >2)
 	{
 		uint x=0, y=0;
 
-		if(!sscanf(argv[1],"%d",&x))
+		x = parms.IntTok(1);
+		y = parms.IntTok(2);
+
+		if(!x || !y)
+		{
+			ComPrintf("CVar_Res::Bad entries\n");
+			return false;
+		}
+
+/*		if(!sscanf(argv[1],"%d",&x))
 		{
 			ConPrint("CVar_Res::Bad entry for Horizontal Resolution, Defaulting\n");
 			x = g_rInfo.width;
@@ -457,7 +467,7 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 			ConPrint("CVar_Res::Bad entry for Vertical Resolution, Defaulting\n");
 			y = g_rInfo.height;
 		}
-
+*/
 		// no go if we're not changing
 		if ((g_rInfo.width == x) && (g_rInfo.height == y))
 		{
@@ -479,21 +489,28 @@ bool CRenExp::CVar_Res(const CVar * var, int argc, char** argv)
 Handle bpp changes
 ==========================================
 */
-bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
+bool CRenExp::CVar_Bpp(const CVar * var, const CParms &parms)
 {
-	if(argc<=1)
+	int argc = parms.NumTokens();
+	if(argc==1)
 	{	ConPrint("Running in %d bpp\n", var->ival);
 	}
-	else if(argc >= 2)
+	else if(argc > 1)
 	{
-		uint bpp=0;
-		if(!sscanf(argv[1],"%d",&bpp))
-			bpp  = g_rInfo.bpp;
+		uint bpp= parms.IntTok(1);
+		//if(!sscanf(argv[1],"%d",&bpp))
+		//	bpp  = g_rInfo.bpp;
 
 		// no go if we're not changing
 		if (bpp == g_rInfo.bpp)
 		{
-			ConPrint("Bad Entry or already at given bpp\n");
+			ConPrint("Already at given bpp\n");
+			return false;
+		}
+
+		if(bpp < 0)
+		{
+			ConPrint("Bad Bpp\n");
 			return false;
 		}
 
