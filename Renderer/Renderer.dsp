@@ -170,11 +170,11 @@ SOURCE=.\Source\Tex_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Mdl_cache.cpp
+SOURCE=.\Source\Mdl_entry.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mdl_cache.h
+SOURCE=.\Source\Mdl_entry.h
 # End Source File
 # Begin Source File
 
