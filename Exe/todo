@@ -1,9 +1,6 @@
 EXE
 ==============================================================
 -Move client movement to server
--Change everything to 1 based indexing ? 
- checking against -1 for bad indexes just seems, blah
-
 -Add free/in use SoundSource lists in 3dsound manager
 -Add proper channel allocation with channel properties ?
 

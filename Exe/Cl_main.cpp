@@ -273,7 +273,7 @@ void CClient::RunFrame()
 */
 
 		VectorNormalize(&desired_movement);
-		Move(desired_movement, System::g_fframeTime * m_maxvelocity);
+		Move(desired_movement, System::GetFrameTime() * m_maxvelocity);
 		desired_movement.Set(0,0,0);
 //	}
 
@@ -281,8 +281,8 @@ void CClient::RunFrame()
 	m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
 			m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
 	m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
-			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
-	m_fFrameTime = System::g_fcurTime;
+		1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime(), System::GetFrameTime());
+	m_fFrameTime = System::GetCurTime();
 
 	vector_t forward, up, velocity;
 	VectorSet(&velocity, 0,0,0);

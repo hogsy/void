@@ -29,22 +29,22 @@ enum eGameState
 
 namespace System
 {
-	//Current Time
-	extern float	g_fframeTime;
-	extern float	g_fcurTime;
-
 	//Common System functions
+	
+	//Current Time
+	const float &	GetCurTime();
+	const float &	GetFrameTime();
+	
 	I_Console  *	GetConsole();
 	const char *	GetExePath();
 	const char *	GetCurrentPath();
 	eGameState		GetGameState();
 
-	void FatalError(const char *error);
+	void  FatalError(const char *error);
+	void  SetGameState(eGameState state);
 	
-	void SetGameState(eGameState state);
-
 	//Windows specefic
-	HINSTANCE	GetHInstance();
-	HWND		GetHwnd();
+	HINSTANCE		GetHInstance();
+	HWND			GetHwnd();
 }
 #endif

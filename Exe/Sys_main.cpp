@@ -7,11 +7,11 @@
 
 /*
 ==========================================
-Memory Managers
+Memory stuff
 ==========================================
 */
-CMemManager		g_memManager("mem_exe.log");
-CHunkMem		m_HunkManager;
+const char MEM_SZLOGFILE [] = "mem_exe.log";
+CHunkMem   m_HunkManager;
 
 /*
 ==========================================
@@ -60,9 +60,6 @@ CVoid::CVoid(const char * cmdLine)
 	}
 
 	m_Console.LoadConfig("vvars.cfg");
-
-	//Create timer
-	m_pTime = new CTime();						
 
 	//Export structure
 	m_pExport = new VoidExport();
@@ -162,7 +159,7 @@ bool CVoid::Init()
 
 	//================================
 	//Timer
-	m_pTime->Init();
+	m_Time.Init();
 
 	//================================
 	//Input
@@ -210,7 +207,7 @@ bool CVoid::Init()
 #endif
 
 	//Start timer
-	m_pTime->Reset();
+	m_Time.Reset();
 
 	//Set focus to console
 	System::GetInputFocusManager()->SetKeyListener(&m_Console,true);
@@ -256,9 +253,6 @@ CVoid::~CVoid()
 		delete m_pInput;
 	}
 	
-	if(m_pTime)
-		delete m_pTime;
-
 	//Shutdown, and free the Renderer Interface
 	if(m_pRender)
 		m_pRender->Shutdown();
@@ -282,7 +276,7 @@ The Game Loop
 */
 void CVoid::RunFrame()
 {
-	m_pTime->Update();
+	m_Time.Update();
 	
 	//Run Input frame
 	m_pInput->UpdateCursor();
@@ -520,7 +514,9 @@ namespace System
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
-	float GetCurTime() { return g_fcurTime; }
+	const float & GetCurTime() { return g_pVoid->m_Time.GetCurrentTime(); }
+	const float & GetFrameTime()   { return g_pVoid->m_Time.GetFrameTime(); }
+
 
 	void SetGameState(eGameState state) 
 	{

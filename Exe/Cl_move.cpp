@@ -11,7 +11,7 @@ void CClient::Move(vector_t &dir, float time)
 {
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)
-//		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, &dir, time);
+//		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pClient->origin, &dir, time);
 
 	// can we clip through walls?  it's simple then
 	if (!m_cvClip.ival)
@@ -105,7 +105,7 @@ void CClient::CamPath()
 		if (strcmp(m_pWorld->GetKeyString(ent, "classname"), "misc_camera_path_head") == 0)
 		{
 			m_campath = ent;
-			m_camtime = System::g_fcurTime;
+			m_camtime = System::GetCurTime();
 
 			vector_t origin;
 			m_pWorld->GetKeyVector(ent, "origin", origin);

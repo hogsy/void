@@ -2,70 +2,65 @@
 #include <mmsystem.h>
 #include "Sys_time.h"
 
-namespace System
-{
-float	g_fframeTime=0;		//The Global Frame Time
-float	g_fcurTime=0;		//The Global Current Time 
-}
-
-float	CTime::m_fSecsPerTick;
-_int64	CTime::m_dTimerStart;
-
 /*
 =====================================
-Constructor
+Constructor/Destructor
 =====================================
 */
-CTime::CTime()
+CTime::CTime() : 
+		m_pfnUpdate(0),
+		m_fBaseTime(0.0f),
+		m_fLastTime(0.0f),
+		m_fSecsPerTick(0.0f),
+		m_fCurrentTime(0.0f),
+		m_fFrameTime(0.0f),
+		m_dTimerStart(0),
+		m_dCurTime(0)
 {
-	m_fBaseTime = 0.0f;
-	m_fLastTime = 0.0f;
-	m_fSecsPerTick = 0.0f;
-
-	m_dTimerStart= 0;
-	
-	GetTime = 0;
 }
 
-
-/*
-=====================================
-Destructor
-=====================================
-*/
 CTime::~CTime()
-{
-	GetTime = 0;
+{	m_pfnUpdate = 0;
 }
-
 
 /*
 =====================================
 Initialize the timer
 =====================================
 */
-bool CTime::Init()
+void CTime::Init()
 {
-	_int64	dTicksPerSec=0;
+	_int64	dTicksPerSec =0;
 
-	//Use MM time if NOT able to use the High Frequency timer
-	if (!QueryPerformanceFrequency((LARGE_INTEGER *)&dTicksPerSec))
+	if (QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&dTicksPerSec)))
 	{ 
-		// no performance counter available
-		m_dTimerStart = timeGetTime();
-		m_fSecsPerTick = 1.0f/1000.0f;
-		GetTime = &CTime::GetMMTime;
+		// performance counter is available, use it instead of multimedia timer
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&m_dTimerStart));
+		m_fSecsPerTick = (1.0f)/(static_cast<float>(dTicksPerSec));
+		m_pfnUpdate = &CTime::GetPerformanceCounterTime;
 	}
 	else
 	{ 
-		// performance counter is available, use it instead of multimedia timer
-		QueryPerformanceCounter((LARGE_INTEGER *)&m_dTimerStart);
-		m_fSecsPerTick = (float)(1.0)/((float)dTicksPerSec);
-		GetTime = &CTime::GetPerformanceCounterTime;
+		//Use MM timer if unable to use the High Frequency timer
+		m_dTimerStart = timeGetTime();
+		m_fSecsPerTick = 1.0f/1000.0f;
+		m_pfnUpdate = &CTime::GetMMTime;
 	}
-	return true;
 }
 
+/*
+================================================
+Update time
+================================================
+*/
+void CTime::Update()
+{
+	//The ->* operator binds the function pointer to the object pointed to by
+	//the right hand pointer. which is THIS below
+	m_fCurrentTime =  (this->*m_pfnUpdate)() - m_fBaseTime;
+	m_fFrameTime = m_fCurrentTime - m_fLastTime;
+	m_fLastTime = m_fCurrentTime;
+}
 
 /*
 =====================================
@@ -74,24 +69,21 @@ Reset the Timer
 */
 void CTime::Reset()
 {
-	m_fBaseTime =  GetTime();
-	m_fLastTime = System::g_fcurTime = System::g_fframeTime = 0.0;
+	m_fBaseTime =  (this->*m_pfnUpdate)();
+	m_fLastTime = m_fCurrentTime = m_fFrameTime = 0.0;
 }
 
 /*
 =====================================
-Update time
+Time update funcs
 =====================================
 */
-
 float CTime::GetPerformanceCounterTime()
 {
-	static _int64 curTime=0;
-	QueryPerformanceCounter((LARGE_INTEGER *)&curTime);
-	return(((float)(curTime-m_dTimerStart)) * m_fSecsPerTick);
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&m_dCurTime));
+	return (m_fSecsPerTick * (m_dCurTime - m_dTimerStart));
 }
 
 float CTime::GetMMTime()
-{
-	return(((float)(timeGetTime()- m_dTimerStart)) * m_fSecsPerTick);
+{	return (m_fSecsPerTick * (timeGetTime()- m_dTimerStart));
 }

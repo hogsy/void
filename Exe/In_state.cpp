@@ -104,12 +104,12 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 	   (m_aHeldKeys[keyid].state == BUTTONUP))
 	{
 		m_keyEvent.id = keyid;
-		m_keyEvent.time = System::g_fcurTime;
+		m_keyEvent.time = System::GetCurTime();
 		m_keyEvent.state = BUTTONDOWN;
 
 		m_aHeldKeys[keyid].id = keyid;
 		m_aHeldKeys[keyid].state = BUTTONHELD;
-		m_aHeldKeys[keyid].time = System::g_fcurTime + (m_fRepeatRate + 0.4);
+		m_aHeldKeys[keyid].time = System::GetCurTime() + (m_fRepeatRate + 0.4);
 		
 		//Apply flags
 		if(m_keyEvent.flags & SHIFTDOWN)
@@ -123,7 +123,7 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 	{
 		//Send new Keystate
 		m_keyEvent.id = keyid;
-		m_keyEvent.time = System::g_fcurTime;
+		m_keyEvent.time = System::GetCurTime();
 		m_keyEvent.state = BUTTONUP;
 
 		//Reset old keystate
@@ -156,14 +156,14 @@ void CInputState::DispatchKeys()
 		for(int i=0;i<IN_NUMKEYS;i++)
 		{
 			if((m_aHeldKeys[i].state == BUTTONHELD) &&
-			   (System::g_fcurTime > m_aHeldKeys[i].time))
+			   (System::GetCurTime() > m_aHeldKeys[i].time))
 			{
 				m_keyEvent.id   = m_aHeldKeys[i].id; 
-				m_keyEvent.time = System::g_fcurTime;
+				m_keyEvent.time = System::GetCurTime();
 				m_keyEvent.state= BUTTONHELD;
 
 				//Update time
-				m_aHeldKeys[i].time = System::g_fcurTime + m_fRepeatRate;
+				m_aHeldKeys[i].time = System::GetCurTime() + m_fRepeatRate;
 
 				if(m_keyEvent.flags & SHIFTDOWN)
 					ShiftCharacter(m_keyEvent.id);
@@ -190,7 +190,7 @@ void CInputState::FlushKeys()
 
 		if(m_aHeldKeys[i].state != BUTTONUP)
 		{
-			m_keyEvent.time = System::g_fcurTime;
+			m_keyEvent.time = System::GetCurTime();
 			m_keyEvent.state = BUTTONUP;
 			m_keyEvent.id = m_aHeldKeys[i].id; 
 

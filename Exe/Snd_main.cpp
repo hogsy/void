@@ -272,9 +272,9 @@ of range now, and silence them
 */
 void CSoundManager::RunFrame()
 {
-	if(m_fLastFrame > System::g_fcurTime)
+	if(m_fLastFrame > System::GetCurTime())
 		return;
-	m_fLastFrame = System::g_fcurTime + 1/m_cSndFps.fval;
+	m_fLastFrame = System::GetCurTime() + 1/m_cSndFps.fval;
 
 
 	m_pListener->m_pDS3dListener->CommitDeferredSettings();

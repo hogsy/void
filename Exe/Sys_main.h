@@ -51,13 +51,17 @@ public:
 private:
 
 	//Give this friend access
+	friend const float& System::GetCurTime();
+	friend const float& System::GetFrameTime();
 	friend const char * System::GetExePath();
 	friend const char * System::GetCurrentPath();
 	friend I_Console  *	System::GetConsole();
 	friend eGameState   System::GetGameState();
-	friend void	System::SetGameState(eGameState state);
+	
 	friend I_InputFocusManager * System::GetInputFocusManager();
+	
 	friend void System::FatalError(const char *error);
+	friend void	System::SetGameState(eGameState state);
 	
 	friend void ComPrintf(const char* text, ...);
 	
@@ -65,14 +69,14 @@ private:
 	//=========================================================
 	
 	CConsole	   m_Console;		//Console
+	CTime		   m_Time;
+
+	VoidExport   * m_pExport;		//Exported Stuff
 	
 	I_Renderer   * m_pRender;
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 
-	VoidExport   * m_pExport;		//Exported Data
-	
 	CInput		 * m_pInput;		//Input 
-	CTime		 * m_pTime;			//Timer
 	CFileSystem  * m_pFileSystem;	//FileSystem
 
 	CServer		 * m_pServer;		//Server

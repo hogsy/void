@@ -205,17 +205,17 @@ void CServer::RunFrame()
 		return;
 
 	//Re-seed current time
-	srand((uint)System::g_fcurTime);
+	srand((uint)System::GetCurTime());
 
 	//Get updates
 	m_net.ReadPackets();
 
 
 	//Run game at fixed speed
-	if(m_fGameTime < System::g_fcurTime)
+	if(m_fGameTime < System::GetCurTime())
 	{
-		m_fGameTime = System::g_fcurTime + GAME_FRAMETIME;
-		m_pGame->RunFrame(System::g_fcurTime);
+		m_fGameTime = System::GetCurTime() + GAME_FRAMETIME;
+		m_pGame->RunFrame(System::GetCurTime());
 	}
 
 	//run clients
