@@ -17,15 +17,21 @@ Maintains clients game state
 Nearly all cleint side systems act on this data
 ================================================
 */
-class CClientState
+class CGameClient : public I_ConHandler
 {
 public:
-	CClientState(CClient	   & rClient,
+	CGameClient(CClient	   & rClient,
 				 I_HudRenderer * pHud,
 				 CSoundManager * pSound,
 				 CMusic		   * pMusic);
 
-	~CClientState();
+	~CGameClient();
+
+	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+
+	vector_t m_moveAngles;
+	CVar    m_cvKbSpeed;
 
 	//spawn for the first time.
 	void BeginGame();
@@ -36,6 +42,7 @@ public:
 	void RunFrame(float frameTime);
 	void WriteCmdUpdate(CBuffer &buf);
 	void UpdateView();
+
 
 	//==================================================
 	//Movement
@@ -55,6 +62,10 @@ public:
 	I_HudRenderer * m_pHud;
 	CSoundManager * m_pSound;
 	CMusic		  * m_pMusic;
+
+	friend class CClientGameInput;
+	CClientGameInput * m_pCmdHandler;
+
 
 	CWorld	 *  m_pWorld;
 	CClient	 &	m_rClient;

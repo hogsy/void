@@ -8,8 +8,6 @@ struct CCommand;
 //======================================================================================
 //======================================================================================
 
-const int CL_CMDBUFFERSIZE = 8;
-
 //Registered Command Ids
 enum
 {
@@ -31,6 +29,29 @@ enum
 	CMD_TALK		  = 15,
 	CMD_RECONNECT	  = 16
 };
+
+
+
+struct ClientGameCmd
+{
+	const char * szCmd;
+	unsigned int id;
+};
+
+const ClientGameCmd g_clGameCmds[] =
+{
+	{	"+forward",	CMD_MOVE_FORWARD },
+	{	"+back",	CMD_MOVE_BACKWARD },
+	{	"+moveleft",	CMD_MOVE_LEFT },
+	{	"+moveright",	CMD_MOVE_RIGHT },
+	{	"+right",	CMD_ROTATE_RIGHT },
+	{	"+left",	CMD_ROTATE_LEFT },
+	{	"+lookup",	CMD_ROTATE_UP },
+	{	"+lookdown",	CMD_ROTATE_DOWN },
+	{	0, 0}
+};
+
+
 
 //======================================================================================
 //======================================================================================
@@ -98,6 +119,12 @@ const ClientKeyConstants_t keytable[] =
 
 //======================================================================================
 //======================================================================================
+
+const int CL_CMDBUFFERSIZE = 8;
+
+
+class CGameClient;
+
 /*
 ======================================
 Client Command Handler
@@ -109,19 +136,21 @@ Client Command Handler
 ======================================
 */
 
-class CClientGameCmd : public I_InKeyListener,
-							  I_InCursorListener
+class CClientGameInput : public I_InKeyListener,	
+					 public I_InCursorListener
 {
 public:
 
-	//FIXME, change parm to just a vector to hold mouse co-ords ?
-	CClientGameCmd(CClient &owner);
-	~CClientGameCmd();
+	CClientGameInput(CGameClient &rGameClient);
+	~CClientGameInput();
 
 	void IntializeBinds();
 
-	void SetListenerState(bool on);
+	//Call this to execute all the commands buffered during the frame
 	void RunCommands();
+	
+	//Will update cursor pos if it had changed and return true
+	bool UpdateCursorPos(float &ix, float &iy, float &iz);
 
 	void HandleKeyEvent	  (const KeyEvent &kevent);
 	void HandleCursorEvent(const float &ix,
@@ -140,9 +169,12 @@ private:
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
-	CParms		m_Parms;
+	CGameClient & m_refClient;
 
-	CClient	  & m_refClient;
+	float		m_fXpos, m_fYpos, m_fZpos;
+	bool		m_bCursorChanged;
+
+	CParms		m_Parms;
 
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];

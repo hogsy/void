@@ -3,53 +3,47 @@
 #include "Sys_cons.h"
 #include "Cl_game.h"
 
-//======================================================================================
-//======================================================================================
-
 /*
 ==========================================
 Constructor/Destructor
 ==========================================
 */
-CClientGameCmd::CClientGameCmd(CClient &owner) : 
-							m_Parms(80), m_refClient(owner)
+CClientGameInput::CClientGameInput(CGameClient & rGameClient) : m_Parms(80) , 
+							   m_fXpos(0.0f), m_fYpos (0.0f), m_fZpos(0.0f),
+							   m_bCursorChanged(false),
+							   m_refClient(rGameClient)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
 }
 
-CClientGameCmd::~CClientGameCmd()
+CClientGameInput::~CClientGameInput()
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
 }
 
 
-/*
-==========================================
-Activate/Deactivate Listener
-==========================================
-*/
-void CClientGameCmd::SetListenerState(bool on)
+bool CClientGameInput::UpdateCursorPos(float &ix, float &iy, float &iz)
 {
-	if(on = true)
+	if(m_bCursorChanged)
 	{
-		System::GetInputFocusManager()->SetCursorListener(this);
-		System::GetInputFocusManager()->SetKeyListener(this,false);
+		m_bCursorChanged = false;
+		ix = m_fXpos;
+		iy = m_fYpos;
+		iz = m_fZpos;
+		return true;
 	}
-	else
-	{
-		System::GetInputFocusManager()->SetCursorListener(0);
-		System::GetInputFocusManager()->SetKeyListener(0);
-	}
+	return false;
 }
+
 
 /*
 ==========================================
 Run all the commands added into the buffer
 ==========================================
 */
-void CClientGameCmd::RunCommands()
+void CClientGameInput::RunCommands()
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -68,7 +62,7 @@ void CClientGameCmd::RunCommands()
 Handle Key Event
 ==========================================
 */
-void CClientGameCmd::HandleKeyEvent(const KeyEvent &kevent)
+void CClientGameInput::HandleKeyEvent(const KeyEvent &kevent)
 {
 	//check if there is a command bound to that key
 	if(m_cmdKeys[(kevent.id)].szCommand[0])
@@ -92,12 +86,21 @@ void CClientGameCmd::HandleKeyEvent(const KeyEvent &kevent)
 Handle Cursor Move Event
 ==========================================
 */
-void CClientGameCmd::HandleCursorEvent(const float &ix,
-									   const float &iy,
-									   const float &iz)
+void CClientGameInput::HandleCursorEvent(const float &ix,
+									 const float &iy,
+									 const float &iz)
 {
-	m_refClient.m_pClState->RotateRight(ix);
-	m_refClient.m_pClState->RotateUp(iy);
+/*
+	m_bCursorChanged = true;
+	m_fXpos = ix;
+	m_fYpos = iy;
+	m_fZpos = iz;
+
+	m_refClient.R
+*/
+
+	m_refClient.RotateRight(ix);
+	m_refClient.RotateUp(iy);
 }
 
 
@@ -106,7 +109,7 @@ void CClientGameCmd::HandleCursorEvent(const float &ix,
 Bind a command to a key
 ==========================================
 */
-void CClientGameCmd::BindFuncToKey(const CParms &parms)
+void CClientGameInput::BindFuncToKey(const CParms &parms)
 {
 	//no arguments
 	int argc = parms.NumTokens();
@@ -164,13 +167,6 @@ void CClientGameCmd::BindFuncToKey(const CParms &parms)
 
 	strcpy(m_cmdKeys[keynum].szCommand, cmdName);
 
-	//copy token 3 and up to the command
-/*	for(int i=3; i< argc; i++)
-	{
-		strcat(m_cmdKeys[keynum].szCommand," ");
-		strcat(m_cmdKeys[keynum].szCommand, parms.StringTok(i));
-	}
-*/
 	ComPrintf("\"%s\"(%d) = \"%s\"\n", keyName, keynum, m_cmdKeys[keynum].szCommand);
 }
 
@@ -180,7 +176,7 @@ void CClientGameCmd::BindFuncToKey(const CParms &parms)
 Default key bindings
 ======================================
 */
-void CClientGameCmd::IntializeBinds()
+void CClientGameInput::IntializeBinds()
 {
 	CParms parms(80);
 
@@ -218,7 +214,7 @@ void CClientGameCmd::IntializeBinds()
 Unbind a key
 ==========================================
 */
-void CClientGameCmd::Unbind(const CParms &parms)
+void CClientGameInput::Unbind(const CParms &parms)
 {
 	if(parms.NumTokens() <2)
 	{
@@ -266,7 +262,7 @@ void CClientGameCmd::Unbind(const CParms &parms)
 Print out a list of current binds
 ==========================================
 */
-void CClientGameCmd::BindList() const
+void CClientGameInput::BindList() const
 {
 	ComPrintf(" Client Bindings \n");
 	ComPrintf("=================\n");
@@ -302,7 +298,7 @@ void CClientGameCmd::BindList() const
 Unbind all the keys
 ==========================================
 */
-void CClientGameCmd::Unbindall()
+void CClientGameInput::Unbindall()
 {
 	for(int i=0;i<256;i++)
 	{
@@ -320,7 +316,7 @@ void CClientGameCmd::Unbindall()
 Add command to execute buffer
 ==========================================
 */
-void CClientGameCmd::AddToCmdBuffer(ClientKey * const pcommand)
+void CClientGameInput::AddToCmdBuffer(ClientKey * const pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -341,7 +337,7 @@ void CClientGameCmd::AddToCmdBuffer(ClientKey * const pcommand)
 Remove from execute buffer
 ==========================================
 */
-void CClientGameCmd::RemoveFromCmdBuffer(const ClientKey * pcommand)
+void CClientGameInput::RemoveFromCmdBuffer(const ClientKey * pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -358,7 +354,7 @@ void CClientGameCmd::RemoveFromCmdBuffer(const ClientKey * pcommand)
 Write all the bound commands to file
 ==========================================
 */
-void CClientGameCmd::WriteBinds(const char * szBindsfile)
+void CClientGameInput::WriteBinds(const char * szBindsfile)
 {
 	char file[COM_MAXPATH];
 	sprintf(file,"%s/%s",System::GetExePath(),szBindsfile);
@@ -366,7 +362,7 @@ void CClientGameCmd::WriteBinds(const char * szBindsfile)
 	FILE * fp = fopen(file,"w");
 	if(!fp)
 	{
-		ComPrintf("CClientGameCmd::WriteBinds\n");
+		ComPrintf("CClientGameInput::WriteBinds\n");
 		return;
 	}
 

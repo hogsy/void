@@ -13,7 +13,7 @@ const float CL_ROTATION_SENS = 0.05f;
 
 
 // FIXME - this should be an entitiy move, not a client move
-void CClientState::Move(vector_t &dir, float time)
+void CGameClient::Move(vector_t &dir, float time)
 {
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)
@@ -28,7 +28,7 @@ void CClientState::Move(vector_t &dir, float time)
 
 
 
-void CClientState::MoveForward()
+void CGameClient::MoveForward()
 {
 	static vector_t forward;
 	AngleToVector (&m_pGameClient->angles, &forward, NULL, NULL);
@@ -36,7 +36,7 @@ void CClientState::MoveForward()
 	VectorAdd2(desired_movement,forward);
 }
 
-void CClientState::MoveBackward()
+void CGameClient::MoveBackward()
 {
 	static vector_t backword;
 	AngleToVector (&m_pGameClient->angles, &backword, NULL, NULL);
@@ -44,7 +44,7 @@ void CClientState::MoveBackward()
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
 
-void CClientState::MoveRight()
+void CGameClient::MoveRight()
 {
 	static vector_t right;
 	AngleToVector (&m_pGameClient->angles, NULL, &right, NULL);
@@ -52,7 +52,7 @@ void CClientState::MoveRight()
 	VectorAdd2(desired_movement,right);
 }
 
-void CClientState::MoveLeft()
+void CGameClient::MoveLeft()
 {
 	static vector_t left;
 	AngleToVector (&m_pGameClient->angles, NULL, &left, NULL);
@@ -60,21 +60,21 @@ void CClientState::MoveLeft()
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
-void CClientState::RotateRight(const float &val)
+void CGameClient::RotateRight(const float &val)
 {
 	m_pGameClient->angles.YAW += (val * CL_ROTATION_SENS);  
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
 }
 
-void CClientState:: RotateLeft(const float &val)
+void CGameClient:: RotateLeft(const float &val)
 {
 	m_pGameClient->angles.YAW -= (val * CL_ROTATION_SENS); 
 	if (m_pGameClient->angles.YAW < -PI)
 		m_pGameClient->angles.YAW += 2*PI;
 }
 
-void CClientState::RotateUp(const float &val)
+void CGameClient::RotateUp(const float &val)
 {
 	m_pGameClient->angles.PITCH +=  (val * CL_ROTATION_SENS);
 	if (m_pGameClient->angles.PITCH < -PI/2)
@@ -83,7 +83,7 @@ void CClientState::RotateUp(const float &val)
 		m_pGameClient->angles.PITCH = PI/2;
 }
 
-void CClientState:: RotateDown(const float &val)
+void CGameClient:: RotateDown(const float &val)
 {
 	m_pGameClient->angles.PITCH -=  (val * CL_ROTATION_SENS); 
 	if (m_pGameClient->angles.PITCH < -PI/2)
@@ -100,7 +100,7 @@ void CClientState:: RotateDown(const float &val)
 follow a camera path
 ===========
 */
-void CClientState::CamPath()
+void CGameClient::CamPath()
 {
 /*	// find the head path node
 	for (int ent=0; ent<m_pWorld->nentities; ent++)

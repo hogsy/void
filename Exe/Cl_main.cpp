@@ -26,7 +26,7 @@ CClient::CClient(I_Renderer * prenderer,
 					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
+//					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
 					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
@@ -35,11 +35,11 @@ CClient::CClient(I_Renderer * prenderer,
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
 
-	m_pCmdHandler = new CClientGameCmd(*this);
+//	m_pCmdHandler = new CClientInput();
 
 	//Setup network listener
 	m_pNetCl= new CNetClient(this);
-	m_pClState = new CClientState(*this, m_pHud, m_pSound, m_pMusic);
+	m_pClState = new CGameClient(*this, m_pHud, m_pSound, m_pMusic);
 
 	
 	m_pWorld = 0;
@@ -49,13 +49,13 @@ CClient::CClient(I_Renderer * prenderer,
 
 	System::GetConsole()->RegisterCVar(&m_cvClip);
 	System::GetConsole()->RegisterCVar(&m_cvNetStats);
-	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
+//	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvModel,this);
 	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
-	
+/*	
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
 	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
@@ -70,12 +70,13 @@ CClient::CClient(I_Renderer * prenderer,
 	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
 	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+*/
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 
-	m_pCmdHandler->IntializeBinds();
+//	m_pCmdHandler->IntializeBinds();
 
 	m_pNetCl->SetRate(m_cvRate.ival);
 }
@@ -87,7 +88,7 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	m_pCmdHandler->WriteBinds("vbinds.cfg");
+//	m_pCmdHandler->WriteBinds("vbinds.cfg");
 
 	m_pNetCl->Disconnect(false);
 
@@ -107,7 +108,7 @@ CClient::~CClient()
 	delete m_pClState;
 
 	delete m_pNetCl;
-	delete m_pCmdHandler;
+//	delete m_pCmdHandler;
 }
 
 /*
@@ -194,27 +195,14 @@ void CClient::RunFrame()
 	}
 	else 
 	{
+/*		m_pCmdHandler->UpdateCursorPos(m_pClState->m_moveAngles.x,
+										m_pClState->m_moveAngles.y,
+										m_pClState->m_moveAngles.z);
 
 		m_pCmdHandler->RunCommands();
-
+*/
 		m_pClState->RunFrame(System::GetFrameTime());
 
-	/*	if (!((desired_movement.x==0) && 
-			  (desired_movement.y==0) &&  
-			  (desired_movement.z==0)) || 
-			  (m_campath != -1))
-		{
-	*/
-/*
-			VectorNormalize(&desired_movement);
-			Move(desired_movement, System::GetFrameTime() * m_maxvelocity);
-			desired_movement.Set(0,0,0);
-*/
-	//	}
-
-		//Print Stats
-//		m_pHud->Printf(0, 50,0, "%.2f, %.2f, %.2f", 
-//				m_pGameClient->origin.x,  m_pGameClient->origin.y, m_pGameClient->origin.z);
 		m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
 			1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
 		
@@ -284,7 +272,22 @@ void CClient::WriteUpdate()
 //======================================================================================
 //======================================================================================
 
-void CClient::SetInputState(bool on)  {	m_pCmdHandler->SetListenerState(on); }
+void CClient::SetInputState(bool on)  
+{	
+//	m_pCmdHandler->SetListenerState(on); 
+
+	if(on == true)
+	{
+		System::GetInputFocusManager()->SetCursorListener(m_pClState->m_pCmdHandler);
+		System::GetInputFocusManager()->SetKeyListener(m_pClState->m_pCmdHandler,false);
+	}
+	else
+	{
+		System::GetInputFocusManager()->SetCursorListener(0);
+		System::GetInputFocusManager()->SetKeyListener(0);
+	}
+
+}
 
 /*
 ==========================================
@@ -295,7 +298,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
-	case CMD_MOVE_FORWARD:
+/*	case CMD_MOVE_FORWARD:
 		m_pClState->MoveForward();
 		break;
 	case CMD_MOVE_BACKWARD:
@@ -331,6 +334,8 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_UNBINDALL:
 		m_pCmdHandler->Unbindall();
 		break;
+*/
+
 	case CMD_CAM:
 //		CamPath();
 		break;
@@ -374,7 +379,7 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return ValidateRate(parms);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
 		return ValidateName(parms);
-	else if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
+/*	else if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
 	{
 		float val = parms.FloatTok(1);
 		if(val <= 0.0 || val >= 1.0)
@@ -384,6 +389,7 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
+*/
 	return false;
 }
 

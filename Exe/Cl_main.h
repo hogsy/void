@@ -40,6 +40,7 @@ public:
 	~CClient();
 
 	void RunFrame();
+
 	void SetInputState(bool on);
 
 	//Client Interface
@@ -84,7 +85,7 @@ private:
 	CVar	m_cvRate;
 	CVar    m_cvModel;
 	CVar    m_cvSkin;
-	CVar    m_cvKbSpeed;
+//	CVar    m_cvKbSpeed;
 	CVar	m_cvClip;
 	CVar	m_cvNetStats;
 
@@ -92,11 +93,11 @@ private:
 
 	//==================================================
 	//Subsystems
-	friend class CClientGameCmd;
-	friend class CClientState;
+//	friend class CClientInput;
+	friend class CGameClient;
 
-	CClientGameCmd    * m_pCmdHandler;
-	CClientState      *	m_pClState;
+//	CClientInput    * m_pCmdHandler;
+	CGameClient      *	m_pClState;
 
 	I_Renderer		  * m_pRender;
 	I_ClientRenderer  * m_pClRen;
