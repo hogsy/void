@@ -115,7 +115,7 @@ public:
 	void SetListenerState(bool on);
 	void RunCommands();
 
-	void HandleKeyEvent	  (const KeyEvent_t &kevent);
+	void HandleKeyEvent	  (const KeyEvent &kevent);
 	void HandleCursorEvent(const float &ix,
 						   const float &iy,
 					       const float &iz);

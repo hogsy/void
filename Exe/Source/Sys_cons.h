@@ -71,7 +71,7 @@ public:
 
 	//==============================================================
 	//Key Listener interface
-	void HandleKeyEvent(const KeyEvent_t &kevent);
+	void HandleKeyEvent(const KeyEvent &kevent);
 
 	//==============================================================
 	//Command Handler

@@ -1,16 +1,17 @@
 #include "In_main.h"
-#include "In_hdr.h"
+#include "In_state.h"
 #include "In_kb.h"
 #include "In_mouse.h"
 
 using namespace VoidInput;
 
-//========================================================================================
-//========================================================================================
-
-CKeyboard *		g_pKb=0;	//Keyboard object
-
 LPDIRECTINPUT7	m_pDInput=0;//The direct input object
+
+namespace VoidInput
+{	LPDIRECTINPUT7  GetDirectInput() {	return m_pDInput;  }
+}
+
+static void DIErrorMessageBox(HRESULT err, char * msg);
 
 //========================================================================================
 //========================================================================================
@@ -25,7 +26,7 @@ CInput::CInput() : m_pVarExclusive("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIV
 	m_pStateManager = new CInputState();
 
 	m_pMouse = new CMouse(m_pStateManager);
-	g_pKb = new CKeyboard(m_pStateManager);
+	m_pKb = new CKeyboard(m_pStateManager);
 
 	//Register CVars
 	System::GetConsole()->RegisterCVar(&m_pVarExclusive,this);
@@ -43,10 +44,10 @@ CInput::~CInput()
 		delete m_pMouse;
 		m_pMouse = 0;
 	}
-	if(g_pKb)
+	if(m_pKb)
 	{
-		delete g_pKb;
-		g_pKb = 0;
+		delete m_pKb;
+		m_pKb = 0;
 	}
 	delete m_pStateManager;
 	m_pDInput = 0;
@@ -83,15 +84,15 @@ bool CInput::Init()
 	if(FAILED(hr))
 	{
 		Shutdown();
-		In_DIErrorMessageBox(hr,"CInput::Init:Mouse Intialization failed\n");
+		DIErrorMessageBox(hr,"CInput::Init:Mouse Intialization failed\n");
 		return false;
 	}
 	
-	hr =g_pKb->Init((int)m_pVarExclusive.value, CKeyboard::KB_NONE); 
+	hr =m_pKb->Init((int)m_pVarExclusive.value, CKeyboard::KB_NONE); 
 	if(FAILED(hr))
 	{
 		Shutdown();
-		In_DIErrorMessageBox(hr,"CInput::Init:Keyboard Intialization failed");
+		DIErrorMessageBox(hr,"CInput::Init:Keyboard Intialization failed");
 		return false;
 	}
 	return true;
@@ -106,7 +107,7 @@ void CInput::Shutdown()
 {
 	//Release all Devices here
 	m_pMouse->Shutdown();
-	g_pKb->Shutdown();
+	m_pKb->Shutdown();
 	
 	if(m_pDInput) 
 	{
@@ -144,11 +145,11 @@ Acquire the Keyboard
 bool CInput::AcquireKeyboard()
 {
 	//If device has not been initialized then just return
-	if((!g_pKb) || g_pKb->GetDeviceState() == DEVNONE)
+	if((!m_pKb) || m_pKb->GetDeviceState() == DEVNONE)
 		return false;
 	
 	//Already acquired, or acquring was successful
-	if((g_pKb->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(g_pKb->Acquire())))
+	if((m_pKb->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(m_pKb->Acquire())))
 		return true;
 
 	ComPrintf("CInput::Acquire::Couldnt acquire keyboard\n");
@@ -192,13 +193,13 @@ Unacquire the keyboard
 */
 bool CInput::UnAcquireKeyboard()
 {
-	if(!g_pKb)
+	if(!m_pKb)
 		return true;
 
-	if(g_pKb->GetDeviceState() == DEVINITIALIZED)
+	if(m_pKb->GetDeviceState() == DEVINITIALIZED)
 		return true;
 
-	if(g_pKb->UnAcquire())
+	if(m_pKb->UnAcquire())
 		return true;
 	return false;
 }
@@ -232,7 +233,7 @@ Update functions
 =====================================
 */
 void CInput::UpdateKeys() 
-{ 	g_pKb->Update(); 
+{ 	m_pKb->Update(); 
 }			
 
 void CInput::UpdateCursor() 
@@ -242,7 +243,7 @@ void CInput::UpdateCursor()
 void CInput::UpdateDevices()  
 {
 	m_pMouse->Update();
-	g_pKb->Update();
+	m_pKb->Update();
 }
 
 /*
@@ -277,7 +278,7 @@ bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
 			if(temp)
 			{
 				if(FAILED(m_pMouse->SetExclusive(true)) ||
-				   FAILED(g_pKb->SetExclusive(true)))
+				   FAILED(m_pKb->SetExclusive(true)))
 				{
 					ComPrintf("Failed to change Input mode to Exclusive\n");
 					return false;
@@ -286,7 +287,7 @@ bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
 			else 
 			{
 				if(FAILED(m_pMouse->SetExclusive(false)) ||
-				   FAILED(g_pKb->SetExclusive(false)))
+				   FAILED(m_pKb->SetExclusive(false)))
 				{
 					ComPrintf("Failed to change Input mode to NonExclusive\n");
 					return false;
@@ -307,20 +308,10 @@ bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
 
 /*
 =====================================
-Returns the DI object for Mouse/Keyboard
-=====================================
-*/
-LPDIRECTINPUT7  In_GetDirectInput()
-{	return m_pDInput;
-}
-
-
-/*
-=====================================
 Throws an error message box
 =====================================
 */
-void In_DIErrorMessageBox(HRESULT err, char * msg)
+void DIErrorMessageBox(HRESULT err, char * msg)
 {
 	char error[128];
 	if(msg)

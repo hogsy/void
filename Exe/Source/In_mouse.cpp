@@ -1,4 +1,5 @@
 #include "In_mouse.h"
+#include "In_state.h"
 
 namespace
 {	const char	SZ_DIMOUSEEVENT[]= "DI MouseEvent";
@@ -155,7 +156,7 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 		Shutdown();
 	
 	//Create the Device
-	HRESULT hr = (In_GetDirectInput())->CreateDeviceEx(GUID_SysMouse, 
+	HRESULT hr = (VoidInput::GetDirectInput())->CreateDeviceEx(GUID_SysMouse, 
 									   IID_IDirectInputDevice7,
 									   (void**)&m_pDIMouse, 
 									   NULL); 
@@ -650,8 +651,7 @@ HRESULT CMouse :: Acquire()
 			m_eMouseState = DEVACQUIRED;
 			return DI_OK;
 		}
-//		ComPrintf("CMouse::Acquire OK\n");
-		In_DIErrorMessageBox(hr,"CMouse::Acquire:Unable to acquire\n");
+		ComPrintf("CMouse::Acquire Failed\n");
 		m_eMouseState = DEVINITIALIZED;
 		return hr;
 	}

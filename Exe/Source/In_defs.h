@@ -126,9 +126,9 @@ enum EInKey
 Key Event Object
 ===========================================
 */
-struct KeyEvent_t
+struct KeyEvent
 {
-	KeyEvent_t() 
+	KeyEvent() 
 	{ 
 		state = BUTTONUP;
 		flags = 0;
@@ -156,7 +156,7 @@ struct I_InCursorListener
 
 struct I_InKeyListener
 {	
-	virtual void HandleKeyEvent(const KeyEvent_t &kevent)=0;
+	virtual void HandleKeyEvent(const KeyEvent &kevent)=0;
 };
 
 /*

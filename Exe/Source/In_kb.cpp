@@ -1,13 +1,14 @@
 #include "In_kb.h"
 
-using namespace VoidInput;
 /*
 ========================================================================================
 Additional Virtual key constants
 sort of an hack. not sure if they will work on all keyboards
 ========================================================================================
 */
-enum
+namespace
+{
+	enum
 	{
 		VK_SEMICOLON= 186,
 		VK_EQUALS	= 187,
@@ -23,10 +24,11 @@ enum
 		VK_QUOTE	= 222
 	};
 
-#define KB_MAXEVENTS    32
+	//Crappy. Need this for the Win32 Hook function. Cant find a way around it
+	VoidInput::CKeyboard	* m_pKeyboard=0;	
+}
 
-//The Keyboard object, need this for CVar and other non member funcs
-extern CKeyboard	* g_pKb;	
+using namespace VoidInput;
 
 //========================================================================================
 //========================================================================================
@@ -40,6 +42,8 @@ CKeyboard::CKeyboard(CInputState * pStateManager) :
 				m_pVarKbMode("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 
 {
+	m_pKeyboard = this;
+
 	m_pStateManager = pStateManager;
 
 	m_pDIKb = 0;
@@ -50,8 +54,7 @@ CKeyboard::CKeyboard(CInputState * pStateManager) :
 
 	m_pDIKb=0;
 
-	memset(m_aCharVal, 0, IN_NUMKEYS*sizeof(unsigned int));
-
+	memset(m_aCharVal, 0,  IN_NUMKEYS*sizeof(int));
 	memset(m_aKeyState, 0, IN_NUMKEYS*sizeof(BYTE));
 	memset(m_aDIBufKeydata,0,KB_DIBUFFERSIZE*sizeof(DIDEVICEOBJECTDATA));
 
@@ -68,6 +71,7 @@ CKeyboard::~CKeyboard()
 	Shutdown();
 	m_pDIKb = 0;
 	m_pStateManager = 0;
+	m_pKeyboard = 0;
 }
 
 /*
@@ -168,7 +172,7 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 		Shutdown();
 
 	//Create the device
-	HRESULT hr = (In_GetDirectInput())->CreateDeviceEx( GUID_SysKeyboard, 
+	HRESULT hr = (VoidInput::GetDirectInput())->CreateDeviceEx( GUID_SysKeyboard, 
 										IID_IDirectInputDevice7, 
 										(void**)&m_pDIKb, 
 										NULL); 
@@ -311,7 +315,7 @@ bool CKeyboard::Win32_Shutdown()
 Acquire the keyboard
 ===========================================
 */
-HRESULT CKeyboard :: Acquire()
+HRESULT CKeyboard::Acquire()
 {
 	if(m_eKbState == DEVACQUIRED)
 		return S_OK;
@@ -381,7 +385,6 @@ bool CKeyboard::UnAcquire()
 	return true;
 }
 
-
 /*
 ===========================================
 Toggle Exclusive Mode
@@ -430,10 +433,9 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 Returns current State
 ===========================================
 */
-int	 CKeyboard::GetDeviceState() 
+int	 CKeyboard::GetDeviceState() const
 { return m_eKbState; 
 }
-
 
 /*
 ===========================================
@@ -611,86 +613,67 @@ void CKeyboard::Update_Win32()
 	}
 } 
 
+//======================================================================================
+//======================================================================================
 
 /*
 =====================================
-Win32 Callback keyboard Hook function
+Change keyboard mode
 =====================================
 */
-LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
-									WPARAM wParam,  // virtual-key code
-									LPARAM lParam)   // keystroke-message information
+bool CKeyboard::CKBMode(const CVar * var, int argc, char** argv)
 {
-	//if(code >= 0)
-	if(code == HC_ACTION)
+	if(argc == 2 && argv[1])
 	{
-/*		//wParam
-		WORD wInfo = (WORD) (lParam >> 16);
-		BOOL fRepeat = wInfo & KF_REPEAT;
-
-		// check for ctrl-alt-del
-		if (wParam == VK_DELETE && (wInfo & KF_ALTDOWN) &&
-			(GetAsyncKeyState(VK_CONTROL) & 0x80000000))
-			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
-
-		// check for ctrl-esc
-		if (wParam == VK_ESCAPE && (GetAsyncKeyState(VK_CONTROL) & 0x80000000))
-			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
-
-		// check for alt-tab
-		if (wParam == VK_TAB && (wInfo & KF_ALTDOWN))
-			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
-*/
-		
-		if((wParam >= VK_F1 && wParam <= VK_F12) &&
-			((lParam >> 16) & KF_ALTDOWN))
-			return CallNextHookEx(g_pKb->hWinKbHook, code, wParam, lParam );
-
-		//Set flags
-		int keyindex = wParam;
-		if(keyindex == VK_SHIFT)
+		int temp=0;
+		if(argv[1] && sscanf(argv[1],"%d",&temp))
 		{
-			if(!(lParam & 0x80000000))
+			//Check for Vaild value
+			if(temp < KB_DIBUFFERED &&
+			   temp > KB_WIN32POLL)
 			{
-				if(::GetAsyncKeyState(VK_LSHIFT) & 0x80000000)
-					keyindex = VK_LSHIFT; 
-				else 
-					keyindex = VK_RSHIFT; 
+				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
+				return false;
 			}
-		}
-		else if(keyindex == VK_MENU)
-		{
-			if(!(lParam & 0x80000000))
-			{
-				if(::GetAsyncKeyState(VK_LMENU) & 0x80000000)
-					keyindex = VK_LMENU; 
-				else 
-					keyindex = VK_RMENU; 
-			}
-		}
-		else if(keyindex == VK_CONTROL)
-		{
-			if(!(lParam & 0x80000000))
-			{
-				if(::GetAsyncKeyState(VK_LCONTROL) & 0x80000000)
-					keyindex = VK_LCONTROL; 
-				else 
-					keyindex = VK_RCONTROL; 
-			}
-		}
 
-		if(!(lParam & 0x80000000))
-			g_pKb->m_pStateManager->UpdateKey(g_pKb->m_aCharVal[keyindex],BUTTONDOWN);
-		else
-			g_pKb->m_pStateManager->UpdateKey(g_pKb->m_aCharVal[keyindex],BUTTONUP);
-		return 1;
+			//Allow configs to change the mousemode if its valid
+			//even before the mouse actually inits
+			if(m_eKbState == DEVNONE) 
+			{
+				m_eKbMode = (EKbMode)temp;
+				return true;
+			}
+
+			if(FAILED(Init(m_bExclusive,(EKbMode)temp)))
+			{
+				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",temp);
+				return false;
+			}
+			return true;
+		}
+		ComPrintf("CKeyboard::CKBMode:couldnt read required mode\n");
 	}
-	return CallNextHookEx(g_pKb->hWinKbHook, code, wParam, lParam );
+
+	ComPrintf("Keyboard Mode is %d\n",m_eKbMode);
+	switch(m_eKbMode)
+	{
+	case KB_NONE:
+		ComPrintf("CKeyboard mode::No mode set\n");
+	case KB_DIBUFFERED:
+		ComPrintf("CKeyboard mode::DirectInput Buffered mode\n");
+		break;
+	case KB_DIIMMEDIATE:
+		ComPrintf("CKeyboard mode::DirectInput Immediate mode\n");
+		break;
+	case KB_WIN32POLL:
+		ComPrintf("CKeyboard mode::Win32 Keyboard polling\n");
+		break;
+	case KB_WIN32HOOK:
+		ComPrintf("CKeyboard mode::Win32 Keyboard Hooks\n");
+		break;
+	}
+	return false;
 }
-
-
-//======================================================================================
-//======================================================================================
 
 /*
 =====================================
@@ -831,12 +814,6 @@ void CKeyboard::SetCharTable(CKeyboard::EKbMode mode)
 			m_aCharVal[VK_LCONTROL] = INKEY_LEFTCTRL;
 			m_aCharVal[VK_LMENU]	= INKEY_LEFTALT;
 			m_aCharVal[VK_RMENU]	= INKEY_RIGHTALT;
-
-			//Mouse Keys
-/*			m_aCharVal[VK_LBUTTON]  = 	INKEY_MOUSE1;
-			m_aCharVal[VK_RBUTTON]  = 	INKEY_MOUSE2;
-			m_aCharVal[VK_MBUTTON]  = 	INKEY_MOUSE3;
-*/
 			break;
 		}
 	case CKeyboard::KB_DIBUFFERED:
@@ -959,65 +936,84 @@ void CKeyboard::SetCharTable(CKeyboard::EKbMode mode)
 	m_aCharVal[INKEY_MOUSE4]  = 	INKEY_MOUSE4;
 }
 
+//======================================================================================
+//======================================================================================
 
-//========================================================================================
-
+namespace VoidInput
+{
 /*
 =====================================
-Change keyboard mode
+Win32 Callback keyboard Hook function
 =====================================
 */
-bool CKeyboard::CKBMode(const CVar * var, int argc, char** argv)
+LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
+									WPARAM wParam,  // virtual-key code
+									LPARAM lParam)   // keystroke-message information
 {
-	if(argc == 2 && argv[1])
+	//if(code >= 0)
+	if(code == HC_ACTION)
 	{
-		int temp=0;
-		if(argv[1] && sscanf(argv[1],"%d",&temp))
+/*		//wParam
+		WORD wInfo = (WORD) (lParam >> 16);
+		BOOL fRepeat = wInfo & KF_REPEAT;
+
+		// check for ctrl-alt-del
+		if (wParam == VK_DELETE && (wInfo & KF_ALTDOWN) &&
+			(GetAsyncKeyState(VK_CONTROL) & 0x80000000))
+			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
+
+		// check for ctrl-esc
+		if (wParam == VK_ESCAPE && (GetAsyncKeyState(VK_CONTROL) & 0x80000000))
+			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
+
+		// check for alt-tab
+		if (wParam == VK_TAB && (wInfo & KF_ALTDOWN))
+			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
+*/
+		
+		if((wParam >= VK_F1 && wParam <= VK_F12) &&
+			((lParam >> 16) & KF_ALTDOWN))
+			return CallNextHookEx(m_pKeyboard->hWinKbHook, code, wParam, lParam );
+
+		//Set flags
+		int keyindex = wParam;
+		if(keyindex == VK_SHIFT)
 		{
-			//Check for Vaild value
-			if(temp < KB_DIBUFFERED &&
-			   temp > KB_WIN32POLL)
+			if(!(lParam & 0x80000000))
 			{
-				ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
-				return false;
+				if(::GetAsyncKeyState(VK_LSHIFT) & 0x80000000)
+					keyindex = VK_LSHIFT; 
+				else 
+					keyindex = VK_RSHIFT; 
 			}
-
-			//Allow configs to change the mousemode if its valid
-			//even before the mouse actually inits
-			if(m_eKbState == DEVNONE) 
-			{
-				m_eKbMode = (EKbMode)temp;
-				return true;
-			}
-
-			if(FAILED(Init(m_bExclusive,(EKbMode)temp)))
-			{
-				ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",temp);
-				return false;
-			}
-			return true;
 		}
-		ComPrintf("CKeyboard::CKBMode:couldnt read required mode\n");
-	}
+		else if(keyindex == VK_MENU)
+		{
+			if(!(lParam & 0x80000000))
+			{
+				if(::GetAsyncKeyState(VK_LMENU) & 0x80000000)
+					keyindex = VK_LMENU; 
+				else 
+					keyindex = VK_RMENU; 
+			}
+		}
+		else if(keyindex == VK_CONTROL)
+		{
+			if(!(lParam & 0x80000000))
+			{
+				if(::GetAsyncKeyState(VK_LCONTROL) & 0x80000000)
+					keyindex = VK_LCONTROL; 
+				else 
+					keyindex = VK_RCONTROL; 
+			}
+		}
 
-	ComPrintf("Keyboard Mode is %d\n",m_eKbMode);
-	switch(m_eKbMode)
-	{
-	case KB_NONE:
-		ComPrintf("CKeyboard mode::No mode set\n");
-	case KB_DIBUFFERED:
-		ComPrintf("CKeyboard mode::DirectInput Buffered mode\n");
-		break;
-	case KB_DIIMMEDIATE:
-		ComPrintf("CKeyboard mode::DirectInput Immediate mode\n");
-		break;
-	case KB_WIN32POLL:
-		ComPrintf("CKeyboard mode::Win32 Keyboard polling\n");
-		break;
-	case KB_WIN32HOOK:
-		ComPrintf("CKeyboard mode::Win32 Keyboard Hooks\n");
-		break;
+		if(!(lParam & 0x80000000))
+			m_pKeyboard->m_pStateManager->UpdateKey(m_pKeyboard->m_aCharVal[keyindex],BUTTONDOWN);
+		else
+			m_pKeyboard->m_pStateManager->UpdateKey(m_pKeyboard->m_aCharVal[keyindex],BUTTONUP);
+		return 1;
 	}
-	return false;
+	return CallNextHookEx(m_pKeyboard->hWinKbHook, code, wParam, lParam );
 }
-
+}

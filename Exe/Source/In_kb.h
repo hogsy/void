@@ -2,10 +2,13 @@
 #define VOID_KEYBOARD_INTERFACE
 
 #include "In_main.h"
-#include "In_hdr.h"
+#include "In_state.h"
 
-using namespace VoidInput;
- 
+namespace VoidInput{
+
+LRESULT CALLBACK Win32_KeyboardProc(int code,      // hook code
+								   WPARAM wParam,  // virtual-key code
+								   LPARAM lParam); // keystroke-message information
 /*
 ===========================================
 The Keyboard interface Class
@@ -13,8 +16,6 @@ Inherits from listener interface so we can have
 a default handler implementation
 ===========================================
 */
-#define KB_DIBUFFERSIZE	16
-
 class CKeyboard : public I_CVarHandler	
 {
 public:
@@ -36,47 +37,39 @@ public:
 
 	HRESULT	Acquire();
 	bool	UnAcquire();
+	HRESULT	SetExclusive(bool exclusive);	//Toggle Exclusive mode
+	void	Update();
+	int		GetDeviceState() const;
 
 	//CVar Handler
 	bool	HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
-	//Toggle Exclusive mode
-	HRESULT	SetExclusive(bool exclusive);
-
-	void	Update();
-	int		GetDeviceState();
-
 private:
+	enum
+	{	KB_DIBUFFERSIZE	= 16
+	};
 
 	//========================================================================
 	//Private Member Vars
 
-	CInputState * m_pStateManager;
-	
-	//Event handle
-	HANDLE			m_hDIKeyboardEvent;	
-	
-	//Device State amd Mode
-	EDeviceState	m_eKbState;
-	EKbMode			m_eKbMode;
-	bool			m_bExclusive;
-	
-	CVar 			m_pVarKbMode;
+	CVar 	m_pVarKbMode;
 
- HHOOK	hWinKbHook;	//Keyboard Hook handle
+	EKbMode	m_eKbMode;
+	bool	m_bExclusive;
 
-//Device Query Buffers
- BYTE					m_aKeyState[IN_NUMKEYS];		  //Receives immediate and Win32 data
+	HANDLE	m_hDIKeyboardEvent;			//Event handle
+	HHOOK	hWinKbHook;					//Keyboard Hook handle
 
-	//Key Translation table		
-	int				m_aCharVal[IN_NUMKEYS]; 	
+	BYTE	m_aKeyState[IN_NUMKEYS];	//Receives immediate and Win32 data
+	int		m_aCharVal[IN_NUMKEYS]; 	//Key Translation table		
 	
-	//Receives DI buffered data 
-	DIDEVICEOBJECTDATA	 m_aDIBufKeydata[KB_DIBUFFERSIZE]; 
+	EDeviceState			m_eKbState;			//Device State
 	
-	//The DirectInputDevice Object
-	LPDIRECTINPUTDEVICE7 m_pDIKb;	
-
+	CInputState *			m_pStateManager;
+	
+	LPDIRECTINPUTDEVICE7	m_pDIKb;	
+	DIDEVICEOBJECTDATA		m_aDIBufKeydata[KB_DIBUFFERSIZE]; 
+	
 	//========================================================================
 	//Private Member funcs
 
@@ -96,10 +89,13 @@ private:
 	void	Update_DIImmediate();
 	void	Update_Win32();
 
-	friend LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
+	bool CKBMode(const CVar * var, int argc, char** argv);
+
+	friend LRESULT CALLBACK VoidInput::Win32_KeyboardProc(int code,       // hook code
 											   WPARAM wParam,  // virtual-key code
 											   LPARAM lParam); // keystroke-message information
-	bool CKBMode(const CVar * var, int argc, char** argv);
 };
+
+}
 
 #endif

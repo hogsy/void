@@ -2,7 +2,7 @@
 #define VOID_MOUSE_INTERFACE
 
 #include "In_main.h"
-#include "In_hdr.h"
+#include "In_state.h"
 
 namespace VoidInput {
 

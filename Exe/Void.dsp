@@ -343,10 +343,6 @@ SOURCE=.\Source\In_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\In_hdr.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\In_kb.cpp
 # End Source File
 # Begin Source File
@@ -372,6 +368,10 @@ SOURCE=.\Source\In_mouse.h
 # Begin Source File
 
 SOURCE=.\Source\In_state.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\In_state.h
 # End Source File
 # End Group
 # Begin Group "Interface"

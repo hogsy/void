@@ -1,5 +1,10 @@
 #include "Sys_hdr.h"
-#include "In_hdr.h"
+#include "In_state.h"
+
+namespace
+{
+	const float KB_REPEATWAIT = 0.3f;
+}
 
 using namespace VoidInput;
 

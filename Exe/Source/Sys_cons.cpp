@@ -160,7 +160,7 @@ void CConsole::ComPrint(char* text)
 Handle input, 1 character at a time
 ======================================
 */
-void CConsole::HandleKeyEvent(const KeyEvent_t &kevent)
+void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 {
 	if((kevent.state == BUTTONDOWN) ||
 		(kevent.state == BUTTONHELD))

@@ -67,7 +67,7 @@ void CClientCmdHandler::RunCommands()
 Handle Key Event
 ==========================================
 */
-void CClientCmdHandler::HandleKeyEvent(const KeyEvent_t &kevent)
+void CClientCmdHandler::HandleKeyEvent(const KeyEvent &kevent)
 {
 	//check if there is a command bound to that key
 	if(m_cmdKeys[(kevent.id)].szCommand)

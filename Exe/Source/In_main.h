@@ -9,6 +9,7 @@ namespace VoidInput
 {
 class CInputState;
 class CMouse;
+class CKeyboard;
 }
 
 /*
@@ -53,6 +54,7 @@ private:
 
 	VoidInput::CInputState	* m_pStateManager;
 	VoidInput::CMouse		* m_pMouse;
+	VoidInput::CKeyboard	* m_pKb;
 
 	CVar m_pVarExclusive;
 	bool CSetExclusive(const CVar * var, int argc, char** argv);	
