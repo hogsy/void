@@ -342,7 +342,7 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 			  (bufname[cdfh.filename_length - 1] != '/'))
 			{
 				bufname[cdfh.filename_length] = '\0';
-				ComPrintf("%s\n", bufname);
+//				ComPrintf("%s\n", bufname);
 
 				ZipEntry_t * newfile = new ZipEntry_t();
 				strcpy(newfile->filename,bufname);

@@ -80,17 +80,6 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 	m_Console.LoadConfig("vvars.cfg");
 
 	//================================
-	//Export structure
-	m_pExport = new VoidExports();
-	m_pExport->pConsole    = (I_Console*)&m_Console;
-	m_pExport->pHunkManager= g_pHunkManager; 
-	m_pExport->pfnGetCurTime = System::GetCurTime;
-	m_pExport->pfnGetCurPath = System::GetCurGamePath;
-	m_pExport->pfnSystemError = System::FatalError;
-	m_pExport->pfnGetFrameTime = System::GetFrameTime;
-	m_pExport->pfnCreateFileReader = System::CreateFileReader;
-
-	//================================
 	//Create and initialize the file system
 	m_pFileSystem = FILESYSTEM_Create(ComPrintf,
 									  System::FatalError,
@@ -101,6 +90,17 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 		System::FatalError("Unable to create the Void filesystem");
 		return;
 	}
+
+	//================================
+	//Export structure
+	m_pExport = new VoidExports();
+	m_pExport->pConsole    = (I_Console*)&m_Console;
+	m_pExport->pHunkManager= g_pHunkManager; 
+	m_pExport->pfnGetCurTime = System::GetCurTime;
+	m_pExport->pfnGetCurPath = System::GetCurGamePath;
+	m_pExport->pfnSystemError = System::FatalError;
+	m_pExport->pfnGetFrameTime = System::GetFrameTime;
+	m_pExport->pfnCreateFileReader = System::CreateFileReader;
 
 	//Create the input system
 	m_pInput= new CInput();					
