@@ -167,7 +167,7 @@ private:
 	void AddToCmdBuffer(ClientKey * const pcommand);
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
-	float		m_fXpos, m_fYpos, m_fZpos;
+	float			m_fXpos, m_fYpos, m_fZpos;
 	mutable bool	m_bCursorChanged;
 
 	CParms		m_Parms;

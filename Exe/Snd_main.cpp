@@ -1,9 +1,13 @@
 #include "Sys_hdr.h"
+#include "Com_vector.h"
+#include "Cl_base.h"
 #include "Snd_main.h"
 #include "Snd_hdr.h"
 #include "Snd_buf.h"
 #include "Snd_chan.h"
 #include "Com_util.h"
+#include "Com_camera.h"
+
 
 using namespace VoidSound;
 
@@ -247,17 +251,25 @@ bool CSoundManager::Init()
 Update Listener pos
 ======================================
 */
+/*
 void CSoundManager::UpdateListener(const vector_t &pos,
 								   const vector_t &velocity,
 								   const vector_t &forward,
 								   const vector_t &up)
+*/
+void CSoundManager::UpdateListener(const CCamera * pCamera)
 {	
 	//Void3d::VectorSet(,pos);
-	m_listenerPos = pos;
-	m_pListener->m_pDS3dListener->SetPosition(pos.x, pos.y, pos.z, DS3D_DEFERRED);
+	
+	m_listenerPos = pCamera->origin;
+	m_pListener->m_pDS3dListener->SetPosition(m_listenerPos.x, m_listenerPos.y, m_listenerPos.z, 
+											  DS3D_DEFERRED);
+
 //	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
-	m_pListener->m_pDS3dListener->SetOrientation(forward.x, forward.y, forward.z, 
-												 up.x,up.y, up.z, DS3D_DEFERRED);
+	
+	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
+												 pCamera->up.x,pCamera->up.y, pCamera->up.z, 
+												 DS3D_DEFERRED);
 }
 
 

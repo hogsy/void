@@ -9,6 +9,8 @@ class  CWorld;
 class  CCamera;
 class  CClientGameInput;
 struct I_ClientGame;
+struct I_InKeyListener;
+struct I_InCursorListener;
 
 /*
 ================================================
@@ -24,30 +26,40 @@ public:
 	CGameClient(I_ClientGame * pClGame);
 	~CGameClient();
 
-	//Client Interface
+	//NetClient Implementation
 	//Parse and handle a game message
 	void HandleGameMsg(CBuffer &buffer); 
-	
 	//Parse and handle spawm parms
 	void HandleSpawnMsg(byte msgId, CBuffer &buffer); 
-
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
-
 	//Put Client in game. The clNum is the clients num on the server
 	void BeginGame(int clNum, CBuffer &buffer);
-
 	//Write userInfo to the given buffer
 	void WriteUserInfo(CBuffer &buffer);
-
 	//Util Print
 	void Print(const char * msg, ...);
 
+	//Needed by the Main Client System
+	I_InKeyListener		* GetKeyListener();
+	I_InCursorListener	* GetCursorListener();
+	CCamera *			  GetCamera();
 
+	bool LoadWorld(CWorld * pWorld);
+	void UnloadWorld();
+
+	void RunFrame(float frameTime);
+	void WriteCmdUpdate(CBuffer &buf);
+
+	//Console Handler Implementation
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
+private:
+
 	vector_t m_moveAngles;
+
+	void UpdateView();
 
 	I_ClientGame * m_pClGame;
 	
@@ -62,16 +74,6 @@ public:
 	void Talk(const char * string);
 	bool ValidateName(const CParms &parms);
 	bool ValidateRate(const CParms &parms);
-
-	//spawn for the first time.
-	void BeginGame();
-	
-	bool LoadWorld(CWorld * pWorld);
-	void UnloadWorld();
-
-	void RunFrame(float frameTime);
-	void WriteCmdUpdate(CBuffer &buf);
-	void UpdateView();
 
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
@@ -98,8 +100,6 @@ public:
 
 	CWorld	 *  m_pWorld;
 
-
-//	float		m_fFrameTime;
 	bool		m_ingame;
 
 	int			m_numEnts;
@@ -107,6 +107,10 @@ public:
 	ClClient 	m_clients[GAME_MAXCLIENTS];
 
 	ClClient *	m_pGameClient;
+	vector_t	m_vecForward,
+				m_vecRight,
+				m_vecUp,
+				m_vecVelocity;
 	
 	ClCmd		m_cmd;
 	ClCmd		m_oldCmd;

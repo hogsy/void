@@ -1,21 +1,7 @@
 #ifndef VOID_CLIENT_RENDERER
 #define VOID_CLIENT_RENDERER
 
-#include "Cl_defs.h"
-
-/*
-============================================================================
-This header is shared between the renderer, the exe and the clientside dll.
-The struct defs should be considerer as constant by the clientside dll
-it can subclass the EntState struct if more functionality is wanted.
-============================================================================
-*/
-enum
-{
-	MODEL_SKIN_BOUND = 0,
-	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
-	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
-};
+#include "Cl_base.h"
 
 /*
 ==========================================

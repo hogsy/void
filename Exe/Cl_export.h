@@ -10,6 +10,9 @@ public:
 	~CClientExports() {}
 
 	//Models
+	inline void DrawModel(const ClEntity &state)
+	{	m_refClient.m_pClRen->DrawModel(state);
+	}
 	inline int  RegisterModel(const char *model, CacheType cache,int index=-1)
 	{	return m_refClient.m_pClRen->LoadModel(model,cache,index);
 	}
@@ -32,8 +35,13 @@ public:
 	}
 
 	//Hud
-	inline void HudPrint(int x, int y, float time, const char *msg)
-	{	m_refClient.m_pHud->Printf(x,y,time,msg);
+	inline void HudPrintf(int x, int y, float time, const char *msg, ...)
+	{	
+		va_list args;
+		va_start(args, msg);
+		vsprintf(m_hudBuffer, msg, args);
+		va_end(args);
+		m_refClient.m_pHud->Printf(x,y,time,m_hudBuffer);
 	}
 
 	//Sound
@@ -97,6 +105,7 @@ public:
 	}
 
 private:
+	char	  m_hudBuffer[512];
 	CClient & m_refClient;
 };
 

@@ -1,8 +1,6 @@
 #ifndef VOID_GAME_DEFS
 #define VOID_GAME_DEFS
 
-struct I_World;
-
 /*
 ======================================
 Basic "game" definitions.
@@ -17,9 +15,11 @@ const int	GAME_MAXCLIENTS = 16;
 const char	GAME_WORLDSDIR[]= "Worlds/";
 
 
-//======================================================================================
-//======================================================================================
+/*
+================================================
 
+================================================
+*/
 enum EMoveType
 {
 	MOVETYPE_NOCLIP,
@@ -30,73 +30,50 @@ enum EMoveType
 };
 
 /*
-============================================================================
-Only contains data needed by routines shared between client and server code
-Both client and server subclass this adding stuff they need
-
-This data will be propagated to all connected clients
-============================================================================
+================================================
+Basic client side definitions 
+There are needed by the client 
+resource managers like
+the Renderer and Sound system etc
+================================================
 */
-struct BaseEntity
+enum CacheType
 {
-	BaseEntity()
-	{
-		num = -1;
-		mdlIndex = -1;
-		frameNum = nextFrame = skinNum = 0;
-		sndIndex = -1;
-		volume = attenuation = 0;
-		moveType = MOVETYPE_NOCLIP;
-	}
-
-	virtual ~BaseEntity() =0 {}
-
-	int		num;
-	int		mdlIndex, 
-			frameNum,	
-			nextFrame, 
-			skinNum;
-	int		sndIndex, 
-			volume,	
-			attenuation;
-	
-	EMoveType	moveType;
-	
-	vector_t	origin;
-	vector_t	angles;
-	vector_t	velocity;
-	vector_t	mins;
-	vector_t	maxs;
+	CACHE_LOCAL = 0,	//Persistant through out the game, Client is reponsible for loading these.
+	CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
+	CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
 };
+const int CACHE_NUMCACHES = 3;
 
 /*
-======================================
-Client sends this to the server as frequently as possible
-======================================
+================================================
+================================================
 */
-struct ClCmd
+enum
 {
-	byte	time;			//Frame Time
-	int		angles[3];		//Current View angels
-	short	forwardmove, 
-			rightmove, 
-			upmove;
-	//add buttons and what not
+	MODEL_SKIN_BOUND = 0,
+	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
+	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
 };
 
 
 /*
 ================================================
-defined in Game_move.cpp
+
 ================================================
 */
-namespace EntMove {
-
-void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
-void ClientMove(BaseEntity *ent, vector_t &dir, float time);
-void SetWorld(I_World * pWorld);
-
-}
-
+enum SndChannelType
+{
+	CHAN_AUTO   = 0,		//first free
+	CHAN_UI		= 1,		//UI sound, no coordinates
+	CHAN_WORLD  = 2,		//ambient, world sounds etc
+	CHAN_CLIENT = 3,		//sounds from the player
+	CHAN_MONSTER= 4,		//Monster and player share channels
+	CHAN_PLAYER = 4,
+	CHAN_ITEM   = 5,		//item noises, pickups etc
+	CHAN_WEAPON	= 6,		//weapon noises
+	
+	CHAN_LOOPING = 128		//flagged
+};
 
 #endif

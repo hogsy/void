@@ -4,7 +4,7 @@
 #include "Com_world.h"
 #include "Com_camera.h"
 
-#include "Cl_defs.h"
+#include "Cl_base.h"
 #include "Cl_game.h"
 
 

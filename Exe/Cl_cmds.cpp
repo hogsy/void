@@ -51,12 +51,6 @@ void CClientGameInput::RunCommands()
 				m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
 				m_cmdBuffer[i] = 0;
 			}
-
-/*			m_Parms = m_cmdBuffer[i]->szCommand;
-			m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
-			if(m_cmdBuffer[i]->szCommand[0] != '+')
-				m_cmdBuffer[i] = 0;
-*/
 		}
 	}
 }
@@ -98,9 +92,6 @@ void CClientGameInput::HandleCursorEvent(const float &ix,
 	m_fXpos = ix;
 	m_fYpos = iy;
 	m_fZpos = iz;
-
-//	m_refClient.RotateRight(ix);
-//	m_refClient.RotateUp(iy);
 }
 
 

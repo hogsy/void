@@ -263,10 +263,6 @@ SOURCE=.\Cl_cmds.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Cl_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Cl_export.h
 # End Source File
 # Begin Source File
@@ -399,10 +395,6 @@ SOURCE=.\In_state.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Shared\I_client.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\I_clientRenderer.h
 # End Source File
 # Begin Source File
@@ -424,10 +416,6 @@ SOURCE=..\Shared\I_hud.h
 # Begin Source File
 
 SOURCE=..\Shared\I_hunkmem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_netclient.h
 # End Source File
 # Begin Source File
 
@@ -489,6 +477,14 @@ SOURCE=..\..\Mssdk\Include\WinEFS.h
 # Begin Group "Game"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Cl_base.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Game_base.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\Shared\Game_defs.h

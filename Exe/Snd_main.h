@@ -1,10 +1,7 @@
 #ifndef VOID_SOUND_SYSTEM
 #define VOID_SOUND_SYSTEM
 
-#include "Com_defs.h"
-#include "Com_vector.h"
-#include "Cl_defs.h"
-
+#include "Game_defs.h"
 
 /*
 ======================================
@@ -19,6 +16,7 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
+class  CCamera;
 struct ClEntity;
 
 /*
@@ -62,10 +60,7 @@ public:
 	void UpdateStaticSource(const ClEntity * ent);
 
 	//update pos CCamera
-	void UpdateListener(const vector_t &pos,
-						const vector_t &velocity,
-						const vector_t &forward,
-						const vector_t &up);
+	void UpdateListener(const CCamera * pCamera);
 
 	//Play a sound originating from an entity
 	//If volume and attenuation are 0 then it uses the ones set to the entitiy

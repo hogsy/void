@@ -1,7 +1,7 @@
 #ifndef VOID_GAME_INTERFACE
 #define VOID_GAME_INTERFACE
 
-#include "Game_defs.h"
+#include "Game_base.h"
 
 struct I_Console;
 class  CBuffer;

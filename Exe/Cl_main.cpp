@@ -9,17 +9,12 @@
 #include "I_hud.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
+#include "In_defs.h"
 
-#include "Net_defs.h"
-#include "Net_protocol.h"
-
-#include "Cl_defs.h"
-#include "Cl_game.h"
+#include "Cl_base.h"
 #include "Cl_hdr.h"
 #include "Cl_main.h"
 #include "Cl_export.h"
-
-#include "Cl_cmds.h"
 
 enum
 {
@@ -30,7 +25,6 @@ enum
 
 //==========================================================================
 //==========================================================================
-
 
 /*
 ======================================
@@ -80,6 +74,11 @@ CClient::~CClient()
 {
 	m_pNetCl->Disconnect(false);
 
+	delete m_pClState;
+	delete m_pNetCl;
+	delete m_pExports;
+
+	//Final Cleanup
 	if(m_pClRen)
 	{
 		m_pClRen->UnloadModelAll();
@@ -89,12 +88,10 @@ CClient::~CClient()
 	m_pHud = 0;
 	m_pRender = 0;
 	
+	if(m_pSound)
+		m_pSound->UnregisterAll();
 	m_pSound = 0;
 	m_pMusic = 0;
-
-	delete m_pClState;
-	delete m_pNetCl;
-	delete m_pExports;
 }
 
 /*
@@ -135,7 +132,7 @@ bool CClient::LoadWorld(const char *worldname)
 
 /*
 =====================================
-Unload the world
+Unload the world. Free data caches
 =====================================
 */
 void CClient::UnloadWorld()
@@ -151,13 +148,13 @@ void CClient::UnloadWorld()
 
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 	m_pClRen->UnloadImageCache(CACHE_GAME);
+	m_pSound->UnregisterCache(CACHE_GAME);
 
 	m_pClState->UnloadWorld();
 
 	CWorld::DestroyWorld(m_pWorld);
 	m_pWorld = 0;
 
-	m_pSound->UnregisterAll();
 	System::SetGameState(INCONSOLE);
 }
 
@@ -172,43 +169,25 @@ void CClient::RunFrame()
 
 	if(m_clientState == CLIENT_INGAME)
 	{
-		m_pClState->RunFrame(System::GetFrameTime());
-
-		m_pHud->Printf(0, 70,0, "%3.2f : %4.2f", 
-			1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
-		
-		m_pHud->Printf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
-
+		//Print FPS, Update frame time
+		m_pHud->Printf(0,50,0, "%3.2f : %4.2f", 1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
+		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
 		m_fFrameTime = System::GetCurTime();
 
-		vector_t forward, up, velocity;
-		VectorSet(&velocity, 0,0,0);
-		AngleToVector(&m_pClState->m_pGameClient->angles, &forward, 0, &up);
-		m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-		m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
-
+		//Draw NetStats if flagged
 		if(m_cvNetStats.bval)
 			ShowNetStats();
 
-		m_pSound->UpdateListener(m_pClState->m_pGameClient->origin, velocity, up, forward);
-
-		//fix me. draw ents only in the pvs
-		for(int i=0; i< GAME_MAXENTITIES; i++)
-		{
-			if(m_pClState->m_entities[i].inUse && (m_pClState->m_entities[i].mdlIndex >= 0))
-				m_pClRen->DrawModel(m_pClState->m_entities[i]);	
-		}
+		//Run Client Frame. All game related processing/drawing
+		m_pClState->RunFrame(System::GetFrameTime());
 		
-		//Draw clients
-		for(i=0; i< GAME_MAXCLIENTS; i++)
-		{
-			if(m_pClState->m_clients[i].inUse && m_pClState->m_clients[i].mdlIndex >=0)
-				m_pClRen->DrawModel(m_pClState->m_clients[i]);
-		}
+		//Update Sound engine with client new pos
+		m_pSound->UpdateListener(m_pClState->GetCamera());
 
-		m_pClState->UpdateView();
-		m_pRender->Draw(m_pClState->m_pCamera);
+		//Draw from the client view point
+		m_pRender->Draw(m_pClState->GetCamera());
 		
+		//Have the client write any outgoing data
 		WriteUpdate();
 	}
 	else
@@ -220,10 +199,9 @@ void CClient::RunFrame()
 	m_pNetCl->SendUpdate();
 }
 
-
 /*
 ======================================
-
+Write to the outgoing network buffer
 ======================================
 */
 void CClient::WriteUpdate()
@@ -246,67 +224,11 @@ void CClient::WriteUpdate()
 //======================================================================================
 //======================================================================================
 
-void CClient::SetInputState(bool on)  
-{	
-	if(on == true)
-	{
-		System::GetInputFocusManager()->SetCursorListener(m_pClState->m_pCmdHandler);
-		System::GetInputFocusManager()->SetKeyListener(m_pClState->m_pCmdHandler,false);
-	}
-	else
-	{
-		System::GetInputFocusManager()->SetCursorListener(0);
-		System::GetInputFocusManager()->SetKeyListener(0);
-	}
-
-}
-
 /*
-==========================================
-Handle Registered Commands
-==========================================
+================================================
+Update Client state
+================================================
 */
-void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
-{
-	switch(cmdId)
-	{
-	case CMD_CONNECT:
-		{
-			char addr[NET_IPADDRLEN];
-			parms.StringTok(1,addr,NET_IPADDRLEN);
-			m_pNetCl->ConnectTo(addr);
-			break;
-		}
-	case CMD_DISCONNECT:
-		m_pNetCl->Disconnect(false);
-		break;
-	case CMD_RECONNECT:
-		m_pNetCl->Reconnect(false);
-		break;
-	}
-}
-
-/*
-==========================================
-Validate/Handle any CVAR changes
-==========================================
-*/
-bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
-{
-	if(cvar == reinterpret_cast<CVarBase*>(&m_cvPort))
-	{
-		int port = parms.IntTok(1);
-		if(port < 1024 || port > 32767)
-		{
-			ComPrintf("Port is out of range, select another\n");
-			return false;
-		}
-		return true;
-	}
-	return false;
-}
-
-
 void CClient::SetClientState(int state)
 {
 	switch(state)
@@ -330,8 +252,31 @@ void CClient::SetClientState(int state)
 
 
 /*
-======================================
+================================================
+Client system got/lost input focus. 
+Route it according
+================================================
+*/
+void CClient::SetInputState(bool on)  
+{	
+	if(on == true)
+	{
+		System::GetInputFocusManager()->SetCursorListener(m_pClState->GetCursorListener());
+		System::GetInputFocusManager()->SetKeyListener(m_pClState->GetKeyListener(),false);
+	}
+	else
+	{
+		System::GetInputFocusManager()->SetCursorListener(0);
+		System::GetInputFocusManager()->SetKeyListener(0);
+	}
 
+}
+
+
+
+/*
+======================================
+Displays network stats on screen.
 ======================================
 */
 void CClient::ShowNetStats()
@@ -349,13 +294,59 @@ void CClient::ShowNetStats()
 
 }
 
-
-/*
-================================================
-
-================================================
-*/
-
 void CClient::SetNetworkRate(int rate)
 {	m_pNetCl->SetRate(rate);
+}
+
+
+
+
+//==========================================================================
+//==========================================================================
+
+/*
+==========================================
+Handle Registered Commands
+==========================================
+*/
+void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
+{
+	switch(cmdId)
+	{
+	case CMD_CONNECT:
+		{
+			char addr[NET_IPADDRLEN];
+			parms.StringTok(1,addr,NET_IPADDRLEN);
+			m_pNetCl->ConnectTo(addr);
+			break;
+		}
+	case CMD_DISCONNECT:
+		m_clientState = CLIENT_DISCONNECTED;
+		m_pNetCl->Disconnect(false);
+		break;
+	case CMD_RECONNECT:
+		m_clientState = CLIENT_RECONNECTING;
+		m_pNetCl->Reconnect(false);
+		break;
+	}
+}
+
+/*
+==========================================
+Validate/Handle any CVAR changes
+==========================================
+*/
+bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
+{
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cvPort))
+	{
+		int port = parms.IntTok(1);
+		if(port < 1024 || port > 32767)
+		{
+			ComPrintf("Port is out of range, select another\n");
+			return false;
+		}
+		return true;
+	}
+	return false;
 }

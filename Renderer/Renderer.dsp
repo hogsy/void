@@ -242,6 +242,10 @@ SOURCE=..\Shared\Bsp_file.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Cl_base.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_camera.h
 # End Source File
 # Begin Source File
@@ -299,6 +303,14 @@ SOURCE=..\Shared\Com_vector.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_world.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Game_base.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
 # End Source File
 # End Group
 # Begin Group "Interface"
@@ -458,15 +470,7 @@ SOURCE=.\Mdl_sp2.h
 # End Group
 # Begin Source File
 
-SOURCE=..\Shared\Cl_defs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Client.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Game_defs.h
 # End Source File
 # End Group
 # Begin Group "Shader"

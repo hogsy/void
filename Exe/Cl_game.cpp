@@ -6,16 +6,11 @@
 #include "Com_world.h"
 #include "Com_camera.h"
 
-#include "Net_defs.h"
-#include "Net_protocol.h"
 #include "Net_client.h"
-
-#include "Cl_defs.h"
+#include "Cl_base.h"
 #include "Cl_hdr.h"
 #include "Cl_cmds.h"
 #include "Cl_game.h"
-
-#include "I_clientRenderer.h"
 
 /*
 ================================================
@@ -72,7 +67,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 
 /*
 ================================================
-
+Destructor
 ================================================
 */
 CGameClient::~CGameClient()
@@ -81,20 +76,22 @@ CGameClient::~CGameClient()
 
 	if(m_pCamera)
 		delete m_pCamera;
+	
+	m_pGameClient = 0;
 	m_pWorld = 0;
 
 	delete m_pCmdHandler;
-
-	m_pGameClient = 0;
 }
 
-
-void CGameClient::Spawn(vector_t	*origin, vector_t *angles)
-{
-}
-
+/*
+================================================
+Run a Client frame
+================================================
+*/
 void CGameClient::RunFrame(float frameTime)
 {
+	AngleToVector(&m_pGameClient->angles, &m_vecForward, &m_vecRight, &m_vecUp);
+
 	if(m_pCmdHandler->CursorChanged())
 	{
 		m_pCmdHandler->UpdateCursorPos(m_moveAngles.x, m_moveAngles.y, m_moveAngles.z);
@@ -108,8 +105,43 @@ void CGameClient::RunFrame(float frameTime)
 	Move(desired_movement, frameTime * m_maxvelocity);
 	desired_movement.Set(0,0,0);
 
-//	m_pClGame->HudPrint(0, 50,0, "%.2f, %.2f, %.2f", 
-//				m_pGameClient->origin.x,  m_pGameClient->origin.y, m_pGameClient->origin.z);
+	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x, m_pGameClient->origin.y,m_pGameClient->origin.z);
+	m_pClGame->HudPrintf(0,120,0, "FORWARD: %.2f, %.2f, %.2f", m_vecForward.x, m_vecForward.y, m_vecForward.z);
+	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f, %.2f, %.2f", m_vecUp.x,  m_vecUp.y,  m_vecUp.z);		
+
+	//fix me. draw ents only in the pvs
+	for(int i=0; i< GAME_MAXENTITIES; i++)
+	{
+		if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
+			m_pClGame->DrawModel(m_entities[i]);	
+	}
+	
+	//Draw clients
+	for(i=0; i< GAME_MAXCLIENTS; i++)
+	{
+		if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
+			m_pClGame->DrawModel(m_clients[i]);
+	}
+
+	UpdateView();
+}
+
+
+void CGameClient::Spawn(vector_t	*origin, vector_t *angles)
+{
+}
+
+
+I_InKeyListener		* CGameClient::GetKeyListener()
+{	return reinterpret_cast<I_InKeyListener*>(m_pCmdHandler);
+}
+
+I_InCursorListener	* CGameClient::GetCursorListener()
+{	return reinterpret_cast<I_InCursorListener*>(m_pCmdHandler);
+}
+
+CCamera *	CGameClient::GetCamera()
+{	return m_pCamera;
 }
 
 
@@ -150,42 +182,6 @@ void CGameClient::UpdateView()
 }
 
 
-//spawn for the first time.
-void CGameClient::BeginGame()
-{
-	m_campath = -1;
-	m_maxvelocity =  200.0f;
-	
-	m_pGameClient->moveType = MOVETYPE_STEP;
-
-	VectorSet(&m_pGameClient->angles, 0.0f,0.0f,0.0f);
-	VectorSet(&m_pGameClient->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&m_pGameClient->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&m_pGameClient->maxs, 10.0f, 10.0f, 10.0f);
-	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
-
-	VectorSet(&desired_movement, 0, 0, 0);
-
-	//Register static sound sources with SoundManager
-	for(int i=0; i< GAME_MAXENTITIES; i++)
-	{
-		if(m_entities[i].inUse && m_entities[i].sndIndex > -1)
-		{
-			m_entities[i].sndCache = CACHE_GAME;
-			m_entities[i].volume = 10;
-			m_entities[i].attenuation = 5;
-//			m_pSound->AddStaticSource(&m_entities[i]);
-			m_pClGame->AddSoundSource(&m_entities[i]);
-		}
-	}
-	
-	
-	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, m_screenBlend);
-
-	m_ingame = true;
-
-	Spawn(0,0);
-}
 
 
 bool CGameClient::LoadWorld(CWorld * pWorld)
@@ -196,10 +192,7 @@ bool CGameClient::LoadWorld(CWorld * pWorld)
 
 	m_hsTalk    = m_pClGame->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
 	m_hsMessage = m_pClGame->RegisterSound("sounds/message.wav", CACHE_LOCAL);
-
-//	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
-//	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
-
+	
 	ComPrintf("CGameClient::Load World: OK\n");
 	return true;
 
@@ -227,7 +220,6 @@ void CGameClient::UnloadWorld()
 		if(m_entities[i].inUse)
 		{
 			if(m_entities[i].sndIndex > -1)
-				//m_pSound->RemoveStaticSource(&m_entities[i]);
 				m_pClGame->RemoveSoundSource(&m_entities[i]);
 			m_entities[i].Reset();
 		}
@@ -339,7 +331,6 @@ void CGameClient::Talk(const char * string)
 		return;
 
 	ComPrintf("%s: %s\n", m_cvName.string, msg);
-//	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 	m_pClGame->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
 
 	//Send this reliably ?
@@ -445,7 +436,6 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			{
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
-				//m_pNetCl->Disconnect(true);
 				m_pClGame->SetClientState(CLIENT_DISCONNECTED);
 				break;
 			}
@@ -457,7 +447,6 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_RECONNECT:
 			{
-				//m_pNetCl->Reconnect(true);
 				m_pClGame->SetClientState(CLIENT_RECONNECTING);
 				break;
 			}
@@ -478,7 +467,6 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 
 				m_clients[num].mdlCache = CACHE_GAME;
 				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_GAME, sindex);
-//				m_pClGame->LoadImage(path, CACHE_GAME, sindex);
 				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_GAME;
 
 				sprintf(path,"Players/%s/tris.md2", model);
@@ -682,11 +670,43 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	//Initialize local Client
 	m_pGameClient = &m_clients[clNum];
 	m_pGameClient->Reset();
-//	strcpy(m_pGameClient->name, m_cvName.string);
+	strcpy(m_pGameClient->name, m_cvName.string);
 	m_pGameClient->inUse = true;
 
 	HandleGameMsg(buffer);
-	BeginGame();
+
+	m_campath = -1;
+	m_maxvelocity =  200.0f;
+	
+	m_pGameClient->moveType = MOVETYPE_STEP;
+
+	VectorSet(&m_pGameClient->angles, 0.0f,0.0f,0.0f);
+	VectorSet(&m_pGameClient->origin, 0.0f,0.0f,48.0f);
+	VectorSet(&m_pGameClient->mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&m_pGameClient->maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
+
+	VectorSet(&desired_movement, 0, 0, 0);
+
+	//Register static sound sources with SoundManager
+	for(int i=0; i< GAME_MAXENTITIES; i++)
+	{
+		if(m_entities[i].inUse && m_entities[i].sndIndex > -1)
+		{
+			m_entities[i].sndCache = CACHE_GAME;
+			m_entities[i].volume = 10;
+			m_entities[i].attenuation = 5;
+			m_pClGame->AddSoundSource(&m_entities[i]);
+		}
+	}
+	
+	
+	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, m_screenBlend,
+							m_vecForward, m_vecRight, m_vecUp,	m_vecVelocity);
+
+	m_ingame = true;
+
+	Spawn(0,0);
 
 	m_pClGame->SetClientState(CLIENT_INGAME);
 }

@@ -3,6 +3,7 @@
 
 #include "Com_defs.h"
 #include "Com_vector.h"
+
 #include "Cl_game.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
@@ -33,6 +34,7 @@ enum EClState
 struct I_ClientGame
 {
 	//Models
+	virtual void DrawModel(const ClEntity &state)=0;
 	virtual int  RegisterModel(const char *model, CacheType cache, int index=-1)=0;
 	virtual void UnregisterModel(CacheType cache,int index)=0;
 	virtual void UnregisterModelCache(CacheType cache)=0;
@@ -43,7 +45,7 @@ struct I_ClientGame
 	virtual void UnregisterImageCache(CacheType cache)=0;
 
 	//Hud
-	virtual void HudPrint(int x, int y, float time, const char *msg)=0;
+	virtual void HudPrintf(int x, int y, float time, const char *msg,...)=0;
 
 	//Sound
 	virtual int  RegisterSound(const char *path, CacheType cache, int index = -1)=0;
