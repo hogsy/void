@@ -111,7 +111,7 @@ void CRConsole::Draw()
 		}
 	case CON_CLOSING:
 		{
-			m_alpha -= (*g_pFrameTime * g_pConspeed->value);
+			m_alpha -= (GetFrameTime() * g_pConspeed->value);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -133,7 +133,7 @@ void CRConsole::Draw()
 				break;
 			}
 
-			m_alpha += (*g_pFrameTime * g_pConspeed->value);
+			m_alpha += (GetFrameTime() * g_pConspeed->value);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{

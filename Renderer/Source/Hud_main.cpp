@@ -126,7 +126,7 @@ void CHudMessage::Draw()
 	glEnd();
 
 	//Expire items who have passed the time limit
-	if(time >= *g_pCurTime)
+	if(time >= GetCurTime())
 	{	Reset();
 	}
 }
@@ -223,7 +223,7 @@ void __stdcall CRHud::HudPrintf(int x, int y, float time, char *msg,...)
 	if(i== MAX_MESSAGES)
 		return;
 
-	m_hmessages[i].Set(buff,x,y,time+(*g_pCurTime));
+	m_hmessages[i].Set(buff,x,y,time+(GetCurTime()));
 }
 
 
@@ -242,7 +242,7 @@ void __stdcall CRHud::HudPrint(char *msg, int x, int y, float time, int color)
 	if(i== MAX_MESSAGES)
 		return;
 	
-	m_hmessages[i].Set(msg,x,y,time+(*g_pCurTime));
+	m_hmessages[i].Set(msg,x,y,time+(GetCurTime()));
 }
 
 

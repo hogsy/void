@@ -310,6 +310,10 @@ SOURCE=..\Shared\I_hud.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\I_mem.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_renderer.h
 # End Source File
 # Begin Source File

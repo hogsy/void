@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdbg.h>
+//#include <crtdbg.h>
 #include "Ren_exp.h"
 
 /*
@@ -8,10 +8,26 @@ These are the only functions directly
 exported by the dll
 ==========================================
 */
-static HFILE * g_hmemlog;
+//static HFILE * g_hmemlog;
 
 extern RenderInfo_t g_rInfo;
-extern I_Console *  g_pConsole;
+
+I_Console	 * g_pConsole=0;
+I_Void		 * g_pVoidExp=0;
+I_MemManager * g_pMemManager=0;
+
+
+float & GetCurTime()
+{	return g_pVoidExp->GetCurTime();
+}
+
+float & GetFrameTime()
+{	return g_pVoidExp->GetFrameTime();
+}
+
+const char * GetCurPath()
+{	return g_pVoidExp->GetCurPath();
+}
 
 /*
 ==========================================
@@ -19,8 +35,12 @@ Create the renderer interface, and
 start memory logging if in debug mode
 ==========================================
 */
-RENDERER_API I_Renderer * RENDERER_Create(VoidExport_t * vexp)
+//RENDERER_API I_Renderer * RENDERER_Create(VoidExport_t * vexp)
+RENDERER_API I_Renderer * RENDERER_Create(I_Void * vexp)
 {
+	g_pMemManager = vexp->memManager;
+	g_pConsole	  = vexp->console;
+/*
 #ifdef _DEBUG
 	
 	// memory debugging stuff
@@ -35,12 +55,11 @@ RENDERER_API I_Renderer * RENDERER_Create(VoidExport_t * vexp)
    _CrtSetReportFile(_CRT_ERROR, g_hmemlog);
    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
    _CrtSetReportFile(_CRT_ASSERT, g_hmemlog);
-
 #endif
-
+*/
 	if(!g_pRenExp)
 	{
-		g_pRenExp = new CRenExp(vexp);
+		g_pRenExp = new CRenExp();
 		if(!g_pRenExp)
 		{
 			::MessageBox(0,"CreateRenderer:: Unable to create Renderer",
@@ -67,13 +86,13 @@ RENDERER_API void RENDERER_Free()
 		delete g_pRenExp;
 		g_pRenExp = 0;
 	}
-
+/*
 #ifdef _DEBUG
 	// memory debugging stuff
    _CrtDumpMemoryLeaks();
 	CloseHandle(g_hmemlog);
 #endif
-
+*/
 }
 
 /*

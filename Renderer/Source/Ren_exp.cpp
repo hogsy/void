@@ -15,10 +15,6 @@
 RenderInfo_t  g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
 
-float		* g_pCurTime=0;		//Current Timer
-float		* g_pFrameTime=0;	//Frame Time
-
-I_Console   * g_pConsole=0;
 CRenExp		* g_pRenExp=0;
 
 //======================================================================================
@@ -39,14 +35,8 @@ configs have been excuted to update the cvars with the
 saved rendering info
 =======================================
 */
-
-CRenExp::CRenExp(VoidExport_t * pVExp)
+CRenExp::CRenExp()
 {
-	//Set Global Time pointers
-	g_pCurTime = pVExp->curtime; 
-	g_pFrameTime = pVExp->frametime;
-	g_pConsole = pVExp->vconsole;
-
 	//Create different subsystems
 
 	//Start the console first thing

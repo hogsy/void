@@ -7,7 +7,7 @@ class CRenExp : public I_Renderer
 {
 public:
 	
-	CRenExp(VoidExport_t * pVExp);
+	CRenExp();
 	~CRenExp();
 
 	//Startup/Shutdown

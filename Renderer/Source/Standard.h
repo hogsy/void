@@ -13,6 +13,7 @@
 #include <windows.h>
 
 #include "Com_defs.h"
+#include "I_mem.h"
 #include "I_renderer.h"
 #include "I_file.h"
 
@@ -32,10 +33,9 @@ extern I_Console *  g_pConsole;
 //The World
 extern world_t	*world;
 
-//Timing variables
-extern float * g_pCurTime;		
-extern float * g_pFrameTime;	
-
+float & GetCurTime();
+float & GetFrameTime();
+const char * GetCurPath();
 
 void FError(char *error, ...);		//Fatal Error, shutdown and exit
 void Error(char *error, ...);		//Throw a message box
