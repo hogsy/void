@@ -2,7 +2,6 @@
 #define VOID_COM_BUFFER
 
 #include "Com_defs.h"
-
 /*
 ==========================================
 Network buffer utility class
@@ -11,7 +10,6 @@ Network buffer utility class
 class CNetBuffer
 {
 public:
-
 	enum
 	{
 		SIZE_CHAR  = 1,
@@ -26,41 +24,40 @@ public:
 	~CNetBuffer();
 
 	//Writing funcs
-	void WriteChar(char c);
-	void WriteByte(byte b);
-	void WriteShort(short s);
-	void WriteInt(int i);
-	void WriteFloat(float f);
+	CNetBuffer & operator += (char c);
+	CNetBuffer & operator += (byte b);
+	CNetBuffer & operator += (short s);
+	CNetBuffer & operator += (int i);
+	CNetBuffer & operator += (float f);
+	CNetBuffer & operator += (const char * string);
+	CNetBuffer & operator += (const CNetBuffer & buffer);
 
+	void WriteData(byte * data, int len);
 	void WriteAngle(float f);
 	void WriteCoord(float f);
-	void WriteString(const char *s);
-	
+		
 	//Reading funcs
 	char  ReadChar();
 	byte  ReadByte();
 	short ReadShort();
 	int   ReadInt();
 	float ReadFloat();
-
 	float ReadAngle();
 	float ReadCoord();
 	char* ReadString(char delim=0);
 
 	//Other util
-	
 	bool  BadRead()	const { return m_badRead; }
 	byte* GetData() const { return m_buffer;  }
 	int   GetSize() const { return m_curSize; }
-	bool  OverFlowed() const { return m_overFlowed; }
 	int   GetMaxSize()  const { return m_maxSize; }
+	bool  OverFlowed()  const { return m_overFlowed; }
 	int   UnreadBytes() const { return m_curSize - m_readCount; }
 
 	void  Reset();
-	void  SetCurSize(int size){ m_curSize = size; }
+	void  SetSize(int size){ m_curSize = size; }
 
 private:
-	
 	byte *	m_buffer;
 	int		m_curSize;
 	int		m_maxSize;
@@ -71,6 +68,5 @@ private:
 
 	byte*	GetSpace(int size);
 };
-
 
 #endif
