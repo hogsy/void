@@ -8,6 +8,8 @@
 #define CONBACK_INDEX			1
 #define CON_DIFFERENTIAL		150
 
+extern	CVar *	g_pConAlpha;
+
 /*
 =======================================
 Constructor
@@ -158,15 +160,15 @@ void CRConsole::Draw()
 	}
 
 	DWORD top = (int) m_alpha;
-	if (m_alpha > 255)
-		top = 255;
+	if (m_alpha > (int)g_pConAlpha->value)
+		top = (int)g_pConAlpha->value;
 
 	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
 	if (m_alpha < CON_DIFFERENTIAL)
 		bottom = 0;
 
-	if (bottom > 255)
-		bottom = 255;
+	if (bottom > (int)g_pConAlpha->value)
+		bottom = (int)g_pConAlpha->value;
 
 	float ftop = (float)top/255;
 	float fbot = (float)bottom/255;
@@ -202,7 +204,7 @@ void CRConsole::Draw()
 	glEnd();
 
 	//print all our text over the top
-	PrintBuffer();
+	PrintBuffer(top, bottom);
 
 	//restore stuff
 	glPopMatrix();
@@ -216,25 +218,13 @@ Print Current Console Messages -
 assumes view and tex filter are ok
 ======================================
 */
-void CRConsole::PrintBuffer()
+void CRConsole::PrintBuffer(DWORD top, DWORD bottom)
 {
 	//Alpha values
 	float ftop, fbot;
-	DWORD top, bottom;
 	float diff;
 	float alpha;
 	int a;
-
-	top = (int) m_alpha;
-	if (m_alpha > 255)
-		top = 255;
-
-	bottom = (int) m_alpha - CON_DIFFERENTIAL;
-	if (m_alpha < CON_DIFFERENTIAL)
-		bottom = 0;
-
-	if (bottom > 255)
-		bottom = 255;
 
 	diff = float(top - bottom);
 	diff /= m_maxlines;
@@ -300,18 +290,22 @@ void CRConsole::PrintBuffer()
 				t = (m_statusline[start] / 16) * 0.0625f;
 
 				glColor4f(ftop, ftop, ftop, ftop);
+				glColor4f(1, 1, 1, ftop);
 				glTexCoord2f(s, t);
 				glVertex2i(x1, y1);
 
 				glColor4f(ftop, ftop, ftop, ftop);
+				glColor4f(1, 1, 1, ftop);
 				glTexCoord2f(s + 0.0625f, t);
 				glVertex2i(x2, y1);
 
 				glColor4f(fbot, fbot, fbot, fbot);
+				glColor4f(1, 1, 1, fbot);
 				glTexCoord2f(s + 0.0625f, t + 0.0625f);
 				glVertex2i(x2, y2);
 		
 				glColor4f(fbot, fbot, fbot, fbot);
+				glColor4f(1, 1, 1, fbot);
 				glTexCoord2f(s, t + 0.0625f);
 				glVertex2i(x1, y2);
 

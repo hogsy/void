@@ -15,6 +15,7 @@ CVar *	g_pFov=0;
 CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
 CVar *	g_p32BitTextures=0;
+CVar *	g_pConAlpha=0;
 
 
 //======================================================================================
@@ -261,6 +262,28 @@ bool CVar_32BitTextures(const CVar * var, int argc, char** argv)
 }
 
 
+/*
+=======================================
+set how much the console will fade in
+=======================================
+*/
+bool CVar_ConAlpha(const CVar * var, int argc, char** argv)
+{
+	if (argc>1)
+	{
+		int temp=0;
+		if(!argv[1] || !sscanf(argv[1],"%d",&temp))
+			return false;
+
+		if (temp<100 || temp>255)
+			return false;
+	}
+
+	return true;
+}
+
+
+
 //======================================================================================
 //======================================================================================
 
@@ -302,6 +325,8 @@ bool CRConsole::HandleCVar(const CVarBase *cvar,int numArgs, char ** szArgs)
 		return CVar_VidSynch((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == g_p32BitTextures)
 		return CVar_32BitTextures((CVar*)cvar,numArgs,szArgs);
+	else if(cvar == g_pConAlpha)
+		return CVar_ConAlpha((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 
@@ -321,6 +346,7 @@ void CRConsole::RegisterConObjects()
 	g_pVidSynch  = new CVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 	g_pMultiTexture = new CVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_p32BitTextures = new CVar("r_32bittextures","1", CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
+	g_pConAlpha = new CVar("r_conalpha","200", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 
 
 	g_pConsole->RegisterCVar(g_pFullbright,this);
@@ -328,6 +354,7 @@ void CRConsole::RegisterConObjects()
 	g_pConsole->RegisterCVar(g_pMultiTexture,this);
 	g_pConsole->RegisterCVar(g_pVidSynch,this);
 	g_pConsole->RegisterCVar(g_p32BitTextures,this);
+	g_pConsole->RegisterCVar(g_pConAlpha,this);
 }
 
 /*
@@ -342,12 +369,14 @@ void CRConsole::DestroyConObjects()
 	delete g_pVidSynch;
 	delete g_pMultiTexture;
 	delete g_p32BitTextures;
+	delete g_pConAlpha;
 
 	g_pFullbright = 0;
 	g_pFov = 0;
 	g_pVidSynch =0;
 	g_pMultiTexture = 0;
 	g_p32BitTextures = 0;
+	g_pConAlpha = 0;
 }
 
 

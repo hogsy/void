@@ -72,7 +72,7 @@ private:
 	//Private methods
 	void AddMessage(char *buff, bool first);
 	void PrintRecursive(bool first, char *msg);
-	void PrintBuffer();
+	void PrintBuffer(DWORD top, DWORD bottom);
 
 	//CVars
 	CVar 		m_conSpeed;
