@@ -83,11 +83,11 @@ LINK32=link.exe
 # Name "VLight - Win32 Debug"
 # Begin Source File
 
-SOURCE=..\Shared\3dmath.h
+SOURCE=..\Shared\Bsp_file.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Bsp_file.h
+SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 

@@ -69,23 +69,24 @@ int main (int argc, char **argv)
 
 
 	CWorld *w = CWorld::CreateWorld(argv[i]);
-	w->DestroyLightData();
-	if (light_run(w))
-		light_write();
-	if (w)
-		CWorld::DestroyWorld(w);
+	if(w)
+	{
+		w->DestroyLightData();
+		if (light_run(w))
+			light_write();
+		if (w)
+			CWorld::DestroyWorld(w);
 
 
-	// log time
-	time(&end_time);
-	long seconds = end_time-start_time;
-	long minutes = seconds/60;
-	seconds %= 60;
-	long hours = minutes / 60;
-	minutes %= 60;
-	v_printf("time elapsed - %2d:%2d:%2d (%d seconds)\n", hours, minutes, seconds, end_time-start_time);
-
-
+		// log time
+		time(&end_time);
+		long seconds = end_time-start_time;
+		long minutes = seconds/60;
+		seconds %= 60;
+		long hours = minutes / 60;
+		minutes %= 60;
+		v_printf("time elapsed - %2d:%2d:%2d (%d seconds)\n", hours, minutes, seconds, end_time-start_time);
+	}
 
 	// close up log file
 	if (flog)

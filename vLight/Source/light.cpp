@@ -217,6 +217,9 @@ void light_write(void)
 	world->nlightdefs = nlightdefs;
 
 	world->WriteToFile();
+
+	world->lightdefs = 0;
+
 	v_printf("OK\n");
 }
 
