@@ -45,7 +45,9 @@ COpenGLRast::~COpenGLRast()
 
 	// unload the driver
 	OpenGLUnInit();
-	::ChangeDisplaySettings(NULL, 0);
+
+	// why the hell does this crash when quitting from fullscreen ?
+//	::ChangeDisplaySettings(NULL, 0);
 	ComPrintf("GL::Final Shutdown OK\n");
 }
 
@@ -65,7 +67,7 @@ bool COpenGLRast::Init()
 
 
 	ComPrintf("CGLUtil::Init:Res: %d %d\n",g_rInfo.width, g_rInfo.height);
-//	ComPrintf("CGLUtil::Init:Pos: %d %d\n",m_cWndX.ival,m_cWndY.ival);
+	ComPrintf("CGLUtil::Init:Pos: %d %d\n",m_cWndX.ival,m_cWndY.ival);
 
 
 #ifdef DYNAMIC_GL
@@ -97,7 +99,6 @@ bool COpenGLRast::Init()
 	_wglMakeCurrent(hDC, hRC);
 
 	//Get GL Extentions
-	//get extension pointers
 	OpenGLGetExtensions();
 
 
@@ -148,7 +149,7 @@ Shutdown
 */
 bool COpenGLRast::Shutdown()
 {
-/*
+
 	//Update Win Pos
 	RECT rect;
 	if(GetWindowRect(g_rInfo.hWnd, &rect))
@@ -159,7 +160,7 @@ bool COpenGLRast::Shutdown()
 		m_cWndX.Set((float)rect.left);
 		m_cWndY.Set((float)rect.top);
 	}
-*/
+
 	_wglMakeCurrent(NULL, NULL);
 	_wglDeleteContext(hRC);
 
@@ -228,8 +229,8 @@ bool COpenGLRast::GoWindowed(void)
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOP,
-				   0,//m_cWndX.ival,
-				   0,//m_cWndY.ival,
+				   m_cWndX.ival,
+				   m_cWndY.ival,
 			       width,
 			       height,
 				   0);
@@ -362,8 +363,8 @@ void COpenGLRast::SetWindowCoords(int wndX, int wndY)
 	//Dont bother with initial co-ords
 	if(!m_bInitialized)
 		return;
-//	m_cWndX.Set(wndX);
-//	m_cWndY.Set(wndY);
+	m_cWndX.Set(wndX);
+	m_cWndY.Set(wndY);
 }
 
 /*

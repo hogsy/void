@@ -9,7 +9,6 @@
 
 #include "I_hunkmem.h"
 #include "I_renderer.h"
-#include "Rasterizer.h"
 
 #include "Com_cvar.h"
 
@@ -23,6 +22,9 @@ extern RenderInfo_t g_rInfo;
 
 //Console Interface for registering CVars
 extern I_Console *  g_pConsole;
+
+// MUST be after declaration of g_pConsole
+#include "Rasterizer.h"
 
 // Rasterizer Interface
 extern I_Rasterizer  * g_pRast;

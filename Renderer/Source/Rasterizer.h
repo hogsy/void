@@ -2,7 +2,8 @@
 #define RASTERIZER_H
 
 
-#include "3dmath.h"
+#include "standard.h"
+#include "Com_cvar.h"
 
 
 // max number of possible mipmaps 10 -> 1024 max dim size
@@ -89,8 +90,11 @@ Rasterizer Interface
 class I_Rasterizer
 {
 public:
-	I_Rasterizer() { }
-	~I_Rasterizer() { }
+	I_Rasterizer() :	m_cWndX("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+						m_cWndY("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+		{	g_pConsole->RegisterCVar(&m_cWndX);	g_pConsole->RegisterCVar(&m_cWndY);	}
+
+	virtual ~I_Rasterizer() { }
 
 	//Startup/Shutdown
 	virtual bool Init()=0;
@@ -131,6 +135,12 @@ public:
 	virtual void ReportErrors(void)=0;
 	virtual void FrameEnd(void)=0;
 	virtual void ScreenShot(unsigned char *dest)=0;
+
+
+protected:
+	CVar    m_cWndX;        //Windowed X pos
+	CVar    m_cWndY;        //Windowed Y pos
+
 };
 
 extern I_Rasterizer *g_pRast;

@@ -72,6 +72,7 @@ CRenExp::~CRenExp()
 	g_pConsole = 0;
 }
 
+
 /*
 ==========================================
 This is called once the CVars have been updated
