@@ -2,6 +2,7 @@
 #include "Standard.h"
 #include "Mdl_entry.h"
 #include "Tex_image.h"
+#include "Img_main.h"
 
 
 typedef struct
@@ -404,7 +405,12 @@ Draw
 */
 void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 {
-	g_pRast->TextureSet(skin_bin, skin);
+	if (skin & MODEL_SKIN_UNBOUND_GAME)
+		g_pImage->Set(CACHE_GAME, skin & ~MODEL_SKIN_UNBOUND_GAME);
+	else if (skin & MODEL_SKIN_UNBOUND_LOCAL)
+		g_pImage->Set(CACHE_LOCAL, skin & ~MODEL_SKIN_UNBOUND_LOCAL);
+	else
+		g_pRast->TextureSet(skin_bin, skin);
 
 	if (frac>=1) fframe = cframe;
 	if (frac<=0) cframe = fframe;

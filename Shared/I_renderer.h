@@ -105,6 +105,13 @@ enum
 	MODEL_CACHE_SIZE =256
 };
 
+enum
+{
+	MODEL_SKIN_BOUND = 0,
+	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
+	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
+};
+
 struct R_EntState 
 {
 	int			num_skins;
