@@ -54,8 +54,8 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
 	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 
-	m_hsTalk    = m_pClGame->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
-	m_hsMessage = m_pClGame->RegisterSound("sounds/message.wav", CACHE_LOCAL);
+	m_hsTalk    = m_pClGame->RegisterSound("sounds/Interface/notify.wav", CACHE_LOCAL);
+	m_hsMessage = m_pClGame->RegisterSound("sounds/Interface/click one.wav", CACHE_LOCAL);
 
 	m_pCmdHandler->IntializeBinds();
 }

@@ -375,6 +375,12 @@ void CSoundManager::PlaySnd3d(const ClEntity * ent,
 							  int volume, int attenuation,
 							  int chantype)
 {
+	if(index < 0)
+	{
+		ComPrintf("CSoundManager::PlaySnd2d: Bad sound index %d\n", index);
+		return;
+	}
+
 	if(!m_bufferCache[cache][index].InUse())
 	{
 		ComPrintf("CSoundManager::PlaySnd3d: No sound at index %d, cache %d\n", index, cache);
@@ -471,8 +477,11 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 							  int volume,
 							  int chantype)
 {
-	if(index == -1 || cache == -1)
+	if(index < 0)
+	{
+		ComPrintf("CSoundManager::PlaySnd2d: Bad sound index %d\n", index);
 		return;
+	}
 
 	if(!(m_bufferCache[cache][index].InUse()))
 	{
@@ -512,6 +521,12 @@ processed each frame
 */
 void CSoundManager::AddStaticSource(const ClEntity * ent)
 {
+	if(ent->sndIndex < 0)
+	{
+		ComPrintf("CSoundManager::PlaySnd2d: Bad sound index %d\n", ent->sndIndex);
+		return;
+	}
+
 	if(!m_bufferCache[ent->sndCache][ent->sndIndex].InUse())
 	{
 		ComPrintf("CSoundManager::AddStaticSource: no sound at index %d, cache %d\n", 
