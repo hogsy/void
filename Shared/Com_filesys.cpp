@@ -1,43 +1,39 @@
-#include "../Exe/Source/Sys_hdr.h"			//Exe
-
-#include "Com_filesys.h"
 #include "Com_pakfile.h"
 #include "Com_zipfile.h"
 
-//extern void ComPrintf(char *string,...);
 
-const char  * archive_exts[] =	{ "zip","pak",  0 };
+/*===========================================
+Supported File Types
+===========================================*/
+const char  * archive_exts[] =	
+{	
+	"zip",
+	"pak",  
+	0 
+};
 
-/*
-===========================================
-Search Path
-singly linked list
-
-And entry might points to 
-only a real directoy
-or
-an archive with the real directoys name
-===========================================
-*/
-class CSearchPath
+/*=========================================
+Search Path - singly linked list
+an entry might be an archive, 
+or a standard dir path
+=========================================*/
+struct CFileSystem::SearchPath_t
 {
-public:
-	CSearchPath()  { prev = 0; archive = 0; }
-	~CSearchPath() { if(archive) delete archive;
+	SearchPath_t()  { prev = 0; archive = 0; }
+	~SearchPath_t() { if(archive) delete archive;
 					 prev=0; }
 	
-	//Search Path will either be an archive, or a standard dir path
-	CArchive  * archive;				
-	char		path[COM_MAXPATH];		//This is always set to the directory itself, 
-										//or the name of directly containing the archive
-	
-	CSearchPath * prev;
+	//The path is always set to the directory itself, 
+	//or the name of directly containing the archive
+	char		   path[COM_MAXPATH];		
+	CArchive     * archive;
+	SearchPath_t * prev;
 };
 
 
 /*
 =======================================================================
-CFileManager
+CFileSystem
 =======================================================================
 */
 /*
@@ -45,29 +41,20 @@ CFileManager
 Constructor and Destructor
 ==========================================
 */
-CFileManager::CFileManager()
+CFileSystem::CFileSystem()
 {
-	m_totalfiles=0;
-	m_numopenfiles   = 0;
-
-	memset(m_openfiles,0,COM_MAXOPENFILES*sizeof(CFile*));
-	
 	m_numsearchpaths = 0;
-	m_searchpaths = new CSearchPath();
+	m_searchpaths = new SearchPath_t();
 	m_lastpath = m_searchpaths;
+
+	//Sets itself as CFileReader's FileSystem object
+	CFileReader::SetFileSystem(this);
 }
 
 
-CFileManager::~CFileManager()
+CFileSystem::~CFileSystem()
 {
-	//Close any open files
-	for(int i=0;i<COM_MAXOPENFILES; i++)
-	{
-		if(m_openfiles[i])
-			Close(m_openfiles[i]);
-	}
-
-	CSearchPath * iterator = m_lastpath;
+	SearchPath_t * iterator = m_lastpath;
 	while(iterator->prev)
 	{
 		m_lastpath = iterator->prev;
@@ -75,6 +62,8 @@ CFileManager::~CFileManager()
 		iterator = m_lastpath;
 	}
 	delete iterator;
+
+	CFileReader::SetFileSystem(0);
 }
 
 /*
@@ -83,85 +72,99 @@ Initialize the file system
 expects the basedirectory passed to it
 ===========================================
 */
-bool CFileManager::Init(const char *exedir, const char * basedir)
+bool CFileSystem::Init(const char *exedir, const char * basedir)
 {
 	//Validate given base dir
 	if(!exedir || !basedir)
 	{
-		ComPrintf("CFileManager::Init: No Base directory specified\n");
+		ComPrintf("CFileSystem::Init: No Exe directory specified\n");
 		return false;
 	}
 
 	//Validate EXE dir name
-	int len =0;
-	len = strlen(exedir);
-	
+	int exepathlen =0;
+	exepathlen = strlen(exedir);
 	//check for length
-	if(!len || (len) > COM_MAXPATH)		
+	if(!exepathlen || (exepathlen) > COM_MAXPATH)		
 	{
-		ComPrintf("CFileManager::Init: Base directory exceeds COM_MAXPATH : %s\n",exedir);
+		ComPrintf("CFileSystem::Init: Exe directory exceeds COM_MAXPATH : %s\n",exedir);
 		return false;
 	}
-	
-	//get rid of any leading slash
-	if((exedir[0] == '\\') || (exedir[0] == '/'))	
-	{
-		len -=2;
-		strcpy(m_exepath,exedir+1);
-	}
-	else
-	{
-		len --;
-		strcpy(m_exepath,exedir);
-	}
-	
+
 	//make sure there is no trailing slash
-	if((m_exepath[len] == '/') || (m_exepath[len] == '\\'))
-		m_exepath[len] = '\0';
+	strcpy(m_exepath,exedir);
+	--exepathlen;
+	if((m_exepath[exepathlen] == '/') || (m_exepath[exepathlen] == '\\'))
+		m_exepath[exepathlen] = '\0';
+
+	//Make sure the given path exists.
+	if(!PathExists(m_exepath))
+	{
+		ComPrintf("CFileSystem::Init: Exe directory does not exist : %s\n",m_exepath);
+		return false;
+	}
 
 	//Add to search path now
-	if(AddGameDir(basedir))
+	if(!AddGameDir(basedir))
 	{
-		strcpy(m_basedir,basedir);
-		return true;
+		ComPrintf("CFileSystem::Init: Unable to add base dir, %s\n", basedir);
+		return false;
 	}
-	ComPrintf("CFileManager::Init:Unable to add base dir, %s\n", basedir);
-	return false;
+	strcpy(m_basedir,basedir);
+	return true;
 }
-
 
 /*
 ===========================================
-Adds a game directory to override content in base
+Add a content dir to the file system
+
+The first dir is always the base content dir
+However we can add another directory (only 1 at a time)
+which can override content in the base dir.
+
+if there already is an additional game dir, then
+subsequent calls to AddGameDir will remove that game
+dir, and replace it with the new one
+
 ===========================================
 */
-bool CFileManager::AddGameDir(const char *dir)
+bool CFileSystem::AddGameDir(const char *dir)
 {
 	//Validate Game dir name (no slashes before or after)
 	if(strlen(dir) > COM_MAXPATH)
 	{
-		ComPrintf("CFileManager::Init: Game directory exceeds COM_MAXDIRNAME: %s\n", dir);	
+		ComPrintf("CFileSystem::AddGameDir: Game directory exceeds COM_MAXDIRNAME: %s\n", dir);	
 		return false;
 	}
 
+	//Dont copy any leading slash.
 	char gamedir[COM_MAXPATH];
-
-	//Dont copy leading slash.
 	if((dir[0] == '\\') || (dir[0] == '/'))
 		strcpy(gamedir,dir+1);
 	else
 		strcpy(gamedir,dir);
 	
-	//Get rid of trailing slash for base dirs
-	int len = strlen(gamedir) - 1;
-	if((gamedir[len] == '\\') || (gamedir[len] == '/'))
-		gamedir[len] = '\0';
+	//Get rid of trailing slash
+	int dirnamelen = strlen(gamedir) - 1;
+	if((gamedir[dirnamelen] == '\\') || (gamedir[dirnamelen] == '/'))
+		gamedir[dirnamelen] = '\0';
+
+	//Check to see Dir exists.
+	char fullpath[COM_MAXPATH];
+	sprintf(fullpath,"%s/%s",m_exepath,gamedir);
+	if(!PathExists(fullpath))
+	{
+		ComPrintf("CFileSystem::AddGameDir: Game dir does not exist : %s\n",fullpath);
+		return false;
+	}
+
+	//Directoy is Valid. Reset the current GAME directoy before changing to new one
+	ResetGameDir();
 
 	//Add to SearchPath
 	AddSearchPath(gamedir);
 
 	//Add any archive files into the search path as well
-	int  i=0;
 	CStringList	archives;
 	char archivepath[COM_MAXPATH];
 	
@@ -170,17 +173,23 @@ bool CFileManager::AddGameDir(const char *dir)
 		CStringList * iterator = &archives;
 		while(iterator->next)
 		{
-			ComPrintf("%s\n",iterator->string);
-
 			if(CompareExts(iterator->string,"zip"))
 			{
+				CZipFile * zipfile = new CZipFile();
+				sprintf(archivepath,"%s/%s", gamedir,iterator->string);
+				if(zipfile->Init(archivepath, m_exepath))
+					AddSearchPath(gamedir,(CArchive*)zipfile);
+				else
+					delete zipfile;
 			}
+
+			//Found a Pak file, try adding
 			if(CompareExts(iterator->string,"pak"))
 			{
-				CPakFile * pakfile = new CPakFile;
+				CPakFile * pakfile = new CPakFile();
 				
 				sprintf(archivepath,"%s/%s", gamedir,iterator->string);
-				if(pakfile->Init(m_exepath, archivepath))
+				if(pakfile->Init(archivepath, m_exepath))
 					AddSearchPath(gamedir,(CArchive*)pakfile);
 				else
 					delete pakfile;
@@ -191,28 +200,26 @@ bool CFileManager::AddGameDir(const char *dir)
 	return true;
 }
 
+
 /*
-===========================================
-Reinits the file system, then adds the new game dir
-===========================================
+==========================================
+Reset the current game dir.
+Nothing happens if no game dir is specified
+otherwise, all the game dir entries are removed
+and only base ones are left
+==========================================
 */
-bool CFileManager::ChangeGameDir(const char *dir)
+void CFileSystem::ResetGameDir()
 {
-	//Close any open files
-	for(int i=0;i<COM_MAXOPENFILES; i++)
-	{
-		if(m_openfiles[i])
-			Close(m_openfiles[i]);
-	}
-
-
-	CSearchPath * iterator = m_lastpath;
+	//Remove all search paths associated with the current game dir
+	//including the archive files
+	SearchPath_t * iterator = m_lastpath;
 	while(iterator)
 	{
 		//remove this entry if it doesnt match the base dir
 		if(strcmp(iterator->path,m_basedir))
-		{
-			CSearchPath * temp = iterator;
+		{	
+			SearchPath_t * temp = iterator;
 			iterator = iterator->prev;
 			delete temp;
 			m_lastpath = iterator;
@@ -220,190 +227,59 @@ bool CFileManager::ChangeGameDir(const char *dir)
 		else
 			iterator = iterator->prev;
 	}
-
-	//Now add the new dir
-	return AddGameDir(dir);
+//	ComPrintf("CFileSystem::ResetGameDir: Reset game dir\n");
 }
-
 
 /*
 ===========================================
-Opens the requested file
+Loads the requested file into given buffer.
+buffer needs to be null. Its allocated here
 ===========================================
 */
-CFile * CFileManager::Open(const char *filename)
+ulong CFileSystem::LoadFile(byte ** ibuffer, const char *ifilename)
 {
-	if(m_numopenfiles >= COM_MAXOPENFILES)
-	{
-		ComPrintf("CFileManager::Open:Can't open %s, reached max open files\n", filename);
-		return 0;
-	}
-
-	//Find space in open file array
-	for(int i=0; i< COM_MAXOPENFILES; i++)
-	{
-		if(!m_openfiles[i])
-			break;
-	}
-	//Unable to find a space in openfile array
-	if(m_openfiles[i])
-	{
-		ComPrintf("CFileManager::Open:Can't open %s, unable to find blank entry in openfiles\n", filename);
-		return false;
-	}
-
-	long size = 0;
-	CSearchPath * iterator = m_lastpath;
-	byte *buffer=0;
-
-	while(iterator->prev)
-	{
-		iterator = iterator->prev;
-
-		//Try opening as an archive
-		if(iterator->archive)
-		{
-			//size = iterator->archive->OpenFile(filename,&(file->m_buffer));
-			size = iterator->archive->OpenFile(filename,&buffer);
-			if(size)
-			{
-				CFile * file = new CFile();
-
-				//Set the size and the name
-				file->m_filename = new char[strlen(filename)+1];
-				strcpy(file->m_filename, filename);
-				file->m_size = size;
-				file->m_buffer = buffer;
-				m_openfiles[i] = file;
-				m_numopenfiles ++;
-				return file;
-			}
-		}
-		//Try opening as a standard file
-		else
-		{
-			char filepath[COM_MAXPATH];
-			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, filename);
-			FILE * fp = fopen(filepath,"r+b");
-			
-			if(fp)
-			{
-				CFile * file = new CFile();
-				
-				fseek(fp,SEEK_END,0);
-				file->m_size = ftell(fp);
-				fseek(fp,SEEK_SET,0);
-
-				//fill the file buffer
-				file->m_buffer = new unsigned char[file->m_size];
-				fread(file->m_buffer,file->m_size,1,fp);
-				fclose(fp);
-
-				file->m_filename = new char[strlen(filename)+1];
-				strcpy(file->m_filename, filename);
-				
-				m_openfiles[i] = file;
-				m_numopenfiles ++;
-				return file;
-			}
-
-		}
-	}
+	ulong size = 0;
+	byte * buf = 0;
+	SearchPath_t * iterator = m_lastpath;
 	
-	ComPrintf("CFileManager::Open:File not found %s\n", filename);
-	return false;
-}
-
-
-/*
-=====================================
-Loads a File into the given buffer
-=====================================
-*/
-ulong CFileManager::Load(const char *filename, byte ** buffer)
-{
-	long size = 0;
-	CSearchPath * iterator = m_lastpath;
 	while(iterator->prev)
 	{
-		*buffer = 0;
 		iterator = iterator->prev;
-
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			size = iterator->archive->OpenFile(filename,buffer);
+			size = iterator->archive->OpenFile(ifilename,&buf);
 			if(size)
+			{
+				*ibuffer = buf;
 				return size;
+			}
 		}
 		//Try opening as a standard file
 		else
 		{
 			char filepath[COM_MAXPATH];
-			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, filename);
+			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
 			FILE * fp = fopen(filepath,"r+b");
 			
 			if(fp)
 			{
-				fseek(fp,SEEK_END,0);
+				fseek(fp,0,SEEK_END);
 				size = ftell(fp);
-				fseek(fp,SEEK_SET,0);
+				fseek(fp,0,SEEK_SET);
 
 				//fill the file buffer
-				*buffer = new unsigned char[size];
-				fread(*buffer,size,1,fp);
+				buf = new byte[size];
+				fread(buf,sizeof(byte),size,fp);
+				*ibuffer = buf;
 				fclose(fp);
 				return size;
 			}
 
 		}
 	}
-	ComPrintf("CFileManager::Load:File not found %s\n", filename);
+	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
-}
-
-/*
-===========================================
-Close the given file
-===========================================
-*/
-bool CFileManager::Close(CFile *file )
-{
-	if(!file)
-	{
-		ComPrintf("CFileManager::Close:Error, File does not exist\n");
-		return false;
-	}
-
-	//Check to see if file matches an entry in our list of openfiles
-	for(int i=0;i<COM_MAXOPENFILES;i++)
-	{
-		if(m_openfiles[i] == file)
-			break;
-	}
-
-	if(m_openfiles[i] != file)
-	{
-		ComPrintf("CFileManager::Close:Error,given file ,%s, is not in our list of" 
-								"open files\n", file->m_filename);
-		return false;
-	}
-
-	if(file->m_buffer)
-	{
-		delete [] file->m_buffer;
-		file->m_buffer = 0;
-	}
-	if(file->m_filename)
-	{
-		delete file->m_filename;
-		file->m_filename = 0;
-	}
-	
-	delete file;
-	file = 0;
-	m_openfiles[i] = 0;
-	return true;
 }
 
 /*
@@ -411,21 +287,23 @@ bool CFileManager::Close(CFile *file )
 Lists Added search paths
 ===========================================
 */
-void CFileManager::ListSearchPaths()
+void CFileSystem::ListSearchPaths()
 {
 	if(!m_lastpath)
+	{
+		ComPrintf("CFileSystem::ListSearchPaths: File System is uninitialized\n");
 		return;
-	
-	ComPrintf("Listing Current Search Paths:\n");
+	}
+	ComPrintf("Current Search Paths:\n");
 
-	CSearchPath * iterator = m_lastpath;
+	SearchPath_t * iterator = m_lastpath;
 	while(iterator->prev)
 	{
 		iterator = iterator->prev;
 		if(iterator->archive)
-			ComPrintf("%s\n",	iterator->archive->archivename);
+			ComPrintf("%s\n",iterator->archive->m_archiveName);
 		else
-			ComPrintf("%s\n",	iterator->path);
+			ComPrintf("%s\n",iterator->path);
 	}
 }
 
@@ -434,19 +312,24 @@ void CFileManager::ListSearchPaths()
 Lists files in added archives
 ===========================================
 */
-void CFileManager::ListArchiveFiles()
+void CFileSystem::ListArchiveFiles()
 {
 	if(!m_lastpath)
+	{
+		ComPrintf("CFileSystem::ListArchiveFiles: File System is uninitialized\n");
 		return;
+	}
+	ComPrintf("Archived files in search paths:\n");
 
-	ComPrintf("Listing Files in Search Paths:\n");
-
-	CSearchPath * iterator = m_lastpath;
+	SearchPath_t * iterator = m_lastpath;
 	while(iterator->prev)
 	{
 		iterator = iterator->prev;
 		if(iterator->archive)
+		{
+			ComPrintf("\n%s\n",iterator->archive->m_archiveName);
 			iterator->archive->ListFiles();
+		}
 	}
 }
 
@@ -455,7 +338,7 @@ void CFileManager::ListArchiveFiles()
 Scan a directory for supported archive types
 ===========================================
 */
-bool CFileManager::GetArchivesInPath(const char *path, CStringList * list)
+bool CFileSystem::GetArchivesInPath(const char *path, CStringList * list)
 {
 	char		 searchpath[COM_MAXPATH];
 	CStringList	*iterator = list;
@@ -472,7 +355,7 @@ bool CFileManager::GetArchivesInPath(const char *path, CStringList * list)
 		hsearch = FindFirstFile(searchpath,&finddata);
 		if(hsearch == INVALID_HANDLE_VALUE)
 		{
-			ComPrintf("CFileManager::GetArchivesInPath:Couldnt find %s\n",searchpath);
+			ComPrintf("CFileSystem::GetArchivesInPath:Couldnt find %s\n",searchpath);
 			continue;
 		}
 
@@ -492,12 +375,29 @@ bool CFileManager::GetArchivesInPath(const char *path, CStringList * list)
 			}
 		}
 		if(FindClose(hsearch) == FALSE)   // file search handle
-			ComPrintf("CFileManager::Win32_DirectoryList:Unable to close search handle\n");
+			ComPrintf("CFileSystem::Win32_DirectoryList:Unable to close search handle\n");
 	}
 	list->QuickSortStringList(list,num);
 	return true;
 }
 
+
+/*
+===========================================
+Check if given directoy exists
+===========================================
+*/
+bool CFileSystem::PathExists(const char *path)
+{
+	WIN32_FIND_DATA	finddata;
+	HANDLE hsearch = FindFirstFile(path,&finddata);
+	if(hsearch == INVALID_HANDLE_VALUE)
+		return false;
+
+	if(FindClose(hsearch) == FALSE)
+		ComPrintf("CFileSystem::PathExists:Unable to close search handle\n");
+	return true;
+}
 
 /*
 ===========================================
@@ -508,12 +408,12 @@ will point to the real dir containing the
 archive
 ===========================================
 */
-void CFileManager::AddSearchPath(const char * path, CArchive * archive)
+void CFileSystem::AddSearchPath(const char * path, CArchive * archive)
 {
 	strcpy(m_lastpath->path, path);
 	m_lastpath->archive = archive;	//Will be zero, if a real dir was added
 
-	CSearchPath * newpath = new CSearchPath();
+	SearchPath_t * newpath = new SearchPath_t();
 	newpath->prev = m_lastpath;
 	m_lastpath = newpath;
 }
@@ -524,16 +424,16 @@ Remove Any SearchPaths
 archives, or real dirs, that are in this path
 ===========================================
 */
-void CFileManager::RemoveSearchPath(const char *path)
+void CFileSystem::RemoveSearchPath(const char *path)
 {
-	CSearchPath * iterator = m_lastpath;
+	SearchPath_t * iterator = m_lastpath;
 
 	while(iterator)
 	{
 		//remove this entry if matches
 		if(strcmp(iterator->path,path)==0)
 		{
-			CSearchPath * temp = iterator;
+			SearchPath_t * temp = iterator;
 			iterator = iterator->prev;
 			delete temp;
 			m_lastpath = iterator;
@@ -544,12 +444,26 @@ void CFileManager::RemoveSearchPath(const char *path)
 }
 
 /*
+===========================================
+Create a listing of files with the given
+characteristics
+===========================================
+*/
+int CFileSystem::FindFiles(CStringList *filelist,	//File List to fill
+							const char  *ext,		//Extension		  
+							const char  *path)		//Search in a specific path
+{
+	return 0;
+}
+
+
+/*
 ==========================================
 Compare file Extensions
 return true if equa
 ==========================================
 */
-bool CFileManager::CompareExts(const char *file, const char *ext)		
+bool CFileSystem::CompareExts(const char *file, const char *ext)		
 {
 	const char *p = file;
 	while(*p && *p!='.' && *p!='\0')
@@ -569,6 +483,56 @@ bool CFileManager::CompareExts(const char *file, const char *ext)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*	
 	//Returns a filelisting matching the criteria	
 	int FindFiles(CStringList *filelist,		//File List to fill
@@ -576,9 +540,34 @@ bool CFileManager::CompareExts(const char *file, const char *ext)
 				  const char  *path=0);			//Search in a specific path
 */
 
-
-
-
+/*
+===========================================
+Reinits the file system, then adds the new game dir
+===========================================
+*/
+/*
+bool CFileSystem::ChangeGameDir(const char *dir)
+{
+	//Remove all search paths associated with the current game dir
+	//including the archive files
+	SearchPath_t * iterator = m_lastpath;
+	while(iterator)
+	{
+		//remove this entry if it doesnt match the base dir
+		if(strcmp(iterator->path,m_basedir))
+		{
+			SearchPath_t * temp = iterator;
+			iterator = iterator->prev;
+			delete temp;
+			m_lastpath = iterator;
+		}
+		else
+			iterator = iterator->prev;
+	}
+	//Now add the new dir
+	return AddGameDir(dir);
+}
+*/
 
 
 #if 0
@@ -592,7 +581,7 @@ Returns a filelisting matching the criteria
 ===========================================
 */
 
-int CFileManager::FindFiles(CFileList  *filelist,			//File List to fill
+int CFileSystem::FindFiles(CFileList  *filelist,			//File List to fill
 							const char *ext,				//extension
 							const char *path)				//Search in a specific path
 {
@@ -620,7 +609,7 @@ int CFileManager::FindFiles(CFileList  *filelist,			//File List to fill
 
 		if(!dir)
 		{
-			ComPrintf("CFileManager::FindFiles: Invalid Path\n");
+			ComPrintf("CFileSystem::FindFiles: Invalid Path\n");
 			return 0;
 		}
 
@@ -646,7 +635,7 @@ int CFileManager::FindFiles(CFileList  *filelist,			//File List to fill
 
 ===========================================
 */
-CFileList * CFileManager::BuildSearchList(const CDirectory * dir, CFileList * list,
+CFileList * CFileSystem::BuildSearchList(const CDirectory * dir, CFileList * list,
 										  const char * ext, int &numfiles)
 {
 	CFileList * fl = list;
@@ -673,6 +662,7 @@ CFileList * CFileManager::BuildSearchList(const CDirectory * dir, CFileList * li
 
 
 
+
 #if 0
 
 /*
@@ -680,7 +670,7 @@ CFileList * CFileManager::BuildSearchList(const CDirectory * dir, CFileList * li
 QuickSorts the String list of files
 ===========================================
 */
-void CFileManager::QuickSortStringList(CStringList * const list,const int numitems)
+void CFileSystem::QuickSortStringList(CStringList * const list,const int numitems)
 {
 	if(numitems < 2)
 		return;
@@ -741,6 +731,5 @@ void CFileManager::QuickSortStringList(CStringList * const list,const int numite
 
 
 #endif
-
 
 

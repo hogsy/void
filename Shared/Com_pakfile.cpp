@@ -1,8 +1,8 @@
 #include "Com_pakfile.h"
 
-
 //======================================================================================
 //Private definations
+//======================================================================================
 
 #define PAKENTRYSIZE	64
 
@@ -14,7 +14,17 @@ typedef struct
 	int		dirlen;
 }PakHeader_t;
 
+
+struct CPakFile::PakEntry_t
+{
+	PakEntry_t() { filepos = filelen = 0; };
+	char filename[56];
+	long filepos, filelen;
+};
+
 //======================================================================================
+//======================================================================================
+
 /*
 ===========================================
 Constructor/Destructor
@@ -23,8 +33,8 @@ Constructor/Destructor
 CPakFile::CPakFile()
 {
 	m_fp = 0;
-	files = 0; 
-	numfiles = 0;
+	m_files = 0; 
+	m_numFiles = 0;
 }
 
 CPakFile::~CPakFile()
@@ -32,12 +42,12 @@ CPakFile::~CPakFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	for(int i=0;i<numfiles;i++)
+	for(int i=0;i<m_numFiles;i++)
 	{
-		delete files[i];
-		files[i] = 0;
+		delete m_files[i];
+		m_files[i] = 0;
 	}
-	delete [] files;
+	delete [] m_files;
 }
 
 /*
@@ -45,11 +55,11 @@ CPakFile::~CPakFile()
 Builds the filelist
 ===========================================
 */
-bool CPakFile::Init(const char * base, const char * archive)
+bool CPakFile::Init(const char * archivepath, const char * basepath)
 {
 	//Open File
 	char filepath[COM_MAXPATH];
-	sprintf(filepath,"%s/%s",base,archive);
+	sprintf(filepath,"%s/%s",basepath,archivepath);
 
 	m_fp = fopen(filepath,"r+b");
 	if(!m_fp)
@@ -61,7 +71,6 @@ bool CPakFile::Init(const char * base, const char * archive)
 	//Read Header
 	PakHeader_t phead;
 	fread(&phead,sizeof(PakHeader_t),1,m_fp);
-
 	//Verify id
 	if (phead.id[0] != 'P' || 
 		phead.id[1] != 'A' || 
@@ -73,56 +82,25 @@ bool CPakFile::Init(const char * base, const char * archive)
 		return false;
 	}
 
-	//Find num files, and alloc space
-	numfiles = phead.dirlen / PAKENTRYSIZE;
+	//Find num m_files, and alloc space
+	m_numFiles = phead.dirlen / PAKENTRYSIZE;
+
+	m_files = new PakEntry_t * [m_numFiles];
 
 	//Seek to the fileinfo offset
 	fseek(m_fp,	phead.dirofs, SEEK_SET);
 
-#if 0
-	//Copy to our list
-	CPtrList<CPakEntry> * filelist = new CPtrList<CPakEntry>;
-	CPtrList<CPakEntry> * iterator = filelist;
-	for(int i=0;i<numfiles;i++)
+	PakEntry_t * temp= 0;
+	for(int i= 0; i< m_numFiles;i++)
 	{
-		iterator->item = new CPakEntry();
-		fread(iterator->item, sizeof(CPakEntry),1,m_fp);
-		iterator->next = new CPtrList<CPakEntry>;
-		iterator = iterator->next;
+		temp = new PakEntry_t();
+		fread(temp,sizeof(PakEntry_t),1,m_fp);
+		m_files[i] = temp;
 	}
-	//Sort the List
-	QuickSortFileEntries(filelist,numfiles);
+	QuickSortFileEntries(m_files,m_numFiles);
 
-	//Copy to our array
-	files = new CPakEntry * [numfiles];
-	iterator = filelist;
-	for(i=0;i<numfiles;i++)
-	{
-		files[i] = iterator->item;
-		iterator->item = 0;
-		iterator = iterator->next;
-	}
-
-	iterator = 0;
-	delete filelist;
-
-#else		//This way seems faster
-	
-	CPakEntry * temp = 0;
-	files = new CPakEntry * [numfiles];
-	
-	for(int i= 0; i< numfiles;i++)
-	{
-		temp = new CPakEntry();
-		fread(temp,sizeof(CPakEntry),1,m_fp);
-		files[i] = temp;
-	}
-	QuickSortFileEntries(files,numfiles);
-
-#endif
-
-	strcpy(archivename,archive);
-	ComPrintf("%s, Added %d files\n", archivename,numfiles);
+	strcpy(m_archiveName,archivepath);
+	ComPrintf("%s, Added %d entries\n", m_archiveName,m_numFiles);
 	return true;
 }
 
@@ -133,19 +111,18 @@ this will have to use a custom memory manager later
 on to alloc the buffer for the file.
 ===========================================
 */
-long CPakFile::OpenFile(const char* path, byte ** buffer)
+long CPakFile::OpenFile(const char* filename, byte ** buffer)
 {
 	if(*buffer)
 	{
-		ComPrintf("CPakFile::OpenFile: Expecting empty file pointer %s\n", path);
+		ComPrintf("CPakFile::OpenFile: Expecting empty file pointer %s\n", filename);
 		return 0;
 	}
 	
-	CPakEntry *	entry;
+	PakEntry_t * entry=0;
 
-	if(BinarySearchForEntry(path,files,&entry,0,numfiles))
+	if(BinarySearchForEntry(filename,m_files,&entry,0,m_numFiles))
 	{
-		entry;
 		*buffer= new unsigned char [entry->filelen];
 		fseek(m_fp,entry->filepos,SEEK_SET);
 		fread(*buffer, entry->filelen, 1, m_fp);
@@ -153,7 +130,6 @@ long CPakFile::OpenFile(const char* path, byte ** buffer)
 	}
 	return 0;
 }
-
 
 /*
 ===========================================
@@ -164,41 +140,39 @@ bool CPakFile::GetFileList (CStringList * list)
 {
 	if(list)
 	{
-		ComPrintf("CPakFile::GetFileList: List needs to be deleted!, %s\n", archivename);
+		ComPrintf("CPakFile::GetFileList: List needs to be deleted!, %s\n", m_archiveName);
 		return false;
 	}
 	
-	if(!files)
+	if(!m_files)
 		return false;
 
 	list = new CStringList;
 	CStringList  *iterator = list;
 
-	for(int i = 0; i< numfiles; i++)
+	for(int i = 0; i< m_numFiles; i++)
 	{
-		strcpy(iterator->string,files[i]->filename);
+		strcpy(iterator->string,m_files[i]->filename);
 		
 		iterator->next = new CStringList;
 		iterator = iterator->next;
 	}
-	return false;
+	return true;
 }
-
 
 /*
 ===========================================
-Print List of files
+Print List of m_files
 ===========================================
 */
 void CPakFile::ListFiles()
 {
-	if(!files)
+	if(!m_files)
 		return;
 
-	for(int i=0;i< numfiles;i++)
-		ComPrintf("%s\n",files[i]->filename);
+	for(int i=0;i< m_numFiles;i++)
+		ComPrintf("%s\n",m_files[i]->filename);
 }
-
 
 /*
 ===========================================
@@ -206,7 +180,7 @@ QuickSort PakEntry array
 ===========================================
 */
 
-void CPakFile::QuickSortFileEntries(CPakEntry ** list, const int numitems)
+void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
 {
 	if(numitems < 2)
 		return;
@@ -214,7 +188,7 @@ void CPakFile::QuickSortFileEntries(CPakEntry ** list, const int numitems)
 	int maxindex = numitems-1;
 	int left=0;
 	int right = maxindex; 
-	CPakEntry ** sorted = new CPakEntry * [numitems];
+	PakEntry_t ** sorted = new PakEntry_t * [numitems];
 
 	for(int i=1,comp=0;i<=maxindex;i++)
 	{
@@ -247,70 +221,6 @@ void CPakFile::QuickSortFileEntries(CPakEntry ** list, const int numitems)
 	delete [] sorted;
 }
 
-
-/*
-===========================================
-QuickSorts PtrLst of CPakEntry pointers
-===========================================
-*/
-void CPakFile::QuickSortFileEntries(CPtrList<CPakEntry> * list, const int numitems)
-{
-	if(numitems < 2)
-		return;
-
-	CPtrList<CPakEntry> * sorted = new CPtrList<CPakEntry>[numitems];	//dest array
-	CPtrList<CPakEntry> * pivot = list;									//let the first one be the pivot
-	CPtrList<CPakEntry> * iterator = list->next;					
-	
-	int maxindex = numitems-1;
-	int left=0;
-	int right = maxindex; 
-	
-	//loop one less time since the first item is the pivot
-	for(int i=0,comp=0;i<maxindex;i++)
-	{
-		comp = _stricmp(iterator->item->filename,pivot->item->filename);
-		
-		if(comp < 0)
-		{
-			sorted[left].item = iterator->item;
-			sorted[left].next = &sorted[(left+1)];
-			left++;
-		}
-		else if(comp >= 0)
-		{
-			sorted[right].item = iterator->item;
-			sorted[(right-1)].next = &sorted[right];
-			right--;
-		}
-		iterator = iterator->next;
-	}
-	
-	//Copy the pivot point in the empty space
-	sorted[left].item = pivot->item;
-	if(right == maxindex)
-		sorted[left].next = 0;
-	else
-		sorted[left].next = &sorted[(left+1)];
-		
-	if(left > 1) 
-		QuickSortFileEntries(sorted,left);								
-	if((numitems - (right+1)) > 1)
-		QuickSortFileEntries(&sorted[left+1],(numitems - (right+1)));		//starting from the one right after the pivot
-	
-	//List is sorted, copy into return filelist now
-	//everything is sorted now copy it over
-	iterator = list;
-	for(i=0;i<numitems;i++)
-	{
-		iterator->item = sorted[i].item;
-		iterator=iterator->next;
-		sorted[i].next = 0;						//get rid of the links so we dont have problems deleting the array
-		sorted[i].item = 0;
-	}
-	delete [] sorted;
-}
-
 /*
 ===========================================
 Searches for PakEntry 
@@ -318,8 +228,8 @@ sets pointer, and returns true if finds it
 ===========================================
 */
 bool CPakFile::BinarySearchForEntry(const char *name,	
-									CPakEntry ** array, 
-									CPakEntry ** item,
+									PakEntry_t ** array, 
+									PakEntry_t ** item,
 									int low, int high)
 {
 	//Array doenst have any items

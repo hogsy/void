@@ -1,20 +1,21 @@
-#include "Com_file.h"
+#include "Com_fs.h"
+
+CFileSystem * CFileReader::m_pFileSystem=0;
 
 /*
 ==========================================
 Constructor and Destructor
 ==========================================
 */
-CFile::CFile()
+CFileReader::CFileReader()
 {
 	m_filename = 0;
 	m_curpos = 0;
 	m_size = 0;
-	
 	m_buffer = 0;
 }
 
-CFile::~CFile()
+CFileReader::~CFileReader()
 {	
 	//None of these conditions should ever be met
 	if(m_filename)
@@ -28,35 +29,75 @@ CFile::~CFile()
 Is the File open ?
 =====================================
 */
-bool CFile::isOpen()
-{
+bool CFileReader::isOpen()
+{	
 	if(m_buffer)
 		return true;
 	return false;
 }
 
+/*
+=====================================
+Open the requested file
+=====================================
+*/
+bool CFileReader::Open(const char * ifilename)
+{
+	int size = m_pFileSystem->LoadFile(&m_buffer,ifilename);
+	//File opened successfully
+	if(size)
+	{
+		m_size = size;
+		m_curpos = 0;
+		m_filename = new char[strlen(ifilename)+1];
+		strcpy(m_filename, ifilename);
+		return true;
+	}
+	return false;
+}
+
+/*
+=====================================
+Close file
+=====================================
+*/
+bool CFileReader::Close()
+{
+	if(m_buffer)
+	{
+		delete [] m_buffer;
+		m_buffer = 0;
+	}
+	if(m_filename)
+	{
+		delete m_filename;
+		m_filename = 0;
+	}
+	m_curpos = 0;
+	m_size = 0;	
+	return true;
+}
 
 /*
 ===========================================
-Read func
+Read items of given size of given count
+into given buffer
 ===========================================
 */
-ulong CFile::Read(void *buf,const ulong &size, const ulong &num)
+ulong CFileReader::Read(void *buf,const ulong &size, const ulong &count)
 {
-	//Otherwise use the buffer
-	if(!buf || !size || !num)
+	if(!buf || !size || !count)
 	{
-		ComPrintf("CFile::Read:Invalid parameters :%s\n",m_filename);
+		ComPrintf("CFileReader::Read: Invalid parameters :%s\n",m_filename);
 		return 0;
 	}
 	
-	unsigned long bytes_req = size * num;
-	if(bytes_req > (m_size - m_curpos))
+	unsigned long bytes_req = size * count;
+	if(m_curpos + bytes_req > m_size)
 	{
-		ComPrintf("CFile::Read:File doesn't contain requested data from current offset: %s\n",m_filename);
+		ComPrintf("CFileReader::Read: File doesn't contain requested data from current offset: %s\n",m_filename);
 		bytes_req = m_size - m_curpos;
 	}
-
 	memcpy(buf,m_buffer+m_curpos,bytes_req);
 	m_curpos += (bytes_req);
 	return bytes_req;
@@ -67,12 +108,12 @@ ulong CFile::Read(void *buf,const ulong &size, const ulong &num)
 Get current character
 ===========================================
 */
-int CFile::GetChar()
+int CFileReader::GetChar()
 {
 	if((m_curpos +1) >= m_size)
 	{
-		ComPrintf("CFile::GetByte:EOF reached: %s\n",m_filename);
-		return -1; //(EOF)
+		ComPrintf("CFileReader::GetByte:EOF reached: %s\n",m_filename);
+		return -1;
 	}
 	return (m_buffer[m_curpos++]);
 }
@@ -82,25 +123,31 @@ int CFile::GetChar()
 Seek to end/start, certain offset
 ===========================================
 */
-bool CFile::Seek(const ulong &offset,  const int   &origin)
+bool CFileReader::Seek(const ulong &offset, EFilePos origin)
 {
 	switch(origin)
 	{
-	case SEEK_SET:
+	case EFILE_START:
 		if(offset > m_size)
 			return false;
 		m_curpos = offset;
 		return true;
-	case SEEK_CUR:
+	case EFILE_CUR:
 		if(m_curpos + offset > m_size)
 			return false;
 		m_curpos += offset;
 		return true;
-	case SEEK_END:
+	case EFILE_END:
 		if(offset > m_size)
 			return false;
 		m_curpos = m_size - offset;
 		return true;
 	}
 	return false;
+}
+
+
+
+int CFileReader::LoadFile(void **buf, const char * ifilename)
+{	return m_pFileSystem->LoadFile((byte**)buf,ifilename);
 }

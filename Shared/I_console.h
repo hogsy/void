@@ -10,6 +10,10 @@ Exe Console Interface
 */
 struct I_ExeConsole
 {
+	//Print Functions
+	virtual void dprint(char* text)=0;
+
+	//Cvar Registrations
 	virtual void RegisterCVar( CVar **cvar, 
 							  const char *varname, 
 							  const char *varval,		//scanned to sting/float/int 
@@ -19,8 +23,12 @@ struct I_ExeConsole
 	
 	virtual void RegisterCFunc(const char *funcname,
 							  CFUNC pfunc)=0;
-	//Print Functions
-	virtual void dprint(char* text)=0;
+
+	virtual void CVarSet(CVar **cvar, const char *varval)=0;
+	virtual void CVarForceSet(CVar **cvar, const char *varval)=0;
+
+	virtual void CVarSet(CVar **cvar, float val)=0;
+	virtual void CVarForceSet(CVar **cvar, float val)=0;
 };
 
 

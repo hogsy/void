@@ -3,7 +3,7 @@
 
 #include "Com_file.h"
 
-bool LoadQuakeBSPTextures(CFile *file);
+bool LoadQuakeBSPTextures(CFileReader *file);
 
 
 #endif

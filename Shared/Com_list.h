@@ -20,14 +20,18 @@ public:
 };
 
 
+/*
+===========================================
+Similar to above, but "items" are not deleted
+===========================================
+*/
 template <class T> class CPRefList
 {
 public:
-	CPRefList()  { next = 0; item = 0; }
-	~CPRefList() { item = 0;
-				   if(next) delete next; next = 0;
+	CPRefList() { next = 0; item = 0; }
+	~CPRefList(){ item = 0;
+				  if(next) delete next; next = 0; 
 				}
-
 	T * item;
 	CPRefList * next;
 };

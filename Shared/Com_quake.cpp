@@ -1,6 +1,102 @@
 #include "Com_quake.h"
 
 
+
+
+#if 0
+
+/*
+==============================================================================
+WAL texture file format
+==============================================================================
+*/
+
+#define	MIPLEVELS	4
+typedef struct miptex_s
+{
+	char		name[32];
+	unsigned	width, height;
+	unsigned	offsets[MIPLEVELS];		// four mip maps stored
+	char		animname[32];			// next frame in animation chain
+	int			flags;
+	int			contents;
+	int			value;
+} miptex_t;
+
+/*
+==========================================
+
+==========================================
+*/
+
+bool WriteTGAfromWal(CFileReader *file)
+{
+	CImageData image;
+	
+	long	size=0;
+	char	walname[32];
+	unsigned mip_offset[4];
+
+	FILE * fp  = file->GetFp();
+	
+	if(fp== NULL)
+	{
+		cout<<"Couldnt read file\n";
+		return false;
+	}
+
+	long pos = ftell(fp);
+	fseek(fp,0,SEEK_END);
+	size = ftell(fp);
+
+	cout<<"File size = "<< size <<" bytes"<<endl;
+
+	fseek(fp,0,SEEK_SET);
+	fread(walname,1,32,fp);
+
+	cout<<"Wal name = "<< walname <<endl;
+
+
+	fread(&image.width,sizeof(int),1,fp);
+	fread(&image.height,sizeof(int),1,fp);
+	cout<<"Wal width = "<< image.width << endl;
+	cout<<"Wal height = "<< image.height << endl;
+
+	mip_offset[0]=0;
+	mip_offset[1]=0;
+	mip_offset[2]=0;
+	mip_offset[3]=0;
+
+	fread(mip_offset,sizeof(int),4,fp);
+
+
+	int mips_size = (image.width*image.height) + (image.width*image.height/4) +
+                    (image.width*image.height/16) + (image.width*image.height/64);
+
+	cout<<"Mips size [0] = "<< mip_offset[0] << endl;
+	cout<<"Mips size [1] = "<< mip_offset[1] << endl;
+	cout<<"Mips size [2] = "<< mip_offset[2] << endl;
+	cout<<"Mips size [3] = "<< mip_offset[3] << endl;
+	cout<<"Mips size = "<< mips_size << endl;
+
+	//ignore everything else and seek to the mip offset
+
+	fseek(fp,mip_offset[0],SEEK_SET);
+
+	image.data = new unsigned char[(image.width*image.height)];
+	fread(image.data,1,(image.width*image.height),fp);
+	
+	if(!WriteTGAFromWal(file->filename,&image)) //width,height,image))
+		cout<<"error writing tga"<<endl;
+
+	file->Close();
+	return true;
+}
+
+
+#endif
+
+
 #if 0
 /*
 ==============================================================================
@@ -61,7 +157,7 @@ typedef struct                 // Mip Texture
 
 ==========================================
 */
-bool LoadQuakeBSPTextures(CFile *file)
+bool LoadQuakeBSPTextures(CFileReader *file)
 {
 	if(!file)
 	{

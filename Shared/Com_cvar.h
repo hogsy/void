@@ -1,5 +1,5 @@
-#ifndef _VOID_CVARS_AND_CMDS_
-#define _VOID_CVARS_AND_CMDS_
+#ifndef VOID_CVARS_AND_CMDS
+#define VOID_CVARS_AND_CMDS
 
 #include "Com_defs.h"
 
@@ -7,7 +7,7 @@
 
 #define MAX_CVARSTRING_LEN	512
 
-class CVar;
+struct CVar;
 
 //validation func, cvar is only updated if this returns true
 typedef bool (*CVAR_FUNC)(const CVar *, int,  char**);	
@@ -15,10 +15,8 @@ typedef void (*CFUNC)(int,  char**);
 
 //==============================================================
 
-class CVar
+struct CVar
 {
-public:
-
 	enum CVarFlags
 	{
 		CVAR_ARCHIVE = 1,
@@ -35,26 +33,6 @@ public:
 		CVAR_BOOL
 	};
 
-	
-	CVar(const char *varname, 
-		 const char *varval,
-		 CVarType vartype,
-		 int varflags,
-		 CVAR_FUNC varfunc=0);
-
-	~CVar();
-
-	//Utility functions, use these to change cvar data
-	void Set(const char *varstring);
-	void Set(const float val);
-	void ForceSet(const char *varstring);
-	void ForceSet(const float val);
-
-/*
-	std::string name;
-	std::string str;
-	std::string latched_str;
-*/
 	char * name;
 	char * string;
 	char * latched_string;
@@ -64,18 +42,41 @@ public:
 	int			flags;		//CVar characteristics
 	CVarType	type;
 	CVAR_FUNC	func;		//Functions pointer to Custom Cvar func
+
+
+	CVar()
+	{
+		name = string = default_string = latched_string = 0;
+		value = 0.0f;
+		flags = 0;
+		type = CVAR_UNDEFINED;
+		func = 0;
+	}
+
+	~CVar()
+	{	func = 0;
+		if(name)   delete [] name; name = 0;
+		if(string) delete [] string; string = 0;
+		if(default_string) delete [] default_string; default_string = 0;
+		if(latched_string) delete [] latched_string; latched_string = 0;
+	}
 };
 
 
 //==============================================================
 
-class CFunc
+struct CFunc
 {
-public:
-	CFunc(const char *inname, CFUNC infunc);
-	~CFunc();
+	CFunc()
+	{	name = 0;
+		func = 0;
+	}
+	
+	~CFunc()
+	{	if(name) delete [] name;name = 0;
+		func = 0;
+	}
 
-//	std::string name;
 	char *	name;
 	CFUNC	func;
 };
