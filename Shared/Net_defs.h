@@ -68,6 +68,35 @@ const byte SV_RECONNECT		= 10;	// Server is changing maps, tell all clients to r
 Other common definitions
 ======================================================================================
 */
+
+/*
+======================================
+Stats of a Network comm channel
+======================================
+*/
+struct NetChanState
+{
+	NetChanState() { Reset(); }
+	void Reset() 
+	{
+		inMsgId = inAckedId = outMsgId = lastOutReliableId = 0;
+		dropCount = goodCount = numChokes = 0;
+	}
+
+	uint	inMsgId;				//Latest incoming messageId
+	uint	inAckedId;				//Latest remotely acked message.
+	uint	outMsgId;				//Outgoing messageId
+	uint	lastOutReliableId;		//Id of the last reliable message sent
+	int		dropCount;
+	int		goodCount;
+	int		numChokes;
+};
+
+/*
+======================================
+Network Client states
+======================================
+*/
 enum
 {	CL_FREE = 0,		//nothing doing. can be used
 	CL_INUSE = 1,		//trying to connect
@@ -75,13 +104,23 @@ enum
 	CL_SPAWNED = 4		//in game
 };
 
-
+/*
+======================================
+The Network library needs access to
+game/frame time variables
+======================================
+*/
 namespace System
 {
 	extern float	g_fframeTime;		//Frametime
 	extern float	g_fcurTime;			//Current Timer
 }
 
+/*
+======================================
+Other misc shared definitions
+======================================
+*/
 const char szWORLDDIR[]     = "Worlds/";
 
 const int  SV_DEFAULT_PORT = 20010;

@@ -1,9 +1,8 @@
 #ifndef VOID_CLIENT_NETHANDLER
 #define VOID_CLIENT_NETHANDLER
 
-#include "Net_defs.h"
-//#include "Net_chan.h"
 #include "Com_buffer.h"
+#include "Net_defs.h"
 
 //======================================================================================
 //======================================================================================
@@ -48,14 +47,24 @@ struct I_ClientNetHandler
 	virtual const ClUserInfo & GetUserInfo() const = 0;
 };
 
+
+/*
+======================================
+Internal Class declarations
+======================================
+*/
+namespace VoidNet
+{
+	class CNetSocket;
+	class CNetChan;
+}
+
 /*
 ======================================
 Responsible for handling all 
 network communication for the client
 ======================================
 */
-class CNetSocket;
-
 class CNetClient
 {
 public:
@@ -79,11 +88,11 @@ public:
 	CBuffer & GetReliableBuffer() { return m_backBuffer; }
 
 	//Access outgoing message buffer
-	CBuffer & GetSendBuffer() { return m_netChan.m_buffer; }
+	CBuffer & GetSendBuffer();
 	
-	void SetRate(int rate);			
+	void SetRate(int rate);
+	const NetChanState & GetChanState() const;
 
-	const CNetChan & GetChan() const { return m_netChan; }
 
 private:
 
@@ -94,27 +103,27 @@ private:
 	void SendChallengeReq();
 	void SendConnectReq();
 
-	CBuffer		m_buffer;
-	CBuffer		m_backBuffer;
+	I_ClientNetHandler  * m_pClient;
+	
+	VoidNet::CNetChan   * m_pNetChan;
+	VoidNet::CNetSocket * m_pSock;
 
-	CNetChan	m_netChan;
-	CNetSocket * m_pSock;
+	CBuffer	m_buffer;
+	CBuffer	m_backBuffer;
 	
-	char		m_szServerAddr[24];
-	bool		m_bLocalServer;
+	char	m_szServerAddr[24];
+	bool	m_bLocalServer;
 	
-	int			m_levelId;
-	int			m_challenge;
+	int		m_levelId;
+	int		m_challenge;
+
+	byte	m_spawnState;
+	int		m_netState;
 
 	//Flow Control for an Unspawned client
-	float		m_fNextSendTime;	//Next send time
-	int			m_numResends;		//Max number of resends
-	const char* m_szLastOOBMsg;		//Keep Track of the last OOB message sent
-	
-	byte		m_spawnState;
-	int			m_netState;
-
-	I_ClientNetHandler * m_pClient;
+	float	m_fNextSendTime;	//Next send time
+	int		m_numResends;		//Max number of resends
+	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
 };
 
 #endif

@@ -1,16 +1,7 @@
-#ifndef  VOID_NET_SERVER
-#define  VOID_NET_SERVER
+#ifndef  VOID_NETWORK_SERVER
+#define  VOID_NETWORK_SERVER
 
 #include "Com_buffer.h"
-
-/*
-======================================
-These should be called by the main application
-======================================
-*/
-bool InitNetwork();
-void ShutdownNetwork();
-
 
 /*
 ======================================
@@ -42,20 +33,31 @@ struct ServerState
 	char	gameName[32];	//Game name
 };
 
-/*
-======================================
-The NETWORK server.
-Engine should subclass this
-======================================
-*/
-class CNetSocket;
+
+//Predeclarations
+namespace VoidNet 
+{	class CNetSocket;
+}
+//FIXME : this should be changed 
+//to a base GameClient so that the game
+//code can access is
 class SVClient;
 
+/*
+======================================
+The Server class in the Exe code should
+subclass this
+======================================
+*/
 class CNetServer
 {
 public:
 	CNetServer();
 	virtual ~CNetServer();
+
+	//Call these on Application Startup/Shutdown
+	static bool InitNetwork();
+	static void ShutdownNetwork();
 
 protected:
 
@@ -66,6 +68,7 @@ protected:
 		MAX_CLIENTS = 16
 	};
 
+	//Server Init/Shutdown/Restart
 	bool NetInit();
 	void NetShutdown();
 	void NetRestart();
@@ -102,40 +105,26 @@ protected:
 	//Server Statue
 	ServerState m_svState;
 
-	//Total clients
-	SVClient *	m_clients; //[MAX_CLIENTS];
+	//Game clients
+	SVClient *	m_clients;
 
-	//Use to stores Entity baselines etc which
+	//Used to stores Entity baselines etc which
 	//are transmitted to the client on connection
 	int			m_numSignOnBuffers;
 	CBuffer		m_signOnBuf[MAX_SIGNONBUFFERS];
 
 private:
 
-/*
-	struct NetChallenge;
-	{
-		NetChallenge()	{ challenge = 0;	time = 0.0f;  }
-		CNetAddr	addr;
-		int			challenge;
-		float		time;
-	};
-	
-	NetChallenge  m_challenges[MAX_CHALLENGES];
-*/
-
 	struct NetChallenge;
 	NetChallenge  * m_challenges;
 
-
 	//private data
-	CNetSocket* m_pSock;
+	VoidNet::CNetSocket* m_pSock;
 
 	CBuffer		m_recvBuf;
 	CBuffer		m_sendBuf;
 	
 	char		m_printBuffer[512];
 };
-
 
 #endif
