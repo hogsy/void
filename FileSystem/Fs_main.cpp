@@ -11,7 +11,7 @@ Local vars
 static HFILE	* m_phMemfile=0;
 #endif
 
-static I_Console * m_pConsole = 0;
+I_Console    * m_pConsole = 0;
 CFileSystem  * g_pFileSystem = 0;
 
 /*
@@ -70,8 +70,7 @@ FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Console * pconsole)
 		g_pFileSystem = new CFileSystem();
 	m_pConsole = pconsole;
 	
-	m_pConsole->RegisterCFunc("fs_list",&CFuncListFiles);
-	
+//	m_pConsole->RegisterCFunc("fs_list",&CFuncListFiles);
 	return g_pFileSystem;
 }
 
@@ -105,5 +104,5 @@ void ComPrintf(char* text, ...)
 	vsprintf(buff, text, args);
 	va_end(args);
 
-	m_pConsole->dprint(buff);
+	m_pConsole->ConPrint(buff);
 }
