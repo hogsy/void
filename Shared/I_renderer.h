@@ -34,7 +34,6 @@ typedef struct RenderInfo_t
 		stencil = 0;
 		active = false;
 		ready = false;
-		fov = PI/2;
 		rflags = 0;
 	}
 
@@ -48,7 +47,6 @@ typedef struct RenderInfo_t
 	//==========================================
 	//Renderering Information
 	
-	float			fov;	//fov in radians
 	unsigned char	rflags;
 
 	unsigned int    width, 
