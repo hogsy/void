@@ -252,7 +252,7 @@ void ShowMessageBox(const char * str, const char *title)
 }
 
 
-char * GetWin32ErrorMessage(ulong msgId, char *buf, int buflen)
+char * GetWin32ErrorMessage(unsigned long msgId, char *buf, int buflen)
 {
 	if(FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS|FORMAT_MESSAGE_FROM_SYSTEM,
 					0, msgId,MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 

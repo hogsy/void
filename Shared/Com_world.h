@@ -27,7 +27,7 @@ public:
 									 const vector_t &mins, const vector_t &maxs);
 
 	void PrintInfo() const;
-	void WriteToFile();
+	bool WriteToFile(const char * szPath) const;
 
 	//Util Key Access funcs
 	int	  GetKeyInt(int ent, const char * keyName) const;
@@ -35,11 +35,8 @@ public:
 	float GetKeyFloat(int ent, const char * keyName) const;
 	const char* GetKeyString(int ent, const char * keyName) const;
 
-#ifdef _VLIGHT_
-	// functions needed by vlight
 	void DestroyLightData(void);
 	void SetLightData(unsigned char *data, int len, bspf_texdef_t *defs, int numdefs);
-#endif
 
 	//the world should be loaded and destroyed using these
 	static CWorld * CreateWorld(const char * szFileName);
@@ -84,9 +81,9 @@ private:
 	plane_t * Ray(int node, const vector_t &start, const vector_t &end, 
 				  float *endfrac, plane_t *lastplane);
 
-	static int  LoadLump(FILE * fp, int l, void **data);
 	static int  LoadLump(CFileStream &file, int l, void **data);
 	static void AddLump(FILE *f, bspf_header_t &header, int l, void *data, int size);
+
 
 	//Cached world data to prevent 
 	//the world from being loaded twice.
