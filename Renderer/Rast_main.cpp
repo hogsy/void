@@ -8,10 +8,13 @@
 // for sky texgen
 extern const CCamera * camera;
 
+
 float q2norms[] = 
 {
 #include "rast_norms.h"
 };
+
+
 
 /*
 =======================================
@@ -23,6 +26,14 @@ CRasterizer::CRasterizer()
 	mMaxElements = mNumElements = 0;
 	mMaxIndices = mNumIndices = 0;
 	mFirstIndex = mFirstElement = 0;
+
+	for (int i=0; i<MAX_ELEMENTS; i++)
+	{
+		mVerts[i].norm[0] = -1;
+		mVerts[i].norm[1] = 0;
+		mVerts[i].norm[2] = 0;
+	}
+
 
 	mColor = 0xffffffff;
 	mShader = NULL;
@@ -365,15 +376,10 @@ void CRasterizer::PolyNormalf(vector_t &norm)
 
 void CRasterizer::PolyNormali(byte i)
 {
-	if (i>162)
-		ComPrintf("shit\n");
-
 	int index = i*3;
 	mVerts[mNumElements].norm[0] = q2norms[index++];
 	mVerts[mNumElements].norm[1] = q2norms[index++];
 	mVerts[mNumElements].norm[2] = q2norms[index];
-
-
 }
 
 

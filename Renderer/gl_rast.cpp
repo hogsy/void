@@ -1040,12 +1040,14 @@ void COpenGLRast::LightSet(bool enable)
 			glLightfv(GL_LIGHT0+i, GL_POSITION, v);
 
 
+
 			vector_t color(mLights[i].color);
 			color.ColorNormalize();
 			float scale = dist / mLights[i].radius;
 			if (scale < 0) scale = 0;
 			if (scale > 1) scale = 1;
 			color.Scale(1-scale);
+
 
 			v[0] = color.x;
 			v[1] = color.y;

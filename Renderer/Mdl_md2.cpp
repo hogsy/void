@@ -109,7 +109,7 @@ void CModelMd2::LoadModel(I_FileReader * pFile, const char * szFileName)
 			frames[f][v].v.x = vertex[0]*scale.x + trans.x;
 			frames[f][v].v.y = vertex[1]*scale.y + trans.y;
 			frames[f][v].v.z = vertex[2]*scale.z + trans.z;
-			frames[f][v].norm= vertex[4];
+			frames[f][v].norm= vertex[3];
 		}
 	}
 
@@ -299,6 +299,8 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	int *ptr = (int*)cmds;
 	int i, num_cmds = *(int*)ptr;
 	model_glcmd_t *cmd;
+
+	// we'll save some time by not interpolating normals - it doesnt really have any visible artifacts
 
 	while (num_cmds)
 	{
