@@ -6,9 +6,15 @@
 //======================================================================================
 //======================================================================================
 
+//Pre-declarations
 class CVarBase;
-struct I_CVarHandler
-{	virtual bool HandleCVar(const CVarBase * cvar, const CParms &parms)=0;
+typedef int HCMD;
+
+//Handles console variables and commands
+struct I_ConHandler
+{
+	virtual void HandleCommand(HCMD cmdId, const CParms &parms) = 0;
+	virtual bool HandleCVar(const CVarBase * cvar, const CParms &parms) = 0;
 };
 
 //======================================================================================
@@ -67,19 +73,12 @@ protected:
 	char * default_string;
 
 	CVarType		type;
-	I_CVarHandler * handler;
+	I_ConHandler * handler;
 };
 
 
 //======================================================================================
 //======================================================================================
-
-typedef int HCMD;
-
-struct I_CmdHandler
-{	virtual void HandleCommand(HCMD cmdId, const CParms &parms)=0;
-};
-
 
 /*
 ==========================================
@@ -88,13 +87,18 @@ Console Interface
 */
 struct I_Console
 {
-	//Cvar Registrations
-	virtual void RegisterCVar(	CVarBase * var,				 //The Cvar being registered
-								I_CVarHandler * handler=0)=0;//Optional handler
+	//Cvar Registration
+	virtual void RegisterCVar(CVarBase * var,				 //The Cvar being registered
+							  I_ConHandler * handler=0)=0;	//Optional handler
 
-	virtual void RegisterCommand(const char *cmdname,		 //Command Name
-								HCMD id,					 //ID in the registering class
-								I_CmdHandler * handler)=0;	 //the class registering the command
+	//Con Command Registration
+	virtual void RegisterCommand(const char *cmdname,		//Command Name
+							  HCMD id,						//ID in the registering class
+							  I_ConHandler * handler)=0;	//the class registering the command
+
+	//Subsystem has restarted, unlatch its cvars
+	virtual void UnlatchCVars(I_ConHandler * handler)=0;
+
 	//Print Functions
 	virtual void ComPrint(char* text)=0;
 

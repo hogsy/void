@@ -23,7 +23,7 @@ maintains the Searchpaths with precedence
 ==========================================
 */
 
-class FILESYSTEM_API CFileSystem : public I_CmdHandler
+class FILESYSTEM_API CFileSystem : public I_ConHandler
 {
 public:
 	CFileSystem();
@@ -47,6 +47,7 @@ public:
 
 	//Handle Console Commands
 	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
 	//Finds the full file name and returns it
 	bool FindFileName(char * buf, int buflen, const char * path);
