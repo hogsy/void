@@ -8,10 +8,13 @@
 
 //Predeclarations
 struct world_t;
-struct EntClient;
 
-const int GAME_MAXENTITES= 1024;
-
+/*
+Entity "id" layout
+id 0 is worldspawn
+ids after that, upto MAX_ENTITIES can be used for game/map entities
+ids after that are used for clients
+*/
 
 /*
 ======================================
@@ -91,9 +94,8 @@ private:
 	
 	//=================================================
 
-	CNetServer	m_net;
 	ServerState m_svState;
-
+	CNetServer	m_net;
 	NetChanWriter & m_chanWriter;
 
 	//=================================================
@@ -109,13 +111,11 @@ private:
 	//Should be handled by the game Dll
 
 	//the first num MAXClient entities are reserved for clients
-
-	Entity   ** m_entities;
-
-	int			m_maxEntities;
-	int			m_numEntities;
-	int			m_numClients;
-
+	Entity    ** m_entity;
+	int			 m_maxEntities;
+	int			 m_numEntities;
+	
+	EntClient ** m_client;
 };
 
 

@@ -380,7 +380,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 			break;
 		}
 	case CMD_DISCONNECT:
-		m_pNetCl->Disconnect(true);
+		m_pNetCl->Disconnect(false);
 		break;
 	case CMD_RECONNECT:
 		m_pNetCl->Reconnect();

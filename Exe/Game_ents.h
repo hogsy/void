@@ -16,6 +16,7 @@ const int ENT_MAXSTRING = 128;
 const int ENT_MAXMESSAGE = 256;
 
 const int GAME_MAXCLIENTS = 16;
+const int GAME_MAXENTITES = 1024;
 
 /*
 ============================================================================
@@ -104,7 +105,7 @@ struct EntWorldSpawn : public Entity
 		gravity = 800;
 	}
 
-	virtual ~EntWorldSpawn();
+	virtual ~EntWorldSpawn() { }
 
 	char	message[ENT_MAXMESSAGE];
 	char    music[ENT_MAXSTRING];
@@ -127,6 +128,9 @@ struct EntClient : public Entity
 	virtual ~EntClient() { }
 
 	virtual bool WriteBaseline(CBuffer &buf) const
+	{
+		return Entity::WriteBaseline(buf);
+	}
 	
 	bool inUse;
 	char name[32];

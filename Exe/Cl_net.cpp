@@ -157,8 +157,6 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 				{
 					ComPrintf("Error reading Ent %d\n", id);
 					m_gameEnts[id].Reset();
-//					m_gameEnts[id].inUse = false;
-//					m_gameEnts[id].index = -1;
 					break;
 				}
 
@@ -186,11 +184,14 @@ Handle disconnect from server
 */
 void CClient::HandleDisconnect(bool listenserver)
 {
-	ComPrintf("CL: KILLING LOCAL SERVER\n");
+//	ComPrintf("CL: KILLING LOCAL SERVER\n");
 
 	//Kill server if local
 	if(listenserver)
+	{
+		ComPrintf("CL: KILLING LOCAL SERVER\n");
 		System::GetConsole()->ExecString("killserver");
+	}
 	UnloadWorld();
 }
 

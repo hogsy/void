@@ -29,16 +29,11 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 {
 	g_pServer = this;
 
+	m_entity = 0;
+	m_client = 0;
+
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
-
-	//Game
-	m_entities = new Entity * [GAME_MAXENTITES];
-	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
-	
-	m_maxEntities=0;
-	m_numEntities= 4;
-	m_numClients = 0;
 
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
@@ -73,12 +68,24 @@ CServer::~CServer()
 
 	Shutdown();
 
-	for(int i=0;i<GAME_MAXENTITES; i++)
+	if(m_entity)
 	{
-		if(m_entities[i]) 
-			delete m_entities[i];
+		for(int i=0;i<GAME_MAXENTITES; i++)
+		{
+			if(m_entity[i]) 
+				delete m_entity[i];
+		}
+		delete [] m_entity;
 	}
-	delete [] m_entities;
+	if(m_client)
+	{
+		for(int i=0;i<GAME_MAXCLIENTS; i++)
+		{
+			if(m_client[i]) 
+				delete m_client[i];
+		}
+		delete [] m_client;
+	}
 }
 
 
@@ -91,12 +98,24 @@ bool CServer::Init()
 {
 	if(!m_net.Init())
 		return false;
-
-	InitGame();
 	
 	//more initialization here ?
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 	m_active = true;
+
+	//Game
+	m_maxEntities=0;
+	m_numEntities= 0;
+//	m_numClients = 0;
+
+	m_entity = new Entity * [GAME_MAXENTITES];
+	memset(m_entity,0,(sizeof(Entity *) * GAME_MAXENTITES));
+
+	m_client = new EntClient * [GAME_MAXCLIENTS];
+	memset(m_client,0,(sizeof(EntClient*) * GAME_MAXCLIENTS));
+
+	InitGame();
+	
 	return true;
 }
 
@@ -116,7 +135,9 @@ void CServer::Shutdown()
 	m_svState.levelId = 0;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
 	m_active = false;
-	
+
+	//Destroy nonpersistant entities
+
 	//destroy world data
 	if(m_pWorld)
 		world_destroy(m_pWorld);
@@ -271,7 +292,6 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	{
 		buffer.Reset();
 		buffer.Write((short)i);
-		//buffer.Write(m_modelList[i].id);
 		buffer.Write(m_modelList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -300,7 +320,6 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	{
 		buffer.Reset();
 		buffer.Write((short)i);
-		//buffer.Write(m_soundList[i].id);
 		buffer.Write(m_soundList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -325,10 +344,11 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	//==================================
 	//Write entity baselines
 	numBufs = 0;
-	for(i=5; i<m_numEntities; i++)
+	for(i=0; i<m_numEntities; i++)
 	{
 		buffer.Reset();
-		if(!m_entities[i]->WriteBaseline(buffer))
+		if(!m_entity[i] || !m_entity[i]->WriteBaseline(buffer))
+//		if(!m_entities[i]->WriteBaseline(buffer))
 			continue;
 
 		//Check if the signOn buffer has space for this entity
@@ -451,13 +471,13 @@ void CServer::PrintServerStatus()
 	ComPrintf("Map name   : %s\n", m_svState.worldname);
 	ComPrintf("Map id     : %d\n", m_svState.levelId);
 
-	EntClient * client = 0;
+//	EntClient * client = 0;
 	for(int i=0; i<m_svState.maxClients; i++)
 	{
-		if(m_entities[i])
+		if(m_client[i])
 		{
-			client = reinterpret_cast<EntClient *>(m_entities[i]);
-			ComPrintf("%s:\n", client->name);
+//			client = reinterpret_cast<EntClient *>(m_entities[i]);
+			ComPrintf("%s:\n", m_client[i]->name);
 
 			const NetChanState & state = m_net.ChanGetState(i);
 			ComPrintf("  Rate:%d\n  In:%d\n  Acked:%d\n  Out:%d\n", 
@@ -615,21 +635,13 @@ bool CServer::SpawnEntity(CBuffer &buf)
 	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
 	if(ent)
 	{
-		m_entities[m_numEntities] = ent;
-		m_entities[m_numEntities]->num = m_numEntities;
+		m_entity[m_numEntities] = ent;
+		m_entity[m_numEntities]->num = m_numEntities;
 		m_numEntities++;
 		return true;
 	}
 	return false;
 }
-
-
-
-
-
-
-
-
 
 
 

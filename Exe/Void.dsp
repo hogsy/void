@@ -495,6 +495,14 @@ SOURCE=.\Game_ents.h
 SOURCE=.\I_game.h
 # End Source File
 # End Group
+# Begin Group "Client Game"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Clgame_defs.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\todo

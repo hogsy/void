@@ -12,7 +12,7 @@ Validate connection request from a client
 bool CServer::ValidateClConnection(int clNum, bool reconnect,
 									CBuffer &buffer)
 {
-	if(m_entities[clNum] && !reconnect)
+	if(m_client[clNum] && !reconnect)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
@@ -24,18 +24,18 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		return false;
 	}
 */
-	m_entities[clNum] = new EntClient();
-	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+	m_client[clNum] = new EntClient();
+//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
-	strcpy(client->name, buffer.ReadString());
+	strcpy(m_client[clNum]->name, buffer.ReadString());
 	m_net.ChanSetRate(clNum, buffer.ReadInt());
 	
-	client->inUse = true;
+	m_client[clNum]->inUse = true;
 
 	if(!reconnect)
 		m_svState.numClients++;
 
-	m_net.BroadcastPrintf("%s connected", client->name);
+	m_net.BroadcastPrintf("%s connected", m_client[clNum]->name);
 	return true;
 }
 
@@ -48,7 +48,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
-	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
 	switch(packetId)
 	{
@@ -61,7 +61,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			int len = strlen(msg);
 			msg[len] = 0;
 			len += 4;
-			len += strlen(client->name);
+			len += strlen(m_client[clNum]->name);
 			
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0;i<m_svState.maxClients;i++)
@@ -70,10 +70,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(i == clNum)
 					continue;
 
-				if(m_entities[i])
+				if(m_client[i]) //[i])
 				{
 					m_net.ChanBeginWrite(i,SV_TALK, len);
-					m_net.ChanWrite(client->name);
+					m_net.ChanWrite(m_client[clNum]->name);
 					m_net.ChanWrite(msg);
 					m_net.ChanFinishWrite();
 				}
@@ -87,13 +87,13 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			if(id == 'n')
 			{
 				const char * clname = buffer.ReadString();
-				m_net.BroadcastPrintf("%s renamed to %s", client->name, clname);
-				strcpy(client->name, clname);
+				m_net.BroadcastPrintf("%s renamed to %s", m_client[clNum]->name, clname);
+				strcpy(m_client[clNum]->name, clname);
 			}
 			else if (id == 'r')
 			{
 				int rate = buffer.ReadInt();
-ComPrintf("SV: %s changed rate to %d\n", client->name, rate);
+ComPrintf("SV: %s changed rate to %d\n", m_client[clNum]->name, rate);
 				m_net.ChanSetRate(clNum,rate);
 			}
 			break;
@@ -105,12 +105,12 @@ ComPrintf("SV: %s changed rate to %d\n", client->name, rate);
 		}
 	case CL_MOVE:
 		{
-			client->origin.x = buffer.ReadCoord();
-			client->origin.y = buffer.ReadCoord();
-			client->origin.z = buffer.ReadCoord();
-			client->angles.x = buffer.ReadAngle();
-			client->angles.y = buffer.ReadAngle();
-			client->angles.z = buffer.ReadAngle();
+			m_client[clNum]->origin.x = buffer.ReadCoord();
+			m_client[clNum]->origin.y = buffer.ReadCoord();
+			m_client[clNum]->origin.z = buffer.ReadCoord();
+			m_client[clNum]->angles.x = buffer.ReadAngle();
+			m_client[clNum]->angles.y = buffer.ReadAngle();
+			m_client[clNum]->angles.z = buffer.ReadAngle();
 			break;
 		}
 	}
@@ -123,23 +123,25 @@ Handle Client disconnection
 */
 void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 {
-	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 
 	switch(reason)
 	{
 	case CLIENT_QUIT:
-		m_net.BroadcastPrintf("%s disconnected", client->name);
+		m_net.BroadcastPrintf("%s disconnected", m_client[clNum]->name);
 		break;
 	case CLIENT_TIMEOUT:
-		m_net.BroadcastPrintf("%s timed out", client->name);
+		m_net.BroadcastPrintf("%s timed out", m_client[clNum]->name);
 		break;
 	case CLIENT_OVERFLOW:
-		m_net.BroadcastPrintf("%s overflowed", client->name);
+		m_net.BroadcastPrintf("%s overflowed", m_client[clNum]->name);
 		break;
 	}
 
-	delete client;
-	m_entities[clNum] = 0;
+//	delete client;
+//	m_entities[clNum] = 0;
+	delete m_client[clNum];
+	m_client[clNum] = 0;
 //	m_clients[clNum].inUse = false;
 	m_svState.numClients --;
 }
@@ -160,9 +162,9 @@ Handle Client spawning
 */
 void CServer::OnClientSpawn(int clNum)
 {
-	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
+//	EntClient * client = reinterpret_cast<EntClient *>(m_entities[clNum]);
 	//Check chanIds to see what client spawned
-	m_net.BroadcastPrintf("%s entered the game", client->name);
+	m_net.BroadcastPrintf("%s entered the game", m_client[clNum]->name);
 }
 
 /*
