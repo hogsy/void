@@ -276,7 +276,6 @@ void CServer::RunFrame()
 	{
 		m_fGameTime = System::GetCurTime() + GAME_FRAMETIME;
 		m_pGame->RunFrame(System::GetCurTime(), GAME_FRAMETIME);
-	}
 
 	//Write updates to all connected clients
 	for(int i=0;i<m_svState.maxClients;i++)
@@ -313,6 +312,8 @@ void CServer::RunFrame()
 			m_net.ChanWriteAngle(m_clients[j]->angles.z);
 			m_net.ChanFinishWrite();
 		}
+	}
+
 	}
 
 	//write to clients

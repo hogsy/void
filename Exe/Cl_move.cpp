@@ -70,7 +70,7 @@ float tiltStep = PI/500;
 void CGameClient::UpdateAngles(const vector_t &angles, float time)
 {
 	//Apply tilt
-	if(m_cmd.rightmove != 0)
+/*	if(m_cmd.rightmove != 0)
 	{
 		m_pGameClient->angles.ROLL += (m_cmd.rightmove * time * 0.01);
 		if(m_pGameClient->angles.ROLL > maxTilt)
@@ -95,7 +95,7 @@ void CGameClient::UpdateAngles(const vector_t &angles, float time)
 				m_pGameClient->angles.ROLL = 0;
 		}
 	}
-
+*/
 	m_pGameClient->angles.YAW += (angles.YAW * time);  
 	if (m_pGameClient->angles.YAW > PI)
 		m_pGameClient->angles.YAW -= 2*PI;
