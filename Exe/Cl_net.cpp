@@ -74,7 +74,6 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 			int  modelId=0;
 
 			int numModels = buffer.ReadInt();
-
 			ComPrintf("CL: ModelList :%d models\n", numModels);
 
 			for(int i=0; i<numModels;i++)
@@ -102,39 +101,46 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		}
 	case SVC_BASELINES:
 		{
-			int numEnts = buffer.ReadInt();
-			ComPrintf("CL: Baselines :%d entities\n", numEnts);
+			char  type = 0;
+			m_numEnts = 0;
+			int id = buffer.ReadShort();
 
-//			int index = 0;
+			while(id != -1)
+			{
+				m_gameEnts[id].origin.x = buffer.ReadCoord();
+				m_gameEnts[id].origin.y = buffer.ReadCoord();
+				m_gameEnts[id].origin.z = buffer.ReadCoord();
 
-			//parse entity baselines
-//			for(int i=0; i<numEnts; i++)
-//			{
-			int i = 0;
-				buffer.ReadInt();
-				buffer.ReadString();
+				m_gameEnts[id].angle.x = buffer.ReadAngle();
+				m_gameEnts[id].angle.y = buffer.ReadAngle();
+				m_gameEnts[id].angle.z = buffer.ReadAngle();
 
-				m_gameEnts[i].origin.x = buffer.ReadCoord();
-				m_gameEnts[i].origin.y = buffer.ReadCoord();
-				m_gameEnts[i].origin.z = buffer.ReadCoord();
+				type = buffer.ReadChar();
+							
+				if(type == 'm')
+				{
+					m_gameEnts[id].index = buffer.ReadShort();
+					m_gameEnts[id].skinnum = buffer.ReadShort();
+					m_gameEnts[id].frame = (float)buffer.ReadShort();
+				}
+				else
+				{
+					buffer.ReadShort();
+					buffer.ReadShort();
+					buffer.ReadShort();
+				}
 
-				m_gameEnts[i].angle.x = buffer.ReadAngle();
-				m_gameEnts[i].angle.y = buffer.ReadAngle();
-				m_gameEnts[i].angle.z = buffer.ReadAngle();
+				if(buffer.BadRead())
+				{
+					ComPrintf("Error reading Ent %d\n", id);
+					memset(&m_gameEnts[id],0, sizeof(R_EntState));
+					break;
+				}
+				m_numEnts ++;
+				id = buffer.ReadShort();
+			}
 
-				m_gameEnts[i].index = buffer.ReadInt();
-/*
-		buf.Write(num);
-		buf.Write(classname);
-		buf.WriteCoord(origin.x);
-		buf.WriteCoord(origin.y);
-		buf.WriteCoord(origin.z);
-		buf.WriteAngle(angles.x);
-		buf.WriteAngle(angles.y);
-		buf.WriteAngle(angles.z);
-*/
-//			}
-
+			ComPrintf("CL: Parsed %d entities\n", m_numEnts);
 			break;
 		}
 	case SVC_BEGIN:

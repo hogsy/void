@@ -5,6 +5,8 @@
 #include "Com_defs.h"
 #include "Com_buffer.h"
 
+#if 0
+
 const int ENT_MAXCLASSNAME = 32
 
 /*
@@ -91,5 +93,7 @@ struct I_GameServer
 	virtual void ClientDisconnect();
 };
 
+
+#endif
 
 #endif

@@ -29,6 +29,7 @@ struct R_EntState
 	monsters
 	static ents, no prediction
 
+const int MAX_CLIENTENTS = 1024;
 */
 
 const int MAX_CLIENTENTS = 1024;
@@ -144,6 +145,7 @@ private:
 	EntClient	m_gameClient;
 
 	R_EntState  m_gameEnts[MAX_CLIENTENTS];
+	int			m_numEnts;
 
 //	R_EntState  m_entQuad; //bah
 

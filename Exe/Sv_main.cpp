@@ -65,7 +65,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
-	
+
 	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
 	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
 	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
@@ -321,11 +321,11 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	//==================================
 	//Write entity baselines
 	numBufs = 0;
-	signOnBuf.entityList[0].Write(m_numEntities);
 	for(i=1; i<m_numEntities; i++)
 	{
 		buffer.Reset();
-		m_entities[i]->Write(buffer);
+		if(!m_entities[i]->WriteBaseline(buffer))
+			continue;
 
 		//Check if the signOn buffer has space for this entity
 		if(!signOnBuf.entityList[numBufs].HasSpace(buffer.GetSize()))
@@ -505,8 +505,6 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 	}
 }
 
-
-
 //======================================================================================
 //======================================================================================
 
@@ -613,8 +611,6 @@ bool CServer::SpawnEntity(CBuffer &buf)
 	{
 		m_entities[m_numEntities] = ent;
 		m_entities[m_numEntities]->num = m_numEntities;
-		m_entities[m_numEntities]->Initialize();
-
 		m_numEntities++;
 		return true;
 	}

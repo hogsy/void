@@ -15,22 +15,11 @@ const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;
 const int ENT_MAXMESSAGE = 256;
 
-enum EntType
-{
-	ENT_ITEM,
-	ENT_NPC,
-	ENT_WORLD,
-	ENT_CLIENT
-};
-
-
 /*
-======================================
-The base game entitiy. 
-can be subclasses for more specific stuff
-
-add all common parms we want to be baselined here
-======================================
+============================================================================
+The basic game entitiy. 
+This data will be propagated to connected clients
+============================================================================
 */
 struct Entity
 {
@@ -39,29 +28,63 @@ struct Entity
 		strcpy(classname, ename);
 		origin.x = origin.y = origin.z = 0.0f;
 		angles.x = angles.y = angles.z = 0.0f;
+
+		modelIndex = -1;
+		soundIndex = -1;
+
+		skinNum = frameNum = 0;
+		volume = attenuation = 0;
 	}
+	
 	virtual ~Entity() {}
 
-	
 	int			num;
+
 	char		classname[ENT_MAXCLASSNAME];
 	vector_t	origin;
 	vector_t	angles;
 
-	virtual void Write(CBuffer &buf) const
-	{
-		buf.Write(num);
-		buf.Write(classname);
-		buf.WriteCoord(origin.x);
-		buf.WriteCoord(origin.y);
-		buf.WriteCoord(origin.z);
-		buf.WriteAngle(angles.x);
-		buf.WriteAngle(angles.y);
-		buf.WriteAngle(angles.z);
-	}
+	int		    modelIndex;
+	int			skinNum;
+	int			frameNum;
 
-	//Register resources here
-	virtual void Initialize(){}
+	int			soundIndex;
+	int			volume;
+	int			attenuation;
+
+	bool WriteBaseline(CBuffer &buf) const
+	{
+		//we only write a baseline if the entity
+		//is using a model or soundIndex
+		if(modelIndex >= 0 || soundIndex >= 0)
+		{
+			buf.Write((short)num);
+			buf.WriteCoord(origin.x);
+			buf.WriteCoord(origin.y);
+			buf.WriteCoord(origin.z);
+			buf.WriteAngle(angles.x);
+			buf.WriteAngle(angles.y);
+			buf.WriteAngle(angles.z);
+
+			if(modelIndex >=0)
+			{
+				//set the highbit if its a modelindex
+				buf.Write('b');
+				buf.Write((short)modelIndex);
+				buf.Write((short)skinNum);
+				buf.Write((short)frameNum);
+			}
+			else
+			{
+				buf.Write('s');
+				buf.Write((short)soundIndex);
+				buf.Write((short)volume);
+				buf.Write((short)attenuation);
+			}
+			return true;
+		}
+		return false;
+	}
 };
 
 /*
@@ -71,6 +94,7 @@ WorldSpawn
 */
 struct EntWorldSpawn : public Entity
 {
+
 	EntWorldSpawn() : Entity("worldspawn")
 	{
 		memset(message,0,ENT_MAXMESSAGE);
@@ -78,66 +102,11 @@ struct EntWorldSpawn : public Entity
 		gravity = 800;
 	}
 
-	virtual void Write(CBuffer &buf) const {}
+//	virtual void Write(CBuffer &buf) const {}
 
 	char	message[ENT_MAXMESSAGE];
 	char    music[ENT_MAXSTRING];
 	int		gravity;
-};
-
-/*
-======================================
-Speaker
-======================================
-*/
-struct EntSpeaker : public Entity
-{
-	EntSpeaker(): Entity("target_speaker")
-	{
-		volume = 0;
-		attenuation = 0;
-
-		soundIndex = 0;
-		memset(soundName,0,ENT_MAXRESNAME);
-	}
-
-	virtual void Write(CBuffer &buf) const
-	{
-//		Entity::Write(buf);
-//		buf.Write(soundIndex);
-	}
-
-	int	 volume;
-	int  attenuation;
-	int  soundIndex;
-	char soundName[ENT_MAXRESNAME];
-	virtual void Initialize();
-
-};
-
-
-/*
-======================================
-EntWorldModel
-======================================
-*/
-struct EntWorldModel : public Entity
-{
-	EntWorldModel(): Entity("misc_model")
-	{	
-		modelIndex = 0;
-		memset(modelName,0,ENT_MAXRESNAME);
-	}
-
-	virtual void Write(CBuffer &buf) const
-	{
-		Entity::Write(buf);
-		buf.Write(modelIndex);
-	}
-
-	int  modelIndex;
-	char modelName[ENT_MAXRESNAME];
-	virtual void Initialize();
 };
 
 /*

@@ -28,7 +28,11 @@ CEntityMaker::CEntityMaker()
 	Entity * ent = 0;
 	entFields.push_back(KeyField("origin",(int)&(ent->origin), KEY_VECTOR));
 	entFields.push_back(KeyField("angles",(int)&(ent->angles), KEY_VECTOR));
+	entFields.push_back(KeyField("volume",(int)&(ent->volume), KEY_INT));
+	entFields.push_back(KeyField("attenuation",(int)&(ent->attenuation), KEY_INT));
 }
+
+//ntFields.push_back(KeyField("sound",(int)&(ent->soundName), KEY_STRING));
 
 /*
 ======================================
@@ -68,16 +72,20 @@ Every subclass should implement this
 */
 Entity * CEntityMaker::MakeEntity(const char * classname, CBuffer &parms) const 
 { 
-/*	Entity * ent = new Entity(classname);
+	Entity * ent = new Entity(classname);
 	char * key = parms.ReadString();
 	while(key && *key != 0)
 	{
-		ParseKey(ent,key,parms);
+//Handle resource Names differently
+		if(strcmp(key,"model")==0)
+			ent->modelIndex = g_pServer->RegisterModel(parms.ReadString());
+		else if(strcmp(key,"noise")==0)
+			ent->soundIndex = g_pServer->RegisterSound(parms.ReadString());
+		else
+			ParseKey(ent,key,parms);
 		key = parms.ReadString();
 	};
 	return ent; 
-*/
-	return 0;
 };
 
 /*
@@ -136,16 +144,18 @@ private:
 //======================================================================================
 //======================================================================================
 
+
 //Worldspawn spawner
 EntMaker <EntWorldSpawn> worldSpawnMaker("worldspawn");
 EntFields EntMaker<EntWorldSpawn,CEntityMaker>::entFields;
 
+/*
 EntMaker <EntSpeaker> speakerMaker("target_speaker");
 EntFields EntMaker<EntSpeaker>::entFields;
 
 EntMaker <EntWorldModel> miscModelMaker("misc_model");
 EntFields EntMaker<EntWorldModel>::entFields;
-
+*/
 
 
 void CServer::InitGame()
@@ -155,16 +165,17 @@ void CServer::InitGame()
 	EntMaker<EntWorldSpawn>::AddField(KeyField("music",(int)&(worldspawn->music), KEY_STRING));
 	EntMaker<EntWorldSpawn>::AddField(KeyField("gravity",(int)&(worldspawn->gravity), KEY_INT));
 
-	EntSpeaker * speaker = 0;
+/*	EntSpeaker * speaker = 0;
 	EntMaker<EntSpeaker>::AddField(KeyField("volume",(int)&(speaker->volume), KEY_INT));
 	EntMaker<EntSpeaker>::AddField(KeyField("attenuation",(int)&(speaker->attenuation), KEY_INT));
 	EntMaker<EntSpeaker>::AddField(KeyField("sound",(int)&(speaker->soundName), KEY_STRING));
 
 	EntWorldModel * miscModel = 0;
 	EntMaker<EntWorldModel>::AddField(KeyField("model",(int)&(miscModel->modelName), KEY_STRING));
+*/
 }
 
-
+/*
 void EntSpeaker::Initialize()
 {	soundIndex = g_pServer->RegisterSound(soundName);
 }
@@ -172,10 +183,80 @@ void EntSpeaker::Initialize()
 void EntWorldModel::Initialize()
 {	modelIndex = g_pServer->RegisterModel(modelName);
 }
+*/
+
+/*
+void Entity::Initialize()
+{
+}
+*/
 
 
 
 
+
+
+
+
+#if 0
+
+/*
+======================================
+Speaker
+======================================
+*/
+struct EntSpeaker : public Entity
+{
+	EntSpeaker(): Entity("target_speaker")
+	{
+		volume = 0;
+		attenuation = 0;
+
+		soundIndex = 0;
+		memset(soundName,0,ENT_MAXRESNAME);
+	}
+
+/*	virtual void Write(CBuffer &buf) const
+	{
+		Entity::Write(buf);
+		buf.Write(soundIndex);
+	}
+*/
+//	int	 volume;
+//	int  attenuation;
+//	int  soundIndex;
+	char soundName[ENT_MAXRESNAME];
+	virtual void Initialize();
+
+};
+
+
+/*
+======================================
+EntWorldModel
+======================================
+*/
+struct EntWorldModel : public Entity
+{
+	EntWorldModel(): Entity("misc_model")
+	{	
+		modelIndex = 0;
+		memset(modelName,0,ENT_MAXRESNAME);
+	}
+
+/*	virtual void Write(CBuffer &buf) const
+	{
+		Entity::Write(buf);
+		buf.Write(modelIndex);
+	}
+*/
+
+//	int  modelIndex;
+	char modelName[ENT_MAXRESNAME];
+//	virtual void Initialize();
+};
+
+#endif
 
 
 

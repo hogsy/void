@@ -2,6 +2,7 @@
 #define VOID_COM_KEYFIELDS
 
 #include "Com_buffer.h"
+#include "3dmath.h"
 
 /*
 ======================================================================================
@@ -64,32 +65,53 @@ struct KeyField
 	//Write Field value to given dest
 	static void ReadField(const KeyField &field, CBuffer &buf, byte * dest)
 	{
+		void * p = (void *)(dest + field.offset);
+
 		switch(field.type)
 		{
 		case KEY_BYTE:
-			break;
+			{
+				*(byte *)(p)= buf.ReadByte();
+				break;
+			}
 		case KEY_SHORT:
-			break;
+			{
+				*(short *)(p) = (short)atoi(buf.ReadString());
+				break;
+			}
 		case KEY_INT:
-			break;
+			{
+				*(int *)(p) = atoi(buf.ReadString());
+				break;
+			}
+		case KEY_FLOAT:
+			{
+				*(float *)(p) = atof(buf.ReadString());
+				break;
+			}
 		case KEY_VECTOR:
 			{
-
-
-//				char* CBuffer::ReadString(char delim)
-//				"origin" "344 824 8"
+				vector_t vec;
+				char * key = buf.ReadString();
+				sscanf(key,"%f %f %f", &vec.x, &vec.y, &vec.z);
+				(*((vector_t *)p)).x = vec.x;
+				(*((vector_t *)p)).y = vec.y;
+				(*((vector_t *)p)).z = vec.z;
+				break;
+			}
+		case KEY_ANGLE:
+			{
+				float f = atof(buf.ReadString());
+				(*((vector_t *)p)).x = 0;
+				(*((vector_t *)p)).y = f;
+				(*((vector_t *)p)).z = 0;
 				break;
 			}
 		case KEY_STRING:
 			{
-				void * p = (void *)(dest + field.offset);
 				strcpy((char*)p, buf.ReadString());
 				break;
 			}
-		case KEY_ANGLE:
-			break;
-		case KEY_FLOAT:
-			break;
 		}
 	}
 

@@ -104,11 +104,14 @@ void CBuffer::Write(const CBuffer & buffer)
 }
 
 void CBuffer::WriteAngle(float f)
-{	Write((int)(f*256/360) & 255);
+{	Write((byte) ((int)(f*256/360) & 255));
 }
 void CBuffer::WriteCoord(float f)
-{	Write((int)(f*8));
+{	Write((short) ((int)(f*8)));
 }
+
+
+
 
 void CBuffer::WriteData(byte * data, int len)
 {
