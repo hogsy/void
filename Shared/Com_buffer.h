@@ -11,8 +11,12 @@ Network buffer utility class
 class CNetBuffer
 {
 public:
+
 	CNetBuffer(int size);
 	~CNetBuffer();
+
+	CNetBuffer();
+	void Create(int size);
 
 	//Writing funcs
 	CNetBuffer & operator += (char c);

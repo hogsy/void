@@ -17,6 +17,29 @@ CNetBuffer::CNetBuffer(int size)
 	m_overFlowed = false;
 }
 
+CNetBuffer::CNetBuffer()
+{
+	m_curSize = 0;
+
+	m_readCount = 0;
+
+	m_badRead = false;
+	m_overFlowed = false;
+	
+	m_buffer = 0;
+	m_maxSize = 0;
+}
+
+void CNetBuffer::Create(int size)
+{
+	Reset();
+	if(m_buffer)
+		delete [] m_buffer;
+	m_buffer = new byte[size];
+	m_maxSize = size;
+}
+
+
 CNetBuffer::~CNetBuffer()
 {
 	if(m_buffer)
