@@ -2,7 +2,7 @@
 #include "In_hdr.h"
 #include "In_kb.h"
 #include "In_mouse.h"
-#include "Sys_cons.h"
+//#include "Sys_cons.h"
 
 //========================================================================================
 //========================================================================================
@@ -378,7 +378,8 @@ void In_DIErrorMessageBox(HRESULT err, char * msg)
 		case DI_POLLEDDEVICE: strcat(error,"POLLEDDEVICE"); break;
 		default: strcat(error,"UNKNOWNERROR");	break;
 	}
-	g_pConsole->MsgBox(error);
+//	g_pConsole->MsgBox(error);
+	Util::ShowMessageBox(error);
 }
 
 

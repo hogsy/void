@@ -145,14 +145,15 @@ void ConfirmDir(char* dir)
 	}
 }
 
+//======================================================================================
+//======================================================================================
 
 /*
 =======================================
-prints HR Error message
+prints HR message
 =======================================
 */
-void PrintErrorMessage( HRESULT hr, const char* str)
-
+void HRPrint( HRESULT hr, const char* str)
 {
 	void* pMsgBuf ;
  
@@ -181,7 +182,7 @@ void PrintErrorMessage( HRESULT hr, const char* str)
 Print HR error message box
 ==========================================
 */
-void ErrorMessageBox(HRESULT hr, const char* str)
+void HRShowMessageBox(HRESULT hr, const char* str)
 {
 	void* pMsgBuf ;
 	 
@@ -210,5 +211,71 @@ void ErrorMessageBox(HRESULT hr, const char* str)
 	LocalFree( pMsgBuf ) ;
 }
 
+/*
+==========================================
+Throw a messagebox
+==========================================
+*/
+void ShowMessageBox(const char * str, const char *title)
+{
+	if(!title)
+		MessageBox(0,str,"Error", MB_OK);
+	else
+		MessageBox(0,str,title, MB_OK);
+}
+
+
+/*
+======================================
+Buffer Parsing
+======================================
+*/
+
+int	BufParse(const char *string, //in
+			  char ** szargv)	 //out- arg list
+{
+	const char *p = string;
+	const char *last = string;
+	bool	inquotes=false;
+	int		numargs=0;
+	int		arglen=0;
+
+	//stuff enclosed in " " is treated as 1 arg
+	while((*p || *p=='\0') && numargs < 5) //BMAX_ARGS) FIXME !!
+	{
+		//are we in quotes
+		if(*p == '\"')
+		{
+			if(inquotes==false) 
+				inquotes=true;
+			else
+				inquotes=false;
+		}
+		else
+		{
+			if(((*p == ' ') && !(inquotes)) 	|| (*p == '\0'))
+			{
+				//FIXME !!
+				memset(szargv[numargs],0,80);//CON_MAXARGSIZE);
+				strncpy(szargv[numargs],last,arglen);
+				szargv[numargs][arglen] = '\0';
+				last = p;
+				last++;
+				arglen =0;
+				numargs++;
+
+				if(*p=='\0')
+					break;
+			}
+			else if(arglen <80) //CON_MAXARGSIZE) !!!!
+			{
+					arglen++;
+			}
+		}
+		p++;
+		
+	}
+	return numargs;
+}
 
 }

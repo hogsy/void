@@ -738,7 +738,7 @@ void CVoid::Error(char *error, ...)
 	va_start(args, error);
 	vsprintf(textBuffer, error, args);
 	va_end(args);
-	MessageBox(NULL, textBuffer, "Error", MB_OK);
+	Util::ShowMessageBox(textBuffer);
 
 	//Win32
 	PostMessage(System::GetHwnd(),	// handle of destination window 

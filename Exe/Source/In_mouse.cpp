@@ -28,21 +28,6 @@ static float	m_fXSens,
 				m_fYSens, 
 				m_fSens;
 //Console Vars
-/*
-static CVar		m_pVarXSens;
-static CVar		m_pVarYSens;
-static CVar		m_pVarSens;
-static CVar		m_pVarInvert;
-static CVar		m_pVarMode;
-static CVar 	m_pVarFilter;
-
-CVar	m_pVarXSens("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
-CVar	m_pVarYSens("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
-CVar	m_pVarSens ("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
-CVar	m_pVarInvert("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
-CVar	m_pVarMode("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-CVar 	m_pVarFilter("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE);
-*/
 
 //Other flags
 static bool		m_bExclusive;
@@ -74,18 +59,6 @@ static I_InCursorListener  * m_pCursorHandler=0;
 //Local function declarations
 //========================================================================================
 
-//update Mousestate object with latest info 
-
-
-//Console Variable Validation/Handler funcs
-/*
-static bool CXSens(const CVar * var, int argc, char** argv);
-static bool CYSens(const CVar * var, int argc, char** argv);
-static bool CSens(const CVar *var, int argc, char** argv);
-static bool CInvert(const CVar *var, int argc, char** argv);
-static bool CMouseMode(const CVar *var, int argc, char** argv);
-static bool CMouseFilter(const CVar *var, int argc, char** argv);
-*/
 
 //========================================================================================
 //Implementation
@@ -118,9 +91,9 @@ Constructor
 CMouse::CMouse() :	m_pVarXSens("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
 					m_pVarYSens("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
 					m_pVarSens ("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
-					m_pVarInvert("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE),
+					m_pVarInvert("m_invert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE),
 					m_pVarMode("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-					m_pVarFilter("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
+					m_pVarFilter("m_filter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
 {
 	m_pDIMouse = 0;
 	m_eMouseState = DEVNONE;
@@ -141,21 +114,6 @@ CMouse::CMouse() :	m_pVarXSens("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCH
 
 	SetCursorListener(this);
 
-/*	
-	m_pVarXSens = System::GetConsole()->RegisterCVar("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	m_pVarYSens = System::GetConsole()->RegisterCVar("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	m_pVarSens  = System::GetConsole()->RegisterCVar("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	m_pVarInvert= System::GetConsole()->RegisterCVar("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, this);
-	m_pVarMode  = System::GetConsole()->RegisterCVar("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, this);
-	m_pVarFilter= System::GetConsole()->RegisterCVar("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, this);
-*/
-/*	System::GetConsole()->RegisterCVar(&m_pVarXSens,"m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	System::GetConsole()->RegisterCVar(&m_pVarYSens,"m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	System::GetConsole()->RegisterCVar(&m_pVarSens,"m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
-	System::GetConsole()->RegisterCVar(&m_pVarInvert,"m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, this);
-	System::GetConsole()->RegisterCVar(&m_pVarMode,"m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, this);
-	System::GetConsole()->RegisterCVar(&m_pVarFilter,"m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, this);
-*/
 	System::GetConsole()->RegisterCVar(&m_pVarXSens,this);
 	System::GetConsole()->RegisterCVar(&m_pVarYSens,this);
 	System::GetConsole()->RegisterCVar(&m_pVarSens,this);

@@ -179,14 +179,6 @@ SOURCE=..\Shared\clip.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_buffer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_buffer.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File
@@ -199,10 +191,6 @@ SOURCE=..\Shared\Com_hunk.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_list.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_mem.cpp
 # End Source File
 # Begin Source File
@@ -212,10 +200,6 @@ SOURCE=..\Shared\Com_mem.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_parms.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_queue.h
 # End Source File
 # Begin Source File
 

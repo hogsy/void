@@ -13,6 +13,8 @@
   #define __VOIDALPHA	1
 //#define INCLUDE_MUSIC	1
 
+#pragma warning(disable : 4786)
+
 #include "Com_defs.h"
 #include "Com_mem.h"
 

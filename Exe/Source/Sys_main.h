@@ -2,8 +2,8 @@
 #define VOID_SYS_MAIN
 
 #include "Sys_hdr.h"
-#include "Sys_time.h"
 #include "I_renderer.h"
+#include "Sys_time.h"
 #include "Sys_exp.h"
 
 //========================================================================================
