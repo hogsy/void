@@ -1,0 +1,5 @@
+LIBRARY			vrender.dll
+DESCRIPTION		'provides interfaces to Voids rendering system
+EXPORTS
+				GetRendererAPI
+				FreeRenderer

@@ -1,0 +1,17 @@
+
+make the z window in zulu do something or get rid of it
+
+set hidden sector indices to 0
+
+grid snapping in zulu
+
+make a way to move textures
+
+fix model drawing - caching
+
+fix entity reloading in zulu
+
+rework handling of the sky textures and definition
+
+dont free / realloc mem when rebuilding world in zulu?
+
