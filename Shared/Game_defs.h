@@ -1,9 +1,7 @@
 #ifndef VOID_GAME_DEFS
 #define VOID_GAME_DEFS
 
-#include "Com_defs.h"
-#include "Com_vector.h"
-#include "Com_trace.h"
+struct I_World;
 
 /*
 ======================================

@@ -1,9 +1,6 @@
 #ifndef VOID_COM_BUFFER
 #define VOID_COM_BUFFER
 
-#include "Com_defs.h"
-
-
 /*
 ==========================================
 Network buffer utility class

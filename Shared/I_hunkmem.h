@@ -1,8 +1,6 @@
 #ifndef INC_HUNK_INTERFACE
 #define INC_HUNK_INTERFACE
 
-#include "Com_defs.h"
-
 /*
 ==========================================
 The Hunk Manager Interface

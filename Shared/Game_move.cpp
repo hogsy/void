@@ -1,3 +1,6 @@
+#include "Com_defs.h"
+#include "Com_vector.h"
+#include "Com_trace.h"
 #include "Game_defs.h"
 
 namespace 

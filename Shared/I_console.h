@@ -1,14 +1,12 @@
 #ifndef INC_CONSOLE_INTERFACE
 #define INC_CONSOLE_INTERFACE
 
-#include "Com_parms.h"
-
-//======================================================================================
-//======================================================================================
-
-//Pre-declarations
+//Forward -declarations
 class CVarBase;
+class CParms;
+
 typedef int HCMD;
+
 
 //Handles console variables and commands
 struct I_ConHandler

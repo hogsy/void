@@ -1,7 +1,6 @@
 #ifndef  VOID_NETWORK_SERVER
 #define  VOID_NETWORK_SERVER
 
-#include "Com_buffer.h"
 #include "Net_defs.h"
 
 /*

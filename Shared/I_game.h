@@ -3,6 +3,10 @@
 
 #include "Game_defs.h"
 
+struct I_Console;
+class  CBuffer;
+
+
 const int ENT_MAXCLASSNAME = 32;
 const int ENT_MAXRESNAME = 64;
 const int ENT_MAXSTRING = 128;

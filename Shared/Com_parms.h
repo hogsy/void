@@ -1,8 +1,6 @@
 #ifndef VOID_COM_PARMS
 #define VOID_COM_PARMS
 
-#include "Com_defs.h"
-
 /*
 ======================================
 Util class which can parse a 

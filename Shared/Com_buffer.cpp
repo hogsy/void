@@ -1,3 +1,4 @@
+#include "Com_defs.h"
 #include "Com_buffer.h"
 
 /*

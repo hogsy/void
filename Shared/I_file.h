@@ -7,24 +7,6 @@
 #define FILESYSTEM_API __declspec(dllimport)
 #endif
 
-#include "Com_defs.h"
-
-//====================================================================================
-
-struct I_FileReader
-{
-	virtual bool Open(const char * filename)=0;
-	virtual void Close()=0;
-	virtual bool isOpen()const =0;
-	virtual uint Read(void * buf, uint size, uint count)=0;
-	virtual int  GetChar()=0;
-	virtual void GetToken(char *buff, bool newline) =0;
-	virtual bool Seek(int offset, int origin)=0;
-	virtual uint GetPos() const =0;
-	virtual uint GetSize() const =0;
-	virtual const char * GetFileName() const= 0;
-};
-
 //====================================================================================
 //Not all of these really need to be here, move them to ComUtil ?
 //Only FindFileExtension is REALLY needed to be exported.
@@ -43,7 +25,7 @@ FileBuffer Reader Class
 ==========================================
 */
 
-class FILESYSTEM_API CFileBuffer : public I_FileReader
+class FILESYSTEM_API CFileBuffer
 {
 public:
 	
@@ -95,7 +77,7 @@ FileStream Reader class
 ==========================================
 */
 
-class FILESYSTEM_API CFileStream : public I_FileReader
+class FILESYSTEM_API CFileStream 
 {
 public:
 	

@@ -1,9 +1,6 @@
 #ifndef VOID_CLIENT_NETHANDLER
 #define VOID_CLIENT_NETHANDLER
 
-#include "Com_buffer.h"
-#include "Net_defs.h"
-
 /*
 ======================================================================================
 The game client will have to implement this interface

@@ -7,12 +7,12 @@
 #define FILESYSTEM_API __declspec(dllimport)
 #endif
 
-#include "Com_defs.h"
-#include "I_void.h"
+#include "I_Console.h"
 
 //====================================================================================
 //Pre-declarations
 class  CArchive;
+struct I_Void;
 
 //====================================================================================
 
