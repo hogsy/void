@@ -80,6 +80,8 @@ Destroy the client
 */
 CClient::~CClient()
 {
+	SetInputState(false);
+
 	m_pRender = 0;
 	m_pHud = 0;
 
