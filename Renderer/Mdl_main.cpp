@@ -214,8 +214,10 @@ void CModelManager::Purge(void)
 		g_pRast->MatrixRotateX( walk->state->angles.PITCH * 180/PI);
 		g_pRast->MatrixRotateZ(-walk->state->angles.ROLL  * 180/PI);
 
-		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, walk->state->frameNum,
-					walk->state->nextFrame, walk->state->frac);
+		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
+																   walk->state->frameNum,
+																   walk->state->nextFrame, 
+																   walk->state->frac);
 
 		g_pRast->MatrixPop();
 

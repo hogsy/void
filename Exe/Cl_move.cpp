@@ -1,95 +1,27 @@
 #include "Cl_main.h"
 #include "Com_world.h"
 
-#define MAX_CLIP_PLANES 5
-#define STOP_EPSILON 0.3f
-
 const float CL_ROTATION_SENS = 0.05f;
-
-
-void CClient::EntityMove(const vector_t &origin, 
-						 const vector_t &mins, 
-						 const vector_t &maxs,
-						 vector_t &dir, 
-						 float time)
-{
-	
-	// all the normals of the planes we've hit
-	vector_t	hitplanes[MAX_CLIP_PLANES];	
-	int			hits=0;				// number of planes we've hit, and number we're touching
-	vector_t	end;				// where we want to end up
-	vector_t	primal_dir;			// dir we originally wanted
-	TraceInfo	tr;
-	float d;
-
-	Void3d::VectorScale(dir,dir, time);
-	Void3d::VectorSet(primal_dir, dir);
-	
-	for(int bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
-	{
-		VectorAdd(origin, dir, end);
-
-		m_pWorld->Trace(tr, origin, end, mins, maxs);
-		if (tr.fraction > 0)
-		{
-			Void3d::VectorSet(m_pClient->origin, tr.endpos);
-			hits = 0;
-		}
-
-		// we're done moving
-		if ((!tr.plane) || (hits==2))	// full move or this is our 3rd plane
-			break;
-
-		Void3d::VectorSet(hitplanes[hits],tr.plane->norm);
-		hits++;
-
-		// we're only touching 1 plane - project velocity onto it
-		if (hits==1)
-			MakeVectorPlanar(&dir, &dir, &hitplanes[0]);
-		// we have to set velocity along crease
-		else
-		{
-			vector_t tmp;
-			_CrossProduct(&hitplanes[0], &hitplanes[1], &tmp);
-			d = Void3d::DotProduct(tmp,dir);
-			Void3d::VectorScale(dir,tmp, d);
-		}
-
-		// make sure we're still going forward
-		if (Void3d::DotProduct(dir,primal_dir) <= 0)
-		{
-			Void3d::VectorSet(dir, 0, 0, 0);
-			break;
-		}
-	}
-
-}
 
 
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
 
 // FIXME - this should be an entitiy move, not a client move
-void CClient::Move(vector_t *dir, float time)
+void CClient::Move(vector_t &dir, float time)
 {
-	// not in a sector, so just fly through everything
-// fake gravity
-//	velocity->z -= MAXVELOCITY;
-
-
 	// figure out what dir we want to go if we're folling a path
 	if (m_campath != -1)
-		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, dir, time);
+		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, &dir, time);
 
 	// can we clip through walls?  it's simple then
 	if (!m_cvClip.ival)
 	{
-		VectorMA(&m_pClient->origin, time, dir, &m_pClient->origin);
+		VectorMA(&m_pClient->origin, time, &dir, &m_pClient->origin);
 		return;
 	}
-	EntityMove(m_pClient->origin, m_pClient->mins, m_pClient->maxs,	*dir, time);
+
+	CMoveType::ClientMove(*m_pClient, dir, time);
 }
-
-
 
 
 

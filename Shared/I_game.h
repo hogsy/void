@@ -43,6 +43,9 @@ struct EntClient : public Entity
 	bool inUse;
 	bool spawned;
 
+	//Server will update this as it gets updates from the client
+	ClCmd clCmd;
+
 	char name[ENT_MAXCLASSNAME];
 	char modelName[ENT_MAXRESNAME];
 	char skinName[ENT_MAXRESNAME];

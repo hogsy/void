@@ -633,6 +633,7 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 	if(ent->mdlIndex >= 0 || ent->sndIndex >= 0)
 	{
 		buf.WriteShort(ent->num);
+		buf.WriteByte(ent->moveType);
 		buf.WriteCoord(ent->origin.x);
 		buf.WriteCoord(ent->origin.y);
 		buf.WriteCoord(ent->origin.z);

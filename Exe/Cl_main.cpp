@@ -42,7 +42,6 @@ CClient::CClient(I_Renderer * prenderer,
 	m_ingame = false;
 	m_fFrameTime = 0.0f;
 
-	m_numGameClient =0;
 	m_numEnts = 0;
 	
 	m_pCamera = 0;
@@ -142,6 +141,9 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
+	//setup
+	CMoveType::SetWorld(m_pWorld);
+
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav", CACHE_LOCAL);
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav", CACHE_LOCAL);
 	
@@ -211,6 +213,8 @@ ComPrintf("CL :UNLOADED MODELS\n");
 	m_pClRen->UnloadModelCache(CACHE_GAME);
 	m_pClRen->UnloadImageCache(CACHE_GAME);
 
+	CMoveType::SetWorld(0);
+
 	delete m_pCamera;
 	m_pCamera = 0;
 
@@ -263,7 +267,7 @@ void CClient::RunFrame()
 			 (m_campath != -1))
 		{
 			VectorNormalize(&desired_movement);
-			Move(&desired_movement, System::g_fframeTime * m_maxvelocity);
+			Move(desired_movement, System::g_fframeTime * m_maxvelocity);
 			Void3d::VectorSet(desired_movement,0,0,0);
 		}
 
@@ -300,7 +304,9 @@ void CClient::RunFrame()
 		for(int i=0; i< GAME_MAXENTITIES; i++)
 		{
 			if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
+			{
 				m_pClRen->DrawModel(m_entities[i]);	
+			}
 		}
 		
 		//Draw clients
@@ -312,25 +318,40 @@ void CClient::RunFrame()
 
 		m_pRender->Draw(m_pCamera);
 
-		//Write any updates
-		if(m_pNetCl->CanSend())
-		{
-			//Write all updates
-			CBuffer &buf = m_pNetCl->GetSendBuffer();
-			
-			buf.Reset();
-			buf.WriteByte(CL_MOVE);
-			buf.WriteCoord(m_pClient->origin.x);
-			buf.WriteCoord(m_pClient->origin.y);
-			buf.WriteCoord(m_pClient->origin.z);
-			buf.WriteAngle(m_pClient->angles.x);
-			buf.WriteAngle(m_pClient->angles.y);
-			buf.WriteAngle(m_pClient->angles.z);
-		}
+		WriteUpdate();
 	}
 	//Write updates
 	m_pNetCl->SendUpdate();
 }
+
+
+/*
+======================================
+
+======================================
+*/
+void CClient::WriteUpdate()
+{
+	//Write any updates
+	if(m_pNetCl->CanSend())
+	{
+		//Write all updates
+		CBuffer &buf = m_pNetCl->GetSendBuffer();
+		
+		buf.Reset();
+		buf.WriteByte(CL_MOVE);
+		buf.WriteFloat(m_cmd.time);
+		
+		buf.WriteShort(m_cmd.forwardmove);
+		buf.WriteShort(m_cmd.rightmove);
+		buf.WriteShort(m_cmd.upmove);
+
+		buf.WriteInt(m_cmd.angles[0]);
+		buf.WriteInt(m_cmd.angles[1]);
+		buf.WriteInt(m_cmd.angles[2]);
+	}
+}
+
 
 
 //======================================================================================

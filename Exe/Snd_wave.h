@@ -30,7 +30,6 @@ private:
 
 	int	   m_refs;
 	char * m_filename;
-	
 	byte * m_data;		// data stream, variable-sized
 
 public:

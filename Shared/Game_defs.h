@@ -15,16 +15,45 @@ const int	GAME_MAXENTITIES= 1024;
 const int	GAME_MAXCLIENTS = 16;
 const char	GAME_WORLDSDIR[]= "Worlds/";
 
-/*
-======================================
-Only contains data needed by routines 
-shared between client and server code
-Both client and server subclass this 
-adding stuff they need
 
-This data will be propagated to all 
-connected clients
-======================================
+
+//======================================================================================
+//======================================================================================
+
+enum EMoveType
+{
+	MOVETYPE_NOCLIP,
+	MOVETYPE_BBOX,		//just a static bbox
+	MOVETYPE_MISSLE,	
+	MOVETYPE_TRAJECTORY,
+	MOVETYPE_CLIENT
+};
+
+//Forward declarations
+class  CWorld;
+struct BaseEntity;
+
+//defined in Game_move.cpp
+class CMoveType
+{
+public:
+	static void NoClipMove(BaseEntity &ent, vector_t &dir, float time);
+	static void ClientMove(BaseEntity &ent, vector_t &dir, float time);
+
+	static void SetWorld(CWorld * pWorld);
+
+private:
+	static CWorld * m_pWorld;
+};
+
+
+/*
+============================================================================
+Only contains data needed by routines shared between client and server code
+Both client and server subclass this adding stuff they need
+
+This data will be propagated to all connected clients
+============================================================================
 */
 struct BaseEntity
 {
@@ -35,11 +64,13 @@ struct BaseEntity
 		frameNum = nextFrame = skinNum = 0;
 		sndIndex = -1;
 		volume = attenuation = 0;
-		origin.x = origin.y = origin.z = 0.0f;
-		angles.x = angles.y = angles.z = 0.0f;
-		velocity.x = velocity.y = velocity.z = 0.0f;
-		mins.x = mins.y = mins.z = 0.0f;
-		maxs.x = maxs.y = maxs.z = 0.0f;
+		moveType = MOVETYPE_NOCLIP;
+
+		Void3d::VectorSet(origin,0,0,0);
+		Void3d::VectorSet(angles,0,0,0);
+		Void3d::VectorSet(velocity,0,0,0);
+		Void3d::VectorSet(mins,0,0,0);
+		Void3d::VectorSet(maxs,0,0,0);
 	}
 
 	virtual ~BaseEntity() =0 {}
@@ -53,11 +84,13 @@ struct BaseEntity
 			volume,	
 			attenuation;
 	
-	vector_t origin;
-	vector_t angles;
-	vector_t velocity;
-	vector_t mins;
-	vector_t maxs;
+	EMoveType	moveType;
+	
+	vector_t	origin;
+	vector_t	angles;
+	vector_t	velocity;
+	vector_t	mins;
+	vector_t	maxs;
 };
 
 /*
@@ -72,6 +105,7 @@ struct ClCmd
 	short	forwardmove, 
 			rightmove, 
 			upmove;
+	//add buttons and what not
 };
 
 #endif
