@@ -141,7 +141,7 @@ public:
 	//Loads data from file into given buffer. return size of buffer
 	//after allocation and copying.
 	uint LoadFileData(byte ** ibuffer, uint buffersize, const char *ifilename);
-	bool OpenFileStream(CFileStream * fstream, const char *ifilename);
+	uint OpenFileStream(FILE * ifp, int &ifileHandle, const char *ifilename);
 	
 	uint GetFileSize(const char * filename);
 
