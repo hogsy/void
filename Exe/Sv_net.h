@@ -1,7 +1,38 @@
-#include VNETSV
-#define  VNETSV
+#ifndef  VOID_NET_SERVER
+#define  VOID_NET_SERVER
 
-#if 0
+#include "Com_buffer.h"
+#include "Sv_client.h"
+
+/*
+======================================
+Server State Struct
+======================================
+*/
+struct ServerState
+{
+	ServerState()
+	{
+		port = 0;
+		maxClients = numClients = levelId = 0;
+		memset(hostName,0,sizeof(hostName));
+		memset(gameName,0,sizeof(gameName));
+		memset(worldname,0,sizeof(worldname));
+		memset(localAddr,0,sizeof(localAddr));
+	}
+
+	int		maxClients;		//Max num of clients
+	int		numClients;		//Current num of clients
+	
+	char	worldname[32];	//Map name
+	int		levelId;		//Current map id
+	
+	char	localAddr[24];	//Server address
+	short	port;			//Server port num
+	
+	char	hostName[32];	//Server name
+	char	gameName[32];	//Game name
+};
 
 /*
 ======================================
@@ -9,6 +40,7 @@ The NETWORK server.
 Engine should subclass this
 ======================================
 */
+class CNetSocket;
 
 class CNetServer
 {
@@ -18,18 +50,12 @@ public:
 
 protected:
 
-	SVClient	m_clients[MAX_CLIENTS];
-
-	bool		m_active;
-	int			m_numClients;
-
-	//to check for map changes while clients are connecting
-	int			m_levelNum;		
-
-	//Stores Entity baselines etc
-	int			m_numSignOnBuffers;
-	CBuffer		m_signOnBuf[MAX_SIGNONBUFFERS];
-
+	enum
+	{
+		MAX_SIGNONBUFFERS = 8,
+		MAX_CHALLENGES =  512,
+		MAX_CLIENTS = 16
+	};
 
 	bool NetInit();
 	void NetShutdown();
@@ -40,7 +66,7 @@ protected:
 	void WritePackets();
 
 	//Misc
-	void PrintServerStatus();
+	void NetPrintStatus();
 
 	//Handle Connectionless requests
 	void HandleStatusReq();
@@ -62,17 +88,20 @@ protected:
 	void SendReconnect(SVClient &client);
 	void SendDisconnect(SVClient &client, const char * reason);
 
+	//===================================================
+
+	//Server Statue
+	ServerState m_svState;
+
+	//Total clients
+	SVClient	m_clients[MAX_CLIENTS];
+
+	//Use to stores Entity baselines etc which
+	//are transmitted to the client on connection
+	int			m_numSignOnBuffers;
+	CBuffer		m_signOnBuf[MAX_SIGNONBUFFERS];
+
 private:
-
-	CBuffer		m_recvBuf;
-	CBuffer		m_sendBuf;
-
-	enum
-	{
-		MAX_SIGNONBUFFERS = 8,
-		MAX_CHALLENGES =  512,
-		MAX_CLIENTS = 16
-	};
 
 	struct NetChallenge
 	{
@@ -87,9 +116,11 @@ private:
 	//private data
 	CNetSocket* m_pSock;
 
+	CBuffer		m_recvBuf;
+	CBuffer		m_sendBuf;
+	
 	char		m_printBuffer[512];
 };
 
 
-#endif
 #endif

@@ -35,6 +35,9 @@ CClient::CClient(I_Renderer * prenderer):
 
 	g_pWorld = 0;
 
+	m_hsTalk = 0;
+	m_hsMessage = 0;
+
 	System::GetConsole()->RegisterCVar(&m_noclip);
 	System::GetConsole()->RegisterCVar(&m_clport,this);
 	System::GetConsole()->RegisterCVar(&m_clrate,this);
@@ -202,7 +205,7 @@ void CClient::RunFrame()
 		//Print Stats
 		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, eye.origin.y, eye.origin.z);
 
-		m_pHud->HudPrintf(0, 70,0, "%.2f", 1/(System::g_fcurTime - m_fFrameTime));
+		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
 		m_fFrameTime = System::g_fcurTime;
 
 		//Networking

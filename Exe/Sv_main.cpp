@@ -1,4 +1,4 @@
-#include "Net_sock.h"
+//#include "Net_sock.h"
 #include "Sv_main.h"
 #include "Net_defs.h"
 #include "Com_util.h"
@@ -14,38 +14,33 @@ namespace
 		CMD_STATUS	= 3
 	};
 }
-
 using namespace VoidNet;
 
 //======================================================================================
 //======================================================================================
+
 /*
-==========================================
+======================================
 Constructor/Destructor
-==========================================
+======================================
 */
-CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
-					 m_sendBuf(MAX_BUFFER_SIZE),
-					 m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
-	m_pSock = new CNetSocket(&m_recvBuf);
+	//Default State values
+	strcpy(m_svState.gameName,"Game");
+	strcpy(m_svState.hostName,"Void Server");
+	m_svState.worldname[0] = 0;
+	m_svState.levelId = 0;
+	m_svState.maxClients = 4;
+	m_svState.port = SV_DEFAULT_PORT;
 
-	m_worldName[0] = 0;
 	m_pWorld = 0;
-	
-	//Server State
 	m_active = false;
-	m_numClients = 0;
 	
-	m_levelNum = 0;
-	m_numSignOnBuffers=0;
-
-	memset(m_printBuffer,0,sizeof(m_printBuffer));
-
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
@@ -58,128 +53,52 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 }	
 
 CServer::~CServer()
-{
-	Shutdown();
-	delete m_pSock;
+{	Shutdown();
 }
 
-//======================================================================================
-//======================================================================================
+
 /*
-==========================================
-Initialize the listener socket
-gets computer names and addy
-==========================================
+======================================
+Initialize the Server
+======================================
 */
 bool CServer::Init()
 {
-	if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, false))
-	{
-		PrintSockError(WSAGetLastError(),"CServer::Init: Couldnt create socket");
+	if(!NetInit())
 		return false;
-	}
-
-	INTERFACE_INFO localAddr[10];  // Assume there will be no more than 10 IP interfaces 
-	int numAddrs = 0;
 	
-	numAddrs = m_pSock->GetInterfaceList((INTERFACE_INFO **)&localAddr,10);
-	if(numAddrs == 0)
-	{
-		ComPrintf("CServer::Init: Unable to get network interfaces\n");
-		return false;
-	}
-
-	ulong  addrFlags=0;
-	char*  pAddrString=0;
-	SOCKADDR_IN* pAddrInet=0;
-
-	char   boundAddr[24];
-	memset(boundAddr,0,24);
-	
-	for (int i=0; i<numAddrs; i++) 
-	{
-		pAddrInet = (SOCKADDR_IN*)&localAddr[i].iiAddress;
-		pAddrString = inet_ntoa(pAddrInet->sin_addr);
-		
-		if (pAddrString)
-			ComPrintf("IP: %s ", pAddrString);
-		
-		addrFlags = localAddr[i].iiFlags;
-		if (addrFlags & IFF_UP)
-		{
-			//if(!(addrFlags & IFF_LOOPBACK))
-			if(!(addrFlags & IFF_LOOPBACK) && pAddrString[0] != '0')
-			{
-				strcpy(boundAddr,pAddrString);
-				ComPrintf(": Active\n");
-			}
-		}
-		if (addrFlags & IFF_LOOPBACK)
-			ComPrintf(": Loopback\n");
-//		if (addrFlags & IFF_POINTTOPOINT)
-//			ComPrintf(". this is a point-to-point link");
-	}
-
-	//Default to loopback
-	if(boundAddr[0] == '\0')
-		strcpy(boundAddr,"127.0.0.1");
-	strcat(boundAddr,":");
-	strcat(boundAddr, m_cPort.string);
-
-	CNetAddr netaddr(boundAddr);
-	if(!netaddr.IsValid())
-	{
-		ComPrintf("CServer::Init:Unable to resolve ip address\n");
-		return false;
-	}
-
-	//Save Local Address
-	CNetAddr::SetLocalServerAddr(boundAddr);
-	if(!m_pSock->Bind(netaddr))
-	{
-		ComPrintf("CServer::Init:Unable to bind socket\n");
-		return false;
-	}
+	//more initialization here ?
 	m_active = true;
 	return true;
 }
 
 /*
-==========================================
+======================================
 Shutdown the server
-==========================================
+======================================
 */
 void CServer::Shutdown()
 {
 	if(!m_active)
 		return;
 
-	//Send disconnect messages to clients, if active
-	for(int i=0;i<m_cMaxClients.ival;i++)
-	{
-		if(m_clients[i].m_state != CL_SPAWNED) 
-			continue;
-		SendDisconnect(m_clients[i],"Server quit");
-	}
+	NetShutdown();
+
+	m_active = false;
 
 	//destroy world data
 	if(m_pWorld)
 		world_destroy(m_pWorld);
 	m_pWorld = 0;
-	m_worldName[0] = 0;
+	m_svState.worldname[0] = 0;
 
-	//Update State
-	m_numClients = 0;
-	m_active = false;
-	m_levelNum = 0;
-	
-	m_pSock->Close();
 	ComPrintf("CServer::Shutdown OK\n");
 }
 
+
 /*
 ======================================
-Restart
+Restart the server
 ======================================
 */
 void CServer::Restart()
@@ -189,25 +108,43 @@ void CServer::Restart()
 
 	m_active = false;
 
-	for(int i=0;i<m_cMaxClients.ival;i++)
-	{
-		if(m_clients[i].m_state == CL_SPAWNED)
-			SendReconnect(m_clients[i]);
-	}
+	NetRestart();
 
 	if(m_pWorld)
 	{
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
-		m_worldName[0] = 0;
+		m_svState.worldname[0] = 0;
 	}
 	ComPrintf("CServer::Restart OK\n");
 }
 
 
+/*
+==========================================
+Run a server frame
+==========================================
+*/
+void CServer::RunFrame()
+{
+	if(m_active == false)
+		return;
+
+	//Re-seed current time
+	srand((uint)System::g_fcurTime);
+
+	//Get updates
+	ReadPackets();
+
+	//Run game
+
+	//write to clients
+	WritePackets();
+}
 
 //======================================================================================
 //======================================================================================
+
 /*
 ==========================================
 Load the World
@@ -217,8 +154,8 @@ void CServer::LoadWorld(const char * mapname)
 {
 	if(!mapname)
 	{
-		if(m_worldName[0])
-			ComPrintf("Playing %s\n",m_worldName);
+		if(m_svState.worldname[0])
+			ComPrintf("Playing %s\n",m_svState.worldname);
 		else
 			ComPrintf("No world loaded\n");
 		return;
@@ -252,7 +189,7 @@ void CServer::LoadWorld(const char * mapname)
 	}
 
 	//Set worldname
-	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
+	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldname);
 
 	//Load entities
 	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
@@ -305,7 +242,7 @@ void CServer::LoadWorld(const char * mapname)
 */
 
 	//update state
-	m_levelNum ++;
+	m_svState.levelId ++;
 	m_active = true;
 
 	//Create Sigon-message. includes static entity baselines
@@ -313,36 +250,14 @@ void CServer::LoadWorld(const char * mapname)
 	//all we need is the map name right now
 	m_numSignOnBuffers = 1;
 	m_signOnBuf[0].Write(SVC_INITCONNECTION);
-	m_signOnBuf[0].Write(m_cGame.string);
-	m_signOnBuf[0].Write(m_worldName);
+	m_signOnBuf[0].Write(m_svState.gameName);
+	m_signOnBuf[0].Write(m_svState.worldname);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)
 		System::GetConsole()->ExecString("connect localhost");
 }
 
-//======================================================================================
-/*
-==========================================
-Run a server frame
-==========================================
-*/
-void CServer::RunFrame()
-{
-	if(m_active== false)
-		return;
-
-	//Re-seed current time
-	srand((uint)System::g_fcurTime);
-
-	//Get updates
-	ReadPackets();
-
-	//Run game
-
-	//write to clients
-	WritePackets();
-}
 
 //======================================================================================
 //======================================================================================
@@ -354,31 +269,17 @@ Print Status info
 */
 void CServer::PrintServerStatus()
 {
-	ComPrintf("Game Path   : %s\n", m_cGame.string);
-	ComPrintf("Hostname	   : %s\n", m_cHostname.string);
-	ComPrintf("Max clients : %d\n", m_cMaxClients.ival);
-	ComPrintf("Port        : %d\n", m_cPort.ival);
+	ComPrintf("Game Path   : %s\n", m_svState.gameName);
+	ComPrintf("Hostname	   : %s\n", m_svState.hostName);
+	ComPrintf("Max clients : %d\n", m_svState.maxClients);
+	ComPrintf("Port        : %d\n", m_svState.port);
 
-	if(!m_active)
+	if(m_active)
+		NetPrintStatus();
+	else
 	{
 		ComPrintf("Server is inactive\n");
 		return;
-	}
-	
-	ComPrintf("Ip address  : %s\n", CNetAddr::GetLocalServerAddr());
-	ComPrintf("Map name    : %s\n", m_worldName);
-	ComPrintf("Num Clients : %d\n========================\n", m_numClients);
-	for(int i=0; i<m_numClients; i++)
-	{
-		if(m_clients[i].m_state == CL_CONNECTED)
-			ComPrintf("%s : Connecting\n", m_clients[i].m_name);
-		else if(m_clients[i].m_state == CL_SPAWNED)
-		{
-			ComPrintf("%s :", m_clients[i].m_name);
-			m_clients[i].m_netChan.PrintStats();
-		}
-//			ComPrintf("%s: Rate %.2f: Chokes %d\n", m_clients[i].m_name, 
-//				1/m_clients[i].m_netChan.m_rate, m_clients[i].m_netChan.m_numChokes);
 	}
 }
 
@@ -388,7 +289,8 @@ Handle CVars
 ==========================================
 */
 bool CServer::HandleCVar(const CVarBase * cvar, const CParms &parms)
-{	return false;
+{	
+	return false;
 }
 
 /*
@@ -411,3 +313,5 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	}
 }
+
+

@@ -241,7 +241,7 @@ void CNetClient::HandleOOBMessage()
 	if(!strcmp(msg, S2C_REJECT))
 	{
 		Disconnect();
-		m_pClient->Print(CLMSG_SERVER,"Server rejected connection: %s\n", m_buffer.ReadString());
+		m_pClient->Print(CLMSG_DEFAULT,"Server rejected connection: %s\n", m_buffer.ReadString());
 		return;
 	}
 	
