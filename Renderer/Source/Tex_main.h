@@ -23,8 +23,8 @@ public:
 	CTextureManager();
 	~CTextureManager();
 
-	bool Init(char *basepath);	//Loads base game textures
-	bool Shutdown();			//Unload everything
+	bool Init();	//Loads base game textures
+	bool Shutdown();//Unload everything
 	
 	bool LoadWorldTextures(world_t *map);
 	bool UnloadWorldTextures();

@@ -234,7 +234,7 @@ void model_read_md2(model_t *m, char *name)
 	char path[260];
 
 //	sprintf(path, "%s\\game\\models\\%s\\tris.md2", rInfo->base_dir, name);
-	sprintf(path, "%s/models/%s/tris.md2",g_szGamePath , name);
+	sprintf(path, "%s/models/%s/tris.md2",CFileSystem::GetCurrentPath(), name);
 
 	ConPrint("loading %s\n", path);
 

@@ -289,7 +289,7 @@ bool CSound::Init()//int maxchannels)
 		return false; 
 	}
 
-	sprintf(soundpath,"%s\\%s\\%s\\",g_exedir,g_gamedir,SND_PATH);
+	sprintf(soundpath,"%s\\%s\\",CFileSystem::GetCurrentPath(),SND_PATH);
 
 //	strcpy(soundpath,g_gamedir);
 //	strcat(soundpath,SND_PATH);

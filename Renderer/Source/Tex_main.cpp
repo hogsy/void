@@ -40,11 +40,8 @@ Initialize
 Load base game textures
 ==========================================
 */
-bool CTextureManager::Init(char *basepath)
+bool CTextureManager::Init()
 {
-	if(!basepath)
-		return false;
-
 	//allocate all mem
 	tex = new tex_t;
 	if (tex == NULL) 

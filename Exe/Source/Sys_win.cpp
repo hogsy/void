@@ -169,7 +169,7 @@ static bool RegisterWindow()
 	wcl.cbClsExtra = 0;
 	wcl.cbWndExtra = 0;
 	wcl.hInstance = g_hInst;
-	wcl.lpszClassName = MAINWINDOWCLASS;
+	wcl.lpszClassName = VOID_MAINWINDOWCLASS;
 	wcl.lpfnWndProc = MainWndProc;
 	wcl.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 

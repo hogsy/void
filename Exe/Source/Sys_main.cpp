@@ -14,7 +14,7 @@
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
 char		g_exedir[COM_MAXPATH];
-char		g_gamedir[COM_MAXPATH];
+//char		g_gamedir[COM_MAXPATH];
 eGameState	g_gameState;
 
 //pointers to subsystems
@@ -68,7 +68,6 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_hInst = hInstance;
 
 	_getcwd(g_exedir,COM_MAXPATH);		//Current Working directory
-	strcpy(g_gamedir,"game");			//Set default game dir
 
 	//Create timer
 	g_pTime = new CTime();						
@@ -77,14 +76,13 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_pCons = new CConsole();
 	
 	//Create the file system
-	g_pFileSystem = CreateFileSystem(g_pCons);
+	g_pFileSystem = FILESYSTEM_Create(g_pCons);
 	
 	//Create the input system
 	g_pInput= new CInput();					
 	
 	//Export structure
-	g_pExport= new VoidExport_t(g_exedir,g_gamedir,
-					&g_fcurTime, &g_fframeTime);
+	g_pExport= new VoidExport_t(&g_fcurTime, &g_fframeTime);
 	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
 	
 	//Create the Renderer
@@ -173,7 +171,7 @@ CVoid::~CVoid()
 	}
 
 
-	DestroyFileSystem();
+	FILESYSTEM_Free();
 
 	if(g_pCons)
 	{		delete g_pCons;
@@ -203,7 +201,7 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize FileSystem
-	if(!g_pFileSystem->Init(g_exedir,"Game"))
+	if(!g_pFileSystem->Init(g_exedir,VOID_DEFAULTGAMEDIR))
 	{
 		Error("CVoid::Init:Error Initializing File System\n");
 		return false;
@@ -230,8 +228,8 @@ bool CVoid::Init()
 	}
 
 	//create the window
-	g_hWnd = CreateWindow(MAINWINDOWCLASS, 
-						  MAINWINDOWTITLE,
+	g_hWnd = CreateWindow(VOID_MAINWINDOWCLASS, 
+						  VOID_MAINWINDOWTITLE,
 						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
 						  CW_USEDEFAULT, 
 						  CW_USEDEFAULT, 
@@ -602,7 +600,7 @@ Parse Command line, update any CVar values
 void CVoid::ParseCmdLine(LPSTR lpCmdLine)
 {
 	ComPrintf("CVoid::Command Line :%s\n",lpCmdLine);
-	ComPrintf("CVoid::Current Working Directory :%s\n", g_exedir);
+//	ComPrintf("CVoid::Current Working Directory :%s\n", g_exedir);
 
 	//FIXME - break into arguments
 	//decide on an identifier scheme

@@ -5,9 +5,10 @@
 #include "Sys_time.h"
 
 //========================================================================================
-#define MAINWINDOWCLASS "Void"
-#define MAINWINDOWTITLE	"Void"
+#define VOID_MAINWINDOWCLASS "Void"
+#define VOID_MAINWINDOWTITLE "Void"
 
+#define VOID_DEFAULTGAMEDIR	"Game"
 
 class CVoid
 {

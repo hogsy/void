@@ -83,7 +83,7 @@ bool CServer::InitGame(char *mapname)
 	
 	Util_DefaultExtension(mapname,".bsp");
 //	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
-	sprintf(worldname,"%s\\game\\worlds\\%s",g_exedir,mapname);
+//	sprintf(worldname,"%s\\worlds\\%s",g_exedir,mapname);
 
 	if(m_pWorld != 0)
 		world_destroy(m_pWorld);

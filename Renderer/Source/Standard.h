@@ -35,7 +35,6 @@ extern RenderInfo_t* rInfo;
 
 extern float * g_pCurTime;		//Current Time
 extern float * g_pFrameTime;	//Frame Time
-extern char  * g_szGamePath;	//Path to game dir
 
 extern world_t	*world;
 

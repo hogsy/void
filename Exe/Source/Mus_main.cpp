@@ -79,8 +79,9 @@ Init the music system
 
 bool CMusic::Init() 
 {
-	sprintf(muspath,"%s/%s/%s",
-			g_exedir,g_gamedir,MUS_PATH);
+//	sprintf(muspath,"%s/%s/%s",
+//			g_exedir,g_gamedir,MUS_PATH);
+	sprintf(muspath,"%s/%s", CFileSystem::GetCurrentPath(), MUS_PATH);
 	
 	FSOUND_SetOutput(FSOUND_OUTPUT_WINMM);
 	FSOUND_SetDriver(0);

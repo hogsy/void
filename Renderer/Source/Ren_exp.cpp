@@ -25,7 +25,6 @@ world_t		* world=0;			//The World
 
 float		* g_pCurTime=0;		//Current Timer
 float		* g_pFrameTime=0;	//Frame Time
-char		* g_szGamePath=0;	//Game Path
 
 CRenExp		* g_pRenExp=0;
 
@@ -64,9 +63,6 @@ CRenExp::CRenExp(VoidExport_t * pVExp)
 		return;
 	}
 
-	g_szGamePath = new char[256];
-	sprintf(g_szGamePath,"%s/%s",m_pImport->basedir,m_pImport->gamedir);
-
 	g_prCons->RegCVar(&m_cFull,"r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
 	g_prCons->RegCVar(&m_cBpp,"r_bpp",  "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
 	g_prCons->RegCVar(&m_cWndX,"r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
@@ -102,8 +98,6 @@ CRenExp::~CRenExp()
 		delete rInfo;
 	rInfo = 0;
 	
-	delete [] g_szGamePath;
-	g_szGamePath = 0;
 	rInfo = 0;
 }
 
@@ -159,7 +153,7 @@ bool CRenExp::InitRenderer()
 	}
 
 	//Start up the texture manager
-	if(!g_pTex->Init(g_szGamePath))
+	if(!g_pTex->Init())
 	{
 		ConPrint("CRenExp::InitRenderer:Failed to initialize Texture manager\n");
 		Shutdown();
@@ -357,9 +351,6 @@ change res or to/from fullscreen
 void CRenExp::ChangeDispSettings(unsigned int width, unsigned int height, unsigned int bpp, 
 								 unsigned int fullscreen)
 {
-	//Update GameDir
-	sprintf(g_szGamePath,"%s/%s",m_pImport->basedir,m_pImport->gamedir);
-
 	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
 	
 	// shut the thing down
@@ -367,7 +358,7 @@ void CRenExp::ChangeDispSettings(unsigned int width, unsigned int height, unsign
 
 	g_pGL->UpdateDisplaySettings(width,height,bpp,fullscreen);
 
-	if(!g_pTex->Init(g_szGamePath))
+	if(!g_pTex->Init())
 	{
 		ConPrint("failed to init texture base\n");
 		return;
@@ -396,9 +387,6 @@ Restart the Renderer
 */
 bool CRenExp::Restart(void)
 {
-	//Update GameDir
-	sprintf(g_szGamePath,"%s/%s",m_pImport->basedir,m_pImport->gamedir);
-
 	g_pTex->Shutdown();
 
 	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
@@ -408,7 +396,7 @@ bool CRenExp::Restart(void)
 	g_pGL->Init();
 
 	//Start up the texture manager
-	if(!g_pTex->Init(g_szGamePath))
+	if(!g_pTex->Init())
 	{
 		ConPrint("failed to init texture base\n");
 		return false;

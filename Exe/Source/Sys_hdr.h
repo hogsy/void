@@ -42,7 +42,7 @@ enum eGameState
 extern HWND			g_hWnd;
 extern HINSTANCE	g_hInst;
 extern char			g_exedir[COM_MAXPATH];
-extern char			g_gamedir[COM_MAXPATH];
+//extern char			g_gamedir[COM_MAXPATH];
 
 extern float		g_fframeTime;
 extern float		g_fcurTime;

@@ -139,12 +139,13 @@ public:
 	//Print out the list of files in added archives
 	void ListArchiveFiles();
 	
-	uint GetFileSize(const char * filename);
-
 	//Returns a filelisting matching the criteria
 	int FindFiles(CStringList *filelist,		//File List to fill
 				  const char  *ext,				//Extension		  
 				  const char  *path=0);			//Search in a specific path
+
+	//Returns current path EXE+Game
+	static const char * GetCurrentPath();
 
 private:
 
@@ -168,11 +169,11 @@ private:
 	int			m_totalfiles;					//total number of Files in the archives
 	char		m_exepath[COM_MAXPATH];			//Exe path
 	char		m_basedir[COM_MAXPATH];			//Base Dir, IS NOT changed
-
 	int			m_numsearchpaths;				//Number of searchpaths
 	SearchPath_t * m_searchpaths;				//DoublyLinked list of searchpaths
 	SearchPath_t * m_lastpath;					//Latest path
 
+	static char		m_curpath[COM_MAXPATH];
 
 	//Member Functions
 	//================================================================
@@ -194,7 +195,7 @@ private:
 
 //====================================================================================
 
-FILESYSTEM_API CFileSystem * CreateFileSystem(I_ExeConsole * pconsole);
-FILESYSTEM_API void DestroyFileSystem();
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_ExeConsole * pconsole);
+FILESYSTEM_API void FILESYSTEM_Free();
 
 #endif
