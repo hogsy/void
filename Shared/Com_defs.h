@@ -3,17 +3,25 @@
 
 #undef  STRICT
 #define STRICT
+
 #define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
 
 //disable horrible vc problem of identifiers 
 //getting truncated to 255 char 
 #pragma warning(disable : 4786)
+
+//Only include the following if not 
+//being used in an MFC app
+#ifndef __AFXWIN_H__
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <windows.h>
+
+#endif
 
 //STL
 #include <list>

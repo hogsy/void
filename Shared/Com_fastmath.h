@@ -33,15 +33,6 @@ Floating point util funcs
 ================================================
 */
 namespace FM {
-/*
-inline float INV(float p)
-{
-    int _i = 2 * FP_ONE_BITS - *(int *)&(p);
-    float r = *(float *)&_i;
-    r = r * (2.0f - (p) * r);                   
-	return r;
-}
-*/
 
 inline float INV(float p)
 {
@@ -64,8 +55,27 @@ inline float INV(float p)
 #endif
 }
 
+inline float INV(const float &p)
+{
+// devvoid needs more accuracy
+#ifdef DEVVOID
+	return (1.0f/p);
+#else
+	static float two = 2.0f;
+	float r;
 
-//Not sure if this one is correct
+	__asm { mov		eax,0x7F000000	  }; 
+	__asm { sub		eax,dword ptr [p] }; 
+	__asm { mov		dword ptr [r],eax }; 
+	__asm { fld		dword ptr [p]     }; 
+	__asm { fmul	dword ptr [r]     }; 
+	__asm { fsubr	[two]             }; 
+	__asm { fmul	dword ptr [r]     }; 
+	__asm { fstp	dword ptr [r]     }; 
+	return r;
+#endif
+}
+
 inline ulong NORM_TO_BYTE(float p)
 {
     float _n = (p) + 1.0f;
@@ -120,6 +130,20 @@ private:
 
 
 inline float SquareRoot(float n)
+{
+#ifdef DEVVOID
+	return sqrt(n);
+#else
+	if (FP_BITS(n) == 0)
+		return 0.0;                 // check for square root of 0
+  
+	FP_BITS(n) = CFastMath::fastSqrtTable[(FP_BITS(n) >> 8) & 0xFFFF] | 
+				((((FP_BITS(n) - 0x3F800000) >> 1) + 0x3F800000) & 0x7F800000);
+	return n;
+#endif
+}
+
+inline float SquareRoot(const float &n)
 {
 #ifdef DEVVOID
 	return sqrt(n);
