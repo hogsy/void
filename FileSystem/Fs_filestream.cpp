@@ -167,7 +167,18 @@ void CFileStream::GetToken(char *buff, bool newline)
 
 	// if we want a new line, find the first '\n'
 	if (newline)
-		while (GetChar() != '\n');
+		while (1)
+		{
+			tmp = GetChar();
+			if (tmp == '\n')
+				break;
+
+			if ((tmp == EOF) || (tmp == -1))
+			{
+				(*buff) = '\0';
+				return;
+			}
+		}
 
 	// advance until we find characters
 	while (1)
