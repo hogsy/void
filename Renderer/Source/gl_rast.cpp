@@ -509,8 +509,16 @@ void COpenGLRast::DepthFunc(EDepthFunc func)
 		glDepthFunc(GL_LEQUAL);
 		break;
 	}
-
 }
+
+void COpenGLRast::DepthWrite(bool write)
+{
+	if (write)
+		glDepthMask(GL_TRUE);
+	else
+		glDepthMask(GL_FALSE);
+}
+
 void COpenGLRast::BlendFunc(ESourceBlend src, EDestBlend dest)
 {
 	int source = 0;
@@ -589,7 +597,7 @@ void COpenGLRast::TextureBinDestroy(int bin)
 	}
 
 	glDeleteTextures(mTexBins[bin].num, mTexBins[bin].glnames);
-	delete [] mTexBins[bin].glnames;
+	delete mTexBins[bin].glnames;
 	mTexBins[bin].glnames = NULL;
 	mTexBins[bin].num = -1;
 }
@@ -605,10 +613,31 @@ void COpenGLRast::TextureSet(int bin, int texnum)
 void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 {
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[num]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+
+	// clamping
+	if (texdata->clamp)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+
+	// mipmapping
+	if (texdata->mipmap)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	}
+
 
 	int ext_format, int_format;
 	if (texdata->format == IMG_RGB)
@@ -625,22 +654,38 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 	int w = texdata->width;
 	int h = texdata->height;
 
-	for (int m=texdata->mipmaps-1; m>=0; m--)
+	if (texdata->mipmap)
+	{
+		for (int m=texdata->mipmaps-1; m>=0; m--)
+		{
+			glTexImage2D(GL_TEXTURE_2D,
+					 texdata->mipmaps - m - 1,
+					 int_format,
+					 w,
+					 h,
+					 0,
+					 ext_format,
+					 GL_UNSIGNED_BYTE,
+					 texdata->mipdata[m]);
+
+			w /= 2;
+			h /= 2;
+			if (w==0) w=1;
+			if (h==0) h=1;
+		}
+	}
+
+	else
 	{
 		glTexImage2D(GL_TEXTURE_2D,
-				 texdata->mipmaps - m - 1,
-				 int_format,
-				 w,
-				 h,
-				 0,
-				 ext_format,
-				 GL_UNSIGNED_BYTE,
-				 texdata->mipdata[m]);
-
-		w /= 2;
-		h /= 2;
-		if (w==0) w=1;
-		if (h==0) h=1;
+					 0,
+					 int_format,
+					 w,
+					 h,
+					 0,
+					 ext_format,
+					 GL_UNSIGNED_BYTE,
+					 texdata->mipdata[texdata->mipmaps - 1]);
 	}
 }
 

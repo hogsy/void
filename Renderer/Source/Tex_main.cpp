@@ -79,48 +79,10 @@ bool CTextureManager::Init()
 		tdata.width  = m_texReader->GetWidth();
 		tdata.mipmaps= m_texReader->GetNumMips();
 		tdata.mipdata= m_texReader->GetMipData();
-
-		int mipcount = tdata.mipmaps - 1;
-		while (mipcount > 0)
-		{
-			m_texReader->ImageReduce(mipcount);
-			mipcount--;
-		}
+		tdata.mipmap = false;
+		tdata.clamp  = true;
 
 		g_pRast->TextureLoad(tex->bin_base, count, &tdata);
-
-
-
-/*
-		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-		int ext_format, int_format;
-		if (m_texReader->GetFormat() == IMG_RGB)
-		{
-			ext_format = GL_RGB;
-			int_format = GL_RGB8;
-		}
-		else
-		{
-			ext_format = GL_RGBA;
-			int_format = GL_RGBA8;
-		}
-
-		glTexImage2D(GL_TEXTURE_2D,
-				 0,
-				 int_format,
-				 m_texReader->GetWidth(),
-				 m_texReader->GetHeight(),
-				 0,
-				 ext_format,
-				 GL_UNSIGNED_BYTE,
-				 m_texReader->GetData());
-*/
-		
 	}
 	m_loaded = BASE_TEXTURES;
 	return true;
@@ -216,6 +178,8 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		tdata.width  = m_texReader->GetWidth();
 		tdata.mipmaps= m_texReader->GetNumMips();
 		tdata.mipdata= m_texReader->GetMipData();
+		tdata.mipmap = true;
+		tdata.clamp  = false;
 
 		int mipcount = tdata.mipmaps - 1;
 		while (mipcount > 0)
@@ -240,55 +204,27 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	unsigned char *ptr = map->lightdata;
 	for (t = 0; t < g_pRast->TextureCount(tex->bin_light); t++)
 	{
-/*
+
 		m_texReader->ReadLightMap(&ptr);
-		mipcount = m_texReader->GetMipCount();
 
-		//Set initial dimensions
-		glBindTexture(GL_TEXTURE_2D, tex->light_names[t]);
+		// create all mipmaps
+		tex_load_t tdata;
+		tdata.format = m_texReader->GetFormat();
+		tdata.height = m_texReader->GetHeight();
+		tdata.width  = m_texReader->GetWidth();
+		tdata.mipmaps= m_texReader->GetNumMips();
+		tdata.mipdata= m_texReader->GetMipData();
+		tdata.mipmap = true;
+		tdata.clamp  = true;
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-
-		int ext_format, int_format;
-		if (m_texReader->GetFormat() == IMG_RGB)
+		int mipcount = tdata.mipmaps - 1;
+		while (mipcount > 0)
 		{
-			ext_format = GL_RGB;
-
-			if (g_p32BitTextures->ival)
-				int_format = GL_RGB8;
-			else
-				int_format = GL_RGB5;
-		}
-		else
-		{
-			ext_format = GL_RGBA;
-			if (g_p32BitTextures->ival)
-				int_format = GL_RGBA8;
-			else
-				int_format = GL_RGBA4;
+			m_texReader->ImageReduce(mipcount);
+			mipcount--;
 		}
 
-		for (m = 0; m < mipcount; m++)
-		{
-			if(m)
-				m_texReader->ImageReduce();
-
-			glTexImage2D(GL_TEXTURE_2D,
-						 m,
-						 int_format,
-						 m_texReader->GetWidth(),
-						 m_texReader->GetHeight(),
-						 0,
-						 ext_format,
-						 GL_UNSIGNED_BYTE,
-						 m_texReader->GetData());
-		}
-		m_texReader->Reset();
-		*/
+		g_pRast->TextureLoad(tex->bin_light, t, &tdata);
 	}
 
 	m_texReader->FreeMipData();

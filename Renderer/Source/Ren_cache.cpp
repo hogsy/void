@@ -123,6 +123,7 @@ void r_draw_world_poly(poly_t *p, dimension_t dim)
 
 void r_draw_light_poly(poly_t *p)
 {
+
 	if (p->lightdef == -1)
 		return;
 
@@ -257,6 +258,8 @@ void cache_purge_single()
 		case CACHE_PASS_ALPHABLEND*2:		// texture
 			g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
 			g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
+			g_pRast->DepthWrite(false);
+
 			if (lightmaps)
 				g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 0.2f);
 			else
@@ -297,6 +300,8 @@ void cache_purge_single()
 			}
 		}
 	}
+
+	g_pRast->DepthWrite(true);
 }
 
 
@@ -392,9 +397,9 @@ void cache_purge(void)
 					!(g_rInfo.rflags&RFLAG_FULLBRIGHT) 
 					&& world->nlightdefs && world->light_size);
 
-	if (multitex)
-		cache_purge_multi();
-	else
+//	if (multitex)
+//		cache_purge_multi();
+//	else
 		cache_purge_single();
 
 

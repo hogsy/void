@@ -40,6 +40,7 @@ public:
 
 
 	void DepthFunc(EDepthFunc func);
+	void DepthWrite(bool write);
 	void BlendFunc(ESourceBlend src, EDestBlend dest);
 
 	int  TextureBinInit(int num);

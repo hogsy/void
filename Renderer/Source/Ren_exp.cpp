@@ -146,8 +146,6 @@ Shutdown
 */
 bool CRenExp::Shutdown(void)
 {
-	ConPrint("Shutting donw renderer\n");
-
 	//Destroy Subsystems
 	cache_destroy();
 	beam_shutdown();

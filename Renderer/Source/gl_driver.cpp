@@ -18,6 +18,7 @@ GLCOLOR4F			glColor4f			= NULL;
 GLCULLFACE			glCullFace			= NULL;
 GLDELETETEXTURES	glDeleteTextures	= NULL;
 GLDEPTHFUNC			glDepthFunc			= NULL;
+GLDEPTHMASK			glDepthMask			= NULL;
 GLDISABLE			glDisable			= NULL;
 GLENABLE			glEnable			= NULL;
 GLEND				glEnd				= NULL;
@@ -392,6 +393,7 @@ int OpenGLInit(char *lib)
 	glCullFace			= (GLCULLFACE)			GetProcAddress(openglInst, "glCullFace");
 	glDeleteTextures	= (GLDELETETEXTURES)	GetProcAddress(openglInst, "glDeleteTextures");
 	glDepthFunc			= (GLDEPTHFUNC)			GetProcAddress(openglInst, "glDepthFunc");
+	glDepthMask			= (GLDEPTHMASK)			GetProcAddress(openglInst, "glDepthMask");
 	glDisable			= (GLDISABLE)			GetProcAddress(openglInst, "glDisable");
 	glEnable			= (GLENABLE)			GetProcAddress(openglInst, "glEnable");
 	glEnd				= (GLEND)				GetProcAddress(openglInst, "glEnd");

@@ -1195,6 +1195,7 @@ typedef	void (APIENTRY * GLCOLOR4F) (GLfloat red, GLfloat green, GLfloat blue, G
 typedef	void (APIENTRY * GLCULLFACE) (GLenum mode);
 typedef	void (APIENTRY * GLDELETETEXTURES) (GLsizei n, const GLuint *textures);
 typedef	void (APIENTRY * GLDEPTHFUNC) (GLenum func);
+typedef void (APIENTRY * GLDEPTHMASK) (GLboolean flag);
 typedef	void (APIENTRY * GLDISABLE) (GLenum cap);
 typedef	void (APIENTRY * GLENABLE) (GLenum cap);
 typedef	void (APIENTRY * GLEND) (void);
@@ -1264,6 +1265,7 @@ extern	GLCOLOR4F glColor4f;
 extern	GLCULLFACE glCullFace;
 extern	GLDELETETEXTURES glDeleteTextures;
 extern	GLDEPTHFUNC glDepthFunc;
+extern	GLDEPTHMASK glDepthMask;
 extern	GLDISABLE glDisable;
 extern	GLENABLE glEnable;
 extern	GLEND glEnd;

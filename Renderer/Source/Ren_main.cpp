@@ -247,7 +247,7 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(eye.origin);
 
-	g_pRast->ClearBuffers(VRAST_COLOR_BUFFER | VRAST_DEPTH_BUFFER);
+	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
 
 // set up the view transformation
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);

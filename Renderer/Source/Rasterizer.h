@@ -53,6 +53,8 @@ typedef struct
 	unsigned char **mipdata;
 	int mipmaps;	// number of mipmaps
 	EImageFormat format;
+	bool mipmap;
+	bool clamp;
 	int height;
 	int width;
 } tex_load_t;
@@ -94,6 +96,7 @@ struct I_Rasterizer
 	virtual bool UpdateDisplaySettings(int width, int height, int bpp, bool fullscreen)=0;
 
 	virtual void DepthFunc(EDepthFunc func)=0;
+	virtual void DepthWrite(bool write)=0;
 	virtual void BlendFunc(ESourceBlend src, EDestBlend dest)=0;
 
 	virtual int  TextureBinInit(int num)=0;
