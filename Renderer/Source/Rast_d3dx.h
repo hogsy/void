@@ -83,13 +83,15 @@ private:
 	LPDIRECTDRAW7		m_pDD;
 	LPDIRECT3D7			m_pD3D;
 	LPDIRECT3DDEVICE7	m_pD3DDevice;
+	LPDIRECT3DVERTEXBUFFER7	m_pvbVertices;
 
 	LPD3DXMATRIXSTACK	m_matView;
 	D3DXMATRIX			m_matWorld;
 	D3DXMATRIX			m_matProjection;
 
 	int					mNumVerts;
-	D3DLVERTEX			mVerts[10024];	// max verts per poly
+	D3DLVERTEX			mVerts[16000];
+
 
 	float		mTexCoords[2];
 	vector_t	mColor;

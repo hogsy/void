@@ -16,7 +16,7 @@ CRastD3DX::CRastD3DX()
 	m_pD3DX	= NULL;
 	m_pDD	= NULL;
 	m_pD3D	= NULL;
-
+	m_pvbVertices = NULL;
 	mhError = S_OK;
 	m_matView = NULL;
 
@@ -41,6 +41,31 @@ Init
 */
 bool CRastD3DX::Init()
 {
+
+	RECT wrect;
+	wrect.left = m_cWndX.ival;
+	wrect.top = m_cWndY.ival;
+	wrect.right = m_cWndX.ival + g_rInfo.width;
+	wrect.bottom= m_cWndY.ival + g_rInfo.height;
+	
+	//Adjusts Client Size
+	::AdjustWindowRect(&wrect, 
+					   WS_CAPTION,
+					   FALSE);
+
+	int width = wrect.right - wrect.left;
+	int height = wrect.bottom - wrect.top;
+
+	::SetWindowPos(g_rInfo.hWnd,
+				   HWND_TOP,
+				   wrect.left,
+				   wrect.top,
+			       width,
+			       height,
+				   0);
+
+
+
 	HRESULT hr;
 
 	if(FAILED(hr = D3DXInitialize()))
@@ -98,13 +123,14 @@ bool CRastD3DX::Init()
 	}
 
 	m_matView->LoadIdentity();
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW,		*m_matView->GetTop());
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD,		*D3DXMatrixIdentity(&m_matWorld));
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION,*D3DXMatrixIdentity(&m_matProjection));
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW,		(D3DMATRIX *)m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD,		(D3DMATRIX *)D3DXMatrixIdentity(&m_matWorld));
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION,(D3DMATRIX *)D3DXMatrixIdentity(&m_matProjection));
 
 	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, FALSE);
 
-	m_pDD->FlipToGDISurface();
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CLIPPLANEENABLE, 0);
+	m_pD3DDevice->SetRenderState(D3DRENDERSTATE_CULLMODE, D3DCULL_NONE);
 
 	g_rInfo.ready = true;
 	return true;
@@ -128,6 +154,10 @@ bool CRastD3DX::Shutdown()
 		SetWindowCoords(rect.left, rect.top);
 	}
 
+	if (m_matView)
+		m_matView->Release();
+	m_matView = NULL;
+
 	if (m_pD3DDevice)
 		m_pD3DDevice->Release();
 	m_pD3DDevice = NULL;
@@ -143,10 +173,6 @@ bool CRastD3DX::Shutdown()
 	if (m_pD3DX)
 		m_pD3DX->Release();
 	m_pD3DX = NULL;
-
-	if (m_matView)
-		m_matView->Release();
-	m_matView = NULL;
 
     D3DXUninitialize();
 
@@ -181,6 +207,18 @@ void CRastD3DX::Resize()
 	GetClientRect(g_rInfo.hWnd, &crect);
 	g_rInfo.width  = crect.right - crect.left;
 	g_rInfo.height = crect.bottom - crect.top;
+
+
+	D3DVIEWPORT7 viewData;
+	memset(&viewData, 0, sizeof(D3DVIEWPORT7));
+	viewData.dwX = 0;
+	viewData.dwY = 0;
+	viewData.dwWidth  = g_rInfo.width;
+	viewData.dwHeight = g_rInfo.height;
+	viewData.dvMinZ = 0.0f;     
+	viewData.dvMaxZ = 1.0f;
+
+	m_pD3DDevice->SetViewport(&viewData);
 }
 
 
@@ -250,7 +288,6 @@ void CRastD3DX::SetFocus()
 
 void CRastD3DX::DepthFunc(EDepthFunc func)
 {
-/*
 	switch (func)
 	{
 	case VRAST_DEPTH_NONE:
@@ -258,26 +295,23 @@ void CRastD3DX::DepthFunc(EDepthFunc func)
 		return;
 
 	case VRAST_DEPTH_FILL:
-		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, TRUE);
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_USEW);
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZFUNC,   D3DCMP_ALWAYS);
 		return;
 
 	case VRAST_DEPTH_LEQUAL:
-		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, TRUE);
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_USEW);
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZFUNC,   D3DCMP_LESSEQUAL);
 		return;
 	}
-*/
 }
 
 void CRastD3DX::DepthWrite(bool write)
 {
-/*
 	if (write)
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, TRUE);
 	else
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, FALSE);
-*/
 }
 
 void CRastD3DX::BlendFunc(ESourceBlend src, EDestBlend dest)
@@ -467,36 +501,37 @@ Matrix*
 void CRastD3DX::MatrixReset(void)
 {
 	m_matView->LoadIdentity();
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 void CRastD3DX::MatrixRotateX(float degrees)
 {
 	D3DXMATRIX mat;
 	D3DXMatrixRotationX(&mat, degrees * PI/180);
 	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 void CRastD3DX::MatrixRotateY(float degrees)
 {
 	D3DXMATRIX mat;
 	D3DXMatrixRotationY(&mat, degrees * PI/180);
 	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 void CRastD3DX::MatrixRotateZ(float degrees)
 {
 	D3DXMATRIX mat;
 	D3DXMatrixRotationZ(&mat, degrees * PI/180);
 	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 
 void CRastD3DX::MatrixTranslate(vector_t &dir)
 {
 	D3DXMATRIX mat;
-	D3DXMatrixTranslation(&mat, dir.x, dir.y, dir.z);
+	D3DXMatrixTranslation(&mat, -dir.x, -dir.z, dir.y);
 	D3DXMatrixMultiply(m_matView->GetTop(), &mat, m_matView->GetTop());
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 
@@ -509,13 +544,13 @@ void CRastD3DX::MatrixScale(vector_t &factors)
 void CRastD3DX::MatrixPush(void)
 {
 	m_matView->Push();
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 void CRastD3DX::MatrixPop(void)
 {
 	m_matView->Pop();
-	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, *m_matView->GetTop());
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 
@@ -539,19 +574,26 @@ PolyEnd
 */
 void CRastD3DX::PolyEnd(void)
 {
+	int i;
+	D3DLVERTEX *vptr;
 
 	switch (mType)
 	{
 	case VRAST_TRIANGLE_FAN:
-//		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_LVERTEX, mVerts, mNumVerts, 0 );
+		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_LVERTEX, &mVerts, mNumVerts, 0 );
 		break;
 
 	case VRAST_TRIANGLE_STRIP:
-//		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_LVERTEX, mVerts, mNumVerts, 0 );
+		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_LVERTEX, &mVerts, mNumVerts, 0 );
 		break;
 
 	case VRAST_QUADS:
-//		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_VERTEX, mVerts, mNumVerts, 0 );
+		vptr = mVerts;
+		for (i=0; i<mNumVerts; i+=4)
+		{
+			vptr = &mVerts[i];
+			m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_LVERTEX, vptr, 4, 0);
+		}
 		break;
 	}
 
@@ -560,21 +602,16 @@ void CRastD3DX::PolyEnd(void)
 
 void CRastD3DX::PolyVertexf(vector_t &vert)
 {
-
-//	mVerts[mNumVerts] = D3DVERTEX(  D3DVECTOR(vert.x, vert.z, -vert.y),
-//									D3DVECTOR(mColor.x, mColor.y, mColor.z),
-//									mTexCoords[0], mTexCoords[1]);
-	mVerts[mNumVerts] = D3DLVERTEX(  D3DVECTOR(vert.x, vert.z, -vert.y),
-									RGB_MAKE(0, 200, 0),
+	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(vert.x, vert.z, -vert.y),
+									rand(),
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
 }
 void CRastD3DX::PolyVertexi(int x, int y)
 {
-
-	mVerts[mNumVerts] = D3DLVERTEX(  D3DVECTOR(x, 0, y),
-									RGB_MAKE(200, 0, 200),
+	mVerts[mNumVerts] = D3DLVERTEX( D3DVECTOR(x, y, 0),
+									rand(),
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
@@ -629,23 +666,65 @@ ProjectionMode
 */
 void CRastD3DX::ProjectionMode(EProjectionMode mode)
 {
+	float x;
+	float z;
 
-	D3DXMatrixIdentity(&m_matProjection);
+	float r = g_rInfo.width;
+	float t = g_rInfo.height;
+/*
+	D3DMATRIX mat;
+	mat._11 = 2.0f / (r-0);
+	mat._21 = 0;
+	mat._31 = 0;
+	mat._41 = 0;
+	mat._12 = 0;
+	mat._22 = 2.0f / (t-0);
+	mat._32 = 0;
+	mat._42 = 0;
+	mat._13 = 0;
+	mat._23 = 0;
+	mat._33 = -2.0f / (1- -1);
+	mat._43 = 0;
+	mat._14 = (r+0) / (r-0);
+	mat._24 = (t+0) / (t-0);
+	mat._34 = (1+-1) / (1 - -1);
+	mat._44 = 1;
+*/
+/*
+	mat._11 = 2.0f / (r-0);
+	mat._12 = 0;
+	mat._13 = 0;
+	mat._14 = 0;
+	mat._21 = 0;
+	mat._22 = 2.0f / (t-0);
+	mat._23 = 0;
+	mat._24 = 0;
+	mat._31 = 0;
+	mat._32 = 0;
+	mat._33 = -2.0f / (1- -1);
+	mat._34 = 0;
+	mat._41 = (r+0) / (r-0);
+	mat._42 = (t+0) / (t-0);
+	mat._43 = (1+-1) / (1 - -1);
+	mat._44 = 1;
+*/
 
 	switch (mode)
 	{
 	case VRAST_PERSPECTIVE:
 		// FIXME - access fov here
-		D3DXMatrixPerspectiveFov(&m_matProjection, 90.0f*(PI/180), 3.0f / 4.0f, 1, 10000);
+		x = (float) tan(90.0f*(PI/180) * 0.5f);
+		z = x * 0.75f;						// always render in a 3:4 aspect ratio
+		D3DXMatrixPerspectiveOffCenter(&m_matProjection, -x, x, -z, z, 1, 10000);
 		break;
 
 	case VRAST_ORTHO:
-		D3DXMatrixOrtho(&m_matProjection, g_rInfo.width, g_rInfo.height, -1, 1);
+		D3DXMatrixOrthoOffCenter(&m_matProjection, 0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
+
 		break;
 	}
 
-    m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, m_matProjection);
-
+	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)m_matProjection);
 }
 
 
@@ -677,15 +756,15 @@ ClearBuffers
 */
 void CRastD3DX::FrameEnd(void)
 {
+	Sleep(1);
 	m_pD3DDevice->EndScene();
-	m_pDD->FlipToGDISurface();
 	// Update frame
-  /*
-  HRESULT hr = m_pD3DX->UpdateFrame(0);
+  
+	HRESULT hr = m_pD3DX->UpdateFrame(0);
 	if (FAILED(hr))
 		mhError = hr;
 
-
+/*
     if(DDERR_SURFACELOST == hr || DDERR_SURFACEBUSY == hr)
     {
         hr = g_pDD->TestCooperativeLevel();

@@ -212,12 +212,6 @@ void build_frust(void)
 	VectorMA(&d, -z, &up, &d);
 
 // 4 sides
-/*
-	clip_build_plane3(&eye.origin, &b, &a, &frust[0]);
-	clip_build_plane3(&eye.origin, &c, &b, &frust[1]);
-	clip_build_plane3(&eye.origin, &d, &c, &frust[2]);
-	clip_build_plane3(&eye.origin, &a, &d, &frust[3]);
-*/
 	clip_build_plane3(&camera->origin, &b, &a, &frust[0]);
 	clip_build_plane3(&camera->origin, &c, &b, &frust[1]);
 	clip_build_plane3(&camera->origin, &d, &c, &frust[2]);
@@ -225,8 +219,25 @@ void build_frust(void)
 
 // near-z
 	VectorCopy(forward, frust[4].norm);
-//	frust[4].d = dot(frust[4].norm, eye.origin);
 	frust[4].d = dot(frust[4].norm, camera->origin);
+/*
+// poly right in front of eye
+	cpoly_t *poly = get_poly();
+	poly->poly.lightdef = 0;
+	poly->poly.texdef = 0;
+	poly->poly.num_vertices = 4;
+	VectorMA(&a, 5, &forward, &poly->poly.vertices[0]);
+	VectorMA(&b, 5, &forward, &poly->poly.vertices[1]);
+	VectorMA(&c, 5, &forward, &poly->poly.vertices[2]);
+	VectorMA(&d, 5, &forward, &poly->poly.vertices[3]);
+
+	g_pRast->PolyStart(VRAST_QUADS);
+	for (int i=0; i<4; i++)
+		g_pRast->PolyVertexf(poly->poly.vertices[i]);
+	g_pRast->PolyEnd();
+
+	cache_add_poly(poly, CACHE_PASS_ZBUFFER);
+*/
 }
 
 
@@ -244,51 +255,12 @@ void r_draw_world()
 
 /***********************
 Draw the current frame
-***********************/
-/*
-void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
-{
-//FIXME !!!!!!!!!!!!!!!!!!!!!
-	eye.origin = *origin;
-	eye.angles = *angles;
-	fullblend  =  blend;
-
-	AngleToVector (&eye.angles, &forward, &right, &up);
-	VectorNormalize(&forward);
-	VectorNormalize(&right);
-	VectorNormalize(&up);
-
-	// find eye leaf for pvs tests
-	eye_leaf = get_leaf_for_point(eye.origin);
-
-	g_pRast->ClearBuffers(VRAST_COLOR_BUFFER | VRAST_DEPTH_BUFFER);
-
-// set up the view transformation
-	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
-	g_pRast->MatrixReset();
-
-	g_pRast->MatrixRotateZ( eye.angles.ROLL  * 180/PI);
-	g_pRast->MatrixRotateX(-eye.angles.PITCH * 180/PI);
-	g_pRast->MatrixRotateY( eye.angles.YAW   * 180/PI);
-	g_pRast->MatrixTranslate(eye.origin);
-
-
-	r_draw_world();
-
-// display any messages
-	g_prHud->DrawHud();
-
-// draw the console if we need to
-	g_prCons->Draw();
-
-	g_pRast->FrameEnd();
-}
-*/
-
+************************/
 void r_drawframe(const CCamera * pcamera)
 {
 	camera = pcamera;
 
+//	VectorSet(&camera->angles, 0, 0, 0);
 	AngleToVector (&camera->angles, &forward, &right, &up);
 	
 	fullblend  =  &camera->blend;
@@ -305,6 +277,7 @@ void r_drawframe(const CCamera * pcamera)
 
 // set up the view transformation
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
+
 	g_pRast->MatrixReset();
 
 	g_pRast->MatrixRotateZ( camera->angles.ROLL  * 180/PI);
@@ -316,7 +289,7 @@ void r_drawframe(const CCamera * pcamera)
 
 	r_draw_world();
 
-// display any messages
+	// display any messages
 	g_prHud->DrawHud();
 
 // draw the console if we need to
