@@ -11,6 +11,9 @@ extern	CVar *	g_pFullbright;
 // to get the time for tcmods
 extern	I_Void		  *	g_pVoidExp;
 
+// for sky texgen
+extern const CCamera * camera;
+
 /*
 =======================================
 Constructor 
@@ -190,6 +193,25 @@ void CRasterizer::DrawLayer(int l)
 		}
 		break;
 
+
+	case TEXGEN_SKY:
+		if (!mUseTexDef)
+			break;
+
+		for (i=0; i<mNumElements; i++)
+		{
+			mVerts[i].tex1[0] = mTexCoords[i][0] - camera->origin.x * mTexDef->vecs[0][0]
+												 - camera->origin.y * mTexDef->vecs[0][1]
+												 - camera->origin.z * mTexDef->vecs[0][2];
+
+			mVerts[i].tex1[1] = mTexCoords[i][1] - camera->origin.x * mTexDef->vecs[1][0]
+												 - camera->origin.y * mTexDef->vecs[1][1]
+												 - camera->origin.z * mTexDef->vecs[1][2];
+		}
+		break;
+
+
+
 	case TEXGEN_LIGHT:
 		if (!mUseLightDef)
 			break;
@@ -234,6 +256,9 @@ void CRasterizer::DrawLayer(int l)
 			TextureSet(mShader->mTextureBin, layer->mTextureNames[texture].index);
 		}
 	}
+
+	// texture clamping
+	TextureClamp(layer->mTextureClamp);
 
 	// blendfunc
 	BlendFunc(layer->mSrcBlend, layer->mDstBlend);

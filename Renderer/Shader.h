@@ -18,11 +18,13 @@ class CFileBuffer;
 enum ETexGen
 {
 	TEXGEN_BASE,
+	TEXGEN_SKY,
 	TEXGEN_LIGHT,
 	TEXGEN_VECTOR
 };
 
 
+//===================================================================================================
 // tcmod's - modify texture coords
 class CTCModBase
 {
@@ -94,8 +96,7 @@ private:
 };
 
 
-
-
+//===================================================================================================
 // where alpha values come from
 enum EAlphaGen
 {
@@ -152,6 +153,8 @@ public:
 	vector_t		mTexVector[2];
 
 	CTCModBase		*mHeadTCMod;
+
+	bool			mTextureClamp;
 
 	// alpha component generation
 	alphagen_t		mAlphaGen;

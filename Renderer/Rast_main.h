@@ -133,6 +133,7 @@ public:
 	virtual int  TextureCount(int bin)=0;
 	virtual void TextureBinDestroy(int bin)=0;
 	virtual void TextureLoad(int bin, int num, const TextureData &texdata)=0;
+	virtual void TextureClamp(bool clamp)=0;
 
 	virtual void MatrixReset(void)=0;
 	virtual void MatrixRotateX(float degrees)=0;

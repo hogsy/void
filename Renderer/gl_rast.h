@@ -33,6 +33,8 @@ public:
 	void TextureBinDestroy(int bin);
 	void TextureSet(int bin, int texnum);
 	void TextureLoad(int bin, int num, const TextureData &texdata);
+	void TextureClamp(bool clamp);
+
 
 	void MatrixReset(void);
 	void MatrixRotateX(float degrees);

@@ -21,8 +21,8 @@ CShaderManager	*g_pShaders=0;
 
 const char * BaseTextureList[] =
 {
-	"base/_ascii",
-	"base/conback",
+	"textures/base/_ascii",
+	"textures/base/conback",
 	0
 };
 
@@ -46,7 +46,7 @@ CShaderManager::CShaderManager()
 
 
 	CFileBuffer	 fileReader;
-	if (!fileReader.Open("Shaders/shaderlist.txt"))
+	if (!fileReader.Open("Scripts/shaderlist.txt"))
 		return;
 
 
@@ -90,7 +90,7 @@ void CShaderManager::ParseShaders(const char *shaderfile)
 	CFileBuffer	 fileReader;
 	char path[260];
 
-	sprintf(path, "Shaders/%s.txt", shaderfile);
+	sprintf(path, "scripts/%s.shader", shaderfile);
 
 	if (!fileReader.Open(path))
 		return;

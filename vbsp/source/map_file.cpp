@@ -310,7 +310,7 @@ int parse_brush_side(void)
 
 	// read the texdef
 	map_brush_sides[num_map_brush_sides].texinfo = num_map_texinfos;
-	strcpy(map_texinfos[num_map_texinfos].name, token);
+	sprintf(map_texinfos[num_map_texinfos].name, "%s/%s", "textures", token);
 
 	get_token(false);
 	map_texinfos[num_map_texinfos].shift[0] = atoi(token);

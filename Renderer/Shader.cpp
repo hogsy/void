@@ -35,6 +35,7 @@ CShaderLayer::CShaderLayer()
 	mbMipMap = true;
 	mAlphaGen.func = ALPHAGEN_IDENTITY;
 	mHeadTCMod = new CTCModHead();
+	mTextureClamp = false;
 }
 
 
@@ -70,6 +71,8 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 				mTexGen = TEXGEN_BASE;
 			else if (_stricmp(token, "lightmap") == 0)
 				mTexGen = TEXGEN_LIGHT;
+			else if (_stricmp(token, "sky") == 0)
+				mTexGen = TEXGEN_SKY;
 			else if (_stricmp(token, "vector") == 0)
 			{
 				mTexGen = TEXGEN_VECTOR;
@@ -112,7 +115,7 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 				mHeadTCMod->Add(new CTCModScroll(x, y));
 			}
 
-			if (_stricmp(token, "scale") == 0)
+			else if (_stricmp(token, "scale") == 0)
 			{
 				float x, y;
 				layer->GetToken(token, false);
@@ -131,6 +134,41 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 		// only 1 texture for this layer
 		else if (_stricmp(token, "map") == 0)
 		{
+			mNumTextures = 1;
+			mTextureNames = new texname_t[1];
+			if (!mTextureNames)	FError("mem for texture names");
+
+			layer->GetToken(token, false);
+			if (token[0] == '\0')
+				Error("error parsing shader file!!\n");
+
+			if (_stricmp(token, "$lightmap") == 0)
+			{
+				mTextureClamp = true;
+				mIsLight = true;
+				mTextureNames[0].index = -1;
+				mTexGen = TEXGEN_LIGHT;
+			}
+			else
+			{
+				mTextureNames[0].index = texindex++;
+				strcpy(mTextureNames[0].filename, token);
+				// strip the extension off the filename
+				for (int c=strlen(mTextureNames[0].filename); c>=0; c--)
+				{
+					if (mTextureNames[0].filename[c] == '.')
+					{
+						mTextureNames[0].filename[c] = '\0';
+						break;
+					}
+				}
+			}
+		}
+
+		// only 1 texture for this layer - clamped
+		else if (_stricmp(token, "clampmap") == 0)
+		{
+			mTextureClamp = true;
 			mNumTextures = 1;
 			mTextureNames = new texname_t[1];
 			if (!mTextureNames)	FError("mem for texture names");
@@ -317,6 +355,7 @@ void CShaderLayer::Default(const char *name, int &texindex)
 		mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
 		mTexGen = TEXGEN_LIGHT;
 		mIsLight = true;
+		mTextureClamp = true;
 	}
 	else
 	{
@@ -334,10 +373,7 @@ GetDims
 void CShaderLayer::GetDims(int &width, int &height)
 {
 	TextureData		tdata;
-	char texname[COM_MAXPATH];
-	sprintf(texname,"%s/%s","textures",mTextureNames[0].filename);
-
-	CImageReader::GetReader().Read(texname, tdata);
+	CImageReader::GetReader().Read(mTextureNames[0].filename, tdata);
 	CImageReader::GetReader().FreeMipData();
 
 	width = tdata.width;
@@ -429,6 +465,10 @@ void CShader::Parse(CFileBuffer *shader)
 			mContentFlags &= ~CONTENTS_SOLID;
 		}
 
+		// editor image
+		else if (_stricmp(token, "qer_editorimage") == 0)
+			shader->GetToken(token, false);
+
 		// end of shader def
 		else if (_stricmp(token, "}") == 0)
 			break;
@@ -511,8 +551,6 @@ void CShader::LoadTextures(void)
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
-	char texname[COM_MAXPATH];
-
 
 	int t=0;
 	for (int l=0; l<mNumLayers; l++)
@@ -521,12 +559,9 @@ void CShader::LoadTextures(void)
 		{
 			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
-				sprintf(texname,"%s/%s","textures",mLayers[l]->mTextureNames[tex].filename);
-
 				tData.bMipMaps = mLayers[l]->mbMipMap;
 
-
-				if (!CImageReader::GetReader().Read(texname, tData))
+				if (!CImageReader::GetReader().Read(mLayers[l]->mTextureNames[tex].filename, tData))
 					CImageReader::GetReader().DefaultTexture(tData);
 
 				g_pRast->TextureLoad(mTextureBin, t, tData);

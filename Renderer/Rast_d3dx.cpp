@@ -475,6 +475,21 @@ void CRastD3DX::TextureBinDestroy(int bin)
 }
 
 
+void CRastD3DX::TextureClamp(bool clamp)
+{
+	if (clamp)
+	{
+		m_pD3DDevice->SetTextureStageState(0, D3DTSS_ADDRESSU, D3DTADDRESS_WRAP);
+		m_pD3DDevice->SetTextureStageState(0, D3DTSS_ADDRESSV, D3DTADDRESS_WRAP);
+	}
+	else
+	{
+		m_pD3DDevice->SetTextureStageState(0, D3DTSS_ADDRESSU, D3DTADDRESS_WRAP);
+		m_pD3DDevice->SetTextureStageState(0, D3DTSS_ADDRESSV, D3DTADDRESS_WRAP);
+	}
+}
+
+
 
 void CRastD3DX::TextureSet(int bin, int texnum)
 {
@@ -704,7 +719,7 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 			D3DXMatrixOrthoOffCenter(&m_matProjection, 0, g_rInfo.width, 0, g_rInfo.height, -1, 1);
 		else
 			D3DXMatrixOrthoOffCenter(&m_matProjection,	1.0f/g_pD3DXShift->ival, g_rInfo.width + 1.0f/g_pD3DXShift->ival,
-														1.0f/g_pD3DXShift->ival, g_rInfo.height+ 1.0f/g_pD3DXShift->ival, -1, 1);
+														-1.0f/g_pD3DXShift->ival, g_rInfo.height- 1.0f/g_pD3DXShift->ival, -1, 1);
 
 		break;
 	}

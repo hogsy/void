@@ -705,6 +705,21 @@ void COpenGLRast::TextureSet(int bin, int texnum)
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
 }
 
+void COpenGLRast::TextureClamp(bool clamp)
+{
+	if (clamp)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+}
+
+
 void COpenGLRast::TextureLoad(int bin, int num, const TextureData &texdata)
 {
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[num]);
