@@ -14,6 +14,7 @@
 #include "I_filesystem.h"
 #include "Sys_exp.h"
 #include "Cl_main.h"
+#include "Sys_cons.h"
 
 //========================================================================================
 
@@ -32,15 +33,9 @@ public:
 	~CVoid();								//Destructor
 	
 	bool Init();							//Init subsystems
-	bool Shutdown();						//Shutdown everything
-
 	void RunFrame();						//Game Loop
 
-	bool LoadWorld(char *worldname);
-	bool UnloadWorld();
-
-	bool InitServer(char *map);				//Init game
-	bool ShutdownServer();
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 	void Error(char *error, ...);
 
@@ -50,25 +45,28 @@ public:
 	void Activate(bool focus);
 	void OnFocus();
 	void LostFocus();
-//hack
+	
+	//hack
 	void HandleMM(uint wParam, long lParam);	//MCI Multimedia event
-
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
 private:
 
 	//Give this friend access
 	friend const char * System::GetExePath();
 	friend const char * System::GetCurrentPath();
+	friend I_Console  *	System::GetConsole();
 	friend eGameState   System::GetGameState();
 	friend void	System::SetGameState(eGameState state);
 	friend I_InputFocusManager * System::GetInputFocusManager();
-	friend void System::ToggleConsole();
-
+	
+	friend void ComPrintf(char* text, ...);
+	
 	//Private vars
 	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
 	
+	CConsole	   m_Console;		//Console
+
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 	VoidExport   * m_pExport;		//Exported Data
 	CInput		 * m_pInput;		//Input 
@@ -89,12 +87,9 @@ private:
 
 	bool CreateVoidWindow();
 	void ParseCmdLine(const char * cmdLine);	//Parse Cmd Line
-
-	//Write configuration file
-	void WriteConfig(char *config);
-
-	void CFuncQuit();						//quit game
-	void CFuncMap(int argc, char** argv);	//start local server with map + connect to it
+	void WriteConfig(const char *config);		//Write configuration file
+	void ToggleConsole();
+	void Quit();				
 };
 
 #endif

@@ -45,7 +45,6 @@ int WINAPI WinMain(HINSTANCE hInst,
 	if(!g_pVoid->Init()) 
 	{
 		g_pVoid->Error("Error Initializing Subsystems\n");
-		g_pVoid->Shutdown();
 		delete g_pVoid;
 		return -1;
 	}
@@ -88,7 +87,6 @@ int WINAPI WinMain(HINSTANCE hInst,
 	}
 */
 	//Will never get executed
-	g_pVoid->Shutdown();
 	delete g_pVoid;  
 	UnRegisterWindow(m_hInst);
 	return -1;
@@ -164,7 +162,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 	case WM_QUIT:
 		{
 			//Cleanup
-			g_pVoid->Shutdown();
 			delete g_pVoid;
 			UnRegisterWindow(m_hInst);
 			exit(0);

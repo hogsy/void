@@ -1,5 +1,4 @@
 #include "Sys_main.h"
-#include "Sys_cons.h"
 #include "Com_hunk.h"
 #include "Com_util.h"
 
@@ -20,9 +19,6 @@ Subsystems
 ==========================================
 */
 I_Renderer  *	g_pRender  =0;	//Renderer
-CConsole	*	g_pConsole =0;	//Console
-
-world_t		*	g_pWorld=0;		//The World
 extern CVoid*	g_pVoid;
 
 /*
@@ -35,7 +31,8 @@ namespace
 	enum
 	{
 		CMD_QUIT = 0,
-		CMD_MAP  = 1
+		CMD_TOGGLECONS = 1,
+		CMD_WRITECONFIG = 2,
 	};
 }
 
@@ -61,11 +58,11 @@ CVoid::CVoid(const char * cmdLine)
 	m_pTime = new CTime();						
 
 	//Create the game console
-	g_pConsole = new CConsole();
+//	m_Console = new CConsole();
 
 	//Export structure
 	m_pExport = new VoidExport();
-	m_pExport->console    = (I_Console*)g_pConsole;
+	m_pExport->console    = (I_Console*)&m_Console;
 	m_pExport->hunkManager= g_pHunkManager; 
 	
 	//Create the file system
@@ -82,7 +79,7 @@ CVoid::CVoid(const char * cmdLine)
 	m_pClient = new CClient();		
 
 	//Network Sys
-	m_pServer = new CServer();
+	m_pServer = new CServer(m_pClient);
 
 #ifdef INCLUDE_SOUND
 	//Sound
@@ -99,40 +96,8 @@ CVoid::CVoid(const char * cmdLine)
 
 	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("map",CMD_MAP,this );
-	System::GetConsole()->RegisterCommand("connect",CMD_MAP,this);
-}
-
-/*
-==========================================
-Destructor
-==========================================
-*/
-CVoid::~CVoid() 
-{
-	if(m_pServer)	delete m_pServer;	
-	if(m_pClient) 	delete m_pClient;
-	
-#ifdef INCLUDE_SOUND
-	if(m_pSound)	delete m_pSound;
-#endif
-
-#ifdef INCLUDE_MUSIC
-	if(m_pMusic)	delete m_pMusic;
-#endif
-	
-	if(m_pInput)	delete m_pInput;
-	
-	if(m_pTime)		delete m_pTime;
-
-	RENDERER_Free();	//Free the Renderer Interface
-	FILESYSTEM_Free();	//Free the file system
-
-	if(m_pExport)	delete m_pExport;
-
-	m_HunkManager.PrintStats();
-
-	if(g_pConsole)	delete g_pConsole;
+	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
+	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
 }
 
 /*
@@ -149,8 +114,8 @@ bool CVoid::Init()
 	//parse Command line
 //	ParseCmdLine(lpCmdLine);
 
-	g_pConsole->ExecConfig("default.cfg");
-	g_pConsole->ExecConfig("void.cfg");
+	m_Console.ExecConfig("default.cfg");
+	m_Console.ExecConfig("void.cfg");
 
 
 	//================================
@@ -182,11 +147,8 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize Console
-	if(!g_pConsole->Init(g_pRender->GetConsole()))
-	{
-		Error("CVoid::Init: Could not Intialize the console");
-		return false;
-	}
+	m_Console.SetConsoleRenderer(g_pRender->GetConsole());
+
 
 	//================================
 	//Initialize the Renderer
@@ -218,11 +180,6 @@ bool CVoid::Init()
 	if(!VoidNet::InitNetwork())
 	{
 		Error("CVoid::Init: Could not initalize Winsock");
-		return false;
-	}
-	if(!m_pServer->Init())
-	{
-		Error("CVoid::Init: Could not Initialize server");
 		return false;
 	}
 
@@ -262,32 +219,96 @@ bool CVoid::Init()
 	m_pTime->Reset();
 
 	//Set focus to console
-	System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+	System::GetInputFocusManager()->SetKeyListener(&m_Console,true);
 
 	//Exec any autoexec file
-	g_pConsole->ExecConfig("autoexec.cfg");
+	m_Console.ExecConfig("autoexec.cfg");
 	return true;
+}
+
+
+
+/*
+==========================================
+Destructor
+==========================================
+*/
+CVoid::~CVoid() 
+{
+	//console
+	char configname[128];
+	sprintf(configname,"%s\\void.cfg",m_exePath);
+	WriteConfig(configname);
+
+	if(m_pServer)	
+		delete m_pServer;	
+
+	if(m_pClient)
+	{
+		m_pClient->UnloadWorld();
+		delete m_pClient;
+	}
+
+	VoidNet::ShutdownNetwork();
+	
+#ifdef INCLUDE_SOUND
+	if(m_pSound)	
+	{
+		m_pSound->Shutdown();
+		delete m_pSound;
+	}
+#endif
+
+#ifdef INCLUDE_MUSIC
+	if(m_pMusic)
+	{
+		m_pMusic->Shutdown();
+		delete m_pMusic;
+	}
+#endif
+	
+	if(m_pInput)
+	{
+		m_pInput->Shutdown();
+		delete m_pInput;
+	}
+	
+	if(m_pTime)
+		delete m_pTime;
+
+	//Shutdown, and free the Renderer Interface
+	if(g_pRender)
+		g_pRender->Shutdown();
+
+	m_HunkManager.PrintStats();
+
+//if(m_Console)
+//	m_Console->Shutdown();
+
+	//Free the file system
+	FILESYSTEM_Free();	
+	RENDERER_Free();
+
+	if(m_pExport)
+		delete m_pExport;
+	
+//	delete m_Console;
+	CoUninitialize();
 }
 
 /*
 ==========================================
 Shutdown all the subsystems
 ==========================================
-*/
+
 bool CVoid::Shutdown()
 {
 	//Subsystem shutdown proceedures
 	//=============================
-
-	if(m_pClient && m_pClient->m_ingame)
-		m_pClient->Disconnect();
+	if(m_pClient)
+		m_pClient->UnloadWorld();
 	
-	ShutdownServer();
-
 	VoidNet::ShutdownNetwork();
-
-	if(m_pServer)
-		m_pServer->Shutdown();
 
 #ifdef INCLUDE_SOUND
 	//Sound
@@ -314,13 +335,14 @@ bool CVoid::Shutdown()
 	if(g_pRender)
 		g_pRender->Shutdown();
 
-	if(g_pConsole)
-		g_pConsole->Shutdown(); 
+	if(m_Console)
+		m_Console->Shutdown(); 
 
 	//Release COM library
 	CoUninitialize();
 	return true;
 }
+*/
 
 /*
 ==========================================
@@ -341,180 +363,9 @@ void CVoid::RunFrame()
 #endif
 
 	m_pServer->RunFrame();
-
-	//Run Client frame
-	if(m_pClient->m_ingame)
-	//if(m_pClient->m_active)
-	{
-		m_pClient->RunFrame();
-		//draw the scene
-		g_pRender->DrawFrame(&m_pClient->eye.origin,&m_pClient->eye.angles);
-	}
-	else
-	{
-		//draw the console or menues etc
-		g_pRender->DrawFrame(0,0);
-	}
-}
-
-/*
-======================================
-Init Game
-======================================
-*/
-bool CVoid::InitServer(char *map)
-{
-/*	if(m_pClient->m_connected && !m_pClient->Disconnect())
-	{
-		ComPrintf("CVoid::InitServer:Unable to disconnect Client\n");
-		return false;
-	}
-*/
-
-	char worldname[128];
-	char mapname[128];
 	
-	strcpy(mapname, map);
-	Util::SetDefaultExtension(mapname,".bsp");
-	
-//	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
-	
-	strcpy(worldname,"Worlds/");
-	strcat(worldname,mapname);
-	
-	if(g_pWorld != 0)
-	{
-		m_pClient->UnloadWorld();
-		UnloadWorld();
-	}
-
-	g_pWorld = 0;
-	g_pWorld = world_create(worldname);
-
-	if(!g_pWorld)
-	{
-		ComPrintf("CVoid::InitGame: couldnt load map\n");
-		return false;
-	}
-
-	m_pClient->LoadWorld(g_pWorld);
-	m_pClient->m_connected = true;
-	m_pClient->m_ingame = true;
-	m_pClient->SetInputState(true);
-	
-
-#ifndef __VOIDALPHA
-	if(g_pServer->m_active)
-	{
-		if(!ShutdownServer())
-		{
-			ComPrintf("CVoid::InitGame: already in game, couldnt shutdown\n");
-			return false;
-		}
-	}
-
-	if(!g_pServer->InitGame(map))
-	{
-		ComPrintf("CVoid::InitGame: couldnt init server\n");
-		ShutdownServer();
-		return false;
-	}
-#endif
-
-/*	if(!LoadWorld(mapname))
-	{
-		ComPrintf("CVoid::InitGame: couldnt load world\n");
-		ShutdownServer();
-		return false;
-	}
-
-	//Init game server and load the world
-	if(!g_pServer->InitGame(g_pWorld))
-	{
-		ComPrintf("CVoid::InitGame: couldnt init server\n");
-		ShutdownServer();
-		return false;
-	}
-*/
-
-	ComPrintf("CVoid::InitGame: OK\n");
-	return true;
-}
-
-/*
-======================================
-Shutdown game
-======================================
-*/
-bool CVoid::ShutdownServer()
-{
-	//Network Server
-#ifndef __VOIDALPHA
-	if(g_pServer && g_pServer->m_active)
-		g_pServer->Shutdown();
-#endif
-
-	m_pClient->UnloadWorld();
-	UnloadWorld();
-
-/*	//destroy the world
-	if(g_pWorld)
-		world_destroy(g_pWorld);
-	g_pWorld = 0;
-*/
-	m_gameState = INCONSOLE;
-	ComPrintf("CVoid::ShutdownGame: OK\n");
-	return true;
-}
-
-
-/*
-=======================================
-Load a map
-destroys current map, if its there
-=======================================
-*/
-bool CVoid::LoadWorld(char *worldname)
-{
-	if(g_pWorld != 0)
-		return false;
-
-#ifndef __VOIDALPHA	
-	if(!strcmp(worldname,g_pServer->m_mapname))
-	{
-		g_pWorld = g_pServer->GetWorld();
-		return true;
-	}
-#endif
-
-	g_pWorld = world_create(worldname);
-	if(!g_pWorld)
-	{
-		ComPrintf("CVoid::LoadWorld: couldnt load %s\n",worldname);
-		return false;
-	}
-	return true;
-}
-
-/*
-=====================================
-Unload a map
-=====================================
-*/
-
-bool CVoid::UnloadWorld()
-{
-#ifndef __VOIDALPHA
-	if(g_pWorld && g_pWorld == g_pServer->GetWorld())
-	{
-		ComPrintf("CVoid::UnloadWorld: world in use by the server\n");
-		return false;
-	}
-#endif
-
-	world_destroy(g_pWorld);
-	g_pWorld =0;
-	return true;
+	//Will handle menu/UI/world/HUD drawing
+	m_pClient->RunFrame();
 }
 
 //======================================================================================
@@ -664,12 +515,47 @@ void CVoid::Error(char *error, ...)
 				0);
 }
 
+
+//======================================================================================
+//Console loopback functions
+//======================================================================================
+
+/*
+===============================================
+quit game - 
+disconnect client + shutdown server + exit game
+===============================================
+*/
+void CVoid::Quit()
+{
+	ComPrintf("CVoid::Quit\n");
+
+	//Win32 func
+	PostMessage(System::GetHwnd(),	// handle of destination window 
+				WM_QUIT,			// message to post 
+				0,					// first message parameter 
+				0);					// second message parameter 
+}
+
+/*
+==========================================
+Toggle Console
+==========================================
+*/
+void CVoid::ToggleConsole()
+{
+	if(System::GetGameState() == INGAMECONSOLE)
+		System::SetGameState(INGAME);
+	else if(System::GetGameState() == INGAME)
+		System::SetGameState(INGAMECONSOLE);
+}
+
 /*
 =====================================
 Write the configuration file
 =====================================
 */
-void CVoid::WriteConfig(char *config)
+void CVoid::WriteConfig(const char *config)
 {
 	//Write the Config file
 	if(config)
@@ -677,17 +563,13 @@ void CVoid::WriteConfig(char *config)
 		FILE * fp = fopen(config,"w");
 		if(fp != NULL)
 		{
-			g_pConsole->WriteCVars(fp);
+			m_Console.WriteCVars(fp);
 			if(m_pClient)
 				m_pClient->WriteBindTable(fp);
 			fclose(fp);
 		}
 	}
 }
-
-//======================================================================================
-//Console loopback functions
-//======================================================================================
 
 /*
 ==========================================
@@ -700,55 +582,20 @@ void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 	{
 	case CMD_QUIT:
 		{
-			CFuncQuit();
+			Quit();
 			break;
 		}
-	case CMD_MAP:
+	case CMD_TOGGLECONS:
 		{
-			CFuncMap(numArgs,szArgs);
+			ToggleConsole();
+			break;
+		}
+	case CMD_WRITECONFIG:
+		{
+			WriteConfig(szArgs[1]);
 			break;
 		}
 	}
-}
-
-/*
-===============================================
-quit game - 
-disconnect client + shutdown server + exit game
-===============================================
-*/
-void CVoid::CFuncQuit()
-{
-	ComPrintf("CVoid::Quit\n");
-
-	//Win32 func
-	PostMessage(System::GetHwnd(),	// handle of destination window 
-				WM_QUIT,			// message to post 
-				0,					// first message parameter 
-				0);					// second message parameter 
-}
-
-/*
-======================================
-Load a Map
-start local server with map + connect to it
-======================================
-*/
-void CVoid::CFuncMap(int argc, char** argv)
-{
-	if(argc >= 2)
-	{
-		InitServer(argv[1]);
-/*		if(InitServer(argv[1]))
-		{
-			m_pClient->ConnectTo("loopback",36666);
-		}
-		else
-			ComPrintf("CVoid::Map: couldnt start server\n");
-*/
-		return;
-	}
-	ComPrintf("CVoid::Map: invalid arguments\n");
 }
 
 //======================================================================================
@@ -764,24 +611,45 @@ namespace System
 	const char* GetExePath()    { return g_pVoid->m_exePath; } 
 	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
-	void SetGameState(eGameState state) { g_pVoid->m_gameState = state; }
+	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
-	void ToggleConsole()
-	{
-		if(GetGameState() == INGAMECONSOLE)
+	void SetGameState(eGameState state) 
+	{ 
+		g_pVoid->m_gameState = state; 
+		if(state == INCONSOLE)
 		{
-			SetGameState(INGAME);
-			g_pConsole->Toggle(false);
+			g_pVoid->m_Console.SetFullscreen(true);
+			g_pVoid->m_Console.SetVisible(true);
+		}
+		else if(state == INGAMECONSOLE)
+		{
+			g_pVoid->m_Console.SetFullscreen(false);
+			g_pVoid->m_Console.SetVisible(true);
+		}
+		else if(state == INGAME)
+		{
+			g_pVoid->m_Console.SetFullscreen(false);
+			g_pVoid->m_Console.SetVisible(false);
+
 			g_pVoid->m_pClient->SetInputState(true);
 		}
-		else if(GetGameState() == INGAME)
-		{
-			GetInputFocusManager()->SetCursorListener(0);
-			GetInputFocusManager()->SetKeyListener(g_pConsole,true);
-
-			SetGameState(INGAMECONSOLE);
-			g_pConsole->Toggle(true);
-		}
 	}
+}
+
+/*
+===============================================
+print a string to debugging window 
+and handle any arguments
+===============================================
+*/
+void ComPrintf(char* text, ...)
+{
+	static char textBuffer[1024];
+	va_list args;
+	va_start(args, text);
+	vsprintf(textBuffer, text, args);
+	va_end(args);
+		
+	g_pVoid->m_Console.ComPrint(textBuffer);
 }

@@ -1,44 +1,24 @@
-#include "Sys_hdr.h"
 #include "Sys_cons.h"
 #include "Com_util.h"
 
-#define CMD_CVARLIST	0
-#define CMD_CMDLIST		1
-#define CMD_TOGGLECONS	2
-#define CMD_TEST		3
+#include <direct.h>
 
-//======================================================================================
+//Private stuff
 //======================================================================================
 
-namespace System
-{	
-	I_Console * GetConsole() {	return g_pConsole; }
-}
-
-/*
-===============================================
-print a string to debugging window 
-and handle any arguments
-===============================================
-*/
-void ComPrintf(char* text, ...)
+namespace
 {
-	if(g_pConsole)
+	enum
 	{
-		static char textBuffer[1024];
-		va_list args;
-		va_start(args, text);
-		vsprintf(textBuffer, text, args);
-		va_end(args);
-		
-		g_pConsole->ComPrint(textBuffer);
-	}
+		CMD_CVARLIST = 1,
+		CMD_CMDLIST  = 2,
+		CMD_TEST	 = 3
+	};
+
+	const int  CON_MAXARGSIZE  = 80;
 }
 
 //======================================================================================
-//======================================================================================
-
-#define CON_MAXARGSIZE 80
 
 /*
 ======================================
@@ -58,17 +38,24 @@ CConsole::CConsole()
 		m_szargv[i] = new char[CON_MAXARGSIZE];;
 	}
 
+	//open logfile
+	char debugfilename[COM_MAXPATH];
+	_getcwd(debugfilename,COM_MAXPATH);
+	strcat(debugfilename,"/debug.log");
+
+	m_pflog = fopen(debugfilename, "wc");
+
+#ifdef DOSCONS
+	AllocConsole();
+	SetConsoleTitle("Void Debug");
+	m_hIn  = ::GetStdHandle(STD_INPUT_HANDLE);
+	m_hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+
 	RegisterCommand("cvarlist",CMD_CVARLIST, this);
 	RegisterCommand("cmdlist", CMD_CMDLIST,this);
 	RegisterCommand("cfunclist", CMD_CMDLIST,this);
 	RegisterCommand("ctest", CMD_TEST, this);
-	RegisterCommand("contoggle", CMD_TOGGLECONS,this);
-
-	//open logfile
-	char debugfilename[128];
-	strcpy(debugfilename,System::GetExePath());
-	strcat(debugfilename,"//vdebug.log");
-	m_pflog = fopen(debugfilename, "wc");
 }
 
 /*
@@ -82,6 +69,13 @@ CConsole::~CConsole()
 	if(m_pflog)
 		fclose(m_pflog);
 
+#ifdef DOSCONS
+	ComPrintf("CConsole::Shutting down Console\n");
+	CloseHandle(m_hIn);
+	CloseHandle(m_hOut);
+	FreeConsole();
+#endif
+
 	for(int i=0;i<CVarBase::CVAR_MAXARGS;i++)
 			delete [] m_szargv[i]; 
 	delete [] m_szargv;
@@ -91,41 +85,11 @@ CConsole::~CConsole()
 
 /*
 ==========================================
-Initialize the Console
+Set the Renderer
 ==========================================
 */
-bool CConsole::Init(I_ConsoleRenderer * prcons)
-{
-	// Create a debugging window
-#ifdef DOSCONS
-	AllocConsole();
-	SetConsoleTitle("Void Debug");
-	m_hIn  = ::GetStdHandle(STD_INPUT_HANDLE);
-	m_hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
-	
-	m_prCons = prcons;
-	if(!m_prCons)
-		return false;
-	return true;
-}
-
-/*
-==========================================
-Shutdown the console
-==========================================
-*/
-bool CConsole::Shutdown()
-{
-
-#ifdef DOSCONS
-	ComPrintf("CConsole::Shutting down Console\n");
-	CloseHandle(m_hIn);
-	CloseHandle(m_hOut);
-	FreeConsole();
-#endif
-	m_prCons=0;
-	return true;
+void CConsole::SetConsoleRenderer(I_ConsoleRenderer * prcons)
+{	m_prCons = prcons;
 }
 
 /*
@@ -170,7 +134,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 			case '`':
 			{
 				m_conString.erase();
-				System::ToggleConsole(); //1,0);
+				ExecString("contoggle");
 				break;
 			}
 			case INKEY_ENTER:
@@ -277,7 +241,6 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 		m_prCons->Statusline(m_conString.c_str(),m_conString.size()+1);
 	}
 }
-
 
 /*
 ======================================
@@ -424,9 +387,6 @@ void CConsole::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 	case CMD_CMDLIST:
 		CCmdList(numArgs,szArgs);
 		break;
-	case CMD_TOGGLECONS:
-		System::ToggleConsole();
-		break;
 	case CMD_TEST:
 		CFunctest(numArgs,szArgs);
 		break;
@@ -461,16 +421,15 @@ Proxy functions
 ==========================================
 */
 
-void CConsole::ToggleFullscreen(bool full)
-{	m_prCons->ToggleFullscreen(full);
+void CConsole::SetFullscreen(bool full)
+{	
+	m_prCons->ToggleFullscreen(full);
 }
 
-void CConsole::Toggle(bool down)
+void CConsole::SetVisible(bool down)
 {	
-	if(down)
-		ComPrintf("Toggling on");
-	else
-		ComPrintf("Toggling off");
+	System::GetInputFocusManager()->SetCursorListener(0);
+	System::GetInputFocusManager()->SetKeyListener(this,true);
 	m_prCons->Toggle(down);
 }
 

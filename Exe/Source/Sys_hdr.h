@@ -39,7 +39,6 @@ namespace System
 	const char *	GetCurrentPath();
 	eGameState		GetGameState();
 	
-	void ToggleConsole();
 	void SetGameState(eGameState state);
 
 	//Windows specefic

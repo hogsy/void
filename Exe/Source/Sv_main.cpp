@@ -1,13 +1,17 @@
 #include "Net_sock.h"
 #include "Sv_main.h"
+#include "Com_util.h"
 
 namespace
 {
 	enum 
 	{
-		CMD_MAP = 1
+		CMD_MAP = 1,
+		CMD_KILLSERVER = 2
 	};
-	const char szLoopbackAdr [] = "loopback";
+	
+	const char szLOOPBACKADDR[] = "loopback";
+	const char szWORLDDIR[]     = "Worlds/";
 }
 
 using namespace VoidNet;
@@ -19,36 +23,49 @@ using namespace VoidNet;
 Constructor/Destructor
 ==========================================
 */
-CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+CServer::CServer(CClient * client) : 
+					 m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
+	memset(m_boundAddr,0,sizeof(m_boundAddr));
+
+	m_pWorld = 0;
+
+	m_pClient = client;
+	
+	m_pBuffer = new CNetBuffer();
+	m_pSock = new CNetSocket(&m_pBuffer);
+
+	m_active = false;
+
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
 	
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
-
-//	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
 	
-	memset(m_boundAddr,0,sizeof(m_boundAddr));
-	
-	m_pBuffer = new CNetBuffer();
-	m_pSock = new CNetSocket(&m_pBuffer);
-
-	m_initialized = false;
+	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
+	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
 }	
 
 CServer::~CServer()
-{	
+{
+	m_pClient = 0;
+
+	if(m_pWorld)
+		world_destroy(m_pWorld);
+	
 	delete m_pSock;
 	delete m_pBuffer;
 }
 
 
+//======================================================================================
+//======================================================================================
 /*
 ==========================================
 Initialize the listener socket
@@ -101,7 +118,7 @@ bool CServer::Init()
 	}
 
 	if(m_boundAddr[0] == '\0')
-		strcpy(m_boundAddr,szLoopbackAdr);
+		strcpy(m_boundAddr,szLOOPBACKADDR);
 
 	if(!m_pSock->Bind(m_boundAddr,(short)m_cPort.ival,false))
 	{
@@ -109,7 +126,7 @@ bool CServer::Init()
 		memset(m_boundAddr,0,sizeof(m_boundAddr));
 		return false;
 	}
-	m_initialized = true;
+	m_active = true;
 	return true;
 }
 
@@ -120,7 +137,64 @@ Shutdown the server
 */
 void CServer::Shutdown()
 {
+	if(!m_active)
+		return;
+
+	//Send disconnect messages to clients, if active
+	if(m_pWorld)
+	{
+		//HACK calling client directly right now
+		m_pClient->UnloadWorld();
+		world_destroy(m_pWorld);
+	}
+
 	m_pSock->Close();
+	m_active = false;
+}
+
+
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Load the World
+==========================================
+*/
+void CServer::LoadWorld(const char * mapname)
+{
+	//Shutdown if currently active
+	if(m_active)
+		Shutdown();
+	
+	if(!Init())
+		return;
+
+	//Now load the map
+	char mappath[COM_MAXPATH];
+	
+	strcpy(mappath, szWORLDDIR);
+	strcat(mappath, mapname);
+	Util::SetDefaultExtension(mappath,".bsp");
+	
+	m_pWorld = world_create(mappath);
+	if(!m_pWorld)
+	{
+		ComPrintf("CServer::LoadWorld: couldnt load map %s\n", mappath);
+		Shutdown();
+		return;
+	}
+	
+	//if its not a dedicated server, then push "connect loopback" into the console
+	if(!m_cDedicated.bval)
+	{
+		//HACK
+		if(!m_pClient->LoadWorld(m_pWorld))
+		{
+			Shutdown();
+			return;
+		}
+	}
 }
 
 /*
@@ -130,7 +204,7 @@ Run a server frame
 */
 void CServer::RunFrame()
 {
-	if(m_initialized== false)
+	if(m_active== false)
 		return;
 
 	int recvs = 0;
@@ -157,18 +231,24 @@ Handle Commands
 */
 void CServer::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 {
+	switch(cmdId)
+	{
+	case CMD_MAP:
+		LoadWorld(szArgs[1]);
+		break;
+	case CMD_KILLSERVER:
+		Shutdown();
+		break;
+	}
 }
 
 
-/*
-==========================================
-Try to load the map
-==========================================
-*/
-void CServer::LoadMap(const char * mapname)
-{
-	//if this is not a dedicated server, then pass the world to the local client
-}
+
+
+
+
+
+
 
 
 
@@ -181,8 +261,6 @@ void CServer::LoadMap(const char * mapname)
 #include "Sv_client.h"
 CNetClients g_netclients;
 char		g_gamedir[MAXPATH];
-
-
 /*
 ========================================
 Constructor
@@ -802,153 +880,4 @@ bool CServer::WritePlayerInfo(CNBuffer *dest,int playernum)
 void CServer::SV_Status(int argc,char **argv)
 {
 }
-
-
-//=====================================================================================
-//=====================================================================================
-
-
-
-CNetClients::CNetClients()
-{
-	m_svclients = 0;
-	m_maxclients =0;
-	m_curclients =0;
-}
-
-
-/*
-=====================================
-Init the client manager class
-=====================================
-*/
-
-void CNetClients::Init(SOCKADDR_IN &addr,int numclients, int svport)
-{
-	m_curclients =0;
-	m_maxclients = numclients;
-	m_svclients = new CSVClient[numclients];
-
-	for(int i=0; i<m_maxclients;i++)
-	{
-		m_svclients[i].SV_InitClient(addr,(svport+i+2));
-	}
-
-}
-
-
-/*
-=====================================
-Shutdown the client manager class
-=====================================
-*/
-
-void CNetClients::Shutdown()
-{
-	for(int i=0;i<m_maxclients;i++)
-	{
-		if(m_svclients[i].m_active)
-			m_svclients[i].SV_Disconnect();
-	}
-
-	delete [] m_svclients;
-	m_maxclients = 0;
-	m_curclients = 0;
-}
-
-
-/*
-=====================================
-Return Free Client
-=====================================
-*/
-
-CSVClient * CNetClients::GetFreeClient()
-{
-	for(int i=0;i<m_maxclients;i++)
-	{
-		if(!m_svclients[i].m_active)
-			return &m_svclients[i];
-	}
-	return 0;
-}
-
-
-
-
-/*
-=====================================
-Run clients
-=====================================
-*/
-
-void CNetClients::RunClients()
-{
-	for(int i=0;i<m_maxclients;i++)
-	{
-		if(m_svclients[i].m_active)
-		{
-			m_svclients[i].Run();
-
-			//connection has timed out
-			if(!m_svclients[i].m_pSock.bcansend ||
-				(m_svclients[i].m_pSock.m_state == CSocket::SOCK_IDLE))
-			{
-				m_svclients[i].SV_Disconnect();
-			}
-		}
-	}
-}
-
-
-/*
-=====================================
-Print currently connected client 
-names and frags for brief info
-=====================================
-*/
-
-char * CNetClients::PrintClInfo()
-{
-	return 0;
-}
-
-
-/*
-=====================================
-Print currently connected client details
-=====================================
-*/
-
-char * CNetClients::PrintClStatus()
-{
-	return 0;
-}
-
-
-
-/*
-=====================================
-this is very primitive
-writes a talk message to ALL the clients for now
-the "global" server datagram is overwrote for each of these
-type of message. NEED to fix that for all NBuffers
-they should be appendable
-=====================================
-*/
-
-void CNetClients::WriteTalkMessage(char *msg, int numSender, int numReceiver)
-{
-	if(msg)
-	{
-		for(int i=0;i<m_maxclients;i++)
-		{
-			if(m_svclients[i].m_connected)
-				m_svclients[i].WriteToClient(SV_PRINT,(unsigned char *)msg);
-		}
-
-	}
-}
-
-
 #endif

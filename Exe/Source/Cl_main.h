@@ -25,21 +25,12 @@ class CClient :	public I_CmdHandler
 public:
 	CClient();
 	~CClient();
-
-	bool InitNet();
-	bool CloseNet();
-
-	bool InitGame();
-	bool ShutdownGame();
+	
+	bool LoadWorld(world_t * world);
+	bool UnloadWorld();
 
 	void WriteBindTable(FILE *fp);
 	
-	bool ConnectTo(char *ipaddr, int port);
-	bool Disconnect();
-
-	bool LoadWorld(world_t *world=0);
-	bool UnloadWorld();
-
 	void SetInputState(bool on);
 
 	//Command Handler Interface
@@ -52,16 +43,16 @@ public:
 	//messages received from the server would be handled here
 	void RunFrame();
 
-	friend void Talk(int argc,char **argv);
-	friend void Connect(int argc, char** argv);
-	
+private:
+
 	bool m_active;
 	bool m_connected;
 	bool m_ingame;
 
 	eyepoint_t  eye;
 
-private:
+	bool ConnectTo(char *ipaddr, int port);
+	bool Disconnect();
 
 	//Movement
 	void Move(vector_t *dir, float time);
@@ -82,9 +73,7 @@ private:
 	CVar 	m_clrate;
 	CVar 	m_noclip;
 
-
-
-	world_t    *m_world;
+//	world_t    *m_pWorld;
 
 	friend class VoidClient::CClientCmdHandler;
 	VoidClient::CClientCmdHandler * m_pCmdHandler;

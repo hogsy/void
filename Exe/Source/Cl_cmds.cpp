@@ -56,7 +56,7 @@ void CClientCmdHandler::RunCommands()
 	{
 		if(m_cmdBuffer[i])
 		{
-			g_pConsole->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
+			((CConsole*)System::GetConsole())->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
 			if(m_cmdBuffer[i]->szCommand[0] != '+')
 				m_cmdBuffer[i] = 0;
 		}
@@ -151,7 +151,7 @@ void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 		return;
 	}
 
-	m_cmdKeys[keynum].pCmd =g_pConsole->GetCommandByName(argv[2]);
+	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(argv[2]);
 	if(m_cmdKeys[keynum].pCmd < 0)
 	{
 		ComPrintf("Bind : %s is not a valid command\n",argv[2]);

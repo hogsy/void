@@ -1,8 +1,7 @@
 #include "Cl_main.h"
 #include "Cl_cmds.h"
-#include "Sys_cons.h"
 
-extern world_t		*g_pWorld;
+world_t	*g_pWorld;
 extern I_Renderer   *g_pRender;
 
 using namespace VoidClient;
@@ -13,12 +12,10 @@ Constructor
 ======================================
 */
 
-CClient::CClient():	//m_sock(&m_recvBuf,&m_sendBuf),
-					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
+CClient::CClient():	m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
 					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,		CVar::CVAR_ARCHIVE)
-					//m_pCmdHandler()
 {
 
 	m_pCmdHandler = new CClientCmdHandler(this);
@@ -44,17 +41,28 @@ CClient::CClient():	//m_sock(&m_recvBuf,&m_sendBuf),
 	m_acceleration = 400.0f;
 	m_maxvelocity =  200.0f;
 
-//	m_sendseq = 0;
-//	m_recvseq = 0;
-
 	m_rHud = 0;
+	g_pWorld = 0;
+//	m_pWorld = 0;
 
 	System::GetConsole()->RegisterCVar(&m_clport);
 	System::GetConsole()->RegisterCVar(&m_clrate);
 	System::GetConsole()->RegisterCVar(&m_clname);
 	System::GetConsole()->RegisterCVar(&m_noclip);
 
-	RegCommands();
+	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
+	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
+	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
+	System::GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
+	System::GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
+	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
+	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
+	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
+	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
+	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
+	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
+	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
+	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 }
 
 
@@ -65,79 +73,8 @@ Destroy the client
 */
 CClient::~CClient()
 {
-#ifndef __VOIDALPHA
-	CloseNet();
-#endif
-
+	g_pWorld = 0;
 	delete m_pCmdHandler;
-}
-
-
-/*
-=======================================
-Initnet
-
-intialize any local network stuff
-the socket will remain passive until
-we actually try to connect to a server
-=======================================
-*/
-bool CClient::InitNet()
-{
-//	ComPrintf("CClient::InitNet:%s:%s\n",g_computerName,g_ipaddr);
-
-
-#ifndef __VOIDALPHA
-	//init listener sock
-	if(!m_sock.Init())
-	{
-		ComPrintf("CClient::InitNet:: Couldnt open socket\n");
-		return false;
-	}
-
-
-	SOCKADDR_IN addr;
-	addr.sin_addr.s_addr = inet_addr(g_ipaddr);
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons((int)m_clport->value);
-//		addr.sin_port = htons((int)m_clport.value);
-
-	if(!m_sock.Bind(addr,(int)m_clport->value,true))
-//if(!m_sock.Bind(addr,(int)m_clport.value,true))
-	{
-		ComPrintf("CClient::InitNet:: Couldnt bind socket\n");
-		return false;
-	}
-#endif
-	m_active = true;
-	return true;
-}
-
-
-/*
-=======================================
-CloseNet
-=======================================
-*/
-bool CClient::CloseNet()
-{
-#ifndef __VOIDALPHA
-	m_recvBuf.Reset();
-	m_sendBuf.Reset();
-#endif
-
-	m_active = false;
-	m_connected = false;
-	m_ingame = false;
-
-//	m_sendseq = 0;
-//	m_recvseq = 0;
-
-#ifndef __VOIDALPHA
-	return m_sock.Close();
-#else
-	return true;
-#endif
 }
 
 
@@ -146,6 +83,7 @@ bool CClient::CloseNet()
 Spawn the client into the game
 ======================================
 */
+/*
 
 bool CClient::InitGame()//sector_t *sec);
 {
@@ -176,7 +114,7 @@ bool CClient::InitGame()//sector_t *sec);
 	ComPrintf("CClient::Init:: ok\n");// at :%s:%d\n",m_ipaddr,port);
 	return true;
 }
-
+*/
 
 /*
 ======================================
@@ -184,7 +122,7 @@ Shutdown the client
 Back to console, not connected anywhere
 ======================================
 */
-
+/*
 bool CClient::ShutdownGame()
 {
 #ifndef __VOIDALPHA
@@ -198,6 +136,7 @@ bool CClient::ShutdownGame()
 	ComPrintf("CClient::Shutdown:: Client shutdown ok\n");
 	return true;
 }
+*/
 
 
 /*
@@ -207,13 +146,10 @@ Load the world for the client to render
 */
 bool CClient::LoadWorld(world_t *world)
 {
-	if(!world)
-		return false;
-
 	// load the textures
-	if(!g_pRender->LoadWorld(g_pWorld,1))
+	if(!g_pRender->LoadWorld(world,1))
 	{
-		ComPrintf("CVoid::InitGame: renderer couldnt load world\n");
+		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
 		return false;
 	}
 
@@ -223,16 +159,42 @@ bool CClient::LoadWorld(world_t *world)
 //	g_pCons->ExecConfig(configname);
 //	g_pCons->ExecConfig("void.cfg");
 
+	m_rHud = g_pRender->GetHud();
+	if(!m_rHud) //g_pRender->GetHud(&m_rHud))
+	{
+		ComPrintf("CClient::Init:: Couldnt get hud interface from renderer\n");
+		return false;
+	}
+
+// FIXME - should be taken care of at spawn
+// FIXME - should be actual player size
+
+	VectorSet(&eye.mins, -10, -10, -40);
+	VectorSet(&eye.maxs,  10,  10,  10);
+
+
+// FIXME - should be taken care of at spawn
+	eye.angles.ROLL = 0;
+	eye.angles.PITCH = 0;
+	eye.angles.YAW = 0;
+	eye.origin.x = 0;
+	eye.origin.y = 0;
+	eye.origin.z = 48;	// FIXME - origin + view height
+
+
 	//Spawn ourselves into the world
-	if(!InitGame())//&g_pWorld->sectors[0]))
+/*	if(!InitGame())//&g_pWorld->sectors[0]))
 	{
 		ComPrintf("CVoid::InitGame: couldnt init client\n");
 		UnloadWorld();
 		return false;
 	}
-	
-	g_pConsole->ToggleFullscreen(false);
-	g_pConsole->Toggle(false);
+*/	
+	g_pWorld = world;
+
+	m_connected = true;
+	m_ingame = true;
+	SetInputState(true);
 	
 	ComPrintf("CClient::Load World: OK\n");
 
@@ -254,11 +216,10 @@ bool CClient::UnloadWorld()
 		return false;
 	}
 
-	g_pConsole->ToggleFullscreen(true);
-	g_pConsole->Toggle(true);
+	g_pWorld = 0;
 
-	
-//	return g_pVoid->UnloadWorld();
+	SetInputState(false);
+	System::SetGameState(INCONSOLE);
 	return true;
 }
 
@@ -299,10 +260,16 @@ void CClient::RunFrame()
 				m_rHud->HudPrintf(0,60,0, "in sector %d", i);
 		}
 */
+		g_pRender->DrawFrame(&eye.origin,&eye.angles);
+	}
+	else
+	{
+		//draw the console or menues etc
+		g_pRender->DrawFrame(0,0);
 	}
 
+
 #ifndef __VOIDALPHA
-	
 	m_sock.Run();
 	
 	//in the process of connecting and received something
@@ -533,7 +500,6 @@ bool CClient::Disconnect()
 {
 	if(m_ingame)
 		UnloadWorld();
-	CloseNet();
 	System::SetGameState(INCONSOLE);
 //	g_pWorld = 0;
 	return true;
@@ -608,9 +574,7 @@ void Talk(int argc,char **argv)
 */
 
 void CClient::SetInputState(bool on)
-{
-	m_pCmdHandler->SetListenerState(on);
-//	m_pCmdHandler.SetListenerState(on);
+{	m_pCmdHandler->SetListenerState(on);
 }
 
 
@@ -619,24 +583,6 @@ void CClient::SetInputState(bool on)
 
 ==========================================
 */
-
-void CClient::RegCommands()
-{
-	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
-	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
-	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
-	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
-	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
-	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
-	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
-	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
-	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
-	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
-	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
-}
-
 void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 {
 	switch(cmdId)
@@ -667,19 +613,15 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		break;
 	case CMD_BIND:
 		m_pCmdHandler->BindFuncToKey(numArgs,szArgs);
-//		m_pCmdHandler.BindFuncToKey(numArgs,szArgs);
 		break;
 	case CMD_BINDLIST:
 		m_pCmdHandler->BindList();
-//		m_pCmdHandler.BindList();
 		break;
 	case CMD_UNBIND:
 		m_pCmdHandler->Unbind(numArgs,szArgs);
-//		m_pCmdHandler.Unbind(numArgs,szArgs);
 		break;
 	case CMD_UNBINDALL:
 		m_pCmdHandler->Unbindall();
-//		m_pCmdHandler.Unbindall();
 		break;
 	case CMD_CAM:
 		CamPath(numArgs,szArgs);
@@ -695,9 +637,7 @@ called from the Console Shutdown func
 */
 
 void CClient::WriteBindTable(FILE *fp)
-{
-	m_pCmdHandler->WriteBindTable(fp);
-//	m_pCmdHandler.WriteBindTable(fp);
+{	m_pCmdHandler->WriteBindTable(fp);
 }
 
 

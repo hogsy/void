@@ -1,6 +1,7 @@
 #ifndef VOID_CONSOLE_CLASS
 #define VOID_CONSOLE_CLASS
 
+#include "Sys_hdr.h"
 #include "I_console.h"
 #include "I_renderer.h"
 #include "In_defs.h"
@@ -83,8 +84,7 @@ public:
 
 	//==============================================================
 
-	bool Init(I_ConsoleRenderer * prcons);
-	bool Shutdown();
+	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
 
 	void UnlatchCVars();
 
@@ -96,8 +96,8 @@ public:
 	CCommand * GetCommandByName(const char * cmdString);
 	
 	//Console funcs
-    void ToggleFullscreen(bool full);
-    void Toggle(bool down);
+    void SetFullscreen(bool full);
+    void SetVisible(bool down);
 
 private:
 
@@ -139,7 +139,5 @@ private:
 	void CFunctest(int argc, char** argv);
 
 };
-
-extern CConsole *g_pConsole;
 
 #endif

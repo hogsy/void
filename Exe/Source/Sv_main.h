@@ -2,6 +2,8 @@
 #define VOID_NETWORK_SERVER
 
 #include "Sys_hdr.h"
+#include "Cl_main.h"		//HACK
+#include "World.h"
 
 /*
 ==========================================
@@ -27,11 +29,10 @@ class CServer : public I_CVarHandler,
 {
 public:
 
-	CServer();
+	//HACK
+	CServer(CClient * client);
+//	CServer();
 	~CServer();
-
-	bool Init();
-	void Shutdown();
 
 	void RunFrame();
 
@@ -43,14 +44,24 @@ public:
 
 private:
 
-	void LoadMap(const char * mapname);
+	//HACK
+	CClient * m_pClient;
+
+	//These arent called by the Sysmain on startup
+	//The server is only initialized if/when needed
+	bool Init();
+	void Shutdown();
+
+	void LoadWorld(const char * mapname);
 
 	//private data
-
 	VoidNet::CNetSocket  * m_pSock;
 	VoidNet::CNetBuffer  * m_pBuffer;
 
-	bool	m_initialized;
+	//world data currently loaded by the server.
+	world_t	* m_pWorld;
+
+	bool	m_active;
 
 	char	m_boundAddr[16];
 
@@ -60,6 +71,9 @@ private:
 	CVar 	m_cMaxClients;	//Max Clients
 	CVar	m_cGame;		//Game Dir
 };
+
+
+
 
 
 
