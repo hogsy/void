@@ -127,7 +127,8 @@ void CServer::HandleConnectReq()
 	//Check if this client is already connected
 	for(i=0;i<m_cMaxClients.ival;i++)
 	{
-		if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+//		if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+		if(m_clients[i].m_netChan.MatchAddr(m_pSock->GetSource()))
 		{
 			//Is connected, ignore dup connected
 			if(m_clients[i].m_state == CL_CONNECTED)
@@ -263,7 +264,7 @@ void CServer::ParseSpawnMessage(SVClient &client)
 	
 	if( levelid != m_levelNum)
 	{
-//ComPrintf("SV: Client needs to reconnect, bad levelid %d != %d\n", levelid ,m_levelNum);
+ComPrintf("SV: Client needs to reconnect, bad levelid %d != %d\n", levelid ,m_levelNum);
 		SendReconnect(client);
 		return;
 	}
@@ -279,13 +280,13 @@ void CServer::ParseSpawnMessage(SVClient &client)
 	}
 	else if(spawnparm == SVC_BEGIN+1)
 	{
-//ComPrintf("SV:%s entered the game\n", m_clients[i].m_name);
+ComPrintf("SV:%s entered the game\n", client.m_name);
 		client.m_state = CL_SPAWNED;
 		BroadcastPrintf(0,"%s entered the game", client.m_name);
 	}
 	else
 	{
-//ComPrintf("SV: Client requesting spawn level %d\n", m_clients[i].m_spawnState);
+ComPrintf("SV: Client requesting spawn level %d\n", spawnparm);
 		client.m_spawnState = spawnparm;
 	}
 	client.m_bSend = true;
@@ -347,12 +348,14 @@ Tell the client to disconnect
 */
 void CServer::SendDisconnect(SVClient &client, const char * reason)
 {
-	client.m_netChan.m_reliableBuffer.Reset();
+//	client.m_netChan.m_reliableBuffer.Reset();
 	client.m_netChan.m_buffer.Reset();
 	client.m_netChan.m_buffer.Write(SV_DISCONNECT);
 	client.m_netChan.m_buffer.Write(reason);
 	client.m_netChan.PrepareTransmit();
-	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
+
+	m_pSock->SendTo(client.m_netChan);
+//	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
 	client.Reset();
 }
 
@@ -363,11 +366,13 @@ Ask client to reconnect
 */
 void CServer::SendReconnect(SVClient &client)
 {
-	client.m_netChan.m_reliableBuffer.Reset();
+//	client.m_netChan.m_reliableBuffer.Reset();
 	client.m_netChan.m_buffer.Reset();
 	client.m_netChan.m_buffer.Write(SV_RECONNECT);
 	client.m_netChan.PrepareTransmit();
-	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
+	
+//	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
+	m_pSock->SendTo(client.m_netChan);
 	client.m_state = CL_INUSE;
 }
 
@@ -391,6 +396,7 @@ void CServer::ParseClientMessage(SVClient &client)
 			int len = strlen(msg);
 			msg[len] = 0;
 			len += strlen(client.m_name);
+			
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0; i<m_cMaxClients.ival;i++)
 			{
@@ -421,7 +427,8 @@ void CServer::ParseClientMessage(SVClient &client)
 			{
 				int rate = m_recvBuf.ReadInt();
 ComPrintf("SV: %s changed rate to %d\n", client.m_name, rate);
-				client.m_netChan.m_rate =1.0/rate;
+				//client.m_netChan.m_rate =1.0/rate;
+				client.m_netChan.SetRate(rate);
 			}
 			break;
 		}
@@ -460,7 +467,8 @@ void CServer::ReadPackets()
 		for(int i=0; i<m_cMaxClients.ival;i++)
 		{
 			//match client
-			if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+//			if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+			if(m_clients[i].m_netChan.MatchAddr(m_pSock->GetSource()))
 			{
 				m_recvBuf.BeginRead();
 				m_clients[i].m_netChan.BeginRead();
@@ -488,6 +496,12 @@ Send updates to clients
 */
 void CServer::WritePackets()
 {
+/*	static float lastTime = 0.0f;
+	if(lastTime > System::g_fcurTime)
+		return;
+
+	lastTime = System::g_fcurTime + 1.0/30.0;
+*/
 	for(int i=0; i<m_cMaxClients.ival;i++)
 	{
 		if(m_clients[i].m_state == CL_FREE)
@@ -496,7 +510,10 @@ void CServer::WritePackets()
 		//Will fail if we didnt receive a packet from 
 		//this client this frame, or if channels chokes
 		if(!m_clients[i].ReadyToSend())
+		{
+//ComPrintf("SV:not ready to send\n");
 			continue;
+		}
 
 		//In game clients
 		if(m_clients[i].m_state == CL_SPAWNED)
@@ -523,7 +540,10 @@ void CServer::WritePackets()
 			//flag resends if no response to a reliable packet
 
 			m_clients[i].m_netChan.PrepareTransmit();
-			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+			m_pSock->SendTo(m_clients[i].m_netChan);
+
+//			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+
 			//m_clients[i].m_bSend = false;
 //ComPrintf("SV:: writing to spawned client\n");
 			continue;
@@ -533,7 +553,7 @@ void CServer::WritePackets()
 		if(m_clients[i].m_state == CL_CONNECTED)
 		{
 			SendSpawnParms(m_clients[i]);
-			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+			m_pSock->SendTo(m_clients[i].m_netChan);
 			m_clients[i].m_bSend = false;
 		}
 	}

@@ -100,7 +100,7 @@ void CNetClient::SendUpdate()
 		if(m_netChan.CanSend())
 		{
 			m_netChan.PrepareTransmit();
-			m_sock.Send(m_netChan.m_sendBuffer);
+			m_sock.SendTo(m_netChan);
 			m_netChan.m_buffer.Reset();
 //m_pClient->Print(CLMSG_DEFAULT"CL: Client sending update\n");
 		}
@@ -119,19 +119,22 @@ void CNetClient::SendUpdate()
 	if(m_netState == CL_CONNECTED)
 	{
 		//Its been a while and our reliable packet hasn't been answered, try again
-		if(m_fNextSendTime < System::g_fcurTime)
-			m_netChan.m_reliableBuffer.Reset();
+//		if(m_fNextSendTime > System::g_fcurTime)
+//			return;
+//			m_netChan.m_reliableBuffer.Reset();
 		
 		//Ask for next spawn parm if we have received a reply to the last
 		//otherwise, keep asking for the last one
 		if(m_netChan.CanSendReliable())
+		//if(m_netChan.CanSend())
 		{
 			m_netChan.m_buffer.Reset();
 			m_netChan.m_buffer.Write(m_levelId);
 			m_netChan.m_buffer.Write((m_spawnState + 1));
 			m_netChan.PrepareTransmit();
 
-			m_sock.Send(m_netChan.m_sendBuffer);
+//			m_sock.Send(m_netChan.m_sendBuffer);
+			m_sock.SendTo(m_netChan);
 
 			//We got all the necessary info. just ack and switch to spawn mode
 			if(m_spawnState == SVC_BEGIN)
@@ -139,18 +142,21 @@ void CNetClient::SendUpdate()
 m_pClient->Print(CLMSG_DEFAULT,"CL: Client is ready to SPAWN\n");
 				m_netState = CL_SPAWNED;
 			}
-			else
+
+/*			else
 			{
 				m_fNextSendTime = System::g_fcurTime + 1.0f;
 				m_numResends ++;
 //m_pClient->Print(CLMSG_DEFAULT"CL: Asking for spawnstate %d\n", m_spawnState+1);
 			}
+*/
 		}
 	}
 	//Unconnected socket. sends OOB queries
-	else if((m_netState == CL_INUSE) && 
-			(m_fNextSendTime < System::g_fcurTime))
+	else if((m_netState == CL_INUSE) && (m_fNextSendTime < System::g_fcurTime))
 	{
+m_pClient->Print(CLMSG_DEFAULT,"CL: Resending OOB request\n");
+
 		if(m_szLastOOBMsg == C2S_GETCHALLENGE)
 			SendChallengeReq();
 		else if(m_szLastOOBMsg == C2S_CONNECT)
@@ -188,6 +194,10 @@ void CNetClient::HandleSpawnParms()
 		m_fNextSendTime = 0.0f;
 		m_szLastOOBMsg = 0;
 		m_numResends = 0;
+
+		Disconnect();
+
+ComPrintf("CL: Server asked to reconnect\n");
 
 		SendChallengeReq();
 		return;
@@ -249,8 +259,6 @@ void CNetClient::HandleOOBMessage()
 		//Only reliable messages are sent until spawned
 		m_netChan.Setup(m_sock.GetSource(),&m_buffer);
 		m_netChan.SetRate(m_pClient->GetUserInfo().rate);
-//		m_netChan.m_outMsgId = 1;
-//		m_netChan.m_bInReliableAcked = true;
 
 m_pClient->Print(CLMSG_DEFAULT, "CLNet: Connected\n");
 		return;
@@ -396,16 +404,9 @@ void CNetClient::Disconnect(bool serverPrompted)
 			m_netChan.m_buffer.Reset();
 			m_netChan.m_buffer.Write(CL_DISCONNECT);
 			m_netChan.PrepareTransmit();
-			m_sock.Send(m_netChan.m_sendBuffer);
+			m_sock.SendTo(m_netChan);
 		}
-		
 		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
-/*			//Kill server if local
-			if(m_bLocalServer)
-				m_pClient->ExecConCmd("killserver");
-		}
-		m_pClient->UnloadWorld();
-*/
 	}
 
 	m_netChan.Reset();
@@ -441,39 +442,6 @@ void CNetClient::Reconnect()
 
 
 //======================================================================================
-//======================================================================================
-#if 0
-/*
-=====================================
-Talk message sent to server if 
-we are connected
-=====================================
-*/
-void CNetClient::SendTalkMsg(const char *string)
-{
-	if(m_netState != CL_SPAWNED)
-		return;
-
-	//Send this reliably ?
-	m_netChan.m_buffer.Write(CL_TALK);
-	m_netChan.m_buffer.Write(string);
-}
-
-/*
-======================================
-update name on the server
-======================================
-*/
-void CNetClient::UpdateName(const char *name)
-{
-	if(m_netState == CL_SPAWNED)
-	{
-		m_netChan.m_buffer.Write(CL_UPDATEINFO);
-		m_netChan.m_buffer.Write('n');
-		m_netChan.m_buffer.Write(name);
-	}
-}
-#endif
 
 /*
 ======================================
@@ -481,14 +449,5 @@ update rate on the server
 ======================================
 */
 void CNetClient::SetRate(int rate)
-{
-	m_netChan.SetRate(rate);
-	
-/*	if(m_netState == CL_SPAWNED)
-	{
-		m_netChan.m_buffer.Write(CL_UPDATEINFO);
-		m_netChan.m_buffer.Write('r');
-		m_netChan.m_buffer.Write(rate);
-	}
-*/
+{	m_netChan.SetRate(rate);
 }

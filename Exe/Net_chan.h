@@ -18,56 +18,59 @@ public:
 	CNetChan();
 	~CNetChan();
 
+	//Management
 	void Setup(const CNetAddr &addr, CBuffer * recvBuffer);
 	void Reset();
+	
+	void SetRate(int rate);	
+	void PrintStats() const;
+	bool MatchAddr(const CNetAddr &addr) const;
+	const char * GetAddrString() const;
 
+	//Check status
 	bool CanSend();
 	bool CanSendReliable();
-	
-	//We have written to the sendbuffer, 
-	//now we would like to prepare it for sending
-	void PrepareTransmit();
 
+	//Prepere channel for transmission
+	void PrepareTransmit();
 	//Just got a message. start by reading the id headers
 	bool BeginRead();
 
-	void SetRate(int rate);
-
-	//The address the channel will send to
-	CNetAddr	m_addr;
-
-	//This is what the client writes to send to the server
-	//and the server uses this to send/recv unreliable messages to the client
-	CBuffer	m_buffer;
+	//================================================================
 	
-	//the channel writes data to here for sending
-	CBuffer	m_sendBuffer;
+	CBuffer	m_buffer;				//Write to this buffer for transmission
 
-	//ptr to receiving sockets buffer
-	CBuffer *m_pRecvBuffer;
-	CBuffer  m_reliableBuffer;	//Internal, keep reliable messages for retransmit
-
+	float	m_lastReceived;
+	
 	uint	m_inMsgId;				//Latest incoming messageId
 	uint	m_inAckedMsgId;			//Latest remotely acked message.
 	uint	m_outMsgId;				//Outgoing messageId
 	uint	m_lastOutReliableMsgId;	//Id of the last reliable message sent
 
-	int		m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
-	int		m_bInReliableAcked;		//Was the last reliabled message acked by the remote host ?
-
-	int		m_port;					//Client port
-
-	float	m_lastReceived;
-	
 	//Stats
 	int		m_dropCount;
 	int		m_goodCount;
 	int		m_numChokes;
 
+	bool	m_bFatalError;
+
+private:
+
+	friend class CNetSocket;
+
 	double	m_clearTime;
 	double	m_rate;					//Byte/Sec
-	
-	bool	m_bFatalError;
+
+	int		m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
+	int		m_bInReliableAcked;		//Was the last reliabled message acked by the remote host ?
+	int		m_bOutReliableMsg;		//Did we send a reliable message
+
+	CNetAddr  m_addr;				//Client addr
+	int		  m_vPort;				//Client vport
+
+	CBuffer	  m_sendBuffer;			//the channel writes data to here for sending
+	CBuffer   m_reliableBuffer;		//Internal, keep reliable messages for retransmit
+	CBuffer * m_pRecvBuffer;		//ptr to receiving sockets buffer
 };
 
 #endif

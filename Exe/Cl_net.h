@@ -31,21 +31,13 @@ public:
 
 	//Access reliable message buffer
 	//this gets resent until it is acknowledged
-	CBuffer & GetReliableBuffer() { return m_netChan.m_reliableBuffer; }
+	CBuffer & GetReliableBuffer() { return m_backBuffer; }
 
 	//Access outgoing message buffer
 	CBuffer & GetSendBuffer() { return m_netChan.m_buffer; }
 	
-	//Send talk message
-	//Validate message first
-/*	void SendTalkMsg(const char * string);
+	void SetRate(int rate);			
 
-	//UserInfo update funcs
-	//These values should be validate by the client first
-	void UpdateName(const char *name);	//Should be non null
-*/	
-	void SetRate(int rate);			//Should be b/w 1000 and 30000
-	//Client needs access to netchan for statistics
 	const CNetChan & GetChan() const { return m_netChan; }
 
 private:
@@ -58,6 +50,8 @@ private:
 	void SendConnectReq();
 
 	CBuffer		m_buffer;
+	CBuffer		m_backBuffer;
+
 	CNetChan	m_netChan;
 	CNetSocket  m_sock;
 	

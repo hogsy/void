@@ -19,9 +19,10 @@ public:
 	//Send to source
 	void Send(const byte * data, int length);
 	void Send(const CBuffer &buffer);
-	void Send(const CNetChan &netchan);
+	
 
 	//Send data to given dest
+	void SendTo(const CNetChan &netchan);
 	void SendTo(const byte * data, int length, const CNetAddr &addr);
 	void SendTo(const CBuffer &buffer, const CNetAddr &addr);
 	

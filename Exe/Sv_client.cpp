@@ -11,17 +11,10 @@ Constructor/Destructor
 ======================================
 */
 SVClient::SVClient()
-{
-//	for(int i=0; i< MAX_BACKBUFFERS; i++)
-//		m_backBuffer[i] = new CBuffer(MAX_DATAGRAM_SIZE);
-	Reset();
+{	Reset();
 }
 
-SVClient::~SVClient()
-{
-//	for(int i=0; i< MAX_BACKBUFFERS; i++)
-//		delete m_backBuffer[i];
-}
+SVClient::~SVClient() {}
 
 /*
 ======================================
@@ -52,10 +45,9 @@ void SVClient::ValidateBuffer()
 	if(m_bBackbuf)
 	{
 		//drop client if overflowed
-		//if(m_backBuffer[m_numBuf]->OverFlowed())
 		if(m_backBuffer[m_numBuf].OverFlowed())
 		{
-ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_netChan.m_addr.ToString());
+ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_netChan.GetAddrString());
 			m_bDropClient = true;
 		}
 	}
@@ -73,23 +65,22 @@ void SVClient::MakeSpace(int reqsize)
 	if((m_netChan.m_buffer.GetSize() + reqsize) >= m_netChan.m_buffer.GetMaxSize())
 	{
 		//havent been using any backbuffers, so start now
+ComPrintf("Using backbuffer for %s\n", m_name);
 		if(!m_bBackbuf)
 			m_bBackbuf = true;
 		else
 		{
 			//if the current backbuffer doesnt have any space, then move to the next one
-			//if(m_backBuffer[m_numBuf]->GetSize() + reqsize >= m_backBuffer[m_numBuf]->GetMaxSize())
 			if(m_backBuffer[m_numBuf].GetSize() + reqsize >= m_backBuffer[m_numBuf].GetMaxSize())
 			{
 				//drop client if we have filled up the LAST backbuffer,
 				if(m_numBuf + 1 == MAX_BACKBUFFERS)
 				{
-ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.m_addr.ToString());
+ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.GetAddrString());
 					m_bDropClient = true;
 					return;
 				}
 				m_numBuf++;
-				//m_backBuffer[m_numBuf]->Reset();
 				m_backBuffer[m_numBuf].Reset();
 			}
 		}
@@ -173,7 +164,6 @@ void SVClient::WriteChar(char c)
 		m_netChan.m_buffer.Write(c);
 	else
 	{
-		//m_backBuffer[m_numBuf]->Write(c);
 		m_backBuffer[m_numBuf].Write(c);
 		ValidateBuffer();
 	}
@@ -185,7 +175,6 @@ void SVClient::WriteShort(short s)
 		m_netChan.m_buffer.Write(s);
 	else
 	{
-		//m_backBuffer[m_numBuf]->Write(s);
 		m_backBuffer[m_numBuf].Write(s);
 		ValidateBuffer();
 	}
@@ -197,7 +186,6 @@ void SVClient::WriteInt(int i)
 		m_netChan.m_buffer.Write(i);
 	else
 	{
-		//m_backBuffer[m_numBuf]->Write(i);
 		m_backBuffer[m_numBuf].Write(i);
 		ValidateBuffer();
 	}
@@ -209,7 +197,6 @@ void SVClient::WriteFloat(float f)
 		m_netChan.m_buffer.Write(f);
 	else
 	{
-		//m_backBuffer[m_numBuf]->Write(f);
 		m_backBuffer[m_numBuf].Write(f);
 		ValidateBuffer();
 	}
@@ -221,7 +208,6 @@ void SVClient::WriteString(const char *string)
 		m_netChan.m_buffer.Write(string);
 	else
 	{
-		//m_backBuffer[m_numBuf]->Write(string);
 		m_backBuffer[m_numBuf].Write(string);
 		ValidateBuffer();
 	}
@@ -233,7 +219,6 @@ void SVClient::WriteCoord(float c)
 		m_netChan.m_buffer.WriteCoord(c);
 	else
 	{
-		//m_backBuffer[m_numBuf]->WriteCoord(c);
 		m_backBuffer[m_numBuf].WriteCoord(c);
 		ValidateBuffer();
 	}
@@ -245,7 +230,6 @@ void SVClient::WriteAngle(float a)
 		m_netChan.m_buffer.WriteAngle(a);
 	else
 	{
-		//m_backBuffer[m_numBuf]->WriteAngle(a);
 		m_backBuffer[m_numBuf].WriteAngle(a);
 		ValidateBuffer();
 	}
@@ -259,7 +243,6 @@ void SVClient::WriteData(byte * data, int len)
 	else	
 	{
 		//write to current backbuffer
-		//m_backBuffer[m_numBuf]->WriteData(data,len);
 		m_backBuffer[m_numBuf].WriteData(data,len);
 		ValidateBuffer();
 	}

@@ -79,7 +79,7 @@ const byte SV_UPDATESTAT	= 3;
 const byte SV_STUFFCMD		= 4;	// Client will execute this locally
 const byte SV_PRINT			= 5;    // Client will print this locally
 const byte SV_TALK			= 7;	// chat message
-const byte SV_RECONNECT		= 8;	// Server is changing maps, tell all clients to reconnect
+const byte SV_RECONNECT		= 10;	// Server is changing maps, tell all clients to reconnect
 
 
 /*

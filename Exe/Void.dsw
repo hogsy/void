@@ -15,18 +15,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Network"=..\Network\Network.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "Renderer"=..\Renderer\Renderer.dsp - Package Owner=<4>
 
 Package=<5>

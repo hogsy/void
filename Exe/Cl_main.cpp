@@ -288,7 +288,7 @@ void CClient::Talk(const char * string)
 
 	//Send this reliably ?
 	m_pNetCl->GetSendBuffer().Write(CL_TALK);
-	m_pNetCl->GetSendBuffer().Write(string);
+	m_pNetCl->GetSendBuffer().Write(msg);
 }
 
 /*
@@ -310,9 +310,14 @@ bool CClient::ValidateName(const CParms &parms)
 	if(!m_ingame)
 		return true;
 
-	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
+	m_pNetCl->GetSendBuffer().Write(CL_UPDATEINFO);
+	m_pNetCl->GetSendBuffer().Write('n');
+	m_pNetCl->GetSendBuffer().Write(name);
+
+/*	m_pNetCl->GetReliableBuffer().Write(CL_UPDATEINFO);
 	m_pNetCl->GetReliableBuffer().Write('n');
 	m_pNetCl->GetReliableBuffer().Write(name);
+*/
 	return true;
 }
 
@@ -489,31 +494,32 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 //Parse and handle spawm parms
 void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 {
-		switch(msgId)
+	switch(msgId)
+	{
+	case SVC_INITCONNECTION:
 		{
-		case SVC_INITCONNECTION:
-			{
-				char * game = buffer.ReadString();
+			char * game = buffer.ReadString();
 ComPrintf("CL: Game: %s\n", game);
-				char * map = buffer.ReadString();
+			char * map = buffer.ReadString();
 ComPrintf("CL: Map: %s\n", map);
-				if(!LoadWorld(map))
-					m_pNetCl->Disconnect();
-				break;
-			}
-		case SVC_MODELLIST:
+			if(!LoadWorld(map))
+				m_pNetCl->Disconnect();
 			break;
-		case SVC_SOUNDLIST:
-			break;
-		case SVC_IMAGELIST:
-			break;
-		case SVC_BASELINES:
-			break;
-		case SVC_BEGIN:
-			{
-				break;
-			}
 		}
+	case SVC_MODELLIST:
+		break;
+	case SVC_SOUNDLIST:
+		break;
+	case SVC_IMAGELIST:
+		break;
+	case SVC_BASELINES:
+		break;
+	case SVC_BEGIN:
+		{
+		
+			break;
+		}
+	}
 }
 
 //Handle disconnect from server
@@ -525,14 +531,6 @@ void CClient::HandleDisconnect(bool listenserver)
 	UnloadWorld();
 }
 
-
-
-
-/*
-void CClient::ExecConCmd(const char * cmd)
-{	System::GetConsole()->ExecString(cmd);
-}
-*/
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {

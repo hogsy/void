@@ -4,7 +4,7 @@
 
 enum
 {
-	MAX_BACKUP =200
+	MAX_BACKUP = 200
 };
 
 using namespace VoidNet;
@@ -12,6 +12,11 @@ using namespace VoidNet;
 //======================================================================================
 //======================================================================================
 
+/*
+======================================
+Constructor/Destructor
+======================================
+*/
 CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
 					   m_reliableBuffer(MAX_DATAGRAM_SIZE),
 					   m_sendBuffer(MAX_DATAGRAM_SIZE)
@@ -21,30 +26,44 @@ CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
 }
 
 CNetChan::~CNetChan()
-{
-	m_pRecvBuffer =0;
+{	m_pRecvBuffer =0;
 }
 
 
+/*
+======================================
+Setup the NetChannel for listening
+======================================
+*/
 void CNetChan::Setup(const CNetAddr &addr, CBuffer * recvBuffer )
 {
 	Reset();
 	m_addr = addr;
 	m_pRecvBuffer = recvBuffer;
-//
+
 	m_outMsgId = 1;
-	m_bInReliableAcked = true;
+	m_bInReliableAcked = 1;
 }
 
+/*
+======================================
+Reset the Network Channel
+======================================
+*/
 void CNetChan::Reset()
 {
 	m_addr.Reset();
+
+	m_buffer.Reset();
+	m_reliableBuffer.Reset();
+	m_sendBuffer.Reset();
 	
 	m_inMsgId=0;				//Latest incoming messageId
 	m_inAckedMsgId=0;			//Latest remotely acked message.
 	m_outMsgId=0;				//Outgoing messageId
 	m_lastOutReliableMsgId=0;	//Id of the last reliable message sent
 
+	m_bOutReliableMsg = 0;
 	m_bInReliableMsg=0;			//Is the message recived supposed to be reliable ?
 	m_bInReliableAcked=0;		//Was the last reliabled message acked by the remote host ?
 
@@ -57,24 +76,24 @@ void CNetChan::Reset()
 	m_bFatalError = false;
 }
 
+
 /*
-===============
-Returns true if the bandwidth choke isn't active
-================
+======================================
+True if the bandwidth choke isn't active
+======================================
 */
 bool CNetChan::CanSend() 
 {
 	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
-//ComPrintf("CNetChan::Choked\n");
 	m_numChokes ++;
 	return false;
 }
 
 /*
-===============
-Returns true if the bandwidth choke isn't 
-================
+======================================
+Can we safely write to the reliable buffer ?
+======================================
 */
 bool CNetChan::CanSendReliable() 
 {
@@ -102,7 +121,7 @@ A 0 length will still generate a packet and deal with the reliable messages.
 */
 void CNetChan::PrepareTransmit()
 {
-	if(m_buffer.OverFlowed())
+	if(m_buffer.OverFlowed()) // || m_reliableBuffer.OverFlowed())
 	{
 		m_bFatalError = true;
 		ComPrintf("%s: Outgoing message overflow\n", m_addr.ToString());
@@ -111,11 +130,10 @@ void CNetChan::PrepareTransmit()
 
 	int	send_reliable = 0;
 
-	//send reliably, if the latest message we got has a higher id then the last 
-	//reliable message sent and if the last message received was reliable and hasn't been acked
-	if((m_inMsgId > m_lastOutReliableMsgId)	&&	(m_bInReliableMsg != m_bInReliableAcked))
+	// the remote side dropped the last reliable message we sent, resend it
+	if((m_inAckedMsgId > m_lastOutReliableMsgId) &&	
+	   (m_bInReliableAcked != m_bOutReliableMsg))
 	{
-//ComPrintf("CNetChan: Sending reliably\n");
 	   send_reliable = 1;
 	}
 	
@@ -144,8 +162,14 @@ void CNetChan::PrepareTransmit()
 //ComPrintf("CNetChan: Sending reliably\n");
 		m_sendBuffer.Write(m_reliableBuffer);
 		m_lastOutReliableMsgId = m_outMsgId;
-		m_bInReliableMsg = 1;
+		m_bOutReliableMsg = 1;
+		//m_bInReliableMsg = 1;
 	}
+	
+	//Add unreliable message if it has space
+	if(m_buffer.GetSize() &&
+	  (m_sendBuffer.GetSize() + m_buffer.GetSize() > m_sendBuffer.GetMaxSize()))
+		m_sendBuffer.Write(m_buffer);
 
 	//increment outgoing sequence
 	m_outMsgId++;
@@ -167,7 +191,7 @@ bool CNetChan::BeginRead()
 	uint seq = m_pRecvBuffer->ReadInt();
 	uint seqacked = m_pRecvBuffer->ReadInt();
 	
-	uint bReliable	   = (seq >> 31);
+	uint bReliable	    = (seq >> 31);
 	uint bReliableAcked = (seqacked >> 31);
 
 	//get rid of high bits
@@ -177,30 +201,49 @@ bool CNetChan::BeginRead()
 	//Message is a duplicate or old, ignore it
 	if (seq <= m_inMsgId)
 	{
-//ComPrintf("CNetChan: dropping old/dup packet, %d >= %d\n", seq, m_inMsgId);
+//		ComPrintf("CNetChan: dropping old/dup packet, %d <= %d\n", seq, m_inMsgId);
 		return false;
 	}
 
 	//A message was never reccived. This one is more than just the next one in the sequence
-	if (seq - (m_inMsgId+1) > 0)
+	if(seq > (m_inMsgId+1))
 		m_dropCount += 1;
 
 	//If the last reliable message we sent has been acknowledged
 	//then clear the buffer to make way for the next
-	if (bReliableAcked == m_bInReliableMsg)
+	if ((bReliableAcked == m_bOutReliableMsg) ||
+		(seqacked > m_lastOutReliableMsgId))
+	{
 		m_reliableBuffer.Reset();
+		m_bOutReliableMsg = 0;
+	}
 	
 	//Update sequence numbers. set reliable flags if this was sent reliably
 	m_inMsgId = seq;
 	m_inAckedMsgId = seqacked;
+	
+	//We have been sent a reliable message which will need to be acked.accordingly
+	m_bInReliableMsg = bReliable;
 	m_bInReliableAcked = bReliableAcked;
-	if (bReliable)
-		m_bInReliableMsg = 1;
-	else
-		m_bInReliableMsg = 0;
 
 	//Update stats
-	m_goodCount += 1;
+	m_goodCount ++;
 	m_lastReceived = System::g_fcurTime;
 	return true;
+}
+
+
+void CNetChan::PrintStats() const
+{
+	ComPrintf("Rate %.2f: Chokes %d\nGoodcount %d Dropped %d\n", 1/m_rate, m_numChokes, m_goodCount, m_dropCount);
+	ComPrintf("In:%d  InAcked:%d Out:%d\n", m_inMsgId, m_inAckedMsgId, m_outMsgId);
+}
+
+//also check Port here ?
+bool CNetChan::MatchAddr(const CNetAddr &addr) const
+{	return (addr == m_addr);
+}
+
+const char * CNetChan::GetAddrString() const
+{	return m_addr.ToString();
 }

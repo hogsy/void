@@ -373,8 +373,12 @@ void CServer::PrintServerStatus()
 		if(m_clients[i].m_state == CL_CONNECTED)
 			ComPrintf("%s : Connecting\n", m_clients[i].m_name);
 		else if(m_clients[i].m_state == CL_SPAWNED)
-			ComPrintf("%s: Rate %.2f: Chokes %d\n", m_clients[i].m_name, 
-				1/m_clients[i].m_netChan.m_rate, m_clients[i].m_netChan.m_numChokes);
+		{
+			ComPrintf("%s :", m_clients[i].m_name);
+			m_clients[i].m_netChan.PrintStats();
+		}
+//			ComPrintf("%s: Rate %.2f: Chokes %d\n", m_clients[i].m_name, 
+//				1/m_clients[i].m_netChan.m_rate, m_clients[i].m_netChan.m_numChokes);
 	}
 }
 

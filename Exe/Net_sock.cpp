@@ -291,7 +291,7 @@ void CNetSocket::Send(const CBuffer &buffer)
 {	SendTo(buffer,m_srcAddr);
 }
 
-void CNetSocket::Send(const CNetChan &netchan)
+void CNetSocket::SendTo(const CNetChan &netchan)
 {	SendTo(netchan.m_sendBuffer,netchan.m_addr);
 }
 

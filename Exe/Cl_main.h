@@ -41,7 +41,6 @@ public:
 	void Print(ClMsgType type, const char * msg, ...);
 	bool LoadWorld(const char *worldname);
 	void UnloadWorld();
-//	void ExecConCmd(const char * cmd);
 
 	const ClUserInfo & GetUserInfo() const { return userInfo; }
 
@@ -58,13 +57,6 @@ public:
 	
 private:
 
-/*	enum ClMsgType
-	{
-		DEFAULT,
-		SERVER_MESSAGE,
-		TALK_MESSAGE
-	};
-*/
 	//==================================================
 	//Movement
 	void Move(vector_t *dir, float time);
