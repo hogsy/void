@@ -372,15 +372,26 @@ int  CPakFile::GetChar(HFS handle)
 
 bool CPakFile::Seek(uint offset, int origin, HFS handle)
 {
-	return false;
+	uint newpos = m_openFiles[handle]->filepos;
+	switch(origin)
+	{
+	case SEEK_SET:
+			newpos += offset;
+			break;
+	case SEEK_END:
+			newpos += (m_openFiles[handle]->filelen - offset);
+			break;
+	case SEEK_CUR:
+			newpos += (m_openFiles[handle]->curpos + offset);
+			break;
+	}
+	return 0;
 }
 
 uint CPakFile::GetPos(HFS handle)
-{
-	return 0;
+{	return m_openFiles[handle]->curpos;
 }
 
 uint CPakFile::GetSize(HFS handle)
-{
-	return 0;
+{	return m_openFiles[handle]->filelen;
 }
