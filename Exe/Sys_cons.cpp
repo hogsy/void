@@ -278,15 +278,19 @@ bool CConsole::ExecString(const char *string)
 		{
 			CVarBase * pVar = *it;
 
+			if(pVar->flags & CVAR_READONLY)
+			{
+				if(m_parms.NumTokens() > 1)
+					ComPrintf("%s is a read-only variable\n",  pVar->name);
+				ComPrintf("%s = \"%s\"\n",pVar->name,pVar->string);
+				return true;
+			}
+
 			if(m_parms.NumTokens() > 1)
 			{
 				const char * argVal = m_parms.StringTok(1,m_szParmBuffer,MAX_CONSOLE_BUFFER);
-
-				if(pVar->flags & CVAR_READONLY)
-				{
-					ComPrintf("%s is a read-only variable\n",  pVar->name);
-				}
-				else if((!pVar->handler) || pVar->handler->HandleCVar(pVar,CStringVal(argVal)))
+				
+				if((!pVar->handler) || pVar->handler->HandleCVar(pVar,CStringVal(argVal)))
 				{
 					pVar->Set(argVal);
 					if(pVar->flags & CVAR_LATCH)

@@ -47,20 +47,19 @@ extern CVoid*	g_pVoid;
 Constructor
 ==========================================
 */
-CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
+CVoid::CVoid(const char * curDir, const char * cmdLine) : 
+						m_Console(curDir),
+						m_pExport(0),
+						m_pRender(0),
+						m_pRParms(0),
+						m_pInput(0),
+						m_pFileSystem(0),
+						m_pClient(0),
+						m_pSound(0),
+						m_pMusic(0),
+						m_varTimeStamp("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY),
+						m_varVersion("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY)
 {
-	//================================
-	//Zero out everything so only created stuff gets deleted
-	m_pExport=0;		//Exported Stuff
-	m_pRender=0;		//Renderer
-	m_pRParms=0;		//Current Renderering info
-	m_pInput=0;			//Input 
-	m_pFileSystem=0;	//FileSystem
-	m_pClient=0;		//Client and UI
-	m_pSound=0;			//Sound subsystem
-	m_pMusic=0;			//Music subsystem
-
-
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
@@ -109,15 +108,6 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
 	m_pRender = RENDERER_Create(m_pExport); 
 	m_pRParms = RENDERER_GetParms();
 
-	//Register these commands before the client is create so it can bind to them
-	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
-	
-	System::GetConsole()->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
-	System::GetConsole()->RegisterCommand("fs_path",CMD_LISTPATHS,this);
-	System::GetConsole()->RegisterCommand("fs_dir",CMD_DIRPATH,this);
-
 	//Sound
 	m_pSound = new CSoundManager();
 
@@ -126,9 +116,21 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
 
 	//Network Sys
 	VoidServer::Create();
-	
+
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
+
+	//Register these commands before the client is created so it can bind to them
+	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
+	
+	System::GetConsole()->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
+	System::GetConsole()->RegisterCommand("fs_path",CMD_LISTPATHS,this);
+	System::GetConsole()->RegisterCommand("fs_dir",CMD_DIRPATH,this);
+
+	System::GetConsole()->RegisterCVar(&m_varTimeStamp);
+	System::GetConsole()->RegisterCVar(&m_varVersion);
 }
 
 /*
