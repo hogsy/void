@@ -20,8 +20,7 @@ namespace VoidSound
 
 //This is what is exposed to Sys_main
 class CSoundManager : public I_SoundManager,
-					  public I_CVarHandler,
-					  public I_CmdHandler
+					  public I_ConHandler 
 {
 public:
 
@@ -47,7 +46,6 @@ public:
 
 	//CVar Handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-
 	//Cmd Handler
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 

@@ -24,8 +24,7 @@ Game independent network server
 */
 class CNetSocket;
 
-class CServer : public I_CVarHandler,
-				public I_CmdHandler
+class CServer : public I_ConHandler 
 {
 public:
 	CServer();

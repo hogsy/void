@@ -4,7 +4,7 @@
 #include "I_renderer.h"
 
 class CRenExp : public I_Renderer,
-			    public I_CVarHandler
+			    public I_ConHandler
 {
 public:
 	
@@ -32,8 +32,9 @@ public:
 
 	bool Restart(void);
 
-	//CVar Handler
+	//Console Handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void HandleCommand(HCMD cmdId, const CParms &parms) { }
 
 private:
 

@@ -25,8 +25,7 @@ namespace VoidMusic
 //======================================================================================
 //======================================================================================
 
-class CMusic : public I_CmdHandler,
-			   public I_CVarHandler
+class CMusic : public I_ConHandler
 {
 public:
 

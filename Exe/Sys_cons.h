@@ -14,7 +14,7 @@ Console Command
 */
 struct CCommand
 {
-	CCommand(const char * iname, HCMD iid, I_CmdHandler * ihandler)
+	CCommand(const char * iname, HCMD iid, I_ConHandler * ihandler)
 	{
 		name = new char[strlen(iname)+1];
 		strcpy(name,iname);
@@ -37,7 +37,7 @@ struct CCommand
 
 	HCMD	id;
 	char *	name;
-	I_CmdHandler * handler;
+	I_ConHandler  * handler;
 };
 
 
@@ -53,7 +53,7 @@ config files
 
 class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener,	//Key Event listener interface	
-				public I_CmdHandler
+				public I_ConHandler
 {
 public:
 
@@ -64,10 +64,13 @@ public:
 	//I_Console Interface
 
 	void RegisterCVar(	CVarBase * var,
-						I_CVarHandler * handler=0);
+						I_ConHandler * handler=0);
 	void RegisterCommand(const char *cmdname,
 						HCMD id,
-						I_CmdHandler * handler);
+						I_ConHandler * handler);
+
+	void UnlatchCVars(I_ConHandler * handler);
+
 	void ComPrint(char* text);
 
 	//just pass a string to be parsed and exec'ed
@@ -80,12 +83,11 @@ public:
 	//==============================================================
 	//Command Handler
 	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
 	//==============================================================
 
 	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
-
-	void UnlatchCVars();
 
 	void ExecConfig(const char *filename);
 	void WriteCVars(FILE *fp);

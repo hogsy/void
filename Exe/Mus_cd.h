@@ -7,7 +7,7 @@
 namespace VoidMusic 
 {
 
-class CMusCDAudio : public I_CmdHandler
+class CMusCDAudio : public I_ConHandler
 {
 public:
 
@@ -18,7 +18,10 @@ public:
 	bool Shutdown();
 
 	void HandleMCIMsg(uint &wParam, long &lParam);
+	
 	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
+	
 	
 private:
 

@@ -13,7 +13,7 @@ Inherits from listener interface so we can have
 a default handler implementation
 ================================
 */
-class CMouse : public I_CVarHandler	
+class CMouse : public I_ConHandler
 {
 public:
 	
@@ -38,10 +38,12 @@ public:
 
 	//Needed by the Win32 handler to calc center co-drds
 	void	Resize(int x, int y, int w, int h);
-	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
 	
-	EDeviceState 
-			GetDeviceState() const; 
+	//Console Handler
+	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void	HandleCommand(HCMD cmdId, const CParms &parms){}
+	
+	EDeviceState GetDeviceState() const; 
 private:
 
 	//=============================================

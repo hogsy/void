@@ -25,7 +25,7 @@
 
 //========================================================================================
 
-class CVoid : public I_CmdHandler
+class CVoid : public I_ConHandler
 {
 public:
 		
@@ -35,7 +35,9 @@ public:
 	bool Init();							//Init subsystems
 	void RunFrame();						//Game Loop
 
+	//Console Handler
 	void HandleCommand(HCMD cmdId, const CParms &parms);
+	bool HandleCVar(const CVarBase * cvar, const CParms &parms) { return false; } 
 
 	void Error(char *error, ...);
 

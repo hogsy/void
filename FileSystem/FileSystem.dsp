@@ -129,10 +129,6 @@ SOURCE=.\Fs_zipfile.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\Shared\Com_parms.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Fs_hdr.h
 # End Source File
 # Begin Source File
@@ -166,6 +162,10 @@ SOURCE=..\Shared\Com_mem.h
 # Begin Source File
 
 SOURCE=..\Shared\Com_parms.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_parms.h
 # End Source File
 # Begin Source File
 

@@ -13,6 +13,11 @@ Predeclarations
 class CClientCmdHandler;	//Handles all client command processing
 class CClientNetHandler;	//Handles all client network communication
 
+struct I_Client
+{
+};
+
+
 /*
 =====================================
 Client class
@@ -24,8 +29,7 @@ Client class
 -basically all the user interactive elements which are only available when in game
 =====================================
 */
-class CClient :	public I_CmdHandler,
-				public I_CVarHandler
+class CClient :	public I_ConHandler
 {
 public:
 	CClient(I_Renderer * prenderer);

@@ -483,7 +483,7 @@ Register CVar
 Initialize CVar and alphabetically add to list
 ==========================================
 */
-void CConsole::RegisterCVar(CVarBase * var,	I_CVarHandler * handler)
+void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 {
 	if(handler)
 		var->handler = handler;
@@ -503,7 +503,7 @@ Register CFunc
 */
 void CConsole::RegisterCommand(const char *cmdname,
 							   HCMD id,
-							   I_CmdHandler * handler)
+							   I_ConHandler * handler)
 {
 	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
 	{
@@ -511,6 +511,15 @@ void CConsole::RegisterCommand(const char *cmdname,
 			break;
 	}
 	m_lCmds.insert(it,CCommand(cmdname,id,handler));
+}
+
+/*
+======================================
+Unlatch the cvars of the given handler
+======================================
+*/
+void CConsole::UnlatchCVars(I_ConHandler * handler)
+{
 }
 
 

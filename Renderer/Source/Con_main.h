@@ -14,8 +14,7 @@ Just display the data it accumulates
 */
 
 class CRConsole:public I_ConsoleRenderer,
-				public I_CVarHandler,
-				public I_CmdHandler
+				public I_ConHandler
 {
 public:
 

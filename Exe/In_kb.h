@@ -16,7 +16,7 @@ Inherits from listener interface so we can have
 a default handler implementation
 ===========================================
 */
-class CKeyboard : public I_CVarHandler	
+class CKeyboard : public I_ConHandler
 {
 public:
 
@@ -41,8 +41,9 @@ public:
 	void	Update();
 	int		GetDeviceState() const;
 
-	//CVar Handler
+	//Console Handler
 	bool	HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void	HandleCommand(HCMD cmdId, const CParms &parms){}
 
 private:
 	enum

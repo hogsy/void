@@ -19,7 +19,7 @@ is only exposed to Sys_main so it can
 initialize, destroy and run updates
 ===========================================
 */
-class CInput : public I_CVarHandler
+class CInput : public I_ConHandler
 {
 public:
 
@@ -45,8 +45,9 @@ public:
 	//Handle resizes, needed for Win32 mouse clipping
 	void Resize(int x, int y, int w, int h);
 
-	//CVar Handler
+	//Console Handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
+	void HandleCommand(HCMD cmdId, const CParms &parms){}
 
 	I_InputFocusManager * GetFocusManager();
 
