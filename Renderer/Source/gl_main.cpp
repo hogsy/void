@@ -121,9 +121,13 @@ bool CGLUtil::Init()
 	ConPrint("\nGL_VENDOR: %s\n",glGetString(GL_VENDOR));
 	ConPrint("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
 	ConPrint("GL_VERSION: %s\n", glGetString(GL_VERSION));
-	ConPrint("GL_EXTENSIONS:\n");
+	
 
 	const char * ext = (const char*)glGetString(GL_EXTENSIONS);
+	if(!ext)
+		return true;
+
+	ConPrint("GL_EXTENSIONS:\n");
 	int l = strlen(ext) + 1;
 	char *ext2 = new char[l];
 	ext2[l-1] = '\0';
