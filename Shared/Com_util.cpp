@@ -42,19 +42,34 @@ void RemoveExtension (char *out, int bufsize, const char *in)
 }
 
 /*
+======================================
+Get file name out of a path string
+======================================
+*/
+void ParseFileName(char *name, int namelen, const char *path)
+{
+	int pathlen = strlen(path);
+	const char * s = path + pathlen - 1;
+
+	//go back until we get to a /
+	while (s != path && *s != '/' && *s != '\\')
+		s--;
+	int i = s-path + 1;
+	strcpy(name,path+i);
+}
+
+/*
 =======================================
 Get File Path
 =======================================
 */
 void ParseFilePath(char *path, int pathlen,const char *file)
 {
-	const char *s;
-
 	//point to end of file
-	s = file + strlen(file) - 1;
+	const char *s = file + strlen(file) - 1;
 	
 	//go back until we get to a /
-	while (s != file && *s != '/')
+	while (s != file && *s != '/' && *s != '\\')
 		s--;
 
 	int i = s-file;
@@ -104,10 +119,9 @@ return true if equa
 */
 bool CompareExts(const char *file, const char *ext)		
 {
-	const char *p = file;
+	const char *p = file + (strlen(file) - 1);
 	while(*p && *p!='.' && *p!='\0')
-		p++;
-
+		p--;
 	if(*p=='.')
 	{
 		if(!_stricmp(++p,ext))

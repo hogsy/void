@@ -18,7 +18,7 @@ public:
 		INVALID_VALUE = -1
 	};
 
-	CParms(int len);	
+	explicit CParms(int len);	
 	CParms(const CParms &parms);
 	CParms(const char * buf);
 	~CParms();

@@ -65,7 +65,7 @@ public:
 	void RegisterCVar(CVarBase * var,I_ConHandler * handler=0);
 	void RegisterCommand(const char *cmdname,HCMD id,I_ConHandler * handler);
 	void ComPrint(char* text);
-	void ExecString(const char *string);
+	bool ExecString(const char *string);
 
 	//looks through config file to see if any parms match the given token
 	//set parm to that token if found
@@ -84,7 +84,10 @@ public:
 
 	void SetConsoleRenderer(I_ConsoleRenderer * prcons);
 
-	//Configs
+	//Configs, commandline Parms etc
+	void AddCmdLineParm(const char * cmdLine);
+	void ExecCmdLine();
+
 	void LoadConfig(const char * szFilename);
 	void ExecConfig(const char * szFilename);
 	void WriteCVars(const char * szFilename);
@@ -98,7 +101,8 @@ public:
 
 private:
 	
-	bool ReadConfigParm(char *buf, int bufsize, FILE * fp);
+	int  ReadConfigParm(char *buf, int bufsize, FILE * fp);
+	bool IsCmdLineParm(const char * token, int tokenLen);
 
 	//==============================================================
 	typedef std::list<CCommand>	 CmdList;
@@ -122,6 +126,7 @@ private:
 	StringList::iterator	m_itCmd;
 
 	StringList  m_configFileParms;
+	StringList  m_cmdLineParms;
 	
 	//The Console Renderer
 	I_ConsoleRenderer	*	m_prCons;

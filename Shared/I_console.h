@@ -102,7 +102,7 @@ struct I_Console
 	virtual void ComPrint(char* text)=0;
 
 	//pass a string to be exec'ed
-	virtual void ExecString(const char *string)=0;
+	virtual bool ExecString(const char *string)=0;
 
 	//looks through config file to see if any parms match the given token
 	//set parm to that token if found

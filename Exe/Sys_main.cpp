@@ -40,12 +40,24 @@ Constructor
 CVoid::CVoid(const char * cmdLine)
 {
 	//Current Working directory
-	_getcwd(m_exePath,COM_MAXPATH);		
+	_getcwd(m_exePath,COM_MAXPATH);
 
 	//Hack. 
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
+
+
+	//Add CommandLine
+	if(cmdLine && Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
+	{
+		char map[COM_MAXPATH];
+		char parm[COM_MAXPATH];
+		Util::ParseFileName(map,COM_MAXPATH,cmdLine);
+
+		sprintf(parm, "map %s", map);
+		m_Console.AddCmdLineParm(parm);
+	}
 
 	m_Console.LoadConfig("vvars.cfg");
 
@@ -205,7 +217,8 @@ bool CVoid::Init()
 	//Set focus to console
 	System::GetInputFocusManager()->SetKeyListener(&m_Console,true);
 
-	//Exec any autoexec file
+	//Exec any autoexec files and the commandLine
+	m_Console.ExecCmdLine();
 	m_Console.ExecConfig("autoexec.cfg");
 	return true;
 }

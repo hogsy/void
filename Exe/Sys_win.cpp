@@ -1,5 +1,7 @@
 #include "Sys_main.h"
 #include "resources.h"
+#include "Com_util.h"
+#include <direct.h>
 #include <mmsystem.h>
 
 //======================================================================================
@@ -34,20 +36,78 @@ int WINAPI WinMain(HINSTANCE hInst,
 				   int nCmdShow)
 {
 	m_hInst = hInst;
-
 	if(!RegisterWindow(hInst))
 	{
 		MessageBox(NULL,"Error Registering Window\n","Error",MB_OK);
 		return -1;
 	}
 
-	g_pVoid = new CVoid(lpCmdLine);
+	//Check if CmdLine contains a map, if so, then go down the directory
+	//tree until we find a void binary to load it with and change to that dir
+	char cmdLine[COM_MAXPATH];
+	memset(cmdLine,0,COM_MAXPATH);
+	if(lpCmdLine)
+	{
+		//strip ""
+		if(lpCmdLine[0] == '"')
+		{
+			strcpy(cmdLine, lpCmdLine+1);
+			int len = strlen(lpCmdLine) - 2;
+			cmdLine[len] = '\0';
+		}
+	}
+
+	if(Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
+	{
+		WIN32_FIND_DATA finddata;
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+		char nextPath[COM_MAXPATH];
+		char curPath[COM_MAXPATH];
+		bool foundPath = false;
+	
+		strcpy(curPath,cmdLine);
+		do
+		{
+			memset(&finddata,0, sizeof(WIN32_FIND_DATA));
+			memset(nextPath,0,COM_MAXPATH);
+
+			Util::ParseFilePath(nextPath,COM_MAXPATH,curPath);
+			if(!strlen(nextPath))
+				break;
+
+			hFind = ::FindFirstFile(VOID_DEFAULTBINARYNAME,&finddata);
+			if(hFind != INVALID_HANDLE_VALUE)
+			{
+				foundPath = true;
+				break;
+			}
+
+			if(_chdir(nextPath) == -1)
+				break;
+			strcpy(curPath,nextPath);
+
+		}while(!foundPath);
+
+		if(hFind != INVALID_HANDLE_VALUE)
+			::FindClose(hFind);
+
+		if(!foundPath)
+		{
+			Util::ShowMessageBox("Unable to find Void executable in the current directory tree",
+								 "Void Error");
+			return -1;
+		}
+	}
+
+	//Create the Void object
+	g_pVoid = new CVoid(cmdLine);
 	if(!g_pVoid->Init()) 
 	{
 		System::FatalError("Error Initializing Subsystems\n");
 		return -1;
 	}
 
+	//Start the windowloop
 	MSG msg;
 	while (1)
 	{

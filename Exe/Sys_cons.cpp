@@ -138,8 +138,16 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 					ComPrintf("]%s\n",m_conString.c_str());
 
 					//Exec the string
-					ExecString(m_conString.c_str());
-	
+					if(!ExecString(m_conString.c_str()))
+					{
+						if(System::GetGameState() == INGAMECONSOLE)
+						{
+							m_conString.insert(0,"say ");
+							ExecString(m_conString.c_str());
+						}
+						else
+							ComPrintf("Unknown command \"%s\"\n",m_conString.c_str());
+					}
 					//reset the buffer
 					m_conString.erase();
 				}
@@ -240,7 +248,7 @@ void CConsole::HandleKeyEvent(const KeyEvent &kevent)
 Try to execute a string in the console
 =======================================
 */
-void CConsole::ExecString(const char *string)
+bool CConsole::ExecString(const char *string)
 {
 	m_parms = string;
 	const char * szfirstArg = m_parms.UnsafeStringTok(0);
@@ -249,7 +257,7 @@ void CConsole::ExecString(const char *string)
 	{
 		if(strcmp(itcmd->name, szfirstArg)==0)
 		{	itcmd->handler->HandleCommand(itcmd->id,m_parms);
-			return;
+			return true;
 		}
 	}
 
@@ -293,11 +301,10 @@ void CConsole::ExecString(const char *string)
 				}
 			}
 			ComPrintf("%s = \"%s\"\n",(*it)->name,(*it)->string);
-			return;
+			return true;
 		}
 	}
-	//Couldn't exec
-	ComPrintf("Unknown command \"%s\"\n",string);
+	return false;
 }
 
 /*
@@ -480,7 +487,34 @@ void CConsole::CFunctest(const CParms &parms)
 
 
 //======================================================================================
-//Config files
+//Command line
+//======================================================================================
+
+void CConsole::AddCmdLineParm(const char * cmdLine)
+{	m_cmdLineParms.push_back(std::string(cmdLine));
+}
+
+bool CConsole::IsCmdLineParm(const char * token, int tokenLen)
+{
+	for(StringList::iterator it = m_cmdLineParms.begin(); it != m_cmdLineParms.end(); it++)
+	{
+		if(strncmp(it->c_str(), token, tokenLen)==0)
+			return true;
+	}
+	return false;
+}
+
+void CConsole::ExecCmdLine()
+{
+	for(StringList::iterator itVal = m_cmdLineParms.begin(); itVal != m_cmdLineParms.end(); itVal++)
+	{
+		if(!ExecString(itVal->c_str()))
+			ComPrintf("Unknown command \"%s\"\n",itVal->c_str());
+	}
+}
+
+//======================================================================================
+//Config files etc
 //======================================================================================
 
 /*
@@ -510,7 +544,7 @@ bool CConsole::GetTokenParms(const char * token, CParms * parms)
 Fill buffer with a parm from the config file
 ======================================
 */
-bool CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
+int CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
 {
 	int len = 0;
 	char c = fgetc(fp);
@@ -524,9 +558,7 @@ bool CConsole::ReadConfigParm(char * buf, int bufsize, FILE * fp)
 		c = fgetc(fp);
 	}
 	buf[len] = '\0';
-	if(len)
-		return true;
-	return false;
+	return len;
 }
 
 /*
@@ -556,7 +588,7 @@ void CConsole::LoadConfig(const char * szFilename)
 	{
 		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
-		
+
 		m_configFileParms.push_back(std::string(line));
 		memset(line,0,CON_MAXARGSIZE);
 		lines ++;
@@ -586,7 +618,11 @@ void CConsole::ExecConfig(const char *szFilename)
 
 	//Configs files are linited to 256 lines, 80 chars each
 	int  lines=0;
+	CParms parm(80);
+	const char * firstParm;
+	int firstParmLen;
 	char line[CON_MAXARGSIZE];
+	
 	memset(line,0,CON_MAXARGSIZE);
 	
 	do
@@ -594,7 +630,15 @@ void CConsole::ExecConfig(const char *szFilename)
 		if(!ReadConfigParm(line,CON_MAXARGSIZE,fpcfg))
 			break;
 		
-		ExecString(line);
+		parm = line;
+		firstParm = parm.UnsafeStringTok(0);
+		firstParmLen = strlen(firstParm);
+
+		if(IsCmdLineParm(firstParm,firstParmLen))
+			continue;
+		
+		if(!ExecString(line))
+			ComPrintf("Unknown command \"%s\"\n",line);
 		memset(line,0,CON_MAXARGSIZE);
 		lines ++;
 

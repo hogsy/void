@@ -17,10 +17,10 @@
 
 //========================================================================================
 
-const char VOID_MAINWINDOWCLASS[] = "Void";
-const char VOID_MAINWINDOWTITLE[] = "Void";
+const char VOID_MAINWINDOWCLASS[]	= "Void";
+const char VOID_MAINWINDOWTITLE[]	= "Void";
 
-const char VOID_DEFAULTGAMEDIR [] = "Game";
+const char VOID_DEFAULTBINARYNAME[]	= "Void.exe";
 
 //========================================================================================
 

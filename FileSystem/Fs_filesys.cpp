@@ -508,7 +508,7 @@ bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
 	}
 
 	WIN32_FIND_DATA	finddata;
-	HANDLE hsearch;
+	HANDLE hsearch = INVALID_HANDLE_VALUE;
 	int pathlen = strlen(path);
 	char searchpath[COM_MAXPATH];
 	bool found = false;

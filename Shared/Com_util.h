@@ -12,6 +12,7 @@ namespace Util
 void ParseExtension(char *ext, int bufsize, const char *filename);
 void RemoveExtension (char *out, int bufsize, const char *in);
 void ParseFilePath(char *path, int pathlen, const char *file);
+void ParseFileName(char *name, int namelen, const char *path);
 void SetDefaultExtension (char *filename, const char *extension);
 bool CompareExts(const char *file, const char *ext);		
 
