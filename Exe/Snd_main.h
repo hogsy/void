@@ -77,10 +77,10 @@ private:
 	void SListSounds();
 	bool SPrintInfo();
 
-	static BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,            
-										  const char * szDesc,
-										  const char * szModule,
-										  void * pContext);
+//	static BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,            
+//										  const char * szDesc,
+//										  const char * szModule,
+//										  void * pContext);
 };
 
 #endif

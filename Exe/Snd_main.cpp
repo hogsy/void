@@ -341,6 +341,7 @@ void CSoundManager::SListSounds()
 Device Enumeration. Can't find any use yet
 ======================================
 */
+/*
 BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
 									  const char * szDesc,
 									  const char * szModule,
@@ -352,7 +353,7 @@ BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,
 		ComPrintf("Module : %s\n", szModule);
 	return true;
 }
-
+*/
 
 /*
 ==========================================
