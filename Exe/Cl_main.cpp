@@ -292,7 +292,7 @@ void CClient::RunFrame()
 		{
 			m_gameEnts[i].frame = 0;
 			m_gameEnts[i].skinnum= 0;
-			m_pModel->DrawModel(m_gameEnts[i].index, MODEL_CACHE_GAME, m_gameEnts[i]);
+			m_pModel->DrawModel(m_gameEnts[i].index, CACHE_GAME, m_gameEnts[i]);
 		}
 
 //		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
