@@ -144,6 +144,7 @@ bool CGLUtil::Init()
 		}
 	}
 	delete [] ext2;
+
 	return true;
 }
 
@@ -183,20 +184,21 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 	//Adjusts Client Size
 	::AdjustWindowRect(&wrect, 
 					   WS_CAPTION,
-					   TRUE);
+					   FALSE);
+
+	g_rInfo.width  = width;
+	g_rInfo.height = height;
+
+	width = wrect.right - wrect.left;
+	height = wrect.bottom - wrect.top;
 
 	::SetWindowPos(g_rInfo.hWnd,
-				   HWND_TOP,	//always on top HWND_TOP, 
+				   HWND_TOP,
 				   m_wndXpos,
 			       m_wndYpos,
 			       width,
 			       height,
-				   0);//SWP_NOSIZE | SWP_NOMOVE);
-
-//	::ShowWindow(g_rInfo.hWnd, SW_NORMAL);
-
-	g_rInfo.width  = width;
-	g_rInfo.height = height;
+				   0);
 	return true;
 }
 
@@ -295,17 +297,18 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 	wrect.right = g_rInfo.width;
 	wrect.bottom = g_rInfo.height;
 
-	::ShowWindow(g_rInfo.hWnd, SW_MAXIMIZE);
-
 	::AdjustWindowRect(&wrect, 
-					   WS_BORDER | WS_DLGFRAME | WS_POPUP,
+					   WS_CAPTION,
 					   FALSE);
+
+	wrect.left < 0 ? wrect.right -= wrect.left : wrect.right += wrect.left;
+	wrect.top < 0 ? wrect.bottom -= wrect.top : wrect.bottom += wrect.top;
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOPMOST,
 				   wrect.left,
 			       wrect.top,
-			       wrect.right,
+				   wrect.right,
 			       wrect.bottom,
 			       0);
 	return true;
@@ -318,6 +321,8 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
+	ConPrint("CGLUtil::SetWindowCoords: Updated\n");
+
 	if(wndX >= 40)
 		m_wndXpos = wndX;
 	else
@@ -370,6 +375,7 @@ bool CGLUtil::UpdateDisplaySettings(unsigned int width,
 	g_rInfo.bpp		= bpp;
 	g_rInfo.width	= width;
 	g_rInfo.height	= height;
+
 	if (fullscreen)
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 	else
