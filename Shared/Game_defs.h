@@ -164,8 +164,6 @@ struct BaseEntity
 			volume,	
 			attenuation;
 
-	AnimState	animInfo;
-	
 	EMoveType	moveType;
 	
 	vector_t	origin;

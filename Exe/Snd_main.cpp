@@ -303,33 +303,31 @@ Update Listener pos
 */
 void CSoundManager::UpdateListener(const CCamera * pCamera)
 {	
-	HRESULT hr = m_pListener->m_pDS3dListener->SetPosition(
-						pCamera->origin.x, pCamera->origin.y, pCamera->origin.z, 
-											  DS3D_DEFERRED);
-
+	HRESULT hr = m_pListener->m_pDS3dListener->SetPosition(pCamera->origin.x, 
+					pCamera->origin.y, pCamera->origin.z, DS3D_DEFERRED);
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener pos:");
 		return;
 	}
 
-	hr = m_pListener->m_pDS3dListener->SetVelocity(0,0,0,DS3D_DEFERRED);
-
+//	hr = m_pListener->m_pDS3dListener->SetVelocity(0,0,0,DS3D_DEFERRED);
+	hr = m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,
+							pCamera->velocity.z,DS3D_DEFERRED);
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener velocity:");
 		return;
 	}
 
+	hr = m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, 
+		pCamera->forward.z, pCamera->up.x,pCamera->up.y, pCamera->up.z, DS3D_DEFERRED);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CSoundManager::UpdateListener:Setting Listener orientation:");
+		return;
+	}
 
-
-/*	m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,pCamera->velocity.z,
-											  DS3D_DEFERRED);
-*/
-/*	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
-												 pCamera->up.x,pCamera->up.y, pCamera->up.z, 
-												 DS3D_DEFERRED);
-*/
 	m_listenerPos = pCamera->origin;
 }
 
@@ -361,7 +359,7 @@ void CSoundManager::RunFrame()
 			//is out of range now, then stop it
 			if((m_sndSources[i].channel) && (listenerDist >= m_sndSources[i].muteDist))
 			{
-ComPrintf("SND: STOPPING %d\n", i);
+//ComPrintf("SND: STOPPING %d\n", i);
 				m_sndSources[i].channel->Stop();
 				m_sndSources[i].channel->Destroy();
 				m_sndSources[i].channel = 0;
@@ -372,7 +370,7 @@ ComPrintf("SND: STOPPING %d\n", i);
 			//Play sounds which are back in range
 			if((!m_sndSources[i].channel) && (listenerDist < m_sndSources[i].muteDist))
 			{
-ComPrintf("SND: PLAYING %d\n", i);
+//ComPrintf("SND: PLAYING %d\n", i);
 				//Start playing it
 				PlaySoundSource(m_sndSources[i]);
 			}

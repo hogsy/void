@@ -27,7 +27,6 @@ CGame::CGame()
 
 CGame::~CGame()
 {
-
 	I_Console::GetConsole()->UnregisterHandler(this);
 
 	if(entities)
@@ -108,7 +107,7 @@ bool CGame::SpawnEntity(CBuffer &buf)
 	Entity * ent = EntSpawner::CreateEntity(classname,buf);
 	if(ent)
 	{
-ComPrintf("GAME: %s at (%.2f,%.2f,%.2f)\n", ent->classname, ent->origin.x, ent->origin.y, ent->origin.z);
+ComPrintf("GAME: %s : %s\n", ent->classname, ent->origin.ToString());
 		entities[numEnts] = ent;
 		entities[numEnts]->num = numEnts;
 		numEnts++;
@@ -130,7 +129,6 @@ void CGame::RunFrame(float curTime)
 	}
 
 	//Run client movement
-
 	vector_t desiredMove;	
 	vector_t forward, right, up;
 	EntClient * pClient = 0;
@@ -139,12 +137,26 @@ void CGame::RunFrame(float curTime)
 
 	for(i=0; i<numClients; i++)
 	{
-		//Only move the client if we got new input from him  ?
-		//So if the client is lagged, he will be stuck on the server, and
-		//jump back to his original position when his connection unclogs
+		/*
+		FIX ME: Server side movement needs to be redesigned.
+
+		If the server will be running at a fixed frame-rate then the server
+		will need to know how many times between each server frame did a client attempt
+		to move in a given direction and the clients average frame rate.
+		The current system will move a client in a big "GAME_FRAMETIME" chunk even if
+		the client had pressed move for a single client frame.
+		*/
+
+#if 0
+
 		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
 		{
 			pClient = clients[i];
+
+			forward.Set(0,0,0);
+			right.Set(0,0,0);
+			up.Set(0,0,0);
+			desiredMove.Set(0,0,0);
 
 			pClient->angles = pClient->clCmd.angles;
 			pClient->angles.AngleToVector(&forward,&right,&up);
@@ -174,8 +186,7 @@ void CGame::RunFrame(float curTime)
 			}
 
 			//Get desired move
-			desiredMove.Set(0,0,0);
-
+			
 			if (pClient->clCmd.moveFlags & ClCmd::MOVEFORWARD)
 				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), forward);
 			if (pClient->clCmd.moveFlags & ClCmd::MOVEBACK)
@@ -201,13 +212,15 @@ void CGame::RunFrame(float curTime)
 				{	desiredMove.z += 300;
 				}
 			}
+
+			float moveTime = 10 * pClient->clCmd.time;
 			
 			// always add gravity
-			desiredMove.z -= (pClient->gravity * GAME_FRAMETIME);
+			desiredMove.z -= (pClient->gravity * moveTime);
 
 			//gradually slow down existing velocity (friction)
-			pClient->velocity.x *= (pClient->friction  * GAME_FRAMETIME);
-			pClient->velocity.y *= (pClient->friction  * GAME_FRAMETIME);
+			pClient->velocity.x *= (pClient->friction  * moveTime);
+			pClient->velocity.y *= (pClient->friction  * moveTime);
 		
 			if (pClient->velocity.x < 0.01f)
 				pClient->velocity.x = 0;
@@ -225,24 +238,22 @@ void CGame::RunFrame(float curTime)
 				pClient->sendFlags |= SVU_ANIMSEQ;
 			}
 					
-
 			//Add velocity created by new input
 			pClient->velocity += desiredMove;
 
 			//Perform the actual move and update angles
-			EntMove::ClientMove(pClient, GAME_FRAMETIME);
+			EntMove::ClientMove(pClient, moveTime);
 
 			//Do we really want to do this ?
 			pClient->clCmd.Reset();
 		}
+#endif
 	}
 }
-
 
 //==========================================================================
 //Client funcs
 //==========================================================================
-
 
 /*
 ================================================

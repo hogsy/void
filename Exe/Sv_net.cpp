@@ -13,7 +13,7 @@ bool CServer::ValidateClConnection(int clNum,
 {
 	if(!m_pGame->ClientConnect(clNum,buffer,reconnect))
 	{
-		m_net.SendRejectMsg("Couldn't find free client slot");
+		m_net.SendRejectMsg("Server rejected connection");
 		return false;
 	}
 
@@ -95,13 +95,22 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 			}
 		case CL_DISCONNECT:
 			{
-//ComPrintf("SV: %d - %s wants to disconnect\n", clNum, m_clients[clNum]->name);
 				m_net.SendDisconnect(clNum,DR_CLQUIT);
 				break;
 			}
 		case CL_MOVE:
 			{
-				m_incomingCmd.time = ((int)buffer.ReadByte())/1000.0f;
+				m_incomingCmd.time = ((int)buffer.ReadByte())* 1000.0f;
+
+				m_clients[clNum]->origin.x = buffer.ReadFloat();
+				m_clients[clNum]->origin.y = buffer.ReadFloat();
+				m_clients[clNum]->origin.z = buffer.ReadFloat();
+				
+				m_clients[clNum]->angles.x = buffer.ReadFloat();
+				m_clients[clNum]->angles.y = buffer.ReadFloat();
+				m_clients[clNum]->angles.z = buffer.ReadFloat();
+
+#if 0
 				m_incomingCmd.moveFlags = buffer.ReadByte();
 				m_incomingCmd.angles.x = buffer.ReadFloat();
 				m_incomingCmd.angles.y = buffer.ReadFloat();
@@ -113,6 +122,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					return;
 				}
 				m_clients[clNum]->clCmd.UpdateCmd(m_incomingCmd);
+#endif
 				break;
 			}
 		default:
@@ -263,7 +273,7 @@ bool CServer::WriteConfigString(int clNum, CBuffer &buffer, int stringId, int nu
 
 			for(int i=0; i< m_svState.numClients; i++)
 			{
-				if(!m_clients[i]  || i==clNum  ) // ||!m_clients[i]->bSpawned)
+				if(!m_clients[i]  || i==clNum  )
 					continue;
 
 				buffer.WriteByte(SV_CLFULLINFO);

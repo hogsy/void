@@ -43,7 +43,6 @@ struct EntClient : public Entity
 		skinNum = 255;
 
 		animSeq = 0;
-//		animFrame = 0;
 	}
 
 	bool  bSpawned;

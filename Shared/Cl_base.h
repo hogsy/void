@@ -41,6 +41,8 @@ struct ClEntity : public BaseEntity
 
 	bool inUse;
 
+	AnimState	animInfo;
+
 	CacheType	sndCache;
 	CacheType	mdlCache;
 };

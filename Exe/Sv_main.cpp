@@ -10,8 +10,10 @@ enum
 {
 	//Send reconnects if active. Shutdown server. Unload game. Reintialize with new data. Reload GAME
 	CMD_MAP = 1,		
+	
 	//Send Reconnect. Change map.
 	CMD_CHANGELEVEL = 2,
+	
 	//Send disconnects Shutdown Server. Unload Game.
 	CMD_KILLSERVER = 3,
 	
@@ -277,7 +279,7 @@ void CServer::RunFrame()
 		//Write updates to all connected clients
 		for(int i=0;i<m_svState.maxClients;i++)
 		{
-			if((!m_clients[i]) || (!m_clients[i]->bSpawned)) // || (!m_net.ChanCanSend(i)))
+			if((!m_clients[i]) || (!m_clients[i]->bSpawned)  || (!m_net.ChanCanSend(i)))
 				continue;
 
 			//Write clients own position
@@ -297,12 +299,12 @@ void CServer::RunFrame()
 					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
 				if(m_clients[i]->sendFlags & SVU_ANIMSEQ)
 					m_net.ChanWriteByte(m_clients[i]->animSeq);
+				
 				m_clients[i]->sendFlags = 0;
 			}
-
 			m_net.ChanFinishWrite();
 
-			//Write position AND angles of other clients in PVS
+			//Write position and angles of other clients in PVS
 			for(int j=0; j<m_svState.maxClients; j++)
 			{
 				if((!m_clients[j]) || (!m_clients[j]->bSpawned) || (i==j))
@@ -311,9 +313,9 @@ void CServer::RunFrame()
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
 				m_net.ChanWriteByte(m_clients[j]->num);
 				
-				m_net.ChanWriteFloat(m_clients[j]->origin.x);
-				m_net.ChanWriteFloat(m_clients[j]->origin.y);
-				m_net.ChanWriteFloat(m_clients[j]->origin.z);
+				m_net.ChanWriteCoord(m_clients[j]->origin.x);
+				m_net.ChanWriteCoord(m_clients[j]->origin.y);
+				m_net.ChanWriteCoord(m_clients[j]->origin.z);
 				
 				m_net.ChanWriteCoord(m_clients[j]->angles.x);
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
@@ -613,13 +615,10 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 	{
 		buf.WriteShort(ent->num);
 		buf.WriteByte(ent->moveType);
-/*		buf.WriteCoord(ent->origin.x);
+
+		buf.WriteCoord(ent->origin.x);
 		buf.WriteCoord(ent->origin.y);
 		buf.WriteCoord(ent->origin.z);
-*/
-		buf.WriteFloat(ent->origin.x);
-		buf.WriteFloat(ent->origin.y);
-		buf.WriteFloat(ent->origin.z);
 
 		buf.WriteAngle(ent->angles.x);
 		buf.WriteAngle(ent->angles.y);
@@ -803,7 +802,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
-				if(m_clients[i]) // && m_clients[i]->inUse)
+				if(m_clients[i])
 					m_net.SendDisconnect(i, DR_SVQUIT);
 			}
 			Shutdown();

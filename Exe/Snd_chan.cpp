@@ -65,7 +65,7 @@ bool CSoundChannel::CreateBuffer(CSoundBuffer &buffer)
 					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
 					  DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
 */
-//	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     dsbdesc.dwBufferBytes = pWaveFile->m_size;
     dsbdesc.lpwfxFormat = buffer.GetWaveFormat();
     
@@ -128,7 +128,7 @@ bool CSoundChannel::Create3d(CSoundBuffer &buffer,
 	if(!CreateBuffer(buffer))
 		return false;
 
-ComPrintf("SND: %s Mute Dist : %f\n", buffer.GetFilename(), muteDist);
+//ComPrintf("SND: %s Mute Dist : %f\n", buffer.GetFilename(), muteDist);
 
 	m_pDS3dBuffer->SetMinDistance(muteDist * 0.25, DS3D_DEFERRED);
 	m_pDS3dBuffer->SetMaxDistance(muteDist, DS3D_DEFERRED);

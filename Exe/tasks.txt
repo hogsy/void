@@ -2,11 +2,18 @@
 major issues
 =====================================
 
+server-client movement needs to be redesigned with the
+fixed frame rate of the server in mind.
+
+renderer should manage md2s better
+need better way to hook up models with skins
+
 proper animation sequences depending on movement on the server
 add animation cycle flags for clients
 
 add crouch mode (bbox.z/2 and viewheight=0)
-remove fmod and add mp3 playback using directShow
+add mp3 playback using directShow
+
 
 game entities
 =====================================
@@ -14,4 +21,3 @@ game entities
 add delay var to sound sources
 add renderering flags to model entities
 add frame range and scale to model entities
-

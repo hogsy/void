@@ -26,7 +26,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE),
 				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE),
-				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_ARCHIVE),
+				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_READONLY),
 				m_cvLocalMove("cl_localMove","0", CVAR_BOOL, CVAR_ARCHIVE)
 {
 
@@ -54,7 +54,6 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
 	System::GetConsole()->RegisterCVar(&m_cvDefaultChar, this);
-
 
 	//Register Commands
 	for(int i=0; g_clGameCmds[i].szCmd; i++)
@@ -114,48 +113,48 @@ void CGameClient::RunFrame(float frameTime)
 	//Process Movement
 	
 	//Get Angle vectors
+	
 	m_pGameClient->angles.AngleToVector(&m_vecForward, &m_vecRight, &m_vecUp);
 	m_vecForward.Normalize();
 	m_vecRight.Normalize();
 	m_vecUp.Normalize();
 
-	// find forward and right vectors that lie in the xy plane
-	vector_t f, r, vecDesiredMove;
-	f = m_vecForward;
-	f.z = 0;
-	if (f.Normalize() < 0.3)
-	{
-		if (m_vecForward.z < 0)
-			f = m_vecUp;
-		else
-			m_vecUp.Scale(f, -1);
+	//Find forward and right vectors that lie in the xy plane
+	vector_t forward(m_vecForward), 
+			 right(m_vecRight), 
+			 vecDesiredMove;
 
-		f.z = 0;
-		f.Normalize();
+	forward.z = 0;
+	if (forward.Normalize() < 0.3f)
+	{
+		if (forward.z < 0)
+			forward = m_vecUp;
+		else
+			m_vecUp.Scale(forward, -1);
+		forward.z = 0;
+		forward.Normalize();
 	}
 
-	r = m_vecRight;
-	r.z = 0;
-	if (r.Normalize() < 0.3)
+	right.z = 0;
+	if (right.Normalize() < 0.3)
 	{
-		if (m_vecRight.z > 0)
-			r = m_vecUp;
+		if (right.z > 0)
+			right = m_vecUp;
 		else
-			m_vecUp.Scale(r, -1);
-
-		r.z = 0;
-		r.Normalize();
+			m_vecUp.Scale(right, -1);
+		right.z = 0;
+		right.Normalize();
 	}
 
 	//Get desired move
 	if(m_cmd.moveFlags & ClCmd::MOVEFORWARD)
-		vecDesiredMove.VectorMA(vecDesiredMove, m_pGameClient->maxSpeed, f);
+		vecDesiredMove.VectorMA(vecDesiredMove, m_pGameClient->maxSpeed, forward);
 	if(m_cmd.moveFlags & ClCmd::MOVEBACK)
-		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, f);
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, forward);
 	if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
-		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, r);
+		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, right);
 	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
-		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, r);
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, right);
 
 	//Scale down x/y velocity if walking or crouching
 	if(m_cmd.moveFlags & ClCmd::WALK || m_cmd.moveFlags & ClCmd::CROUCH)
@@ -182,6 +181,7 @@ void CGameClient::RunFrame(float frameTime)
 	UpdateViewAngles(frameTime);
 	UpdateViewBlends();
 
+	
 	//Save current view to send to the server
 	m_cmd.angles = m_pGameClient->angles;
 	m_cmd.time = frameTime * 1000.0f;
@@ -189,17 +189,11 @@ void CGameClient::RunFrame(float frameTime)
 		m_cmd.time = 255.0f;
 
 	//Print misc crap
-	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %.2f, %.2f, %.2f", 
-		m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
-	m_pClGame->HudPrintf(0,120,0,"VELOCITY  : %.2f,%.2f,%.2f", 
-		m_pGameClient->velocity.x,m_pGameClient->velocity.y,m_pGameClient->velocity.z);
-
-//	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
-//	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
-//	m_pClGame->HudPrintf(0,160,0,"ANGLES : %.2f,%.2f,%.2f", m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);
+	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %s", m_pGameClient->origin.ToString());
+	m_pClGame->HudPrintf(0,120,0,"VELOCITY: %s",m_pGameClient->velocity.ToString());
 
 	//Drawing
-	//fix me. draw ents only in the pvs
+	//FIXME: PVS Check should be here
 	int i;
 	for(i=0; i< GAME_MAXENTITIES; i++)
 	{
@@ -219,10 +213,7 @@ void CGameClient::RunFrame(float frameTime)
 			m_pClGame->DrawModel(m_clients[i]);
 		}
 	}
-
-	
 }
-
 
 /*
 ======================================
@@ -233,8 +224,16 @@ them to the buffer
 void CGameClient::WriteCmdUpdate(CBuffer &buf)
 {
 	buf.WriteByte(CL_MOVE);
-	buf.WriteByte(m_cmd.time);
+	buf.WriteByte(((int)m_cmd.time));
+
+#if 0
 	buf.WriteByte(m_cmd.moveFlags);
+#else
+	buf.WriteFloat(m_pGameClient->origin.x);
+	buf.WriteFloat(m_pGameClient->origin.y);
+	buf.WriteFloat(m_pGameClient->origin.z);
+#endif
+
 	buf.WriteFloat(m_cmd.angles.x);
 	buf.WriteFloat(m_cmd.angles.y);
 	buf.WriteFloat(m_cmd.angles.z);
@@ -250,7 +249,6 @@ void CGameClient::WriteFullUpdate(CBuffer &buf)
 
 }
 
-
 /*
 ======================================
 Update View blends depending on where we are
@@ -261,11 +259,10 @@ void CGameClient::UpdateViewBlends()
 	int contents = m_pWorld->PointContents(m_pGameClient->origin);
 	if(contents & CONTENTS_SOLID)
 		m_pCamera->blend.Set(0.4f, 0.4f, 0.4f);
-/*	else if(contents & CONTENTS_WATER)
-		VectorSet(&m_vecBlend, 0, 1, 1);
+	else if(contents & CONTENTS_WATER)
+		m_pCamera->blend.Set(0, 1, 1);
 	else if(contents & CONTENTS_LAVA)
-		VectorSet(&m_vecBlend, 1, 0, 0);
-*/
+		m_pCamera->blend.Set(1, 0, 0);
 	else
 		m_pCamera->blend.Set(1,1,1);
 }
@@ -318,10 +315,7 @@ void CGameClient::UnloadWorld()
 		if(m_entities[i].inUse)
 		{
 			if(m_entities[i].sndIndex > -1)
-			{
-//ComPrintf("CLGAME: removed sound %d\n", i);
 				m_pClGame->RemoveSoundSource(&m_entities[i]);
-			}
 		}
 		m_entities[i].Reset();
 	}
@@ -351,17 +345,14 @@ void CGameClient::Print(const char * msg, ...)
 	System::GetConsole()->ComPrint(textBuffer);
 }
 
-
 /*
 ================================================
-
+Should be in client Game
 ================================================
 */
 void CGameClient::Spawn(vector_t &origin, vector_t &angles)
 {
 }
-
-
 
 //==========================================================================
 //==========================================================================
@@ -441,10 +432,6 @@ void CGameClient::HandleCommand(int cmdId, const CParms &parms)
 		Talk(parms.String());
 		break;
 	case CMD_DEBUG:
-		ComPrintf("CL: Pos %.2f %.2f %.2f\n", 
-			m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
-		ComPrintf("CL: Angles %.2f %.2f %.2f\n", 
-			m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);
 		break;
 	}
 }
@@ -489,16 +476,3 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 	}
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -80,7 +80,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				
 				//Unregister model/skin
 				//m_pClGame->UnregisterModel(CACHE_LOCAL, m_clients[num].mdlIndex);
-
+				
 				m_clients[num].Reset();
 				break;
 			}
@@ -94,7 +94,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 
 				if(buffer.BadRead())
 				{
-					ComPrintf("CL: Update is corrupt. Ignoring\n");
+ComPrintf("CL: Update is corrupt. Ignoring\n");
 					return;
 				}
 
@@ -110,17 +110,21 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 						m_pGameClient->friction = buffer.ReadFloat();
 					if(b & SVU_MAXSPEED)
 						m_pGameClient->maxSpeed = buffer.ReadFloat();
-
 					if(b & SVU_ANIMSEQ)
 						buffer.ReadByte();
 				}
-				
+
+#if 0			//Ignoring position until movement is redesigned.
 				if(!m_cvLocalMove.bval)
 				{
-					m_pGameClient->velocity.x += ((x-m_pGameClient->origin.x) *m_fFrameTime);
-					m_pGameClient->velocity.y += ((y-m_pGameClient->origin.y) *m_fFrameTime);
-					m_pGameClient->velocity.z += ((z-m_pGameClient->origin.z) *m_fFrameTime);
+					vector_t pos(x,y,z);
+					vector_t oldvelocity = m_pGameClient->velocity;
+
+					m_pGameClient->velocity += (pos - m_pGameClient->origin);
+					EntMove::ClientMove(m_pGameClient, GAME_FRAMETIME);
+					m_pGameClient->velocity = oldvelocity;
 				}
+#endif
 				break;
 			}
 
@@ -129,16 +133,15 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 				int num = buffer.ReadByte();
 				if(m_clients[num].inUse && num != m_clNum)
 				{
-					m_clients[num].origin.x = buffer.ReadFloat();
-					m_clients[num].origin.y = buffer.ReadFloat();
-					m_clients[num].origin.z = buffer.ReadFloat();
+					m_clients[num].origin.x = buffer.ReadCoord();
+					m_clients[num].origin.y = buffer.ReadCoord();
+					m_clients[num].origin.z = buffer.ReadCoord();
 
 					m_clients[num].angles.x = buffer.ReadCoord();
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
 
-m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %.2f, %.2f, %.2f", 
-					 m_clients[num].origin.x,m_clients[num].origin.y,m_clients[num].origin.z);
+m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %s", m_clients[num].origin.ToString());
 				}
 				break;
 			}
@@ -244,9 +247,9 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 
 				m_entities[id].moveType = (EMoveType)buffer.ReadByte();
 
-				m_entities[id].origin.x = buffer.ReadFloat();
-				m_entities[id].origin.y = buffer.ReadFloat();
-				m_entities[id].origin.z = buffer.ReadFloat();
+				m_entities[id].origin.x = buffer.ReadCoord();
+				m_entities[id].origin.y = buffer.ReadCoord();
+				m_entities[id].origin.z = buffer.ReadCoord();
 
 				m_entities[id].angles.x = buffer.ReadAngle();
 				m_entities[id].angles.y = buffer.ReadAngle();
@@ -354,10 +357,6 @@ ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_clients[num].mdlCache = CACHE_LOCAL;
 
-/*	m_clients[num].frac = 0.0f;
-	m_clients[num].frameNum = 0;
-	m_clients[num].nextFrame = 0;
-*/
 	//Setup bounding box. gravity,. friction etc here as well
 	m_clients[num].mins = VEC_CLIENT_MINS;
 	m_clients[num].maxs = VEC_CLIENT_MAXS;
@@ -583,9 +582,7 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;
-
 ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
-
 			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}
@@ -594,7 +591,7 @@ ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
 	m_campath = -1;
 	
 	//Setup camera
-	m_pCamera = new CCamera(m_pGameClient->angles,   //m_pGameClient->origin,
+	m_pCamera = new CCamera(m_pGameClient->angles,
 							m_vecForward, m_vecRight, m_vecUp,	
 							m_pGameClient->velocity);
 

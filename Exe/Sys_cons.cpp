@@ -375,6 +375,14 @@ void CConsole::UnregisterHandler(I_ConHandler * pHandler)
 		else
 			it++;
 	}
+
+	for(CmdListIt itCmd = m_lCmds.begin(); itCmd != m_lCmds.end();)
+	{
+		if(itCmd->handler == pHandler)
+			m_lCmds.erase(itCmd++);
+		else
+			itCmd++;
+	}
 }
 
 /*
@@ -385,7 +393,7 @@ Register CFunc
 void CConsole::RegisterCommand(const char *cmdname,   int id,
 							   I_ConHandler * pHandler)
 {
-	for(CmdList::iterator it = m_lCmds.begin(); it != m_lCmds.end(); it++)
+	for(CmdListIt it = m_lCmds.begin(); it != m_lCmds.end(); it++)
 	{
 		if(strcmp(it->name, cmdname) > 0)
 			break;

@@ -188,7 +188,8 @@ ComPrintf("Stepped up !");
 		m_bOnGround = false;
 
 	m_pCamera->origin = m_pGameClient->origin;
-		//Need a better transition
+	
+	//Need a better transition
 	if(!(m_cmd.moveFlags & ClCmd::CROUCH))
 		m_pCamera->origin.z += CL_VIEWHEIGHT;
 }

@@ -2,6 +2,10 @@
 #include "Game_main.h"
 #include "Com_parms.h"
 
+enum
+{
+	CMD_CLIENTDEBUG
+};
 
 CVar	g_varGravity("g_gravity", "800", CVAR_FLOAT, 0);
 CVar	g_varMaxSpeed("g_maxspeed", "200", CVAR_FLOAT, 0);
@@ -20,6 +24,8 @@ void CGame::InitializeVars()
 	I_Console::GetConsole()->RegisterCVar(&g_varGravity,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varMaxSpeed,this);
 	I_Console::GetConsole()->RegisterCVar(&g_varFriction,this);
+
+	I_Console::GetConsole()->RegisterCommand("gclientInfo",CMD_CLIENTDEBUG,this);
 }
 
 /*
@@ -73,4 +79,16 @@ Handler game commands
 */
 void CGame::HandleCommand(int cmdId, const CParms &parms)
 {
+	switch(cmdId)
+	{
+		case CMD_CLIENTDEBUG:
+		{
+			for(int i=0; i<numClients; i++)
+			{
+				if(clients[i])
+					ComPrintf("%s : %s\n", clients[i]->name, clients[i]->origin.ToString());
+			}
+			break;
+		}
+	}
 }
