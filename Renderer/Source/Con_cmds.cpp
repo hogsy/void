@@ -71,9 +71,9 @@ void ScreenShot(char *name, EImageFileFormat type)
 	{
 		sprintf(checkname, "%s\\%s\\%s", GetCurPath(), "Shots", name);
 		if(type == FORMAT_PCX)
-			FileUtil::SetDefaultExtension(checkname, ".pcx");
+			Util::SetDefaultExtension(checkname, ".pcx");
 		else
-			FileUtil::SetDefaultExtension(checkname, ".tga");
+			Util::SetDefaultExtension(checkname, ".tga");
 	}
 
 	//Got file name, Now actually take the shot and write it
