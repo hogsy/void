@@ -11,6 +11,8 @@
 
 #include "gl_rast.h"
 #include "Rast_none.h"
+#include "Rast_d3dx.h"
+
 
 //======================================================================================
 //======================================================================================
@@ -48,10 +50,12 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
-	if (stricmp(m_cRast.string, "gl")==0)
+//	if (stricmp(m_cRast.string, "gl")==0)
 		g_pRast = new COpenGLRast();
-	else
-		g_pRast = new CRastNone();
+//	else if (stricmp(m_cRast.string, "d3dx")==0)
+//		g_pRast = new CRastD3DX();
+//	else
+//		g_pRast = new CRastNone();
 
 	g_pConsole->RegisterCVar(&m_cFull,this);
 	g_pConsole->RegisterCVar(&m_cBpp,this);
@@ -363,7 +367,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 {
 	g_pRast->SetFocus();
 
-	// if we're not changing bpp, we can skip a lot of stuff
+/*	// if we're not changing bpp, we can skip a lot of stuff
 	if (bpp == g_rInfo.bpp)
 	{
 		g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
@@ -371,7 +375,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		r_init();
 		return;
 	}
-
+*/
 
 
 	// shut the thing down

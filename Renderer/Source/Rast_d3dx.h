@@ -1,17 +1,21 @@
-#ifndef	RAST_GL_H
-#define RAST_GL_H
+#ifndef	RAST_D3DX_H
+#define RAST_D3DX_H
 
+
+#define D3D_OVERLOADS
 #include <windows.h>
-#include "gl.h"
+#include <d3d.h>
+#include <d3dx.h>
+
 #include "Rasterizer.h"
 
 
-class COpenGLRast : public I_Rasterizer
+class CRastD3DX : public I_Rasterizer
 {
 public:
 
-	COpenGLRast();
-	~COpenGLRast();
+	CRastD3DX();
+	~CRastD3DX();
 
 	//Startup/Shutdown
 	bool Init();
@@ -67,41 +71,34 @@ private:
 	{
 		tex_bin_t()
 		{
-			glnames = NULL;
 			num = -1;
 		}
 
-		GLuint *glnames;
 		int		num;
 	};
-
-
-
-	HDC			hDC;		//device context
-	HGLRC		hRC;		//the gl rendering context
-
-
-	bool GoFull(void);
-	bool GoWindowed(void);
-
-	void EnumDisplayModes();
-	bool SetupPixelFormat();
-
-	DEVMODE*m_devmodes;		//all available display modes
-	int		m_nummodes;		//Number of display modes
-
-	bool	m_loadeddriver;
-	bool	m_initialized;
-	char	m_gldriver[256];
-
-	bool	m_bInitialized;
-
-
 	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
-};
 
-void FError(char *error, ...);
-void Error(char *error, ...);
+
+	ID3DXContext		*m_pD3DX;
+	LPDIRECTDRAW7		m_pDD;
+	LPDIRECT3D7			m_pD3D;
+	LPDIRECT3DDEVICE7	m_pD3DDevice;
+
+	LPD3DXMATRIXSTACK	m_matView;
+	D3DXMATRIX			m_matWorld;
+	D3DXMATRIX			m_matProjection;
+
+	int					mNumVerts;
+	D3DLVERTEX			mVerts[10024];	// max verts per poly
+
+	float		mTexCoords[2];
+	vector_t	mColor;
+	float		mAlpha;
+	EPolyType	mType;
+
+	HRESULT		mhError;
+	bool	m_bInitialized;
+};
 
 
 #endif

@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib winmm.lib ole32.lib advapi32.lib ijl11.lib ..\Debug\vfs.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\vrender.dll"
+# ADD LINK32 d3dxd.lib d3dim.lib ddraw.lib kernel32.lib user32.lib gdi32.lib shell32.lib winmm.lib ole32.lib advapi32.lib ijl11.lib ..\Debug\vfs.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\vrender.dll"
 # SUBTRACT LINK32 /profile /map
 
 !ENDIF 
@@ -390,6 +390,18 @@ SOURCE=.\Source\Rast_none.cpp
 # Begin Source File
 
 SOURCE=.\Source\Rast_none.h
+# End Source File
+# End Group
+# Begin Group "D3DX"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Rast_d3dx.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Rast_d3dx.h
 # End Source File
 # End Group
 # Begin Source File

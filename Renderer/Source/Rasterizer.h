@@ -8,6 +8,7 @@
 
 // max number of possible mipmaps 10 -> 1024 max dim size
 #define MAX_MIPMAPS 11
+#define MAX_TEXTURE_BINS 1024
 
 // depth buffer functions
 enum EDepthFunc

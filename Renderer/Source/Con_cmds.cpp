@@ -150,7 +150,7 @@ bool CVar_Fov(const CVar * var, int val)
 
 	if (val>=10 && val<= 170)
 	{
-		g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
+//		g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 		return true;
 	}
 	return false;
