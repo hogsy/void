@@ -220,6 +220,23 @@ char* CBuffer::ReadString(char delim)
 }
 
 
+void  CBuffer::ReadString(char * buf, int bufsize, char delim)
+{
+	int len = 0;
+	char c = 0;
+
+	while(len < bufsize)
+	{
+		c = ReadChar();
+		if(c == 0 || c == -1 || c == delim)
+			break;
+		buf[len] = c;
+		len++;
+	}
+	buf[len] = 0;
+}
+
+/*
 void CBuffer::ReadVector(vector_t &vec)
 {
 	vec.x = vec.y = vec.z = 0.0f;
@@ -255,3 +272,4 @@ void CBuffer::ReadVector(vector_t &vec)
 		vec.z = atof(coord);
 	}
 }
+*/

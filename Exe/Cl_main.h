@@ -20,7 +20,18 @@ struct R_EntState
 	vector_t angle;
 };
 */
+/*
 
+  Type of client side ents
+ 
+  drawable
+	clients
+	monsters
+	static ents, no prediction
+
+*/
+
+const int MAX_CLIENTENTS = 1024;
 
 /*
 =====================================
@@ -132,8 +143,9 @@ private:
 	//This is the client we should do local prediction on
 	EntClient	m_gameClient;
 
+	R_EntState  m_gameEnts[MAX_CLIENTENTS];
 
-	R_EntState  m_entQuad; //bah
+//	R_EntState  m_entQuad; //bah
 
 	//This should hook up to the game client whne the client
 	//enters a game

@@ -125,14 +125,16 @@ bool CClient::LoadWorld(const char *worldname)
 	}
 
 	//Create local ent
-	Void3d::VectorSet(m_entQuad.angle,0,0,0);
+/*	Void3d::VectorSet(m_entQuad.angle,0,0,0);
 	Void3d::VectorSet(m_entQuad.origin,0,0, 32);
 	
 	m_entQuad.frame = 0;
 	m_entQuad.skinnum= 0;
 	m_entQuad.cache = MODEL_CACHE_LOCAL;
-	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
 	
+//	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
+	m_entQuad.index = m_pModel->LoadModel("models/players/Hueteotl/tris.md2", 1, MODEL_CACHE_LOCAL);
+*/	
 
 
 	char mappath[COM_MAXPATH];
@@ -208,6 +210,8 @@ void CClient::UnloadWorld()
 		return;
 	}
 
+	m_pModel->UnloadModelCache(MODEL_CACHE_GAME);
+
 	delete m_pCamera;
 	m_pCamera = 0;
 
@@ -281,12 +285,15 @@ void CClient::RunFrame()
 
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 
+		//draw the ents in pvs
+
+
 /*	m_entQuad.frame = 0;
 	m_entQuad.skinnum= 0;
 	m_entQuad.cache = MODEL_CACHE_LOCAL;
 	m_entQuad.index = m_pModel->LoadModel("Models/Quad/tris.md2", -1 ,MODEL_CACHE_LOCAL);
 */
-		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
+//		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
 
 		m_pRender->Draw(m_pCamera);
 	}

@@ -68,7 +68,7 @@ Every subclass should implement this
 */
 Entity * CEntityMaker::MakeEntity(const char * classname, CBuffer &parms) const 
 { 
-	Entity * ent = new Entity(classname);
+/*	Entity * ent = new Entity(classname);
 	char * key = parms.ReadString();
 	while(key && *key != 0)
 	{
@@ -76,6 +76,8 @@ Entity * CEntityMaker::MakeEntity(const char * classname, CBuffer &parms) const
 		key = parms.ReadString();
 	};
 	return ent; 
+*/
+	return 0;
 };
 
 /*

@@ -2,7 +2,7 @@
 #define VOID_COM_BUFFER
 
 #include "Com_defs.h"
-#include "3dmath.h"
+//#include "3dmath.h"
 
 /*
 ==========================================
@@ -39,7 +39,9 @@ public:
 	float ReadAngle();
 	float ReadCoord();
 	char* ReadString(char delim=0);
-	void  ReadVector(vector_t &vec);
+	void  ReadString(char * buf, int bufsize, char delim = 0);
+
+//	void  ReadVector(vector_t &vec);
 
 	//Other util
 	const byte* GetData() const { return m_buffer;  }

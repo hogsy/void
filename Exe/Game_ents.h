@@ -78,6 +78,8 @@ struct EntWorldSpawn : public Entity
 		gravity = 800;
 	}
 
+	virtual void Write(CBuffer &buf) const {}
+
 	char	message[ENT_MAXMESSAGE];
 	char    music[ENT_MAXSTRING];
 	int		gravity;
@@ -101,8 +103,8 @@ struct EntSpeaker : public Entity
 
 	virtual void Write(CBuffer &buf) const
 	{
-		Entity::Write(buf);
-		buf.Write(soundIndex);
+//		Entity::Write(buf);
+//		buf.Write(soundIndex);
 	}
 
 	int	 volume;

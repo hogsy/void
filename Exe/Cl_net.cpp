@@ -70,7 +70,24 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		}
 	case SVC_MODELLIST:
 		{
-			ComPrintf("CL: ModelList :%d\n", buffer.GetSize());
+			char modelName[32];
+			int  modelId=0;
+
+			int numModels = buffer.ReadInt();
+
+			ComPrintf("CL: ModelList :%d models\n", numModels);
+
+			for(int i=0; i<numModels;i++)
+			{
+				modelId = buffer.ReadInt();
+				buffer.ReadString(modelName,32);
+
+				if(modelId == -1 || !modelName[0])
+				{
+					continue;
+				}
+				m_pModel->LoadModel(modelName,modelId,MODEL_CACHE_GAME);
+			}
 			break;
 		}
 	case SVC_SOUNDLIST:
@@ -85,7 +102,39 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		}
 	case SVC_BASELINES:
 		{
-			ComPrintf("CL: Baselines :%d\n", buffer.GetSize());
+			int numEnts = buffer.ReadInt();
+			ComPrintf("CL: Baselines :%d entities\n", numEnts);
+
+//			int index = 0;
+
+			//parse entity baselines
+//			for(int i=0; i<numEnts; i++)
+//			{
+			int i = 0;
+				buffer.ReadInt();
+				buffer.ReadString();
+
+				m_gameEnts[i].origin.x = buffer.ReadCoord();
+				m_gameEnts[i].origin.y = buffer.ReadCoord();
+				m_gameEnts[i].origin.z = buffer.ReadCoord();
+
+				m_gameEnts[i].angle.x = buffer.ReadAngle();
+				m_gameEnts[i].angle.y = buffer.ReadAngle();
+				m_gameEnts[i].angle.z = buffer.ReadAngle();
+
+				m_gameEnts[i].index = buffer.ReadInt();
+/*
+		buf.Write(num);
+		buf.Write(classname);
+		buf.WriteCoord(origin.x);
+		buf.WriteCoord(origin.y);
+		buf.WriteCoord(origin.z);
+		buf.WriteAngle(angles.x);
+		buf.WriteAngle(angles.y);
+		buf.WriteAngle(angles.z);
+*/
+//			}
+
 			break;
 		}
 	case SVC_BEGIN:

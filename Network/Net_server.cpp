@@ -537,7 +537,7 @@ void CNetServer::SendSpawnParms(int chanId)
 		SendDisconnect(chanId,CLIENT_BADMSG);
 		return;
 	}
-ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnLevel);
+//ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnLevel);
 }
 
 /*
@@ -582,7 +582,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 		return;
 	}
 
-	ComPrintf("SV:Client(%d) Requesting Spawn, Level:%d  Num:%d\n", chanId, spawnparm, reqNum);
+//ComPrintf("SV:Client(%d) Requesting Spawn, Level:%d  Num:%d\n", chanId, spawnparm, reqNum);
 	
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)

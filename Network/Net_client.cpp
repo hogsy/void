@@ -145,7 +145,7 @@ void CNetClient::SendUpdate()
 				m_pNetChan->m_buffer.Write(m_spawnLevel);
 				m_pNetChan->m_buffer.Write(m_spawnNextPacket);
 
-m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
+//m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
 
 				m_pNetChan->PrepareTransmit();
 				m_pSock->SendTo(m_pNetChan);
@@ -224,7 +224,7 @@ void CNetClient::HandleSpawnParms()
 		return;
 	}
 
-m_pClient->Print("CL: Got spawn level %d. Packet %d\n", id, packNum);
+//m_pClient->Print("CL: Got spawn level %d. Packet %d\n", id, packNum);
 
 /*
 	m_fNextSendTime = 0.0f;

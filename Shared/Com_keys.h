@@ -73,7 +73,13 @@ struct KeyField
 		case KEY_INT:
 			break;
 		case KEY_VECTOR:
-			break;
+			{
+
+
+//				char* CBuffer::ReadString(char delim)
+//				"origin" "344 824 8"
+				break;
+			}
 		case KEY_STRING:
 			{
 				void * p = (void *)(dest + field.offset);
