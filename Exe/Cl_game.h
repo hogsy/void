@@ -114,10 +114,7 @@ private:
 	bool		m_ingame;
 	
 	float		m_fFrameTime;
-	float		m_fLastUpdate;
-
 	ClCmd		m_cmd;
-	ClCmd		m_oldCmd;
 
 	int			m_campath;
 	float		m_camtime;
@@ -133,7 +130,6 @@ private:
 	
 	int			m_clNum;
 	ClClient *	m_pGameClient;
-
 
 	//==================================================
 

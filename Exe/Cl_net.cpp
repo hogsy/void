@@ -10,6 +10,8 @@
 #include "Cl_game.h"
 #include "I_file.h"
 
+#include "Game_anims.h"
+
 /*
 ======================================
 Process game message
@@ -110,11 +112,9 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 						m_pGameClient->friction = buffer.ReadFloat();
 					if(b & SVU_MAXSPEED)
 						m_pGameClient->maxSpeed = buffer.ReadFloat();
-					if(b & SVU_ANIMSEQ)
-						buffer.ReadByte();
 				}
 
-#if 0			//Ignoring position until movement is redesigned.
+/*				//Ignoring position until movement is redesigned.
 				if(!m_cvLocalMove.bval)
 				{
 					vector_t pos(x,y,z);
@@ -124,7 +124,7 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					EntMove::ClientMove(m_pGameClient, GAME_FRAMETIME);
 					m_pGameClient->velocity = oldvelocity;
 				}
-#endif
+*/
 				break;
 			}
 
@@ -140,6 +140,10 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 					m_clients[num].angles.x = buffer.ReadCoord();
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
+
+					byte b = buffer.ReadByte();
+					if(b)
+						ClAnim::SetAnim(m_clients[num].animInfo,(EPlayerAnim)b);
 
 m_pClGame->HudPrintf(0,200,0,"OTHER ORIGIN: %s", m_clients[num].origin.ToString());
 				}
@@ -265,11 +269,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 							m_entities[id].mdlIndex = buffer.ReadShort();
 							
 							m_entities[id].skinNum = buffer.ReadShort();
-							//m_entities[id].skinNum|=  MODEL_SKIN_UNBOUND_GAME;
 							buffer.ReadShort();
-//							m_entities[id].frameNum = 
-//							m_entities[id].nextFrame = m_entities[id].frameNum;
-//							m_entities[id].frac = 0;
 							m_entities[id].mdlCache = CACHE_GAME;
 							break;
 						}
@@ -579,11 +579,10 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	{
 		if((m_entities[i].inUse) && (m_entities[i].sndIndex > -1))
 		{
-
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;
-ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
+//ComPrintf("CL: Added Sound Source Index : %d\n", m_entities[i].sndIndex);
 			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}

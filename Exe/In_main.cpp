@@ -300,7 +300,7 @@ void CInput::ShowMouse(bool show)
 
 	if(show)
 	{
-		ComPrintf("SHOWING CURSOR\n");
+//		ComPrintf("SHOWING CURSOR\n");
 
 		//Try a max of five times
 		for(int i=0; i<5; i++)
@@ -314,7 +314,7 @@ void CInput::ShowMouse(bool show)
 	}
 	else
 	{
-		ComPrintf("HIDING CURSOR\n");
+//		ComPrintf("HIDING CURSOR\n");
 
 		//Try a max of five times
 		for(int i=0; i<5; i++)

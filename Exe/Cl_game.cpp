@@ -39,7 +39,6 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	m_clNum = -1;
 	m_pGameClient = 0;
 
-	m_fLastUpdate = 0.0f;
 	m_fFrameTime = 0.0f;
 	
 	m_pCamera = 0;
@@ -98,7 +97,7 @@ void CGameClient::RunFrame(float frameTime)
 	//Reset move and angles stuff from the old frame
 	m_vecDesiredAngles.Set(0,0,0);
 	m_cmd.Reset();
-
+	
 	//Run Input
 	if(m_pCmdHandler->CursorChanged())
 	{
@@ -123,7 +122,7 @@ void CGameClient::RunFrame(float frameTime)
 	vector_t forward(m_vecForward), 
 			 right(m_vecRight), 
 			 vecDesiredMove;
-
+	
 	forward.z = 0;
 	if (forward.Normalize() < 0.3f)
 	{
@@ -170,6 +169,7 @@ void CGameClient::RunFrame(float frameTime)
 	m_pGameClient->velocity.x *= (m_pGameClient->friction * frameTime);
 	m_pGameClient->velocity.y *= (m_pGameClient->friction * frameTime);
 	
+	//Clamp velocities
 	if (m_pGameClient->velocity.x < 0.01f)
 		m_pGameClient->velocity.x = 0;
 	else if (m_pGameClient->velocity.x > 200.0f)
@@ -187,7 +187,6 @@ void CGameClient::RunFrame(float frameTime)
 	UpdateViewAngles(frameTime);
 	UpdateViewBlends();
 
-	
 	//Save current view to send to the server
 	m_cmd.angles = m_pGameClient->angles;
 	m_cmd.time = frameTime * 1000.0f;
@@ -232,13 +231,12 @@ void CGameClient::WriteCmdUpdate(CBuffer &buf)
 	buf.WriteByte(CL_MOVE);
 	buf.WriteByte(((int)m_cmd.time));
 
-#if 0
 	buf.WriteByte(m_cmd.moveFlags);
-#else
+
+	//Temp
 	buf.WriteFloat(m_pGameClient->origin.x);
 	buf.WriteFloat(m_pGameClient->origin.y);
 	buf.WriteFloat(m_pGameClient->origin.z);
-#endif
 
 	buf.WriteFloat(m_cmd.angles.x);
 	buf.WriteFloat(m_cmd.angles.y);
@@ -272,7 +270,6 @@ void CGameClient::UpdateViewBlends()
 	else
 		m_pCamera->blend.Set(1,1,1);
 }
-
 
 //==========================================================================
 //==========================================================================
@@ -326,12 +323,11 @@ void CGameClient::UnloadWorld()
 		m_entities[i].Reset();
 	}
 
-	ComPrintf("CLGAME: Unload world\n");
-
 	m_numEnts = 0;
 	m_numClients = 0;
-	
 	m_ingame = false;
+
+	ComPrintf("CLGAME: Unload world\n");
 }
 
 

@@ -279,7 +279,7 @@ void CServer::RunFrame()
 		//Write updates to all connected clients
 		for(int i=0;i<m_svState.maxClients;i++)
 		{
-			if((!m_clients[i]) || (!m_clients[i]->bSpawned)  || (!m_net.ChanCanSend(i)))
+			if((!m_clients[i]) || (!m_clients[i]->bSpawned)) //  || (!m_net.ChanCanSend(i)))
 				continue;
 
 			//Write clients own position
@@ -297,8 +297,6 @@ void CServer::RunFrame()
 					m_net.ChanWriteFloat(m_clients[i]->friction);
 				if(m_clients[i]->sendFlags & SVU_MAXSPEED)
 					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
-				if(m_clients[i]->sendFlags & SVU_ANIMSEQ)
-					m_net.ChanWriteByte(m_clients[i]->animSeq);
 				
 				m_clients[i]->sendFlags = 0;
 			}
@@ -320,6 +318,14 @@ void CServer::RunFrame()
 				m_net.ChanWriteCoord(m_clients[j]->angles.x);
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
 				m_net.ChanWriteCoord(m_clients[j]->angles.z);
+
+				if(m_clients[j]->animSeq & 255)
+				{
+					m_clients[j]->animSeq &= ~255;
+					m_net.ChanWriteByte(m_clients[j]->animSeq);
+				}
+				else
+					m_net.ChanWriteByte(0);
 
 				m_net.ChanFinishWrite();
 			}
@@ -629,7 +635,7 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 			buf.WriteChar('m');
 			buf.WriteShort(ent->mdlIndex);
 			buf.WriteShort(ent->skinNum);
-			buf.WriteShort(ent->animFrame);
+			buf.WriteShort(0);
 		}
 		if(ent->sndIndex >=0)
 		{

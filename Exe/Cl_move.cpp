@@ -139,6 +139,22 @@ void CGameClient::UpdatePosition(const float &time)
 {
 	EntMove::ClientMove(m_pGameClient, time);
 
+	TraceInfo traceInfo;
+	vector_t  end(m_pGameClient->origin);
+	end.z -= 0.1f;
+
+	m_pWorld->Trace(traceInfo,m_pGameClient->origin, end, m_pGameClient->mins,m_pGameClient->maxs);
+	if(traceInfo.fraction != 1)
+		m_bOnGround = true;
+	else
+		m_bOnGround = false;
+
+	m_pCamera->origin = m_pGameClient->origin;
+	
+	//Need a better transition
+	if(!(m_cmd.moveFlags & ClCmd::CROUCH))
+		m_pCamera->origin.z += CL_VIEWHEIGHT;
+
 /*	if(EntMove::ClientMove(m_pGameClient, time) == 2)
 	{
 ComPrintf("Hit step!");
@@ -176,23 +192,8 @@ ComPrintf("Stepped up !");
 		}
 	}
 */
-
-	TraceInfo traceInfo;
-	vector_t  end(m_pGameClient->origin);
-	end.z -= 0.1f;
-
-	m_pWorld->Trace(traceInfo,m_pGameClient->origin, end, m_pGameClient->mins,m_pGameClient->maxs);
-	if(traceInfo.fraction != 1)
-		m_bOnGround = true;
-	else
-		m_bOnGround = false;
-
-	m_pCamera->origin = m_pGameClient->origin;
-	
-	//Need a better transition
-	if(!(m_cmd.moveFlags & ClCmd::CROUCH))
-		m_pCamera->origin.z += CL_VIEWHEIGHT;
 }
+
 
 /*
 ================================================
