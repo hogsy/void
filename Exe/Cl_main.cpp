@@ -176,7 +176,7 @@ void CClient::BeginGame()
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;
 			m_pSound->AddStaticSource(&m_entities[i]);
-ComPrintf("CL: ADDED STATIC SOUND\n");
+//ComPrintf("CL: ADDED STATIC SOUND\n");
 		}
 	}
 	
@@ -302,7 +302,10 @@ void CClient::RunFrame()
 			if(m_entities[i].inUse)
 			{
 				if(m_entities[i].mdlIndex >= 0)
+				{
+
 					m_pClRen->DrawModel(m_entities[i]);	
+				}
 			}
 		}
 		//Draw clients

@@ -28,13 +28,13 @@ struct KeyField
 	//======================================================================================
 	//Constructor/Destructor/Assignment
 	KeyField(const char *ikey, int ioffset, KeyType itype) : 
-			offset(ioffset), type(itype)//, name(ikey)
+			offset(ioffset), type(itype)
 	{
 		name = new char[strlen(ikey)+1];
 		strcpy(name,ikey);
 	}
 
-	KeyField(const KeyField &key) : offset(key.offset), type(key.type)//, name(key.name)
+	KeyField(const KeyField &key) : offset(key.offset), type(key.type)
 	{
 		name = new char[strlen(key.name)+1];
 		strcpy(name,key.name);
@@ -54,7 +54,6 @@ struct KeyField
 		strcpy(name,key.name);
 		offset = key.offset;
 		type= key.type;
-//		name = key.name;
 		return *this;
 	}
 
@@ -63,8 +62,7 @@ struct KeyField
 	//byte offset in Source struct to corret field
 	int		 offset;
 	KeyType  type;
-	char   *  name; //[32];
-//	std::string name;
+	char   *  name; 
 
 	//Write Field value to given dest
 	static void ReadField(const KeyField &field, CBuffer &buf, byte * dest)

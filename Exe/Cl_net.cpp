@@ -135,8 +135,7 @@ ComPrintf("CL: Map: %s\n", map);
 				buffer.ReadString(modelName,32);
 
 				if(modelId == -1 || !modelName[0])
-				{
-					continue;
+				{	continue;
 				}
 				m_pClRen->LoadModel(modelName,CACHE_GAME,modelId);
 			}
@@ -156,8 +155,7 @@ ComPrintf("CL: Map: %s\n", map);
 				buffer.ReadString(soundName,32);
 
 				if(soundId == -1 || !soundName[0])
-				{
-					continue;
+				{		continue;
 				}
 				m_pSound->RegisterSound(soundName,CACHE_GAME, soundId);
 			}
@@ -177,6 +175,7 @@ ComPrintf("CL: Map: %s\n", map);
 
 			while(id != -1)
 			{
+				m_entities[id].Reset();
 				m_entities[id].origin.x = buffer.ReadCoord();
 				m_entities[id].origin.y = buffer.ReadCoord();
 				m_entities[id].origin.z = buffer.ReadCoord();
@@ -222,7 +221,6 @@ ComPrintf("CL: Map: %s\n", map);
 				m_numEnts ++;
 				id = buffer.ReadShort();
 			}
-
 			ComPrintf("CL: Parsed %d entities\n", m_numEnts);
 			break;
 		}

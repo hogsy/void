@@ -434,8 +434,6 @@ int CServer::NumConfigStringBufs(int stringId) const
 		return m_signOnBufs.numEntityBufs;
 	case SVC_CLIENTINFO:
 		return 1;
-//	case SVC_BEGIN:
-//		return 1;
 	}
 	return 0;
 }
@@ -482,15 +480,6 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 			//Write info about currently connected clients
 			return true;
 		}
-/*	case SVC_BEGIN:
-		{
-			if(numBuffer > 0)
-				return false;
-			//Begin client
-
-			break;
-		}
-*/
 	}
 	return false;
 }
@@ -541,25 +530,8 @@ void CServer::LoadWorld(const char * mapname)
 	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
 	LoadEntities();
 
-	//Create Sigon-messages
-/*	NetSignOnBufs & signOnBuf = m_net.GetSignOnBufs();
-	//first reset all the signON buffers
-	signOnBuf.gameInfo.Reset();
-	signOnBuf.numImageBufs = 0;
-	for(int i=0; i< NetSignOnBufs::MAX_IMAGE_BUFS; i++)
-		signOnBuf.imageList[i].Reset();
-	signOnBuf.numSoundBufs = 0;
-	for(i=0; i< NetSignOnBufs::MAX_SOUND_BUFS; i++)
-		signOnBuf.soundList[i].Reset();
-	signOnBuf.numModelBufs = 0;
-	for(i=0; i< NetSignOnBufs::MAX_MODEL_BUFS; i++)
-		signOnBuf.modelList[i].Reset();
-	signOnBuf.numEntityBufs = 0;
-	for(i=0; i< NetSignOnBufs::MAX_ENTITY_BUFS; i++)
-		signOnBuf.entityList[i].Reset();
-*/
 	//Write SignON data
-	WriteSignOnBuffer(); //signOnBuf);
+	WriteSignOnBuffer();
 
 	//update state
 	m_svState.levelId ++;

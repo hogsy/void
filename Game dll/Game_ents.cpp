@@ -70,7 +70,7 @@ protected:
 			EntFields  * iterator = spawnFields;
 			while(iterator && iterator->next)
 			{
-				if(!strcmp(iterator->field->name, key) == 0)
+				if(strcmp(iterator->field->name, key) == 0)
 				{	KeyField::ReadField(*(iterator->field),parms, reinterpret_cast<byte*>(ent));
 					return;
 				}
@@ -96,6 +96,15 @@ public:
 
 	EntMaker(EntFields * fields) { spawnFields = fields;}
 	virtual ~EntMaker() {}
+
+	void AddField(const char *ikey, int ioffset, KeyType itype)
+	{
+		EntFields  * iterator = spawnFields;
+		while(iterator->next)
+			iterator = iterator->next;
+		iterator->field = new KeyField(ikey, ioffset, itype);
+		iterator->next = new EntFields();		
+	}
 
 	//Maker func
 	virtual Entity * MakeEntity(const char * classname, CBuffer &parms) const
@@ -186,6 +195,7 @@ void AddMaker(const char * classname, BaseEntMaker * pMaker, EntFields * pFields
 	while(iterator->next)
 		iterator = iterator->next;
 	iterator->classname = new char [strlen(classname)+1];
+	strcpy(iterator->classname, classname);
 	iterator->pMaker = pMaker;
 	iterator->pFields = pFields;
 	iterator->next = new MakerEntry();
@@ -252,7 +262,7 @@ Entity * CreateEntity(const char * classname, CBuffer &parms)
 	MakerEntry  * iterator = makerRegistry;
 	while(iterator->next)
 	{
-		if(!strcmp(iterator->classname, classname))
+		if(strcmp(iterator->classname, classname)==0)
 			return iterator->pMaker->MakeEntity(classname,parms);
 		iterator = iterator->next;
 	}
@@ -273,6 +283,7 @@ bool CGame::SpawnEntity(CBuffer &buf)
 	Entity * ent = EntSpawner::CreateEntity(classname,buf);
 	if(ent)
 	{
+ComPrintf("%s at { %.2f %.2f %.2f }\n", ent->classname, ent->origin.x, ent->origin.y, ent->origin.z);
 		entities[numEnts] = ent;
 		entities[numEnts]->num = numEnts;
 		numEnts++;
