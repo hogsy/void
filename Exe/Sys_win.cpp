@@ -1,9 +1,11 @@
 #include "Sys_hdr.h"
 #include "Sys_main.h"
-#include "resources.h"
+#include "Sys_cons.h"
 #include "Com_util.h"
 #include "Com_registry.h"
 #include "Com_release.h"
+
+#include "resources.h"
 #include <direct.h>
 #include <mmsystem.h>
 
@@ -17,21 +19,8 @@ static void UnRegisterWindow(HINSTANCE hInst);
 static bool ChangeToVoidDir();
 
 
-CConsole *	 g_pConsole;		//Console
-//The game
-CVoid		* g_pVoid=0;		
-
-/*
-================================================
-Global Access funcs
-================================================
-*/
-namespace System
-{
-	const char* GetExePath()  { return m_exePath; } 
-	HINSTANCE	GetHInstance(){ return m_hInst; }
-	HWND		GetHwnd()	  { return m_hWnd;  }
-}
+CConsole * g_pConsole=0;	//The Console
+CVoid	 * g_pVoid=0;		//The game
 
 /*
 ==========================================
@@ -82,7 +71,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 	
 	//Create the Void object
 	g_pConsole = new CConsole(m_exePath);
-	g_pVoid = new CVoid(m_exePath,cmdLine);
+	g_pVoid = new CVoid(m_exePath,cmdLine, g_pConsole);
 	if(!g_pVoid->Init()) 
 	{
 		System::FatalError("Error Initializing Subsystems\n");
@@ -304,6 +293,32 @@ bool CVoid::CreateVoidWindow()
 }
 
 
+//=====================================================================================
+//=====================================================================================
+
+/*
+================================================
+Global Access funcs
+================================================
+*/
+namespace System
+{
+	I_Console *	GetConsole()  { return g_pConsole; }
+	const char* GetExePath()  { return m_exePath; } 
+	HINSTANCE	GetHInstance(){ return m_hInst; }
+	HWND		GetHwnd()	  { return m_hWnd;  }
+
+	void FatalError(const char *error)
+	{
+		Util::ShowMessageBox(error);
+		delete g_pVoid;
+		exit(1);
+	}
+}
+
+//=====================================================================================
+//=====================================================================================
+
 /*
 ======================================
 Handle out of memeoty
@@ -316,4 +331,22 @@ int HandleOutOfMemory(size_t size)
 	UnRegisterWindow(m_hInst);
 	exit(0);
 	return 0;
+}
+
+
+/*
+===============================================
+print a string to debugging window 
+and handle any arguments
+===============================================
+*/
+void ComPrintf(const char* text, ...)
+{
+	static char textBuffer[1024];
+	va_list args;
+	va_start(args, text);
+	vsprintf(textBuffer, text, args);
+	va_end(args);
+		
+	g_pConsole->ComPrint(textBuffer);
 }

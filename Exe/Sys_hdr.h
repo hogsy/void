@@ -27,6 +27,7 @@ enum eGameState
 };
 
 struct I_FileReader;
+struct I_InputFocusManager;
 
 namespace System
 {
@@ -42,6 +43,7 @@ namespace System
 	eGameState		GetGameState();
 
 	I_FileReader *  CreateFileReader(EFileMode mode);
+	I_InputFocusManager * GetInputFocusManager();
 
 	void  FatalError(const char *error);
 	void  SetGameState(eGameState state);

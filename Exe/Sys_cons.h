@@ -14,19 +14,17 @@ Console Command
 struct CCommand
 {
 	CCommand(const char * iname, int iid, I_ConHandler * pHandler)
+		: handler(pHandler), id(iid)
 	{
 		name = new char[strlen(iname)+1];
 		strcpy(name,iname);
-		handler = pHandler;
-		id = iid;
 	}
 
 	CCommand(const CCommand &cmd)
+		: handler(cmd.handler), id(cmd.id)
 	{
 		name = new char[strlen(cmd.name)+1];
 		strcpy(name,cmd.name);
-		handler = cmd.handler;
-		id = cmd.id;
 	}
 
 	~CCommand()
@@ -136,6 +134,7 @@ private:
 	//Updated when handlers are unregistered
 	//Written to config file on exit
 	StrList		m_cvarStrings;	
+	
 	//List of command line parms 
 	StrList		m_cmdLineParms;
 	

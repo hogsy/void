@@ -150,7 +150,7 @@ void CClientGameInput::BindFuncToKey(const CParms &parms, bool bPrint)
 	char cmdName[32];
 	parms.StringTok(2, cmdName, 32);
 
-	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(cmdName);
+	m_cmdKeys[keynum].pCmd = ((CConsole*)I_Console::GetConsole())->GetCommandByName(cmdName);
 	if(m_cmdKeys[keynum].pCmd == 0)
 	{
 		ComPrintf("Bind : %s is not a valid command\n",cmdName);

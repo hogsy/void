@@ -65,12 +65,7 @@ void RunFrame()
 Constructor
 ======================================
 */
-CServer::CServer() : /*m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE),
-					 m_cHostname("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
-					 m_cMaxClients("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE),
-					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
-*/
-					 m_chanWriter(m_net)
+CServer::CServer() : m_chanWriter(m_net)
 {
 	m_numModels = 0;
 	m_numImages = 0;
@@ -86,16 +81,18 @@ CServer::CServer() : /*m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARC
 
 	memset(m_printBuffer,0,512);
 
-	m_cHostname = System::GetConsole()->RegisterCVar("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
-	m_cGame = System::GetConsole()->RegisterCVar("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
-	m_cPort = System::GetConsole()->RegisterCVar("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE,this);
-	m_cMaxClients = System::GetConsole()->RegisterCVar("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE,this);
+	I_Console * pConsole = I_Console::GetConsole();
 
-	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
-	System::GetConsole()->RegisterCommand("changelevel",CMD_CHANGELEVEL, this);
-	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
-	System::GetConsole()->RegisterCommand("kick",CMD_KICK, this);
-	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
+	m_cHostname = pConsole->RegisterCVar("sv_hostname", "Void Server", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cGame = pConsole->RegisterCVar("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cPort = pConsole->RegisterCVar("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHIVE,this);
+	m_cMaxClients = pConsole->RegisterCVar("sv_maxclients", "4", CVAR_INT, CVAR_ARCHIVE,this);
+
+	pConsole->RegisterCommand("map",CMD_MAP, this);
+	pConsole->RegisterCommand("changelevel",CMD_CHANGELEVEL, this);
+	pConsole->RegisterCommand("killserver",CMD_KILLSERVER, this);
+	pConsole->RegisterCommand("kick",CMD_KICK, this);
+	pConsole->RegisterCommand("status",CMD_STATUS, this);
 }	
 
 /*

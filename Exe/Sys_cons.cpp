@@ -3,7 +3,6 @@
 #include "Sys_cons.h"
 #include "I_renderer.h"
 #include "Com_util.h"
-#include <direct.h>
 
 //Private stuff
 namespace

@@ -36,8 +36,6 @@ Constructor
 CClient::CClient(I_Renderer * pRenderer,
 				 CSoundManager * pSound,
 				 CMusic	* pMusic) :
-//					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
-//					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(pRenderer),	
 					m_pSound(pSound),
 					m_pMusic(pMusic),
@@ -65,15 +63,17 @@ CClient::CClient(I_Renderer * pRenderer,
 	m_pWorld = 0;
 	m_bInGame = false;
 
-	m_cvPort = System::GetConsole()->RegisterCVar("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH,this);
-	m_cvNetStats = System::GetConsole()->RegisterCVar("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE,this);
+	I_Console * pConsole = I_Console::GetConsole();
 
-	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
-	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
-	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
+	m_cvPort = pConsole->RegisterCVar("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH,this);
+	m_cvNetStats = pConsole->RegisterCVar("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE,this);
+
+	pConsole->RegisterCommand("connect", CMD_CONNECT, this);
+	pConsole->RegisterCommand("disconnect", CMD_DISCONNECT, this);
+	pConsole->RegisterCommand("reconnect", CMD_RECONNECT, this);
 
 	//Priv func
-	System::GetConsole()->RegisterCommand("reconnect_game", CMD_RECONNECT_SV, this);
+	pConsole->RegisterCommand("reconnect_game", CMD_RECONNECT_SV, this);
 }
 
 /*
@@ -120,7 +120,7 @@ void CClient::RunFrame()
 		//Print FPS, Update frame time
 		m_pHud->Printf(0,50,0, "%3.2f FPS", 1/(System::GetCurTime() - m_fFrameTime));
 		m_pHud->Printf(0,60,0, "%4.2f secs", System::GetCurTime());
-//		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
+		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
 		m_fFrameTime = System::GetCurTime();
 
 		//Draw NetStats if flagged

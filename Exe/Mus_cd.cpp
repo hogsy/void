@@ -31,13 +31,15 @@ CMusCDAudio::CMusCDAudio()
 	
 	m_eState = M_INACTIVE;
 
-	System::GetConsole()->RegisterCommand("cdplay", CD_PLAY, this);
-	System::GetConsole()->RegisterCommand("cdpause", CD_PAUSE, this);
-	System::GetConsole()->RegisterCommand("cdstop", CD_STOP, this);
-	System::GetConsole()->RegisterCommand("cdresume", CD_RESUME, this);
-	System::GetConsole()->RegisterCommand("cdinfo", CD_STATS, this);
-	System::GetConsole()->RegisterCommand("cdeject", CD_EJECT, this);
-	System::GetConsole()->RegisterCommand("cdclose", CD_CLOSE, this);
+	I_Console * pConsole = I_Console::GetConsole();
+
+	pConsole->RegisterCommand("cdplay", CD_PLAY, this);
+	pConsole->RegisterCommand("cdpause", CD_PAUSE, this);
+	pConsole->RegisterCommand("cdstop", CD_STOP, this);
+	pConsole->RegisterCommand("cdresume", CD_RESUME, this);
+	pConsole->RegisterCommand("cdinfo", CD_STATS, this);
+	pConsole->RegisterCommand("cdeject", CD_EJECT, this);
+	pConsole->RegisterCommand("cdclose", CD_CLOSE, this);
 }
 
 CMusCDAudio::~CMusCDAudio()

@@ -1,4 +1,5 @@
 #include "Sys_hdr.h"
+#include "Sys_cons.h"
 #include "In_main.h"
 #include "Mus_main.h"
 #include "Sv_defs.h"
@@ -14,9 +15,6 @@
 #include "Com_release.h"
 
 #include <objbase.h>
-#include <direct.h>
-
-extern CConsole *	   g_pConsole;		//Console
 
 /*
 ==========================================
@@ -43,15 +41,15 @@ namespace
 	};
 }
 
-extern CVoid*	g_pVoid;
+extern CVoid *	g_pVoid;
 
 /*
 ==========================================
 Constructor
 ==========================================
 */
-CVoid::CVoid(const char * curDir, const char * cmdLine) : 
-//						m_Console(curDir),
+CVoid::CVoid(const char * curDir, const char * cmdLine, CConsole * pConsole) : 
+						m_pConsole(pConsole),
 						m_pExport(0),
 						m_pRender(0),
 						m_pRParms(0),
@@ -60,8 +58,6 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 						m_pClient(0),
 						m_pSound(0),
 						m_pMusic(0)
-//						m_varTimeStamp("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY),
-//						m_varVersion("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY)
 {
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
@@ -76,10 +72,10 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 		Util::ParseFileName(map,COM_MAXPATH,cmdLine);
 
 		sprintf(parm, "map %s", map);
-		g_pConsole->AddCmdLineParm(parm);
+		m_pConsole->AddCmdLineParm(parm);
 	}
 
-	g_pConsole->LoadConfig("vvars.cfg");
+	m_pConsole->LoadConfig("vvars.cfg");
 
 	//================================
 	//Create and initialize the file system
@@ -96,7 +92,7 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 	//================================
 	//Export structure
 	m_pExport = new VoidExports();
-	m_pExport->pConsole    = (I_Console*)g_pConsole;
+	m_pExport->pConsole    = (I_Console*)m_pConsole;
 	m_pExport->pHunkManager= g_pHunkManager; 
 	m_pExport->pfnGetCurTime = System::GetCurTime;
 	m_pExport->pfnGetCurPath = System::GetCurGamePath;
@@ -124,17 +120,16 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) :
 	m_gameState = INCONSOLE;
 
 	//Register these commands before the client is created so it can bind to them
-	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
-	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
+	m_pConsole->RegisterCommand("quit",CMD_QUIT,this);			
+	m_pConsole->RegisterCommand("exit",CMD_QUIT,this);			
+	m_pConsole->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
 	
-	System::GetConsole()->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
-	System::GetConsole()->RegisterCommand("fs_path",CMD_LISTPATHS,this);
-	System::GetConsole()->RegisterCommand("fs_dir",CMD_DIRPATH,this);
+	m_pConsole->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
+	m_pConsole->RegisterCommand("fs_path",CMD_LISTPATHS,this);
+	m_pConsole->RegisterCommand("fs_dir",CMD_DIRPATH,this);
 
-
-	m_varTimeStamp = System::GetConsole()->RegisterCVar("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY,this);
-	m_varVersion = System::GetConsole()->RegisterCVar("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY,this);
+	m_varTimeStamp = m_pConsole->RegisterCVar("sys_timestamp", __TIMESTAMP__, CVAR_STRING, CVAR_READONLY,this);
+	m_varVersion = m_pConsole->RegisterCVar("sys_version", VOID_VERSION, CVAR_STRING, CVAR_READONLY,this);
 }
 
 /*
@@ -172,7 +167,7 @@ bool CVoid::Init()
 
 	//================================
 	//Initialize Console
-	g_pConsole->SetConsoleRenderer(m_pRender->GetConsole());
+	m_pConsole->SetConsoleRenderer(m_pRender->GetConsole());
 
 
 	//================================
@@ -233,11 +228,11 @@ bool CVoid::Init()
 	m_Time.Reset();
 
 	//Set focus to console
-	System::GetInputFocusManager()->SetKeyListener(g_pConsole,true);
+	System::GetInputFocusManager()->SetKeyListener(m_pConsole,true);
 
 	//Exec any autoexec files and the commandLine
-	g_pConsole->ExecCmdLine();
-	g_pConsole->ExecConfig("autoexec.cfg");
+	m_pConsole->ExecCmdLine();
+	m_pConsole->ExecConfig("autoexec.cfg");
 	return true;
 }
 
@@ -249,7 +244,7 @@ Destructor
 CVoid::~CVoid() 
 {
 	//console
-	g_pConsole->WriteCVars("vvars.cfg");
+	m_pConsole->WriteCVars("vvars.cfg");
 
 	if(m_pClient)
 		delete m_pClient;
@@ -266,7 +261,9 @@ CVoid::~CVoid()
 	//Shutdown, and free the Renderer Interface
 	if(m_pRender)
 		m_pRender->Shutdown();
-	g_pConsole->SetConsoleRenderer(0);
+	
+	m_pConsole->SetConsoleRenderer(0);
+	m_pConsole = 0;
 
 	if(m_pInput)
 	{
@@ -522,7 +519,6 @@ namespace System
 {
 	const char* GetCurGamePath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
-	I_Console * GetConsole()	{ return g_pConsole; }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 
 	float GetCurTime()	{ return g_pVoid->m_Time.GetCurrentTime(); }
@@ -541,45 +537,20 @@ namespace System
 		g_pVoid->m_gameState = state; 
 		if(state == INCONSOLE)
 		{
-			g_pConsole->SetFullscreen(true);
-			g_pConsole->SetVisible(true);
+			g_pVoid->m_pConsole->SetFullscreen(true);
+			g_pVoid->m_pConsole->SetVisible(true);
 		}
 		else if(state == INGAMECONSOLE)
 		{
-			g_pConsole->SetFullscreen(false);
-			g_pConsole->SetVisible(true);
+			g_pVoid->m_pConsole->SetFullscreen(false);
+			g_pVoid->m_pConsole->SetVisible(true);
 		}
 		else if(state == INGAME)
 		{
-			g_pConsole->SetFullscreen(false);
-			g_pConsole->SetVisible(false);
+			g_pVoid->m_pConsole->SetFullscreen(false);
+			g_pVoid->m_pConsole->SetVisible(false);
 
 			g_pVoid->m_pClient->SetInputState(true);
 		}
 	}
-
-	void FatalError(const char *error)
-	{
-		Util::ShowMessageBox(error);
-		delete g_pVoid;
-		exit(1);
-	}
-}
-
-
-/*
-===============================================
-print a string to debugging window 
-and handle any arguments
-===============================================
-*/
-void ComPrintf(const char* text, ...)
-{
-	static char textBuffer[1024];
-	va_list args;
-	va_start(args, text);
-	vsprintf(textBuffer, text, args);
-	va_end(args);
-		
-	g_pConsole->ComPrint(textBuffer);
 }

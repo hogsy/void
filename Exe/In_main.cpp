@@ -14,16 +14,7 @@ LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 Constructor
 =====================================
 */
-CInput::CInput() /*: 
-				m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE),
-				m_pVarXSens("in_xsens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
-				m_pVarYSens("in_ysens","0.2",CVAR_FLOAT,CVAR_ARCHIVE),
-				m_pVarSens ("in_sens","5.0",CVAR_FLOAT,CVAR_ARCHIVE),
-				m_pVarInvert("in_invert","0",CVAR_BOOL,CVAR_ARCHIVE),
-				m_pVarMouseMode("in_mousemode","1",CVAR_INT,CVAR_ARCHIVE),
-				m_pVarKbMode("in_kbmode","1",CVAR_INT, CVAR_ARCHIVE),
-				m_pVarMouseFilter("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
-*/
+CInput::CInput() 
 {
 	m_bCursorVisible = true;
 

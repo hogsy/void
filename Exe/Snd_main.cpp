@@ -58,14 +58,7 @@ struct CSoundManager::SndSource
 Constructor
 ==========================================
 */
-CSoundManager::CSoundManager() : /*m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cHighQuality("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
-								 m_cRollOffFactor("snd_rolloff", "0.3", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDistanceFactor("snd_distance", "30.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE),
-*/
-								 m_pPrimary(new CPrimaryBuffer)
+CSoundManager::CSoundManager() : m_pPrimary(new CPrimaryBuffer)
 {
 	m_pDSound = 0;
 	m_pListener = 0;	
@@ -98,21 +91,6 @@ CSoundManager::CSoundManager() : /*m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_AR
 	pConsole->RegisterCommand("sndstop",CMD_STOP,this);
 	pConsole->RegisterCommand("sndinfo",CMD_INFO,this);
 	pConsole->RegisterCommand("sndlist",CMD_LIST,this);
-
-
-
-/*	System::GetConsole()->RegisterCVar(&m_cSndFps, this);
-	System::GetConsole()->RegisterCVar(&m_cVolume,this);
-	System::GetConsole()->RegisterCVar(&m_cHighQuality,this);
-	System::GetConsole()->RegisterCVar(&m_cRollOffFactor,this);
-	System::GetConsole()->RegisterCVar(&m_cDopplerFactor,this);
-	System::GetConsole()->RegisterCVar(&m_cDistanceFactor,this);
-	
-	System::GetConsole()->RegisterCommand("sndplay",CMD_PLAY,this);
-	System::GetConsole()->RegisterCommand("sndstop",CMD_STOP,this);
-	System::GetConsole()->RegisterCommand("sndinfo",CMD_INFO,this);
-	System::GetConsole()->RegisterCommand("sndlist",CMD_LIST,this);
-*/
 }
 
 

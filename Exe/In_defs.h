@@ -174,11 +174,4 @@ struct I_InputFocusManager
 	virtual void SetCursorListener(I_InCursorListener * plistener)=0;
 };
 
-//======================================================================================
-//Defined in SysMain where the Input System is actually created.
-namespace System
-{
-	I_InputFocusManager * GetInputFocusManager();
-}
-
 #endif

@@ -1,9 +1,6 @@
 #ifndef VOID_SYS_MAIN
 #define VOID_SYS_MAIN
 
-#define INCLUDE_MUSIC
-
-#include "Sys_cons.h"
 #include "Sys_time.h"
 
 //========================================================================================
@@ -13,9 +10,12 @@ const char VOID_MAINWINDOWTITLE[]	= "Void";
 
 struct  I_Renderer;
 struct  I_FileSystem;
+struct  I_InputFocusManager;
+
 struct  VoidExports;
 struct 	RenderInfo_t;
 
+class   CConsole;
 class	CInput;
 class	CFileSystem;
 class	CClient;
@@ -31,7 +31,8 @@ public:
 		
 	//Constructor
 	CVoid(const char * curDir, 
-		  const char * cmdLine);			
+		  const char * cmdLine,
+		  CConsole * pConsole);			
 	~CVoid();								//Destructor
 	
 	bool Init();							//Init subsystems
@@ -57,28 +58,23 @@ private:
 	//Give this friend access
 	friend float System::GetCurTime();
 	friend float System::GetFrameTime();
-	friend const char * System::GetExePath();
 	friend const char * System::GetCurGamePath();
-	friend I_Console  *	System::GetConsole();
 	friend eGameState   System::GetGameState();
 	
 	friend I_InputFocusManager * System::GetInputFocusManager();
 	friend I_FileReader *  System::CreateFileReader(EFileMode mode);
 	
-	friend void System::FatalError(const char *error);
 	friend void	System::SetGameState(eGameState state);
-	
-	friend void ComPrintf(const char* text, ...);
 	
 	//Subsystems
 	//=========================================================
 	
-//	CConsole	   m_Console;		//Console
 	CTime		   m_Time;
 
-	VoidExports	 * m_pExport;		//Exported Stuff
-	
+	CConsole	 * m_pConsole;		//Console
 	I_FileSystem * m_pFileSystem;	//FileSystem
+
+	VoidExports	 * m_pExport;		//Exported Stuff
 	
 	I_Renderer   * m_pRender;		//Renderer
 	RenderInfo_t * m_pRParms;		//Current Renderering info
