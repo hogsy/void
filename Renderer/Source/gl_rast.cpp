@@ -47,7 +47,7 @@ COpenGLRast::~COpenGLRast()
 	OpenGLUnInit();
 
 	// why the hell does this crash when quitting from fullscreen ?
-//	::ChangeDisplaySettings(NULL, 0);
+	::ChangeDisplaySettings(NULL, 0);
 	ComPrintf("GL::Final Shutdown OK\n");
 }
 

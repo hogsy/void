@@ -212,7 +212,6 @@ bool CImageReader::Read_PCX()
 
 	if (colorkey || (header.num_planes==4))
 	{
-		ConPrint("               %s\n", m_fileReader.GetFileName());
 		format = IMG_RGBA;
 		bpp = 4;
 	}
