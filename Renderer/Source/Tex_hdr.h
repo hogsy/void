@@ -1,8 +1,8 @@
 #ifndef TEXTUREDEFINITIONS_H
 #define TEXTUREDEFINITIONS_H
 
-#include "Ren_cache.h"
 #include "Standard.h"
+#include "Ren_cache.h"
 
 typedef int dimension_t[2];
 
