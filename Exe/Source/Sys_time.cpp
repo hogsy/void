@@ -1,9 +1,14 @@
 #include "Sys_time.h"
 
 
+namespace System
+{
 float	g_fframeTime=0;		//The Global Frame Time
 float	g_fcurTime=0;		//The Global Current Time 
+}
 
+float	CTime::m_fSecsPerTick;
+_int64	CTime::m_dTimerStart;
 
 /*
 =====================================
@@ -68,8 +73,8 @@ bool CTime::Init()
 */
 void CTime::Reset()
 {
-	m_fBaseTime =  (this->*GetTime)();
-	m_fLastTime = g_fcurTime = g_fframeTime = 0.0;
+	m_fBaseTime =  GetTime();
+	m_fLastTime = System::g_fcurTime = System::g_fframeTime = 0.0;
 }
 
 /*

@@ -50,10 +50,10 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 
 	m_rHud = 0;
 
-	m_clport = Sys_GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clrate = Sys_GetConsole()->RegisterCVar("cl_rate","0",	 CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clname = Sys_GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);
-	m_noclip = Sys_GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clport = System::GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clrate = System::GetConsole()->RegisterCVar("cl_rate","0",	 CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clname = System::GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);
+	m_noclip = System::GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	
 	RegCommands();
 }
@@ -240,7 +240,7 @@ bool CClient::LoadWorld(world_t *world)
 	
 	ComPrintf("CClient::Load World: OK\n");
 
-	g_gameState = INGAME;
+	System::g_gameState = INGAME;
 	return true;
 }
 
@@ -280,7 +280,7 @@ void CClient::RunFrame()
 		if (!((desired_movement.x==0) && (desired_movement.y==0) && (desired_movement.z==0)) || (m_campath != -1))
 		{
 			VectorNormalize(&desired_movement);
-			Move(&desired_movement, g_fframeTime * m_maxvelocity);
+			Move(&desired_movement, System::g_fframeTime * m_maxvelocity);
 			desired_movement.x = 0;
 			desired_movement.y = 0;
 			desired_movement.z = 0;
@@ -289,7 +289,7 @@ void CClient::RunFrame()
 		//Print Stats
 		if(m_rHud)
 		{
-		m_rHud->HudPrintf(0, 70,0, "%.2f", 1 / g_fframeTime);
+		m_rHud->HudPrintf(0, 70,0, "%.2f", 1 / System::g_fframeTime);
 		m_rHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, 
 											    eye.origin.y, 
 												eye.origin.z);
@@ -535,7 +535,7 @@ bool CClient::Disconnect()
 	if(m_ingame)
 		UnloadWorld();
 	CloseNet();
-	g_gameState = INCONSOLE;
+	System::g_gameState = INCONSOLE;
 //	g_pWorld = 0;
 	return true;
 }
@@ -622,19 +622,19 @@ void CClient::SetInputState(bool on)
 
 void CClient::RegCommands()
 {
-	Sys_GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
-	Sys_GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
-	Sys_GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
-	Sys_GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
-	Sys_GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
-	Sys_GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
-	Sys_GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
-	Sys_GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
-	Sys_GetConsole()->RegisterCommand("bind",CMD_BIND,this);
-	Sys_GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
-	Sys_GetConsole()->RegisterCommand("cam",CMD_CAM,this);
-	Sys_GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
-	Sys_GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
+	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
+	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
+	System::GetConsole()->RegisterCommand("+moveleft",CMD_MOVE_LEFT,this);
+	System::GetConsole()->RegisterCommand("+moveright",CMD_MOVE_RIGHT,this);
+	System::GetConsole()->RegisterCommand("+right",CMD_ROTATE_RIGHT,this);
+	System::GetConsole()->RegisterCommand("+left",CMD_ROTATE_LEFT,this);
+	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
+	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
+	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
+	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
+	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
+	System::GetConsole()->RegisterCommand("unbind",CMD_UNBIND,this);
+	System::GetConsole()->RegisterCommand("unbindall",CMD_UNBINDALL,this);
 }
 
 void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)

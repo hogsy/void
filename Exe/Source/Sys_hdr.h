@@ -35,6 +35,9 @@ enum eGameState
 	INGAME
 };
 
+namespace System
+{
+
 //Current Game State
 extern eGameState	g_gameState;
 
@@ -43,9 +46,11 @@ extern float		g_fframeTime;
 extern float		g_fcurTime;
 
 //Common System functions
-I_Console *	Sys_GetConsole();
-HINSTANCE	Sys_GetHInstance();
-HWND		Sys_GetHwnd();
-const char* Sys_GetExeDir();
+I_Console *	GetConsole();
+HINSTANCE	GetHInstance();
+HWND		GetHwnd();
+const char* GetExeDir();
+
+}
 
 #endif

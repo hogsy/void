@@ -10,7 +10,11 @@
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
 char		g_exedir[COM_MAXPATH];
+
+namespace System
+{
 eGameState	g_gameState;
+}
 
 //========================================================================================
 CVoid		* g_pVoid =0;		//The game
@@ -38,9 +42,14 @@ CServer		* g_pServer=0;		//Network Server
 //Global access functions for private data
 //======================================================================================
 
-HINSTANCE	Sys_GetHInstance(){ return g_hInst; }
-HWND		Sys_GetHwnd()	  { return g_hWnd;  }
-const char* Sys_GetExeDir()	  { return g_exedir;}
+namespace System
+{
+
+HINSTANCE	GetHInstance(){ return g_hInst; }
+HWND		GetHwnd()	  { return g_hWnd;  }
+const char* GetExeDir()	  { return g_exedir;}
+
+}
 
 
 //======================================================================================
@@ -81,7 +90,7 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_pInput= new CInput();					
 	
 	//Export structure
-	g_pExport= new VoidExport_t(&g_fcurTime, &g_fframeTime);
+	g_pExport= new VoidExport_t(&System::g_fcurTime, &System::g_fframeTime);
 	g_pExport->vconsole = (I_Console*)g_pConsole;
 	
 	//Create the Renderer
@@ -107,12 +116,12 @@ CVoid::CVoid(HINSTANCE hInstance,
 #endif
 
 	//Set game state - full screen console - not connected
-	g_gameState = INCONSOLE;
+	System::g_gameState = INCONSOLE;
 
-	Sys_GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
-	Sys_GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
-	Sys_GetConsole()->RegisterCommand("map",CMD_MAP,this );
-	Sys_GetConsole()->RegisterCommand("connect",CMD_MAP,this);
+	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
+	System::GetConsole()->RegisterCommand("map",CMD_MAP,this );
+	System::GetConsole()->RegisterCommand("connect",CMD_MAP,this);
 
 //	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
@@ -555,7 +564,7 @@ bool CVoid::ShutdownServer()
 		world_destroy(g_pWorld);
 	g_pWorld = 0;
 */
-	g_gameState = INCONSOLE;
+	System::g_gameState = INCONSOLE;
 	ComPrintf("CVoid::ShutdownGame: OK\n");
 	return true;
 }
@@ -872,18 +881,18 @@ void CFuncConnect(int argc, char ** argv)
 */
 void CToggleConsole(int argc, char** argv)
 {
-	if(g_gameState == INGAMECONSOLE)
+	if(System::g_gameState == INGAMECONSOLE)
 	{
-		g_gameState = INGAME;
+		System::g_gameState = INGAME;
 		g_pConsole->Toggle(false);
 		g_pClient->SetInputState(true);
 	}
-	else if(g_gameState == INGAME)
+	else if(System::g_gameState == INGAME)
 	{
 		GetInputFocusManager()->SetCursorListener(0);
 		GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
-		g_gameState = INGAMECONSOLE;
+		System::g_gameState = INGAMECONSOLE;
 		g_pConsole->Toggle(true);
 	}
 }

@@ -78,7 +78,7 @@ CKeyboard::CKeyboard()
 	//Default to self as listener
 	SetKeyListener(this,false,IN_DEFAULTREPEATRATE);
 
-	m_pVarKbMode = Sys_GetConsole()->RegisterCVar("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
+	m_pVarKbMode = System::GetConsole()->RegisterCVar("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
 }
 
 /*
@@ -213,10 +213,10 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 
 	//Set coop level depending on exclusive flag
 	if(!m_bExclusive)
-		hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(),
+		hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(),
 										  DISCL_FOREGROUND | DISCL_NONEXCLUSIVE); 
 	else
-		hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(),
+		hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(),
 										  DISCL_FOREGROUND | DISCL_EXCLUSIVE); 
 	
 	if (FAILED(hr)) 
@@ -374,7 +374,7 @@ HRESULT CKeyboard :: Acquire()
 	{
 		hWinKbHook = SetWindowsHookEx(WH_KEYBOARD,  // type of hook to install
 					 &Win32_KeyboardProc,			// address of hook procedure
-					 Sys_GetHInstance(),			// handle to application instance
+					 System::GetHInstance(),		// handle to application instance
 					 ::GetCurrentThreadId());		// identity of thread to install hook for
 	
 		if(hWinKbHook == 0)
@@ -445,7 +445,7 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 		{
 			//Try changing to DI Exclusive mode is using DirectInput
 			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(), 
+			HRESULT hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
 													DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
@@ -457,7 +457,7 @@ HRESULT	CKeyboard::SetExclusive(bool exclusive)
 		else if(!exclusive && m_bExclusive)
 		{
 			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(Sys_GetHwnd(), 
+			HRESULT hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
 														DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
@@ -507,7 +507,7 @@ void CKeyboard::FlushKeyBuffer()
 			m_aHeldKeys[i].state = BUTTONUP;
 			m_aHeldKeys[i].id = 0;
 
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONUP;
 			m_keyEvent.id = m_aCharVal[i];
 			
@@ -566,15 +566,15 @@ void CKeyboard::Update()
 			if(m_aHeldKeys[i].state == BUTTONDOWN)
 			{
 				m_aHeldKeys[i].state = BUTTONHELD;
-				m_aHeldKeys[i].time = g_fcurTime + KB_REPEATWAIT;
+				m_aHeldKeys[i].time = System::g_fcurTime + KB_REPEATWAIT;
 			}
 			//Dispatch HELD mouse events, if time passed since last dispatch
 			//is bigger than the repeat rate
 			else if((m_aHeldKeys[i].state == BUTTONHELD) &&
-					(g_fcurTime > (m_aHeldKeys[i].time + m_fRepeatRate)))
+					(System::g_fcurTime > (m_aHeldKeys[i].time + m_fRepeatRate)))
 			{
 				m_keyEvent.id = m_aCharVal[i]; 
-				m_keyEvent.time = m_aHeldKeys[i].time = g_fcurTime;
+				m_keyEvent.time = m_aHeldKeys[i].time = System::g_fcurTime;
 				m_keyEvent.state = BUTTONHELD;
 
 				if(m_keyEvent.flags & SHIFTDOWN)
@@ -638,7 +638,7 @@ void CKeyboard::Update_DIBuffered()
 	for(unsigned int i=0;i<numElements;i++)
 	{
 		m_keyEvent.id   = m_aCharVal[(m_aDIBufKeydata[i].dwOfs)];
-		m_keyEvent.time = g_fcurTime;
+		m_keyEvent.time = System::g_fcurTime;
 
 		//Button went down
 		if(m_aDIBufKeydata[i].dwData & 0x80)
@@ -716,7 +716,7 @@ void CKeyboard::Update_DIImmediate()
 			m_aHeldKeys[i].state = BUTTONDOWN;
 
 			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONDOWN;
 			
 			//Apply flags
@@ -736,7 +736,7 @@ void CKeyboard::Update_DIImmediate()
 
 			//Send new Keystate
 			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONUP;
 
 			//Apply flags
@@ -803,7 +803,7 @@ void CKeyboard::Update_Win32()
 			m_aHeldKeys[i].state = BUTTONDOWN;
 
 			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONDOWN;
 			
 			//Apply flags
@@ -822,7 +822,7 @@ void CKeyboard::Update_Win32()
 
 			//Send new Keystate
 			m_keyEvent.id = m_aCharVal[i];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONUP;
 
 			//Apply flags
@@ -919,7 +919,7 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 			m_aHeldKeys[keyindex].state = BUTTONDOWN;
 
 			m_keyEvent.id = g_pKb->m_aCharVal[keyindex];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONDOWN;
 			
 			//Apply flags
@@ -940,7 +940,7 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 
 			//Send new Keystate
 			m_keyEvent.id = g_pKb->m_aCharVal[keyindex];
-			m_keyEvent.time = g_fcurTime;
+			m_keyEvent.time = System::g_fcurTime;
 			m_keyEvent.state = BUTTONUP;
 
 			//Apply flags
@@ -969,7 +969,7 @@ void CKeyboard::SendKeyEvent(int &keyid, EButtonState &keyState)
 		m_aHeldKeys[keyid].state = BUTTONDOWN;
 
 		m_keyEvent.id = m_aCharVal[keyid];
-		m_keyEvent.time = g_fcurTime;
+		m_keyEvent.time = System::g_fcurTime;
 		m_keyEvent.state = BUTTONDOWN;
 		
 		//Apply flags
@@ -989,7 +989,7 @@ void CKeyboard::SendKeyEvent(int &keyid, EButtonState &keyState)
 		//Send new Keystate
 		m_keyEvent.id = m_aCharVal[keyid];
 		//m_keyEvent.id = keyid;
-		m_keyEvent.time = g_fcurTime;
+		m_keyEvent.time = System::g_fcurTime;
 		m_keyEvent.state = BUTTONUP;
 
 		//Apply flags

@@ -13,9 +13,9 @@ public:
 	
 	void Update()
 	{
-		g_fcurTime =  (this->*GetTime)() - m_fBaseTime;
-		g_fframeTime = g_fcurTime - m_fLastTime;
-		m_fLastTime = g_fcurTime;
+		System::g_fcurTime =  GetTime() - m_fBaseTime;
+		System::g_fframeTime = System::g_fcurTime - m_fLastTime;
+		m_fLastTime = System::g_fcurTime;
 	}
 	void Reset();
 
@@ -23,15 +23,16 @@ private:
 
 	float	m_fBaseTime;
 	float	m_fLastTime;
-	float	m_fSecsPerTick;
-	_int64	m_dTimerStart;
 
 	//UpdateFunc GetTime;
-	float	(CTime::*GetTime)();
+	float	(*GetTime)();
+
+	static float	m_fSecsPerTick;
+	static _int64	m_dTimerStart;
 
 	//One of these gets bound to the GetTime func pointer
-	float	GetPerformanceCounterTime();
-	float	GetMMTime();
+	static float	GetPerformanceCounterTime();
+	static float	GetMMTime();
 };
 
 #endif

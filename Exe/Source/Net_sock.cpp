@@ -246,7 +246,7 @@ bool CSocket::Connect(char *ipaddr, int port)
 
 	ComPrintf("%d:CSocket::Connect:: Request sent\n",m_id);
 	m_state = SOCK_CONNECTING;
-	lastsendtime = g_fcurTime;
+	lastsendtime = System::g_fcurTime;
 	return true;
 }
 
@@ -306,7 +306,7 @@ bool CSocket::Connect(SOCKADDR_IN raddr, int port)
 
 	ComPrintf("%d:CSocket::Connect:: Request sent\n",m_id);
 	m_state = SOCK_CONNECTING;
-	lastsendtime = g_fcurTime;
+	lastsendtime = System::g_fcurTime;
 	return true;
 }
 #endif
@@ -375,7 +375,7 @@ bool CSocket::Send()
 //		ComPrintf("%d:CSocket::Sent %s (%d/%d bytes)\n",
 //							m_id,(char*)m_sendBuf->data,sent,m_sendBuf->cursize);
 
-		lastsendtime = g_fcurTime;
+		lastsendtime = System::g_fcurTime;
 		bsend= false;
 		m_sendBuf->Reset();
 //		sendseq++;
@@ -408,7 +408,7 @@ bool CSocket::Recv()
 		
 		brecv = true;
 		m_recvBuf->cursize = recvMsgLen;
-		lastrecvtime = g_fcurTime;
+		lastrecvtime = System::g_fcurTime;
 //		recvseq++;
 		return true;
 	}
@@ -464,7 +464,7 @@ void CSocket::Run()
 			
 			//havent been able to send out anything for this time
 			//looks like the connection didnt go through
-			if((g_fcurTime - lastsendtime) > CON_TIMEOUT)
+			if((System::g_fcurTime - lastsendtime) > CON_TIMEOUT)
 			{
 				if(WSAEventSelect(m_socket,m_event,0) == SOCKET_ERROR)
 				{
@@ -501,7 +501,7 @@ void CSocket::Run()
 			}
 			
 			//havent received anything for a while
-			if((g_fcurTime - lastrecvtime) > GAME_TIMEOUT)
+			if((System::g_fcurTime - lastrecvtime) > GAME_TIMEOUT)
 			{
 				if(WSAEventSelect(m_socket,m_event,0) == SOCKET_ERROR)
 				{
@@ -528,7 +528,7 @@ bool CSocket::AcceptConnection()
 	   bcansend == true)
 	{
 		m_state = SOCK_CONNECTED;
-		connecttime = g_fcurTime;
+		connecttime = System::g_fcurTime;
 		return true;
 	}
 	return false;

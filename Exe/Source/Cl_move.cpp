@@ -91,7 +91,7 @@ void CClient::Move(vector_t *dir, float time)
 
 	// figure out what dir we want to go if we're folling a path
 	if (m_campath != -1)
-		calc_cam_path(m_campath, g_fcurTime - m_camtime, &eye.origin, dir, time);
+		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &eye.origin, dir, time);
 
 	// can we clip through walls?  it's simple then
 	if ((int)m_noclip->value)
@@ -295,21 +295,21 @@ void CClient::MoveLeft()
 
 void CClient::RotateRight(float val)
 {
-	eye.angles.YAW += g_fframeTime * val;
+	eye.angles.YAW += System::g_fframeTime * val;
 	if (eye.angles.YAW > PI)
 		eye.angles.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(float val)
 {
-	eye.angles.YAW -= g_fframeTime * val;
+	eye.angles.YAW -= System::g_fframeTime * val;
 	if (eye.angles.YAW < -PI)
 		eye.angles.YAW += 2*PI;
 }
 
 void CClient::RotateUp(float val)
 {
-	eye.angles.PITCH += g_fframeTime * val;
+	eye.angles.PITCH += System::g_fframeTime * val;
 	if (eye.angles.PITCH < -PI/2)
 		eye.angles.PITCH = -PI/2;
 	if (eye.angles.PITCH > PI/2)
@@ -318,7 +318,7 @@ void CClient::RotateUp(float val)
 
 void CClient:: RotateDown(float val)
 {
-	eye.angles.PITCH -= g_fframeTime * val;
+	eye.angles.PITCH -= System::g_fframeTime * val;
 	if (eye.angles.PITCH < -PI/2)
 		eye.angles.PITCH = -PI/2;
 	if (eye.angles.PITCH > PI/2)
@@ -340,7 +340,7 @@ void CClient::CamPath(int argc,char **argv)
 		if (strcmp(key_get_value(g_pWorld, ent, "classname"), "misc_camera_path_head") == 0)
 		{
 			m_campath = ent;
-			m_camtime = g_fcurTime;
+			m_camtime = System::g_fcurTime;
 
 			vector_t origin;
 			key_get_vector(g_pWorld, ent, "origin", origin);

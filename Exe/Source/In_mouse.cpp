@@ -108,12 +108,12 @@ CMouse::CMouse()
 
 	SetCursorListener(this);
 
-	m_pVarXSens = Sys_GetConsole()->RegisterCVar("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CXSens);
-	m_pVarYSens = Sys_GetConsole()->RegisterCVar("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CYSens);
-	m_pVarSens  = Sys_GetConsole()->RegisterCVar("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CSens);
-	m_pVarInvert= Sys_GetConsole()->RegisterCVar("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, &CInvert);
-	m_pVarMode  = Sys_GetConsole()->RegisterCVar("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CMouseMode);
-	m_pVarFilter= Sys_GetConsole()->RegisterCVar("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, &CMouseFilter);
+	m_pVarXSens = System::GetConsole()->RegisterCVar("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CXSens);
+	m_pVarYSens = System::GetConsole()->RegisterCVar("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CYSens);
+	m_pVarSens  = System::GetConsole()->RegisterCVar("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CSens);
+	m_pVarInvert= System::GetConsole()->RegisterCVar("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, &CInvert);
+	m_pVarMode  = System::GetConsole()->RegisterCVar("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CMouseMode);
+	m_pVarFilter= System::GetConsole()->RegisterCVar("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, &CMouseFilter);
 }
 
 /*
@@ -260,10 +260,10 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 
 	//Set Co-operative mode
 	if(m_bExclusive)
-		hr = m_pDIMouse->SetCooperativeLevel(Sys_GetHwnd(), 
+		hr = m_pDIMouse->SetCooperativeLevel(System::GetHwnd(), 
 											DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 	else
-		hr = m_pDIMouse->SetCooperativeLevel(Sys_GetHwnd(), 
+		hr = m_pDIMouse->SetCooperativeLevel(System::GetHwnd(), 
 											DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 	if (FAILED(hr)) 
 	{
@@ -367,7 +367,7 @@ HRESULT CMouse::Win32_Init()
 	::SetCursorPos(m_dCenterX,m_dCenterY);
 
 	//Cap the mouse
-	::SetCapture(Sys_GetHwnd());
+	::SetCapture(System::GetHwnd());
 
 	//FIX ME
 	//GetSystemMetrics(SM_SWAPBUTTON) 
@@ -687,7 +687,7 @@ HRESULT	CMouse::SetExclusive(bool exclusive)
 		{
 			//Try changing to DI Exclusive mode is using DirectInput
 			UnAcquire();
-			HRESULT hr = m_pDIMouse->SetCooperativeLevel(Sys_GetHwnd(), 
+			HRESULT hr = m_pDIMouse->SetCooperativeLevel(System::GetHwnd(), 
 											DISCL_FOREGROUND|DISCL_EXCLUSIVE);
 			if(FAILED(hr))
 				return hr;
@@ -699,7 +699,7 @@ HRESULT	CMouse::SetExclusive(bool exclusive)
 		else if(!exclusive && m_bExclusive)
 		{
 			UnAcquire();
-			HRESULT hr = m_pDIMouse->SetCooperativeLevel(Sys_GetHwnd(), 
+			HRESULT hr = m_pDIMouse->SetCooperativeLevel(System::GetHwnd(), 
 											DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
 			if(FAILED(hr))
 				return hr;

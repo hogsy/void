@@ -35,7 +35,7 @@ CInput::CInput()
 	m_pDInput = 0;
 
 	//Register CVars
-	m_pVarExclusive = Sys_GetConsole()->RegisterCVar("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
+	m_pVarExclusive = System::GetConsole()->RegisterCVar("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
 }
 
 /*
@@ -71,7 +71,7 @@ bool CInput::Init()
 		return true;
 	}
 
-	HRESULT hr = DirectInputCreateEx(Sys_GetHInstance(),
+	HRESULT hr = DirectInputCreateEx(System::GetHInstance(),
 									 DIRECTINPUT_VERSION, 
 									 IID_IDirectInput7, 
 									 (void**)&m_pDInput, NULL); 
