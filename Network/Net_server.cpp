@@ -64,7 +64,6 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 	}
 	m_clChan = new CNetClChan[m_pSvState->maxClients];
 
-
 	//Initialize Network sockets
 	if(!m_pSock->Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, false))
 	{
@@ -161,7 +160,6 @@ bool CNetServer::Init(I_Server * server, const ServerState * state)
 
 	//Save Local Address
 	CNetAddr::SetLocalServerAddr(ipAddr);
-
 	return true;
 }
 
@@ -196,7 +194,7 @@ void CNetServer::SendReconnectToAll()
 {
 	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
-		if(m_clChan[i].m_state == CL_INGAME)
+		if(m_clChan[i].m_state > CL_INUSE)
 			SendReconnect(i);
 	}
 }
@@ -260,6 +258,8 @@ Respond to challenge request
 */
 void CNetServer::HandleChallengeReq()
 {
+	//Retire inactive clients here ?
+
 	if(m_pSvState->numClients >= m_pSvState->maxClients)
 	{
 		SendRejectMsg("Server is full");
@@ -290,8 +290,8 @@ void CNetServer::HandleChallengeReq()
 		i = oldestchallenge;
 		m_challenges[i].challenge = (rand() << 16) ^ rand();
 		m_challenges[i].addr = m_pSock->GetSource();
-		m_challenges[i].time = System::GetCurTime();
 	}
+	m_challenges[i].time = System::GetCurTime();
 
 ComPrintf("SVNet: Sent challenge %d to %s\n", m_challenges[i].challenge,
 		  m_challenges[i].addr.ToString());
@@ -316,22 +316,30 @@ void CNetServer::HandleConnectReq()
 	if(protocolVersion != VOID_PROTOCOL_VERSION)
 	{
 		char msg[64];
-		sprintf(msg,"Bad Protocol version. Need %d, not %d", 
-						VOID_PROTOCOL_VERSION, protocolVersion);
+		sprintf(msg,"Bad Protocol version. Need %d, not %d", VOID_PROTOCOL_VERSION, protocolVersion);
 		SendRejectMsg(msg);
 		return;
 	}
 
 	//Validate Challenge
 	int challenge = m_recvBuf.ReadInt();
-	for(int i=0; i< MAX_CHALLENGES; i++)
+	for(int i=0; i<MAX_CHALLENGES; i++)
 	{
-		if((m_challenges[i].addr == m_pSock->GetSource()) &&
-		   (m_challenges[i].challenge = challenge))
-		   break;
+		if(m_challenges[i].addr == m_pSock->GetSource()) 
+		{
+			if(m_challenges[i].challenge == challenge)
+				break;
+			else
+			{
+ComPrintf("SVNET: Challenge for %s should be %d. is %d\n", m_challenges[i].addr.ToString(), 
+					m_challenges[i].challenge,  challenge);
+			}
+		}
 	}
+
 	if(i == MAX_CHALLENGES)
 	{
+ComPrintf("SVNET: Unable to find a challenge number for %s\n", m_challenges[i].addr.ToString());
 		SendRejectMsg("Bad Challenge");
 		return;
 	}
@@ -339,6 +347,7 @@ void CNetServer::HandleConnectReq()
 	//Check if this client is already connected
 	int  emptySlot = -1;
 	bool reconnect = false;
+	
 	for(i=0;i<m_pSvState->maxClients;i++)
 	{
 		if((emptySlot == -1) && m_clChan[i].m_state == CL_FREE)
@@ -349,7 +358,7 @@ void CNetServer::HandleConnectReq()
 			//Is already connected, ignore dup connected
 			if(m_clChan[i].m_state >= CL_CONNECTED)
 			{
-				ComPrintf("SV:DupConnect from %s\n", m_pSock->GetSource().ToString());
+				ComPrintf("SVNET: Ignoring DupConnect from %s\n", m_pSock->GetSource().ToString());
 				return;
 			}
 
@@ -376,6 +385,7 @@ void CNetServer::HandleConnectReq()
 	//Initialize the ClientChannel
 	m_clChan[i].m_state = CL_CONNECTED;
 	m_clChan[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
+	
 	//Check if game server accepts the client
 	if(!m_pServer->ValidateClConnection(i,reconnect,m_recvBuf))
 	{
@@ -579,11 +589,18 @@ void CNetServer::SendReconnect(int chanId)
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
 	m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_RECONNECT);
 	m_clChan[chanId].m_netChan.PrepareTransmit();
+
 	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
 
-	m_pServer->OnLevelChange(chanId);
-
+	m_clChan[chanId].m_spawnLevel = 0;
+	m_clChan[chanId].m_spawnReqId = 0;
+	m_clChan[chanId].m_numBuf = 0;
+	m_clChan[chanId].m_bBackbuf = false;
+	m_clChan[chanId].m_bDropClient = false;
+	m_clChan[chanId].m_bSend = false;
 	m_clChan[chanId].m_state = CL_INUSE;
+
+	m_pServer->OnLevelChange(chanId);
 }
 
 /*

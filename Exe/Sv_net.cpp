@@ -173,7 +173,8 @@ Handle Map change on client ?
 ======================================
 */
 void CServer::OnLevelChange(int clNum)
-{	m_clients[clNum]->bSpawned = false;
+{	
+	m_clients[clNum]->bSpawned = false;
 }
 
 /*

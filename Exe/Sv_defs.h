@@ -1,12 +1,11 @@
-#ifndef VOID_MAIN_SERVER
-#define VOID_MAIN_SERVER
+#ifndef VOID_SERVER_INTERFACE
+#define VOID_SERVER_INTERFACE
 
 /*
 ================================================
-Only need to exposed this to Sys_main
+Only need to expose this to Sys_main
 ================================================
 */
-
 namespace VoidServer
 {
 	bool InitializeNetwork();
@@ -16,6 +15,5 @@ namespace VoidServer
 	void Destroy();
 	void RunFrame();
 }
-
 
 #endif

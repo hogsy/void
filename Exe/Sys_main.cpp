@@ -267,8 +267,8 @@ CVoid::~CVoid()
 
 	if(m_pInput)
 	{
-		m_pInput->Shutdown();
 		delete m_pInput;
+		m_pInput = 0;
 	}
 
 	//Free the file system

@@ -69,7 +69,7 @@ struct I_ClientGame
 				   int chantype = CHAN_AUTO)=0;
 
 	//Client
-	virtual void HandleNetEvent(EClEvent event)=0;
+	virtual void ForwardNetworkEvent(EClEvent event)=0;
 	virtual void SetNetworkRate(int rate)=0;
 	
 	virtual CWorld * LoadWorld(const char * worldName)=0;

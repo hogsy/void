@@ -236,7 +236,8 @@ Misc Util
 */
 //also check Port here ?
 bool CNetChan::MatchAddr(const CNetAddr &addr) const
-{	return (addr == m_addr);
+{	
+	return (addr == m_addr);
 }
 
 const char * CNetChan::GetAddrString() const

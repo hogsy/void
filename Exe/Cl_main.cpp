@@ -16,11 +16,13 @@
 #include "Cl_main.h"
 #include "Cl_export.h"
 
+
 enum
 {
 	CMD_CONNECT		  = 1,
 	CMD_DISCONNECT	  = 2,
-	CMD_RECONNECT	  = 3
+	CMD_RECONNECT	  = 3,
+	CMD_RECONNECT_SV  = 4
 };
 
 //==========================================================================
@@ -44,6 +46,7 @@ CClient::CClient(I_Renderer * pRenderer,
 					m_pExports(0),
 					m_pNetCl(0)
 {
+
 	//Get Renderer Interfaces
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
@@ -68,6 +71,9 @@ CClient::CClient(I_Renderer * pRenderer,
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
+
+	//Priv func
+	System::GetConsole()->RegisterCommand("reconnect_game", CMD_RECONNECT_SV, this);
 }
 
 /*
@@ -77,7 +83,7 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	HandleNetEvent(CLIENT_DISCONNECTED);
+	ForwardNetworkEvent(CLIENT_DISCONNECTED);
 
 	delete m_pClState;
 	delete m_pNetCl;
@@ -99,6 +105,57 @@ CClient::~CClient()
 	m_pSound = 0;
 	m_pMusic = 0;
 }
+
+/*
+======================================
+Client frame
+======================================
+*/
+void CClient::RunFrame()
+{
+	m_pNetCl->ReadPackets();
+
+	if(m_bInGame)
+	{
+		//Print FPS, Update frame time
+		m_pHud->Printf(0,50,0, "%3.2f : %4.2f", 1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
+		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
+		m_fFrameTime = System::GetCurTime();
+
+		//Draw NetStats if flagged
+		if(m_cvNetStats.bval)
+			ShowNetStats();
+
+		//Run Client Frame. All game related processing/drawing
+		m_pClState->RunFrame(System::GetFrameTime());
+		
+		//Update Sound engine with client new pos
+		m_pSound->UpdateListener(m_pClState->GetCamera());
+
+		//Have the client write any outgoing data
+		if(m_pNetCl->CanSend())
+		{
+			//Write all updates
+			CBuffer &buf = m_pNetCl->GetSendBuffer();
+			buf.Reset();
+			m_pClState->WriteCmdUpdate(buf);
+		}
+
+		//Draw from the client view point
+		m_pRender->Draw(m_pClState->GetCamera());
+	}
+	else
+	{
+		m_pRender->Draw();
+	}
+	
+	//Write updates
+	m_pNetCl->SendUpdate();
+}
+
+
+//==========================================================================
+//==========================================================================
 
 /*
 =====================================
@@ -127,7 +184,7 @@ CWorld * CClient::LoadWorld(const char *worldname)
 		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
 	}
 
-	HandleNetEvent(CLIENT_DISCONNECTED);
+	ForwardNetworkEvent(CLIENT_DISCONNECTED);
 	return 0;
 }
 
@@ -161,65 +218,6 @@ void CClient::UnloadWorld()
 	ComPrintf("CL: Unloaded world\n");
 }
 
-/*
-======================================
-Client frame
-======================================
-*/
-void CClient::RunFrame()
-{
-	m_pNetCl->ReadPackets();
-
-	if(m_bInGame)
-	{
-		//Print FPS, Update frame time
-		m_pHud->Printf(0,50,0, "%3.2f : %4.2f", 1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
-		m_pHud->Printf(0,70,0, "%d",  (int)(System::GetFrameTime() * 1000));
-		m_fFrameTime = System::GetCurTime();
-
-		//Draw NetStats if flagged
-		if(m_cvNetStats.bval)
-			ShowNetStats();
-
-		//Run Client Frame. All game related processing/drawing
-		m_pClState->RunFrame(System::GetFrameTime());
-		
-		//Update Sound engine with client new pos
-		m_pSound->UpdateListener(m_pClState->GetCamera());
-
-		//Have the client write any outgoing data
-		WriteUpdate();
-
-		//Draw from the client view point
-		m_pRender->Draw(m_pClState->GetCamera());
-	}
-	else
-	{
-		m_pRender->Draw();
-	}
-	
-	//Write updates
-	m_pNetCl->SendUpdate();
-}
-
-/*
-======================================
-Write to the outgoing network buffer
-======================================
-*/
-void CClient::WriteUpdate()
-{
-	//Write any updates
-	if(m_pNetCl->CanSend())
-	{
-		//Write all updates
-		CBuffer &buf = m_pNetCl->GetSendBuffer();
-		buf.Reset();
-		m_pClState->WriteCmdUpdate(buf);
-	}
-}
-
-
 //======================================================================================
 //======================================================================================
 
@@ -228,7 +226,7 @@ void CClient::WriteUpdate()
 Update Client state
 ================================================
 */
-void CClient::HandleNetEvent(int event)
+void CClient::ForwardNetworkEvent(int event)
 {
 	switch(event)
 	{
@@ -287,7 +285,6 @@ void CClient::SetInputState(bool on)
 
 }
 
-
 /*
 ======================================
 Displays network stats on screen.
@@ -338,15 +335,20 @@ void CClient::HandleCommand(int cmdId, const CParms &parms)
 	case CMD_DISCONNECT:
 		{
 ComPrintf("CL : Disconnecting\n");
-			HandleNetEvent(CLIENT_DISCONNECTED);
+			ForwardNetworkEvent(CLIENT_DISCONNECTED);
 			break;
 		}
 	case CMD_RECONNECT:
 		{
 ComPrintf("CL : Reconnecting\n");
-			HandleNetEvent(CLIENT_RECONNECTING);
+			ForwardNetworkEvent(CLIENT_RECONNECTING);
+			break;
 		}
-		break;
+	case CMD_RECONNECT_SV:
+		{
+			ForwardNetworkEvent(CLIENT_SV_RECONNECTING);
+			break;
+		}
 	}
 }
 
@@ -369,3 +371,4 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CStringVal &strval)
 	}
 	return false;
 }
+

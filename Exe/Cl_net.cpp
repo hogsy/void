@@ -40,18 +40,18 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			{
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("Server quit\n");
-				m_pClGame->HandleNetEvent(CLIENT_SV_DISCONNECTED);
+				m_pClGame->ForwardNetworkEvent(CLIENT_SV_DISCONNECTED);
+				break;
+			}
+		case SV_RECONNECT:
+			{
+				m_pClGame->ForwardNetworkEvent(CLIENT_SV_RECONNECTING);
 				break;
 			}
 		case SV_PRINT:	//just a print message
 			{
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s\n",buffer.ReadString());
-				break;
-			}
-		case SV_RECONNECT:
-			{
-				m_pClGame->HandleNetEvent(CLIENT_SV_RECONNECTING);
 				break;
 			}
 		case SV_CLFULLINFO:
@@ -125,10 +125,10 @@ ComPrintf("CL: Grav changed to %f\n", m_pGameClient->gravity);
 				int num = buffer.ReadByte();
 				if(m_clients[num].inUse && num != m_clNum)
 				{
-					m_clients[num].origin.x = buffer.ReadCoord();
-					m_clients[num].origin.y = buffer.ReadCoord();
-					m_clients[num].origin.z = buffer.ReadCoord();
-					
+					m_clients[num].origin.x = buffer.ReadFloat();
+					m_clients[num].origin.y = buffer.ReadFloat();
+					m_clients[num].origin.z = buffer.ReadFloat();
+
 					m_clients[num].angles.x = buffer.ReadCoord();
 					m_clients[num].angles.y = buffer.ReadCoord();
 					m_clients[num].angles.z = buffer.ReadCoord();
@@ -568,7 +568,7 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 							m_vecForward, m_vecRight, m_vecUp,	
 							m_pGameClient->velocity);
 
-	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
+	m_pClGame->ForwardNetworkEvent(CLIENT_BEGINGAME);
 }
 
 

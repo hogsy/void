@@ -80,9 +80,8 @@ public:
 	}
 
 	//Client
-	//inline void SetClientState(EClState state)
-	inline void HandleNetEvent(EClEvent event)
-	{	m_refClient.HandleNetEvent(static_cast<int>(event));
+	inline void ForwardNetworkEvent(EClEvent event)
+	{	m_refClient.ForwardNetworkEvent(static_cast<int>(event));
 	}
 	
 	inline void SetNetworkRate(int rate)

@@ -431,7 +431,6 @@ m_pClient->Print("CL: Telling server we disconnect %s\n", m_pNetChan->GetAddrStr
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
 		}
-//		m_pClient->HandleDisconnect((m_bLocalServer && !serverPrompted));
 		m_pClient->HandleDisconnect();
 	}
 
@@ -463,6 +462,7 @@ void CNetClient::Reconnect(bool serverPrompted)
 {
 	char svaddr[NET_IPADDRLEN];
 	strcpy(svaddr,m_szServerAddr);
+	
 	Disconnect(serverPrompted);
 
 	m_pClient->Print("CL: Reconnecting ...\n");

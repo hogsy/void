@@ -309,9 +309,9 @@ void CServer::RunFrame()
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
 				m_net.ChanWriteByte(m_clients[j]->num);
 				
-				m_net.ChanWriteCoord(m_clients[j]->origin.x);
-				m_net.ChanWriteCoord(m_clients[j]->origin.y);
-				m_net.ChanWriteCoord(m_clients[j]->origin.z);
+				m_net.ChanWriteFloat(m_clients[j]->origin.x);
+				m_net.ChanWriteFloat(m_clients[j]->origin.y);
+				m_net.ChanWriteFloat(m_clients[j]->origin.z);
 				
 				m_net.ChanWriteCoord(m_clients[j]->angles.x);
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
@@ -735,7 +735,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 				//FIXME, Check for dedicated
 				//We need this so the local client can unref the world
 				//So we can free it and load another one
-				System::GetConsole()->ExecString("reconnect");
+				System::GetConsole()->ExecString("reconnect_game");
 			}
 
 			if(Init())
@@ -762,21 +762,21 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 			}
 
 			char mapname[64];
-			parms.StringTok(1,(char*)mapname,64);
+			parms.StringTok(1,mapname,64);
 
 			if(!m_active)
 			{
-				ComPrintf("CServer::Can't change level to %s. Server need to be intialized first\n");
+				ComPrintf("CServer::Can't change level to %s. Server need to be intialized first\n", mapname);
 				return;
 			}
 
-			m_net.SendReconnectToAll();
 			UnloadWorld();
+			m_net.SendReconnectToAll();
 
 			//FIXME, Check for dedicated
 			//We need this so the local client can unref the world
 			//So we can free it and load another one
-			System::GetConsole()->ExecString("reconnect");
+			System::GetConsole()->ExecString("reconnect_game");
 
 			if(!LoadWorld(mapname))
 			{

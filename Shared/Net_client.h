@@ -17,7 +17,7 @@ struct I_NetClientHandler
 	
 	//Handle disconnect from server
 	virtual void HandleDisconnect()=0;
-	
+
 	//Writes the Game clients userinfo
 	virtual void WriteUserInfo(CBuffer &buffer)=0;
 

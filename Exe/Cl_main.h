@@ -37,24 +37,24 @@ private:
 	
 	friend class CClientExports;
 
-	void HandleNetEvent(int event);
+	void ForwardNetworkEvent(int event);
 	void SetNetworkRate(int rate);
 
 	CWorld * LoadWorld(const char *worldname);
 	void UnloadWorld();
 
-	void WriteUpdate();
-	void ShowNetStats();
+	void  ShowNetStats();
 	float GetCurTime();
 
 	//==================================================
 	//Client CVars
-	CVar		m_cvPort;
-	CVar		m_cvNetStats;
+	CVar	m_cvPort;
+	CVar	m_cvNetStats;
 
-	bool		m_bInGame;
-	float		m_fFrameTime;
-	CWorld *	m_pWorld;
+	bool	m_bInGame;
+	float	m_fFrameTime;
+	
+	CWorld*	m_pWorld;
 	
 	CGameClient		  *	m_pClState;
 	CClientExports	  * m_pExports;
