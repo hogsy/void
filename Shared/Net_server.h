@@ -9,18 +9,24 @@
 The Game server usually needs to know how to handle a client disconnection
 For example the game server shouldnt broadcast a Client disconnection
 if it was the Server which went down.
-
-The OnClientDrop function includes a EDisconnectReason parameter.
+The OnClientDrop function includes a DisconnectReason parameter.
 ============================================================================
 */
-enum EDisconnectReason
-{
-	SERVER_QUIT=0,
-	CLIENT_QUIT=1,
-	CLIENT_TIMEOUT=2,
-	CLIENT_OVERFLOW=3,
-	CLIENT_BADMSG = 4
+struct DisconnectReason
+{	
+	const char * disconnectMsg;	//message sent to client as reason
+	const char * broadcastMsg;	//message broadcast to connected clients
 };
+
+const DisconnectReason DR_SVQUIT	= {"Server quit",0};
+const DisconnectReason DR_SVERROR	= {"Server error", 0};
+const DisconnectReason DR_CLQUIT	= {"Disconnected","%s disconnected" };
+const DisconnectReason DR_CLTIMEOUT = {"Connection timed out","%s timed out" };
+const DisconnectReason DR_CLOVERFLOW= {"Connection overflowed","%s overflowed" };
+const DisconnectReason DR_CLBADMSG	= {"Network message error","%s errored out" };
+//Custom reasons
+const DisconnectReason DR_SVKICKED  = {"You were kicked","%s was kicked" };
+
 
 /*
 ============================================================================
@@ -90,7 +96,7 @@ struct I_Server
 	virtual void OnLevelChange(int clNum)=0;
 
 	//Handle client disconnection
-	virtual void OnClientDrop (int clNum, EDisconnectReason reason)=0;
+	virtual void OnClientDrop (int clNum, const DisconnectReason &reason)=0;
 
 	//Have the game server write status info so the network server
 	//can respond to a status request
@@ -164,7 +170,7 @@ public:
 	void SendReconnect(int chanId);
 
 	//Have the client disconnect. Give reason
-	void SendDisconnect(int chanId, EDisconnectReason reason);
+	void SendDisconnect(int chanId, const DisconnectReason &reason);
 	
 	//Print a Server message to the given client(s)
 	void ClientPrintf(int chanId, const char * message);

@@ -8,7 +8,8 @@ enum
 {
 	CMD_MAP = 1,
 	CMD_KILLSERVER = 2,
-	CMD_STATUS	= 3
+	CMD_STATUS	= 3,
+	CMD_KICK = 4
 };
 typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
 typedef void (*GAME_FREEFUNC) ();
@@ -43,6 +44,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 
 	System::GetConsole()->RegisterCommand("map",CMD_MAP, this);
 	System::GetConsole()->RegisterCommand("killserver",CMD_KILLSERVER, this);
+	System::GetConsole()->RegisterCommand("kick",CMD_KICK, this);
 	System::GetConsole()->RegisterCommand("status",CMD_STATUS, this);
 }	
 
@@ -54,7 +56,6 @@ Destructor
 CServer::~CServer()
 {	
 	Shutdown();
-
 	m_entities = 0;
 	m_clients = 0;
 }
@@ -82,7 +83,6 @@ bool CServer::Init()
 	//Initialize Network
 	if(!m_net.Init(this, &m_svState))
 		return false;
-	
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
 
 	//Load the game dll
@@ -109,11 +109,8 @@ bool CServer::Init()
 		Shutdown();
 		return false;
 	}
-	m_maxEntities = m_pGame->maxEnts;
-	m_numEntities = m_pGame->numEnts;
 	m_entities = m_pGame->entities;
 	m_clients = m_pGame->clients;
-
 	m_active = true;
 	return true;
 }
@@ -156,7 +153,6 @@ void CServer::Shutdown()
 	m_svState.port = m_cPort.ival;
 	m_svState.worldname[0] = 0;
 	m_svState.levelId = 0;
-
 	m_svState.numClients = 0;
 	m_svState.levelId = 0;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
@@ -189,7 +185,6 @@ void CServer::Restart()
 		m_pWorld = 0;
 		m_svState.worldname[0] = 0;
 	}
-	
 	m_pGame->InitGame();
 	ComPrintf("CServer::Restart OK\n");
 }
@@ -394,7 +389,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	//==================================
 	//Write entity baselines
 	numBufs = 0;
-	for(i=0; i<m_numEntities; i++)
+	for(i=0; i<m_pGame->numEnts; i++)
 	{
 		buffer.Reset();
 		if(!m_entities[i] || !WriteEntBaseLine(m_entities[i],buffer))
@@ -427,35 +422,31 @@ Load the World
 */
 void CServer::LoadWorld(const char * mapname)
 {
-	//Get Map name
 	if(!mapname)
-	{
-		if(m_svState.worldname[0])
-			ComPrintf("Playing %s\n",m_svState.worldname);
-		else
-			ComPrintf("No world loaded\n");
 		return;
-	}
 
 	bool bRestarting = false;
 	char mappath[COM_MAXPATH];
-	char worldname[64];
+	char worldName[64];
 
-	strcpy(worldname, mapname);
+	strcpy(worldName,mapname);
 	strcpy(mappath, GAME_WORLDSDIR);
-	strcat(mappath, worldname);
+	strcat(mappath, mapname);
 	Util::SetDefaultExtension(mappath,VOID_DEFAULTMAPEXT);
 
 	//Shutdown if currently active
-	if(m_active)
-	{
-		Restart();
-		bRestarting = true;
+	if(!m_active)
+	{	
+		if(!Init())
+		{	
+			ComPrintf("CServer::LoadWorld: Error initializing server");
+			return;
+		}
 	}
 	else
 	{
-		 if(!Init())
-			return;
+		Restart();
+		bRestarting = true;
 	}
 
 	//Load World
@@ -466,19 +457,12 @@ void CServer::LoadWorld(const char * mapname)
 		Shutdown();
 		return;
 	}
-
-	//Set worldname
-	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldname);
-
-	//Create Sigon-message. includes static entity baselines
-	//=======================
-	//all we need is the map name right now
-
+	//Load Entitiys in the world
+	Util::RemoveExtension(m_svState.worldname,COM_MAXPATH, worldName);
 	LoadEntities();
 
-
+	//Create Sigon-messages
 	NetSignOnBufs & signOnBuf = m_net.GetSignOnBufs();
-
 	//first reset all the signON buffers
 	signOnBuf.gameInfo.Reset();
 	signOnBuf.numImageBufs = 0;
@@ -494,6 +478,7 @@ void CServer::LoadWorld(const char * mapname)
 	for(i=0; i< NetSignOnBufs::MAX_ENTITY_BUFS; i++)
 		signOnBuf.entityList[i].Reset();
 
+	//Write SignON data
 	WriteSignOnBuffer(signOnBuf);
 
 	//update state
@@ -508,10 +493,6 @@ void CServer::LoadWorld(const char * mapname)
 
 //======================================================================================
 //======================================================================================
-
-
-
-
 /*
 ======================================
 Print a broadcast message
@@ -523,7 +504,6 @@ void CServer::BroadcastPrintf(const char * msg,...)
 	va_start(args, msg);
 	vsprintf(m_printBuffer, msg, args);
 	va_end(args);
-
 	m_net.BroadcastPrintf(m_printBuffer);
 }
 
@@ -538,10 +518,22 @@ void CServer::ClientPrintf(int clNum, const char * msg,...)
 	va_start(args, msg);
 	vsprintf(m_printBuffer, msg, args);
 	va_end(args);
-
 	m_net.ClientPrintf(clNum,msg);
 }
 
+
+/*
+======================================
+Send sound message to clients in range
+======================================
+*/
+void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
+{
+}
+
+void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
+{
+}
 
 /*
 ======================================
@@ -550,7 +542,10 @@ Game messed up. kill server
 */
 void CServer::FatalError(const char * msg)
 {
-
+	for(int i=0; i< m_svState.numClients; i++)
+		m_net.SendDisconnect(i,DR_SVERROR);
+	ComPrintf("Server Error : %s\n", msg);
+	Shutdown();
 }
 
 /*
@@ -569,16 +564,6 @@ void CServer::DebugPrint(const char * msg)
 NetChanWriter & CServer::GetNetChanWriter()
 {	return (reinterpret_cast<NetChanWriter &>(m_net));
 }
-
-
-void CServer::PlaySnd(const Entity &ent, int index, int channel, float vol, float atten)
-{
-}
-
-void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten)
-{
-}
-
 
 /*
 ======================================
@@ -612,11 +597,13 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 			buf.WriteShort(ent->volume);
 			buf.WriteShort(ent->attenuation);
 		}
-//		buf.WriteChar(' ');
+		//Set END OF MESSAGE
+		buf.WriteChar(0);
 		return true;
 	}
 	return false;
 }
+
 
 /*
 ======================================
@@ -736,7 +723,6 @@ int CServer::RegisterModel(const char * model)
 		if(strcmp(m_modelList[i].name, model) == 0)
 		    return i;
 	}
-
 	m_numModels ++;
 	m_modelList[i].name = new char[strlen(model)+1];
 	strcpy(m_modelList[i].name,model);
@@ -762,7 +748,6 @@ int CServer::RegisterSound(const char * sound)
 		if(strcmp(m_soundList[i].name, sound) == 0)
 		    return i;
 	}
-
 	m_numSounds ++;
 	m_soundList[i].name = new char[strlen(sound)+1];
 	strcpy(m_soundList[i].name,sound);
@@ -788,12 +773,8 @@ int CServer::RegisterImage(const char * image)
 		if(strcmp(m_imageList[i].name, image) == 0)
 		    return i;
 	}
-
 	m_numImages ++;
 	m_imageList[i].name = new char[strlen(image)+1];
 	strcpy(m_imageList[i].name,image);
 	return i;
 }
-
-//======================================================================================
-//======================================================================================

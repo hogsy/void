@@ -297,7 +297,10 @@ bool CConsole::ExecString(const char *string)
 					}
 
 					if((*it)->flags & CVAR_LATCH)
+					{
 						ComPrintf("%s will be changed on restart\n", (*it)->name);
+						return true;
+					}
 				}
 			}
 			ComPrintf("%s = %s\n",(*it)->name,(*it)->string);
@@ -671,10 +674,8 @@ void CConsole::WriteCVars(const char * szFilename)
 		if((*it)->flags & CVAR_ARCHIVE)
 		{
 			char line[80];
-			strcpy(line,(*it)->name);
-			strcat(line," ");
-			strcat(line,(*it)->string);
-			strcat(line,"\n");
+			(*it)->Unlatch();
+			sprintf(line,"%s \"%s\"\n", (*it)->name, (*it)->string);
 			fputs(line,fp);
 		}
 	}

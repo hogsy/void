@@ -34,8 +34,8 @@ When the server sends client the S2C_ACCEPT message, the client switches to Spaw
 The client then starts a reliable sequence of messages to request spawning data from
 the server. 
 
-Spawndata consists of server messages, and model/image/sound lists which associate
-an index with a resource to save up on in-game entity update messages.
+The model/image/sound lists associate an index with a resourceName to save up on 
+in-game entity update messages.
 
 The spawnParm request packet sent by the client is made up of a Parm id which tells 
 the server which spawn sequence the client is querying for, and the sequence num

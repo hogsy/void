@@ -186,31 +186,38 @@ ComPrintf("CL: Map: %s\n", map);
 				m_entities[id].angle.z = buffer.ReadAngle();
 
 				type = buffer.ReadChar();
-							
-				if(type == 'm')
+				while(type != 0)
 				{
-					m_entities[id].mdlIndex = buffer.ReadShort();
-					m_entities[id].skinNum = buffer.ReadShort();
-					m_entities[id].frame = buffer.ReadShort();
-					m_entities[id].nextFrame = m_entities[id].frame;
-					m_entities[id].frac = 0;
-					m_entities[id].mdlCache = CACHE_GAME;
+					switch(type)
+					{
+					case 'm':
+						{
+							m_entities[id].mdlIndex = buffer.ReadShort();
+							m_entities[id].skinNum = buffer.ReadShort();
+							m_entities[id].frame = buffer.ReadShort();
+							m_entities[id].nextFrame = m_entities[id].frame;
+							m_entities[id].frac = 0;
+							m_entities[id].mdlCache = CACHE_GAME;
+							break;
+						}
+					case 's':
+						{
+							m_entities[id].sndCache = CACHE_GAME;
+							m_entities[id].soundIndex = buffer.ReadShort();
+							m_entities[id].volume = buffer.ReadShort();
+							m_entities[id].attenuation = buffer.ReadShort();
+							break;
+						}
+					}
+					type = buffer.ReadChar();
 				}
-				else
-				{
-					m_entities[id].sndCache = CACHE_GAME;
-					m_entities[id].soundIndex = buffer.ReadShort();
-					m_entities[id].volume = buffer.ReadShort();
-					m_entities[id].attenuation = buffer.ReadShort();
-				}
-
+					
 				if(buffer.BadRead())
 				{
 					ComPrintf("Error reading Ent %d\n", id);
 					m_entities[id].Reset();
 					break;
 				}
-
 				m_entities[id].inUse = true;
 				m_numEnts ++;
 				id = buffer.ReadShort();

@@ -107,7 +107,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			}
 		case CL_DISCONNECT:
 			{
-				m_net.SendDisconnect(clNum,CLIENT_QUIT);
+				m_net.SendDisconnect(clNum,DR_CLQUIT);
 				break;
 			}
 		case CL_MOVE:
@@ -122,7 +122,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			}
 		default:
 			{
-				m_net.SendDisconnect(clNum,CLIENT_BADMSG);
+				m_net.SendDisconnect(clNum,DR_CLBADMSG);
 				break;
 			}
 		}
@@ -136,23 +136,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 Handle Client disconnection
 ======================================
 */
-void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
+void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 {
-	switch(reason)
-	{
-	case CLIENT_QUIT:
-ComPrintf("%s Disconnected", m_clients[clNum]->name);
-		BroadcastPrintf("%s disconnected", m_clients[clNum]->name);
-		break;
-	case CLIENT_TIMEOUT:
-ComPrintf("%s Timed out", m_clients[clNum]->name);
-		BroadcastPrintf("%s timed out", m_clients[clNum]->name);
-		break;
-	case CLIENT_OVERFLOW:
-ComPrintf("%s overflowed", m_clients[clNum]->name);
-		BroadcastPrintf("%s overflowed", m_clients[clNum]->name);
-		break;
-	}
+	if(reason.broadcastMsg)
+		BroadcastPrintf(reason.broadcastMsg, m_clients[clNum]->name);
 	
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;

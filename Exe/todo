@@ -4,23 +4,6 @@ EXE
 -Seperate server/ server game code
 -Move client movement to server
 
-headers
-Client/ClGame header
-rbaseentitiy
-client ent defs
-ui/model/image exports
-sound exports
-client/cgame interfaces
-
-Server/ServerGame header
-entitiy defs
-server/svgame interfaces
-
-Common stuff
-Resource IDs, limits
-Defs, vectors, com_bufs
-
-
 -Add free/in use SoundSource lists in 3dsound manager
 -Add proper channel allocation with channel properties ?
 

@@ -34,11 +34,9 @@ public:
 	~CClient();
 
 	void RunFrame();
-	
 	void SetInputState(bool on);
 
 	//Client Interface
-	
 	//Parse and handle a game message
 	void HandleGameMsg(CBuffer &buffer); 
 	
@@ -96,7 +94,6 @@ private:
 	CVar	m_cvClip;
 	CVar	m_cvNetStats;
 
-	
 	//==================================================
 	//Subsystems
 

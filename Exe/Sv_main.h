@@ -32,7 +32,7 @@ public:
 	bool ValidateClConnection(int clNum, bool reconnect,CBuffer &buffer);
 	void HandleClientMsg(int clNum, CBuffer &buffer);
 	void OnClientBegin(int clNum);
-	void OnClientDrop(int clNum, EDisconnectReason reason);
+	void OnClientDrop(int clNum, const DisconnectReason &reason);
 	void OnLevelChange(int clNum);
 	void WriteGameStatus(CBuffer &buffer);
 
@@ -113,8 +113,6 @@ private:
 
 	//These should just point to the data in the GAME code
 	Entity    ** m_entities;
-	int			 m_maxEntities;
-	int			 m_numEntities;
 	EntClient ** m_clients;
 };
 
