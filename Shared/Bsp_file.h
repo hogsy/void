@@ -80,7 +80,9 @@ typedef struct
 } bspf_texdef_t;
 
 
-#define SURF_INVISIBLE 0x0001
+#define SURF_INVISIBLE	0x00000001
+#define SURF_SKY		0x00000004
+
 typedef struct
 {
 	int		first_vert;
