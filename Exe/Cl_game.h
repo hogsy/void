@@ -46,7 +46,9 @@ public:
 	CCamera *			  GetCamera();
 
 	void RunFrame(float frameTime);
+	
 	void WriteCmdUpdate(CBuffer &buf);
+	void WriteFullUpdate(CBuffer &buf);
 
 	//Console Handler Implementation
 	void HandleCommand(HCMD cmdId, const CParms &parms);
@@ -59,7 +61,9 @@ private:
 
 	//==================================================
 	//Movement
-	void Move(vector_t &dir, float time);
+	void UpdatePosition(vector_t &dir, float time);
+	void UpdateAngles(const vector_t &angles, float time);
+	
 	void MoveForward();
 	void MoveBackward();
 	void MoveRight();
@@ -122,13 +126,16 @@ private:
 
 	CCamera	*	m_pCamera;
 	
-	vector_t	m_vecViewAngles;
+	vector_t	m_vecMouseAngles;
+
 	vector_t	m_vecBlend;
 	vector_t	m_vecForward,
 				m_vecRight,
 				m_vecUp,
 				m_vecVelocity;
-	vector_t	m_vecDesiredMove;
+	
+	vector_t	m_vecDesiredMove,
+				m_vecDesiredAngles;
 };
 
 #endif

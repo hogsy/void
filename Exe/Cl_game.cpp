@@ -19,7 +19,7 @@ Constructor
 */
 CGameClient::CGameClient(I_ClientGame * pClGame) : 
 				m_pClGame(pClGame),
-				m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
+				m_cvKbSpeed("cl_kbspeed","5.0", CVAR_FLOAT, CVAR_ARCHIVE),
 				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
 				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
@@ -58,6 +58,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	m_hsMessage = m_pClGame->RegisterSound("sounds/Interface/click one.wav", CACHE_LOCAL);
 
 	m_pCmdHandler->IntializeBinds();
+
 }
 
 /*
@@ -67,16 +68,8 @@ Destructor
 */
 CGameClient::~CGameClient()
 {
-//	HandleDisconnect();
-
 	m_pCmdHandler->WriteBinds("vbinds.cfg");
 
-/*	if(m_pCamera)
-		delete m_pCamera;
-	
-	m_pGameClient = 0;
-	m_pWorld = 0;
-*/
 	UnloadWorld();
 
 	delete m_pCmdHandler;
@@ -89,28 +82,49 @@ Run a Client frame
 */
 void CGameClient::RunFrame(float frameTime)
 {
+	//Reset move and angles stuff from the old frame
+	m_vecDesiredMove.Set(0,0,0);
+	m_vecDesiredAngles.Set(0,0,0);
+	
+	m_cmd.forwardmove = m_cmd.rightmove = m_cmd.upmove = 0;
+	m_cmd.angles[0] = m_cmd.angles[1] = m_cmd.angles[2] = 0;
+
+	//Input
 	if(m_pCmdHandler->CursorChanged())
 	{
-		m_pCmdHandler->UpdateCursorPos(m_vecViewAngles.x, m_vecViewAngles.y, m_vecViewAngles.z);
-		RotateRight(m_vecViewAngles.x);
-		RotateUp(m_vecViewAngles.y);
+		m_pCmdHandler->UpdateCursorPos(m_vecMouseAngles.x, m_vecMouseAngles.y, m_vecMouseAngles.z);
+		RotateRight(m_vecMouseAngles.x);
+		RotateUp(m_vecMouseAngles.y);
 	}
+	m_pCmdHandler->RunCommands();
 
-	AngleToVector(&m_pGameClient->angles, &m_vecForward, &m_vecRight, &m_vecUp);
+	//Movement
+	//Get Normalized angle vectors
+	m_pGameClient->angles.AngleToVector(&m_vecForward, &m_vecRight, &m_vecUp);
 	m_vecForward.Normalize();
 	m_vecRight.Normalize();
 	m_vecUp.Normalize();
 
-	m_pCmdHandler->RunCommands();
+	//Get desired move
+	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.forwardmove, m_vecForward);
+	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.rightmove, m_vecRight);
+	m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_cmd.upmove, m_vecUp);
 
-	VectorNormalize(&m_vecDesiredMove);
-	Move(m_vecDesiredMove, frameTime * m_maxvelocity);
-	m_vecDesiredMove.Set(0,0,0);
+	//Perform the actual move and update angles
+	UpdatePosition(m_vecDesiredMove, frameTime);
+	UpdateAngles(m_vecDesiredAngles,frameTime);
 
+	//Save current view to send to the server
+	m_cmd.angles[0] = (int)m_pGameClient->angles.x;
+	m_cmd.angles[1] = (int)m_pGameClient->angles.y;
+	m_cmd.angles[2] = (int)m_pGameClient->angles.z;
+
+	//Print misc crap
 	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
 	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
 	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);		
 
+	//Drawing
 	//fix me. draw ents only in the pvs
 	for(int i=0; i< GAME_MAXENTITIES; i++)
 	{
@@ -144,6 +158,16 @@ void CGameClient::WriteCmdUpdate(CBuffer &buf)
 	buf.WriteInt(m_cmd.angles[0]);
 	buf.WriteInt(m_cmd.angles[1]);
 	buf.WriteInt(m_cmd.angles[2]);
+}
+
+/*
+================================================
+Write full update
+================================================
+*/
+void CGameClient::WriteFullUpdate(CBuffer &buf)
+{
+
 }
 
 
@@ -250,7 +274,6 @@ void CGameClient::Spawn(vector_t	*origin, vector_t *angles)
 
 
 
-
 //==========================================================================
 //==========================================================================
 
@@ -331,9 +354,9 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
 	{
 		float val = parms.FloatTok(1);
-		if(val <= 0.0 || val >= 1.0)
+		if(val < 0.6 || val >= 10.0)
 		{
-			ComPrintf("Out of range. Should be between 0.0 and 1.0\n");
+			ComPrintf("Out of range. Should be between 0.6 and 10.0\n");
 			return false;
 		}
 		return true;

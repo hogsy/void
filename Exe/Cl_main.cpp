@@ -73,7 +73,6 @@ Destroy the client
 */
 CClient::~CClient()
 {
-//	m_pNetCl->Disconnect(false);
 	HandleNetEvent(CLIENT_DISCONNECTED);
 
 	delete m_pClState;
@@ -125,30 +124,7 @@ CWorld * CClient::LoadWorld(const char *worldname)
 	}
 
 	HandleNetEvent(CLIENT_DISCONNECTED);
-//	m_pNetCl->Disconnect(false);
 	return 0;
-
-
-/*	if(m_pWorld)
-	{
-		ComPrintf("CClient::LoadWorld: World not found\n");
-		m_pNetCl->Disconnect(false);
-		return false;
-	}
-
-	// load the textures
-	if(!m_pRender->LoadWorld(m_pWorld,1))
-	{
-		ComPrintf("CClient::LoadWorld: Renderer couldnt load world\n");
-		m_pNetCl->Disconnect(false);
-		return false;
-	}
-
-	m_pClState->LoadWorld(m_pWorld);
-
-	ComPrintf("CClient::Load World: OK\n");
-	return true;
-*/
 }
 
 /*
@@ -177,9 +153,7 @@ void CClient::UnloadWorld()
 
 	m_bInGame = false;
 
-//	m_clientState = CLIENT_DISCONNECTED;
 	System::SetGameState(INCONSOLE);
-
 	ComPrintf("CL: Unloaded world\n");
 }
 
@@ -255,11 +229,8 @@ void CClient::WriteUpdate()
 Update Client state
 ================================================
 */
-//void CClient::SetClientState(int state)
 void CClient::HandleNetEvent(int event)
 {
-//	m_bInGame = false;
-
 	switch(event)
 	{
 	case CLIENT_DISCONNECTED:
@@ -294,7 +265,6 @@ ComPrintf("CL: KILLING local server\n");
 			break;
 		}
 	};
-//	m_clientState = state;
 }
 
 /*
@@ -365,18 +335,14 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_DISCONNECT:
 		{
 ComPrintf("CL : Disconnecting\n");
-//			m_clientState = CLIENT_DISCONNECTED;
 			HandleNetEvent(CLIENT_DISCONNECTED);
-//			m_pNetCl->Disconnect(false);
 			break;
 		}
 	case CMD_RECONNECT:
-	//	m_clientState = CLIENT_RECONNECTING;
 		{
 ComPrintf("CL : Reconnecting\n");
 			HandleNetEvent(CLIENT_RECONNECTING);
 		}
-//		m_pNetCl->Reconnect(false);
 		break;
 	}
 }

@@ -7,8 +7,6 @@
 #include "Cl_base.h"
 #include "Cl_game.h"
 
-const float CL_ROTATION_SENS = 0.05f;
-
 /*
 ================================================
 Step Functions. The angle vectors have already
@@ -16,21 +14,20 @@ been normalized.
 ================================================
 */
 void CGameClient::MoveForward()
-{	m_vecDesiredMove += m_vecForward;
+{	m_cmd.forwardmove += (int)m_maxvelocity;
 }
 
 void CGameClient::MoveBackward()
-{	m_vecDesiredMove -= m_vecForward;
+{	m_cmd.forwardmove -= (int)m_maxvelocity;
 }
 
 void CGameClient::MoveRight()
-{	m_vecDesiredMove += m_vecRight;
+{	m_cmd.rightmove += (int)m_maxvelocity;
 }
 
 void CGameClient::MoveLeft()
-{	m_vecDesiredMove -= m_vecRight;
+{	m_cmd.rightmove -= (int)m_maxvelocity;
 }
-
 
 /*
 ================================================
@@ -38,31 +35,33 @@ Rotate camera in the appropriate dir
 ================================================
 */
 void CGameClient::RotateRight(const float &val)
-{
-	m_pGameClient->angles.YAW += (val * CL_ROTATION_SENS);  
-	if (m_pGameClient->angles.YAW > PI)
-		m_pGameClient->angles.YAW -= 2*PI;
+{	m_vecDesiredAngles.y += val;
 }
 
 void CGameClient:: RotateLeft(const float &val)
-{
-	m_pGameClient->angles.YAW -= (val * CL_ROTATION_SENS); 
-	if (m_pGameClient->angles.YAW < -PI)
-		m_pGameClient->angles.YAW += 2*PI;
+{	m_vecDesiredAngles.y -= val;
 }
 
 void CGameClient::RotateUp(const float &val)
-{
-	m_pGameClient->angles.PITCH +=  (val * CL_ROTATION_SENS);
-	if (m_pGameClient->angles.PITCH < -PI/2)
-		m_pGameClient->angles.PITCH = -PI/2;
-	if (m_pGameClient->angles.PITCH > PI/2)
-		m_pGameClient->angles.PITCH = PI/2;
+{	m_vecDesiredAngles.x += val;
 }
 
 void CGameClient:: RotateDown(const float &val)
+{	m_vecDesiredAngles.x -= val;
+}
+
+/*
+================================================
+Update angles. called onces per frame
+================================================
+*/
+void CGameClient::UpdateAngles(const vector_t &angles, float time)
 {
-	m_pGameClient->angles.PITCH -=  (val * CL_ROTATION_SENS); 
+	m_pGameClient->angles.YAW += (angles.YAW * time);  
+	if (m_pGameClient->angles.YAW > PI)
+		m_pGameClient->angles.YAW -= 2*PI;
+
+	m_pGameClient->angles.PITCH +=  (angles.PITCH * time);
 	if (m_pGameClient->angles.PITCH < -PI/2)
 		m_pGameClient->angles.PITCH = -PI/2;
 	if (m_pGameClient->angles.PITCH > PI/2)
@@ -77,7 +76,7 @@ Perform the actual move
 */
 //void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
 
-void CGameClient::Move(vector_t &dir, float time)
+void CGameClient::UpdatePosition(vector_t &dir, float time)
 {
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)

@@ -92,6 +92,12 @@ CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
 									  System::FatalError,
 									  curDir,
 									  VOID_DEFAULTGAMEDIR);
+	if(!m_pFileSystem)
+	{
+		System::FatalError("Unable to create the Void filesystem");
+		return;
+	}
+
 	//Create the input system
 	m_pInput= new CInput();					
 	
