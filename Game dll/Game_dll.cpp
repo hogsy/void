@@ -14,9 +14,6 @@ CGame		  *	g_pGame=0;
 
 I_Game * GAME_GetAPI(I_GameHandler * pImports, I_Console * pConsole)
 {
-	// must be very first thing
-	build_sqrt_table();
-	
 	g_pImports = pImports;
 	g_pCons = pConsole;
 	if(!g_pGame)
