@@ -12,7 +12,8 @@ a default handler implementation
 ================================
 */
 
-class CMouse : public I_InCursorListener
+class CMouse : public I_InCursorListener,
+			   public I_CVarHandler	
 {
 public:
 
@@ -33,6 +34,9 @@ public:
 	HRESULT	Acquire();		
 	bool	UnAcquire();
 
+	//CVar Handler
+	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
+
 	//Toggle Exclusive mode
 	HRESULT	SetExclusive(bool exclusive);						
 
@@ -51,8 +55,26 @@ public:
 
 private:
 
+ CVar		m_pVarXSens;
+ CVar		m_pVarYSens;
+ CVar		m_pVarSens;
+ CVar		m_pVarInvert;
+ CVar		m_pVarMode;
+ CVar 	m_pVarFilter;
+
+ bool CXSens(const CVar * var, int argc, char** argv);
+ bool CYSens(const CVar * var, int argc, char** argv);
+ bool CSens(const CVar *var, int argc, char** argv);
+ bool CInvert(const CVar *var, int argc, char** argv);
+ bool CMouseMode(const CVar *var, int argc, char** argv);
+ bool CMouseFilter(const CVar *var, int argc, char** argv);
+
 	//This is what gets called to update the mouse
-	void (*PollMouse)();
+//	void (*PollMouse)();
+
+void Update_DIBuffered();
+void Update_DIImmediate();	
+void Update_Win32();	
 
 	//Initialize to a given mode
 	HRESULT Win32_Init();

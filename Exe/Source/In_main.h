@@ -12,12 +12,12 @@ initialize, destroy and run updates
 ===========================================
 */
 
-class CInput : public I_InputFocusManager
+class CInput : public I_InputFocusManager,
+			   public I_CVarHandler
 {
 public:
 
 	//Public Interface
-		
 	CInput();
 	~CInput();
 
@@ -38,6 +38,9 @@ public:
 	void UpdateKeys();			//Just update keys
 	void UpdateCursor();		//Update the cursor position
 
+	//CVar Handler
+	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
+
 	//Input Focus Manager Implementation
 
 	void SetKeyListener(I_InKeyListener * plistener,
@@ -45,6 +48,11 @@ public:
 						float fRepeatRate);
 
 	void SetCursorListener(I_InCursorListener * plistener);
+
+private:
+	CVar m_pVarExclusive;
+
+	bool CSetExclusive(const CVar * var, int argc, char** argv);	
 };
 
 #endif

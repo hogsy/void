@@ -14,20 +14,27 @@ extern CInput *			g_pInput;	//The Input object, Need this here for Cvar funcs, a
 
 static LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 
-static CVar	 *			m_pVarExclusive=0;
-static bool	CSetExclusive(const CVar * var, int argc, char** argv);	
+//static CVar	 			m_pVarExclusive;
+//static bool	CSetExclusive(const CVar * var, int argc, char** argv);	
 
 bool g_bDIAvailable = false;
 
 //========================================================================================
 //========================================================================================
 
+bool CInput::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+{
+	if(cvar == &m_pVarExclusive)
+		return CSetExclusive(cvar,numArgs,szArgs);
+	return false;
+}
+
 /*
 =====================================
 Constructor
 =====================================
 */
-CInput::CInput()
+CInput::CInput() : m_pVarExclusive("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 {
 	g_pMouse = new CMouse();
 	g_pKb = new CKeyboard();
@@ -35,7 +42,8 @@ CInput::CInput()
 	m_pDInput = 0;
 
 	//Register CVars
-	m_pVarExclusive = System::GetConsole()->RegisterCVar("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
+	//System::GetConsole()->RegisterCVar(&m_pVarExclusive,"in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	System::GetConsole()->RegisterCVar(&m_pVarExclusive,this);
 }
 
 /*
@@ -91,7 +99,7 @@ bool CInput::Init()
 	//Are Initialized without specifying any modes, so that they
 	//can default to what they read from config files
 
-	hr = g_pMouse->Init((int)m_pVarExclusive->value, CMouse::M_NONE); 
+	hr = g_pMouse->Init((int)m_pVarExclusive.value, CMouse::M_NONE); 
 	if(FAILED(hr))
 	{
 		Shutdown();
@@ -99,7 +107,7 @@ bool CInput::Init()
 		return false;
 	}
 	
-	hr =g_pKb->Init((int)m_pVarExclusive->value, CKeyboard::KB_NONE); 
+	hr =g_pKb->Init((int)m_pVarExclusive.value, CKeyboard::KB_NONE); 
 	if(FAILED(hr))
 	{
 		Shutdown();
@@ -285,7 +293,7 @@ Console Loopback Func
 Set exclusive access
 ================================
 */
-bool CSetExclusive(const CVar * var, int argc, char** argv)
+bool CInput::CSetExclusive(const CVar * var, int argc, char** argv)
 {
 	if(argc == 2 && argv[1])
 	{
@@ -313,7 +321,7 @@ bool CSetExclusive(const CVar * var, int argc, char** argv)
 			return true;
 		}
 	}
-	if(m_pVarExclusive->value)
+	if(m_pVarExclusive.value)
 		ComPrintf("Input in Exclusive mode\n");
 	else
 		ComPrintf("Input in NonExclusive mode\n");

@@ -6,13 +6,14 @@
 #include "Net_util.h"
 #include "Net_sock.h"
 #include "I_hud.h"
+#include "Cl_cmds.h"
 
 /*
 =====================================
 The client
 =====================================
 */
-class CClient :	public I_CmdHandler
+class CClient :	public I_CmdHandler 
 {
 public:
 	CClient();
@@ -36,6 +37,9 @@ public:
 
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
+	//CVar Handler Interface
+//	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
 
 	//run local stuff, 
 	//messages received from the server would be handled here
@@ -66,13 +70,10 @@ private:
 	//Console funcs
 	void CamPath(int argc,char **argv);
 
-
-	
-	static	CVar *		m_clport;
-	static  CVar *		m_clname;
-	static  CVar *		m_clrate;
-	static  CVar *		m_noclip;
-
+	 CVar 	m_clport;
+	 CVar 	m_clname;
+	 CVar 	m_clrate;
+	 CVar 	m_noclip;
 
 	unsigned int	m_recvseq;		//packet num
 	CNBuffer		m_recvBuf;		//network buffer we read from
@@ -83,7 +84,7 @@ private:
 	world_t    *m_world;
 
 	friend class CClientCmdHandler;
-	CClientCmdHandler * m_pCmdHandler;
+	CClientCmdHandler m_pCmdHandler;
 
 	I_RHud *	m_rHud;
 

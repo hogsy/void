@@ -125,6 +125,28 @@ void DefaultExtension (char *path, const char *extension)
 
 
 /*
+======================================
+make sure the dir is there. create it if not
+======================================
+*/
+void ConfirmDir(char* dir)
+{
+	//try creating each dir - nothing will change if it already exists
+	char *c = dir;
+	while (*c)
+	{
+		if ((*c)== '\\')
+		{
+			*c = NULL;
+			CreateDirectory(dir, NULL);
+			*c = '\\';
+		}
+		c++;
+	}
+}
+
+
+/*
 =======================================
 prints HR Error message
 =======================================

@@ -1,31 +1,19 @@
 #include "Com_mem.h"
 
-#ifdef _DEBUG
-#include <crtdbg.h>
-#endif
-
 /*
 ==========================================
 Constructor, creates log file for mem debug info
 ==========================================
 */
-CMemManager::CMemManager()
-{
-	//Set the global memory manager to self
-	g_pMemManager = this;
 
-	m_numAllocations=0;
-	m_numAllocated = 0;
+CMemManager::CMemManager(const char * memfile)
+{
+	m_numAllocs=0;
+	m_curAllocs = 0;
 	m_memAllocated=0;
 
-	m_numHeapAllocs=0;
-	m_numHeapAllocated=0;
-	m_memHeapAllocated=0;
-
-	m_hHeap = ::GetProcessHeap();
-
 #ifdef _DEBUG
-	h_memfile = (HFILE*)::CreateFile("mem.log",
+	h_memfile = (HFILE*)::CreateFile(memfile,
 					GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -45,21 +33,15 @@ Closes log file
 */
 CMemManager::~CMemManager()
 {
-	//Set the global memory manager to 0
-	g_pMemManager = 0;
 #ifdef _DEBUG
 
 	char msg[256];
 	ulong written = 0;
 	
 	sprintf(msg,"Total Allocs : %d\nTotal Bytes Alloced : %d\nCurrent Allocs : %d\n", 
-		m_numAllocations, m_memAllocated, m_numAllocated);
+		m_numAllocs, m_memAllocated, m_curAllocs);
 	WriteFile(h_memfile,msg,strlen(msg),&written,0);
 	
-	sprintf(msg,"Total Heap Allocs : %d\nTotal Heap Bytes Alloced : %d\nCurrent Heap Allocs : %d\n", 
-		m_numHeapAllocs, m_memHeapAllocated, m_numHeapAllocated);
-	WriteFile(h_memfile,msg,strlen(msg),&written,0);
-
    _CrtDumpMemoryLeaks();
    	CloseHandle(h_memfile);
 #endif
@@ -73,43 +55,6 @@ Init/Shutdown ?
 */
 void CMemManager::Init() {}
 void CMemManager::Shutdown() {} 
-
-
-/*
-==========================================
-Heap Alloc/Free funcs to alloc big chunks
-==========================================
-*/
-void * CMemManager::HeapAlloc(uint size)
-{
-	if(size <=0)
-	{	
-		ComPrintf("CMemManager::HeapAlloc: Bad size\n");
-		return 0;
-	}
-
-	void * ptr = ::HeapAlloc(m_hHeap,
-							 HEAP_GENERATE_EXCEPTIONS,
-							 size);
-	if(!ptr)
-	{
-		ComPrintf("CMemManager::HeapAlloc: Unable to alloc %d bytes\n", size);
-		return 0;
-	}
-	m_numHeapAllocs ++;
-	m_numHeapAllocated ++;
-	m_memHeapAllocated +=size;
-	return ptr;
-}
-
-void CMemManager::HeapFree(void * mem)
-{
-	if(mem)
-	{
-		::HeapFree(m_hHeap,0, mem);
-		m_numHeapAllocated --;
-	}
-}
 
 /*
 ==========================================
@@ -132,8 +77,8 @@ void * CMemManager::Malloc(uint size)
 		return 0;
 	}
 
-	m_numAllocations++;
-	m_numAllocated  ++;
+	m_numAllocs++;
+	m_curAllocs++;
 	m_memAllocated += size;
 	return ptr;
 }
@@ -155,8 +100,8 @@ void * CMemManager::Realloc(void *mem, uint size)
 	else if(size) 
 	{
 		ptr = malloc(size);
-		m_numAllocations++;
-		m_numAllocated++;
+		m_numAllocs++;
+		m_curAllocs++;
 		m_memAllocated += size;
 	}
 	else 
@@ -164,7 +109,7 @@ void * CMemManager::Realloc(void *mem, uint size)
 		if(mem)
 		{
 			free(mem);
-			m_numAllocated --;
+			m_curAllocs --;
 		}
 		ptr = NULL;
 	}
@@ -180,30 +125,11 @@ void CMemManager::Free(void *mem )
 {
 	if(mem)
 	{	free(mem);
-		m_numAllocated --;
+		m_curAllocs --;
 	}
 }
-
-/*
-==========================================
-Print current mem stats
-==========================================
-*/
-void CMemManager::PrintDebug()
-{
-}
-
-/*
-==========================================
-run some vailidation on heap
-==========================================
-*/
-void CMemManager::ValidateHeap()
-{
-}
-
 //======================================================================================
-//Debug Allocation funcs
+//Debug mode
 //======================================================================================
 
 #ifdef _DEBUG
@@ -224,8 +150,17 @@ void * CMemManager::MallocDbg(uint size, const char * file, int line)
 		return 0;
 	}
 
-	m_numAllocations++;
-	m_numAllocated  ++;
+	if (!_CrtIsValidHeapPointer(ptr))
+	{
+		char msg[256];
+		ulong written = 0;
+	
+		sprintf(msg,"Invalid Heap Pointer : %s (%d)\n", file, line);
+		WriteFile(h_memfile,msg,strlen(msg),&written,0);
+	}
+
+	m_numAllocs++;
+	m_curAllocs  ++;
 	m_memAllocated += size;
 	return ptr;
 }
@@ -242,8 +177,8 @@ void * CMemManager::ReallocDbg(void *mem, uint size, const char * file, int line
 	else if(size) 
 	{
 		ptr = _malloc_dbg(size,_NORMAL_BLOCK,file,line);
-		m_numAllocations++;
-		m_numAllocated++;
+		m_numAllocs++;
+		m_curAllocs++;
 		m_memAllocated += size;
 	}
 	else 
@@ -251,7 +186,7 @@ void * CMemManager::ReallocDbg(void *mem, uint size, const char * file, int line
 		if(mem)
 		{
 			_free_dbg(mem,_NORMAL_BLOCK);
-			m_numAllocated --;
+			m_curAllocs --;
 		}
 		ptr = NULL;
 	}
@@ -261,9 +196,34 @@ void * CMemManager::ReallocDbg(void *mem, uint size, const char * file, int line
 void CMemManager::FreeDbg(void *mem)
 {
 	if(mem)
-	{	_free_dbg(mem,_NORMAL_BLOCK);
-		m_numAllocated --;
+	{	
+		if (!_CrtIsValidHeapPointer(mem))
+		{
+			int blah=0;
+			blah ++;
+		}
+		_free_dbg(mem,_NORMAL_BLOCK);
+		m_curAllocs --;
 	}
 }
 
 #endif
+
+
+/*
+==========================================
+Print current mem stats
+==========================================
+*/
+void CMemManager::PrintStats()
+{
+}
+
+/*
+==========================================
+run some vailidation on heap
+==========================================
+*/
+bool CMemManager::Validate()
+{	return true;
+}

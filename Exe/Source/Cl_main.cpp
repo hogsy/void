@@ -1,17 +1,13 @@
 #include "Cl_main.h"
 #include "Sys_cons.h"
 #include "I_renderer.h"
-#include "Cl_cmds.h"
+//#include "Cl_cmds.h"
 #include "Sys_hdr.h"
 
 
 extern world_t		*g_pWorld;
 extern I_Renderer   *g_pRender;
 
-CVar *		CClient::m_clport;
-CVar *		CClient::m_clname;
-CVar *		CClient::m_clrate;
-CVar *		CClient::m_noclip;
 
 /*
 ======================================
@@ -19,10 +15,23 @@ Constructor
 ======================================
 */
 
-CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
+//CVar Handler Interface
+/*
+bool CClient::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+{
+	return false;
+}
+*/
+
+CClient::CClient():	m_sock(&m_recvBuf,&m_sendBuf),
+					m_clport("cl_port","36667", CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
+					m_clname("cl_name","Player",CVar::CVAR_STRING,	CVar::CVAR_ARCHIVE),
+					m_clrate("cl_rate","0",		CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
+					m_noclip("cl_noclip","0",   CVar::CVAR_INT,		CVar::CVAR_ARCHIVE),
+					m_pCmdHandler()
 {
 
-	m_pCmdHandler = new CClientCmdHandler(this);
+//	 = new CClientCmdHandler();
 
 	// FIXME - should be actual player size
 	VectorSet(&eye.mins, -10, -10, -40);
@@ -50,11 +59,11 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 
 	m_rHud = 0;
 
-	m_clport = System::GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clrate = System::GetConsole()->RegisterCVar("cl_rate","0",	 CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	m_clname = System::GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);
-	m_noclip = System::GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
-	
+	System::GetConsole()->RegisterCVar(&m_clport);
+	System::GetConsole()->RegisterCVar(&m_clrate);
+	System::GetConsole()->RegisterCVar(&m_clname);
+	System::GetConsole()->RegisterCVar(&m_noclip);
+
 	RegCommands();
 }
 
@@ -70,7 +79,7 @@ CClient::~CClient()
 	CloseNet();
 #endif
 
-	delete m_pCmdHandler;
+//	delete m_pCmdHandler;
 }
 
 
@@ -275,7 +284,8 @@ void CClient::RunFrame()
 {
 	if(m_ingame)
 	{
-		m_pCmdHandler->RunCommands();
+//		m_pCmdHandler->RunCommands();
+		m_pCmdHandler.RunCommands();
 
 		if (!((desired_movement.x==0) && (desired_movement.y==0) && (desired_movement.z==0)) || (m_campath != -1))
 		{
@@ -610,7 +620,8 @@ void Talk(int argc,char **argv)
 
 void CClient::SetInputState(bool on)
 {
-	m_pCmdHandler->SetListenerState(on);
+//	m_pCmdHandler->SetListenerState(on);
+	m_pCmdHandler.SetListenerState(on);
 }
 
 
@@ -666,16 +677,20 @@ void CClient::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
 		RotateDown();
 		break;
 	case CMD_BIND:
-		m_pCmdHandler->BindFuncToKey(numArgs,szArgs);
+//		m_pCmdHandler->BindFuncToKey(numArgs,szArgs);
+		m_pCmdHandler.BindFuncToKey(numArgs,szArgs);
 		break;
 	case CMD_BINDLIST:
-		m_pCmdHandler->BindList();
+		//m_pCmdHandler->BindList();
+		m_pCmdHandler.BindList();
 		break;
 	case CMD_UNBIND:
-		m_pCmdHandler->Unbind(numArgs,szArgs);
+		//m_pCmdHandler->Unbind(numArgs,szArgs);
+		m_pCmdHandler.Unbind(numArgs,szArgs);
 		break;
 	case CMD_UNBINDALL:
-		m_pCmdHandler->Unbindall();
+		//m_pCmdHandler->Unbindall();
+		m_pCmdHandler.Unbindall();
 		break;
 	case CMD_CAM:
 		CamPath(numArgs,szArgs);
@@ -692,7 +707,8 @@ called from the Console Shutdown func
 
 void CClient::WriteBindTable(FILE *fp)
 {
-	m_pCmdHandler->WriteBindTable(fp);
+//	m_pCmdHandler->WriteBindTable(fp);
+	m_pCmdHandler.WriteBindTable(fp);
 }
 
 

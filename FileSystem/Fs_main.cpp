@@ -58,7 +58,7 @@ void ComPrintf(char* text, ...)
 	vsprintf(buff, text, args);
 	va_end(args);
 
-	g_pConsole->ConPrint(buff);
+	g_pConsole->ComPrint(buff);
 }
 
 

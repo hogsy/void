@@ -14,9 +14,10 @@
 //#define INCLUDE_MUSIC	1
 
 #include "Com_defs.h"
+#include "Com_mem.h"
 #include "Com_util.h"
 
-#include "I_mem.h"
+#include "I_hunkmem.h"
 #include "I_console.h"
 #include "I_file.h"
 #include "I_filesystem.h"

@@ -37,14 +37,15 @@ public:
 
 private:
 
-	static CVar *	m_cFull;		//fullscreen
-	static CVar *   m_cRes;			//resolution
-	static CVar *   m_cBpp;			//bpp
+	CVar   m_cFull;		//fullscreen
+	CVar   m_cRes;		//resolution
+	CVar   m_cBpp;		//bpp
 
 	//CVar Handlers
-	static bool CVar_FullScreen(const CVar * var, int argc, char** argv);
-	static bool CVar_Res(const CVar * var, int argc, char** argv);
-	static bool CVar_Bpp(const CVar * var, int argc, char** argv);
+	bool CVar_FullScreen(const CVar * var, int argc, char** argv);
+	bool CVar_Res(const CVar * var, int argc, char** argv);
+	bool CVar_Bpp(const CVar * var, int argc, char** argv);
+
 };
 
 extern CRenExp * g_pRenExp;

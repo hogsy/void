@@ -25,29 +25,23 @@ class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener,	//Key Event listener interface	
 				public I_CmdHandler
 {
+
 public:
 
+	CConsole();
+	~CConsole();
+
 	//==============================================================
-	//I_ExeConsole Interface
+	//I_Console Interface
 
 	//CVar Registration
-	CVar * RegisterCVar(const char *varname, 
-					    const char *varval,		//scanned to sting/float/int 
-					    CVar::CVarType vartype,	//var type - can be float/int/char * etc
-					    int varflags,			//extra parm, locked vars etc
-					    CVAR_FUNC varfunc=0);	//validation func
-
+	void RegisterCVar(	CVar * var,
+						I_CVarHandler * handler=0);
 	void RegisterCommand(const char *cmdname,
-						 HCMD id,
-						 I_CmdHandler * handler);
-
-	void CVarSet(CVar **cvar, const char *varval);
-	void CVarForceSet(CVar **cvar, const char *varval);
-	void CVarSet(CVar **cvar, float val);
-	void CVarForceSet(CVar **cvar, float val);
-
+						HCMD id,
+						I_CmdHandler * handler);
 	//Print Function
-	void ConPrint(char* text);
+	void ComPrint(char* text);
 
 	//==============================================================
 	//Key Listener interface
@@ -59,9 +53,6 @@ public:
 
 	//==============================================================
 
-	CConsole();
-	~CConsole();
-
 	bool Init(I_ConsoleRenderer * prcons);
 	bool Shutdown();
 
@@ -70,6 +61,7 @@ public:
 	void MsgBox(char *msg, ...);
 
 	void ExecConfig(const char *filename);
+	
 	void WriteCVars(FILE *fp);
 
 	//just pass a string to be parsed and exec'ed
@@ -98,7 +90,7 @@ private:
 	void CCmdList(int argc, char** argv);
 	void CFunctest(int argc, char** argv);
 
-	CPtrList<CVar>    *m_pcList;	//List of Cvars
+	CPRefList<CVar>    *m_pcList;	//List of Cvars
 	CPtrList<CCommand> *m_pfList;	//List of Cfuncs
 
 	//Args

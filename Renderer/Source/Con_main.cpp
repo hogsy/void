@@ -8,14 +8,14 @@
 #define CONBACK_INDEX			1
 #define CON_DIFFERENTIAL		150
 
-CRConsole * g_prCons=0;
-
 /*
 =======================================
 Constructor
 =======================================
 */
-CRConsole::CRConsole(): m_seperatorchar('^')
+CRConsole::CRConsole(): m_seperatorchar('^'),
+						m_conSpeed("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+						
 {
 	m_statuslen = 0;
 	m_statusline = 0;
@@ -111,7 +111,7 @@ void CRConsole::Draw()
 		}
 	case CON_CLOSING:
 		{
-			m_alpha -= (GetFrameTime() * g_pConspeed->value);
+			m_alpha -= (GetFrameTime() * m_conSpeed.value);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -133,7 +133,7 @@ void CRConsole::Draw()
 				break;
 			}
 
-			m_alpha += (GetFrameTime() * g_pConspeed->value);
+			m_alpha += (GetFrameTime() * m_conSpeed.value);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{

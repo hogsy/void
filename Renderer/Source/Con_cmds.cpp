@@ -4,11 +4,13 @@
 //======================================================================================
 //======================================================================================
 
-CVar *	g_pFullbright=0;
-CVar *	g_pDrawSils=0;
-CVar *  g_pFov=0;
-CVar *  g_pMultiTexture=0;
-CVar *	g_pVidSynch=0;
+//CVar 	g_pDrawSils;
+
+//CVar	g_pFullbright("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+/*CVar	g_pFov("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+CVar	g_pMultiTexture("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+CVar 	g_pVidSynch("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
+*/
 
 /*
 ======================================
@@ -131,6 +133,8 @@ void CFunc_TGAShot(int argc, char** args)
 		ScreenShot(0,FORMAT_TGA);
 }
 
+
+
 /*
 =======================================
 switch fullbright (light) rendering
@@ -155,6 +159,7 @@ bool CVar_FullBright(const CVar * var, int argc, char** argv)
 	return true;
 }
 
+#if 0
 
 /*
 =======================================
@@ -238,17 +243,18 @@ bool CVar_VidSynch(const CVar * var, int argc, char** argv)
 	return true;
 }
 
-
+#endif
 bool CRConsole::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
 {
-	if(cvar == g_pFullbright)
-		return CVar_FullBright(cvar,numArgs,szArgs);
-	else if(cvar == g_pFov)
+//	if(cvar == &g_pFullbright)
+//		return CVar_FullBright(cvar,numArgs,szArgs);
+/*	else if(cvar == &g_pFov)
 		return CVar_Fov(cvar,numArgs,szArgs);
-	else if(cvar == g_pMultiTexture)
+	else if(cvar == &g_pMultiTexture)
 		return CVar_MultiTexture(cvar,numArgs,szArgs);
-	else if(cvar == g_pVidSynch)
+	else if(cvar == &g_pVidSynch)
 		return CVar_VidSynch(cvar,numArgs,szArgs);
+*/
 	return false;
 }
 
@@ -259,14 +265,19 @@ Register Cvars and Commands
 */
 void CRConsole::RegisterFuncs()
 {
-	
-	g_pConspeed		= g_pConsole->RegisterCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	g_pConsole->RegisterCVar(&m_conSpeed);
 
-	g_pFov			= g_pConsole->RegisterCVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pFullbright	= g_pConsole->RegisterCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pMultiTexture = g_pConsole->RegisterCVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	g_pVidSynch		= g_pConsole->RegisterCVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,this);
+//	g_pConsole->RegisterCVar(&g_pFov,this);
+//	g_pConsole->RegisterCVar(&g_pFullbright,this);
+/*	g_pConsole->RegisterCVar(&g_pMultiTexture,this);
+	g_pConsole->RegisterCVar(&g_pVidSynch,this);
+*/
 
+/*	g_pConsole->RegisterCVar(&g_pFov,"r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pConsole->RegisterCVar(&g_pFullbright,"r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pConsole->RegisterCVar(&g_pMultiTexture,"r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	g_pConsole->RegisterCVar(&g_pVidSynch,"r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE,this);
+*/
 //	g_pConsole->RegisterCFunc("screenshot", &CFunc_PCXShot);
 //	g_pConsole->RegisterCFunc("tgashot", &CFunc_TGAShot);
 }

@@ -286,7 +286,27 @@ SOURCE=..\Shared\Com_cvar.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_list.h
+SOURCE=..\Shared\Com_mem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_mem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_registry.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_registry.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.h
 # End Source File
 # Begin Source File
 
@@ -310,7 +330,7 @@ SOURCE=..\Shared\I_hud.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_mem.h
+SOURCE=..\Shared\I_hunkmem.h
 # End Source File
 # Begin Source File
 
@@ -327,26 +347,6 @@ SOURCE=..\Shared\I_void.h
 # Begin Source File
 
 SOURCE=.\Source\Dll_main.cpp
-# End Source File
-# End Group
-# Begin Group "Util"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\Com_registry.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_registry.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Util.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Util.h
 # End Source File
 # End Group
 # Begin Source File

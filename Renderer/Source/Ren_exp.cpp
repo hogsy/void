@@ -16,26 +16,10 @@ RenderInfo_t  g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
 
 CRenExp		* g_pRenExp=0;
+CRConsole   * g_prCons=0;
 
 //======================================================================================
-
-//Static CVars
-CVar *	CRenExp::m_cFull=0;		//Fullscreen
-CVar *	CRenExp::m_cRes=0;		//Resolution
-CVar *  CRenExp::m_cBpp=0;		//Bpp
-
 //======================================================================================
-
-bool CRenExp::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
-{
-	if(cvar == m_cFull)
-		return CVar_FullScreen(cvar,numArgs,szArgs);
-	else if(cvar == m_cRes)
-		return CVar_Res(cvar,numArgs,szArgs);
-	else if(cvar == m_cBpp)
-		return CVar_Bpp(cvar,numArgs,szArgs);
-	return false;
-}
 
 /*
 =======================================
@@ -46,7 +30,9 @@ configs have been excuted to update the cvars with the
 saved rendering info
 =======================================
 */
-CRenExp::CRenExp()
+CRenExp::CRenExp() : m_cFull("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+					 m_cBpp("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+					 m_cRes("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
 {
 	//Create different subsystems
 
@@ -63,9 +49,9 @@ CRenExp::CRenExp()
 		return;
 	}
 
-	m_cFull= g_pConsole->RegisterCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	m_cBpp = g_pConsole->RegisterCVar("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
-	m_cRes = g_pConsole->RegisterCVar("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,this);
+	g_pConsole->RegisterCVar(&m_cFull,this);
+	g_pConsole->RegisterCVar(&m_cBpp,this);
+	g_pConsole->RegisterCVar(&m_cRes,this);
 }
 
 /*
@@ -107,24 +93,24 @@ bool CRenExp::InitRenderer()
 	world	= NULL;
 
 	//Setup initial state
-	g_rInfo.bpp = (int)m_cBpp->value;
-	if(m_cFull->value)
+	g_rInfo.bpp = (int)m_cBpp.value;
+	if(m_cFull.value)
 		g_rInfo.rflags |= RFLAG_FULLSCREEN;
 
 	//parse width and height out of string
-	char *c = strchr(m_cRes->string, ' ');
+	char *c = strchr(m_cRes.string, ' ');
 	if(c)
 	{
 		char tmp[8];
 		
 		//Read Width
-		int i = c - m_cRes->string;
-		strncpy(tmp,m_cRes->string,i);
+		int i = c - m_cRes.string;
+		strncpy(tmp,m_cRes.string,i);
 		sscanf(tmp,"%d",&g_rInfo.width);
 
 		//Read Height
 		c++;
-		strcpy(tmp,m_cRes->string+i+1);
+		strcpy(tmp,m_cRes.string+i+1);
 		sscanf(tmp,"%d",&g_rInfo.height);
 	}
 
@@ -383,6 +369,22 @@ bool CRenExp::Restart(void)
 	r_init();
 
 	return true;
+}
+
+/*
+==========================================
+CVar Handlers
+==========================================
+*/
+bool CRenExp::HandleCVar(const CVar *cvar,int numArgs, char ** szArgs)
+{
+	if(cvar == &m_cFull)
+		return CVar_FullScreen(cvar,numArgs,szArgs);
+	else if(cvar == &m_cRes)
+		return CVar_Res(cvar,numArgs,szArgs);
+	else if(cvar == &m_cBpp)
+		return CVar_Bpp(cvar,numArgs,szArgs);
+	return false;
 }
 
 /*

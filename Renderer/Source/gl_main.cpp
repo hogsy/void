@@ -8,7 +8,8 @@ CGLUtil * g_pGL=0;
 Constructor/Destructor
 ==========================================
 */
-CGLUtil::CGLUtil()
+CGLUtil::CGLUtil() : m_cWndX("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+					 m_cWndY("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 {
 	m_nummodes = 0;
 	m_devmodes = 0;
@@ -27,8 +28,8 @@ CGLUtil::CGLUtil()
 	ConPrint("GL:Loaded GL driver: %s\n", m_gldriver);
 	m_loadeddriver = true;
 
-	m_cWndX= g_pConsole->RegisterCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	m_cWndY= g_pConsole->RegisterCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	g_pConsole->RegisterCVar(&m_cWndX);
+	g_pConsole->RegisterCVar(&m_cWndY);
 }
 
 
@@ -157,8 +158,8 @@ bool CGLUtil::Shutdown()
 		if(rect.left < 40)	rect.left= 40;
 		if(rect.top  < 20)	rect.top = 20;
 
-		g_pConsole->CVarSet(&m_cWndX,(float)rect.left);
-		g_pConsole->CVarSet(&m_cWndY,(float)rect.top);
+//		g_pConsole->CVarSet(&m_cWndX,(float)rect.left);
+//		g_pConsole->CVarSet(&m_cWndY,(float)rect.top);
 	}
 
 	_wglMakeCurrent(NULL, NULL);
@@ -200,8 +201,8 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 
 	::SetWindowPos(g_rInfo.hWnd,
 				   HWND_TOP,
-				   (int)m_cWndX->value,
-				   (int)m_cWndY->value,
+				   (int)m_cWndX.value,
+				   (int)m_cWndY.value,
 			       width,
 			       height,
 				   0);
@@ -326,8 +327,8 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-	wndX < 80 ? g_pConsole->CVarSet(&m_cWndX,80.0) : g_pConsole->CVarSet(&m_cWndX,wndX);
-	wndY < 80 ? g_pConsole->CVarSet(&m_cWndY,40.0) : g_pConsole->CVarSet(&m_cWndY,wndY);
+//	wndX < 80 ? g_pConsole->CVarSet(&m_cWndX,80.0) : g_pConsole->CVarSet(&m_cWndX,wndX);
+//	wndY < 80 ? g_pConsole->CVarSet(&m_cWndY,40.0) : g_pConsole->CVarSet(&m_cWndY,wndY);
 }
 
 /*
@@ -354,7 +355,7 @@ Set Windows Initial Size
 void CGLUtil::SetInitializePos()
 {
 	//Initializing for the first time, set default Window Position
-	SetWindowCoords((int)m_cWndX->value,(int)m_cWndY->value);
+	SetWindowCoords((int)m_cWndX.value,(int)m_cWndY.value);
 }
 
 

@@ -1,21 +1,23 @@
 #ifndef VOID_SYS_MEMORYMANAGER
 #define VOID_SYS_MEMORYMANAGER
 
-//======================================================================================
-//======================================================================================
-
 #include "Com_defs.h"
-#include "I_mem.h"
 
-
-class CMemManager : public I_MemManager 
+/*/
+======================================================================================
+Every module includes this
+a global object is created on the stack, and we use that to allocate
+all dynamic memory in the module
+======================================================================================
+*/
+class CMemManager 
 {
 public:
 
-	CMemManager();
+	CMemManager(const char * memfile);
 	~CMemManager();
 
-	void Init(void);
+	void Init();
 	void Shutdown(void);
 	
 	void * Malloc(uint size);
@@ -28,27 +30,76 @@ public:
 	void FreeDbg(void *mem);
 #endif
 	
-	void * HeapAlloc(uint size);
-	void HeapFree(void * mem);
-
-	void PrintDebug();
-	void ValidateHeap();
+	void PrintStats();
+	bool Validate();
 
 private:
 
-	ulong m_numAllocations;
-	ulong m_numAllocated;
+	ulong m_numAllocs;
+	ulong m_curAllocs;
 	ulong m_memAllocated;
-
-	ulong m_numHeapAllocs;
-	ulong m_numHeapAllocated;
-	ulong m_memHeapAllocated;
-
-	HANDLE m_hHeap;
 
 #ifdef _DEBUG
 	HFILE	* h_memfile;
 #endif
 };
+
+//The global reference to the mem manager
+extern CMemManager g_memManager;
+
+//======================================================================================
+//global Custom allocator funcs
+//======================================================================================
+
+//Debug mode
+#ifdef _DEBUG
+
+#include <crtdbg.h>
+
+#define MALLOC(size)		g_memManager.MallocDbg(size,__FILE__,__LINE__)
+#define REMALLOC(p,size)	g_memManager.ReallocDbg(p,size,__FILE__,__LINE__)
+#define FREE(p)				g_memManager.FreeDbg(p)
+
+inline void* operator new(uint size)
+{ 	return g_memManager.MallocDbg(size,__FILE__,__LINE__);
+}
+
+inline void* operator new[] (uint size)
+{	return g_memManager.MallocDbg(size,__FILE__,__LINE__);
+}
+
+inline void  operator delete(void* ptr)	 
+{	g_memManager.FreeDbg(ptr);	
+}
+
+inline void  operator delete[](void* ptr)
+{	g_memManager.FreeDbg(ptr);	
+}
+
+#else
+
+//Release mode
+
+#define MALLOC(size)		g_memManager.Malloc(size)
+#define REALLOC(p,size)		g_memManager.Realloc(p, size)
+#define FREE(p)				g_memManager(p)
+
+inline void* operator new(uint size)
+{	return g_memManager.Malloc(size);
+}
+
+inline void* operator new[] (uint size)
+{ 	return g_memManager.Malloc(size); 
+}
+
+inline void  operator delete(void* ptr)	 
+{	g_memManager.Free(ptr);	
+}
+
+inline void  operator delete[](void* ptr)
+{	g_memManager.Free(ptr);	
+}
+
+#endif
 
 #endif

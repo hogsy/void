@@ -10,7 +10,7 @@
 //========================================================================================
 //Private Local Vars
 
-extern CMouse * g_pMouse;	//pointer to Mouse class
+//extern CMouse * g_pMouse;	//pointer to Mouse class
 
 //Current mouse co-ords
 static float	m_fXPos, 
@@ -28,12 +28,21 @@ static float	m_fXSens,
 				m_fYSens, 
 				m_fSens;
 //Console Vars
-static CVar	*	m_pVarXSens=0;
-static CVar	*	m_pVarYSens=0;
-static CVar	*	m_pVarSens=0;
-static CVar	*	m_pVarInvert=0;
-static CVar	*	m_pVarMode=0;
-static CVar *	m_pVarFilter=0;
+/*
+static CVar		m_pVarXSens;
+static CVar		m_pVarYSens;
+static CVar		m_pVarSens;
+static CVar		m_pVarInvert;
+static CVar		m_pVarMode;
+static CVar 	m_pVarFilter;
+
+CVar	m_pVarXSens("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
+CVar	m_pVarYSens("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
+CVar	m_pVarSens ("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
+CVar	m_pVarInvert("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
+CVar	m_pVarMode("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+CVar 	m_pVarFilter("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE);
+*/
 
 //Other flags
 static bool		m_bExclusive;
@@ -66,34 +75,58 @@ static I_InCursorListener  * m_pCursorHandler=0;
 //========================================================================================
 
 //update Mousestate object with latest info 
-static void Update_DIBuffered();
-static void Update_DIImmediate();	
-static void Update_Win32();	
+
 
 //Console Variable Validation/Handler funcs
+/*
 static bool CXSens(const CVar * var, int argc, char** argv);
 static bool CYSens(const CVar * var, int argc, char** argv);
 static bool CSens(const CVar *var, int argc, char** argv);
 static bool CInvert(const CVar *var, int argc, char** argv);
 static bool CMouseMode(const CVar *var, int argc, char** argv);
 static bool CMouseFilter(const CVar *var, int argc, char** argv);
+*/
 
 //========================================================================================
 //Implementation
 //========================================================================================
+
+//CVar Handler
+
+bool CMouse::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+{
+	if(cvar == &m_pVarXSens)
+		return CXSens(cvar,numArgs,szArgs);
+	else if(cvar == &m_pVarYSens)
+		return CYSens(cvar,numArgs,szArgs);
+	else if(cvar == &m_pVarSens)
+		return CSens(cvar,numArgs,szArgs);
+	else if(cvar == &m_pVarInvert)
+		return CInvert(cvar,numArgs,szArgs);
+	else if(cvar == &m_pVarMode)
+		return CMouseMode(cvar,numArgs,szArgs);
+	else if(cvar == &m_pVarFilter)
+		return CMouseFilter(cvar,numArgs,szArgs);
+	return false;
+}
 
 /*
 =====================================
 Constructor
 =====================================
 */
-CMouse::CMouse()
+CMouse::CMouse() :	m_pVarXSens("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
+					m_pVarYSens("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
+					m_pVarSens ("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE),
+					m_pVarInvert("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE),
+					m_pVarMode("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
+					m_pVarFilter("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
 {
 	m_pDIMouse = 0;
 	m_eMouseState = DEVNONE;
 	m_eMouseMode = M_NONE;
 
-	PollMouse = 0;
+//	PollMouse = 0;
 
 	m_bExclusive = false;
 	m_bInvert = false;
@@ -108,12 +141,27 @@ CMouse::CMouse()
 
 	SetCursorListener(this);
 
-	m_pVarXSens = System::GetConsole()->RegisterCVar("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CXSens);
-	m_pVarYSens = System::GetConsole()->RegisterCVar("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CYSens);
-	m_pVarSens  = System::GetConsole()->RegisterCVar("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, &CSens);
-	m_pVarInvert= System::GetConsole()->RegisterCVar("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, &CInvert);
-	m_pVarMode  = System::GetConsole()->RegisterCVar("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CMouseMode);
-	m_pVarFilter= System::GetConsole()->RegisterCVar("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, &CMouseFilter);
+/*	
+	m_pVarXSens = System::GetConsole()->RegisterCVar("m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	m_pVarYSens = System::GetConsole()->RegisterCVar("m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	m_pVarSens  = System::GetConsole()->RegisterCVar("m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	m_pVarInvert= System::GetConsole()->RegisterCVar("m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, this);
+	m_pVarMode  = System::GetConsole()->RegisterCVar("m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, this);
+	m_pVarFilter= System::GetConsole()->RegisterCVar("m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, this);
+*/
+/*	System::GetConsole()->RegisterCVar(&m_pVarXSens,"m_fXSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	System::GetConsole()->RegisterCVar(&m_pVarYSens,"m_fYSens","0.2",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	System::GetConsole()->RegisterCVar(&m_pVarSens,"m_fSens","5.0",CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE, this);
+	System::GetConsole()->RegisterCVar(&m_pVarInvert,"m_bInvert","0",CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE, this);
+	System::GetConsole()->RegisterCVar(&m_pVarMode,"m_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, this);
+	System::GetConsole()->RegisterCVar(&m_pVarFilter,"m_bFilter","0",CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE, this);
+*/
+	System::GetConsole()->RegisterCVar(&m_pVarXSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarYSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarSens,this);
+	System::GetConsole()->RegisterCVar(&m_pVarInvert,this);
+	System::GetConsole()->RegisterCVar(&m_pVarMode,this);
+	System::GetConsole()->RegisterCVar(&m_pVarFilter,this);
 }
 
 /*
@@ -126,7 +174,7 @@ CMouse::~CMouse()
 	Shutdown();
 
 	m_eMouseState = DEVNONE;
-	PollMouse = 0;
+//	PollMouse = 0;
 
 	if(m_pDIState)
 		delete m_pDIState;
@@ -190,11 +238,11 @@ HRESULT CMouse::Init(int exclusive, EMouseMode mode)
 	}
 
 	//Update Sensitivities and other variables that are used at runtime
-	m_fXSens= m_pVarXSens->value;
-	m_fYSens= m_pVarYSens->value;
-	m_fSens= m_pVarSens->value;
-	m_pVarFilter->value ? m_bFilter = true: m_bFilter = false;
-	m_pVarInvert->value ? m_bInvert = true: m_bInvert = false;
+	m_fXSens= m_pVarXSens.value;
+	m_fYSens= m_pVarYSens.value;
+	m_fSens= m_pVarSens.value;
+	m_pVarFilter.value ? m_bFilter = true: m_bFilter = false;
+	m_pVarInvert.value ? m_bInvert = true: m_bInvert = false;
 
 	//Update state vars
 	m_eMouseState = DEVINITIALIZED;
@@ -298,7 +346,7 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 		m_pDIState= new DIMOUSESTATE2;
 
 		//Set update info
-		PollMouse = Update_DIImmediate;
+//		PollMouse = Update_DIImmediate;
 		ComPrintf("CMouse::InitMode:Initialized DI Immediate mode\n");
 		m_eMouseMode = M_DIIMMEDIATE;
 	}
@@ -325,7 +373,7 @@ HRESULT CMouse::DI_Init(EMouseMode mode)
 		m_pDIState = 0;
 
 		//Set update info
-		PollMouse = Update_DIBuffered;
+//		PollMouse = Update_DIBuffered;
 		ComPrintf("CMouse::InitMode:Initialized DI Buffered mode\n");
 		m_eMouseMode = M_DIBUFFERED;
 	}
@@ -377,7 +425,7 @@ HRESULT CMouse::Win32_Init()
 	if(m_bExclusive)
 		SetExclusive(true);
 
-	PollMouse = Update_Win32;
+//	PollMouse = Update_Win32;
 
 	ComPrintf("CMouse::InitMode:Initialized Win32 mode\n");
 	m_eMouseMode = M_WIN32;
@@ -451,7 +499,12 @@ void CMouse::Update()
 	{ 
 		// Event is set. If the event was created as 
 		// autoreset, it has also been reset. 
-		PollMouse();
+		//PollMouse();
+		if(m_eMouseMode == M_DIBUFFERED)
+			Update_DIBuffered();
+		else if(m_eMouseMode == M_DIIMMEDIATE)
+			Update_DIImmediate();
+
 	}
 }
 
@@ -478,7 +531,7 @@ void DI_FlushMouseData()
 DirectInput Buffered Data
 =====================================
 */
-void Update_DIBuffered()
+void CMouse::Update_DIBuffered()
 {
 	DWORD dwElements = M_DIBUFFER_SIZE;
 
@@ -494,7 +547,7 @@ void Update_DIBuffered()
 		{
 			ComPrintf("CMouse::Update_DIBuffered, failed to update. Lost device");
 			m_eMouseState = DEVINITIALIZED;
-			hr = g_pMouse->Acquire();
+			hr = Acquire();
 		}
 		else
 			ComPrintf("CMouse::Update_DIBuffered, failed to update. Unknown error");
@@ -575,7 +628,7 @@ void Update_DIBuffered()
 DirectInput Immediate data
 =====================================
 */
-void Update_DIImmediate()
+void CMouse::Update_DIImmediate()
 {
 	//Get Mouse State
 	HRESULT hr = m_pDIMouse->GetDeviceState(sizeof(DIMOUSESTATE2), 
@@ -587,7 +640,7 @@ void Update_DIImmediate()
 		{
 			ComPrintf("CMouse::Update_DIImmediate, failed to update. Lost device");
 			m_eMouseState = DEVINITIALIZED;
-			hr = g_pMouse->Acquire();
+			hr = Acquire();
 		}
 		else
 			ComPrintf("CMouse::Update_DIImmediate, failed to update. Unknown Error");
@@ -630,7 +683,7 @@ void Update_DIImmediate()
 Win32 Mouse update
 =====================================
 */
-void Update_Win32()
+void CMouse::Update_Win32()
 {
 	//Get current cursor pos
 	::GetCursorPos(&m_w32Pos);
@@ -807,7 +860,7 @@ DI_Immediate
 Win32 update
 =====================================
 */
-bool CMouseMode(const CVar * var, int argc,char** argv)
+bool CMouse::CMouseMode(const CVar * var, int argc,char** argv)
 {
 	if(argc >= 2 && argv[1])
 	{
@@ -828,7 +881,7 @@ bool CMouseMode(const CVar * var, int argc,char** argv)
 				return true;
 			}
 
-			if(FAILED(g_pMouse->Init(m_bExclusive,(CMouse::EMouseMode)temp)))
+			if(FAILED(Init(m_bExclusive,(CMouse::EMouseMode)temp)))
 			{
 				ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",temp);
 				return false;
@@ -864,7 +917,7 @@ bool CMouseMode(const CVar * var, int argc,char** argv)
 Console Func - Sets X-axis Sensitivity
 ======================================
 */
-bool CXSens(const CVar * var, int argc,char** argv)
+bool CMouse::CXSens(const CVar * var, int argc,char** argv)
 {
 	if(argc == 2 && argv[1])
 	{
@@ -888,7 +941,7 @@ bool CXSens(const CVar * var, int argc,char** argv)
 Console Func - Sets Y-axis Sensitivity
 ======================================
 */
-bool CYSens(const CVar * var, int argc,char** argv)
+bool CMouse::CYSens(const CVar * var, int argc,char** argv)
 {
 	if(argc == 2 && argv[1])
 	{
@@ -913,7 +966,7 @@ bool CYSens(const CVar * var, int argc,char** argv)
 Console Func - Sets master Sensitivity
 ======================================
 */
-bool CSens(const CVar * var, int argc, char** argv)
+bool CMouse::CSens(const CVar * var, int argc, char** argv)
 {
 	if(argc == 2 && argv[1])
 	{
@@ -938,7 +991,7 @@ bool CSens(const CVar * var, int argc, char** argv)
 Console Func - Sets Mouse Inverted states
 ======================================
 */
-bool CInvert(const CVar * var, int argc, char** argv)
+bool CMouse::CInvert(const CVar * var, int argc, char** argv)
 {
 	if(argc == 2 && argv[1])
 	{
@@ -964,7 +1017,7 @@ bool CInvert(const CVar * var, int argc, char** argv)
 Sets the local mouse filter value
 ===========================================
 */
-bool CMouseFilter(const CVar * var, int argc, char** argv)
+bool CMouse::CMouseFilter(const CVar * var, int argc, char** argv)
 {
 	if(argc >= 2 && argv[1])
 	{

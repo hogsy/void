@@ -63,7 +63,7 @@ private:
 	void PrintBuffer();
 
 	//CVars
-	CVar *		g_pConspeed;
+	CVar 		m_conSpeed;
 
 	bool		m_condown;		// is the console down
 	bool		m_fullscreen;	// fullscreen console?

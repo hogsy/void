@@ -42,52 +42,6 @@ struct ClientKey
 	CCommand * pCmd;
 };
 
-//======================================================================================
-//======================================================================================
-/*
-======================================
-Client Command Handler
--handle input events
--maintain a list of all the valid commands
--maintain a command buffer that gets executed every frame
--provide means to register new commands
--provide means to bind keys to commands
-======================================
-*/
-
-class CClientCmdHandler : public I_InKeyListener,
-								 I_InCursorListener
-{
-public:
-
-	CClientCmdHandler(CClient * pclient);
-	~CClientCmdHandler();
-
-	void SetListenerState(bool on);
-	void RunCommands();
-
-	void HandleKeyEvent	  (const KeyEvent_t &kevent);
-	void HandleCursorEvent(const float &ix,
-						   const float &iy,
-					       const float &iz);
-
-	void BindFuncToKey(int argc, char** argv);
-	void Unbind(int argc, char** argv);
-	void Unbindall();
-	void BindList() const;
-
-	void WriteBindTable(FILE *fp);
-
-private:
-
-	void AddToCmdBuffer(ClientKey * const pcommand);
-	void RemoveFromCmdBuffer(const ClientKey * pcommand);
-
-	CClient   * m_pClient;
-	ClientKey	m_cmdKeys[IN_NUMKEYS];
-	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
-};
-
 /*
 ============================================================================
 A Constant list of Special keys "names"
@@ -134,5 +88,51 @@ const ClientKeyConstants_t keytable[] =
 	{	0,	0}
 };
 
+
+//======================================================================================
+//======================================================================================
+/*
+======================================
+Client Command Handler
+-handle input events
+-maintain a list of all the valid commands
+-maintain a command buffer that gets executed every frame
+-provide means to register new commands
+-provide means to bind keys to commands
+======================================
+*/
+
+class CClientCmdHandler : public I_InKeyListener,
+								 I_InCursorListener
+{
+public:
+
+	CClientCmdHandler();
+	~CClientCmdHandler();
+
+	void SetListenerState(bool on);
+	void RunCommands();
+
+	void HandleKeyEvent	  (const KeyEvent_t &kevent);
+	void HandleCursorEvent(const float &ix,
+						   const float &iy,
+					       const float &iz);
+
+	void BindFuncToKey(int argc, char** argv);
+	void Unbind(int argc, char** argv);
+	void Unbindall();
+	void BindList() const;
+
+	void WriteBindTable(FILE *fp);
+
+private:
+
+	void AddToCmdBuffer(ClientKey * const pcommand);
+	void RemoveFromCmdBuffer(const ClientKey * pcommand);
+
+//	CClient   * m_pClient;
+	ClientKey	m_cmdKeys[IN_NUMKEYS];
+	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
+};
 
 #endif

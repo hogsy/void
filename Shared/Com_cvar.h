@@ -3,19 +3,30 @@
 
 #include "Com_defs.h"
 
-//==============================================================
-
-#define MAX_CVARSTRING_LEN	512
-#define COM_MAXARGS			5
+//======================================================================================
+//======================================================================================
 
 struct CVar;
-//validation func, cvar is only updated if this returns true
-typedef bool (*CVAR_FUNC)(const CVar *, int,  char**);	
+struct I_CVarHandler
+{	virtual bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)=0;
+};
 
-//==============================================================
+//======================================================================================
+//======================================================================================
 
 struct CVar
 {
+	/*
+	==========================================
+	Constants
+	==========================================
+	*/
+	enum
+	{
+		CVAR_MAXSTRINGLEN =	512,
+		CVAR_MAXARGS	  =	5
+	};
+
 	enum CVarFlags
 	{
 		CVAR_ARCHIVE = 1,
@@ -32,6 +43,11 @@ struct CVar
 		CVAR_BOOL
 	};
 
+	/*
+	==========================================
+	Public vars
+	==========================================
+	*/
 	char * name;
 	char * string;
 	char * latched_string;
@@ -40,29 +56,151 @@ struct CVar
 	float		value;
 	int			flags;		//CVar characteristics
 	CVarType	type;
-	CVAR_FUNC	func;		//Functions pointer to Custom Cvar func
+	I_CVarHandler * handler;
 
-
-	CVar()
+	/*
+	==========================================
+	Constructor
+	==========================================
+	*/
+	CVar(const char *varname, 
+		 const char *varval,
+		 CVarType vartype,	
+		 int varflags)
 	{
-		name = string = default_string = latched_string = 0;
+		name = new char[strlen(varname)+1];
+		strcpy(name,varname);
+		
+		type = vartype;
+		flags = varflags;
+
+		string = 0;
+		latched_string = 0;
+		default_string = 0;
 		value = 0.0f;
-		flags = 0;
-		type = CVAR_UNDEFINED;
-		func = 0;
+		handler = 0;
+
+		ForceSet(varval);
 	}
 
+	/*
+	==========================================
+	Desctructor
+	==========================================
+	*/
 	~CVar()
-	{	func = 0;
+	{	
+		handler = 0;
 		if(name)   delete [] name; name = 0;
 		if(string) delete [] string; string = 0;
 		if(default_string) delete [] default_string; default_string = 0;
 		if(latched_string) delete [] latched_string; latched_string = 0;
 	}
+
+	/*
+	==========================================
+	ForceSet CVar to the given val. regardless of flags
+	==========================================
+	*/
+	void ForceSet(const char *varval)
+	{
+		if(string)
+		{
+			delete [] string;
+			string = 0;
+		}
+	
+		switch(type)
+		{
+		case CVAR_INT:
+		case CVAR_FLOAT:
+			{
+				if(!sscanf(varval,"%f",&value))
+				{
+					value =0;
+					string = new char[strlen("\" \"") + 1];
+					strcpy(string,"\" \"");
+				}
+				else
+				{
+					string = new char[strlen(varval) + 1];
+					strcpy(string,varval);
+				}
+				break;
+			}
+		case CVAR_BOOL:
+			{
+				if(!sscanf(varval,"%f",&value))
+					value = 0;
+				string = new char[strlen("false") + 1];
+				if(!value)
+					strcpy(string,"false");
+				else
+					strcpy(string,"true");
+				break;
+			}
+		case CVAR_STRING:
+		default:
+			{
+				value = 0;
+				string = new char[strlen(varval) + 1];
+				strcpy(string,varval);
+				break;
+			}
+		}
+
+		//Add a default value, if this is the first time
+		//we are setting the cvar
+		if(!default_string)
+		{
+			default_string = new char[strlen(string) + 1];
+			strcpy(default_string,string);
+		}
+	}
+
+
+	void ForceSet(float val)
+	{
+		char buffer[8];
+		memset(buffer,0,sizeof(buffer));
+		sprintf(buffer,"%f",val);
+		
+		ForceSet(buffer);
+	}
+
+	/*
+	==========================================
+	Set Cvar to the given value
+	==========================================
+	*/
+	void Set(const char *varval)
+	{
+		//Return if its a latched var
+		if(flags & CVAR_LATCH)		
+			return;
+	
+		//Read only funcs can only be set once
+		if((flags & CVAR_READONLY) && default_string)
+			return;
+		ForceSet(varval);
+	}
+
+	void Set(float val)
+	{
+		//Return if its a latched var
+		if(flags & CVAR_LATCH)		
+			return;
+	
+		//Read only funcs can only be set once
+		if((flags & CVAR_READONLY) && default_string)
+			return;
+		ForceSet(val);
+	}
 };
 
 
-//==============================================================
+//======================================================================================
+//======================================================================================
 
 typedef int HCMD;
 
@@ -70,11 +208,14 @@ struct I_CmdHandler
 {	virtual void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)=0;
 };
 
+//======================================================================================
+//======================================================================================
+
 struct CCommand
 {
 	CCommand(const char * iname,
 			 HCMD iid, 
-			 I_CmdHandler * ihandler)	 : handler(ihandler), id(iid)
+			 I_CmdHandler * ihandler) : handler(ihandler), id(iid)
 	{
 		name = new char[strlen(iname)+1];
 		strcpy(name,iname);

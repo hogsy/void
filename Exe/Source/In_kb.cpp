@@ -1,4 +1,5 @@
 #include "In_kb.h"
+
 /*
 ========================================================================================
 Additional Virtual key constants
@@ -23,6 +24,7 @@ enum
 
 #define KB_MAXEVENTS    32
 #define KB_REPEATWAIT	0.3f
+
 
 //The Keyboard object, need this for CVar and other non member funcs
 extern CKeyboard	* g_pKb;	
@@ -51,12 +53,22 @@ void In_UpdateKey(int keyid, EButtonState keyState)
 
 //========================================================================================
 //========================================================================================
+
+bool CKeyboard::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+{
+	if(cvar == &m_pVarKbMode)
+	{
+		return CKBMode(cvar, numArgs,szArgs);
+	}
+	return false;
+}
+
 /*
 =====================================
 Constructor
 =====================================
 */
-CKeyboard::CKeyboard() 
+CKeyboard::CKeyboard() : m_pVarKbMode("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 {
 	m_pDIKb = 0;
 	m_eKbState = DEVNONE;
@@ -78,7 +90,8 @@ CKeyboard::CKeyboard()
 	//Default to self as listener
 	SetKeyListener(this,false,IN_DEFAULTREPEATRATE);
 
-	m_pVarKbMode = System::GetConsole()->RegisterCVar("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
+//	System::GetConsole()->RegisterCVar(&m_pVarKbMode,"kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,this);
+	System::GetConsole()->RegisterCVar(&m_pVarKbMode,this);
 }
 
 /*

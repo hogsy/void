@@ -40,16 +40,15 @@ private:
 	void EnumDisplayModes();
 	bool SetupPixelFormat();
 
-	DEVMODE*m_devmodes; //all available display modes
-	int		m_nummodes; //Number of display modes
+	DEVMODE*m_devmodes;		//all available display modes
+	int		m_nummodes;		//Number of display modes
 
 	bool	m_loadeddriver;
 	bool	m_initialized;
 	char	m_gldriver[256];
 	
-	CVar *	m_cWndX;	//Windowed X pos
-	CVar *  m_cWndY;	//Windowed Y pos
-	CVar *  m_cGLExt;	//Store GL Exts
+	CVar    m_cWndX;	//Windowed X pos
+	CVar    m_cWndY;	//Windowed Y pos
 };
 
 extern CGLUtil * g_pGL;

@@ -11,24 +11,14 @@ Exe Console Interface
 struct I_Console
 {
 	//Cvar Registrations
-	virtual CVar * RegisterCVar(const char *varname, 
-							  const char *varval,		//scanned to sting/float/int 
-							  CVar::CVarType vartype,	//var type - can be float/int/char * etc
-							  int varflags,				//extra parm, locked vars etc
-							  CVAR_FUNC varfunc=0)=0;	//validation func
+	virtual void RegisterCVar(	CVar * var,					//The Cvar being registered
+								I_CVarHandler * handler=0)=0;//Optional handler
 
-	virtual void RegisterCommand(const char *cmdname,	//Command Name
-							HCMD id,					//ID in the registering class
-							I_CmdHandler * handler)=0;	//the class registering the command
-	
-	virtual void CVarSet(CVar **cvar, const char *varval)=0;
-	virtual void CVarForceSet(CVar **cvar, const char *varval)=0;
-
-	virtual void CVarSet(CVar **cvar, float val)=0;
-	virtual void CVarForceSet(CVar **cvar, float val)=0;
-
+	virtual void RegisterCommand(const char *cmdname,		//Command Name
+								HCMD id,					//ID in the registering class
+								I_CmdHandler * handler)=0;	//the class registering the command
 	//Print Functions
-	virtual void ConPrint(char* text)=0;
+	virtual void ComPrint(char* text)=0;
 };
 
 
@@ -46,6 +36,5 @@ struct I_ConsoleRenderer
 	virtual void Statusline(const char  *status_line, const int &len) = 0;
 	virtual void AddLine(char *line, int color=0, int size=0) = 0;
 };
-
 
 #endif

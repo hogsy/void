@@ -7,20 +7,18 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <objbase.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <windows.h>
 
 #include "Com_defs.h"
-#include "I_mem.h"
+#include "Com_mem.h"
+
+#include "I_hunkmem.h"
 #include "I_renderer.h"
 #include "I_file.h"
 
 #include "gl.h"
 #include "3dMath.h"
 #include "World.h"
-#include "Util.h"
+#include "Com_util.h"
 
 #define ConPrint ComPrintf
 

@@ -28,13 +28,13 @@ CConsole::CConsole()
 	m_pflog = NULL;
 	m_prCons = NULL;
 
-	m_pcList = new CPtrList<CVar>;
+	m_pcList = new CPRefList<CVar>;
 	m_pfList = new CPtrList<CCommand>;
 
 	m_CmdBuffer = new CQueue<char>;
 
 	m_szargv = new char * [BMAX_ARGS];
-	for(int i=0;i<COM_MAXARGS;i++)
+	for(int i=0;i<CVar::CVAR_MAXARGS;i++)
 	{
 		m_szargv[i] = new char[CON_MAXARGSIZE];;
 	}
@@ -119,7 +119,7 @@ bool CConsole::Shutdown()
 print a string to debugging window	
 ===============================================
 */
-void CConsole::ConPrint(char* text)
+void CConsole::ComPrint(char* text)
 {
 	if (!text)
 		return;
@@ -157,7 +157,7 @@ void ComPrintf(char* text, ...)
 		vsprintf(textBuffer, text, args);
 		va_end(args);
 		
-		g_pConsole->ConPrint(textBuffer);
+		g_pConsole->ComPrint(textBuffer);
 	}
 }
 
@@ -241,7 +241,7 @@ void CConsole::HandleInput(const int &i)
 			//Print all the CVars and cmds that match the given string
 			const char * p = m_szCBuffer.GetString();
 			char * lastmatch=0;
-			CPtrList<CVar> * pcvar = g_pConsole->m_pcList;
+			CPRefList<CVar> * pcvar = g_pConsole->m_pcList;
 			CPtrList<CCommand> * pcfunc = g_pConsole->m_pfList;
 
 			ComPrintf("\n");
@@ -321,13 +321,14 @@ bool CConsole::Exec(int argc, char** argv)
 
 	//is it a cvar ?
 	CVar * pcvar = 0;
-	for (CPtrList<CVar> *temp= m_pcList;temp->item; temp=temp->next)
+	for (CPRefList<CVar> *temp= m_pcList;temp->item; temp=temp->next)
 	{
 		pcvar = temp->item;
 		if(!strcmp(argv[0],pcvar->name))
 		{
 			//only exec'ed IF function returns true
-			if((!pcvar->func) || pcvar->func(pcvar,argc,argv))
+			//if((!pcvar->func) || pcvar->func(pcvar,argc,argv))
+			if((!pcvar->handler) || pcvar->handler->HandleCVar(pcvar,argc,argv))
 			{
 				switch(pcvar->type)
 				{
@@ -450,7 +451,7 @@ void CConsole::WriteCVars(FILE * fp)
 {
 	//write all the archive flaged vars in the config file
 	CVar * var = 0;
-	for (CPtrList<CVar> *temp=m_pcList; temp->item; temp=temp->next)
+	for (CPRefList<CVar> *temp=m_pcList; temp->item; temp=temp->next)
 	{
 		var = temp->item;
 		if(var->flags & CVar::CVAR_ARCHIVE)
@@ -523,7 +524,7 @@ void CConsole::CVarlist(int argc,  char** argv)
 	if(argc==2)
 	{
 		int len= strlen(argv[1]);
-		for (CPtrList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
+		for (CPRefList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			if(strncmp(temp->item->name,argv[1], len)==0)
 				ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
@@ -531,7 +532,7 @@ void CConsole::CVarlist(int argc,  char** argv)
 	}
 	else
 	{	
-		for (CPtrList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
+		for (CPRefList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
 		}
@@ -590,7 +591,8 @@ void CConsole::HandleString (CVar *var, int argc,  char** argv)
 			strcat(newstr," ");
 			strcat(newstr,argv[i]);
 		}
-		CVarSet(&var,newstr);
+		//CVarSet(&var,newstr);
+		var->Set(newstr);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -606,9 +608,12 @@ void  CConsole::HandleInt (CVar *var, int argc,  char** argv)
 //FIXME - add parser for special chars like "" and =
 	if(argc >=2 && argv[1])
 	{
-		int temp=0;
+		var->Set(argv[1]);
+/*		int temp=0;
 		if(sscanf(argv[1],"%d",&temp))
-			CVarSet(&var,(float)temp);
+			//CVarSet(&var,(float)temp);
+			var->Set((float)temp);
+*/
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -624,9 +629,12 @@ void CConsole::HandleFloat (CVar *var, int argc,  char** argv)
 //FIXME - add parser for special chars like "" and =
 	if(argc>=2 && argv[1])
 	{
-		float temp=0;
+		var->Set(argv[1]);
+/*		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			CVarSet(&var,temp);
+			//CVarSet(&var,temp);
+			var->Set(temp);
+*/
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -642,13 +650,18 @@ void CConsole::HandleBool (CVar *var , int argc,  char** argv)
 //FIXME - add parser for special chars like "" and =
 	if(argc>=2 && argv[1])
 	{
-		float temp=0;
+		var->Set(argv[1]);
+/*		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			g_pConsole->CVarSet(&var,temp);
+			//CVarSet(&var,temp);
+			var->Set(temp);
 		else if(!strcmp(argv[1],"true"))
-			g_pConsole->CVarSet(&var,1.0f);
+			//CVarSet(&var,1.0f);
+			var->Set(1.0f);
 		else
-			g_pConsole->CVarSet(&var,0.0f);
+			//CVarSet(&var,0.0f);
+			var->Set(1.0f);
+*/
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }

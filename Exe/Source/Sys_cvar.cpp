@@ -10,24 +10,15 @@ Initialize CVar and alphabetically add to list
 ==========================================
 */
 
-CVar * CConsole::RegisterCVar(const char *varname, 
-							const char *varval,
-							CVar::CVarType vartype, 
-							int varflags,
-							CVAR_FUNC varfunc)
+void CConsole::RegisterCVar(CVar * var,
+							I_CVarHandler * handler)
 {
-	CVar *var = new CVar();
-	var->name = new char[strlen(varname)+1];
-	strcpy(var->name,varname);
-	if(varfunc)
-		var->func = varfunc;
-	var->type = vartype;
-	var->flags = varflags;
-	CVarForceSet(&var,varval);
+	if(handler)
+		var->handler = handler;
 
 	//Add Item to CvarList
-	CPtrList<CVar>* i1 = m_pcList;
-	CPtrList<CVar>* i2 = 0;
+	CPRefList<CVar>* i1 = m_pcList;
+	CPRefList<CVar>* i2 = 0;
 	
 	//Loop till there are no more items in list, or the variable name is 
 	//bigger than the item in the list
@@ -43,7 +34,7 @@ CVar * CConsole::RegisterCVar(const char *varname,
 		//New item comes before the first item in the list
 		if(m_pcList->item)
 		{
-			CPtrList<CVar> * newentry = new CPtrList <CVar>;
+			CPRefList<CVar> * newentry = new CPRefList <CVar>;
 			newentry->item = var;
 			newentry->next = i1;
 			m_pcList = newentry;
@@ -52,18 +43,17 @@ CVar * CConsole::RegisterCVar(const char *varname,
 		else
 		{
 			i1->item = var;
-			i1->next = new CPtrList<CVar>;
+			i1->next = new CPRefList<CVar>;
 		}
 	}
 	//Item comes after the item in list pointer to by i2, and before i1
 	else
 	{
-		CPtrList<CVar> * newentry = new CPtrList <CVar>;
+		CPRefList<CVar> * newentry = new CPRefList <CVar>;
 		newentry->item = var;
 		i2->next = newentry;
 		newentry->next = i1;
 	}
-	return var;
 }
 
 /*
@@ -135,6 +125,8 @@ CCommand * CConsole::GetCommandByName(const char * cmdString)
 }
 
 
+#if 0
+
 /*
 ===================
 Standard Set functions
@@ -178,8 +170,8 @@ void CConsole::CVarForceSet(CVar **cvar, const char *varval)
 		return;
 
 	int len = strlen(varval) + 1;
-	if(len > MAX_CVARSTRING_LEN)
-		len = MAX_CVARSTRING_LEN;
+	if(len > CVar::CVAR_MAXSTRINGLEN)
+		len = CVar::CVAR_MAXSTRINGLEN;
 
 	if((*cvar)->string)
 	{
@@ -237,4 +229,7 @@ void CConsole::CVarForceSet(CVar **cvar, float val)
 	sprintf(buffer,"%f",val);
 	CVarForceSet(cvar,buffer);
 }
+
+#endif
+
 

@@ -5,32 +5,32 @@
 #include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
-#include "Com_mem.h"
+#include "Com_hunk.h"
 
 //========================================================================================
-//The memory manager object
-I_MemManager * g_pMemManager=0;
-CMemManager    m_MemManager;
+//The memory manager objects
+CMemManager		g_memManager("mem_exe.log");
+CHunkMem		m_HunkManager;
 
 //======================================================================================
 //Subsystems
 
-I_Renderer  * g_pRender  =0;	//Renderer
-CConsole	* g_pConsole =0;	//Console
-CInput		* g_pInput   =0;	//Input 
-CClient		* g_pClient  =0;	//Client and UI
+I_Renderer  *	g_pRender  =0;	//Renderer
+CConsole	*	g_pConsole =0;	//Console
+CInput		*	g_pInput   =0;	//Input 
+CClient		*	g_pClient  =0;	//Client and UI
 
 #ifdef INCLUDE_SOUND
-CSound		* g_pSound=0;		//Sound Subsystem
+CSound		*	g_pSound=0;		//Sound Subsystem
 #endif
 #ifdef INCLUDE_MUSIC
-CMusic		* g_pMusic=0;		//Music Subsystem
+CMusic		*	g_pMusic=0;		//Music Subsystem
 #endif
 #ifndef __VOIDALPHA
-CServer		* g_pServer=0;		//Network Server
+CServer		*	g_pServer=0;	//Network Server
 #endif
 
-world_t		* g_pWorld=0;		//The World
+world_t		*	g_pWorld=0;		//The World
 
 //======================================================================================
 //Console loopback func
@@ -78,7 +78,7 @@ CVoid::CVoid(const char * cmdLine)
 	//Export structure
 	m_pExport = new VoidExport();
 	m_pExport->console    = (I_Console*)g_pConsole;
-	m_pExport->memManager = (I_MemManager*)&m_MemManager;
+	m_pExport->hunkManager= g_pHunkManager; 
 	
 	//Create the file system
 	m_pFileSystem = FILESYSTEM_Create(m_pExport);
@@ -163,14 +163,14 @@ CVoid::~CVoid()
 
 	//Free the Renderer Interface
 	RENDERER_Free();
+	
+	FILESYSTEM_Free();
 
 	if(m_pExport)
 	{
 		delete m_pExport;
 		m_pExport = 0;
 	}
-
-	FILESYSTEM_Free();
 
 	if(g_pConsole)
 	{		delete g_pConsole;
@@ -360,14 +360,14 @@ bool CVoid::Shutdown()
 	if(g_pInput)
 		g_pInput->Shutdown();
 
-	//Renderer
-	if(g_pRender)
-		g_pRender->Shutdown();
-
 	//console
 	char configname[128];
 	sprintf(configname,"%s\\void.cfg",m_exePath);
 	WriteConfig(configname);
+
+	//Renderer
+	if(g_pRender)
+		g_pRender->Shutdown();
 
 	if(g_pConsole)
 		g_pConsole->Shutdown(); 

@@ -61,9 +61,7 @@ void CImageReader::LockBuffer(int size)
 {
 	UnlockBuffer();
 
-	data = (byte*)::HeapAlloc(::GetProcessHeap(),
-								  HEAP_GENERATE_EXCEPTIONS,
-								  size);
+	data = (byte*) g_pHunkManager->HunkAlloc(size);
 	if(!data)
 	{
 		FError("CImageReader::LockBuffer: Failed to alloc %d\n", size);
@@ -77,7 +75,7 @@ void CImageReader::UnlockBuffer()
 	buffersize = 0;
 	if(data)
 	{
-		::HeapFree(::GetProcessHeap(),0, data);
+		g_pHunkManager->HunkFree(data);
 		data = 0;
 	}
 }
@@ -86,9 +84,7 @@ void CImageReader::LockMipMapBuffer(int size)
 {
 	UnlockMipMapBuffer();
 
-	mipmapdata = (byte*)::HeapAlloc(::GetProcessHeap(),
-								  HEAP_GENERATE_EXCEPTIONS,
-								  size);
+	mipmapdata = (byte*) g_pHunkManager->HunkAlloc(size);
 	if(!mipmapdata)
 	{
 		FError("CImageReader::LockMipMapBuffer: Failed to alloc %d\n", size);
@@ -102,7 +98,7 @@ void CImageReader::UnlockMipMapBuffer()
 	mipbuffersize = 0;
 	if(mipmapdata)
 	{
-		::HeapFree(::GetProcessHeap(),0, mipmapdata);
+		g_pHunkManager->HunkFree(data);
 		mipmapdata = 0;
 	}
 }
@@ -324,8 +320,6 @@ bool CImageReader::Read_PCX()
 		LockBuffer(buffersize);
 	}
 	memset(data, 0xFF, width * height * 4);
-
-	ComPrintf("pcx numplanes %d\n", header.num_planes);
 
 	byte ch;
 	int number, color;

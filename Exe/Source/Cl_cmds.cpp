@@ -10,9 +10,9 @@
 Constructor/Destructor
 ==========================================
 */
-CClientCmdHandler::CClientCmdHandler(CClient * pclient)
+CClientCmdHandler::CClientCmdHandler() //CClient * pclient)
 {
-	m_pClient = pclient;
+//	m_pClient = g_pClient;
 
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
@@ -95,8 +95,8 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 										  const float &iy,
 										  const float &iz)
 {
-	m_pClient->RotateRight(ix);
-	m_pClient->RotateUp(iy);
+	g_pClient->RotateRight(ix);
+	g_pClient->RotateUp(iy);
 }
 
 

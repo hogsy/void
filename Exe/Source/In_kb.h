@@ -11,7 +11,8 @@ Inherits from listener interface so we can have
 a default handler implementation
 ===========================================
 */
-class CKeyboard : public I_InKeyListener	
+class CKeyboard : public I_InKeyListener,
+				  public I_CVarHandler	
 {
 public:
 
@@ -32,6 +33,9 @@ public:
 
 	HRESULT	Acquire();
 	bool	UnAcquire();
+
+	//CVar Handler
+	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
 
 	//Toggle Exclusive mode
 	HRESULT	SetExclusive(bool exclusive);
@@ -65,7 +69,7 @@ private:
 	bool			m_bRepeatEvents;	//Report Held events ?
 	I_InKeyListener* m_pKeyHandler;		//Key listener object
 
-	CVar *			m_pVarKbMode;
+	CVar 			m_pVarKbMode;
 
 	//Key Translation table		
 	uint			m_aCharVal[IN_NUMKEYS]; 	
