@@ -155,10 +155,10 @@ void parse_key(void)
 
 /*
 ============
-parse_brush_side
+parse_brush_side - return contents
 ============
 */
-void parse_brush_side(void)
+int parse_brush_side(void)
 {
 	if (num_map_brush_sides == MAX_MAP_BRUSH_SIDES)
 		Error("too many brush sides");
@@ -223,9 +223,12 @@ void parse_brush_side(void)
 	map_texinfos[num_map_texinfos].scale[1] = (float)atof(token);
 
 
-	// skip whatever else is there for now
+	// find contents of this side
+	int contents = 0;
 	get_token(false);
+	contents |= atoi(token);
 	get_token(false);
+	contents |= atoi(token);
 	get_token(false);
 
 
@@ -233,6 +236,7 @@ void parse_brush_side(void)
 	num_map_brush_sides++;
 	map_brushes[num_map_brushes].num_sides++;
 
+	return contents;
 }
 
 
@@ -251,13 +255,17 @@ void parse_brush(void)
 
 	map_brushes[num_map_brushes].first_side = num_map_brush_sides;
 	map_brushes[num_map_brushes].num_sides = 0;
-	map_brushes[num_map_brushes].contents = CONTENTS_SOLID;	// FIXME - brushes always solid
+	map_brushes[num_map_brushes].contents = 0;
 
 	while (token[0] == '(')
 	{
-		parse_brush_side();
+		map_brushes[num_map_brushes].contents |= parse_brush_side();
 		get_token(true);
 	}
+	
+	if (map_brushes[num_map_brushes].contents == 0)
+		map_brushes[num_map_brushes].contents = CONTENTS_SOLID;
+
 
 	map_entities[num_map_entities].num_brushes++;
 	num_map_brushes++;
