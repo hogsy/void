@@ -2,11 +2,10 @@
 #define VOID_GAME_DEFS
 
 /*
-======================================
+==========================================================================
 Basic "game" definitions.
-======================================
+==========================================================================
 */
-
 const int	GAME_MAXMODELS	= 256;
 const int	GAME_MAXSOUNDS	= 256;
 const int	GAME_MAXIMAGES	= 256;
@@ -18,47 +17,24 @@ const char  CL_MAXNAME		= 32;
 const char  CL_MAXMODELNAME = 32;
 const char  CL_MAXCHARNAME  = 64;
 
-/*
-================================================
-Move types
-================================================
-*/
-enum EMoveType
-{
-	MOVETYPE_NOCLIP,
-	MOVETYPE_BBOX,		//just a static bbox
-	MOVETYPE_MISSLE,	
-	MOVETYPE_TRAJECTORY,
-	MOVETYPE_STEP
-};
+const vector_t VEC_CLIENT_MINS(-16, -16, -24);
+const vector_t VEC_CLIENT_MAXS(16, 16, 32);
 
 /*
 ================================================
-Basic client side definitions 
-There are needed by the client 
-resource managers like
-the Renderer and Sound system etc
+Basic client side definitions There are needed 
+by the client resource managers like the 
+Renderer and Sound system etc
 ================================================
 */
+const int CACHE_NUMCACHES = 3;
+
 enum CacheType
 {
 	CACHE_LOCAL = 0,	//Persistant through out the game, Client is reponsible for loading these.
 	CACHE_GAME	= 1,	//Map specific, should be unloaded on map change
 	CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
 };
-const int CACHE_NUMCACHES = 3;
-
-/*
-================================================
-================================================
-*/
-enum
-{
-	MODEL_SKIN_BOUND = 0,
-	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
-	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
-};
-
 
 /*
 ================================================
@@ -78,5 +54,147 @@ enum SndChannelType
 	
 	CHAN_LOOPING = 128		//flagged
 };
+
+/*
+================================================
+Model skin rendereing flags
+Or'ed with skinNum
+================================================
+*/
+enum
+{
+	MODEL_SKIN_BOUND = 0,
+	MODEL_SKIN_UNBOUND_GAME  = 0X80000000,
+	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
+};
+
+/*
+============================================================================
+Only contains data needed by routines shared between client and server code
+Both client and server subclass this adding stuff they need
+
+This data will be propagated to all connected clients
+============================================================================
+*/
+struct BaseEntity
+{
+	BaseEntity()
+	{
+		num = -1;
+		mdlIndex = sndIndex = -1;
+		frameNum = nextFrame = skinNum = 0;
+		volume = attenuation = 0;
+		moveType = MOVETYPE_NOCLIP;
+	}
+
+	virtual ~BaseEntity() =0 {}
+
+	int		num;
+	int		mdlIndex, 
+			frameNum,	
+			nextFrame, 
+			skinNum;
+	int		sndIndex, 
+			volume,	
+			attenuation;
+	
+	EMoveType	moveType;
+	
+	vector_t	origin;
+	vector_t	angles;
+	vector_t	velocity;
+	vector_t	mins;
+	vector_t	maxs;
+};
+
+/*
+==========================================================================
+Client sends this to the server as frequently as possible
+==========================================================================
+*/
+struct ClCmd
+{
+	enum
+	{
+		MOVEFORWARD = 1,
+		MOVEBACK = 2,
+		MOVELEFT = 4,
+		MOVERIGHT = 8,
+		JUMP = 16,
+		CROUCH = 32
+	};
+
+	enum
+	{
+		NONE = 0,
+		UPDATED = 1,
+		SENT = 2
+	};
+
+	ClCmd() { Reset(); }
+
+	void UpdateCmd(const ClCmd & cmd)
+	{
+		time = cmd.time;
+		angles = cmd.angles;
+		moveFlags |= cmd.moveFlags;
+		svFlags = UPDATED;
+	}
+	
+	void Reset()
+	{ 
+		moveFlags = 0;
+		svFlags = NONE;
+		time = 0.0f;
+		angles.Set(0,0,0);
+	}
+
+	vector_t angles;	//Clients view angles
+	float	 time;		//Clients frame Time
+	byte	 moveFlags;	//Move flags
+	byte	 svFlags;	//Server flags
+	
+	//add buttons and what not
+};
+
+/*
+================================================
+Applied to SV_UPDATE and SV_CLUPDATE messages
+to indicate type of incoming data. not sure if
+this should be here
+================================================
+*/
+enum EClUpdateFlags
+{
+	SVU_DEFAULT = 0,
+	SVU_GRAVITY = 1,
+	SVU_FRICTION = 2,
+	SVU_MAXSPEED = 4
+};
+
+
+/*
+==========================================================================
+Move Stuff
+==========================================================================
+*/
+enum EMoveType
+{
+	MOVETYPE_NOCLIP,
+	MOVETYPE_BBOX,		//just a static bbox
+	MOVETYPE_MISSLE,	
+	MOVETYPE_TRAJECTORY,
+	MOVETYPE_STEP
+};
+
+struct I_World;
+
+namespace EntMove {
+
+void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
+void ClientMove(BaseEntity *ent, float time);
+void SetWorld(I_World * pWorld);
+
+}
 
 #endif
