@@ -1,7 +1,6 @@
 Server commands howto.
 
-I'll be using Java as the example language here because it's rather easy to send 
-UDP packets in Java compared to other languages.
+
 The Quake 3 Arena server exclusively uses UDP packets for all transmission.  
 Specifically, it uses what we define as "Out Of Band" packets (OOB), or connectionless packet.  
 That is, the first four bytes of the packet make up the serial number of the packet 

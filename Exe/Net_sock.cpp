@@ -163,11 +163,12 @@ void CNetSocket::Send(const char *ipaddr, const byte *data, int length)
 {
 	SOCKADDR_IN sAddr;
 	
-	if(!StringToSockAddr(ipaddr,sAddr))
+/*	if(!StringToSockAddr(ipaddr,sAddr))
 	{
 		ComPrintf("CNetSocket::Send:Invalid address %s\n", ipaddr);
 		return;
 	}
+*/
 	Send(sAddr,data,length);
 }
 

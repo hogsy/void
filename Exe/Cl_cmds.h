@@ -29,7 +29,8 @@ enum
 	CMD_UNBINDALL	  =	11,
 	CMD_CAM			  =	12,
 	CMD_CONNECT		  = 13,
-	CMD_DISCONNECT	  = 14
+	CMD_DISCONNECT	  = 14,
+	CMD_TALK		  = 15
 };
 
 //======================================================================================
@@ -138,6 +139,7 @@ private:
 	void RemoveFromCmdBuffer(const ClientKey * pcommand);
 
 	CClient   * m_pClient;
+
 	ClientKey	m_cmdKeys[IN_NUMKEYS];
 	ClientKey * m_cmdBuffer[CL_CMDBUFFERSIZE];
 };

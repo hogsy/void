@@ -419,6 +419,10 @@ SOURCE=..\Shared\Com_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\q3netinfo
+# End Source File
+# Begin Source File
+
 SOURCE=.\Sys_hdr.h
 # End Source File
 # Begin Source File

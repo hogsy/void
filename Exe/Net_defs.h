@@ -1,3 +1,23 @@
+#ifndef VOID_NET_DEFS
+#define VOID_NET_DEFS
+
+namespace VoidNet
+{
+
+//Connnectionless client to Server messages
+const char C2S_PING[]			= "ping";
+const char C2S_STATUS[]			= "status";
+const char C2S_CONNECT[]		= "connect";
+const char C2S_GETCHALLENGE[]	= "getchallenge";
+
+//Connectionless server to client messages
+
+
+}
+
+#endif
+
+
 
 
 

@@ -44,6 +44,9 @@ public:
 
 private:
 
+	struct NetChallenge;
+	NetChallenge *	m_challenges;
+
 	//HACK
 	CClient * m_pClient;
 
@@ -54,6 +57,16 @@ private:
 
 	void LoadWorld(const char * mapname);
 
+	//Handle Connectionless requests
+	void HandleStatusREQ();
+	void HandleConnectREQ();
+	void HandleChallengeREQ();
+
+	//FRAME proceedures
+	void ProcessQueryPacket();
+	void ReadPackets();
+
+	
 	//private data
 	VoidNet::CNetSocket  * m_pSock;
 	VoidNet::CNetBuffer  * m_pBuffer;

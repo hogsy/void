@@ -1,5 +1,6 @@
 #include "Net_sock.h"
 #include "Sv_main.h"
+#include "Net_defs.h"
 #include "Com_util.h"
 
 namespace
@@ -10,9 +11,20 @@ namespace
 		CMD_KILLSERVER = 2
 	};
 	
+	const int  MAX_CHALLENGES = 512;
+
 	const char szLOOPBACKADDR[] = "loopback";
 	const char szWORLDDIR[]     = "Worlds/";
 }
+
+struct CServer::NetChallenge
+{
+	NetChallenge()	{ challenge = 0;	time = 0.0f;  }
+
+	VoidNet::CNetAddr	addr;
+	int		challenge;
+	float	time;
+};
 
 using namespace VoidNet;
 
@@ -31,6 +43,8 @@ CServer::CServer(CClient * client) :
 					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
 {
 	memset(m_boundAddr,0,sizeof(m_boundAddr));
+
+	m_challenges = new NetChallenge[MAX_CHALLENGES];
 
 	m_pWorld = 0;
 
@@ -58,6 +72,8 @@ CServer::~CServer()
 
 	if(m_pWorld)
 		world_destroy(m_pWorld);
+
+	delete [] m_challenges;
 	
 	delete m_pSock;
 	delete m_pBuffer;
@@ -200,6 +216,75 @@ void CServer::LoadWorld(const char * mapname)
 	}
 }
 
+//======================================================================================
+//======================================================================================
+
+void CServer::HandleStatusREQ()
+{
+}
+
+void CServer::HandleConnectREQ()
+{
+}
+
+void CServer::HandleChallengeREQ()
+{
+	float oldestchallenge = 0.0f;
+
+	for(int i=0; i< MAX_CHALLENGES; i++)
+	{
+	}
+}
+
+
+void CServer::ProcessQueryPacket()
+{
+	ComPrintf("Query from %s:%d\n", inet_ntoa(m_pSock->m_srcAddr.sin_addr), 
+								    m_pSock->m_srcAddr.sin_port);
+
+//	m_pSock->m_srcAddr.sin_addr
+
+	char * msg = m_pBuffer->ReadString();
+
+	//Ping Request
+	if(strcmp(msg, C2S_PING) == 0)
+	{
+//		m_pSock->Send(m_pSock->m_srcAddr, C2S_PING, strlen(C2S_PING));
+	}
+	else if(strcmp(msg, C2S_STATUS) == 0)
+	{
+
+	}
+	else if(strcmp(msg, C2S_CONNECT) == 0)
+	{
+	}
+	else if(strcmp(msg, C2S_GETCHALLENGE) == 0)
+	{
+	}
+}
+
+
+/*
+==========================================
+
+==========================================
+*/
+void CServer::ReadPackets()
+{
+	int packetId = 0;
+	
+	while(m_pSock->Recv())
+	{
+		packetId = m_pBuffer->ReadInt();
+
+		if(packetId == -1)
+		{
+			ProcessQueryPacket();
+			continue;
+		}
+	}
+}
+
 /*
 ==========================================
 Run a server frame
@@ -210,11 +295,8 @@ void CServer::RunFrame()
 	if(m_active== false)
 		return;
 
-	int recvs = 0;
-	while(m_pSock->Recv())
-	{
-		ComPrintf("%d\n", recvs++);
-	}
+	//Process messages
+	ReadPackets();
 }
 
 /*

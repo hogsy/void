@@ -4,6 +4,124 @@
 using namespace VoidNet;
 
 //======================================================================================
+//Network Address class
+//======================================================================================
+
+CNetAddr::CNetAddr()
+{
+	ip[0] = ip[1] = ip[2] = ip[3] =0;
+	port = 0;
+	valid = true;
+}
+
+//Assignment operators
+CNetAddr & CNetAddr::operator = (const SOCKADDR_IN &saddr)
+{
+	*(int *)&ip = *(int *)&saddr.sin_addr;
+	port = saddr.sin_port;
+	valid = true;
+	return (*this);
+}
+
+CNetAddr & CNetAddr::operator = (const CNetAddr &addr)
+{
+	if(addr == *this)
+		return *this;
+
+	ip[0] = addr.ip[0];	ip[1] = addr.ip[1];
+	ip[2] = addr.ip[2];	ip[3] = addr.ip[3];
+	port = addr.port;
+	valid = true;
+	return (*this);
+}
+
+CNetAddr & CNetAddr::operator = (const char * szaddr)
+{
+	char		stringaddr[128];
+	SOCKADDR_IN sockAddr;
+	
+	strcpy (stringaddr,szaddr);
+
+	//Strip port number if specified
+	for (char * colon = stringaddr ; *colon ; colon++)
+	{
+		if (*colon == ':')
+		{
+			*colon = 0;
+			sockAddr.sin_port = htons((short)atoi(colon+1));	
+		}
+	}
+	
+	//If an ip address was given then just convert to inetaddr
+	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
+	{
+		*(int *)&sockAddr.sin_addr = inet_addr(stringaddr);
+	}
+	//Resolve hostname
+	else
+	{
+		HOSTENT	*host = 0;
+		if ((host = gethostbyname(stringaddr)) == 0)
+		{
+			valid = false;
+			return (*this);
+		}
+		*(int *)&sockAddr.sin_addr = *(int *)host->h_addr_list[0];
+	}
+
+	//Convert to SOCKADDR_IN
+	*(int *)&ip = *(int *)&sockAddr.sin_addr;
+	port = sockAddr.sin_port;
+	valid = true;
+	return (*this);
+}
+
+//Utility
+const char * CNetAddr::ToString()
+{
+	static char stringaddr[64];
+	
+	if(port > 0)
+		sprintf(stringaddr,"%d.%d.%d.%d:%d\n", ip[0],ip[1],ip[2],ip[3], port);
+	else
+		sprintf(stringaddr,"%d.%d.%d.%d\n", ip[0],ip[1],ip[2],ip[3]);
+	return stringaddr;
+}
+
+//Set the sockADDR struct to self
+void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr)
+{
+	saddr.sin_port = port;
+	saddr.sin_family  = AF_INET;
+	*(int *)&saddr.sin_addr  = *(int *)&ip;
+}
+
+//Util
+void CNetAddr::Print() const
+{	
+	if(port > 0)
+		ComPrintf("%d.%d.%d.%d:%d\n", ip[0],ip[1],ip[2],ip[3], port);
+	else
+		ComPrintf("%d.%d.%d.%d\n", ip[0],ip[1],ip[2],ip[3]);
+}
+
+bool CNetAddr::IsValid() const
+{	return valid;
+}
+
+//Equality check
+/*bool operator == (const CNetAddr &laddr, const CNetAddr &raddr)
+{
+	if((laddr.ip[0] == raddr.ip[0]) &&
+	   (laddr.ip[1] == raddr.ip[1]) &&
+	   (laddr.ip[2] == raddr.ip[2]) &&
+	   (laddr.ip[3] == raddr.ip[3]) &&
+	   (laddr.port  == raddr.port))
+	   return true;
+	return false;
+}*/
+
+//======================================================================================
 //omrafi@hotmail.com
 //======================================================================================
 
@@ -225,98 +343,6 @@ char* CNetBuffer::ReadString(char delim)
 //======================================================================================
 
 namespace VoidNet {
-
-/*
-==========================================
-Convert String to SOCKADDR_IN
-==========================================
-*/
-bool StringToSockAddr(const char *szaddr, SOCKADDR_IN &addr)
-{
-	
-	char  *colon;
-	char   stringaddr[128];
-	
-	memset (&addr,0, sizeof(SOCKADDR_IN));
-	addr.sin_family = AF_INET;
-	addr.sin_port = 0;
-
-	strcpy (stringaddr,szaddr);
-
-	//Strip port number if specified
-	for (colon = stringaddr ; *colon ; colon++)
-	{
-		if (*colon == ':')
-		{
-			*colon = 0;
-			addr.sin_port = htons((short)atoi(colon+1));	
-		}
-	}
-	
-	//If an ip address was given then just convert to inetaddr
-	if (stringaddr[0] >= '0' && stringaddr[0] <= '9')
-	{
-		*(int *)&addr.sin_addr = inet_addr(stringaddr);
-	}
-	//Resolve hostname
-	else
-	{
-		HOSTENT	*host = 0;
-		if ((host = gethostbyname(stringaddr)) == 0)
-			return false;
-		*(int *)&addr.sin_addr = *(int *)host->h_addr_list[0];
-	}
-	return true;
-}
-
-/*
-======================================
-Tries to make sure that a string is a valid ip address
-======================================
-*/
-
-bool IsValidIP(const char *ip)
-{
-/*	int i = strlen(ip);
-	
-	if(!i || i<7)
-		return false;						//too short
-	
-	int j,k,dot,num;
-	char digit[4];
-	
-	memset(digit,0,4);
-	num=dot=j=k=0;
-
-	while(*ip || k<i)
-	{
-		if(*ip == '.')
-		{
-			dot++;
-			j=0;
-			if(!sscanf(digit,"%d",&num))
-				return false;				//not a digit
-			if(num<0 || num > 255)	
-				return false;				//bad range
-			memset(digit,0,4);
-		}
-		else
-		{
-			if(j>3)
-				return false;				//more than 3 digits after a dot
-			digit[j] = *ip;
-			j++;
-		}
-		ip++;
-		k++;
-	}
-	if(dot!=3)
-		return false;						//not 3 dots
-	return true;
-*/
-	return false;
-}
-
 
 /*
 ======================================
