@@ -1,5 +1,3 @@
-
-#include "Sys_main.h"
 #include "Cl_main.h"
 #include "Cl_collision.h"
 

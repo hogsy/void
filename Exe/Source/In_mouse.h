@@ -33,15 +33,19 @@ public:
 	HRESULT	Acquire();		
 	bool	UnAcquire();
 
-	HRESULT	SetExclusive(bool exclusive);						//Toggle Exclusive mode
+	//Toggle Exclusive mode
+	HRESULT	SetExclusive(bool exclusive);						
 
 	//Empty func for default cursor handler
 	void HandleCursorEvent(const float &ix, const float &iy, const float &iz) {}
-	void SetCursorListener( I_InCursorListener * plistener);	//Set Listener object
 	
-	void Update();	//Update Mouse
+	//Set Listener object
+	void SetCursorListener( I_InCursorListener * plistener);	
+	
+	void Update();
 
-	void Resize();	//Needed by the Win32 handler to calc center co-drds
+	//Needed by the Win32 handler to calc center co-drds
+	void Resize(int x, int y, int w, int h);
 
 	EDeviceState GetDeviceState(); 
 

@@ -2,6 +2,12 @@
 #define VOID_SYS_MAIN
 
 #include "Sys_hdr.h"
+#include "Sys_time.h"
+
+//========================================================================================
+#define MAINWINDOWCLASS "Void"
+#define MAINWINDOWTITLE	"Void"
+
 
 class CVoid
 {
@@ -9,8 +15,7 @@ class CVoid
 		
 		CVoid(HINSTANCE hInstance, 
 			  HINSTANCE hPrevInstance, 
-			  LPSTR lpCmdLine, 
-			  int nCmdShow);					//Constructor
+			  LPSTR lpCmdLine);					//Constructor
 		~CVoid();								//Destructor
 		
 		bool Init();							//Init subsystems
@@ -26,9 +31,19 @@ class CVoid
 
 		void Error(char *error, ...);
 
+		//Application Events
+		void Move(int x, int y);
+		void Resize( bool focus, int x, int y, int w, int h);
+		void Activate(bool focus);
+		void OnFocus();
+		void LostFocus();
+
 	private:
 	
 		HINSTANCE hRenderer;					//Handle to Renderer
+
+		CTime		* g_pTime;
+		CFileSystem * g_pFileSystem;
 		
 		//Windows	
 		bool	RegisterWindow();				//Register Window

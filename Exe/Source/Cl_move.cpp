@@ -1,6 +1,6 @@
 #include "Cl_main.h"
 #include "Cl_collision.h"
-#include "Sys_main.h"			//Needed by Friend functions to access the Client 
+//#include "Sys_main.h"			//Needed by Friend functions to access the Client 
 
 
 #define MAX_CLIP_PLANES 5

@@ -24,7 +24,7 @@ public:
 	bool Init();				//Initialize the Input System
 	void Shutdown();			//Shutdown the Input System
 
-	void Resize();				//Handle resizes, needed for Win32 mouse clipping
+	void Resize(int x, int y, int w, int h);				//Handle resizes, needed for Win32 mouse clipping
 	
 	void Acquire();				//Acquire all devices
 	bool AcquireMouse();		//Unacquire Mouse

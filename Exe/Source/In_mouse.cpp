@@ -715,10 +715,13 @@ Main Window resized,
 updated center coords
 ===========================================
 */
-void CMouse::Resize()
+void CMouse::Resize(int x, int y, int w, int h)
 {
-	m_dCenterX = (g_hRect.left + g_hRect.right)/2;
-	m_dCenterY = (g_hRect.top + g_hRect.bottom)/2;
+	m_dCenterX = (x + w)/2;
+	m_dCenterY = (y + h)/2;
+
+//	m_dCenterX = (g_hRect.left + g_hRect.right)/2;
+//	m_dCenterY = (g_hRect.top + g_hRect.bottom)/2;
 }
 
 

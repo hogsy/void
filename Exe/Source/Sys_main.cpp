@@ -2,39 +2,26 @@
 #define INCLUDE_MUSIC	1
 
 #include "Sys_main.h"
-#include "Sys_time.h"
 #include "Sv_main.h"
 #include "Cl_main.h"
 #include "In_main.h"
 #include "Snd_main.h"
 #include "Mus_main.h"
-#include "Util_sys.h"
-#include "resources.h"	
 #include "I_renderer.h"
-
-
-//========================================================================================
-#define MAINWINDOWCLASS "Void"
-#define MAINWINDOWTITLE	"Void"
 
 //Global vars 
 //========================================================================================
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
-
 char		g_exedir[COM_MAXPATH];
 char		g_gamedir[COM_MAXPATH];
-
 eGameState	g_gameState;
-RECT		g_hRect;
 
 //pointers to subsystems
 //========================================================================================
-static CTime		* g_pTime =0;
-static CFileSystem  * g_pFileSystem = 0;
-
 CConsole	* g_pCons =0;		//Console
 CInput		* g_pInput=0;		//Input 
+CClient		* g_pClient=0;		//Client and UI
 
 #ifdef INCLUDE_SOUND
 CSound		* g_pSound=0;		//Sound Subsystem
@@ -48,19 +35,16 @@ CMusic		* g_pMusic=0;		//Music Subsystem
 CServer		* g_pServer=0;		//Network Server
 #endif
 
-CClient		* g_pClient=0;		//Client and UI
-
 //Rendering info, and API
 //========================================================================================
-static RenderInfo_t * g_pRinfo =0;		//holds current renderering info
-static VoidExport_t * g_pExport=0;
 I_Renderer   * g_pRender=0;
 
+static RenderInfo_t * g_pRinfo =0;		//holds current renderering info
+static VoidExport_t * g_pExport=0;
 
 //========================================================================================
 CVoid		 * g_pVoid =0;		//The game
 world_t		 * g_pWorld=0;		//The World
-
 
 //console loopback func
 static void CFuncQuit(int argc, char** argv);		//quit game
@@ -68,211 +52,6 @@ static void CFuncMap(int argc, char** argv);		//start local server with map + co
 static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
 static void CFuncConnect(int argc, char ** argv);	//connect to a server
 void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
-
-/*
-==========================================
-Windows Entry Point
-==========================================
-*/
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
-				   LPSTR lpCmdLine, int nCmdShow)
-{
-	
-	InitMemReporting();
-
-	MSG msg;
-	g_pVoid = new CVoid(hInst, hPrevInst, lpCmdLine, nCmdShow);
-
-	if(!g_pVoid->Init()) 
-	{
-		g_pVoid->Error("Error Initializing Subsystems\n");
-		g_pVoid->Shutdown();
-		delete g_pVoid;
-		EndMemReporting();
-		return -1;
-	}
-
-	while (1)
-	{
-		if(PeekMessage(&msg,g_hWnd,NULL, 0, PM_REMOVE)) 
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		g_pVoid->RunFrame();	// Game loop function
-	}
-
-/*	while(1)
-	{
-		if(PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE))
-		{
-			do
-			{
-				if(!GetMessage(&msg,g_hWnd,0,0))
-				{
-					g_pVoid->Shutdown();
-					delete g_pVoid;
-
-					EndMemReporting();					
-
-					return 0;
-				}
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-
-			}while (PeekMessage(&msg,g_hWnd,0,0, PM_NOREMOVE));
-		}
-		else
-		{
-			g_pVoid->RunFrame();	// Game loop function
-		}
-	}
-*/
-	//Will never get executed
-	g_pVoid->Shutdown();
-	delete g_pVoid;  
-	EndMemReporting();
-	return -1;
-}
-
-
-/*
-==========================================
-Main Window Proc
-==========================================
-*/
-LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, 
-				    	     WPARAM wParam, LPARAM lParam)
-{
-	switch(msg)
-	{
-	case WM_MOVE:
-		{
-			//Move the rendering window
-			if(g_pRender)
-				g_pRender->MoveWindow((SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
-			break;
-		}
-	case WM_SIZE:
-		{
-			//Check to see if we are losing our window...
-			if(wParam == SIZE_MAXHIDE || wParam == SIZE_MINIMIZED)
-			{
-				g_pRinfo->active = false;
-				break;
-			}
-			g_pRinfo->active = true;
-
-			//Change the size of the rendering window
-			if (g_pRender && !(g_pRinfo->rflags & RFLAG_FULLSCREEN))
-				g_pRender->Resize();
-
-			//Update rect
-			::GetClientRect(hWnd,&g_hRect);
-
-			//Set Window extents for input if full screen
-			if(g_pInput)
-				g_pInput->Resize();
-			break;
-		}
-//	case WM_MOUSEACTIVATE:
-	case WM_ACTIVATE:
-		{
-			if (wParam == WA_INACTIVE)
-			{
-				g_pRinfo->active = false;
-
-//				if(g_pInput)
-//					g_pInput->UnAcquire();
-			}
-			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)  ////if (wParam == WA_ACTIVE)
-			{
-				g_pRinfo->active = true;
-
-				if(g_pInput)
-					g_pInput->Acquire();
-
-				if (g_pRender && (g_pRinfo->rflags & RFLAG_FULLSCREEN))
-					g_pRender->Resize();
-
-			}
-			break;
-		}
-	case WM_SETFOCUS:
-//	case WM_MOUSEACTIVATE:
-		{
-			//start rendering again
-			if (g_pRinfo)
-				g_pRinfo->active = true;
-			
-			//Input Focus
-			if(g_pInput)
-				g_pInput->Acquire();
-			break;
-		}
-	case WM_ENTERSIZEMOVE:
-	case WM_ENTERMENULOOP:
-		{
-			if(g_pInput)
-				g_pInput->UnAcquire();
-			break;
-		}
-	case WM_KILLFOCUS:
-		{
-			//Input loses Focus
-			if(g_pInput)
-				g_pInput->UnAcquire();
-			
-			//stop rendering
-			if (g_pRinfo)
-				g_pRinfo->active = false;
-			break;
-		}
-	case WM_NCDESTROY:
-	case WM_CLOSE:
-	case WM_DESTROY:
-	case WM_QUIT:
-		{
-			//Cleanup
-			g_pVoid->Shutdown();
-			delete g_pVoid;
-			EndMemReporting();
-			exit(0);
-			break; 
-		}
-	}
-	return(DefWindowProc(hWnd, msg, wParam, lParam));
-}
-
-
-/*
-==========================================
-Register the Window
-==========================================
-*/
-
-bool CVoid::RegisterWindow()
-{
-	WNDCLASSEX wcl;
-	
-	wcl.cbSize = sizeof(WNDCLASSEX);
-	wcl.style = CS_OWNDC | CS_HREDRAW|CS_VREDRAW;
-	wcl.hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_APPLICATION));
-	wcl.hIconSm = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_APPLICATION));
-	wcl.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcl.lpszMenuName = NULL;
-	wcl.cbClsExtra = 0;
-	wcl.cbWndExtra = 0;
-	wcl.hInstance = g_hInst;
-	wcl.lpszClassName = MAINWINDOWCLASS;
-	wcl.lpfnWndProc = MainWndProc;
-	wcl.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-
-	if (!RegisterClassEx(&wcl))
-		return false;
-	return true;
-}
-
 
 /*
 ==========================================
@@ -284,39 +63,26 @@ Constructor
 
 CVoid::CVoid(HINSTANCE hInstance, 
 			 HINSTANCE hPrevInstance, 
-		     LPSTR lpCmdLine, int nCmdShow)
+		     LPSTR lpCmdLine)
 {
+	_getcwd(g_exedir,COM_MAXPATH);		//Current Working directory
+	strcpy(g_gamedir,"game");			//Set default game dir
+
 	g_hInst = hInstance;
-
-	if(!RegisterWindow())
-	{
-		Error("Error Registering Window\n");
-		return;
-	}
-
-	//Current Working directory
-	_getcwd(g_exedir,COM_MAXPATH);
-
-	//Init Memory first of all
-//	g_pMem = new CMemManager(COM_DEFAULTHUNKSIZE);
-
 
 	g_pTime = new CTime();				//Init Game Timer
 	g_pCons = new CConsole();			//Console
 	g_pFileSystem = CreateFileSystem(g_pCons);
-	
 	g_pInput= new CInput();				//Input sys
+	g_pRinfo = new RenderInfo_t;		//Rendereing Parms
+	g_pExport= new VoidExport_t;		//Exported stuff
+	g_pClient = new CClient;			//The client
 
 #ifndef __VOIDALPHA
 	//Network Sys
 	g_pServer = new CServer;
 #endif
-	strcpy(g_gamedir,"game");
-
-	//Rendering Info
-	g_pRinfo = new RenderInfo_t;
-	g_pExport= new VoidExport_t;
-
+	
 #ifdef INCLUDE_SOUND
 	//Sound
 	g_pSound = new CSound;
@@ -327,19 +93,15 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_pMusic = new CMusic;
 #endif
 
-	g_pClient = new CClient;
-
 	//Set game state - full screen console - not connected
 	g_gameState = INCONSOLE;
 
-	g_pCons->RegisterCFunc("quit",&CFuncQuit);							//Quit
-	g_pCons->RegisterCFunc("exit",&CFuncQuit);							//Quit
+	g_pCons->RegisterCFunc("quit",&CFuncQuit);			
+	g_pCons->RegisterCFunc("exit",&CFuncQuit);			
 	g_pCons->RegisterCFunc("map", &CFuncMap);
-//	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 	g_pCons->RegisterCFunc("connect",&CFuncConnect);
-//	g_pCons->RegisterCFunc("unzip", &CUnzipfile);
+//	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
-
 
 /*
 ==========================================
@@ -351,49 +113,42 @@ CVoid::~CVoid()
 {
 #ifndef __VOIDALPHA	
 	if(g_pServer)
-	{
-		delete g_pServer;
+	{	delete g_pServer;	
 		g_pServer = 0;
 	}
 #endif
 	
 	if(g_pClient)
-	{
-		delete g_pClient;
+	{	delete g_pClient;
 		g_pClient = 0;
 	}
 
 #ifdef INCLUDE_SOUND
 	if(g_pSound)
-	{
-		delete g_pSound;
+	{	delete g_pSound;
 		g_pSound = 0;
 	}
 
 #endif
 #ifdef INCLUDE_MUSIC
 	if(g_pMusic)
-	{
-		delete g_pMusic;
+	{	delete g_pMusic;
 		g_pMusic = 0;
 	}
 #endif
 	
 	if(g_pInput)
-	{
-		delete g_pInput;
+	{	delete g_pInput;
 		g_pInput = 0;
 	}
 
 	if(g_pTime)
-	{
-		delete g_pTime;
+	{	delete g_pTime;
 		g_pTime = 0;
 	}
 
 	if(g_pRinfo)
-	{
-		delete g_pRinfo;
+	{	delete g_pRinfo;
 		g_pRinfo = 0;
 	}
 
@@ -418,23 +173,14 @@ CVoid::~CVoid()
 
 	DestroyFileSystem();
 
-
 	if(g_pCons)
-	{
-		delete g_pCons;
+	{		delete g_pCons;
 		g_pCons = 0;
 	}
 
-/*	if(g_pMem)
-	{
-		delete g_pMem;
-		g_pMem= 0;
-	}
-*/
 	//Release the renderer dll
 	::FreeLibrary(hRenderer);	
 }
-
 
 /*
 ==========================================
@@ -445,23 +191,28 @@ Intializes all the subsystems
 
 bool CVoid::Init()
 {
-	//subsystem startup proceedures
-	//================================
+	HRESULT hr;
 
+	//================================
 	//Init COM librarry
-	HRESULT hr = CoInitialize(NULL);
+	hr = CoInitialize(NULL);
 	if(FAILED(hr))
 	{
 		Error("CVoid::Init:Error Initializing COM library\n");
 		return false;
 	}
 
+	//================================
+	//Initialize FileSystem
 	if(!g_pFileSystem->Init(g_exedir,"Game"))
 	{
 		Error("CVoid::Init:Error Initializing File System\n");
 		return false;
 	}
 
+	//================================
+	//Initialize Renderer
+	
 	g_pRinfo->hInst  = g_hInst;
 	g_pRinfo->width  = 640;
 	g_pRinfo->height = 480;
@@ -479,9 +230,7 @@ bool CVoid::Init()
 	g_pExport->frametime = &g_fframeTime;
 	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
 
-
-	//Renderer
-	//================================
+	//Load Renderer dll
 	hRenderer = ::LoadLibrary("vrender.dll");
 	if(hRenderer == NULL)
 	{
@@ -489,6 +238,7 @@ bool CVoid::Init()
 		return false;
 	}
 
+	//Create Renderer
 	GETRENDERERAPI rapi = (GETRENDERERAPI)::GetProcAddress(hRenderer, "GetRendererAPI");
 	hr = rapi(&g_pRender,g_pRinfo,g_pExport);
 	if(FAILED(hr))
@@ -503,7 +253,7 @@ bool CVoid::Init()
 	//the renderer has been activated and its cvars have been registered
 
 	//parse Command line
-	ParseCmdLine(g_exedir);
+//	ParseCmdLine(lpCmdLine);
 
 	g_pCons->ExecConfig("default.cfg");
 	g_pCons->ExecConfig("void.cfg");
@@ -514,8 +264,7 @@ bool CVoid::Init()
 		return false;
 	}
 
-
-		//create the window
+	//create the window
 	g_hWnd = CreateWindow(MAINWINDOWCLASS, 
 						  MAINWINDOWTITLE,
 						  WS_BORDER | WS_DLGFRAME | WS_POPUP, 
@@ -540,8 +289,6 @@ bool CVoid::Init()
 		Error("Void::Init:Error Intializing Renderer\n");	
 		return false;
 	}
-//	ShowWindow(g_hWnd, SW_NORMAL); 
-//	UpdateWindow(g_hWnd);
 
 	//timer
 	g_pTime->Init();
@@ -553,12 +300,6 @@ bool CVoid::Init()
 		return false;
 	}
 
-
-/*	if(!InitZip())
-	{
-		ComPrintf("CVoid::Init: couldnt load unzip library\n");
-	}
-*/
 #ifndef __VOIDALPHA
 	if(!InitWinsock())
 	{
@@ -610,9 +351,8 @@ bool CVoid::Init()
 	
 	g_pCons->ExecConfig("autoexec.cfg");
 
-		ShowWindow(g_hWnd, SW_NORMAL); 
+	ShowWindow(g_hWnd, SW_NORMAL); 
 	UpdateWindow(g_hWnd);
-
 	return true;
 }
 
@@ -685,16 +425,11 @@ bool CVoid :: Shutdown()
 The Game Loop
 ==========================================
 */
-
-float lastinput = 0.0f;
-
 void CVoid::RunFrame()
 {
 	g_pTime->Update();
 	
 	//Run Input frame
-
-
 	g_pInput->UpdateCursor();
 	g_pInput->UpdateKeys();
 /*	if(g_fcurTime > (lastinput + 0.05f))
@@ -1022,10 +757,10 @@ Connect
 void CFuncConnect(int argc, char ** argv)
 {
 	//List Current Search Paths
-	g_pFileSystem->ListSearchPaths();
+//	g_pFileSystem->ListSearchPaths();
 
 	//Print out the list of files in added archives
-	g_pFileSystem->ListArchiveFiles();
+//	g_pFileSystem->ListArchiveFiles();
 /*
 	if(argc ==2)
 	{
@@ -1046,7 +781,6 @@ void CFuncConnect(int argc, char ** argv)
 
 =====================================
 */
-
 void CToggleConsole(int argc, char** argv)
 {
 	if(g_gameState == INGAMECONSOLE)
@@ -1070,3 +804,81 @@ void CToggleConsole(int argc, char** argv)
 		g_pCons->Toggle(true);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+void CVoid::Move(int x, int y)
+{
+	if(g_pRender)
+		g_pRender->MoveWindow(x,y);
+}
+
+//void CVoid::Resize(bool focus)
+void CVoid::Resize(bool focus, int x, int y, int w, int h)
+{
+	if(focus==false)
+	{
+		g_pRinfo->active = false;
+		return;
+	}
+
+	g_pRinfo->active = true;
+
+	//Change the size of the rendering window
+	if (g_pRender && !(g_pRinfo->rflags & RFLAG_FULLSCREEN))
+		g_pRender->Resize();
+
+	//Set Window extents for input if full screen
+	if(g_pInput)
+		g_pInput->Resize(x,y,w,h);
+}
+
+void CVoid::Activate(bool focus)
+{
+	if (focus == false)
+	{
+		g_pRinfo->active = false;
+//		if(g_pInput)
+//			g_pInput->UnAcquire();
+	}
+	else 
+	{
+		g_pRinfo->active = true;
+		if(g_pInput)
+			g_pInput->Acquire();
+
+		if (g_pRender && (g_pRinfo->rflags & RFLAG_FULLSCREEN))
+			g_pRender->Resize();
+	}
+}
+
+void CVoid::OnFocus()
+{
+	if (g_pRinfo)
+		g_pRinfo->active = true;
+	
+	//Input Focus
+	if(g_pInput)
+		g_pInput->Acquire();
+}
+
+
+void CVoid::LostFocus()
+{
+	//Input loses Focus
+	if(g_pInput)
+		g_pInput->UnAcquire();
+	
+	//stop rendering
+	if (g_pRinfo)
+		g_pRinfo->active = false;
+}
+
+

@@ -1,7 +1,8 @@
 #include "Cl_main.h"
-#include "Sys_main.h"
 #include "I_renderer.h"
 #include "Cl_cmds.h"
+#include "Sys_main.h"
+
 
 extern CVoid		*g_pVoid;
 extern world_t		*g_pWorld;

@@ -233,9 +233,9 @@ call resize event for devices which
 need it
 =====================================
 */
-void CInput::Resize()
+void CInput::Resize(int x, int y, int w, int h)
 {
-	g_pMouse->Resize();
+	g_pMouse->Resize(x,y,w,h);
 }
 
 
