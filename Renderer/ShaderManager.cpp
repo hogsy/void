@@ -408,11 +408,27 @@ CacheAdd
 #ifdef RENDERER
 void CShaderManager::CacheAdd(cpoly_t *p)
 {
+	// sort by both shader
 	int index = world->texdefs[p->texdef].texture;
-	CShader *s = GetShader(mWorldBin, index);
 
-	p->next = mCache[index];
-	mCache[index] = p;
+	// first one for this shader
+	if (!mCache[index])
+	{
+		mCache[index] = p;
+		p->next = NULL;
+	}
+
+	// sort by lightmap
+	else
+	{
+		for (cpoly_t *prev = mCache[index]; prev->next; prev=prev->next)
+		{
+			if (prev->next->lightdef < p->lightdef)
+				break;
+		}
+		p->next = prev->next;
+		prev->next = p;
+	}
 }
 
 
@@ -443,7 +459,7 @@ void CShaderManager::CachePurge(void)
 			// sky brushes never depthwrite
 			g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKY) == 0);
 
-			g_pRast->PolyColor4f(1, 1, 1, 1);
+			g_pRast->PolyColor(1, 1, 1, 1);
 			g_pRast->ShaderSet(shader);
 			while (poly)
 			{

@@ -772,6 +772,7 @@ Matrix*
 */
 void COpenGLRast::MatrixReset(void)
 {
+	Flush();
 	glLoadIdentity();
 }
 void COpenGLRast::MatrixRotateX(float degrees)
@@ -803,11 +804,13 @@ void COpenGLRast::MatrixScale(vector_t &factors)
 
 void COpenGLRast::MatrixPush(void)
 {
+	Flush();
 	glPushMatrix();
 }
 
 void COpenGLRast::MatrixPop(void)
 {
+	Flush();
 	glPopMatrix();
 }
 
@@ -899,6 +902,9 @@ ClearBuffers
 */
 void COpenGLRast::FrameEnd(void)
 {
+	// make sure everything's been drawn
+	Flush();
+
 	glFlush();
 	_SwapBuffers(hDC);
 }

@@ -149,14 +149,12 @@ public:
 	void PolyVertexf(vector_t &vert);
 	void PolyVertexi(int x, int y);
 	void PolyTexCoord(float s, float t);
-	void PolyLightCoord(float s, float t);
-	void PolyColor3f(float r, float g, float b);
-	void PolyColor4f(float r, float g, float b, float a);
+	void PolyColor(float r, float g, float b, float a);
 	virtual void PolyDraw(void)=0;
 
-	void ShaderSet(CShader *shader)				{	mShader = shader;	}
-	void TextureTexDef(bspf_texdef_t *def)		{	mTexDef		= def;	mUseTexDef = true;		}
-	void TextureLightDef(bspf_texdef_t *def)	{	mLightDef	= def;	mUseLightDef = true;	}
+	void ShaderSet(CShader *shader);
+	void TextureTexDef(bspf_texdef_t *def);
+	void TextureLightDef(bspf_texdef_t *def);
 
 
 	virtual void ClearBuffers(int buffers)=0;
@@ -170,7 +168,6 @@ public:
 
 	unsigned int GetNumTris(void)	{ return mTrisDrawn;	}
 	void UseLights(bool l)	{	mUseLights = l;		}
-
 	void ConAlpha(byte t, byte b)	{	mConAlphaTop = t;	mConAlphaBot = b;	}
 
 
@@ -180,6 +177,9 @@ private:
 
 
 protected:
+	void Flush(void);
+
+
 	CVar    m_cWndX;        //Windowed X pos
 	CVar    m_cWndY;        //Windowed Y pos
 
@@ -199,9 +199,6 @@ protected:
 	bspf_texdef_t	*mTexDef;
 	bspf_texdef_t	*mLightDef;
 
-	bool	mUseTexDef;
-	bool	mUseLightDef;
-
 
 	float	mTexCoords[MAX_ELEMENTS][2];
 	float	mLightCoords[MAX_ELEMENTS][2];
@@ -213,6 +210,8 @@ protected:
 
 	int			mNumIndices;
 	int			mNumElements;
+	int			mFirstIndex;
+	int			mFirstElement;
 
 	int			mMaxElements;
 	int			mMaxIndices;

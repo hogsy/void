@@ -529,6 +529,7 @@ Matrix*
 */
 void CRastD3DX::MatrixReset(void)
 {
+	Flush();
 	m_matView->LoadIdentity();
 	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
@@ -576,12 +577,14 @@ void CRastD3DX::MatrixScale(vector_t &factors)
 
 void CRastD3DX::MatrixPush(void)
 {
+	Flush();
 	m_matView->Push();
 	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
 
 void CRastD3DX::MatrixPop(void)
 {
+	Flush();
 	m_matView->Pop();
 	m_pD3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)m_matView->GetTop());
 }
@@ -622,7 +625,7 @@ void CRastD3DX::ClearBuffers(int buffers)
 		ReportErrors();
 	}
 
-//	glClearColor(0, 0, 1, 1);
+//	glClearColor(0, 0, 0, 1);
 	int b = 0;
 
 	if (buffers & VRAST_COLOR_BUFFER)
@@ -651,6 +654,7 @@ void CRastD3DX::ProjectionMode(EProjectionMode mode)
 	float t = g_rInfo.height;
 
 	D3DXMATRIX mat;
+
 
 	switch (mode)
 	{
@@ -720,6 +724,9 @@ ClearBuffers
 */
 void CRastD3DX::FrameEnd(void)
 {
+	// make sure everything's been drawn
+	Flush();
+
 	Sleep(1);
 	m_pD3DDevice->EndScene();
 	// Update frame

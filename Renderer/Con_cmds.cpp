@@ -155,10 +155,7 @@ switch fullbright (light) rendering
 bool CVar_Fov(int val)
 {
 	if (val>=10 && val<= 170)
-	{
-//		g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 		return true;
-	}
 	return false;
 }
 

@@ -178,13 +178,18 @@ void CRConsole::Draw()
 	// transform
 	g_pRast->MatrixReset();
 	g_pRast->ProjectionMode(VRAST_ORTHO);
-	
 
+	// dont want to use texdef or lightdef
+	g_pRast->TextureLightDef(NULL);
+	g_pRast->TextureTexDef(NULL);
 
+	// FIXME - shouldnt need this
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 1));
 
 	g_pRast->PolyStart(VRAST_QUADS);
+
 
 	g_pRast->PolyTexCoord(0, 0);
 	g_pRast->PolyVertexi(0, g_rInfo.height);
@@ -206,8 +211,6 @@ void CRConsole::Draw()
 
 	//print all our text over the top
 	PrintBuffer();
-
-	g_pRast->ConAlpha(255, 255);
 }
 
 
@@ -220,29 +223,8 @@ assumes view and tex filter are ok
 */
 void CRConsole::PrintBuffer()
 {
-	DWORD top = (int) m_alpha;
-	if (m_alpha > 255)
-		top = 255;
-
-	DWORD bottom = (int) m_alpha - CON_DIFFERENTIAL;
-	if (m_alpha < CON_DIFFERENTIAL)
-		bottom = 0;
-
-
-	if (top < 0)	top = 0;
-	if (top > 255)	top = 255;
-	if (bottom < 0)		bottom = 0;
-	if (bottom > 255)	bottom = 255;
-
-	if(m_fullscreen)
-		top = bottom = 255;
-
-	g_pRast->ConAlpha(top, bottom);
-
-
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 0));
 	g_pRast->PolyStart(VRAST_QUADS);
-
 
 	//Text positioning
 	//Find starting position
@@ -252,7 +234,7 @@ void CRConsole::PrintBuffer()
 	float s,t;
 	int start=0;
 	int end = 0;
-	
+
 	//Set starting position for printing
 	y2 = (m_fullscreen ? 0 : g_rInfo.height/2);
 	y1 = y2 + 8;
@@ -299,19 +281,15 @@ void CRConsole::PrintBuffer()
 				s = (m_statusline[start] % 16) * 0.0625f;
 				t = (m_statusline[start] / 16) * 0.0625f;
 
-//				g_pRast->PolyColor4f(1, 1, 1, ftop);
 				g_pRast->PolyTexCoord(s, t);
 				g_pRast->PolyVertexi(x1, y1);
 
-//				g_pRast->PolyColor4f(1, 1, 1, ftop);
 				g_pRast->PolyTexCoord(s + 0.0625f, t);
 				g_pRast->PolyVertexi(x2, y1);
 
-//				g_pRast->PolyColor4f(1, 1, 1, fbot);
 				g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 				g_pRast->PolyVertexi(x2, y2);
 		
-//				g_pRast->PolyColor4f(1, 1, 1, fbot);
 				g_pRast->PolyTexCoord(s, t + 0.0625f);
 				g_pRast->PolyVertexi(x1, y2);
 
@@ -336,19 +314,15 @@ void CRConsole::PrintBuffer()
 		int cy2 = (m_fullscreen ? 0 : g_rInfo.height/2);
 		int cy1 = cy2 + 8;
 
-//		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s, t);
 		g_pRast->PolyVertexi(x1, cy1);
 
-//		g_pRast->PolyColor4f(1, 1, 1, ftop);
 		g_pRast->PolyTexCoord(s + 0.0625f, t);
 		g_pRast->PolyVertexi(x2, cy1);
 
-//		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 		g_pRast->PolyVertexi(x2, cy2);
 
-//		g_pRast->PolyColor4f(1, 1, 1, fbot);
 		g_pRast->PolyTexCoord(s, t + 0.0625f);
 		g_pRast->PolyVertexi(x1, cy2);
 	}
@@ -376,19 +350,15 @@ void CRConsole::PrintBuffer()
 				t = (m_seperatorchar / 16) * 0.0625f;
 			}
 
-//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s, t);
 			g_pRast->PolyVertexi(x1, y1);
 
-//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s + 0.0625f, t);
 			g_pRast->PolyVertexi(x2, y1);
 
-//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 			g_pRast->PolyVertexi(x2, y2);
 	
-//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s, t + 0.0625f);
 			g_pRast->PolyVertexi(x1, y2);
 
@@ -419,19 +389,15 @@ void CRConsole::PrintBuffer()
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
 
 
-//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s, t);
 			g_pRast->PolyVertexi(x1, y1);
 
-//			g_pRast->PolyColor4f(1, 1, 1, ftop);
 			g_pRast->PolyTexCoord(s + 0.0625f, t);
 			g_pRast->PolyVertexi(x2, y1);
 
-//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s + 0.0625f, t + 0.0625f);
 			g_pRast->PolyVertexi(x2, y2);
 
-//			g_pRast->PolyColor4f(1, 1, 1, fbot);
 			g_pRast->PolyTexCoord(s, t + 0.0625f);
 			g_pRast->PolyVertexi(x1, y2);
 

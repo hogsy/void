@@ -55,9 +55,6 @@ Renderer Initiation - set up initial render state
 ***********************/
 void r_init(void)
 {
-	/* set viewing projection */
-	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
-
 	// reset last r_vidsynch
 	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
 	{
@@ -419,7 +416,6 @@ build and draw the world
 void r_draw_world()
 {
 	build_frust();
-//	beam_reset();
 	r_draw_node(0, true);
 	g_pShaders->CachePurge();
 	g_pClient->Purge();
@@ -446,9 +442,8 @@ void r_drawframe(const CCamera * pcamera)
 
 
 // set up the view transformation
-	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
-
 	g_pRast->MatrixReset();
+	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
 
 	g_pRast->MatrixRotateX(-camera->angles.ROLL * 180/PI);
 	g_pRast->MatrixRotateY(camera->angles.PITCH * 180/PI);

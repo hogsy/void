@@ -96,7 +96,7 @@ void CHudMessage::Draw()
 	x2 = x1 + 8;
 
 	g_pRast->PolyStart(VRAST_QUADS);
-	g_pRast->PolyColor4f(1, 1, 1, 1);
+	g_pRast->PolyColor(1, 1, 1, 1);
 
 	float s, t;
 	for (int c = 0; c < len; c++)
@@ -178,10 +178,7 @@ void CRHud::DrawHud()
 	g_pRast->MatrixReset();
 	g_pRast->ProjectionMode(VRAST_ORTHO);
 
-//	g_pRast->TextureSet(tex->bin_base, 0);
 	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 0));
-	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 
 	for(int i=0;i<MAX_MESSAGES;i++)
 	{

@@ -22,12 +22,12 @@ CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
 
 	mMaxElements = mNumElements = 0;
 	mMaxIndices = mNumIndices = 0;
+	mFirstIndex = mFirstElement = 0;
+
 	mColor = 0xffffffff;
 	mShader = NULL;
 	mTexDef = NULL;
 	mLightDef = NULL;
-	mUseTexDef = false;
-	mUseLightDef = false;
 	mUseLights = false;
 }
 
@@ -36,8 +36,8 @@ CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
 void CRasterizer::PolyStart(EPolyType type)
 {
 	mType = type;
-	mNumIndices = 0;
-	mNumElements = 0;
+	mFirstIndex = mNumIndices;
+	mFirstElement = mNumElements;
 }
 
 
@@ -45,53 +45,53 @@ void CRasterizer::PolyEnd(void)
 {
 	int t;
 	int num;
+	unsigned short *indices = &mIndices[mFirstIndex];
 
 	// convert the type into triangles
 	switch (mType)
 	{
 	case VRAST_TRIANGLE_FAN:
-		num = mNumElements-2;
+		num = mNumElements - mFirstElement - 2;
 		for (t=0; t<num; t++)
 		{
-			mIndices[t*3 + 0] = 0;
-			mIndices[t*3 + 1] = t + 1;
-			mIndices[t*3 + 2] = t + 2;
+			indices[t*3 + 0] = 0;
+			indices[t*3 + 1] = t + 1;
+			indices[t*3 + 2] = t + 2;
 		}
-		mNumIndices = num*3;
+		mNumIndices += num*3;
 		break;
 
 	case VRAST_TRIANGLE_STRIP:
-		num = mNumElements-2;
+		num = mNumElements - mFirstElement - 2;
 		for (t=0; t<num; t++)
 		{
 			if (!(t%2))
 			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+1;
-				mIndices[t*3 + 2] = t+2;
+				indices[t*3 + 0] = t;
+				indices[t*3 + 1] = t+1;
+				indices[t*3 + 2] = t+2;
 			}
 			else
 			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+2;
-				mIndices[t*3 + 2] = t+1;
+				indices[t*3 + 0] = t;
+				indices[t*3 + 1] = t+2;
+				indices[t*3 + 2] = t+1;
 			}
 		}
-		mNumIndices = num*3;
+		mNumIndices += num*3;
 		break;
 
 	case VRAST_QUADS:
-		num = mNumElements / 4;
-		mNumIndices = 0;
+		num = (mNumElements - mFirstElement) / 4;
 		for (t=0; t<num; t++)
 		{
-			mIndices[mNumIndices + 0] = t*4;
-			mIndices[mNumIndices + 1] = t*4+1;
-			mIndices[mNumIndices + 2] = t*4+2;
+			indices[mNumIndices + 0] = t*4;
+			indices[mNumIndices + 1] = t*4+1;
+			indices[mNumIndices + 2] = t*4+2;
 
-			mIndices[mNumIndices + 3] = t*4;
-			mIndices[mNumIndices + 4] = t*4+2;
-			mIndices[mNumIndices + 5] = t*4+3;
+			indices[mNumIndices + 3] = t*4;
+			indices[mNumIndices + 4] = t*4+2;
+			indices[mNumIndices + 5] = t*4+3;
 
 			mNumIndices += 6;
 		}
@@ -104,15 +104,12 @@ void CRasterizer::PolyEnd(void)
 	if (mMaxIndices < mNumIndices)
 		mMaxIndices = mNumIndices;
 
-	// 3 indices per triangle
-	mTrisDrawn += mNumIndices / 3;
-
 
 	// generate texture coord data
 	// put it in separate arrays cause we might need to do tcmod's and don't want to have to re-evaluate them
-	if (mUseTexDef)
+	if (mTexDef)
 	{
-		for (int i=0; i<mNumElements; i++)
+		for (int i=mFirstElement; i<mNumElements; i++)
 		{
 			mTexCoords[i][0] =	 mVerts[i].pos[0] * mTexDef->vecs[0][0] +
 								 mVerts[i].pos[1] * mTexDef->vecs[0][1] +
@@ -126,7 +123,7 @@ void CRasterizer::PolyEnd(void)
 		}
 	}
 
-	if (mUseLightDef)
+	if (mLightDef)
 	{
 		for (int i=0; i<mNumElements; i++)
 		{
@@ -141,13 +138,22 @@ void CRasterizer::PolyEnd(void)
 									 mLightDef->vecs[1][3];
 		}
 	}
+}
+
+
+void CRasterizer::Flush(void)
+{
+	if (!mShader && !mNumIndices)
+		return;
+
+	// 3 indices per triangle
+	mTrisDrawn += mNumIndices / 3;
 
 	for (int i=0; i<mShader->mNumLayers; i++)
 		DrawLayer(i);
 
-	mUseTexDef = false;
-	mUseLightDef = false;
-};
+	mNumElements = mNumIndices = 0;
+}
 
 
 void CRasterizer::DrawLayer(int l)
@@ -197,7 +203,7 @@ void CRasterizer::DrawLayer(int l)
 	switch (mShader->mLayers[l]->mTexGen)
 	{
 	case TEXGEN_BASE:
-		if (!mUseTexDef)
+		if (!mTexDef)
 			break;
 
 		for (i=0; i<mNumElements; i++)
@@ -208,8 +214,11 @@ void CRasterizer::DrawLayer(int l)
 		break;
 
 
+	//
+	// FIXME - move this to PolyEnd() somehow so we dont have to flush if the texdef changes
+	//
 	case TEXGEN_SKY:
-		if (!mUseTexDef)
+		if (!mTexDef)
 			break;
 
 		for (i=0; i<mNumElements; i++)
@@ -227,7 +236,7 @@ void CRasterizer::DrawLayer(int l)
 
 
 	case TEXGEN_LIGHT:
-		if (!mUseLightDef)
+		if (!mLightDef)
 			break;
 
 		for (i=0; i<mNumElements; i++)
@@ -328,23 +337,7 @@ void CRasterizer::PolyTexCoord(float s, float t)
 };
 
 
-void CRasterizer::PolyLightCoord(float s, float t)
-{
-	mVerts[mNumElements].tex1[0] = s;
-	mVerts[mNumElements].tex1[1] = t;
-};
-
-
-void CRasterizer::PolyColor3f(float r, float g, float b)
-{
-	// strip everything but the alpha component
-	mColor  = mColor & 0xff000000;
-	mColor |= (byte)(r*255);
-	mColor |= (byte)(g*255) << 8;
-	mColor |= (byte)(b*255) << 16;
-};
-
-void CRasterizer::PolyColor4f(float r, float g, float b, float a)
+void CRasterizer::PolyColor(float r, float g, float b, float a)
 {
 	mColor  = (byte)(r*255);
 	mColor |= (byte)(g*255) << 8;
@@ -352,4 +345,27 @@ void CRasterizer::PolyColor4f(float r, float g, float b, float a)
 	mColor |= (byte)(a*255) << 24;
 }
 
+
+
+void CRasterizer::ShaderSet(CShader *shader)
+{
+	if (shader != mShader)
+	{
+		Flush();
+		mShader = shader;
+	}
+}
+
+void CRasterizer::TextureTexDef(bspf_texdef_t *def)
+{
+	// FIXME - dont need to flush all the time
+	Flush();
+	mTexDef	= def;
+}
+
+void CRasterizer::TextureLightDef(bspf_texdef_t *def)
+{
+	Flush();
+	mLightDef = def;
+}
 
