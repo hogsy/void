@@ -434,6 +434,14 @@ void light_do(int map, int l)
 	light_t *light = &lights[l];
 	lightmap_t *lmap = lightmaps[map];
 
+	// if we're too far from the plane, dont bother
+	float dist = ((DotProduct(world->planes[world->sides[lmap->side].plane].norm, light->origin) - world->planes[world->sides[lmap->side].plane].d));
+	if (dist < 0)
+		return;
+	if (dist > light->intensity)
+		return;
+
+
 	float tw, th;	// lumel width/height
 	tw = lmap->lwidth  / lmap->width;
 	th = lmap->lheight / lmap->height;
@@ -473,13 +481,13 @@ void light_do(int map, int l)
 				if (len > light->intensity)
 					continue;
 
-				if (!point_in_side(test, lmap->side))
-					continue;
+//				if (!point_in_side(test, lmap->side))
+//					continue;
 
 				TraceInfo tr;
 				world->Trace(tr, light->origin, test);
 //				trace_t tr = trace(light->origin, test);
-				if (tr.fraction < 1)
+				if (tr.fraction < 0.99f)
 					continue;
 
 				// add this trace to the lumel
