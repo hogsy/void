@@ -5,9 +5,8 @@
 #include "Sys_hdr.h"
 
 //======================================================================================
+//Private stuff
 //======================================================================================
-
-
 namespace VoidSound
 {
 	class CPrimaryBuffer;	//The primary sound buffer, there can be only one
@@ -16,9 +15,9 @@ namespace VoidSound
 }
 
 //======================================================================================
+//Main Sound manager
 //======================================================================================
 
-//This is what is exposed to Sys_main
 class CSoundManager : public I_SoundManager,
 					  public I_ConHandler 
 {
@@ -41,12 +40,14 @@ public:
 	hSnd RegisterSound(const char * path);
 	void UnregisterAll();
 
+	//update pos
+
+
 	//hook this up with an entity, for speed and origin
 	void Play(hSnd index, int channel= VoidSound::CHAN_AUTO);
 
-	//CVar Handler
+	//Console handler
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
-	//Cmd Handler
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 private:
@@ -63,16 +64,23 @@ private:
 	
 	CVar m_cVolume;			//Master Volume 
 	CVar m_cHighQuality;	//16bit buffer if on.
+	CVar m_cRollOffFactor;
+	CVar m_cDopplerFactor;
+	CVar m_cDistanceFactor;
 
 	bool SVolume(const CParms &parms);
 
 	//==========================================
 	//Temp debug funcs
-	
 	void SPlay(const char * arg);
 	void SStop(int channel);
 	void SListSounds();
 	bool SPrintInfo();
+
+	static BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,            
+										  const char * szDesc,
+										  const char * szModule,
+										  void * pContext);
 };
 
 #endif

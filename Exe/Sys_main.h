@@ -60,7 +60,6 @@ private:
 	friend eGameState   System::GetGameState();
 	friend void	System::SetGameState(eGameState state);
 	friend I_InputFocusManager * System::GetInputFocusManager();
-	friend I_SoundManager * System::GetSoundManager();
 	
 	friend void ComPrintf(const char* text, ...);
 	

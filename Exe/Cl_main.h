@@ -3,7 +3,8 @@
 
 #include "Sys_hdr.h"
 #include "I_renderer.h"
-#include "Snd_defs.h"
+#include "Snd_main.h"
+#include "Mus_main.h"
 #include "Net_client.h"
 
 /*
@@ -22,7 +23,10 @@ class CClient :	public I_ConHandler,
 				public I_NetClientHandler
 {
 public:
-	CClient(I_Renderer * prenderer);
+	CClient(I_Renderer * prenderer,
+			CSoundManager * psound,
+			CMusic	* pmusic);
+
 	~CClient();
 
 	void RunFrame();
@@ -86,11 +90,13 @@ private:
 	//Subsystems
 
 	friend class CClientCmdHandler;
+	
+	I_Renderer		  * m_pRender;
+	I_RHud		 	  *	m_pHud;
+	CSoundManager	  * m_pSound;
+	CMusic		      * m_pMusic;
 	CClientCmdHandler * m_pCmdHandler;
-
-	CNetClient* m_pNetCl;
-	I_Renderer* m_pRender;
-	I_RHud    *	m_pHud;
+	CNetClient		  * m_pNetCl;
 
 	//==================================================
 	//Client side stuff

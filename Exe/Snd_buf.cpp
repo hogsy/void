@@ -31,7 +31,7 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-    dsbdesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_PRIMARYBUFFER; //DSBCAPS_CTRLPAN
+    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_CTRLVOLUME |DSBCAPS_PRIMARYBUFFER; //DSBCAPS_CTRLPAN
 	dsbdesc.guid3DAlgorithm = GUID_NULL;
     dsbdesc.dwBufferBytes = 0;
     dsbdesc.lpwfxFormat = 0; 

@@ -10,6 +10,7 @@
 //Use all static buffers for now
 
 namespace VoidSound {
+
 /*
 ==========================================
 The Primary sound Buffer

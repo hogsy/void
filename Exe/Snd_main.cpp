@@ -29,7 +29,10 @@ Constructor/Destructor
 ==========================================
 */
 CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
-								 m_cHighQuality("s_highquality", "1", CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
+								 m_cHighQuality("s_highquality", "1", CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE),
+								 m_cRollOffFactor("s_rolloff", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
+								 m_cDopplerFactor("s_doppler", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE),
+								 m_cDistanceFactor("s_distance", "1.0", CVar::CVAR_FLOAT, CVar::CVAR_ARCHIVE)
 {
 	m_pPrimary = new CPrimaryBuffer;
 	m_Buffers =  new CSoundBuffer[MAX_SOUNDS];
@@ -43,7 +46,10 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
 	System::GetConsole()->RegisterCVar(&m_cHighQuality,this);
-
+	System::GetConsole()->RegisterCVar(&m_cRollOffFactor,this);
+	System::GetConsole()->RegisterCVar(&m_cDopplerFactor,this);
+	System::GetConsole()->RegisterCVar(&m_cDistanceFactor,this);
+	
 	System::GetConsole()->RegisterCommand("splay",CMD_PLAY,this);
 	System::GetConsole()->RegisterCommand("sstop",CMD_STOP,this);
 	System::GetConsole()->RegisterCommand("sinfo",CMD_INFO,this);
@@ -66,7 +72,7 @@ bool CSoundManager::Init()
 {
 	// Nothing to do if already created.
 	if (m_pDSound) 
-		m_pDSound->Release();
+		Shutdown();
 
 	// Create the DirectSound object.
 	HRESULT hr = CoCreateInstance(CLSID_DirectSound, 
@@ -81,6 +87,14 @@ bool CSoundManager::Init()
 		return false; 
 	}
 
+	//Check sound drivers avaiblable
+/*	hr = DirectSoundEnumerate((LPDSENUMCALLBACK)EnumSoundDevices, 0);
+	if(FAILED(hr))
+	{
+		ComPrintf("CSound::Init Failed to enumerate DirectSound Interface\n");
+		return false;
+	}
+*/
 	// Initialize the DirectSound object.
 	// Defaulting to Primary Sound Driver right now
 	// FIX-ME
@@ -124,6 +138,7 @@ bool CSoundManager::Init()
 		pcmwf.nChannels = 1;
 	//linked with samples per sec ?
 	pcmwf.nBlockAlign = 4;		
+
 //Should this be user definable ?
 	pcmwf.nSamplesPerSec = 22050;
 	pcmwf.nAvgBytesPerSec = pcmwf.nSamplesPerSec * pcmwf.nBlockAlign;
@@ -319,6 +334,25 @@ void CSoundManager::SListSounds()
 	//Currently playing
 //	ComPrintf("Currently playing %d channels\n", m_channelsInUse);
 }
+
+
+/*
+======================================
+Device Enumeration. Can't find any use yet
+======================================
+*/
+BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
+									  const char * szDesc,
+									  const char * szModule,
+									  void * pContext)
+{
+	if(szDesc)
+		ComPrintf("Desc : %s\n", szDesc);
+	if(szModule)
+		ComPrintf("Module : %s\n", szModule);
+	return true;
+}
+
 
 /*
 ==========================================

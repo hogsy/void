@@ -71,12 +71,6 @@ CVoid::CVoid(const char * cmdLine)
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
 	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
-	
-	//Create the client
-	m_pClient = new CClient(m_pRender);		
-
-	//Network Sys
-	m_pServer = new CServer();
 
 #ifdef INCLUDE_SOUND
 	//Sound
@@ -87,6 +81,12 @@ CVoid::CVoid(const char * cmdLine)
 	//Music
 	m_pMusic = new CMusic();
 #endif
+
+	//Network Sys
+	m_pServer = new CServer();
+	
+	//Create the client
+	m_pClient = new CClient(m_pRender, m_pSound, m_pMusic);		
 
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
@@ -550,7 +550,6 @@ namespace System
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }
 	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
-	I_SoundManager * GetSoundManager() { return g_pVoid->m_pSound; }
 
 	void SetGameState(eGameState state) 
 	{

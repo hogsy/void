@@ -8,7 +8,6 @@
 
 namespace VoidSound
 {
-
 	//What channel to play a sound in
 	enum SndChannelType
 	{
@@ -45,11 +44,5 @@ struct  I_SoundManager
 	//hook this up with an entity, for speed and origin
 	virtual void Play(hSnd index, int channel=VoidSound::CHAN_AUTO)=0;
 };
-
-namespace System
-{
-	I_SoundManager * GetSoundManager();
-}
-
 
 #endif

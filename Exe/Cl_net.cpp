@@ -23,20 +23,20 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 			{
 				char name[32];
 				strcpy(name,buffer.ReadString());
-				System::GetSoundManager()->Play(m_hsTalk);
+				m_pSound->Play(m_hsTalk);
 				ComPrintf("%s: %s\n",name,buffer.ReadString());
 				break;
 			}
 		case SV_DISCONNECT:
 			{
-				System::GetSoundManager()->Play(m_hsMessage);
+				m_pSound->Play(m_hsMessage);
 				ComPrintf("Server quit\n");
 				m_pNetCl->Disconnect(true);
 				break;
 			}
 		case SV_PRINT:	//just a print message
 			{
-				System::GetSoundManager()->Play(m_hsMessage);
+				m_pSound->Play(m_hsMessage);
 				ComPrintf("%s\n",buffer.ReadString());
 				break;
 			}
@@ -143,7 +143,7 @@ void CClient::Talk(const char * string)
 		return;
 
 	ComPrintf("%s: %s\n", m_clname.string, msg);
-	System::GetSoundManager()->Play(m_hsTalk);
+	m_pSound->Play(m_hsTalk);
 
 	//Send this reliably ?
 	m_pNetCl->GetReliableBuffer().Write(CL_TALK);

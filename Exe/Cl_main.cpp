@@ -14,11 +14,18 @@ int PointContents(vector_t &v);
 Constructor
 ======================================
 */
-CClient::CClient(I_Renderer * prenderer):
+CClient::CClient(I_Renderer * prenderer,
+				 CSoundManager * psound,
+				 CMusic	* pmusic):
+					//CVars
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
 					m_clport("cl_port","20011", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE| CVar::CVAR_LATCH),
 					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
-					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
+					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE),
+					//Pointers to subsystems
+					m_pRender(prenderer),	
+					m_pSound(psound),
+					m_pMusic(pmusic)
 {
 	m_pCmdHandler = new CClientCmdHandler(*this);
 	
@@ -30,7 +37,7 @@ CClient::CClient(I_Renderer * prenderer):
 	m_fFrameTime = 0.0f;
 	
 	m_pHud = 0;
-	m_pRender = prenderer;
+//	m_pRender = prenderer;
 
 	g_pWorld = 0;
 
@@ -74,6 +81,8 @@ CClient::~CClient()
 
 	m_pRender = 0;
 	m_pHud = 0;
+	m_pSound = 0;
+	m_pMusic = 0;
 
 	g_pWorld = 0;
 
@@ -136,8 +145,8 @@ bool CClient::LoadWorld(const char *worldname)
 	eye.origin.y = 0;
 	eye.origin.z = 48;	// FIXME - origin + view height
 
-	m_hsTalk    = System::GetSoundManager()->RegisterSound("sounds/talk.wav");
-	m_hsMessage = System::GetSoundManager()->RegisterSound("sounds/message.wav");
+	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
+	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
 
 	m_ingame = true;
 
@@ -167,7 +176,7 @@ void CClient::UnloadWorld()
 	world_destroy(g_pWorld);
 	g_pWorld = 0;
 
-	System::GetSoundManager()->UnregisterAll();
+	m_pSound->UnregisterAll();
 	System::SetGameState(INCONSOLE);
 
 	m_ingame = false;
