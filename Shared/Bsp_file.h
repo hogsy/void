@@ -34,6 +34,29 @@
 #define	CONTENTS_MIST			64
 #define	LAST_VISIBLE_CONTENTS	64
 
+// remaining contents are non-visible, and don't eat brushes
+#define	CONTENTS_AREAPORTAL		0x8000
+#define	CONTENTS_PLAYERCLIP		0x10000
+#define	CONTENTS_MONSTERCLIP	0x20000
+
+// currents can be added to any other contents, and may be mixed
+#define	CONTENTS_CURRENT_0		0x40000
+#define	CONTENTS_CURRENT_90		0x80000
+#define	CONTENTS_CURRENT_180	0x100000
+#define	CONTENTS_CURRENT_270	0x200000
+#define	CONTENTS_CURRENT_UP		0x400000
+#define	CONTENTS_CURRENT_DOWN	0x800000
+
+#define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
+
+#define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
+#define	CONTENTS_DEADMONSTER	0x4000000
+#define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
+#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
+#define	CONTENTS_LADDER			0x20000000
+
+
+
 
 typedef char texname_t[32];
 
