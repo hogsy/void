@@ -7,6 +7,13 @@
 #include "Cl_base.h"
 #include "Cl_game.h"
 
+namespace {
+
+const float CL_TILT_RESTORE_SPEED = 0.05f;
+const float CL_TILT_SPEED = 0.1f;
+
+}
+
 /*
 ================================================
 Step Functions. The angle vectors have already
@@ -30,7 +37,9 @@ void CGameClient::MoveLeft()
 }
 
 void CGameClient::Jump()
-{	m_cmd.moveFlags |= ClCmd::JUMP;
+{	
+	if(m_bOnGround)
+		m_cmd.moveFlags |= ClCmd::JUMP;
 }
 
 void CGameClient::Crouch()
@@ -63,48 +72,52 @@ void CGameClient:: RotateDown(const float &val)
 Update angles. called onces per frame
 ================================================
 */
-
-float maxTilt = PI/180;
-float tiltStep = PI/500;
-
-void CGameClient::UpdateAngles(const vector_t &angles, float time)
+void CGameClient::UpdateViewAngles(const float &time)
 {
+	m_pGameClient->angles.YAW += (m_vecDesiredAngles.YAW * time);  
+	if (m_pGameClient->angles.YAW > PI)
+		m_pGameClient->angles.YAW -= 2*PI;
+
+	m_pGameClient->angles.PITCH +=  (m_vecDesiredAngles.PITCH * time);
+	if (m_pGameClient->angles.PITCH < -PI/2)
+		m_pGameClient->angles.PITCH = -PI/2;
+	if (m_pGameClient->angles.PITCH > PI/2)
+		m_pGameClient->angles.PITCH = PI/2;
+
 	//Apply tilt
-/*	if(m_cmd.rightmove != 0)
+	if((m_cmd.moveFlags & ClCmd::MOVERIGHT) ||
+	   (m_cmd.moveFlags & ClCmd::MOVELEFT))
 	{
-		m_pGameClient->angles.ROLL += (m_cmd.rightmove * time * 0.01);
-		if(m_pGameClient->angles.ROLL > maxTilt)
-			m_pGameClient->angles.ROLL = maxTilt;
-		else if(m_pGameClient->angles.ROLL < -maxTilt)
-			m_pGameClient->angles.ROLL = -maxTilt;
-		
+		if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
+		{
+			m_pGameClient->angles.ROLL += (time * CL_TILT_SPEED);
+			if(m_pGameClient->angles.ROLL > m_cvViewTilt.fval)
+				m_pGameClient->angles.ROLL = m_cvViewTilt.fval;
+		}
+
+		if(m_cmd.moveFlags & ClCmd::MOVELEFT)
+		{
+			m_pGameClient->angles.ROLL -= (time * CL_TILT_SPEED);
+			if(m_pGameClient->angles.ROLL < -m_cvViewTilt.fval)
+				m_pGameClient->angles.ROLL = -m_cvViewTilt.fval;
+		}
 	}
-	//Step back to normal view
 	else
 	{
+		//Step back to normal view
 		if(m_pGameClient->angles.ROLL >= 0)
 		{	
-			m_pGameClient->angles.ROLL -= tiltStep;
+			m_pGameClient->angles.ROLL -= (CL_TILT_RESTORE_SPEED * time);
 			if(m_pGameClient->angles.ROLL < 0)
 				m_pGameClient->angles.ROLL = 0;
 		}
 		else
 		{
-			m_pGameClient->angles.ROLL += tiltStep;
+			m_pGameClient->angles.ROLL += (CL_TILT_RESTORE_SPEED * time);
 			if(m_pGameClient->angles.ROLL >= 0)
 				m_pGameClient->angles.ROLL = 0;
 		}
 	}
-*/
-	m_pGameClient->angles.YAW += (angles.YAW * time);  
-	if (m_pGameClient->angles.YAW > PI)
-		m_pGameClient->angles.YAW -= 2*PI;
-
-	m_pGameClient->angles.PITCH +=  (angles.PITCH * time);
-	if (m_pGameClient->angles.PITCH < -PI/2)
-		m_pGameClient->angles.PITCH = -PI/2;
-	if (m_pGameClient->angles.PITCH > PI/2)
-		m_pGameClient->angles.PITCH = PI/2;
 }
 
 
@@ -115,8 +128,9 @@ Perform the actual move
 */
 //void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time);
 
-void CGameClient::UpdatePosition(float time)
+void CGameClient::UpdatePosition(const float &time)
 {
+
 	// figure out what dir we want to go if we're folling a path
 //	if (m_campath != -1)
 //		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pGameClient->origin, &dir, time);
@@ -126,6 +140,20 @@ void CGameClient::UpdatePosition(float time)
 	EntMove::ClientMove(m_pGameClient, time);
 ///	else
 //		EntMove::NoClipMove(m_pGameClient, dir, time);
+
+	//Check current position
+	TraceInfo traceInfo;
+	vector_t  end(m_pGameClient->origin);
+	vector_t  up;
+
+	m_pGameClient->angles.AngleToVector(0,0,&up);
+	end.VectorMA(end,-1,up);
+
+	m_pWorld->Trace(traceInfo,m_pGameClient->origin, end, m_pGameClient->mins,m_pGameClient->maxs);
+	if(traceInfo.fraction <= 0.0)
+		m_bOnGround = true;
+	else
+		m_bOnGround = false;
 }
 
 /*
@@ -151,7 +179,6 @@ void CGameClient::CamPath()
 	}
 */
 }
-
 
 /*
 void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &time)

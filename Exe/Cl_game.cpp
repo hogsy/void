@@ -23,7 +23,8 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
 				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE)
+				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE),
+				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -40,6 +41,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvClip);
+	System::GetConsole()->RegisterCVar(&m_cvViewTilt);
 	System::GetConsole()->RegisterCVar(&m_cvRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
@@ -85,28 +87,30 @@ Run a Client frame
 void CGameClient::RunFrame(float frameTime)
 {
 	//Reset move and angles stuff from the old frame
-	m_vecDesiredMove.Set(0,0,0);
 	m_vecDesiredAngles.Set(0,0,0);
 	m_cmd.Reset();
 
 	//Run Input
 	if(m_pCmdHandler->CursorChanged())
 	{
-		m_pCmdHandler->UpdateCursorPos(m_vecMouseAngles.x, m_vecMouseAngles.y, m_vecMouseAngles.z);
-		RotateRight(m_vecMouseAngles.x);
-		RotateUp(m_vecMouseAngles.y);
+		vector_t vecMouseAngles;
+
+		m_pCmdHandler->UpdateCursorPos(vecMouseAngles.x, vecMouseAngles.y, vecMouseAngles.z);
+		RotateRight(vecMouseAngles.x);
+		RotateUp(vecMouseAngles.y);
 	}
 	m_pCmdHandler->RunCommands();
 
-	//Movement
-	//Get Normalized angle vectors
+	//Process Movement
+	
+	//Get Angle vectors
 	m_pGameClient->angles.AngleToVector(&m_vecForward, &m_vecRight, &m_vecUp);
 	m_vecForward.Normalize();
 	m_vecRight.Normalize();
 	m_vecUp.Normalize();
 
 	// find forward and right vectors that lie in the xy plane
-	vector_t f, r;
+	vector_t f, r, vecDesiredMove;
 	f = m_vecForward;
 	f.z = 0;
 	if (f.Normalize() < 0.3)
@@ -119,7 +123,6 @@ void CGameClient::RunFrame(float frameTime)
 		f.z = 0;
 		f.Normalize();
 	}
-
 
 	r = m_vecRight;
 	r.z = 0;
@@ -134,39 +137,37 @@ void CGameClient::RunFrame(float frameTime)
 		r.Normalize();
 	}
 
-
 	//Get desired move
 	if(m_cmd.moveFlags & ClCmd::MOVEFORWARD)
-		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, f);
+		vecDesiredMove.VectorMA(vecDesiredMove, m_pGameClient->maxSpeed, f);
 	if(m_cmd.moveFlags & ClCmd::MOVEBACK)
-		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, f);
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, f);
 	if(m_cmd.moveFlags & ClCmd::MOVERIGHT)
-		m_vecDesiredMove.VectorMA(m_vecDesiredMove,m_maxvelocity, r);
+		vecDesiredMove.VectorMA(vecDesiredMove,m_pGameClient->maxSpeed, r);
 	if(m_cmd.moveFlags & ClCmd::MOVELEFT)
-		m_vecDesiredMove.VectorMA(m_vecDesiredMove,-m_maxvelocity, r);
+		vecDesiredMove.VectorMA(vecDesiredMove,-m_pGameClient->maxSpeed, r);
 	if(m_cmd.moveFlags & ClCmd::JUMP)
-		m_vecDesiredMove.z += 400;
+		vecDesiredMove.z += 300;
 
-	// FIXME - use gravity cvar
 	// always add gravity
-	m_vecDesiredMove.z -= 800 * frameTime;
+	vecDesiredMove.z -= (m_pGameClient->gravity * frameTime);
 
 	// gradually slow down (friction)
-	m_pGameClient->velocity.x *= 0.9f * frameTime;
-	m_pGameClient->velocity.y *= 0.9f * frameTime;
+	m_pGameClient->velocity.x *= (m_pGameClient->friction * frameTime);
+	m_pGameClient->velocity.y *= (m_pGameClient->friction * frameTime);
 	if (m_pGameClient->velocity.x < 0.01f)
 		m_pGameClient->velocity.x = 0;
 	if (m_pGameClient->velocity.y < 0.01f)
 		m_pGameClient->velocity.y = 0;
 
-
-	m_pGameClient->velocity += m_vecDesiredMove;
+	m_pGameClient->velocity += vecDesiredMove;
 
 	// FIXME - cap velocity somewhere around here
 
 	//Perform the actual move and update angles
 	UpdatePosition(frameTime);
-	UpdateAngles(m_vecDesiredAngles,frameTime);
+	UpdateViewAngles(frameTime);
+	UpdateViewBlends();
 
 	//Save current view to send to the server
 	m_cmd.angles = m_pGameClient->angles;
@@ -192,10 +193,15 @@ void CGameClient::RunFrame(float frameTime)
 	for(i=0; i< GAME_MAXCLIENTS; i++)
 	{
 		if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
+		{
+			m_pClGame->HudPrintf(0,160,0,"OPPONENT : %.2f,%.2f,%.2f", m_clients[i].origin.x,
+				m_clients[i].origin.y,m_clients[i].origin.z);
+
 			m_pClGame->DrawModel(m_clients[i]);
+		}
 	}
 
-	UpdateViewBlends();
+	
 }
 
 

@@ -282,9 +282,21 @@ void CServer::RunFrame()
 
 			//Write clients own position
 			m_net.ChanBeginWrite(i, SV_UPDATE, 12);
+			m_net.ChanWriteByte(m_clients[i]->sendFlags);
 			m_net.ChanWriteFloat(m_clients[i]->origin.x);
 			m_net.ChanWriteFloat(m_clients[i]->origin.y);
 			m_net.ChanWriteFloat(m_clients[i]->origin.z);
+
+			if(m_clients[i]->sendFlags)
+			{
+				if(m_clients[i]->sendFlags & SVU_GRAVITY)
+					m_net.ChanWriteFloat(m_clients[i]->gravity);
+				if(m_clients[i]->sendFlags & SVU_FRICTION)
+					m_net.ChanWriteFloat(m_clients[i]->friction);
+				if(m_clients[i]->sendFlags & SVU_MAXSPEED)
+					m_net.ChanWriteFloat(m_clients[i]->maxSpeed);
+			}
+
 			m_net.ChanFinishWrite();
 
 			//Write position AND angles of other clients in PVS
@@ -293,17 +305,33 @@ void CServer::RunFrame()
 				if((!m_clients[j]) || (!m_clients[j]->spawned) || (i==j))
 					continue;
 
-				m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 20);
+				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
 				m_net.ChanWriteShort(m_clients[j]->num);
+				m_net.ChanWriteByte(m_clients[i]->sendFlags);
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
 				m_net.ChanWriteCoord(m_clients[j]->origin.y);
 				m_net.ChanWriteCoord(m_clients[j]->origin.z);
 				m_net.ChanWriteAngle(m_clients[j]->angles.x);
 				m_net.ChanWriteAngle(m_clients[j]->angles.y);
 				m_net.ChanWriteAngle(m_clients[j]->angles.z);
+
+				if(m_clients[j]->sendFlags)
+				{
+					if(m_clients[j]->sendFlags & SVU_GRAVITY)
+						m_net.ChanWriteFloat(m_clients[j]->gravity);
+					if(m_clients[j]->sendFlags & SVU_FRICTION)
+						m_net.ChanWriteFloat(m_clients[j]->friction);
+					if(m_clients[j]->sendFlags & SVU_MAXSPEED)
+						m_net.ChanWriteFloat(m_clients[j]->maxSpeed);
+				}
 				m_net.ChanFinishWrite();
 			}
 		}
+
+		//FIXME: Clean up
+		for(i=0;i<m_svState.maxClients;i++)
+			if(m_clients[i])
+				m_clients[i]->sendFlags = 0;
 
 	}
 

@@ -50,38 +50,64 @@ frequently as possible
 */
 struct ClCmd
 {
+	enum
+	{
+		MOVEFORWARD = 1,
+		MOVEBACK = 2,
+		MOVELEFT = 4,
+		MOVERIGHT = 8,
+		JUMP = 16,
+		CROUCH = 32
+	};
+
+	enum
+	{
+		NONE = 0,
+		UPDATED = 1,
+		SENT = 2
+	};
+
 	ClCmd() { Reset(); }
 
-	ClCmd & operator = (const ClCmd & cmd)
+	void UpdateCmd(const ClCmd & cmd)
 	{
 		time = cmd.time;
-		angles[0] = cmd.angles[0];
-		angles[1] = cmd.angles[1];
-		angles[2] = cmd.angles[2];
-		forwardmove = cmd.forwardmove;
-		rightmove = cmd.rightmove;
-		upmove = cmd.upmove;
-		flags = cmd.flags;
-		return *this;
+		angles = cmd.angles;
+		moveFlags |= cmd.moveFlags;
+		svFlags = UPDATED;
 	}
 	
 	void Reset()
 	{ 
-		flags = 0;
-		time = angles[0] = angles[1] = angles[2] = 0.0f;
-		forwardmove = rightmove = upmove = 0; 
+		moveFlags = 0;
+		svFlags = NONE;
+		time = 0.0f;
+		angles.Set(0,0,0);
 	}
 
-	float	time;			//Frame Time
-	float	angles[3];		//Current View angels
-	short	forwardmove, 
-			rightmove, 
-			upmove;
-	byte	flags;
+	vector_t angles;	//Clients view angles
+	float	 time;		//Clients frame Time
+	byte	 moveFlags;	//Move flags
+	byte	 svFlags;	//Server flags
 	
 	//add buttons and what not
 };
 
+
+/*
+================================================
+Applied to SV_UPDATE and SV_CLUPDATE messages
+to indicate type of incoming data. not sure if
+this should be here
+================================================
+*/
+enum EClUpdateFlags
+{
+	SVU_DEFAULT = 0,
+	SVU_GRAVITY = 1,
+	SVU_FRICTION = 2,
+	SVU_MAXSPEED = 4
+};
 
 /*
 ================================================

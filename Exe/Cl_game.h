@@ -61,8 +61,7 @@ private:
 
 	//==================================================
 	//Movement
-	void UpdatePosition(float time);
-	void UpdateAngles(const vector_t &angles, float time);
+	void UpdatePosition(const float &time);
 		
 	void MoveForward();
 	void MoveBackward();
@@ -78,6 +77,7 @@ private:
 
 	//==================================================
 
+	void UpdateViewAngles(const float &time);
 	void UpdateViewBlends();
 
 	void Spawn(vector_t	&origin, vector_t &angles);
@@ -94,9 +94,9 @@ private:
 	CVar	m_cvName;
 	CVar	m_cvRate;
 	CVar	m_cvCharacter;
-//	CVar    m_cvModel;
-//	CVar    m_cvSkin;
 	CVar	m_cvClip;
+
+	CVar	m_cvViewTilt;
 
 	//==================================================
 
@@ -133,16 +133,12 @@ private:
 
 	CCamera	*	m_pCamera;
 	
-	vector_t	m_vecMouseAngles;
-
+	bool		m_bOnGround;
 	vector_t	m_vecBlend;
 	vector_t	m_vecForward,
 				m_vecRight,
-				m_vecUp,
-				m_vecVelocity;
-	
-	vector_t	m_vecDesiredMove,
-				m_vecDesiredAngles;
+				m_vecUp;
+	vector_t	m_vecDesiredAngles;
 };
 
 #endif

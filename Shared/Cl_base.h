@@ -59,9 +59,15 @@ struct ClClient : public ClEntity
 	{
 		ClEntity::Reset();
 		memset(name,0,32);
+		gravity = friction = maxSpeed = 0.0f;
 	}
 	
 	char name[CL_MAXNAME];
+
+	//for local prediction
+	float gravity;
+	float friction;
+	float maxSpeed;
 };
 
 

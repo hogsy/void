@@ -3,13 +3,15 @@
 
 #include "Game_base.h"
 
-struct I_Console;
-class  CBuffer;
 
-const int ENT_MAXCLASSNAME= 32;
-const int ENT_MAXRESNAME  = 64;
-const int ENT_MAXSTRING   = 128;
-const int ENT_MAXMESSAGE  = 256;
+//Constants
+const int	GAME_VERSION   = 1;
+const float	GAME_FRAMETIME = 0.05f;
+
+const int	ENT_MAXCLASSNAME= 32;
+const int	ENT_MAXRESNAME  = 64;
+const int	ENT_MAXSTRING   = 128;
+const int	ENT_MAXMESSAGE  = 256;
 
 /*
 =======================================
@@ -39,13 +41,24 @@ struct EntClient : public Entity
 		memset(modelName, 0, CL_MAXMODELNAME);
 		memset(skinName, 0, CL_MAXSKINNAME);
 		inUse = spawned = false;
+		
+		//Default to game/map defaults
+		friction = gravity = maxSpeed = 1.0f;
+		sendFlags = 0;
 	}
 
-	bool inUse;
-	bool spawned;
+	bool  inUse;
+	bool  spawned;
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
+
+	//Server will write only angles and coord by default. 
+	//But changes to these can be added as well.
+	byte  sendFlags;
+	float friction;
+	float gravity;
+	float maxSpeed;
 
 	char name[CL_MAXNAME];
 	char modelName[CL_MAXMODELNAME];
@@ -99,6 +112,9 @@ struct I_GameHandler
 };
 
 
+struct I_Console;
+class  CBuffer;
+
 /*
 ======================================
 Interface exported by the game dll
@@ -114,7 +130,7 @@ struct I_Game
 	virtual bool LoadWorld(I_World * pWorld)=0;
 	virtual void UnloadWorld()=0;
 
-	virtual void RunFrame(float curTime, float frameTime)=0;
+	virtual void RunFrame(float curTime)=0;
 
 	virtual bool SpawnEntity(CBuffer &buf)=0;
 

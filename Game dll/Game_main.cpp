@@ -111,6 +111,7 @@ void CGame::RunFrame(float curTime)
 
 	vector_t desiredMove;	
 	vector_t forward, right, up;
+	EntClient * pClient = 0;
 
 	for(i=0; i<numClients; i++)
 	{
@@ -119,8 +120,11 @@ void CGame::RunFrame(float curTime)
 		//jump back to his original position when his connection unclogs
 		if(clients[i]->clCmd.svFlags & ClCmd::UPDATED)
 		{
-			clients[i]->angles = clients[i]->clCmd.angles;
-			clients[i]->angles.AngleToVector(&forward,&right,&up);
+			pClient = clients[i];
+
+
+			pClient->angles = pClient->clCmd.angles;
+			pClient->angles.AngleToVector(&forward,&right,&up);
 			up.Normalize();
 
 			// find forward and right vectors that lie in the xy plane
@@ -148,38 +152,57 @@ void CGame::RunFrame(float curTime)
 
 			//Get desired move
 			desiredMove.Set(0,0,0);
-
-			if (clients[i]->clCmd.moveFlags & ClCmd::MOVEFORWARD)
-				desiredMove.VectorMA(desiredMove,g_varMaxSpeed.fval, forward);
-			if (clients[i]->clCmd.moveFlags & ClCmd::MOVEBACK)
-				desiredMove.VectorMA(desiredMove,-g_varMaxSpeed.fval, forward);
-			if (clients[i]->clCmd.moveFlags & ClCmd::MOVERIGHT)
-				desiredMove.VectorMA(desiredMove,g_varMaxSpeed.fval, right);
-			if (clients[i]->clCmd.moveFlags & ClCmd::MOVELEFT)
-				desiredMove.VectorMA(desiredMove,-g_varMaxSpeed.fval, right);
-			if (clients[i]->clCmd.moveFlags & ClCmd::JUMP)
-				desiredMove.z += 400;
+/*
+			if (pClient->clCmd.moveFlags & ClCmd::MOVEFORWARD)
+				desiredMove.VectorMA(desiredMove, (g_varMaxSpeed.fval * pClient->maxSpeed), forward);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVEBACK)
+				desiredMove.VectorMA(desiredMove, -(g_varMaxSpeed.fval * pClient->maxSpeed), forward);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVERIGHT)
+				desiredMove.VectorMA(desiredMove, (g_varMaxSpeed.fval * pClient->maxSpeed), right);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVELEFT)
+				desiredMove.VectorMA(desiredMove, -(g_varMaxSpeed.fval * pClient->maxSpeed), right);
+			if (pClient->clCmd.moveFlags & ClCmd::JUMP)
+				desiredMove.z += 300;
 
 			// always add gravity
-			desiredMove.z -= g_varGravity.fval * GAME_FRAMETIME;
+			desiredMove.z -= (pClient->gravity * g_varGravity.fval * GAME_FRAMETIME);
 
 			//gradually slow down existing velocity (friction)
-			clients[i]->velocity.x *= g_varFriction.fval * GAME_FRAMETIME;
-			clients[i]->velocity.y *= g_varFriction.fval * GAME_FRAMETIME;
-			
-			if (clients[i]->velocity.x < 0.01f)
-				clients[i]->velocity.x = 0;
-			if (clients[i]->velocity.y < 0.01f)
-				clients[i]->velocity.y = 0;
+			pClient->velocity.x *= (pClient->friction * g_varFriction.fval * GAME_FRAMETIME);
+			pClient->velocity.y *= (pClient->friction * g_varFriction.fval * GAME_FRAMETIME);
+*/
+
+			if (pClient->clCmd.moveFlags & ClCmd::MOVEFORWARD)
+				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), forward);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVEBACK)
+				desiredMove.VectorMA(desiredMove, -(pClient->maxSpeed), forward);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVERIGHT)
+				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), right);
+			if (pClient->clCmd.moveFlags & ClCmd::MOVELEFT)
+				desiredMove.VectorMA(desiredMove, -(pClient->maxSpeed), right);
+			if (pClient->clCmd.moveFlags & ClCmd::JUMP)
+				desiredMove.z += 300;
+
+			// always add gravity
+			desiredMove.z -= (pClient->gravity * GAME_FRAMETIME);
+
+			//gradually slow down existing velocity (friction)
+			pClient->velocity.x *= (pClient->friction  * GAME_FRAMETIME);
+			pClient->velocity.y *= (pClient->friction  * GAME_FRAMETIME);
+		
+			if (pClient->velocity.x < 0.01f)
+				pClient->velocity.x = 0;
+			if (pClient->velocity.y < 0.01f)
+				pClient->velocity.y = 0;
 
 			//Add velocity created by new input
-			clients[i]->velocity += desiredMove;
+			pClient->velocity += desiredMove;
 
 			//Perform the actual move and update angles
-			EntMove::ClientMove(clients[i], GAME_FRAMETIME);
+			EntMove::ClientMove(pClient, GAME_FRAMETIME);
 
 			//Do we really want to do this ?
-			clients[i]->clCmd.Reset();
+			pClient->clCmd.Reset();
 		}
 	}
 }
@@ -242,11 +265,19 @@ called on initial connection and level changes
 void CGame::ClientBegin(int clNum)
 {
 	clients[clNum]->clCmd.Reset();
-	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
-	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
-	VectorSet(&clients[clNum]->angles, 0.0f, 0.0f, 0.0f);
-	VectorSet(&clients[clNum]->velocity, 0.0f, 0.0f, 0.0f);
+	clients[clNum]->origin.Set(0.0f,0.0f,48.0f);
+	clients[clNum]->mins.Set(-10.0f, -10.0f, -40.0f);
+	clients[clNum]->maxs.Set(10.0f, 10.0f, 10.0f);
+	clients[clNum]->angles.Set(0.0f, 0.0f, 0.0f);
+	clients[clNum]->velocity.Set(0.0f, 0.0f, 0.0f);
+
+	//Set any custom speed/gravity/friction here
+	
+	//First time spawn
+	clients[clNum]->maxSpeed = g_varMaxSpeed.fval;
+	clients[clNum]->gravity = g_varGravity.fval;
+	clients[clNum]->friction = g_varFriction.fval;
+	clients[clNum]->sendFlags |= (SVU_GRAVITY|SVU_FRICTION|SVU_MAXSPEED);
 
 	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
 	clients[clNum]->spawned = true;

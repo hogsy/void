@@ -50,6 +50,7 @@ const byte SV_CONFIGSTRING  = 2;
 const byte SV_STUFFCMD		= 3;	// Client will execute this locally
 const byte SV_PRINT			= 4;    // Client will print this locally
 const byte SV_TALK			= 5;	// Chat message
+
 const byte SV_UPDATE		= 6;	// Clients own update. sent as much as possible
 
 const byte SV_CLFULLINFO	= 7;    // complete info about a given client
@@ -57,7 +58,7 @@ const byte SV_CLFULLINFO	= 7;    // complete info about a given client
 const byte SV_CLINFOCHANGE  = 8;    // clients info changed
 									// n for name, m for model, s for skin etc
 
-const byte SV_CLFULLUPDATE  = 9;	// fully update a clients data
+const byte SV_CLUPDATE		= 9;	// fully update a clients data
 const byte SV_CLDELTAUPDATE	= 10;	// delta update a clients data
 
 const byte SV_CLDISCONNECT  = 11;	// A client disconnected, let everyone know

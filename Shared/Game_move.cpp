@@ -32,7 +32,7 @@ void EntMove::ClientMove(BaseEntity *ent, float time)
 
 	vector_t dir = ent->velocity;
 
-// scale velocity down to frametime
+	// scale velocity down to frametime
 	dir.Scale(time);
 	primal_dir = dir;
 	

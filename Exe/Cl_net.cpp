@@ -98,12 +98,16 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				int  num = buffer.ReadByte();
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
+
+				//Unregister model/skin
+
 				m_clients[num].Reset();
 				break;
 			}
 
 		case SV_UPDATE:
 			{
+				byte  b = buffer.ReadByte();
 				float x = buffer.ReadFloat();
 				float y = buffer.ReadFloat();
 				float z = buffer.ReadFloat();
@@ -113,6 +117,17 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 					ComPrintf("CL: Update is corrupt. Ignoring\n");
 					return;
 				}
+
+				if(b)
+				{
+					//Order matters
+					if(b & SVU_GRAVITY)
+						m_pGameClient->gravity = buffer.ReadFloat();
+					if(b & SVU_FRICTION)
+						m_pGameClient->friction = buffer.ReadFloat();
+					if(b & SVU_MAXSPEED)
+						m_pGameClient->maxSpeed = buffer.ReadFloat();
+				}
 				
 				m_pGameClient->origin.x = x;
 				m_pGameClient->origin.y = y;
@@ -121,17 +136,31 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				break;
 			}
 
-		case SV_CLFULLUPDATE:
+		case SV_CLUPDATE:
 			{
 				int num = buffer.ReadShort();
 				if(m_clients[num].inUse && num != m_clNum)
 				{
+					byte  b = buffer.ReadByte();
+
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
 					m_clients[num].origin.z = buffer.ReadCoord();
 					m_clients[num].angles.x = buffer.ReadAngle();
 					m_clients[num].angles.y = buffer.ReadAngle();
 					m_clients[num].angles.z = buffer.ReadAngle();
+
+					if(b)
+					{
+						//Order matters
+						if(b & SVU_GRAVITY)
+							m_clients[num].gravity = buffer.ReadFloat();
+						if(b & SVU_FRICTION)
+							m_clients[num].friction = buffer.ReadFloat();
+						if(b & SVU_MAXSPEED)
+							m_clients[num].maxSpeed = buffer.ReadFloat();
+					}
+
 				}
 				break;
 			}
@@ -440,6 +469,23 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_pGameClient->inUse = true;
 	m_clNum = clNum;
 
+
+/*
+	char path[256];
+	strcpy(path,"Models/Player/Amber/Amber");
+
+	m_pGameClient->mdlCache = CACHE_LOCAL;
+	m_pGameClient->skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
+	m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
+
+	strcpy(path,"Models/Player/Amber/tris.md2");
+	m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
+*/	
+
+
+
+
+
 	HandleGameMsg(buffer);
 
 	m_campath = -1;
@@ -453,7 +499,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_pGameClient->maxs.Set(10.0f, 10.0f, 10.0f);
 	
 	m_vecBlend.Set(0.0f,0.0f,0.0f);
-	m_vecDesiredMove.Set(0, 0, 0);
+//	m_vecDesiredMove.Set(0, 0, 0);
 
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
@@ -468,7 +514,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	}
 	
 	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, m_vecBlend,
-							m_vecForward, m_vecRight, m_vecUp,	m_vecVelocity);
+							m_vecForward, m_vecRight, m_vecUp,	m_pGameClient->velocity);
 
 	m_ingame = true;
 	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
@@ -499,7 +545,7 @@ void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.WriteString(m_cvName.string);
 //FIXME
-	buffer.WriteString("Amber");
-	buffer.WriteString("Amber");
+	buffer.WriteString("blah");
+	buffer.WriteString("blah");
 	buffer.WriteInt(m_cvRate.ival);
 }
