@@ -169,7 +169,7 @@ void CModelCacheEntry::LoadModel()
 		fileReader.Read(tskin, 64, 1);
 
 		skin_names[s] = new char[64];
-		if (!skin_names[s])	 FError("mem for skin names");
+		if (!skin_names[s])	 FError("mem for skin names2");
 
 		// strip path and extension
 		for (int c=strlen(tskin); c>=0; c--)
@@ -385,11 +385,11 @@ void CModelCacheEntry::LoadFail()
 	// skin names
 
 	skin_names = new char*[1];
-	if (!skin_names) FError("mem for skin names");
+	if (!skin_names) FError("mem for skin names3");
 
 	// md2 skin name list is 64 char strings
 	skin_names[0] = new char[64];
-	if (!skin_names[0])	 FError("mem for skin names");
+	if (!skin_names[0])	 FError("mem for skin names4");
 
 	strcpy(skin_names[0], "none");
 	LoadSkins();

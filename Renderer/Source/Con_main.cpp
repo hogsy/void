@@ -336,7 +336,7 @@ void CRConsole::PrintBuffer()
 	}
 
 	// Draw the blinking cursor
-	if(((int)(GetCurTime()*10)) % 2)
+	if(((int)(GetCurTime()*5)) % 2)
 	{
 		//Print the cursor
 		s = ('_' % 16) * 0.0625f;

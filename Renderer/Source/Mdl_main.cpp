@@ -103,6 +103,7 @@ hMdl CModelManager::LoadModel(const char *model, hMdl index, CacheType cache)
 DrawModel 
 =======================================
 */
+extern I_Void		  *	g_pVoidExp;
 void CModelManager::DrawModel(hMdl index, CacheType cache, const R_EntState &state)
 {
 	// add model to list to be drawn
@@ -181,6 +182,7 @@ void CModelManager::Purge(void)
 	}
 
 	drawmodel_t *next, *walk;
+	vector_t trans;
 
 	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
@@ -190,12 +192,12 @@ void CModelManager::Purge(void)
 	{
 		next = walk->next;
 		g_pRast->MatrixPush();
-		
-		g_pRast->MatrixRotateZ( walk->angles.ROLL  * 180/PI);
-		g_pRast->MatrixRotateX(-walk->angles.PITCH * 180/PI);
-		g_pRast->MatrixRotateY( walk->angles.YAW   * 180/PI);
 
-		g_pRast->MatrixTranslate(walk->origin);
+		VectorInv2(walk->origin, trans);
+		g_pRast->MatrixTranslate(trans);
+		g_pRast->MatrixRotateY(-walk->angles.YAW   * 180/PI);
+		g_pRast->MatrixRotateX( walk->angles.PITCH * 180/PI);
+		g_pRast->MatrixRotateZ(-walk->angles.ROLL  * 180/PI);
 
 		caches[walk->cache][walk->index]->Draw(walk->skin, walk->frame);
 

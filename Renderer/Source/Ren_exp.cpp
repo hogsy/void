@@ -338,7 +338,7 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 	g_pRast->SetFocus();
 
 	// if we're not changing bpp, we can skip a lot of stuff
-	if (0)//bpp == g_rInfo.bpp)
+	if (bpp == g_rInfo.bpp)
 	{
 		g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
 		g_prCons->UpdateRes();

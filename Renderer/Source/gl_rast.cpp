@@ -413,7 +413,7 @@ bool COpenGLRast::UpdateDisplaySettings(int width, int height, int bpp, bool ful
 
 	_wglMakeCurrent(hDC, hRC);
 
-	bool fast = false; //(bpp == g_rInfo.bpp);
+	bool fast = (bpp == g_rInfo.bpp);
 
 
 	//Shutdown openGL first
