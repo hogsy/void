@@ -30,7 +30,7 @@ const int  NET_MAXCLIENTS	   = 32;
 
 //This needs to be defined for the library to link
 namespace System {
-	float GetCurTime();
+	const float &	GetCurTime();
 }
 
 /*

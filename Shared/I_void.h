@@ -15,8 +15,8 @@ struct I_Void
 	I_Void()  { console = 0; hunkManager = 0; }
 	virtual ~I_Void() { console = 0; hunkManager = 0; }
 
-	virtual float & GetCurTime()=0;
-	virtual float & GetFrameTime()=0;
+	virtual float GetCurTime()=0;
+	virtual float GetFrameTime()=0;
 	virtual const char * GetCurPath()=0;
 
 	//Tell the Main application that the given module died so that
