@@ -97,7 +97,7 @@ bool CNetChan::CanSendReliable()
 
 void CNetChan::SetRate(int rate)
 {
-	if(rate < 1000 || rate > 10000)
+	if(rate < 100 || rate > 10000)
 		rate = 2500;
 	m_rate = 1.0/rate;
 }

@@ -22,18 +22,14 @@ bool CServer::ValidateClConnection(int clNum,
 
 	//Add client info to all connected clients
 	int len = strlen(m_clients[clNum]->name) + 
-			  strlen(m_clients[clNum]->modelName) + 
-			  strlen(m_clients[clNum]->skinName) + 10;
+			  strlen(m_clients[clNum]->charPath) + 2;
 
 	GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X,clNum);
 	
 	m_net.ChanBeginWrite(m_multiCastSet, SV_CLFULLINFO, len);
 	m_net.ChanWriteByte(m_clients[clNum]->num);
 	m_net.ChanWriteString(m_clients[clNum]->name);
-	m_net.ChanWriteShort(m_clients[clNum]->mdlIndex);
-	m_net.ChanWriteString(m_clients[clNum]->modelName);
-	m_net.ChanWriteShort(m_clients[clNum]->skinNum);
-	m_net.ChanWriteString(m_clients[clNum]->skinName);
+	m_net.ChanWriteString(m_clients[clNum]->charPath);
 	m_net.ChanFinishWrite();
 	return true;
 }
@@ -91,6 +87,10 @@ ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
 ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					m_net.ChanSetRate(clNum,rate);
 				}
+				else
+				{
+					return;
+				}
 				break;
 			}
 		case CL_DISCONNECT:
@@ -114,6 +114,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 				}
 				
 				m_clients[clNum]->clCmd.UpdateCmd(m_incomingCmd);
+//				m_clients[clNum]->clCmd.moveFlags = m_incomingCmd.moveFlags;
 				break;
 			}
 		default:
@@ -165,14 +166,6 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 	
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
-
-	//TODO: Only if the server isn't dedicated
-/*	if(m_svState.numClients == 0)
-	{
-ComPrintf("SV: No Clients left. Shutting down\n");
-		AddServerCmd("killserver");
-	}
-*/
 }
 
 
@@ -267,18 +260,17 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 		{
 			//This shouldn't go above max packet size
 			//Write info about all currently connected clients
+			buffer.WriteByte(m_svState.numClients);
+
 			for(int i=0; i< m_svState.numClients; i++)
 			{
-				if(!m_clients[i] ||!m_clients[i]->spawned)
+				if(!m_clients[i] ||!m_clients[i]->bSpawned)
 					continue;
 
 				buffer.WriteByte(SV_CLFULLINFO);
 				buffer.WriteByte(m_clients[i]->num);
 				buffer.WriteString(m_clients[i]->name);
-				buffer.WriteShort(m_clients[i]->mdlIndex);
-				buffer.WriteString(m_clients[i]->modelName);
-				buffer.WriteShort(m_clients[i]->skinNum);
-				buffer.WriteString(m_clients[i]->skinName);
+				buffer.WriteString(m_clients[i]->charPath);
 			}
 			return true;
 		}

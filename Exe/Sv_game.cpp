@@ -20,7 +20,7 @@ void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
 		set.Reset();
 		for(int i=0;i<m_svState.numClients;i++)
 		{
-			if(m_clients[i] && m_clients[i]->spawned)
+			if(m_clients[i] && m_clients[i]->bSpawned)
 					set.dest[i] = true;
 		}
 		if(type == MULTICAST_ALL_X)

@@ -354,7 +354,11 @@ void CConsole::RegisterCVar(CVarBase * var,	I_ConHandler * handler)
 	if(GetTokenParms(var->name, &parms))
 	{
 		if(parms.NumTokens() > 1)
-			var->ForceSet(parms.StringTok(1,m_szParmBuffer,1024));
+		{
+//FIXME: validate stuff from configs ??
+//			if(!handler || handler->HandleCVar(var,parms))
+				var->ForceSet(parms.StringTok(1,m_szParmBuffer,1024));
+		}
 	}
 	m_lCVars.insert(it,var);
 }

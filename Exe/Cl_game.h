@@ -45,6 +45,9 @@ public:
 	I_InCursorListener	* GetCursorListener();
 	CCamera *			  GetCamera();
 
+	//network
+	int  GetOutgoingRate() const;
+
 	void RunFrame(float frameTime);
 	
 	void WriteCmdUpdate(CBuffer &buf);
@@ -58,6 +61,8 @@ private:
 
 	bool LoadWorld(CWorld * pWorld);
 	void UnloadWorld();
+
+	void ReadClientInfo(CBuffer &buffer);
 
 	//==================================================
 	//Movement
@@ -92,24 +97,25 @@ private:
 
 	CVar    m_cvKbSpeed;
 	CVar	m_cvName;
-	CVar	m_cvRate;
+	CVar	m_cvInRate;
+	CVar	m_cvOutRate;
 	CVar	m_cvCharacter;
 	CVar	m_cvClip;
-
+	CVar    m_cvDefaultChar;
 	CVar	m_cvViewTilt;
 
 	//==================================================
 
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
-
+	
 	bool		m_ingame;
+
 	ClCmd		m_cmd;
 	ClCmd		m_oldCmd;
 
 	int			m_campath;
 	float		m_camtime;
-	float		m_maxvelocity;
 	
 	//==================================================
 	//Client Side Entities

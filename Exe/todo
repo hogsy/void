@@ -1,13 +1,22 @@
-EXE
-==============================================================
-change model/skins stuff to just character
+BUGS
+=============
+jump hitch
+model angles messed up
+model too high
 
 
 GAME
 ========
+
+add animation cycle flags
+
+entities
+========
+
 add delay var to sound sources
 add renderering flags to model entities
-add frame range to model entities, speed as well ?
+add frame range to model entities
+
 
 
 //AFTER TEST

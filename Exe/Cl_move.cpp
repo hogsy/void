@@ -6,6 +6,7 @@
 
 #include "Cl_base.h"
 #include "Cl_game.h"
+#include "Cl_hdr.h"
 
 namespace {
 
@@ -39,7 +40,10 @@ void CGameClient::MoveLeft()
 void CGameClient::Jump()
 {	
 	if(m_bOnGround)
+	{
+		ComPrintf("Jumped: %f\n", m_pClGame->GetCurTime());
 		m_cmd.moveFlags |= ClCmd::JUMP;
+	}
 }
 
 void CGameClient::Crouch()
@@ -141,20 +145,19 @@ void CGameClient::UpdatePosition(const float &time)
 ///	else
 //		EntMove::NoClipMove(m_pGameClient, dir, time);
 
-	//Check current position
 	TraceInfo traceInfo;
 	vector_t  end(m_pGameClient->origin);
-//	vector_t  up;
-
-//	m_pGameClient->angles.AngleToVector(0,0,&up);
-//	end.VectorMA(end,-1,up);
 	end.z -= 0.1f;
 
 	m_pWorld->Trace(traceInfo,m_pGameClient->origin, end, m_pGameClient->mins,m_pGameClient->maxs);
 	if(traceInfo.fraction != 1)
 		m_bOnGround = true;
 	else
+	{
 		m_bOnGround = false;
+		m_pClGame->HudPrintf(0,160,0,"IN AIR");
+	}
+
 }
 
 /*

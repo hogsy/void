@@ -14,11 +14,11 @@ Constructor
 CNetClient::CNetClient(I_NetClientHandler * client): 
 						m_pClient(client),
 						m_buffer(NET_MAXBUFFERSIZE),
-						m_reliableBuf(NET_MAXBUFFERSIZE)
+						m_reliableBuf(NET_MAXBUFFERSIZE),
+						m_pNetChan(new CNetChan)
 {
 	m_pSock = new CNetSocket(&m_buffer);
 	
-	m_pNetChan = new CNetChan;
 	m_pNetChan->Reset();
 
 	memset(m_szServerAddr,0,NET_IPADDRLEN);
@@ -477,7 +477,8 @@ Update local net vars
 ======================================
 */
 void CNetClient::SetRate(int rate)
-{	m_pNetChan->SetRate(rate);
+{
+	m_pNetChan->SetRate(rate);
 }
 void CNetClient::SetPort(short port)
 {	

@@ -277,7 +277,7 @@ void CServer::RunFrame()
 		//Write updates to all connected clients
 		for(int i=0;i<m_svState.maxClients;i++)
 		{
-			if((!m_clients[i]) || (!m_clients[i]->spawned) || (!m_net.ChanCanSend(i)))
+			if((!m_clients[i]) || (!m_clients[i]->bSpawned) || (!m_net.ChanCanSend(i)))
 				continue;
 
 			//Write clients own position
@@ -302,7 +302,7 @@ void CServer::RunFrame()
 			//Write position AND angles of other clients in PVS
 			for(int j=0; j<m_svState.maxClients; j++)
 			{
-				if((!m_clients[j]) || (!m_clients[j]->spawned) || (i==j))
+				if((!m_clients[j]) || (!m_clients[j]->bSpawned) || (i==j))
 					continue;
 
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
@@ -810,7 +810,7 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 		{
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
-				if(m_clients[i] && m_clients[i]->inUse)
+				if(m_clients[i]) // && m_clients[i]->inUse)
 					m_net.SendDisconnect(i, DR_SVQUIT);
 			}
 			Shutdown();

@@ -36,6 +36,8 @@ enum EClEvent
 
 struct I_ClientGame
 {
+	virtual float GetCurTime()=0;
+
 	//Models
 	virtual void DrawModel(const ClEntity &state)=0;
 	virtual int  RegisterModel(const char *model, CacheType cache, int index=-1)=0;

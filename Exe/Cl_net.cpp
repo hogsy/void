@@ -8,6 +8,7 @@
 #include "Cl_hdr.h"
 #include "Net_client.h"
 #include "Cl_game.h"
+#include "I_file.h"
 
 /*
 ======================================
@@ -54,30 +55,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 			}
 		case SV_CLFULLINFO:
 			{
-				int num = buffer.ReadByte();
-				m_clients[num].Reset();
-				strcpy(m_clients[num].name, buffer.ReadString());
-
-				int mindex = buffer.ReadShort();
-				char model[64];
-				strcpy(model,buffer.ReadString());
-
-				int sindex = buffer.ReadShort();
-				char path[COM_MAXPATH];
-
-				sprintf(path,"Models/Player/%s/%s", model, buffer.ReadString());
-
-				m_clients[num].mdlCache = CACHE_LOCAL;
-				m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL, sindex);
-				m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
-
-				sprintf(path,"Models/Player/%s/tris.md2", model);
-				m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL,mindex);
-				m_clients[num].mdlCache = CACHE_LOCAL;
-
-				m_clients[num].inUse = true;
-
-				ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
+				ReadClientInfo(buffer);
 				break;
 			}
 		case SV_CLINFOCHANGE:
@@ -132,7 +110,6 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				m_pGameClient->origin.x = x;
 				m_pGameClient->origin.y = y;
 				m_pGameClient->origin.z = z;
-
 				break;
 			}
 
@@ -185,11 +162,10 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 	{
 	case SVC_GAMEINFO:
 		{
-
 			char * game = buffer.ReadString();
-ComPrintf("CL: Game: %s\n", game);
+			ComPrintf("CL: Game: %s\n", game);
 			char * map = buffer.ReadString();
-ComPrintf("CL: Map: %s\n", map);
+			ComPrintf("CL: Map: %s\n", map);
 
 			CWorld * pWorld = m_pClGame->LoadWorld(map);
 			if(pWorld)
@@ -305,10 +281,56 @@ ComPrintf("CL: Map: %s\n", map);
 		}
 	case SVC_CLIENTINFO:
 		{
-			HandleGameMsg(buffer);
+			int numClients = buffer.ReadByte();
+			for(int i=0;i<numClients;i++)
+			{
+				if(buffer.ReadByte() != SV_CLFULLINFO)
+					break;
+				ReadClientInfo(buffer);
+			}
 			break;
 		}
 	}
+}
+
+/*
+================================================
+Read Client info
+================================================
+*/
+void CGameClient::ReadClientInfo(CBuffer &buffer)
+{
+	int num = buffer.ReadByte();
+	m_clients[num].Reset();
+	strcpy(m_clients[num].name, buffer.ReadString());
+
+	char szCharacter[CL_MAXCHARNAME];
+	strcpy(szCharacter,buffer.ReadString());
+
+	char * skin = strchr(szCharacter,'/');
+
+	//Bad string, deal with it
+	if(!skin)
+	{
+		ComPrintf("CL: Unable to get skinname: %s: Defaulting to %s\n", 
+					szCharacter, m_cvDefaultChar.string);
+		strcpy(szCharacter,m_cvDefaultChar.string);
+	}
+
+	char path[COM_MAXPATH];
+	sprintf(path,"Models/Player/%s", szCharacter);
+	m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
+	m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
+
+	char modelName[CL_MAXMODELNAME];
+	strncpy(modelName,szCharacter, skin-szCharacter);
+	sprintf(path,"Models/Player/%s/tris.md2", modelName);
+	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
+	m_clients[num].mdlCache = CACHE_LOCAL;
+
+	m_clients[num].inUse = true;
+
+	ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
 }
 
 //==========================================================================
@@ -373,21 +395,18 @@ on the server
 */
 bool CGameClient::ValidateRate(const CParms &parms)
 {
-	
 	if(parms.NumTokens() < 2)
 	{
-		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
+		ComPrintf("Rate = \"%d\"\n", m_cvInRate.ival);
 		return false;
 	}
 
 	int rate = parms.IntTok(1);
-	if(rate < 1000 || rate > 10000)
+	if(rate < 100 || rate > 10000)
 	{
 		ComPrintf("Rate needs to be in (1000-10000): %d\n", rate);
 		return false;
 	}
-
-	m_pClGame->SetNetworkRate(rate);
 
 	if(!m_ingame)
 		return true;
@@ -414,44 +433,81 @@ bool CGameClient::ValidateCharacter(const CParms &parms)
 		return false;
 	}
 
-	char szPath[64];
-	if(!parms.StringTok(1,szPath,64))
+	char szCharacter[CL_MAXCHARNAME];
+	if(!parms.StringTok(1,szCharacter,CL_MAXCHARNAME))
 	{
 		ComPrintf("Unable to read model string\n");
 		return false;
 	}
 
-	char modelPath[CL_MAXMODELNAME];
-	bool bDefaultedSkin = false;
-	
-	CParms charParms(szPath);
-	
-	charParms.StringTok(0,modelPath,CL_MAXMODELNAME,'/');
-	ComPrintf("Model : %s\n", modelPath);
+	char modelName[CL_MAXMODELNAME];
+	char * pSkin = strchr(szCharacter,'/');
 
-	//Check if there is a model by that name, error out if not
-
-	//If we didnt specify a skin, then default to same name as model
-	if(charParms.NumTokens('/') >= 2)
-	{
-		char skinPath[CL_MAXSKINNAME];
-		charParms.StringTok(1,skinPath,64,'/');
-		ComPrintf("Skin  : %s\n", skinPath);
-	}
+	if(pSkin)
+		strncpy(modelName,szCharacter,pSkin-szCharacter);
 	else
+		strncpy(modelName,szCharacter,CL_MAXMODELNAME);
+
+	//Try to load the given model
+	
+	char path[COM_MAXPATH];
+	CFileStream fileStream;
+
+	//Validate model
+	sprintf(path,"Models/Player/%s/tris.md2",modelName);
+
+	if(!fileStream.Open(path))
 	{
-		ComPrintf("Defaulting to %s as skin\n", modelPath);
-		sprintf(szPath,"%s/%s", modelPath,modelPath);
-		m_cvCharacter.ForceSet(szPath);
+		ComPrintf("CL: Unable to load model : %s\n", path);
+		return false;
 	}
 
+	fileStream.Close();
+	
+	if(pSkin)
+		sprintf(path,"Models/Player/%s/%s.tga",modelName, pSkin);
+	else
+		sprintf(path,"Models/Player/%s/%s.tga",modelName, modelName);
+
+	//We dont have the given skin
+	if(!fileStream.Open(path))
+	{
+		ComPrintf("CL: Unable to load skin : %s\n", path);
+		return false;
+	}
+
+	//Everything okay. override the CVar IF the skinName was not supplied
+	if(!pSkin)
+		sprintf(path,"%s/%s", modelName,modelName);
+	else
+		sprintf(path,"%s/%s", modelName,pSkin);
+
+	m_cvCharacter.ForceSet(path);
+
+
+	//Now unload the current stuff, and load the new stuff
 	if(m_ingame)
 	{
+		m_pClGame->UnregisterModel(CACHE_LOCAL, m_pGameClient->mdlIndex);
+		m_pClGame->UnregisterImage(CACHE_LOCAL, (m_pGameClient->skinNum & ~MODEL_SKIN_UNBOUND_LOCAL));
+
+		//Load Skin
+		m_pGameClient->skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
+		m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
+
+		sprintf(path,"Models/Player/%s/tris.md2",modelName);
+		m_pGameClient->mdlCache = CACHE_LOCAL;
+		m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
+		strcpy(m_pGameClient->model,modelName);
+
+		//Notify server
+		CBuffer &buffer = m_pClGame->GetReliableSendBuffer();
+		buffer.WriteByte(CL_INFOCHANGE);
+		buffer.WriteChar('c');
+		buffer.WriteString(m_cvCharacter.string);
 	}
-	return (!bDefaultedSkin);
+	return true;
 }
-
-
 
 //==========================================================================
 //==========================================================================
@@ -464,47 +520,41 @@ Enter the game for the first time
 void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 {
 	//Initialize local Client
-	m_pGameClient = &m_clients[clNum];
-	m_pGameClient->Reset();
-	strcpy(m_pGameClient->name, m_cvName.string);
-	m_pGameClient->inUse = true;
 	m_clNum = clNum;
+	m_pGameClient = &m_clients[clNum];
+	
+	m_pGameClient->Reset();
+	m_pGameClient->inUse = true;
+	strcpy(m_pGameClient->name, m_cvName.string);
+	
+	//Load model Resources
+	char path[COM_MAXPATH];
+	char * skin = strchr(m_cvCharacter.string,'/');
+	if(skin)
+		strncpy(m_pGameClient->model, m_cvCharacter.string, skin - m_cvCharacter.string);
+	else
+		strcpy(m_pGameClient->model, m_cvCharacter.string);
 
+	if(skin)
+		sprintf(path,"Models/Player/%s", m_cvCharacter.string);
+	else
+		sprintf(path,"Models/Player/%s/%s", m_cvCharacter.string,m_cvCharacter.string);
 
-/*
-	char path[256];
-	strcpy(path,"Models/Player/Amber/Amber");
-
-	m_pGameClient->mdlCache = CACHE_LOCAL;
 	m_pGameClient->skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
 	m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
-	strcpy(path,"Models/Player/Amber/tris.md2");
+	sprintf(path,"Models/Player/%s/tris.md2",m_pGameClient->model);
 	m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
-*/	
-
-
-
-
+	m_pGameClient->mdlCache = CACHE_LOCAL;
+	
+	//Setup Game client info
+	m_pGameClient->moveType = MOVETYPE_STEP;
+	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
+	m_pGameClient->origin.Set(0.0f,0.0f,30.0f);
+	m_pGameClient->mins = VEC_CLIENT_MINS;
+	m_pGameClient->maxs = VEC_CLIENT_MAXS;
 
 	HandleGameMsg(buffer);
-
-	m_campath = -1;
-	m_maxvelocity =  200.0f;
-	
-	m_pGameClient->moveType = MOVETYPE_STEP;
-
-	m_pGameClient->angles.Set(0.0f,0.0f,0.0f);
-	
-	m_pGameClient->origin.Set(0.0f,0.0f,30.0f);
-	m_pGameClient->mins.Set(-16, -16, -24);
-	m_pGameClient->maxs.Set(16, 16, 32);
-
-//	vec3_t	mins = {-16, -16, -24};
-//	vec3_t	maxs = {16, 16, 32};
-	
-	m_vecBlend.Set(0.0f,0.0f,0.0f);
-//	m_vecDesiredMove.Set(0, 0, 0);
 
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
@@ -517,15 +567,18 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 			m_pClGame->AddSoundSource(&m_entities[i]);
 		}
 	}
+
 	
+	m_ingame = true;
+	m_campath = -1;
+	m_vecBlend.Set(0.0f,0.0f,0.0f);
+	
+	//Setup camera
 	m_pCamera = new CCamera(m_pGameClient->origin, m_pGameClient->angles, m_vecBlend,
 							m_vecForward, m_vecRight, m_vecUp,	m_pGameClient->velocity);
 
-	m_ingame = true;
 	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
 	
-//	Spawn(0,0);
-
 	ComPrintf("CL: CLIENT NUM %d\n", clNum);
 }
 
@@ -549,8 +602,6 @@ Write UserInfo to buffer
 void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.WriteString(m_cvName.string);
-//FIXME
-	buffer.WriteString("hayden");
-	buffer.WriteString("hayden");
-	buffer.WriteInt(m_cvRate.ival);
+	buffer.WriteString(m_cvCharacter.string);
+	buffer.WriteInt(m_cvInRate.ival);
 }

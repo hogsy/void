@@ -45,14 +45,14 @@ private:
 
 	void WriteUpdate();
 	void ShowNetStats();
+	float GetCurTime();
 
 	//==================================================
 	//Client CVars
 	CVar		m_cvPort;
 	CVar		m_cvNetStats;
 
-//	int			m_clientState;
-	bool	m_bInGame;
+	bool		m_bInGame;
 	float		m_fFrameTime;
 	CWorld *	m_pWorld;
 	

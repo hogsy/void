@@ -448,7 +448,8 @@ CVar Handlers
 */
 bool CRenExp::HandleCVar(const CVarBase *cvar,const CParms &parms)
 {
-	g_pRast->SetFocus();
+	if(g_pRast)
+		g_pRast->SetFocus();
 
 	if(cvar == &m_cFull)
 		return CVar_FullScreen((CVar*)cvar, parms);

@@ -54,9 +54,9 @@ const byte SV_TALK			= 5;	// Chat message
 const byte SV_UPDATE		= 6;	// Clients own update. sent as much as possible
 
 const byte SV_CLFULLINFO	= 7;    // complete info about a given client
-									// {num,name,modelindex,modelname,skinindex,skinname}
+									// {num,name,charactername)
 const byte SV_CLINFOCHANGE  = 8;    // clients info changed
-									// n for name, m for model, s for skin etc
+									// n for name, r for rate, c for character
 
 const byte SV_CLUPDATE		= 9;	// fully update a clients data
 const byte SV_CLDELTAUPDATE	= 10;	// delta update a clients data

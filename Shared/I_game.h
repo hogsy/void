@@ -3,7 +3,6 @@
 
 #include "Game_base.h"
 
-
 //Constants
 const int	GAME_VERSION   = 1;
 const float	GAME_FRAMETIME = 0.05f;
@@ -37,18 +36,15 @@ struct EntClient : public Entity
 {
 	EntClient() :Entity("client")
 	{	
-		memset(name,0,CL_MAXNAME); 
-		memset(modelName, 0, CL_MAXMODELNAME);
-		memset(skinName, 0, CL_MAXSKINNAME);
-		inUse = spawned = false;
-		
-		//Default to game/map defaults
-		friction = gravity = maxSpeed = 1.0f;
+		bSpawned = false;
+		friction = gravity = maxSpeed = 0.0f;
 		sendFlags = 0;
+
+		mdlIndex = 255;
+		skinNum = 255;
 	}
 
-	bool  inUse;
-	bool  spawned;
+	bool  bSpawned;
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
@@ -60,9 +56,9 @@ struct EntClient : public Entity
 	float gravity;
 	float maxSpeed;
 
-	char name[CL_MAXNAME];
-	char modelName[CL_MAXMODELNAME];
-	char skinName[CL_MAXSKINNAME];
+	//Strings
+	char  name[CL_MAXNAME];
+	char  charPath[ENT_MAXRESNAME];
 };
 
 /*

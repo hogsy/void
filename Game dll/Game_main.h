@@ -44,6 +44,7 @@ public:
 
 private:
 
+	I_World * m_pWorld;
 	void InitializeVars();
 
 };

@@ -15,9 +15,8 @@ const int	GAME_MAXCLIENTS = 16;
 const char	GAME_WORLDSDIR[]= "Worlds/";
 
 const char  CL_MAXNAME		= 32;
-const char  CL_MAXSKINNAME  = 32;
 const char  CL_MAXMODELNAME = 32;
-
+const char  CL_MAXCHARNAME  = 64;
 
 /*
 ================================================

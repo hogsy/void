@@ -2,6 +2,7 @@
 #include "Game_main.h"
 #include "Game_spawn.h"
 #include "Com_buffer.h"
+#include "Com_trace.h"
 
 /*
 ================================================
@@ -19,6 +20,7 @@ CGame::CGame()
 	memset(clients,0, sizeof(EntClient *) * GAME_MAXCLIENTS);
 	numClients = 0;
 
+	m_pWorld =	0;
 	InitializeVars();
 }
 
@@ -64,12 +66,15 @@ Load/Unload World
 ================================================
 */
 bool CGame::LoadWorld(I_World * pWorld)
-{	EntMove::SetWorld(pWorld);
+{	
+	EntMove::SetWorld(pWorld);
+	m_pWorld = pWorld;
 	return true;
 }
 
 void CGame::UnloadWorld()
 {	EntMove::SetWorld(0);
+	m_pWorld =	0;
 }
 
 
@@ -152,25 +157,6 @@ void CGame::RunFrame(float curTime)
 
 			//Get desired move
 			desiredMove.Set(0,0,0);
-/*
-			if (pClient->clCmd.moveFlags & ClCmd::MOVEFORWARD)
-				desiredMove.VectorMA(desiredMove, (g_varMaxSpeed.fval * pClient->maxSpeed), forward);
-			if (pClient->clCmd.moveFlags & ClCmd::MOVEBACK)
-				desiredMove.VectorMA(desiredMove, -(g_varMaxSpeed.fval * pClient->maxSpeed), forward);
-			if (pClient->clCmd.moveFlags & ClCmd::MOVERIGHT)
-				desiredMove.VectorMA(desiredMove, (g_varMaxSpeed.fval * pClient->maxSpeed), right);
-			if (pClient->clCmd.moveFlags & ClCmd::MOVELEFT)
-				desiredMove.VectorMA(desiredMove, -(g_varMaxSpeed.fval * pClient->maxSpeed), right);
-			if (pClient->clCmd.moveFlags & ClCmd::JUMP)
-				desiredMove.z += 300;
-
-			// always add gravity
-			desiredMove.z -= (pClient->gravity * g_varGravity.fval * GAME_FRAMETIME);
-
-			//gradually slow down existing velocity (friction)
-			pClient->velocity.x *= (pClient->friction * g_varFriction.fval * GAME_FRAMETIME);
-			pClient->velocity.y *= (pClient->friction * g_varFriction.fval * GAME_FRAMETIME);
-*/
 
 			if (pClient->clCmd.moveFlags & ClCmd::MOVEFORWARD)
 				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), forward);
@@ -180,9 +166,19 @@ void CGame::RunFrame(float curTime)
 				desiredMove.VectorMA(desiredMove, (pClient->maxSpeed), right);
 			if (pClient->clCmd.moveFlags & ClCmd::MOVELEFT)
 				desiredMove.VectorMA(desiredMove, -(pClient->maxSpeed), right);
-			if (pClient->clCmd.moveFlags & ClCmd::JUMP)
-				desiredMove.z += 300;
+			
+			//Check for touching ground
+			TraceInfo traceInfo;
+			vector_t  end(pClient->origin);
+			end.z -= 0.1f;
 
+			m_pWorld->Trace(traceInfo,pClient->origin, end, pClient->mins,pClient->maxs);
+			if(traceInfo.fraction != 1)
+			{
+				if (pClient->clCmd.moveFlags & ClCmd::JUMP)
+					desiredMove.z += 300;
+			}
+			
 			// always add gravity
 			desiredMove.z -= (pClient->gravity * GAME_FRAMETIME);
 
@@ -225,19 +221,10 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 		return false;
 
 	clients[clNum] = new EntClient();
-
-	strcpy(clients[clNum]->name, userInfo.ReadString());
-	strcpy(clients[clNum]->modelName,userInfo.ReadString());
-	strcpy(clients[clNum]->skinName,userInfo.ReadString());
-
-	clients[clNum]->mdlIndex = g_pImports->RegisterModel(clients[clNum]->modelName);
-	clients[clNum]->skinNum = g_pImports->RegisterImage(clients[clNum]->skinName);
-
-	clients[clNum]->inUse = true;
-	clients[clNum]->spawned = false;
-	clients[clNum]->clCmd.Reset();
-
+	clients[clNum]->bSpawned = false;
 	clients[clNum]->num = numClients;
+	strcpy(clients[clNum]->name, userInfo.ReadString());
+	strcpy(clients[clNum]->charPath, userInfo.ReadString());
 
 	if(!reconnect)
 		numClients++;
@@ -265,9 +252,11 @@ called on initial connection and level changes
 void CGame::ClientBegin(int clNum)
 {
 	clients[clNum]->clCmd.Reset();
-	clients[clNum]->origin.Set(0.0f,0.0f,48.0f);
-	clients[clNum]->mins.Set(-10.0f, -10.0f, -40.0f);
-	clients[clNum]->maxs.Set(10.0f, 10.0f, 10.0f);
+	
+	clients[clNum]->mins = VEC_CLIENT_MINS;
+	clients[clNum]->maxs = VEC_CLIENT_MAXS;
+
+	clients[clNum]->origin.Set(0.0f,0.0f,30.0f);
 	clients[clNum]->angles.Set(0.0f, 0.0f, 0.0f);
 	clients[clNum]->velocity.Set(0.0f, 0.0f, 0.0f);
 
@@ -280,7 +269,7 @@ void CGame::ClientBegin(int clNum)
 	clients[clNum]->sendFlags |= (SVU_GRAVITY|SVU_FRICTION|SVU_MAXSPEED);
 
 	g_pImports->BroadcastPrintf("%s entered the game", clients[clNum]->name);
-	clients[clNum]->spawned = true;
+	clients[clNum]->bSpawned = true;
 }
 
 /*

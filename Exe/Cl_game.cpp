@@ -21,10 +21,12 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_pClGame(pClGame),
 				m_cvKbSpeed("cl_kbspeed","5.0", CVAR_FLOAT, CVAR_ARCHIVE),
 				m_cvClip("cl_clip","1",     CVAR_BOOL,0),
-				m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+				m_cvInRate("cl_inRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+				m_cvOutRate("cl_outRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
 				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE),
-				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE)
+				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE),
+				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -42,9 +44,12 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
 	System::GetConsole()->RegisterCVar(&m_cvClip);
 	System::GetConsole()->RegisterCVar(&m_cvViewTilt);
-	System::GetConsole()->RegisterCVar(&m_cvRate,this);
+	System::GetConsole()->RegisterCVar(&m_cvInRate,this);
+	System::GetConsole()->RegisterCVar(&m_cvOutRate,this);
 	System::GetConsole()->RegisterCVar(&m_cvName,this);
 	System::GetConsole()->RegisterCVar(&m_cvCharacter, this);
+	System::GetConsole()->RegisterCVar(&m_cvDefaultChar, this);
+
 
 	//Register Commands
 	for(int i=0; g_clGameCmds[i].szCmd; i++)
@@ -192,11 +197,10 @@ void CGameClient::RunFrame(float frameTime)
 	//Draw clients
 	for(i=0; i< GAME_MAXCLIENTS; i++)
 	{
-		if(m_clients[i].inUse && m_clients[i].mdlIndex >=0)
+		if(m_clients[i].inUse && 
+		  (&m_clients[i] != m_pGameClient) && 
+		  (m_clients[i].mdlIndex >=0))
 		{
-			m_pClGame->HudPrintf(0,160,0,"OPPONENT : %.2f,%.2f,%.2f", m_clients[i].origin.x,
-				m_clients[i].origin.y,m_clients[i].origin.z);
-
 			m_pClGame->DrawModel(m_clients[i]);
 		}
 	}
@@ -354,6 +358,10 @@ CCamera *	CGameClient::GetCamera()
 {	return m_pCamera;
 }
 
+int  CGameClient::GetOutgoingRate() const
+{	return m_cvOutRate.ival;
+}
+
 
 //==========================================================================
 //==========================================================================
@@ -430,6 +438,9 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 {
 	if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
 	{
+		if(parms.NumTokens() < 2)
+			return true;
+
 		float val = parms.FloatTok(1);
 		if(val < 0.6 || val >= 10.0)
 		{
@@ -438,12 +449,30 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvRate))
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvInRate))
 		return ValidateRate(parms);
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvOutRate))
+	{
+		if(parms.NumTokens() < 2)
+			return true;
+
+		int val = parms.IntTok(1);
+		if(val < 1000 || val > 10000)
+		{
+			ComPrintf("Out of range. Should be between 1000 and 10000\n");
+			return false;
+		}
+		m_pClGame->SetNetworkRate(val);
+		return true;
+	}
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
 		return ValidateName(parms);
 	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvCharacter))
 		return ValidateCharacter(parms);
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvDefaultChar))
+	{
+		return false;
+	}
 	return false;
 }
 

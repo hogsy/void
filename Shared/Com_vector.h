@@ -24,10 +24,12 @@ struct vector_t //Vec3d
 	float x, y, z;
 
 	inline vector_t() : x(0), y(0), z(0) {}
+	inline vector_t(float ix, float iy, float iz) : x(ix), y(iy), z(iz){}
 	inline vector_t(const vector_t &v) : x (v.x), y(v.y), z(v.z) {}
 	inline ~vector_t() {}
 
 	//Operators
+	
 	//Assignment
 	inline vector_t & operator = (const vector_t &v) 
 	{
@@ -38,7 +40,6 @@ struct vector_t //Vec3d
 		}
 		return *this;
 	}
-
 	//Addition
 	inline vector_t & operator += (const vector_t &a)
 	{	
@@ -47,7 +48,6 @@ struct vector_t //Vec3d
 		z +=a.z;
 		return *this;
 	}
-
 	//Substraction
 	inline vector_t & operator -= (const vector_t &a)
 	{	
@@ -141,7 +141,7 @@ struct vector_t //Vec3d
 
 /*
 ======================================
-
+Plane
 ======================================
 */
 struct plane_t
@@ -152,6 +152,7 @@ struct plane_t
 	vector_t	norm;	// normal to plane
 	float		d;		// distance from origin
 };
+
 
 
 // math prototypes
@@ -166,24 +167,21 @@ void	AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, 
 int		VectorCompare2 (const vector_t *v1, const vector_t *v2, float thresh);
 void	MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm);
 void	VectorSet(vector_t *a, float x, float y, float z);
-
+void	RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
 
 /*
 Blah, macros suck ass. can't even define my own funcs in a diff namespace cause 
 these mess up the names.
 */
-
 #define dot(a, b) ( a.x*b.x + a.y*b.y + a.z*b.z )
 #define VectorCopy(a, b)    { b.x = a.x; b.y = a.y; b.z = a.z; }
-
 #define VectorAdd(a, b, c)  { c.x=a.x+b.x; c.y=a.y+b.y; c.z=a.z+b.z; }
 #define VectorAdd2(a, b)	{ a.x+=b.x; a.y+=b.y; a.z+=b.z; }
-
 #define VectorSub(a, b, c)  { c.x=a.x-b.x; c.y=a.y-b.y; c.z=a.z-b.z; }
 #define VectorInv(a)	    { a.x=-a.x; a.y=-a.y; a.z=-a.z; }
 #define VectorInv2(a, b)	    { b.x=-a.x; b.y=-a.y; b.z=-a.z; }
 
-void RotatePointAroundVector(vector_t *dst, vector_t *dir, vector_t *point, float rad);
+
 
 #endif
 

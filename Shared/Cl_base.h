@@ -48,7 +48,11 @@ struct ClEntity : public BaseEntity
 	float		frac;
 };
 
-//A client side Client
+/*
+================================================
+A client side Client
+================================================
+*/
 struct ClClient : public ClEntity
 {
 	ClClient() 
@@ -58,11 +62,15 @@ struct ClClient : public ClEntity
 	virtual void Reset()
 	{
 		ClEntity::Reset();
-		memset(name,0,32);
+		memset(name,0,CL_MAXNAME);
+		memset(model,0,CL_MAXMODELNAME);
 		gravity = friction = maxSpeed = 0.0f;
 	}
 	
 	char name[CL_MAXNAME];
+	
+	//fix me, changed to pointer to list of loaded char resources
+	char model[CL_MAXMODELNAME];		
 
 	//for local prediction
 	float gravity;

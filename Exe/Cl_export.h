@@ -9,6 +9,10 @@ public:
 	CClientExports(CClient & refClient) : m_refClient(refClient) {}
 	~CClientExports() {}
 
+	inline float GetCurTime()
+	{	return m_refClient.GetCurTime();
+	}
+
 	//Models
 	inline void DrawModel(const ClEntity &state)
 	{	m_refClient.m_pClRen->DrawModel(state);

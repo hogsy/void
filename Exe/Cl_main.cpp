@@ -38,7 +38,11 @@ CClient::CClient(I_Renderer * pRenderer,
 					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(pRenderer),	
 					m_pSound(pSound),
-					m_pMusic(pMusic)
+					m_pMusic(pMusic),
+					m_pClRen(0),
+					m_pHud(0),
+					m_pExports(0),
+					m_pNetCl(0)
 {
 	//Get Renderer Interfaces
 	m_pClRen = m_pRender->GetClient();
@@ -52,8 +56,8 @@ CClient::CClient(I_Renderer * pRenderer,
 	
 	//Setup network listener
 	m_pNetCl= new CNetClient(m_pClState);
+	m_pNetCl->SetRate(m_pClState->GetOutgoingRate());
 	
-//	m_clientState = CLIENT_DISCONNECTED;
 	m_fFrameTime  = 0.0f;
 	m_pWorld = 0;
 	m_bInGame = false;
@@ -307,6 +311,10 @@ void CClient::ShowNetStats()
 
 void CClient::SetNetworkRate(int rate)
 {	m_pNetCl->SetRate(rate);
+}
+
+float CClient::GetCurTime()
+{	return System::GetCurTime();
 }
 
 //==========================================================================

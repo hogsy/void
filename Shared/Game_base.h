@@ -93,6 +93,8 @@ struct ClCmd
 	//add buttons and what not
 };
 
+const vector_t VEC_CLIENT_MINS(-16, -16, -24);
+const vector_t VEC_CLIENT_MAXS(16, 16, 32);
 
 /*
 ================================================
