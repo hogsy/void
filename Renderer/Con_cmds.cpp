@@ -38,7 +38,7 @@ Take a screen shot, write it to disk
 */
 void ScreenShot(const char *name, EImageFileFormat type)
 {
-	char	checkname[260];
+	char checkname[260];
 
 	//find a file name to save it to 
 	sprintf(checkname, "%s\\%s\\", GetCurPath(), "Shots");
@@ -47,7 +47,7 @@ void ScreenShot(const char *name, EImageFileFormat type)
 	if (!name)
 	{
 		int	  i;
-		FILE *f;
+		FILE *f=0;
 		char  shotname[80]; 
 
 		if(type== FORMAT_PCX)
@@ -64,21 +64,21 @@ void ScreenShot(const char *name, EImageFileFormat type)
 			if (!f)
 				break;
 			fclose(f);
+			f = 0;
 		}
 
-		if (i==100) 
+		if (i== 100) 
 		{
-			ComPrintf("too many screen shots - try deleteing or moving some\n"); 
+			ComPrintf("Too many Screenshots in Shots folder. Please remove some\n");
 			return;
 		}
 	}
 	else
 	{
-		sprintf(checkname, "%s\\%s\\%s", GetCurPath(), "Shots", name);
 		if(type == FORMAT_PCX)
-			Util::SetDefaultExtension(checkname, "pcx");
+			sprintf(checkname, "%s\\%s\\%s.pcx", GetCurPath(), "Shots", name);
 		else
-			Util::SetDefaultExtension(checkname, "tga");
+			sprintf(checkname, "%s\\%s\\%s.tga", GetCurPath(), "Shots", name);
 	}
 
 	//Got file name, Now actually take the shot and write it
@@ -95,7 +95,6 @@ void ScreenShot(const char *name, EImageFileFormat type)
 
 	CImageWriter imageWriter(width,height,data);
 	imageWriter.Write(checkname,type);
-
 	g_pHunkManager->HunkFree(data);
 }
 
@@ -136,7 +135,6 @@ void CRConsole::HandleCommand(int cmdId, const CParms &parms)
 CVar Handling funcs
 ======================================================================================
 */
-
 /*
 =======================================
 switch fullbright (light) rendering

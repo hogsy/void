@@ -95,7 +95,7 @@ public:
 				 const byte * idata);
 	~CImageWriter();
 
-	void Write(const char *name, EImageFileFormat iformat=FORMAT_TGA);
+	void Write(const char *name, EImageFileFormat iformat);
 
 protected:
 
