@@ -30,7 +30,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 								 m_cRollOffFactor("snd_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cSndFps("snd_maxfps", "30", CVAR_FLOAT, CVAR_ARCHIVE)
+								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE)
 {
 	m_pListener = 0;	
 	m_pPrimary = new CPrimaryBuffer;
@@ -48,7 +48,7 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 	m_bStereoSupport= false;
 	m_fLastFrame = 0.0f;
 
-	System::GetConsole()->RegisterCVar(&m_cSndFps);
+	System::GetConsole()->RegisterCVar(&m_cSndFps, this);
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
 	System::GetConsole()->RegisterCVar(&m_cHighQuality,this);
 	System::GetConsole()->RegisterCVar(&m_cRollOffFactor,this);
@@ -864,6 +864,13 @@ bool CSoundManager::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return SetDopplerFactor(parms);
 	if(cvar == reinterpret_cast<CVarBase*>(&m_cDistanceFactor))
 		return SetDistanceFactor(parms);
+	if(cvar == reinterpret_cast<CVarBase*>(&m_cSndFps))
+	{
+		int val = parms.IntTok(1);
+		if(val >= 20)
+			return true;
+		ComPrintf("Max sound FPS must be higher than 20\n");
+	}
 	return false;
 }
 

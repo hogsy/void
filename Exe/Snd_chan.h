@@ -3,7 +3,6 @@
 
 #include "Snd_buf.h"
 #include "Com_vector.h"
-//#include "Clgame_defs.h"
 
 namespace VoidSound {
 

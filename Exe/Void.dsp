@@ -204,10 +204,6 @@ SOURCE=..\Shared\Com_hunk.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\Com_keys.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\Shared\Com_mem.cpp
 # End Source File
 # Begin Source File
@@ -268,6 +264,14 @@ SOURCE=.\Cl_collision.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Cl_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cl_game.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Cl_main.cpp
 # End Source File
 # Begin Source File
@@ -281,10 +285,6 @@ SOURCE=.\Cl_move.cpp
 # Begin Source File
 
 SOURCE=.\Cl_net.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Clgame_defs.h
 # End Source File
 # End Group
 # Begin Group "Resources"
@@ -334,6 +334,10 @@ SOURCE=.\Mus_main.h
 # Begin Group "Server"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Game_defs.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Sv_main.cpp
@@ -412,6 +416,10 @@ SOURCE=..\Shared\I_filesystem.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\I_game.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_hud.h
 # End Source File
 # Begin Source File
@@ -475,26 +483,6 @@ SOURCE=..\..\Mssdk\Include\Tvout.h
 SOURCE=..\..\Mssdk\Include\WinEFS.h
 # End Source File
 # End Group
-# Begin Group "Game"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Game_ents.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Game_ents.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_game.h
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=..\Shared\Game_defs.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\todo

@@ -1,6 +1,5 @@
 #include "Sv_main.h"
 #include "World.h"
-#include "Game_ents.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
 
@@ -9,9 +8,45 @@
 Validate connection request from a client
 ======================================
 */
-bool CServer::ValidateClConnection(int clNum, bool reconnect,
-									CBuffer &buffer)
+bool CServer::ValidateClConnection(int clNum, 
+								   bool reconnect,
+								   CBuffer &buffer)
 {
+	if(!m_pGame->ClientConnect(clNum,buffer,reconnect))
+	{
+		m_net.SendRejectMsg("Couldn't find free client slot");
+		return false;
+	}
+	m_net.ChanSetRate(clNum, buffer.ReadInt());
+	
+	m_svState.numClients = m_pGame->numClients;
+
+	int len = 10 + strlen(m_clients[clNum]->name) + 
+		strlen(m_clients[clNum]->modelName) + strlen(m_clients[clNum]->skinName);
+
+	//Add client info to all connected clients
+	for(int i=0;i<m_svState.maxClients;i++)
+	{
+		//dont send to source
+		if(i == clNum)
+			continue;
+
+		if(m_clients[i] && m_clients[i]->spawned)
+		{
+			m_net.ChanBeginWrite(i,SV_CLIENTINFO, len);
+			m_net.ChanWriteShort(m_clients[clNum]->num);
+			m_net.ChanWriteString(m_clients[clNum]->name);
+			m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
+			m_net.ChanWriteString(m_clients[clNum]->modelName);
+			m_net.ChanWriteShort(m_clients[clNum]->skinNum);
+			m_net.ChanWriteString(m_clients[clNum]->skinName);
+			m_net.ChanFinishWrite();
+		}
+	}
+	return true;
+
+
+/*
 	if(m_clients[clNum] && !reconnect)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
@@ -63,6 +98,7 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 		}
 	}
 	return true;
+*/
 }
 
 /*
@@ -145,7 +181,6 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				break;
 			}
 		}
-
 		//Check for more messages in the buffer
 		packetId = buffer.ReadByte();
 	}
@@ -173,11 +208,14 @@ ComPrintf("%s overflowed", m_clients[clNum]->name);
 		m_net.BroadcastPrintf("%s overflowed", m_clients[clNum]->name);
 		break;
 	}
+	
+	m_pGame->ClientDisconnect(clNum);
+	m_svState.numClients = m_pGame->numClients;
 
-	//Run through resources to see if we can free anything ?
-	delete m_clients[clNum];
+/*	delete m_clients[clNum];
 	m_clients[clNum] = 0;
 	m_svState.numClients --;
+*/
 }
 
 /*
@@ -194,12 +232,11 @@ void CServer::WriteGameStatus(CBuffer &buffer)
 Handle Client spawning
 ======================================
 */
-void CServer::OnClientSpawn(int clNum)
+void CServer::OnClientBegin(int clNum)
 {
-	//Check chanIds to see what client spawned
-	m_net.BroadcastPrintf("%s entered the game", m_clients[clNum]->name);
-	m_clients[clNum]->spawned = true;
+	m_pGame->ClientBegin(clNum);
 
+	//HAAAAAAAAAAAAACK
 	//send other clients info
 	for(int i=0; i< m_svState.numClients; i++)
 	{
@@ -226,6 +263,11 @@ Handle Map change on client ?
 void CServer::OnLevelChange(int clNum)
 {
 }
+
+
+
+
+
 
 
 //======================================================================================

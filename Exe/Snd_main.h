@@ -3,8 +3,7 @@
 
 #include "Sys_hdr.h"
 #include "Com_vector.h"
-#include "Game_defs.h"
-#include "Clgame_defs.h"
+#include "Cl_game.h"
 
 /*
 ======================================

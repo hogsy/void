@@ -1,8 +1,9 @@
 #include "Sv_main.h"
 #include "World.h"
-#include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
+#include "Com_util.h"
+#include "I_game.h"
 
 //======================================================================================
 enum 
@@ -12,7 +13,8 @@ enum
 	CMD_STATUS	= 3
 };
 
-CServer * g_pServer=0;
+typedef I_Game * (*GAME_LOADFUNC) (I_GameHandler * pImport, I_Console * pConsole);
+typedef void (*GAME_FREEFUNC) ();
 
 /*
 ======================================
@@ -25,21 +27,16 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 					 m_cGame("sv_game", "Game", CVAR_STRING, CVAR_LATCH|CVAR_ARCHIVE),
 					 m_chanWriter(m_net)
 {
-	g_pServer = this;
-
-	m_entities = 0;
-	m_clients = 0;
-
-	//Initialize Network Server
-	m_net.Create(this, &m_svState);
-
 	m_numModels = 0;
 	m_numImages = 0;
 	m_numSounds = 0;
 
+	m_entities = 0;
+	m_clients = 0;
+
 	m_pWorld = 0;
 	m_active = false;
-	
+
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
@@ -57,28 +54,10 @@ Destructor
 */
 CServer::~CServer()
 {	
-	g_pServer = 0;
-
 	Shutdown();
 
-	if(m_entities)
-	{
-		for(int i=0;i<GAME_MAXENTITES; i++)
-		{
-			if(m_entities[i]) 
-				delete m_entities[i];
-		}
-		delete [] m_entities;
-	}
-	if(m_clients)
-	{
-		for(int i=0;i<GAME_MAXCLIENTS; i++)
-		{
-			if(m_clients[i]) 
-				delete m_clients[i];
-		}
-		delete [] m_clients;
-	}
+	m_entities = 0;
+	m_clients = 0;
 }
 
 /*
@@ -88,6 +67,7 @@ Initialize the Server from dead state
 */
 bool CServer::Init()
 {
+	//Unlatch all CVARS
 	m_cGame.Unlatch();
 	m_cHostname.Unlatch();
 	m_cPort.Unlatch();
@@ -100,24 +80,42 @@ bool CServer::Init()
 	m_svState.worldname[0] = 0;
 	m_svState.levelId = 0;
 
-	if(!m_net.Init())
+	//Initialize Network
+	if(!m_net.Init(this, &m_svState))
 		return false;
 	
 	strcpy(m_svState.localAddr, m_net.GetLocalAddr());
+
+	//Load the game dll
+	m_hGameDll = ::LoadLibrary("vgame.dll");
+	if(m_hGameDll == NULL)
+	{
+		ComPrintf("CServer::Init: Failed to load game dll\n");
+		Shutdown();
+		return false;
+	}
+
+	GAME_LOADFUNC pfnLoadFunc = (GAME_LOADFUNC)::GetProcAddress(m_hGameDll,"GAME_GetAPI");
+	if(!pfnLoadFunc)
+	{
+		ComPrintf("CServer::Init: Failed to get Load Func\n");
+		Shutdown();
+		return false;
+	}
+
+	m_pGame = pfnLoadFunc(this,System::GetConsole());
+	if(!m_pGame || !m_pGame->InitGame())
+	{
+		ComPrintf("CServer::Init: Failed to initialize Game Interface\n");
+		Shutdown();
+		return false;
+	}
+	m_maxEntities = m_pGame->maxEnts;
+	m_numEntities = m_pGame->numEnts;
+	m_entities = m_pGame->entities;
+	m_clients = m_pGame->clients;
+
 	m_active = true;
-
-	//Initialize Game
-	m_maxEntities=0;
-	m_numEntities= 0;
-
-	m_entities = new Entity * [GAME_MAXENTITES];
-	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
-
-	m_clients = new EntClient * [GAME_MAXCLIENTS];
-	memset(m_clients,0,(sizeof(EntClient*) * GAME_MAXCLIENTS));
-
-	InitGame();
-	
 	return true;
 }
 
@@ -131,12 +129,30 @@ void CServer::Shutdown()
 	if(!m_active)
 		return;
 
+	//Kill the network
 	m_net.Shutdown();
 
+	//Kill the game
+	if(m_pGame)
+	{
+		m_pGame->ShutdownGame();
+//		GAME_Shutdown();
+
+		GAME_FREEFUNC pfnFreeFunc = (GAME_FREEFUNC)::GetProcAddress(m_hGameDll,"GAME_Shutdown");
+		if(pfnFreeFunc)
+			pfnFreeFunc();
+		else
+			ComPrintf("CServer::Shutdown: Failed to get Load Func\n");
+		::FreeLibrary(m_hGameDll);
+		m_hGameDll = 0;
+	}
+
+	//Unlatch Vars
 	m_cGame.Unlatch();
 	m_cHostname.Unlatch();
 	m_cPort.Unlatch();
 
+	//Reset State info
 	strcpy(m_svState.gameName, m_cGame.string);
 	strcpy(m_svState.hostName, m_cHostname.string);
 	m_svState.maxClients = m_cMaxClients.ival;
@@ -148,8 +164,6 @@ void CServer::Shutdown()
 	m_svState.levelId = 0;
 	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
 	m_active = false;
-
-	//Destroy nonpersistant entities
 
 	//destroy world data
 	if(m_pWorld)
@@ -170,16 +184,17 @@ void CServer::Restart()
 	if(!m_active)
 		return;
 
-//	m_active = false;
-
+	m_pGame->ShutdownGame();
 	m_net.Restart();
-
+	
 	if(m_pWorld)
 	{
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
 		m_svState.worldname[0] = 0;
 	}
+
+	m_pGame->InitGame();
 	ComPrintf("CServer::Restart OK\n");
 }
 
@@ -206,6 +221,7 @@ void CServer::RunFrame()
 	//go through all the clients, find entities in their pvs and update them
 
 	//Add client info to all connected clients
+/*
 	for(int i=0;i<m_svState.maxClients;i++)
 	{
 		if(m_clients[i] && m_clients[i]->spawned && m_net.ChanCanSend(i))
@@ -227,13 +243,13 @@ void CServer::RunFrame()
 			}
 		}
 	}
+*/
 	//write to clients
 	m_net.SendPackets();
 }
 
 //======================================================================================
 //======================================================================================
-
 /*
 ======================================
 Parse and read entities
@@ -274,7 +290,7 @@ void CServer::LoadEntities()
 				entBuffer.WriteString(m_pWorld->keys[(m_pWorld->entities[i].first_key + j)].value);
 			}
 		}
-		SpawnEntity(entBuffer);
+		m_pGame->SpawnEntity(entBuffer);
 	}
 	ComPrintf("%d entities, %d keys\n",m_pWorld->nentities, m_pWorld->nkeys);
 }
@@ -387,7 +403,7 @@ void CServer::WriteSignOnBuffer(NetSignOnBufs &signOnBuf)
 	for(i=0; i<m_numEntities; i++)
 	{
 		buffer.Reset();
-		if(!m_entities[i] || !m_entities[i]->WriteBaseline(buffer))
+		if(!m_entities[i] || !WriteEntBaseLine(m_entities[i],buffer))
 			continue;
 
 		//Check if the signOn buffer has space for this entity
@@ -695,10 +711,10 @@ void CServer::FatalError(const char * msg)
 {
 }
 
-void CServer::BroadcastPrint(const char * msg)
+void CServer::BroadcastPrintf(const char * msg,...)
 {	m_net.BroadcastPrintf(msg);
 }
-void CServer::ClientPrint(int clNum, const char * msg)
+void CServer::ClientPrintf(int clNum, const char * msg,...)
 {	m_net.ClientPrintf(clNum,msg);
 }
 
@@ -716,38 +732,38 @@ void CServer::PlaySnd(vector_t &origin,  int index, int channel, float vol, floa
 
 
 
-
-
-//======================================================================================
-//======================================================================================
-
-
-/*
-======================================
-Check in an entity should be spawned
-this will be implemented by teh game dll
-======================================
-*/
-bool CServer::SpawnEntity(CBuffer &buf)
+bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 {
-	buf.BeginRead();
-	char * classname = buf.ReadString();
-
-	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
-	if(ent)
+	//we only write a baseline if the entity
+	//is using a model or soundIndex
+	if(ent->modelIndex >= 0 || ent->soundIndex >= 0)
 	{
-		m_entities[m_numEntities] = ent;
-		m_entities[m_numEntities]->num = m_numEntities;
-		m_numEntities++;
+		buf.WriteShort(ent->num);
+		buf.WriteCoord(ent->origin.x);
+		buf.WriteCoord(ent->origin.y);
+		buf.WriteCoord(ent->origin.z);
+		buf.WriteAngle(ent->angles.x);
+		buf.WriteAngle(ent->angles.y);
+		buf.WriteAngle(ent->angles.z);
+
+		if(ent->modelIndex >=0)
+		{
+			buf.WriteChar('m');
+			buf.WriteShort(ent->modelIndex);
+			buf.WriteShort(ent->skinNum);
+			buf.WriteShort(ent->frameNum);
+		}
+		if(ent->soundIndex >=0)
+		{
+			buf.WriteChar('s');
+			buf.WriteShort(ent->soundIndex);
+			buf.WriteShort(ent->volume);
+			buf.WriteShort(ent->attenuation);
+		}
 		return true;
 	}
 	return false;
 }
-
-
-
-
-
 
 
 

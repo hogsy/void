@@ -3,38 +3,11 @@
 
 #include "Sys_hdr.h"
 #include "Net_server.h"
-#include "Game_ents.h"
 #include "Game_defs.h"
+#include "I_game.h"
 
 //Predeclarations
 struct world_t;
-
-/*
-======================================
-interface exported by the main server
-class to game dlls
-======================================
-*/
-struct I_GameHandler
-{
-	virtual void BroadcastPrint(const char * msg)=0;
-	virtual void ClientPrint(int clNum, const char * msg)=0;
-
-	virtual NetChanWriter & GetNetChanWriter() =0;
-
-	virtual void DebugPrint(const char * msg)=0;
-	virtual void FatalError(const char * msg)=0;
-
-	virtual void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten) =0;
-	virtual void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten) =0;
-
-	virtual void ExecCommand(const char * cmd)=0;
-
-	virtual int  RegisterModel(const char * model)=0;
-	virtual int  RegisterSound(const char * image)=0;
-	virtual int  RegisterImage(const char * sound)=0;
-};
-
 
 /*
 ======================================
@@ -58,9 +31,9 @@ public:
 	//Network Handler
 	bool ValidateClConnection(int clNum, bool reconnect,CBuffer &buffer);
 	void HandleClientMsg(int clNum, CBuffer &buffer);
-	void OnClientSpawn(int clNum);
-	void OnLevelChange(int clNum);
+	void OnClientBegin(int clNum);
 	void OnClientDrop(int clNum, EDisconnectReason reason);
+	void OnLevelChange(int clNum);
 	void WriteGameStatus(CBuffer &buffer);
 
 	//Game Interface
@@ -68,8 +41,8 @@ public:
 	void DebugPrint(const char * msg);
 	void FatalError(const char * msg);
 
-	void BroadcastPrint(const char * msg);
-	void ClientPrint(int clNum, const char * msg);
+	void BroadcastPrintf(const char * msg,...);
+	void ClientPrintf(int clNum, const char * msg,...);
 
 	NetChanWriter & GetNetChanWriter();
 
@@ -89,20 +62,14 @@ private:
 	bool Init();
 	void Shutdown();
 	void Restart();
-
-	void InitGame();
-
-	//Parse entity data from world file into 
-	//Entity spawn buffers
-	bool SpawnEntity(CBuffer &buf);
-
-	void LoadEntities();
-	
-	void WriteSignOnBuffer(NetSignOnBufs &signOnBuf);
-
-	void LoadWorld(const char * mapname);
 	void PrintServerStatus();
 
+	void LoadEntities();
+	void LoadWorld(const char * mapname);
+	
+	bool WriteEntBaseLine(const Entity * ent, CBuffer &buf) const;
+	void WriteSignOnBuffer(NetSignOnBufs &signOnBuf);
+	
 	//=================================================
 	//List of currenly loaded Resources
 	struct ResInfo
@@ -130,6 +97,10 @@ private:
 	CNetServer	m_net;
 	NetChanWriter & m_chanWriter;
 
+	//The Game Interface
+	HINSTANCE m_hGameDll;
+	I_Game *  m_pGame;
+
 	//=================================================
 	//CVars
 	CVar	m_cPort;		//Listen port
@@ -137,15 +108,12 @@ private:
 	CVar 	m_cMaxClients;	//Max Clients
 	CVar	m_cGame;		//Game Dir
 
-
 	//=================================================
-	//Should be handled by the game Dll
 
-	//the first num MAXClient entities are reserved for clients
+	//These should just point to the data in the GAME code
 	Entity    ** m_entities;
 	int			 m_maxEntities;
 	int			 m_numEntities;
-	
 	EntClient ** m_clients;
 };
 

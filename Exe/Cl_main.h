@@ -4,8 +4,7 @@
 #include "Sys_hdr.h"
 #include "Net_client.h"
 #include "I_clientRenderer.h"
-#include "Clgame_defs.h"
-#include "Game_ents.h"
+#include "Cl_game.h"
 
 //Pre-declarations
 class  CSoundManager;
