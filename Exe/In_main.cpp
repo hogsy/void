@@ -88,7 +88,10 @@ bool CInput::Init()
 	//Are Initialized without specifying any modes, so that they
 	//can default to what they read from config files
 
+	m_pMouse->SetFilter(m_pVarMouseFilter.bval);
+	m_pMouse->SetInvert(m_pVarInvert.bval);
 	m_pMouse->SetExclusive(m_pVarExclusive.bval);
+
 	m_pMouse->SetMouseMode((CMouse::EMouseMode)m_pVarMouseMode.ival);
 	if(!m_pMouse->Init())
 	{

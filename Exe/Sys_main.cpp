@@ -40,8 +40,6 @@ namespace
 	};
 }
 
-//======================================================================================
-//======================================================================================
 
 extern CVoid*	g_pVoid;
 
@@ -50,10 +48,10 @@ extern CVoid*	g_pVoid;
 Constructor
 ==========================================
 */
-CVoid::CVoid(const char * curDir, const char * cmdLine)
+CVoid::CVoid(const char * curDir, const char * cmdLine) : m_Console(curDir)
 {
+	//================================
 	//Zero out everything so only created stuff gets deleted
-
 	m_pExport=0;		//Exported Stuff
 	m_pRender=0;		//Renderer
 	m_pRParms=0;		//Current Renderering info
@@ -64,14 +62,11 @@ CVoid::CVoid(const char * curDir, const char * cmdLine)
 	m_pMusic=0;			//Music subsystem
 
 
-	//Current Working directory
-//	_getcwd(m_exePath,COM_MAXPATH);
-
-	//Hack. 
 	//Some constructors need to access the System:: funcs, and those depends on the 
 	//g_pVoid pointer.but that doesnt get set until this constructor returns
 	g_pVoid = this;
 
+	//================================
 	//Add CommandLine
 	if(cmdLine && Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
 	{
@@ -85,6 +80,7 @@ CVoid::CVoid(const char * curDir, const char * cmdLine)
 
 	m_Console.LoadConfig("vvars.cfg");
 
+	//================================
 	//Export structure
 	m_pExport = new VoidExport();
 	m_pExport->console    = (I_Console*)&m_Console;
@@ -190,7 +186,6 @@ bool CVoid::Init()
 
 	//================================
 	//Server
-//	if(!CServer::InitNetwork())
 	if(!VoidServer::InitializeNetwork())
 	{
 		System::FatalError("CVoid::Init: Could not initalize Winsock");
@@ -547,7 +542,6 @@ Global Access funcs
 */
 namespace System
 {
-//	const char* GetExePath()    { return g_pVoid->m_exePath; } 
 	const char* GetCurGamePath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
 	I_Console * GetConsole()	{ return &(g_pVoid->m_Console); }

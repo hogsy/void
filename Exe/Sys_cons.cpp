@@ -23,14 +23,15 @@ namespace
 Constructor
 ======================================
 */ 
-CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
+CConsole::CConsole(const char * curPath) : m_parms(CON_MAXARGSIZE)
 {
 	m_itCmd = 0;
 	m_prCons = 0;
 
 	//open logfile
 	char debugfilename[COM_MAXPATH];
-	_getcwd(debugfilename,COM_MAXPATH);
+//	_getcwd(debugfilename,COM_MAXPATH);
+	strcpy(debugfilename,curPath);
 	strcat(debugfilename,"/debug.log");
 
 	m_hLogFile = ::CreateFile(debugfilename,GENERIC_WRITE, FILE_SHARE_READ, 0,

@@ -22,7 +22,13 @@ namespace
 	//Direct sound object.
 	IDirectSound	*	m_pDSound = 0;	
 	CWaveManager	*	m_pWaveManager = 0;
+	
+	LPGUID				m_pSoundDriver = 0;
+	char				m_szSoundDriver[COM_MAXPATH];
 }
+
+BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,  const char * szDesc,
+							  const char * szModule, void * pContext);
 
 
 /*
@@ -46,7 +52,6 @@ struct CSoundManager::SndSource
 	bool  bStatic;
 	CSoundChannel * channel;
 };
-
 
 
 /*
@@ -165,9 +170,24 @@ bool CSoundManager::Init()
 		return false; 
 	}
 
+
+	m_pSoundDriver = 0;
+	strcpy(m_szSoundDriver,"Primary Sound driver");
+
+	//Check sound drivers avaiblable
+	hr = DirectSoundEnumerate((LPDSENUMCALLBACK)EnumSoundDevices, 0);
+	if(FAILED(hr))
+	{
+		ComPrintf("CSound::Init Failed to enumerate DirectSound Interface\n");
+		return false;
+	}
+
+
+	ComPrintf("CSound::Init: Initializing %s\n", m_szSoundDriver);
+	
 	//Initialize the DirectSound object.
 	//Defaults to Primary Sound Driver right now
-	hr = m_pDSound->Initialize(0);
+	hr = m_pDSound->Initialize(m_pSoundDriver);
 	if (FAILED(hr)) 
 	{ 
 		ComPrintf("CSound::Init Failed Initialize Directsound\n");
@@ -989,29 +1009,27 @@ namespace VoidSound
 
 
 
+
 /*
 ======================================
 Device Enumeration. Can't find any use yet
 ======================================
 */
-	//Check sound drivers avaiblable
-/*	hr = DirectSoundEnumerate((LPDSENUMCALLBACK)EnumSoundDevices, 0);
-	if(FAILED(hr))
-	{
-		ComPrintf("CSound::Init Failed to enumerate DirectSound Interface\n");
-		return false;
-	}
-*/
 /*
-BOOL CALLBACK CSoundManager::EnumSoundDevices(LPGUID lpGuid,            
-									  const char * szDesc,
-									  const char * szModule,
-									  void * pContext)
+
+*/
+BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,  const char * szDesc,
+				const char * szModule, void * pContext)
 {
-	if(szDesc)
-		ComPrintf("Desc : %s\n", szDesc);
-	if(szModule)
-		ComPrintf("Module : %s\n", szModule);
+//	if(szDesc)
+//		ComPrintf("Sound Device : %s\n", szDesc);
+	if(szDesc && szModule[0])
+	{
+//		ComPrintf("Module : %s\n", szModule);
+		strcpy(m_szSoundDriver,szDesc);
+		m_pSoundDriver = lpGuid;
+	}
 	return true;
 }
-*/
+
+

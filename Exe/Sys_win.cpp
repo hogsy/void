@@ -6,7 +6,6 @@
 #include <direct.h>
 #include <mmsystem.h>
 
-
 //Private Info
 static HWND			m_hWnd;
 static HINSTANCE	m_hInst;
@@ -16,7 +15,8 @@ static bool RegisterWindow(HINSTANCE hInst);
 static void UnRegisterWindow(HINSTANCE hInst);
 static bool ChangeToVoidDir();
 
-CVoid		* g_pVoid=0;		//The game
+//The game
+CVoid		* g_pVoid=0;		
 
 /*
 ================================================
@@ -54,17 +54,28 @@ int WINAPI WinMain(HINSTANCE hInst,
 	//Strip quotes off the commandline
 	char cmdLine[COM_MAXPATH];
 	memset(cmdLine,0,COM_MAXPATH);
-	if(lpCmdLine)
+	if(lpCmdLine[0])
 	{
-		//strip ""
-		if(lpCmdLine[0] == '"')
+		//strip "" if present
+		if(lpCmdLine[0] != '"')
+			strcpy(cmdLine,lpCmdLine);
+		else
 		{
 			strcpy(cmdLine, lpCmdLine+1);
 			int len = strlen(lpCmdLine) - 2;
 			cmdLine[len] = '\0';
 		}
-	}
 
+		//Validata CommandLine. Should always be in the Void dir
+		if(_strnicmp(m_exePath,cmdLine,strlen(m_exePath)))
+		{
+			char msg[256];
+			sprintf("Cannot load map : %s\nMaps can only be loaded from the Void directory\n", cmdLine);
+			MessageBox(0,msg,"Void", MB_OK);
+			memset(cmdLine,0,COM_MAXPATH);
+		}
+	}
+	
 	//Create the Void object
 	g_pVoid = new CVoid(m_exePath,cmdLine);
 	if(!g_pVoid->Init()) 
@@ -73,44 +84,21 @@ int WINAPI WinMain(HINSTANCE hInst,
 		return -1;
 	}
 
-	//Start the windowloop
+	//Start the window loop
 	MSG msg;
 	while (1)
 	{
-		if(PeekMessage(&msg,m_hWnd,NULL, 0, PM_REMOVE)) 
+		//Process any window messages
+		while(PeekMessage(&msg,m_hWnd,NULL, 0, PM_REMOVE)) 
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		g_pVoid->RunFrame();	// Game loop function
+
+		//Run the game frame
+		g_pVoid->RunFrame();
 	}
 
-/*	while(1)
-	{
-		if(PeekMessage(&msg,m_hWnd,0,0, PM_NOREMOVE))
-		{
-			do
-			{
-				if(!GetMessage(&msg,m_hWnd,0,0))
-				{
-					g_pVoid->Shutdown();
-					delete g_pVoid;
-
-					EndMemReporting();					
-
-					return 0;
-				}
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-
-			}while (PeekMessage(&msg,m_hWnd,0,0, PM_NOREMOVE));
-		}
-		else
-		{
-			g_pVoid->RunFrame();	// Game loop function
-		}
-	}
-*/
 	//Will never get executed
 	delete g_pVoid;  
 	UnRegisterWindow(m_hInst);
@@ -340,64 +328,3 @@ int HandleOutOfMemory(size_t size)
 	exit(0);
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	//Check if CmdLine contains a map, if so, then go down the directory
-	//tree until we find a void binary to load it with and change to that dir
-
-/*	
-	if(Util::CompareExts(cmdLine,VOID_DEFAULTMAPEXT))
-	{
-		WIN32_FIND_DATA finddata;
-		HANDLE hFind = INVALID_HANDLE_VALUE;
-		char nextPath[COM_MAXPATH];
-		char curPath[COM_MAXPATH];
-		bool foundPath = false;
-	
-		strcpy(curPath,cmdLine);
-		do
-		{
-			memset(&finddata,0, sizeof(WIN32_FIND_DATA));
-			memset(nextPath,0,COM_MAXPATH);
-
-			Util::ParseFilePath(nextPath,COM_MAXPATH,curPath);
-			if(!strlen(nextPath))
-				break;
-
-			hFind = ::FindFirstFile(VOID_DEFAULTBINARYNAME,&finddata);
-			if(hFind != INVALID_HANDLE_VALUE)
-			{
-				foundPath = true;
-				break;
-			}
-
-			if(_chdir(nextPath) == -1)
-				break;
-			strcpy(curPath,nextPath);
-
-		}while(!foundPath);
-
-		if(hFind != INVALID_HANDLE_VALUE)
-			::FindClose(hFind);
-
-		if(!foundPath)
-		{
-			Util::ShowMessageBox("Unable to find Void executable in the current directory tree",
-								 "Void Error");
-			return -1;
-		}
-	}
-*/

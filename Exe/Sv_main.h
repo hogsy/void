@@ -142,8 +142,6 @@ private:
 	struct ResInfo
 	{
 		ResInfo()  { name[0] = 0; } 
-//		~ResInfo() { if(name) delete[] name; }
-//		void Reset() { memset(name,0,ENT_MAXSTRING); }
 		char name[ENT_MAXSTRING]; 
 	};
 

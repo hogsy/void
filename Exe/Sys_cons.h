@@ -55,7 +55,7 @@ class CConsole: public I_Console,		//Console interface exported to other modules
 {
 public:
 
-	CConsole();
+	CConsole(const char * curPath);
 	~CConsole();
 
 	//==============================================================
