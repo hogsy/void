@@ -364,6 +364,7 @@ void CNetServer::HandleConnectReq()
 	m_sendBuf.WriteInt(-1);
 	m_sendBuf.WriteString(S2C_ACCEPT);
 	m_sendBuf.WriteInt(m_pSvState->levelId);
+//	m_sendBuf.WriteInt(i);		//Give client the slot number
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -429,6 +430,8 @@ void CNetServer::SendSpawnParms(int chanId)
 			lastInSeq = 1;
 			m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_GAMEINFO);
 			m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+			//Give client his slotNUM
+			m_clChan[chanId].m_netChan.m_buffer.WriteInt(chanId);
 			m_clChan[chanId].m_netChan.m_buffer.WriteBuffer(m_signOnBufs.gameInfo);
 			break;
 		}

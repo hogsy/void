@@ -205,7 +205,7 @@ void CNetClient::HandleSpawnParms()
 	if(id == SV_RECONNECT)
 	{
 		m_pClient->Print("CL: Server asked to reconnect\n");
-		Reconnect();
+		Reconnect(true);
 		return;
 	}
 	
@@ -286,6 +286,8 @@ void CNetClient::HandleOOBMessage()
 	if(!strcmp(msg,S2C_ACCEPT))
 	{
 		m_levelId = m_buffer.ReadInt();
+
+
 		m_netState = CL_CONNECTED;
 
 		m_szLastOOBMsg = 0;
@@ -457,11 +459,11 @@ void CNetClient::Disconnect(bool serverPrompted)
 Disconnect and reconnect
 ======================================
 */
-void CNetClient::Reconnect()
+void CNetClient::Reconnect(bool serverPrompted)
 {
 	char svaddr[MAX_IPADDR_LEN];
 	strcpy(svaddr,m_szServerAddr);
-	Disconnect(true);
+	Disconnect(serverPrompted);
 	ConnectTo(svaddr);
 	m_pClient->Print("CL: Reconnecting ...\n");
 }
