@@ -48,6 +48,7 @@ struct sil_t
 	int				nedges;
 	vector_t		center;
 	float			area;
+	bool			sky;
 	cpoly_t			*polys;
 	sil_t			*next;
 };
@@ -198,6 +199,131 @@ void beam_shutdown(void)
 
 //====================================================================
 
+
+/*
+==========
+sil_get_sky_polys
+==========
+*/
+void sil_get_sky_polys(sil_t *s)
+{
+	vector_t clipverts[33];
+	float dists[33];
+	int sides[33];
+	int num_clipverts;
+
+	// return any polys we may have gotten
+	return_poly(s->polys);
+	s->polys = NULL;
+
+	// add each of the sky polys and clip to the sil
+	int endside = world->brushes[0].first_side + world->brushes[0].num_sides;
+	for (int side=world->brushes[0].first_side; side<endside; side++)
+	{
+		cpoly_t *poly = get_poly();
+		poly->poly.num_vertices = world->sides[side].num_verts;
+		poly->poly.texdef		= world->sides[side].texdef;
+		poly->poly.lightdef		= world->sides[side].lightdef;
+
+		for (int v=0; v<poly->poly.num_vertices; v++)
+		{
+			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
+		}
+
+		// clip to each sil edge
+		for (int edge=0; edge<s->nedges; edge++)
+		{
+			plane_t plane;
+			vector_t a, b;
+			VectorSub(s->edges[edge][0], eye.origin, a);
+			VectorSub(s->edges[edge][1], eye.origin, b);
+			_CrossProduct(&a, &b, &plane.norm);
+			VectorNormalize(&plane.norm);
+			plane.d = dot(plane.norm, eye.origin);
+
+			if ((dot(plane.norm, s->center) - plane.d) <0)
+			{
+				plane.d = -plane.d;
+				VectorScale(&plane.norm, -1, &plane.norm);
+			}
+
+			bool allfront = true;
+			bool allback = true;
+
+			for (int i=0; i<poly->poly.num_vertices; i++)
+			{
+				dists[i] = dot(plane.norm, poly->poly.vertices[i]) - plane.d;
+				
+				if (dists[i] > 0.01f)
+				{
+					sides[i] = 1;
+					allback = false;
+				}
+				else if (dists[i] < -0.01f)
+				{
+					sides[i] = -1;
+					allfront = false;
+				}
+				else
+					sides[i] = 0;
+			}
+
+			if (allfront)
+				continue;
+			if (allback)
+			{
+				poly->next = NULL;
+				return_poly(poly);
+				break;
+			}
+
+			num_clipverts = 0;
+
+			dists[i] = dists[0];
+			sides[i] = sides[0];
+
+			for (i=0; i<poly->poly.num_vertices; i++)
+			{
+				if (sides[i] == 0)
+				{
+					VectorCopy(poly->poly.vertices[i], clipverts[num_clipverts]);
+					num_clipverts++;
+					continue;
+				}
+
+				if (sides[i] == 1)
+				{
+					VectorCopy(poly->poly.vertices[i], clipverts[num_clipverts]);
+					num_clipverts++;
+				}
+
+				if ((sides[i+1] == 0) || (sides[i] == sides[i+1]))
+					continue;
+
+				vector_t *nextvert = &poly->poly.vertices[(i+1)%poly->poly.num_vertices];
+				double frac = dists[i] / (dists[i]-dists[i+1]);
+				clipverts[num_clipverts].x = (float)(poly->poly.vertices[i].x + frac*(nextvert->x - poly->poly.vertices[i].x));
+				clipverts[num_clipverts].y = (float)(poly->poly.vertices[i].y + frac*(nextvert->y - poly->poly.vertices[i].y));
+				clipverts[num_clipverts].z = (float)(poly->poly.vertices[i].z + frac*(nextvert->z - poly->poly.vertices[i].z));
+				num_clipverts++;
+			}
+
+			// copy everything back
+			if (num_clipverts > 32)
+				num_clipverts = 32;
+			memcpy(poly->poly.vertices, clipverts, sizeof(vector_t) * num_clipverts);
+			poly->poly.num_vertices = num_clipverts;
+		}
+
+		if (edge == s->nedges)
+		{
+			poly->next = s->polys;
+			s->polys = poly;
+		}
+	}
+}
+
+
 /*
 ==========
 sil_build - create a sil from the brush.
@@ -208,6 +334,7 @@ sil_t* sil_build(bspf_brush_t *b)
 	sil_t *sil = get_sil();
 	sil->nedges = 0;
 	sil->area = 0;
+	sil->sky = false;
 	sil->polys = NULL;
 	sil->next = NULL;
 	VectorSet(&sil->center, 0, 0, 0);
@@ -226,34 +353,42 @@ sil_t* sil_build(bspf_brush_t *b)
 		{
 			facing[s] = true;
 
-			// add facing polys to the list
-			poly = get_poly();
-			poly->poly.num_vertices = world->sides[s+b->first_side].num_verts;
-			poly->poly.texdef		= world->sides[s+b->first_side].texdef;
-			poly->poly.lightdef		= world->sides[s+b->first_side].lightdef;
-
-			for (int v=0; v<poly->poly.num_vertices; v++)
-			{
-				VectorCopy(world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]], poly->poly.vertices[v]);
-			}
-			poly->next = sil->polys;
-			sil->polys = poly;
-
 			// add area
 			d = -dot(p->norm, forward);
 			if (d>0)
 				sil->area += world->sides[s+b->first_side].area * d;
 			else
 				sil->area -= world->sides[s+b->first_side].area * d;
+
+//			// use sky polys instead if it's a sky brush
+//			if (world->sides[s+b->first_side].flags & SURF_SKY)
+				sil->sky = true;
+
+//			else
+			{
+				// add facing polys to the list
+				poly = get_poly();
+				poly->poly.num_vertices = world->sides[s+b->first_side].num_verts;
+				poly->poly.texdef		= world->sides[s+b->first_side].texdef;
+				poly->poly.lightdef		= world->sides[s+b->first_side].lightdef;
+
+				for (int v=0; v<poly->poly.num_vertices; v++)
+				{
+					VectorCopy(world->verts[world->iverts[world->sides[s+b->first_side].first_vert+v]], poly->poly.vertices[v]);
+				}
+				poly->next = sil->polys;
+				sil->polys = poly;
+			}
 		}
 
 		else
 			facing[s] = false;
 	}
 
+
 	// if our sil area is small enough, just add it to the zbuffer list 
 	// would take longer to pass through the beam tree
-	if (sil->area < g_pBeamTolerance->fval)
+	if (!sil->sky && (sil->area < g_pBeamTolerance->fval))
 	{
 		cpoly_t *next;
 		for (; sil->polys; sil->polys = next)
@@ -300,6 +435,11 @@ sil_t* sil_build(bspf_brush_t *b)
 	if (sil->nedges)
 	{
 		VectorScale(&sil->center, 1.0f/(2*sil->nedges), &sil->center);
+
+		// if any one of the polys was a sky surf make this sil a sky sil
+//		if (sil->sky)
+//			sil_get_sky_polys(sil);
+
 		return sil;
 	}
 
@@ -498,6 +638,8 @@ void sil_split(sil_t *base, plane_t *p, sil_t **front, sil_t **back)
 	(*front)->nedges = (*back)->nedges = 0;
 	(*front)->polys  = NULL; //fpoly;
 	(*back )->polys  = NULL; //bpoly;
+	(*front)->sky = base->sky;
+	(*back)->sky = base->sky;
 	VectorCopy(base->center, (*front)->center);
 	VectorCopy(base->center, (*back )->center);
 
@@ -643,7 +785,10 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 		for ( ; sil->polys; sil->polys = next)
 		{
 			next = sil->polys->next;
-			cache_add_poly(sil->polys, CACHE_PASS_ZFILL);	// polys from beam tree are always perfect
+			if (sil->sky)
+				cache_add_poly(sil->polys, CACHE_PASS_SKY);
+			else
+				cache_add_poly(sil->polys, CACHE_PASS_ZFILL);	// polys from beam tree are always perfect
 		}
 
 		free_sil(sil);

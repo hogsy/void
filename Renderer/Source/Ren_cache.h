@@ -3,10 +3,11 @@
 
 #include "3dmath.h"
 
-#define	CACHE_PASS_ZFILL		0
-#define CACHE_PASS_ZBUFFER		1
-#define	CACHE_PASS_ALPHABLEND	2
-#define CACHE_PASS_NUM			3
+#define CACHE_PASS_SKY			0
+#define	CACHE_PASS_ZFILL		1
+#define CACHE_PASS_ZBUFFER		2
+#define	CACHE_PASS_ALPHABLEND	3
+#define CACHE_PASS_NUM			4
 
 
 struct cpoly_t

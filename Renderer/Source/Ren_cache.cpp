@@ -99,7 +99,7 @@ void r_draw_world_poly(poly_t *p, dimension_t dim)
 	float s, t;
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 
-	for (int v = 0; v < p->num_vertices; v++)
+	for (int v = 0; v<p->num_vertices; v++)
 	{
 		s = p->vertices[v].x * world->texdefs[p->texdef].vecs[0][0] + 
 			p->vertices[v].y * world->texdefs[p->texdef].vecs[0][1] + 
@@ -275,6 +275,15 @@ void cache_purge_single()
 			else
 				continue;	// lighting not available or in fullbright
 			break;
+
+		case CACHE_PASS_SKY*2:
+			g_pRast->PolyColor4f(1, 1, 1, 1);
+			g_pRast->DepthFunc(VRAST_DEPTH_NONE);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+			break;
+
+		case CACHE_PASS_SKY*2+1:
+			continue;
 
 		default:
 			continue;
