@@ -55,7 +55,10 @@ public:
 	//should be the last thing in a client frame
 	void SendUpdate();
 
+	bool CanSend();
 	CBuffer & GetSendBuffer();			//Access message buffer
+
+	bool CanSendReliable();
 	CBuffer & GetReliableBuffer();		//Access reliable buffer
 
 	void ConnectTo(const char * ipaddr);
