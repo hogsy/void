@@ -84,6 +84,12 @@ BOOL CDevvoidApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
+
+if(!::SetProcessAffinityMask(::GetCurrentProcess(), 1))
+{	AfxMessageBox("Failed to set processor affinity");
+}
+
+
 	//=========================================
 	//Change to proper Void Game dir
 	if(!ChangeToVoidDir())
