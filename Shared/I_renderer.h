@@ -6,6 +6,11 @@
 #include "I_void.h"
 #include "World.h"
 
+#ifdef RENDERER_EXPORTS
+#define RENDERER_API __declspec(dllexport)
+#else
+#define RENDERER_API __declspec(dllimport)
+#endif
 
 /*
 ==========================================
@@ -71,17 +76,8 @@ struct I_Renderer
 };
 
 
-extern "C"
-{
-
-HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp);
-typedef HRESULT (*GETRENDERERAPI)(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp);
-
-HRESULT  __stdcall FreeRenderer(I_Renderer ** pRender);
-typedef HRESULT (*FREERENDERER)(I_Renderer ** pRender);
-
-}
-
+RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo, VoidExport_t * vexp);
+RENDERER_API bool FreeRenderer();
 
 #endif
 
