@@ -136,6 +136,9 @@ bool CServer::Init()
 	m_svCmds.clear();
 
 	ComPrintf("CServer::Init OK: %d commands in buffer\n", m_svCmds.size());
+
+	m_active = true;
+
 	return true;
 }
 
@@ -212,6 +215,8 @@ void CServer::UnloadGame()
 {
 	if(m_pGame)
 	{
+		m_pGame->UnloadWorld();
+
 		m_pGame->ShutdownGame();
 		GAME_FREEFUNC pfnFreeFunc = (GAME_FREEFUNC)::GetProcAddress(m_hGameDll,"GAME_Shutdown");
 		if(pfnFreeFunc)
@@ -282,14 +287,20 @@ void CServer::RunFrame()
 		{
 			for(int j=0; j<m_svState.maxClients; j++)
 			{
-				if(!m_clients[j] || !m_clients[j]->spawned || i==j)
+				if(!m_clients[j] || !m_clients[j]->spawned) //|| i==j)
 					continue;
 
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 0);
 				m_net.ChanWriteShort(m_clients[j]->num);
+/*				
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
 				m_net.ChanWriteCoord(m_clients[j]->origin.y);
 				m_net.ChanWriteCoord(m_clients[j]->origin.z);
+*/
+				m_net.ChanWriteFloat(m_clients[j]->origin.x);
+				m_net.ChanWriteFloat(m_clients[j]->origin.y);
+				m_net.ChanWriteFloat(m_clients[j]->origin.z);
+
 				m_net.ChanWriteAngle(m_clients[j]->angles.x);
 				m_net.ChanWriteAngle(m_clients[j]->angles.y);
 				m_net.ChanWriteAngle(m_clients[j]->angles.z);
@@ -329,6 +340,9 @@ void CServer::UnloadWorld()
 	//destroy world data
 	if(m_pWorld)
 	{
+		if(m_pGame)
+			m_pGame->UnloadWorld();
+
 		CWorld::DestroyWorld(m_pWorld);
 		m_pWorld = 0;
 		ComPrintf("CServer : Unloaded World\n");
@@ -387,9 +401,12 @@ bool CServer::LoadWorld(const char * mapname)
 
 	//Write Client data
 
+	//Set world
+	m_pGame->LoadWorld(m_pWorld);
+
 	//update state
 	m_svState.levelId ++;
-	m_active = true;
+//	m_active = true;
 
 	ComPrintf("CServer::LoadWorld: %s OK\n", m_svState.worldname);
 	return true;

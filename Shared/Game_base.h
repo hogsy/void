@@ -50,8 +50,8 @@ Client sends this to the server as frequently as possible
 */
 struct ClCmd
 {
-	byte	time;			//Frame Time
-	int		angles[3];		//Current View angels
+	float	time;			//Frame Time
+	float	angles[3];		//Current View angels
 	short	forwardmove, 
 			rightmove, 
 			upmove;

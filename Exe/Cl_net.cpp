@@ -77,6 +77,9 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 
 				m_clients[num].inUse = true;
 
+				ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
+
+
 				break;
 			}
 		case SV_CLINFOCHANGE:
@@ -95,6 +98,12 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLDISCONNECT:
 			{
 				int  num = buffer.ReadByte();
+
+				if(num < 0 || num > 4)
+				{
+					return;
+				}
+
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
 				m_clients[num].Reset();
@@ -103,15 +112,42 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLUPDATE:
 			{
 				int num = buffer.ReadShort();
+
+//				ComPrintf("CL UPDATED %d\n", num);
+
 				if(m_clients[num].inUse)
 				{
-					m_clients[num].origin.x = buffer.ReadCoord();
-					m_clients[num].origin.y = buffer.ReadCoord();
-					m_clients[num].origin.z = buffer.ReadCoord();
+/*					float x = buffer.ReadFloat();
+					float y = buffer.ReadFloat();
+					float z = buffer.ReadFloat();
+
+					m_pClGame->HudPrintf(0,200,0,"%.2f, %.2f, %.2f", x,y,z);
+*/
+					m_clients[num].origin.x = buffer.ReadFloat();
+					m_clients[num].origin.y = buffer.ReadFloat();
+					m_clients[num].origin.z = buffer.ReadFloat();
+
+					
+					buffer.ReadAngle();
+					buffer.ReadAngle();
+					buffer.ReadAngle();
+
+/*					m_clients[num].angles.x = buffer.ReadAngle();
+					m_clients[num].angles.y = buffer.ReadAngle();
+					m_clients[num].angles.z = buffer.ReadAngle();
+*/
+//					return;
+
+
+/*					
 					m_clients[num].angles.x = buffer.ReadAngle();
 					m_clients[num].angles.y = buffer.ReadAngle();
 					m_clients[num].angles.z = buffer.ReadAngle();
+*/
 				}
+
+//				ComPrintf("Got Update\n");
+
 				break;
 			}
 		default:
@@ -402,6 +438,8 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_ingame = true;
 	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
 	Spawn(0,0);
+
+	ComPrintf("CL: WE ARE CLIENT NUM %d\n", clNum);
 }
 
 

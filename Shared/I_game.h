@@ -49,6 +49,7 @@ struct EntClient : public Entity
 
 	//Server will update this as it gets updates from the client
 	ClCmd clCmd;
+	int	  flags;
 
 	char name[ENT_MAXCLASSNAME];
 	char modelName[ENT_MAXRESNAME];
@@ -116,6 +117,9 @@ struct I_Game
 	virtual bool InitGame()=0;
 	virtual void ShutdownGame()=0;
 	virtual int  GetVersion()=0;
+
+	virtual bool LoadWorld(I_World * pWorld)=0;
+	virtual void UnloadWorld()=0;
 
 	virtual void RunFrame(float curTime)=0;
 

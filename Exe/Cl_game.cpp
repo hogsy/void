@@ -75,6 +75,8 @@ CGameClient::~CGameClient()
 	delete m_pCmdHandler;
 }
 
+static float blahFrameTime = 0.0f;
+
 /*
 ================================================
 Run a Client frame
@@ -115,14 +117,16 @@ void CGameClient::RunFrame(float frameTime)
 	UpdateAngles(m_vecDesiredAngles,frameTime);
 
 	//Save current view to send to the server
-	m_cmd.angles[0] = (int)m_pGameClient->angles.x;
-	m_cmd.angles[1] = (int)m_pGameClient->angles.y;
-	m_cmd.angles[2] = (int)m_pGameClient->angles.z;
+	m_cmd.angles[0] = m_pGameClient->angles.x;
+	m_cmd.angles[1] = m_pGameClient->angles.y;
+	m_cmd.angles[2] = m_pGameClient->angles.z;
 
 	//Print misc crap
 	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
 	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
-	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);		
+	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
+//	m_pClGame->HudPrintf(0,160,0,"ANGLES  : %.2f,%.2f,%.2f", m_pGameClient->angles.x,
+//				m_pGameClient->angles.y,m_pGameClient->angles.z);	
 
 	//Drawing
 	//fix me. draw ents only in the pvs
@@ -140,6 +144,8 @@ void CGameClient::RunFrame(float frameTime)
 	}
 
 	UpdateViewBlends();
+
+	blahFrameTime = frameTime;
 }
 
 
@@ -151,13 +157,26 @@ them to the buffer
 */
 void CGameClient::WriteCmdUpdate(CBuffer &buf)
 {
+	buf.WriteByte(CL_MOVE);
+	buf.WriteFloat(blahFrameTime);
+
 	buf.WriteShort(m_cmd.forwardmove);
 	buf.WriteShort(m_cmd.rightmove);
 	buf.WriteShort(m_cmd.upmove);
 
-	buf.WriteInt(m_cmd.angles[0]);
-	buf.WriteInt(m_cmd.angles[1]);
-	buf.WriteInt(m_cmd.angles[2]);
+	buf.WriteFloat(m_cmd.angles[0]);
+	buf.WriteFloat(m_cmd.angles[1]);
+	buf.WriteFloat(m_cmd.angles[2]);
+
+
+	m_pClGame->HudPrintf(0,180,0,"CMD: %d,%d,%d, ANG: %.2f,%.2f,%.2f, %.2fms", 
+		m_cmd.forwardmove, m_cmd.rightmove, m_cmd.upmove, m_cmd.angles[0],m_cmd.angles[1],m_cmd.angles[2],
+		blahFrameTime);
+
+
+
+//	ComPrintf("CL: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
+//					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
 }
 
 /*

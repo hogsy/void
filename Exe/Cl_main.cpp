@@ -184,11 +184,11 @@ void CClient::RunFrame()
 		//Update Sound engine with client new pos
 		m_pSound->UpdateListener(m_pClState->GetCamera());
 
-		//Draw from the client view point
-		m_pRender->Draw(m_pClState->GetCamera());
-		
 		//Have the client write any outgoing data
 		WriteUpdate();
+
+		//Draw from the client view point
+		m_pRender->Draw(m_pClState->GetCamera());
 	}
 	else
 	{
@@ -213,8 +213,8 @@ void CClient::WriteUpdate()
 		CBuffer &buf = m_pNetCl->GetSendBuffer();
 		
 		buf.Reset();
-		buf.WriteByte(CL_MOVE);
-		buf.WriteFloat(m_fFrameTime);
+//		buf.WriteByte(CL_MOVE);
+//		buf.WriteFloat(m_fFrameTime);
 
 		m_pClState->WriteCmdUpdate(buf);
 	}

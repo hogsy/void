@@ -87,14 +87,35 @@ void CGame::RunFrame(float curTime)
 	{
 	}
 
-	vector_t desiredDir;
+	vector_t desiredMove;
+	vector_t forward, right, up; //, angles;
+	
 	//Run through clients
 	for(i=0; i<numClients; i++)
 	{
-		if(clients[i]->inUse && clients[i]->spawned)
+		if(clients[i]->spawned && clients[i]->flags)
 		{
-			//clients[i]->clCmd;
-			//CMoveType::ClientMove(clients[clNum]
+			clients[i]->angles.x = clients[i]->clCmd.angles[0];
+			clients[i]->angles.y = clients[i]->clCmd.angles[1];
+			clients[i]->angles.z = clients[i]->clCmd.angles[2];
+
+			clients[i]->angles.AngleToVector(&forward,&right,&up);
+			forward.Normalize();
+			right.Normalize();
+			up.Normalize();
+
+			desiredMove.Set(0,0,0);
+			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.forwardmove, forward);
+			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.rightmove, right);
+			desiredMove.VectorMA(desiredMove,clients[i]->clCmd.upmove, up);
+
+			clients[i]->clCmd.forwardmove = clients[i]->clCmd.rightmove = clients[i]->clCmd.upmove = 0;
+			clients[i]->clCmd.angles[0] = clients[i]->clCmd.angles[1] = clients[i]->clCmd.angles[2] = 0;
+
+			//Perform the actual move and update angles
+			EntMove::ClientMove(clients[i], desiredMove, clients[i]->clCmd.time);
+
+			clients[i]->flags = 0;
 		}
 	}
 }
@@ -125,6 +146,10 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 
 	clients[clNum]->num = numClients;
 
+	VectorSet(&clients[clNum]->origin, 0.0f,0.0f,48.0f);
+	VectorSet(&clients[clNum]->mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&clients[clNum]->maxs, 10.0f, 10.0f, 10.0f);
+
 	if(!reconnect)
 		numClients++;
 
@@ -154,6 +179,18 @@ void CGame::ClientDisconnect(int clNum)
 
 void CGame::ClientCommand(int clNum, CBuffer &command)
 {
+}
+
+
+bool CGame::LoadWorld(I_World * pWorld)
+{
+	EntMove::SetWorld(pWorld);
+	return true;
+}
+
+void CGame::UnloadWorld()
+{
+	EntMove::SetWorld(0);
 }
 
 

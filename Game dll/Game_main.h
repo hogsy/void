@@ -26,6 +26,10 @@ public:
 	void ShutdownGame();
 	int  GetVersion();
 
+	bool LoadWorld(I_World * pWorld);
+	void UnloadWorld();
+
+
 	void RunFrame(float curTime);
 
 	bool SpawnEntity(CBuffer &buf);

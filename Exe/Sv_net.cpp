@@ -102,13 +102,21 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 		case CL_MOVE:
 			{
 				m_clients[clNum]->clCmd.time = buffer.ReadFloat();
+				
 				m_clients[clNum]->clCmd.forwardmove = buffer.ReadShort();
 				m_clients[clNum]->clCmd.rightmove = buffer.ReadShort();
 				m_clients[clNum]->clCmd.upmove = buffer.ReadShort();
+				m_clients[clNum]->clCmd.angles[0] = buffer.ReadFloat();
+				m_clients[clNum]->clCmd.angles[1] = buffer.ReadFloat();
+				m_clients[clNum]->clCmd.angles[2] = buffer.ReadFloat();
 
-				m_clients[clNum]->clCmd.angles[0] = buffer.ReadInt();
-				m_clients[clNum]->clCmd.angles[1] = buffer.ReadInt();
-				m_clients[clNum]->clCmd.angles[2] = buffer.ReadInt();
+//				ComPrintf("SV: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
+//					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
+
+
+				if(buffer.BadRead())
+					return;
+				m_clients[clNum]->flags = 1;
 				break;
 			}
 		default:
