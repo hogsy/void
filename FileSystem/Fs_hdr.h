@@ -7,6 +7,7 @@
 #include "I_console.h"
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
+#pragma warning(disable : 4786)		// bleh, template names expand to more than what vc can handle
 
 extern I_Console * g_pConsole;
 

@@ -1,10 +1,15 @@
 #include "Fs_pakfile.h"
 #include "Fs_zipfile.h"
+#include "I_file.h"
 #include "I_filesystem.h"
+#include <string>
 
+//======================================================================================
 #define CMD_LISTFILES	0
 #define CMD_LISTPATHS	1
 #define CMD_DIRPATH		2
+
+//======================================================================================
 
 /*
 ===========================================
@@ -39,14 +44,11 @@ struct CFileSystem::SearchPath_t
 };
 
 
-
 /*
 =======================================================================
 CFileSystem
 =======================================================================
 */
-
-char CFileSystem::m_curpath[COM_MAXPATH];
 
 /*
 ==========================================
@@ -175,34 +177,38 @@ bool CFileSystem::AddGameDir(const char *dir)
 	AddSearchPath(gamedir);
 
 	//Add any archive files into the search path as well
-	CStringList	archives;
+//	CStringList	archives;
+	//list<string> archives;
+	StringList archives;
+
 	char archivepath[COM_MAXPATH];
 	
-	if(GetArchivesInPath(gamedir,&archives))
+	if(GetArchivesInPath(gamedir,archives))
 	{
-		CStringList * iterator = &archives;
-		while(iterator->next)
+		//CStringList * iterator = &archives;
+		for(std::list<std::string>::iterator itor = archives.begin(); itor != archives.end(); itor++)
+//		while(iterator->next)
 		{
-			if(CompareExts(iterator->string,"zip"))
+			if(CompareExts(itor->c_str(),"zip"))
 			{
 				CZipFile * zipfile = new CZipFile();
-sprintf(archivepath,"%s/%s", gamedir,iterator->string);
+sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
 				if(zipfile->Init(archivepath, m_exepath))
 					AddSearchPath(gamedir,(CArchive*)zipfile);
 				else
 					delete zipfile;
 			}
 			//Found a Pak file, try adding
-			if(CompareExts(iterator->string,"pak"))
+			if(CompareExts(itor->c_str(),"pak"))
 			{
 				CPakFile * pakfile = new CPakFile();
-sprintf(archivepath,"%s/%s", gamedir,iterator->string);
+sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
 				if(pakfile->Init(archivepath, m_exepath))
 					AddSearchPath(gamedir,(CArchive*)pakfile);
 				else
 					delete pakfile;
 			}
-			iterator = iterator->next;
+			//iterator = iterator->next;
 		}
 	}
 	return true;
@@ -420,12 +426,11 @@ void CFileSystem::ListArchiveFiles()
 Scan a directory for supported archive types
 ===========================================
 */
-bool CFileSystem::GetArchivesInPath(const char *path, CStringList * list)
+bool CFileSystem::GetArchivesInPath(const char *path, StringList &strlist)
 {
-	char		 searchpath[COM_MAXPATH];
-	CStringList	*iterator = list;
-	int			 num=0;
-	
+	int	 num=0;
+	char searchpath[COM_MAXPATH];
+
 	for(int i=0; archive_exts[i]; i++)
 	{
 		WIN32_FIND_DATA	finddata;
@@ -445,9 +450,7 @@ bool CFileSystem::GetArchivesInPath(const char *path, CStringList * list)
 		{
 			if(!(finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			{
-				strcpy(iterator->string,finddata.cFileName);
-				iterator->next = new CStringList();
-				iterator = iterator->next;
+				strlist.push_back(std::string(finddata.cFileName));
 				num++;
 			}
 			if (!FindNextFile(hsearch, &finddata))
@@ -459,7 +462,7 @@ bool CFileSystem::GetArchivesInPath(const char *path, CStringList * list)
 		if(FindClose(hsearch) == FALSE)   // file search handle
 			ComPrintf("CFileSystem::Win32_DirectoryList:Unable to close search handle\n");
 	}
-	list->QuickSortStringList(list,num);
+	strlist.sort();
 	return true;
 }
 
@@ -555,7 +558,8 @@ Create a listing of files with the given
 characteristics
 ===========================================
 */
-int CFileSystem::FindFiles(CStringList *filelist,	//File List to fill
+
+int CFileSystem::FindFiles(StringList &filelist,	//File List to fill
 							const char  *ext,		//Extension		  
 							const char  *path)		//Search in a specific path
 {
