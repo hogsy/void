@@ -172,6 +172,9 @@ bool CDevvoidApp::ChangeToVoidDir()
 void Error(const char *err, ...)
 {
 	static char buff[1024];
+	static CCriticalSection	criticalSel;
+
+	criticalSel.Lock();
 
 	va_list args;
 	va_start(args, err);
@@ -179,6 +182,8 @@ void Error(const char *err, ...)
 	va_end(args);
 
 	ComPrintf(buff);
+
+	criticalSel.Lock();
 
 	MessageBox(0,buff,"Error",MB_OK);
 
@@ -189,6 +194,9 @@ void Error(const char *err, ...)
 void ComPrintf(const char *msg, ...)
 {
 	static char buff[1024];
+	static CCriticalSection	criticalSel;
+
+	criticalSel.Lock();
 
 	va_list args;
 	va_start(args, msg);
@@ -199,10 +207,12 @@ void ComPrintf(const char *msg, ...)
 	if(buff[lastChar] == '\n')
 		buff[lastChar] = '\0';
 
-	if(g_pDlg)
+	if(g_pDlg && lastChar > 1)
 		g_pDlg->m_wndOutput.AddLine(CString(buff));
 	if (g_fLog)
 		fprintf(g_fLog, "%s\n", buff);
+
+	criticalSel.Unlock();
 }
 
 
@@ -210,6 +220,9 @@ void ComPrintf(const char *msg, ...)
 void FError(const char *err, ...)
 {
 	static char buff[1024];
+	static CCriticalSection	criticalSel;
+
+	criticalSel.Lock();
 
 	va_list args;
 	va_start(args, err);
@@ -217,6 +230,8 @@ void FError(const char *err, ...)
 	va_end(args);
 
 	ComPrintf(buff);
+	
+	criticalSel.Unlock();
 
 	MessageBox(0,buff,"Error",MB_OK);
 
