@@ -1,6 +1,7 @@
 #include "Standard.h"
 #include "Mdl_sp2.h"
 #include "I_file.h"
+#include "ShaderManager.h"
 
 typedef struct
 {
@@ -163,7 +164,9 @@ void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 
 
 //	g_pRast->PolyColor4f(1, 1, 1, 1-frac);
-	g_pRast->TextureSet(skin_bin, fframe);
+//	g_pRast->TextureSet(skin_bin, fframe);
+	g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, fframe));
+
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 	g_pRast->PolyTexCoord(0, 0);
 	g_pRast->PolyVertexi(-frames[fframe].origin_x, -frames[fframe].origin_y);

@@ -2,6 +2,7 @@
 #include "Mdl_md2.h"
 #include "I_file.h"
 #include "Client.h"
+#include "ShaderManager.h"
 
 
 typedef struct
@@ -293,7 +294,9 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 	else if (skin & MODEL_SKIN_UNBOUND_LOCAL)
 		g_pClient->Set(CACHE_LOCAL, skin & ~MODEL_SKIN_UNBOUND_LOCAL);
 	else
-		g_pRast->TextureSet(skin_bin, skin);
+//		g_pRast->TextureSet(skin_bin, skin);
+		g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, skin));
+
 
 	if (frac>=1) fframe = cframe;
 	if (frac<=0) cframe = fframe;

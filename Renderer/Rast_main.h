@@ -101,6 +101,8 @@ enum EPolyType
 	VRAST_QUADS
 };
 
+class CShader;
+
 /*
 ==========================================
 Rasterizer Interface
@@ -139,12 +141,19 @@ public:
 	virtual void MatrixPop(void)=0;
 
 	void PolyStart(EPolyType type);
-	virtual void PolyEnd(void);
+	void PolyEnd(void);
 	void PolyVertexf(vector_t &vert);
 	void PolyVertexi(int x, int y);
 	void PolyTexCoord(float s, float t);
+	void PolyLightCoord(float s, float t);
 	void PolyColor3f(float r, float g, float b);
 	void PolyColor4f(float r, float g, float b, float a);
+	virtual void PolyDraw(void)=0;
+
+	void ShaderSet(CShader *shader)				{	mShader = shader;	}
+	void TextureTexDef(bspf_texdef_t *def)		{	mTexDef		= def;	mUseTexDef = true;		}
+	void TextureLightDef(bspf_texdef_t *def)	{	mLightDef	= def;	mUseLightDef = true;	}
+
 
 	virtual void ClearBuffers(int buffers)=0;
 	virtual void ProjectionMode(EProjectionMode mode)=0;
@@ -154,6 +163,10 @@ public:
 	virtual void SetVidSynch(int v)=0;
 
 	virtual void SetFocus(void)=0;
+
+
+private:
+	void DrawLayer(int l);
 
 protected:
 	CVar    m_cWndX;        //Windowed X pos
@@ -170,6 +183,16 @@ protected:
 	} rast_vertex_t;
 
 
+	CShader	*mShader;	// current shader
+	bspf_texdef_t	*mTexDef;
+	bspf_texdef_t	*mLightDef;
+
+	bool	mUseTexDef;
+	bool	mUseLightDef;
+
+
+	float	mTexCoords[MAX_ELEMENTS][2];
+	float	mLightCoords[MAX_ELEMENTS][2];
 
 	rast_vertex_t	mVerts[MAX_ELEMENTS];
 	unsigned short	mIndices[MAX_INDICES];

@@ -26,6 +26,7 @@ public:
 
 	void LoadShader(int bin, int index, const char *name);	// loads a specific shader, creates the default if it isn't found
 
+	CShader *GetShader(int bin, int index)	{	return (mShaders[mBins[bin].indices[index]]);	}
 
 	CShader *mShaders[MAX_SHADERS];
 

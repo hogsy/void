@@ -1,6 +1,7 @@
 
 #include "Standard.h"
-
+#include "Shader.h"
+#include "ShaderManager.h"
 
 
 /*
@@ -17,6 +18,11 @@ CRasterizer::CRasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
 	mMaxElements = mNumElements = 0;
 	mMaxIndices = mNumIndices = 0;
 	mColor = 0xffffffff;
+	mShader = NULL;
+	mTexDef = NULL;
+	mLightDef = NULL;
+	mUseTexDef = false;
+	mUseLightDef = false;
 }
 
 
@@ -90,8 +96,105 @@ void CRasterizer::PolyEnd(void)
 	if (mMaxElements < mNumElements)
 		mMaxElements = mNumElements;
 	if (mMaxIndices < mNumIndices)
-		mMaxIndices = mNumIndices;		
+		mMaxIndices = mNumIndices;
+
+	// generate texture coord data
+	// put it in separate arrays cause we might need to do tcmod's and don't want to have to re-evaluate them
+	if (mUseTexDef)
+	{
+		for (int i=0; i<mNumElements; i++)
+		{
+			mTexCoords[i][0] =	mVerts[i].pos[0] * mTexDef->vecs[0][0] +
+								mVerts[i].pos[1] * mTexDef->vecs[0][1] +
+								mVerts[i].pos[2] * mTexDef->vecs[0][2] +
+								mTexDef->vecs[0][3];
+
+			mTexCoords[i][1] =	mVerts[i].pos[0] * mTexDef->vecs[1][0] +
+								mVerts[i].pos[1] * mTexDef->vecs[1][1] +
+								mVerts[i].pos[2] * mTexDef->vecs[1][2] +
+								mTexDef->vecs[1][3];
+		}
+	}
+
+	if (mUseLightDef)
+	{
+		for (int i=0; i<mNumElements; i++)
+		{
+			mTexCoords[i][0] =	mVerts[i].pos[0] * mLightDef->vecs[0][0] +
+								mVerts[i].pos[1] * mLightDef->vecs[0][1] +
+								mVerts[i].pos[2] * mLightDef->vecs[0][2] +
+								mTexDef->vecs[0][3];
+
+			mTexCoords[i][1] =	mVerts[i].pos[0] * mLightDef->vecs[1][0] +
+								mVerts[i].pos[1] * mLightDef->vecs[1][1] +
+								mVerts[i].pos[2] * mLightDef->vecs[1][2] +
+								mTexDef->vecs[1][3];
+		}
+	}
+
+	for (int i=0; i<mShader->mNumLayers; i++)
+		DrawLayer(i);
+
+	mUseTexDef = false;
+	mUseLightDef = false;
 };
+
+
+void CRasterizer::DrawLayer(int l)
+{
+	CShaderLayer *layer = mShader->mLayers[l];
+	int i;
+
+	switch (mShader->mLayers[l]->mTexGen)
+	{
+	case TEXGEN_BASE:
+		if (!mUseTexDef)
+			break;
+
+		for (i=0; i<mNumElements; i++)
+		{
+			mVerts[i].tex1[0] = mTexCoords[i][0];
+			mVerts[i].tex1[1] = mTexCoords[i][1];
+		}
+		break;
+
+	case TEXGEN_LIGHT:
+		if (!mUseLightDef)
+			break;
+
+		for (i=0; i<mNumElements; i++)
+		{
+			mVerts[i].tex1[0] = mLightCoords[i][0];
+			mVerts[i].tex1[1] = mLightCoords[i][1];
+		}
+		break;
+
+	case TEXGEN_VECTOR:
+
+		for (i=0; i<mNumElements; i++)
+		{
+			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[0].x +
+								mVerts[i].pos[1] * layer->mTexVector[0].y +
+								mVerts[i].pos[2] * layer->mTexVector[0].z;
+
+			mVerts[i].tex1[0] =	mVerts[i].pos[0] * layer->mTexVector[1].x +
+								mVerts[i].pos[1] * layer->mTexVector[1].y +
+								mVerts[i].pos[2] * layer->mTexVector[1].z;
+		}
+		break;
+	}
+
+	// FIXME - do tcmod's here
+
+	if (layer->mIsLight)
+		TextureSet(g_pShaders->mLightmapBin, layer->mTextureNames->index);
+	else
+		TextureSet(mShader->mTextureBin, layer->mTextureNames->index);
+
+	BlendFunc(layer->mSrcBlend, layer->mDstBlend);
+
+	PolyDraw();
+}
 
 
 void CRasterizer::PolyVertexf(vector_t &vert)
@@ -113,11 +216,20 @@ void CRasterizer::PolyVertexi(int x, int y)
 };
 
 
+// explicit coords go right into the array
 void CRasterizer::PolyTexCoord(float s, float t)
 {
 	mVerts[mNumElements].tex1[0] = s;
 	mVerts[mNumElements].tex1[1] = t;
 };
+
+
+void CRasterizer::PolyLightCoord(float s, float t)
+{
+	mVerts[mNumElements].tex1[0] = s;
+	mVerts[mNumElements].tex1[1] = t;
+};
+
 
 void CRasterizer::PolyColor3f(float r, float g, float b)
 {

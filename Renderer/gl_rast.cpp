@@ -700,7 +700,6 @@ void COpenGLRast::TextureBinDestroy(int bin)
 
 void COpenGLRast::TextureSet(int bin, int texnum)
 {
-
 	glBindTexture(GL_TEXTURE_2D, mTexBins[bin].glnames[texnum]);
 }
 
@@ -850,12 +849,8 @@ void COpenGLRast::PolyStart(EPolyType type)
 PolyEnd
 ========
 */
-void COpenGLRast::PolyEnd(void)
+void COpenGLRast::PolyDraw(void)
 {
-	// trianglulate
-	CRasterizer::PolyEnd();
-
-	// draw
 	glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
 }
 

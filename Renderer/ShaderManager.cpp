@@ -21,6 +21,7 @@ CShaderManager::CShaderManager()
 	mWorldBin	 = -1;
 	mBaseBin	 = -1;
 
+
 	CFileBuffer	 fileReader;
 	if (!fileReader.Open("Shaders/shaderlist.txt"))
 		return;

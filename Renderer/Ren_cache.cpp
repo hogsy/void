@@ -2,6 +2,7 @@
 #include "Ren_cache.h"
 #include "Tex_hdr.h"
 #include "Client.h"
+#include "ShaderManager.h"
 
 
 int used_polys;
@@ -143,7 +144,9 @@ void r_draw_light_poly(cpoly_t *p)
 		return;
 
 	float s, t;
-	g_pRast->TextureSet(tex->bin_light, p->lightdef);
+//	g_pRast->TextureSet(tex->bin_light, p->lightdef);
+	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mLightmapBin, p->lightdef));
+
 	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
 	for (int v = 0; v < p->num_vertices; v++)
 	{
@@ -313,7 +316,8 @@ void cache_purge_single()
 
 			// only bind world texture once for all polys that use it
 			if (pass%2 == 0)
-				g_pRast->TextureSet(tex->bin_world, t);
+//				g_pRast->TextureSet(tex->bin_world, t);
+				g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mWorldBin, t));
 
 			for (cpoly_t *p=tex->polycaches[pass/2][t]; p; p=p->next)
 			{

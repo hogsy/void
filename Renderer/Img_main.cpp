@@ -1,4 +1,5 @@
 #include "Standard.h"
+#include "ShaderManager.h"
 #include "Img_entry.h"
 #include "Img_main.h"
 

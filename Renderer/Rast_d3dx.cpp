@@ -634,11 +634,8 @@ void CRastD3DX::MatrixPop(void)
 PolyEnd
 ========
 */
-void CRastD3DX::PolyEnd(void)
+void CRastD3DX::PolyDraw(void)
 {
-	// trianglulate
-	CRasterizer::PolyEnd();
-
 	// draw
 	m_pD3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
 		D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0),

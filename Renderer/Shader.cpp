@@ -3,6 +3,7 @@
 #include "I_file.h"
 #include "Tex_image.h"
 
+
 /*
 ===================================================================================================
 CShaderLayer
@@ -17,6 +18,8 @@ CShaderLayer::CShaderLayer()
 	mDepthFunc = VRAST_DEPTH_LEQUAL;
 	mDepthWrite = true;
 	mAnimFreq = 0;
+	mTexGen = TEXGEN_BASE;
+	mIsLight = false;
 }
 
 
@@ -42,6 +45,41 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 	{
 		layer->GetToken(token, true);
 
+		// tex coord generation
+		if (_stricmp(token, "tcgen") == 0)
+		{
+			layer->GetToken(token, false);
+			if (_stricmp(token, "base") == 0)
+				mTexGen = TEXGEN_BASE;
+			else if (_stricmp(token, "lightmap") == 0)
+				mTexGen = TEXGEN_LIGHT;
+			else if (_stricmp(token, "vector") == 0)
+			{
+				mTexGen = TEXGEN_VECTOR;
+
+				layer->GetToken(token, false);	// '('
+				layer->GetToken(token, false);
+				mTexVector[0].x = atof(token);
+				layer->GetToken(token, false);
+				mTexVector[0].y = atof(token);
+				layer->GetToken(token, false);
+				mTexVector[0].z = atof(token);
+				layer->GetToken(token, false);	// ')'
+
+				layer->GetToken(token, false);	// '('
+				layer->GetToken(token, false);
+				mTexVector[1].x = atof(token);
+				layer->GetToken(token, false);
+				mTexVector[1].y = atof(token);
+				layer->GetToken(token, false);
+				mTexVector[1].z = atof(token);
+				layer->GetToken(token, false);	// ')'
+			}
+
+
+
+		}
+
 
 		// only 1 texture for this layer
 		if (_stricmp(token, "map") == 0)
@@ -55,7 +93,10 @@ void CShaderLayer::Parse(CFileBuffer *layer, int &texindex)
 				Error("error parsing shader file!!\n");
 
 			if (_stricmp(token, "$lightmap") == 0)
+			{
+				mIsLight = true;
 				mTextureNames[0].index = -1;
+			}
 			else
 			{
 				mTextureNames[0].index = texindex++;
@@ -208,6 +249,7 @@ void CShaderLayer::Default(const char *name, int &texindex)
 		mTextureNames[0].index = -1;
 		mSrcBlend = VRAST_SRC_BLEND_ZERO;
 		mDstBlend = VRAST_DST_BLEND_SRC_COLOR;
+		mTexGen = TEXGEN_LIGHT;
 	}
 	else
 	{
@@ -228,6 +270,7 @@ CShader::CShader(const char *name)
 	mTextureBin = -1;
 	mNumTextures = 0;
 	mNumLayers = 0;
+	mRefCount = 0;
 }
 
 
@@ -318,6 +361,9 @@ void CShader::LoadTextures(void)
 	tData.bMipMaps = true;
 	tData.bClamped = false;
 
+	static char texname[COM_MAXPATH];
+
+
 	int t=0;
 	for (int l=0; l<mNumLayers; l++)
 	{
@@ -325,7 +371,9 @@ void CShader::LoadTextures(void)
 		{
 			if (mLayers[l]->mTextureNames[tex].index != -1)
 			{
-				if (!CImageReader::GetReader().Read(mLayers[l]->mTextureNames[tex].filename, tData))
+				sprintf(texname,"%s/%s","textures",mLayers[l]->mTextureNames[tex].filename);
+
+				if (!CImageReader::GetReader().Read(texname, tData))
 					CImageReader::GetReader().DefaultTexture(tData);
 
 				g_pRast->TextureLoad(mTextureBin, t, tData);

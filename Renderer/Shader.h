@@ -8,6 +8,14 @@
 class CFileBuffer;
 
 
+enum ETexGen
+{
+	TEXGEN_BASE,
+	TEXGEN_LIGHT,
+	TEXGEN_VECTOR
+};
+
+
 class CShaderLayer
 {
 public:
@@ -26,6 +34,8 @@ public:
 		char filename[64];	// only relevant for non-lightmaps
 	};
 
+	bool	mIsLight;
+
 	int mNumTextures;	// number of textures in this layer - 1 except for animations
 	texname_t *mTextureNames;	// the names of the textures
 
@@ -38,13 +48,17 @@ public:
 	// depth func
 	EDepthFunc		mDepthFunc;
 	bool			mDepthWrite;
+
+	// tex coord generation
+	ETexGen			mTexGen;
+	vector_t		mTexVector[2];
+
 };
-
-
 
 
 class CShader
 {
+	friend class CRasterizer;
 public:
 	CShader(const char *name);
 	~CShader();
@@ -59,6 +73,7 @@ public:
 
 	void LoadTextures(void);
 	void UnLoadTextures(void);
+
 
 private:
 

@@ -12,7 +12,8 @@ public:
 	void LoadTexture(void);
 	void UnLoadTexture(void);
 
-	void Set(void) { if (tex_bin!=-1) g_pRast->TextureSet(tex_bin, 0); }
+//	void Set(void) { if (tex_bin!=-1) g_pRast->TextureSet(tex_bin, 0); }
+	void Set(void) { if (mShaderBin!=-1) g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, 0)); }
 
 	int  Release(void)	{ return --mRefCount; }
 	void AddRef(void)	{ mRefCount++;	}

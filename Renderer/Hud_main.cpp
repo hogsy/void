@@ -2,6 +2,7 @@
 #include "Hud_hdr.h"
 #include "Hud_main.h"
 #include "Tex_hdr.h"
+#include "ShaderManager.h"
 
 
 /*
@@ -179,6 +180,7 @@ void CRHud::DrawHud()
 	g_pRast->ProjectionMode(VRAST_ORTHO);
 
 	g_pRast->TextureSet(tex->bin_base, 0);
+	g_pRast->ShaderSet(g_pShaders->GetShader(g_pShaders->mBaseBin, 0));
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
 	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 
