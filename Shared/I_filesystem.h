@@ -24,7 +24,7 @@ struct FILESYSTEM_API I_FileReader
 	virtual bool Open(const char * filename)=0;
 	virtual void Close()=0;
 	virtual bool isOpen()const =0;
-	virtual ulong Read(void * buf, uint size, uint count)=0;
+	virtual uint Read(void * buf, uint size, uint count)=0;
 	virtual int  GetChar()=0;
 	virtual bool Seek(uint offset, int origin)=0;
 	virtual uint GetPos() const =0;
@@ -48,7 +48,7 @@ public:
 	//Do we have a file open right now ?
 	bool isOpen() const;
 	//Read "count" number of items of "size" into buffer
-	ulong Read(void *buf,uint size, uint count);
+	uint Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
 	int GetChar();
 	//Seek to given offset starting from given origin
@@ -84,8 +84,9 @@ public:
 	void Close();
 	//Do we have a file open right now ?
 	bool isOpen() const;
+
 	//Read "count" number of items of "size" into buffer
-	ulong Read(void *buf,uint size, uint count);
+	uint Read(void *buf,uint size, uint count);
 	//Return the current byte, advance current position
 	int GetChar();
 	//Seek to given offset starting from given origin
