@@ -7,6 +7,7 @@
 #include "Std_lib.h"
 #include "Com_util.h"
 #include "Com_registry.h"
+#include "Com_release.h"
 #include "I_fileSystem.h"
 
 
@@ -147,14 +148,14 @@ bool CDevvoidApp::ChangeToVoidDir()
 	char bufPath[_MAX_PATH];
 	char message[512];
 
-	if(!VoidReg::DoesKeyExist("Software\\Devvoid\\Void"))
+	if(!VoidReg::DoesKeyExist(VOID_REG_KEY))
 	{
 		MessageBox(0,"Void has not been installed in this profile. Please install Void first", "Error",
 			MB_OK);
 		return false;
 	}
 
-	if(!VoidReg::GetKeyValue("Software\\Devvoid\\Void","Path", bufPath, MAX_PATH))
+	if(!VoidReg::GetKeyValue(VOID_REG_KEY,"Path", bufPath, MAX_PATH))
 	{
 		MessageBox(0,"Error reading registry info, please reinstall Void", "Void", MB_OK);
 		return false;

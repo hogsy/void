@@ -62,6 +62,11 @@ struct ClClient : public ClEntity
 	{
 		ClEntity::Reset();
 
+		origin.Set(0,0,48);
+
+		mins = VEC_CLIENT_MINS;
+		maxs = VEC_CLIENT_MAXS;
+
 		clAnim = 0;
 
 		memset(name,0,CL_MAXNAME);

@@ -3,6 +3,7 @@
 #include "resources.h"
 #include "Com_util.h"
 #include "Com_registry.h"
+#include "Com_release.h"
 #include <direct.h>
 #include <mmsystem.h>
 
@@ -14,13 +15,6 @@ static char		    m_exePath[COM_MAXPATH];
 static bool RegisterWindow(HINSTANCE hInst);
 static void UnRegisterWindow(HINSTANCE hInst);
 static bool ChangeToVoidDir();
-
-#ifdef VOID_TEST
-static const char VOID_REG_KEY [] = "Software\\Devvoid\\VoidTest";
-#else
-static const char VOID_REG_KEY [] = "Software\\Devvoid\\Void";
-#endif
-
 
 //The game
 CVoid		* g_pVoid=0;		

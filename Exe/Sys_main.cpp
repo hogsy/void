@@ -11,6 +11,7 @@
 #include "Sys_main.h"
 #include "Com_hunk.h"
 #include "Com_util.h"
+#include "Com_release.h"
 
 #include <objbase.h>
 #include <direct.h>

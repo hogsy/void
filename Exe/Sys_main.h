@@ -10,8 +10,6 @@
 
 const char VOID_MAINWINDOWCLASS[]	= "Void";
 const char VOID_MAINWINDOWTITLE[]	= "Void";
-const char VOID_DEFAULTBINARYNAME[]	= "Void.exe";
-const char VOID_VERSION[] = "0.1";
 
 struct  I_Renderer;
 struct  I_FileSystem;

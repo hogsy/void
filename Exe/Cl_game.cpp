@@ -92,6 +92,8 @@ Run a Client frame
 */
 void CGameClient::RunFrame(float frameTime)
 {
+	assert(m_ingame != false);
+
 	m_fFrameTime = frameTime;
 
 	//Reset move and angles stuff from the old frame
