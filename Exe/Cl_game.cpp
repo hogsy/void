@@ -83,9 +83,7 @@ Destructor
 CGameClient::~CGameClient()
 {
 	m_pCmdHandler->WriteBinds("vbinds.cfg");
-
 	UnloadWorld();
-
 	delete m_pCmdHandler;
 }
 
@@ -279,7 +277,7 @@ bool CGameClient::LoadWorld(CWorld * pWorld)
 	m_pWorld = pWorld;
 	EntMove::SetWorld(m_pWorld);
 
-	ComPrintf("CGameClient::Load World: OK\n");
+ComPrintf("CLGAME::Load World\n");
 	return true;
 
 }
@@ -294,33 +292,42 @@ void CGameClient::UnloadWorld()
 	if(!m_ingame)
 		return;
 
-	m_ingame = false;
+/*	m_pClGame->UnregisterModelCache(CACHE_GAME);
+	m_pClGame->UnregisterImageCache(CACHE_GAME);
+	m_pClGame->UnregisterSoundCache(CACHE_GAME);
+*/
 
 	EntMove::SetWorld(0);
 
 	delete m_pCamera;
 	m_pCamera = 0;
 	m_pWorld = 0;
+
+	m_clNum = -1;
+	m_pGameClient = 0;
 	
 	for(int i=0; i< GAME_MAXCLIENTS; i++)
-		if(m_clients[i].inUse) 
-			m_clients[i].Reset();
+		m_clients[i].Reset();
 
 	for(i=0; i< GAME_MAXENTITIES; i++)
 	{
 		if(m_entities[i].inUse)
 		{
 			if(m_entities[i].sndIndex > -1)
+			{
+ComPrintf("CLGAME: removed sound %d\n", i);
 				m_pClGame->RemoveSoundSource(&m_entities[i]);
-			m_entities[i].Reset();
+			}
 		}
+		m_entities[i].Reset();
 	}
+
+	ComPrintf("CLGAME: Unload world\n");
 
 	m_numEnts = 0;
 	m_numClients = 0;
 	
-	m_clNum = -1;
-	m_pGameClient = 0;
+	m_ingame = false;
 }
 
 

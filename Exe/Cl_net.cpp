@@ -295,6 +295,7 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 					m_entities[id].Reset();
 					break;
 				}
+				
 				m_entities[id].inUse = true;
 				m_numEnts ++;
 				id = buffer.ReadShort();
@@ -574,8 +575,9 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
 	{
-		if(m_entities[i].inUse && m_entities[i].sndIndex > -1)
+		if((m_entities[i].inUse) && (m_entities[i].sndIndex > -1))
 		{
+
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
 			m_entities[i].attenuation = 5;

@@ -411,6 +411,9 @@ bool CServer::LoadWorld(const char * mapname)
 	memset(m_imageList,0,sizeof(ResInfo)*GAME_MAXIMAGES);
 	memset(m_soundList,0,sizeof(ResInfo)*GAME_MAXSOUNDS);
 
+	//Load the World in the Game
+	m_pGame->LoadWorld(m_pWorld);
+
 	//Load Entities in the world
 	LoadEntities();
 
@@ -418,9 +421,6 @@ bool CServer::LoadWorld(const char * mapname)
 	WriteSignOnBuffer();
 
 	//Write Client data
-
-	//Set world
-	m_pGame->LoadWorld(m_pWorld);
 
 	//update state
 	m_svState.levelId ++;
@@ -608,7 +608,6 @@ void CServer::WriteSignOnBuffer()
 		}
 		m_signOnBufs.entityList[numBufs].WriteBuffer(buffer);
 	}
-
 	m_signOnBufs.numEntityBufs= numBufs+1;
 
 	//Debug info
@@ -766,7 +765,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 			{
 				if(!LoadWorld(mapname))
 				{
-					ComPrintf("CServer:: Error changing map. Shutting down\n");
+					ComPrintf("CServer::Error changing map. Shutting down\n");
 					Shutdown();
 					return;
 				}
@@ -781,7 +780,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 		{
 			if(parms.NumTokens() < 2)
 			{
-				ComPrintf("CServer:: Can't change levels. Missing map name\n");
+				ComPrintf("CServer::Can't change levels. Missing map name\n");
 				return;
 			}
 
@@ -790,7 +789,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 
 			if(!m_active)
 			{
-				ComPrintf("CServer:: Can't change level to %s. Server need to be intialized first\n");
+				ComPrintf("CServer::Can't change level to %s. Server need to be intialized first\n");
 				return;
 			}
 
@@ -802,7 +801,7 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 			UnloadWorld();
 			if(!LoadWorld(mapname))
 			{
-				ComPrintf("CServer:: Error changing map. Shutting down\n");
+				ComPrintf("CServer::Error changing map. Shutting down\n");
 				Shutdown();
 				return;
 			}
@@ -810,6 +809,12 @@ void CServer::HandleCommand(int cmdId, const CParms &parms)
 		}
 	case CMD_KILLSERVER:
 		{
+			if(!m_active)
+			{
+				ComPrintf("CServer::KILLSERVER: Already inactive\n");
+				return;
+			}
+
 			for(int i=0;i<m_svState.maxClients;i++)
 			{
 				if(m_clients[i]) // && m_clients[i]->inUse)
