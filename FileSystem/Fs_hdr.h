@@ -13,15 +13,23 @@ Abstract Base class defining interface
 for other Archive handling classes
 ===========================================
 */
+
+#define ARCHIVEMAXOPENFILES 8;
+
 class CArchive
 {
 public:
+
 	//Load a listing of files in the archive, and order them
 	virtual bool Init(const char * archivepath, const char * basepath)=0;
 
 	//Open file at this path, fill buffer
-	virtual uint LoadFile(byte ** ibuffer, uint &buffersize, 
-							bool staticbuffer, const char *ifilename)=0;
+	virtual uint LoadFile(byte ** ibuffer, 
+						  uint buffersize, 
+						  const char *ifilename)=0;
+
+	//Check for presence of given file
+	virtual bool HasFile(const char * filename)=0;
 
 	//Print file listing
 	virtual void ListFiles()=0;

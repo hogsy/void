@@ -13,11 +13,14 @@ const char  * archive_exts[] =
 	0 
 };
 
-/*=========================================
+
+/*
+=========================================
 Search Path - singly linked list
 an entry might be an archive, 
 or a standard dir path
-=========================================*/
+=========================================
+*/
 struct CFileSystem::SearchPath_t
 {
 	SearchPath_t()  { prev = 0; archive = 0; }
@@ -171,7 +174,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 			if(CompareExts(iterator->string,"zip"))
 			{
 				CZipFile * zipfile = new CZipFile();
-	sprintf(archivepath,"%s/%s", gamedir,iterator->string);
+sprintf(archivepath,"%s/%s", gamedir,iterator->string);
 				if(zipfile->Init(archivepath, m_exepath))
 					AddSearchPath(gamedir,(CArchive*)zipfile);
 				else
@@ -181,7 +184,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 			if(CompareExts(iterator->string,"pak"))
 			{
 				CPakFile * pakfile = new CPakFile();
-	sprintf(archivepath,"%s/%s", gamedir,iterator->string);
+sprintf(archivepath,"%s/%s", gamedir,iterator->string);
 				if(pakfile->Init(archivepath, m_exepath))
 					AddSearchPath(gamedir,(CArchive*)pakfile);
 				else
@@ -228,7 +231,7 @@ Loads the requested file into given buffer.
 buffer needs to be null. Its allocated here
 ===========================================
 */
-uint CFileSystem::LoadFile(byte ** ibuffer, uint &buffersize, bool staticbuffer, const char *ifilename)
+uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, bool staticbuffer, const char *ifilename)
 {
 	uint size = 0;
 	SearchPath_t * iterator = m_lastpath;
@@ -240,7 +243,7 @@ uint CFileSystem::LoadFile(byte ** ibuffer, uint &buffersize, bool staticbuffer,
 		if(iterator->archive)
 		{
 			//size = iterator->archive->OpenFile(ifilename,ibuffer);
-			size = iterator->archive->LoadFile(ibuffer,buffersize,staticbuffer,ifilename);
+			size = iterator->archive->LoadFile(ibuffer,buffersize,ifilename);
 			if(size)
 				return size;
 		}
@@ -279,6 +282,102 @@ uint CFileSystem::LoadFile(byte ** ibuffer, uint &buffersize, bool staticbuffer,
 	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
+
+/*
+
+SearchPath_t * CFileSystem::GetFilePath(const char *ifilename)
+{
+	SearchPath_t * iterator = m_lastpath;
+	while(iterator->prev)
+	{
+		iterator = iterator->prev;
+		
+		//Try opening as an archive
+		if(iterator->archive)
+		{
+			if(iterator->archive->HasFile(ifilename))
+				return iterator;
+		}
+		//Try opening as a standard file
+		else
+		{
+			char filepath[COM_MAXPATH];
+			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
+			FILE * fp = fopen(filepath,"r+b");
+			if(fp)
+			{
+				fclose(fp);
+				return iterator;
+			}
+		}
+	}
+	ComPrintf("CFileSystem::GetFilePath:File not found %s\n", ifilename);
+	return 0;
+}
+
+*/
+/*
+int  CFileSystem::LoadFileBuffer(byte ** ibuffer, const char *ifilename);
+{
+	uint size = 0;
+	SearchPath_t * iterator = m_lastpath;
+	
+	while(iterator->prev)
+	{
+		iterator = iterator->prev;
+		
+		//Try opening as an archive
+		if(iterator->archive)
+		{
+			if(size = iterator->archive->LoadFile(fbuffer->m_buffer,
+									   fbuffer->m_buffersize,
+									   fbuffer->m_staticbuffer,ifilename))
+				return size;
+		}
+		//Try opening as a standard file
+		else
+		{
+			char filepath[COM_MAXPATH];
+			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
+			FILE * fp = fopen(filepath,"r+b");
+			if(fp)
+			{
+				fseek(fp,0,SEEK_END);
+				size = ftell(fp);
+				fseek(fp,0,SEEK_SET);
+
+				if(!staticbuffer)
+				{
+					if(fbuffer->m_buffer)
+					{
+						free(fbuffer->m_buffer);
+						fbuffer->m_buffer = 0;
+					}
+					fbuffer->m_buffer = (byte*)MALLOC(size);
+					fbuffer->m_buffersize = size;
+				}
+				else
+				{
+					if(size > buffersize)
+					{
+						free(fbuffer->m_buffer);
+						fbuffer->m_buffer = (byte*)MALLOC(size);
+						fbuffer->m_buffersize = size;
+					}
+				}
+
+				//fill the file buffer
+				fread(fbuffer->m_buffer,sizeof(byte),size,fp);
+				fclose(fp);
+				return size;
+			}
+		}
+	}
+	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
+	return 0;
+}
+*/
+
 
 /*
 ===========================================

@@ -124,6 +124,10 @@ SOURCE=.\Fs_pakfile.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Fs_stream.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_zipfile.h
 # End Source File
 # End Group

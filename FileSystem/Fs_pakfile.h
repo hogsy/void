@@ -11,8 +11,10 @@ public:
 
 	//CArchive Implementation
 	bool Init(const char * archivepath, const char * basepath);
-	uint LoadFile(byte ** ibuffer, uint &buffersize, 
-				bool staticbuffer, const char *ifilename);
+	uint LoadFile(byte ** ibuffer, 
+				  uint buffersize, 
+				  const char *ifilename);
+	bool HasFile(const char * filename);
 	void ListFiles();
 	bool GetFileList (CStringList * list);
 
@@ -29,5 +31,17 @@ private:
 							  int low, int high);
 	void QuickSortFileEntries(PakEntry_t ** list, const int numitems);
 };
+
+/*
+struct BasicFStreamReader
+{
+	virtual ~BasicFStreamReader(){}
+	virtual bool Open(const char * filename)=0;
+	virtual void Close()=0;
+	virtual uint Read(void * buf, uint size, uint count)=0;
+	virtual int  GetChar()=0;
+	virtual int  Seek(const uint offset, int origin)=0;
+};
+*/
 
 #endif

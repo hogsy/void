@@ -107,13 +107,22 @@ bool  CZipFile::GetFileList (CStringList * list)
 }
 
 
+bool CZipFile::HasFile(const char * filename)
+{
+	if (unzLocateFile(m_hFile,filename, 2) == UNZ_OK)
+		return true;
+	return false;
+}
+
+
 /*
 ==========================================
 Load a file in the zip to the given buffer
 ==========================================
 */
-uint CZipFile::LoadFile(byte ** ibuffer, uint &buffersize, 
-						bool staticbuffer, const char *ifilename)
+uint CZipFile::LoadFile(byte ** ibuffer, 
+						uint buffersize, 
+						const char *ifilename)
 {
 	if (unzLocateFile(m_hFile,ifilename, 2) != UNZ_OK)
 		return 0;
@@ -138,7 +147,7 @@ uint CZipFile::LoadFile(byte ** ibuffer, uint &buffersize,
 	}
 
 	uint size =  fileinfo.uncompressed_size;
-	if(!staticbuffer)
+	if(!buffersize)
 	{
 		*ibuffer = (byte*)MALLOC(size);
 	}
@@ -146,9 +155,9 @@ uint CZipFile::LoadFile(byte ** ibuffer, uint &buffersize,
 	{
 		if(size > buffersize)
 		{
-			free(*ibuffer);
-			*ibuffer = (byte*)MALLOC(size);
-			buffersize = size;
+			ComPrintf("CZipFile::LoadFile: Buffer is smaller than size of file %s, %d>%d\n", 
+					ifilename, size, buffersize);
+			return 0;
 		}
 	}
 
@@ -156,7 +165,7 @@ uint CZipFile::LoadFile(byte ** ibuffer, uint &buffersize,
 	if(readbytes != size)
 		ComPrintf("CZipFile::OpenFile: Warning, only read %d of %d. %s , %s\n", 
 		readbytes, size,ifilename, m_archiveName);
-		
+
 	unzCloseCurrentFile(m_hFile);
 	return size;
 }

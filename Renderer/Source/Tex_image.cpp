@@ -68,14 +68,11 @@ CImage::CImage()
 	width = height = 0;
 	type = 0;
 	format = FORMAT_NONE;
-
-	m_fileReader.LockStaticBuffer(MAX_TEXTURESIZE);
 }
 
 CImage::~CImage()		
 {	
 	Reset();
-	m_fileReader.ReleaseStaticBuffer();
 }
 
 /*
@@ -356,7 +353,7 @@ Read a TGA file from the given stream
 */
 bool CImage::Read_TGA()
 {
-	m_fileReader.Seek(12,CFileReader::EFILE_START);
+	m_fileReader.Seek(12,CFileReader::ESEEK_SET);
 
 	width   = m_fileReader.GetChar();
 	width  |= m_fileReader.GetChar() << 8;

@@ -15,9 +15,15 @@ public:
 
 	//CArchive Implementation
 	bool Init(const char * archivepath, const char * basepath);
-	uint LoadFile(byte ** ibuffer, uint &buffersize, 
-				bool staticbuffer, const char *ifilename);
+	
+	uint LoadFile(byte ** ibuffer, 
+				  uint buffersize, 
+				  const char *ifilename);
+	
+	bool HasFile(const char * filename);
+	
 	void ListFiles();
+	
 	bool GetFileList (CStringList * list);
 
 private:

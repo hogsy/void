@@ -112,7 +112,7 @@ int load_lump(int l, void **data)
 	*data = MALLOC(header.lumps[l].length+1);
 	memset(*data, 0, header.lumps[l].length+1);
 
-	m_pFile->Seek(header.lumps[l].offset, CFileReader::EFILE_START);
+	m_pFile->Seek(header.lumps[l].offset, CFileReader::ESEEK_SET);
 	m_pFile->Read(*data, header.lumps[l].length, 1);
 
 	return header.lumps[l].length;

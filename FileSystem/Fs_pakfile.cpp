@@ -105,6 +105,16 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	return true;
 }
 
+
+bool CPakFile::HasFile(const char * filename)
+{
+	PakEntry_t * entry=0;
+	if(BinarySearchForEntry(filename,m_files,&entry,0,m_numFiles))
+		return true;
+	return false;
+}
+
+
 /*
 ===========================================
 FIXME- 
@@ -112,10 +122,11 @@ this will have to use a custom memory manager later
 on to alloc the buffer for the file.
 ===========================================
 */
-uint CPakFile::LoadFile(byte ** ibuffer, uint &buffersize, 
-							bool staticbuffer, const char *ifilename)
+uint CPakFile::LoadFile(byte ** ibuffer, 
+						uint buffersize, 
+						const char *ifilename)
 {
-	if(!staticbuffer && *ibuffer)
+	if(!buffersize && *ibuffer)
 	{
 		ComPrintf("CPakFile::OpenFile: Expecting empty file pointer %s\n", ifilename);
 		return 0;
@@ -124,7 +135,7 @@ uint CPakFile::LoadFile(byte ** ibuffer, uint &buffersize,
 	PakEntry_t * entry=0;
 	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
 	{
-		if(!staticbuffer)
+		if(!buffersize)
 		{
 			*ibuffer= (byte*)MALLOC(entry->filelen);
 		}
@@ -132,12 +143,11 @@ uint CPakFile::LoadFile(byte ** ibuffer, uint &buffersize,
 		{
 			if(entry->filelen > buffersize)
 			{
-				free(*ibuffer);
-				*ibuffer= (byte*)MALLOC(entry->filelen);
-				buffersize = entry->filelen;
+				ComPrintf("CPakFile::LoadFile: Buffer is smaller than size of file %s, %d>%d\n", 
+						ifilename, entry->filelen, buffersize);
+				return 0;
 			}
 		}
-		//*buffer= new unsigned char [entry->filelen];
 		fseek(m_fp,entry->filepos,SEEK_SET);
 		fread(*ibuffer, entry->filelen, 1, m_fp);
 		return entry->filelen;
