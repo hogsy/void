@@ -6,9 +6,9 @@
 #include <d3d.h>
 #include <d3dx.h>
 
-#include "Rasterizer.h"
+#include "Rast_main.h"
 
-class CRastD3DX : public I_Rasterizer
+class CRastD3DX : public CRasterizer
 {
 public:
 
@@ -46,13 +46,7 @@ public:
 	void MatrixPush(void);
 	void MatrixPop(void);
 
-	void PolyStart(EPolyType type);
 	void PolyEnd(void);
-	void PolyVertexf(vector_t &vert);
-	void PolyVertexi(int x, int y);
-	void PolyTexCoord(float s, float t);
-	void PolyColor3f(float r, float g, float b);
-	void PolyColor4f(float r, float g, float b, float a);
 
 	void ClearBuffers(int buffers);
 	void ProjectionMode(EProjectionMode mode);
@@ -91,12 +85,6 @@ private:
 	D3DXMATRIX			m_matWorld;
 	D3DXMATRIX			m_matProjection;
 
-	int					mNumVerts;
-	D3DLVERTEX			mVerts[16000];
-
-	vector_t	mColor;
-	float		mAlpha;
-	EPolyType	mType;
 
 	bool		mVidSynch;
 

@@ -13,9 +13,7 @@ COpenGLRast::COpenGLRast()
 	m_nummodes = 0;
 	m_devmodes = 0;
 
-	mMaxElements = mNumElements = 0;
-	mMaxIndices = mNumIndices = 0;
-	mAlpha = 1;
+
 
 	//Enumerate the available display modes
 	EnumDisplayModes();
@@ -148,9 +146,10 @@ bool COpenGLRast::Init()
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glVertexPointer(3, GL_FLOAT, 0, mVerts);
-	glColorPointer(4, GL_FLOAT, 0, mColors);
-	glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+	glVertexPointer(3, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].pos[0]);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rast_vertex_t), &mVerts[0].color);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(rast_vertex_t), &mVerts[0].tex1[0]);
+
 
 	return true;
 }
@@ -836,7 +835,6 @@ void COpenGLRast::MatrixPop(void)
 ========
 Poly*
 ========
-*/
 void COpenGLRast::PolyStart(EPolyType type)
 {
 	mType = type;
@@ -844,6 +842,7 @@ void COpenGLRast::PolyStart(EPolyType type)
 	mNumIndices = 0;
 	mNumElements = 0;
 }
+*/
 
 
 /*
@@ -853,110 +852,11 @@ PolyEnd
 */
 void COpenGLRast::PolyEnd(void)
 {
-	int t;
-	int num;
+	// trianglulate
+	CRasterizer::PolyEnd();
 
-	// convert the type into triangles
-	switch (mType)
-	{
-	case VRAST_TRIANGLE_FAN:
-		num = mNumElements-2;
-		for (t=0; t<num; t++)
-		{
-			mIndices[t*3 + 0] = 0;
-			mIndices[t*3 + 1] = t + 1;
-			mIndices[t*3 + 2] = t + 2;
-		}
-		mNumIndices = num*3;
-		break;
-
-	case VRAST_TRIANGLE_STRIP:
-		num = mNumElements-2;
-		for (t=0; t<num; t++)
-		{
-			if (!(t%2))
-			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+1;
-				mIndices[t*3 + 2] = t+2;
-			}
-			else
-			{
-				mIndices[t*3 + 0] = t;
-				mIndices[t*3 + 1] = t+2;
-				mIndices[t*3 + 2] = t+1;
-			}
-		}
-		mNumIndices = num*3;
-		break;
-
-	case VRAST_QUADS:
-		num = mNumElements / 4;
-		mNumIndices = 0;
-		for (t=0; t<num; t++)
-		{
-			mIndices[mNumIndices + 0] = t*4;
-			mIndices[mNumIndices + 1] = t*4+1;
-			mIndices[mNumIndices + 2] = t*4+2;
-
-			mIndices[mNumIndices + 3] = t*4;
-			mIndices[mNumIndices + 4] = t*4+2;
-			mIndices[mNumIndices + 5] = t*4+3;
-
-			mNumIndices += 6;
-		}
-
-		break;
-	}
-
-	glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_INT, mIndices);
-	if (mMaxElements < mNumElements)
-		mMaxElements = mNumElements;
-	if (mMaxIndices < mNumIndices)
-		mMaxIndices = mNumIndices;
-}
-
-void COpenGLRast::PolyVertexf(vector_t &vert)
-{
-	mColors[mNumElements][0] = mColor.x;
-	mColors[mNumElements][1] = mColor.y;
-	mColors[mNumElements][2] = mColor.z;
-	mColors[mNumElements][3] = mAlpha;
-
-	mVerts[mNumElements].x = vert.x;
-	mVerts[mNumElements].y = vert.z;
-	mVerts[mNumElements].z =-vert.y;
-	mNumElements++;
-}
-void COpenGLRast::PolyVertexi(int x, int y)
-{
-	mColors[mNumElements][0] = mColor.x;
-	mColors[mNumElements][1] = mColor.y;
-	mColors[mNumElements][2] = mColor.z;
-	mColors[mNumElements][3] = mAlpha;
-
-	mVerts[mNumElements].x = x;
-	mVerts[mNumElements].y = y;
-	mVerts[mNumElements].z = 0;
-	mNumElements++;
-}
-void COpenGLRast::PolyTexCoord(float s, float t)
-{
-	mTexCoords[mNumElements][0] = s;
-	mTexCoords[mNumElements][1] = t;
-}
-void COpenGLRast::PolyColor3f(float r, float g, float b)
-{
-	mColor.x = r;
-	mColor.y = g;
-	mColor.z = b;
-}
-void COpenGLRast::PolyColor4f(float r, float g, float b, float a)
-{
-	mColor.x = r;
-	mColor.y = g;
-	mColor.z = b;
-	mAlpha = a;
+	// draw
+	glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
 }
 
 

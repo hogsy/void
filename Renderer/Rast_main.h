@@ -1,7 +1,6 @@
 #ifndef RASTERIZER_H
 #define RASTERIZER_H
 
-//#include "Standard.h"
 
 // max number of possible mipmaps 10 -> 1024 max dim size
 #define MAX_MIPMAPS 11
@@ -107,14 +106,11 @@ enum EPolyType
 Rasterizer Interface
 ==========================================
 */
-class I_Rasterizer
+class CRasterizer
 {
 public:
-	I_Rasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
-						m_cWndY("r_wndy","40",CVAR_INT,CVAR_ARCHIVE)
-		{	g_pConsole->RegisterCVar(&m_cWndX);	g_pConsole->RegisterCVar(&m_cWndY);	}
-
-	virtual ~I_Rasterizer() { }
+	CRasterizer();
+	virtual ~CRasterizer() { }
 
 	//Startup/Shutdown
 	virtual bool Init()=0;
@@ -142,13 +138,13 @@ public:
 	virtual void MatrixPush(void)=0;
 	virtual void MatrixPop(void)=0;
 
-	virtual void PolyStart(EPolyType type)=0;
-	virtual void PolyEnd(void)=0;
-	virtual void PolyVertexf(vector_t &vert)=0;
-	virtual void PolyVertexi(int x, int y)=0;
-	virtual void PolyTexCoord(float s, float t)=0;
-	virtual void PolyColor3f(float r, float g, float b)=0;
-	virtual void PolyColor4f(float r, float g, float b, float a)=0;
+	void PolyStart(EPolyType type);
+	virtual void PolyEnd(void);
+	void PolyVertexf(vector_t &vert);
+	void PolyVertexi(int x, int y);
+	void PolyTexCoord(float s, float t);
+	void PolyColor3f(float r, float g, float b);
+	void PolyColor4f(float r, float g, float b, float a);
 
 	virtual void ClearBuffers(int buffers)=0;
 	virtual void ProjectionMode(EProjectionMode mode)=0;
@@ -163,9 +159,30 @@ protected:
 	CVar    m_cWndX;        //Windowed X pos
 	CVar    m_cWndY;        //Windowed Y pos
 
+
+	// arrays to store poly data
+
+	typedef struct
+	{
+		float	pos[3];
+		DWORD	color;
+		float	tex1[2];
+	} rast_vertex_t;
+
+
+
+	rast_vertex_t	mVerts[MAX_ELEMENTS];
+	unsigned short	mIndices[MAX_INDICES];
+	DWORD			mColor;	// current color
+	EPolyType		mType;
+
+	int			mNumIndices;
+	int			mNumElements;
+
+	int			mMaxElements;
+	int			mMaxIndices;
 };
 
-extern I_Rasterizer *g_pRast;
 
 // cvars the rasterizers use
 extern CVar *	g_p32BitTextures;

@@ -173,43 +173,6 @@ void CRastNone::MatrixPop(void)
 }
 
 
-
-/*
-========
-Poly*
-========
-*/
-void CRastNone::PolyStart(EPolyType type)
-{
-}
-
-
-/*
-========
-PolyEnd
-========
-*/
-void CRastNone::PolyEnd(void)
-{
-}
-
-void CRastNone::PolyVertexf(vector_t &vert)
-{
-}
-void CRastNone::PolyVertexi(int x, int y)
-{
-}
-void CRastNone::PolyTexCoord(float s, float t)
-{
-}
-void CRastNone::PolyColor3f(float r, float g, float b)
-{
-}
-void CRastNone::PolyColor4f(float r, float g, float b, float a)
-{
-}
-
-
 /*
 ========
 ClearBuffers

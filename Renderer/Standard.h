@@ -18,9 +18,9 @@ extern RenderInfo_t g_rInfo;
 extern I_Console *  g_pConsole;
 
 // MUST be after declaration of g_pConsole
-#include "Rasterizer.h"
+#include "Rast_main.h"
 // Rasterizer Interface
-extern I_Rasterizer  * g_pRast;
+extern CRasterizer  * g_pRast;
 
 
 //The World

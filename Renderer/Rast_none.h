@@ -1,9 +1,9 @@
 #ifndef	RAST_NONE_H
 #define RAST_NONE_H
 
-#include "Rasterizer.h"
+#include "Rast_main.h"
 
-class CRastNone : public I_Rasterizer
+class CRastNone : public CRasterizer
 {
 public:
 
@@ -41,13 +41,6 @@ public:
 	void MatrixPush(void);
 	void MatrixPop(void);
 
-	void PolyStart(EPolyType type);
-	void PolyEnd(void);
-	void PolyVertexf(vector_t &vert);
-	void PolyVertexi(int x, int y);
-	void PolyTexCoord(float s, float t);
-	void PolyColor3f(float r, float g, float b);
-	void PolyColor4f(float r, float g, float b, float a);
 
 	void ClearBuffers(int buffers);
 	void ProjectionMode(EProjectionMode mode);

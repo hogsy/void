@@ -1,11 +1,11 @@
 #ifndef	RAST_GL_H
 #define RAST_GL_H
 
-#include "Rasterizer.h"
+#include "Rast_main.h"
 #include "gl.h"
 
 
-class COpenGLRast : public I_Rasterizer
+class COpenGLRast : public CRasterizer
 {
 public:
 
@@ -43,13 +43,7 @@ public:
 	void MatrixPush(void);
 	void MatrixPop(void);
 
-	void PolyStart(EPolyType type);
 	void PolyEnd(void);
-	void PolyVertexf(vector_t &vert);
-	void PolyVertexi(int x, int y);
-	void PolyTexCoord(float s, float t);
-	void PolyColor3f(float r, float g, float b);
-	void PolyColor4f(float r, float g, float b, float a);
 
 	void ClearBuffers(int buffers);
 	void ProjectionMode(EProjectionMode mode);
@@ -75,7 +69,6 @@ private:
 	};
 
 
-
 	HDC			hDC;		//device context
 	HGLRC		hRC;		//the gl rendering context
 
@@ -98,20 +91,10 @@ private:
 	tex_bin_t mTexBins[MAX_TEXTURE_BINS];
 
 
-	// arrays to store poly data
-	vector_t	mVerts[MAX_ELEMENTS];
-	float		mColors[MAX_ELEMENTS][4];
-	float		mTexCoords[MAX_ELEMENTS][2];	// single pass only right now
-
-	unsigned int	mIndices[MAX_INDICES];
-	int			mNumIndices;
-	int			mNumElements;
-	int	mMaxElements;
-	int mMaxIndices;
 
 	EPolyType	mType;
-	vector_t	mColor;
-	float		mAlpha;
+	DWORD		mColor;
+//	float		mAlpha;
 };
 
 #endif

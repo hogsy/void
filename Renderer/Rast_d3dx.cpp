@@ -1,6 +1,7 @@
 #include "Standard.h"
 #include "Rast_d3dx.h"
 
+#pragma pack(4)
 /*
 =======================================
 Constructor 
@@ -17,8 +18,6 @@ CRastD3DX::CRastD3DX()
 	mhError = S_OK;
 	m_matView = NULL;
 	mVidSynch = false;
-
-	mNumVerts = 0;
 }
 
 
@@ -632,80 +631,22 @@ void CRastD3DX::MatrixPop(void)
 
 /*
 ========
-Poly*
-========
-*/
-void CRastD3DX::PolyStart(EPolyType type)
-{
-	mNumVerts = 0;
-	mType = type;
-}
-
-
-/*
-========
 PolyEnd
 ========
 */
 void CRastD3DX::PolyEnd(void)
 {
-	int i;
-	D3DLVERTEX *vptr;
+	// trianglulate
+	CRasterizer::PolyEnd();
 
-	switch (mType)
-	{
-	case VRAST_TRIANGLE_FAN:
-		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_LVERTEX, &mVerts, mNumVerts, 0 );
-		break;
-
-	case VRAST_TRIANGLE_STRIP:
-		m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_LVERTEX, &mVerts, mNumVerts, 0 );
-		break;
-
-	case VRAST_QUADS:
-		vptr = mVerts;
-		for (i=0; i<mNumVerts; i+=4)
-		{
-			vptr = &mVerts[i];
-			m_pD3DDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, D3DFVF_LVERTEX, vptr, 4, 0);
-		}
-		break;
-	}
-
-	mNumVerts = 0;
-}
-
-void CRastD3DX::PolyVertexf(vector_t &vert)
-{
-	mVerts[mNumVerts].color		= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
-	mVerts[mNumVerts].specular	= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
-	mVerts[mNumVerts].x =  vert.x;
-	mVerts[mNumVerts].y =  vert.z;
-	mVerts[mNumVerts].z = -vert.y;
-	mNumVerts++;
-}
-void CRastD3DX::PolyVertexi(int x, int y)
-{
-	mVerts[mNumVerts].color		= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
-	mVerts[mNumVerts].specular	= RGBA_MAKE((int)(mColor.x*255), (int)(mColor.y*255), (int)(mColor.z*255), (int)(mAlpha*255));
-	mVerts[mNumVerts].x = x;
-	mVerts[mNumVerts].y = y;
-	mVerts[mNumVerts].z = 0;
-	mNumVerts++;
-}
-void CRastD3DX::PolyTexCoord(float s, float t)
-{
-	mVerts[mNumVerts].tu = s;
-	mVerts[mNumVerts].tv = t;
-}
-void CRastD3DX::PolyColor3f(float r, float g, float b)
-{
-	VectorSet(&mColor, r, g, b);
-}
-void CRastD3DX::PolyColor4f(float r, float g, float b, float a)
-{
-	VectorSet(&mColor, r, g, b);
-	mAlpha = a;
+	// draw
+	m_pD3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
+		D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0),
+		mVerts,
+		mNumElements,
+		mIndices,
+		mNumIndices,
+		0);
 }
 
 

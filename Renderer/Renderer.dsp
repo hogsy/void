@@ -390,7 +390,11 @@ SOURCE=.\Rast_d3dx.h
 # End Group
 # Begin Source File
 
-SOURCE=.\Rasterizer.h
+SOURCE=.\Rast_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Rast_main.h
 # End Source File
 # End Group
 # Begin Group "Client"
