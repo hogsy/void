@@ -60,6 +60,7 @@ CConsole::CConsole()
 	}
 
 	RegisterCommand("cvarlist",CMD_CVARLIST, this);
+	RegisterCommand("cmdlist", CMD_CMDLIST,this);
 	RegisterCommand("cfunclist", CMD_CMDLIST,this);
 	RegisterCommand("ctest", CMD_TEST, this);
 	RegisterCommand("contoggle", CMD_TOGGLECONS,this);

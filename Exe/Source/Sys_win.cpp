@@ -1,5 +1,6 @@
 #include "Sys_main.h"
-#include "resources.h"	
+#include "resources.h"
+#include <mmsystem.h>
 
 //======================================================================================
 //======================================================================================
@@ -8,6 +9,7 @@
 static HWND			m_hWnd;
 static HINSTANCE	m_hInst;
 static bool RegisterWindow(HINSTANCE hInst);
+static void UnRegisterWindow(HINSTANCE hInst);
 
 CVoid		* g_pVoid=0;		//The game
 
@@ -88,6 +90,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 	//Will never get executed
 	g_pVoid->Shutdown();
 	delete g_pVoid;  
+	UnRegisterWindow(m_hInst);
 	return -1;
 }
 
@@ -136,6 +139,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			g_pVoid->OnFocus();
 			break;
 		}
+//FIXME. hack to get MCI notifications routed properly
+	case MM_MCINOTIFY :
+		{
+			g_pVoid->HandleMM(wParam,lParam);
+			break;
+		}
 /*	case WM_ENTERSIZEMOVE:
 	case WM_ENTERMENULOOP:
 		{
@@ -157,6 +166,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 			//Cleanup
 			g_pVoid->Shutdown();
 			delete g_pVoid;
+			UnRegisterWindow(m_hInst);
 			exit(0);
 			break; 
 		}
@@ -166,10 +176,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 
 /*
 ==========================================
-Register the Window
+Register the Window class
 ==========================================
 */
-
 static bool RegisterWindow(HINSTANCE hInst)
 {
 	WNDCLASSEX wcl;
@@ -190,6 +199,17 @@ static bool RegisterWindow(HINSTANCE hInst)
 	if (!RegisterClassEx(&wcl))
 		return false;
 	return true;
+}
+
+/*
+==========================================
+Unregister the window class
+==========================================
+*/
+static  void UnRegisterWindow(HINSTANCE hInst)
+{
+	UnregisterClass(VOID_MAINWINDOWCLASS,
+					hInst);
 }
 
 

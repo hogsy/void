@@ -1,8 +1,7 @@
 #include "Mus_main.h"
 #include "I_file.h"
 #include "Mus_fmod.h"
-
-
+#include "Mus_cd.h"
 
 //======================================================================================
 //======================================================================================
@@ -19,10 +18,6 @@ namespace
 	const float MAX_VOLUME = 10.0f;
 	const float MIN_VOLUME = 0.0f;
 	
-	const char DRIVER_FMOD[] = "fmod";
-	const char DRIVER_CD[] = "cdaudio";
-	const char DRIVER_DMUS[] = "dmusic";
-
 	enum
 	{
 		MUS_PLAY  = 1,
@@ -43,57 +38,36 @@ using namespace VoidMusic;
 Constructor/Destructor
 ==========================================
 */
-CMusic::CMusic() : m_cVolume("mus_vol","8", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-				   m_cDriver("mus_driver","fmod", CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
+CMusic::CMusic() : m_cVolume("mus_vol","8", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
 {
-	m_curDriver = 0;
-
-#ifdef INCLUDE_FMOD
-	m_pFMod = new CMusFMod();
-#endif
+	m_pCDAudio = new CMusCDAudio();
 
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
-	System::GetConsole()->RegisterCVar(&m_cDriver,this);
 
-	System::GetConsole()->RegisterCommand("musplay", MUS_PLAY, this);
-	System::GetConsole()->RegisterCommand("muspause", MUS_PAUSE, this);
-	System::GetConsole()->RegisterCommand("musstop", MUS_STOP, this);
-	System::GetConsole()->RegisterCommand("musresume", MUS_RESUME, this);
-	System::GetConsole()->RegisterCommand("musstats", MUS_STATS, this);
+	System::GetConsole()->RegisterCommand("mus_play", MUS_PLAY, this);
+	System::GetConsole()->RegisterCommand("mus_pause", MUS_PAUSE, this);
+	System::GetConsole()->RegisterCommand("mus_stop", MUS_STOP, this);
+	System::GetConsole()->RegisterCommand("mus_resume", MUS_RESUME, this);
+	System::GetConsole()->RegisterCommand("mus_info", MUS_STATS, this);
 }
 
 CMusic::~CMusic()
 {	
 	Shutdown();
-	m_curDriver = 0;
-
-#ifdef INCLUDE_FMOD
-	delete m_pFMod;
-	m_pFMod = 0;
-#endif
+	
+	delete m_pCDAudio;
+	m_pCDAudio= 0;
 }
 	
 /*
 ==========================================
-Initialize Music driver
+Initialize Music drivers
 ==========================================
 */
 bool CMusic::Init()
 {
-	if(!strcmp(m_cDriver.string,DRIVER_FMOD))
-	{
-#ifdef INCLUDE_FMOD
-		m_curDriver = m_pFMod;
-		return m_curDriver->Init();
-#endif
-	}
-	else if(!strcmp(m_cDriver.string,DRIVER_CD))
-	{
-	}
-	else if(!strcmp(m_cDriver.string,DRIVER_DMUS))
-	{
-	}
-	return true;
+	//Just cd audio right now
+	return m_pCDAudio->Init();
 }
 
 /*
@@ -103,10 +77,7 @@ Shutdown the music driver
 */
 void CMusic::Shutdown()
 {	
-	if(m_curDriver)
-	{	m_curDriver->Shutdown();
-		m_curDriver =0;
-	}
+	m_pCDAudio->Shutdown();
 }
 
 /*
@@ -145,18 +116,7 @@ bool CMusic::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
 	if(cvar == &m_cVolume)
 		return Volume(&m_cVolume,numArgs,szArgs);
-    else if(cvar == &m_cDriver)
-		return Driver(&m_cDriver,numArgs,szArgs);
 	return false;
-}
-
-/*
-==========================================
-
-==========================================
-*/
-CMusDriver * CMusic::GetMusicDriver()
-{	return m_curDriver;
 }
 
 //======================================================================================
@@ -164,11 +124,9 @@ CMusDriver * CMusic::GetMusicDriver()
 
 void CMusic::Play(int argc, char** argv)
 {
-	if(!m_curDriver)
-		return;
 	if(argc > 1 && argv[1])
 	{
-		char	filename[COM_MAXPATH];
+/*		char	filename[COM_MAXPATH];
 		char	ext[4];		//extension
 
 		memset(filename,0,COM_MAXPATH);
@@ -201,63 +159,35 @@ void CMusic::Play(int argc, char** argv)
 			m_curDriver->Play(filename);
 		}
 #endif
+*/	
 	}
 }
 
 void CMusic::Pause()
 {
-	if(m_curDriver)
-		m_curDriver->SetPause(true);
 }
 
 void CMusic::Stop()
 {
-	if(m_curDriver)
-		m_curDriver->Stop();
 }
 
 void CMusic::Resume()
 {
-	if(m_curDriver)
-		m_curDriver->SetPause(false);
 }
 
 void CMusic::PrintStats()
 {
-	if(m_curDriver)
-	{
-	}
 }
 
 //======================================================================================
 //======================================================================================
 
 bool CMusic::Volume(const CVar * var, int argc, char** argv)
-{	
-	if(m_curDriver)
-	{
-	}
-	return true;
+{	return true;
 }
 
-bool CMusic::Driver(const CVar * var, int argc, char** argv)
+void CMusic::HandleMCIMsg(uint &wParam, long &lParam)
 {
-	if(argc == 2 && argv[1])
-	{
-		if(!strcmp(argv[1], DRIVER_FMOD))
-		{
-		}
-		else if(!strcmp(argv[1], DRIVER_CD))
-		{
-		}
-		else if(!strcmp(argv[1], DRIVER_DMUS))
-		{
-		}
-	}
-	else
-	{
-		ComPrintf("Valid Music drivers are :\n");
-		ComPrintf("%s, %s, %s\n", DRIVER_FMOD, DRIVER_CD, DRIVER_DMUS);
-	}
-	return false;
+	if(m_pCDAudio)
+		HandleMCIMsg(wParam,lParam);
 }

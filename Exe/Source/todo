@@ -1,16 +1,21 @@
 EXE
 ==============================================================
 
-add 3d sound buffers
+//now
 get cdaudio working
-get a basic directMusic interface going
 
+//soon
+add 3d sound buffers and a listener
 CVar/Command/CmdLine Parms class
 error/logging/handling
+mp3 playback via freeamp
 
+//low priority, would be nice to have
 Clear			clear
-Home and End,	go to top and bottom	
-paste from windows console Ctrl-v
+Home and End,	go to top and bottom
+mpeg playback via wm services
+get a basic directMusic interface going, will have to write a loader stream for that
+
 
 RENDERER
 ==============================================================

@@ -26,14 +26,16 @@ public:
 	bool Create(WAVEFORMATEX &pcmwf);
 	void Destroy();
 
-	ulong GetVolume();
-	void  SetVolume(ulong vol);
+	//Master Volume,	range 0 (max) to 5000 (min)
+	long GetVolume();
+	bool SetVolume(long vol);
 
 	void PrintStats() const;
 
 private:
 
-	ulong m_volume;
+	long m_volume;
+
 	IDirectSoundBuffer * m_pDSBuffer;	//DirectSoundBuffer
 };
 

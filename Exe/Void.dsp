@@ -303,14 +303,6 @@ SOURCE=.\Source\Mus_dm.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Mus_fmod.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Mus_fmod.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Mus_main.cpp
 # End Source File
 # Begin Source File

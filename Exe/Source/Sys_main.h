@@ -48,6 +48,8 @@ public:
 	void Activate(bool focus);
 	void OnFocus();
 	void LostFocus();
+//hack
+	void HandleMM(uint wParam, long lParam);	//MCI Multimedia event
 
 	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 
@@ -84,8 +86,8 @@ private:
 	//Write configuration file
 	void WriteConfig(char *config);
 
-	void CFuncQuit(int argc, char** argv);		//quit game
-	void CFuncMap(int argc, char** argv);		//start local server with map + connect to it
+	void CFuncQuit();						//quit game
+	void CFuncMap(int argc, char** argv);	//start local server with map + connect to it
 
 };
 

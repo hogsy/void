@@ -82,11 +82,14 @@ struct I_Console
 	virtual void RegisterCVar(	CVarBase * var,				 //The Cvar being registered
 								I_CVarHandler * handler=0)=0;//Optional handler
 
-	virtual void RegisterCommand(const char *cmdname,		//Command Name
-								HCMD id,					//ID in the registering class
-								I_CmdHandler * handler)=0;	//the class registering the command
+	virtual void RegisterCommand(const char *cmdname,		 //Command Name
+								HCMD id,					 //ID in the registering class
+								I_CmdHandler * handler)=0;	 //the class registering the command
 	//Print Functions
 	virtual void ComPrint(char* text)=0;
+
+	//pass a string to be exec'ed
+	virtual void ExecString(const char *string)=0;
 };
 
 #endif

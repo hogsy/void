@@ -132,6 +132,7 @@ bool __stdcall CDirectMusic::DMInit(DPRINT print,char *gamepath, IDirectSound *p
         return false;
 	}
 
+
 	dprintf("INIT DMINIT - loader ok\n");
 	
 	// Change the loader's current search directory 

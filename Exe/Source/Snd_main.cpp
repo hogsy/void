@@ -9,8 +9,6 @@ namespace
 	{
 		CMD_PLAY  = 1,
 		CMD_STOP  = 2,
-//		CMD_PAUSE = 3,
-//		CMD_RESUME= 4,
 		CMD_INFO  = 5,
 		CMD_LIST  = 6
 	};
@@ -28,7 +26,7 @@ using namespace VoidSound;
 Constructor/Destructor
 ==========================================
 */
-CSoundManager::CSoundManager() : m_cVolume("s_vol", "8", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 								 m_cHighQuality("s_highquality", "1", CVar::CVAR_BOOL, CVar::CVAR_ARCHIVE)
 {
 	m_pPrimary = new CPrimaryBuffer;
@@ -46,8 +44,6 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "8", CVar::CVAR_INT, CVar::C
 
 	System::GetConsole()->RegisterCommand("splay",CMD_PLAY,this);
 	System::GetConsole()->RegisterCommand("sstop",CMD_STOP,this);
-//	System::GetConsole()->RegisterCommand("spause",CMD_PAUSE,this);
-//	System::GetConsole()->RegisterCommand("sresume",CMD_RESUME,this);
 	System::GetConsole()->RegisterCommand("sinfo",CMD_INFO,this);
 	System::GetConsole()->RegisterCommand("slist",CMD_LIST,this);
 }
@@ -215,9 +211,9 @@ void CSoundManager::Play(hSnd index, int channel)
 
 	m_Channels[i].Create(m_Buffers[index]);
 	
-//TEMP
 	if(m_Channels[i].Play(true))
 	{
+//TEMP, dont really need this info during gameplay
 		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
 		m_channelsInUse ++;
 	}
@@ -374,6 +370,42 @@ bool CSoundManager::SPrintInfo()
 	return true;
 }
 
+
+/*
+==========================================
+Set volume
+==========================================
+*/
+bool CSoundManager::SVolume(int numArgs, char ** szArgs)
+{
+	float fvol = 0.0f;
+	long  lvol = 0;
+	if(numArgs==1)
+	{
+		lvol = m_pPrimary->GetVolume();
+		fvol = (5000 - lvol)/500;
+		ComPrintf("Volume : %.2f (%d)\n", fvol,lvol);
+		return false;
+	}
+	else if(szArgs[1] && sscanf(szArgs[1],"%f",&fvol))
+	{
+		if(fvol < 0.0f || fvol > 10.0f)
+		{
+			ComPrintf("CSoundManager::SVolume: Valid range is 0.0f to 10.0f\n");
+			return false;
+		}
+		lvol = -(5000 - fvol*500);
+		if(m_pPrimary->SetVolume(lvol))
+		{
+			ComPrintf("CSoundManager::SVolume: Changed to %.2f (%d)\n", fvol, lvol);
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
+
+
 /*
 ==========================================
 Handle CVar changes
@@ -381,6 +413,8 @@ Handle CVar changes
 */
 bool CSoundManager::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
+	if(cvar == (CVarBase *)&m_cVolume)
+		return SVolume(numArgs,szArgs);
 	return false;
 }
 

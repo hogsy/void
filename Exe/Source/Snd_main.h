@@ -66,12 +66,12 @@ private:
 	CVar m_cVolume;			//Master Volume 
 	CVar m_cHighQuality;	//16bit buffer if on.
 
+	bool SVolume(int numArgs, char ** szArgs);
+
 	//==========================================
 	//Temp debug funcs
 	
 	void SPlay(int numArgs, char ** szArgs);
-//	void SPause(int numArgs, char ** szArgs);
-//	void SResume(int numArgs, char ** szArgs);
 	void SStop(int numArgs, char ** szArgs);
 	void SListSounds();
 	bool SPrintInfo();

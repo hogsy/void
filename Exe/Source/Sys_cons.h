@@ -6,6 +6,7 @@
 #include "In_defs.h"
 
 //#define VOID_DOS_CONSOLE	1
+
 /*
 ==========================================
 Console Command
@@ -69,6 +70,9 @@ public:
 						I_CmdHandler * handler);
 	void ComPrint(char* text);
 
+	//just pass a string to be parsed and exec'ed
+	void ExecString(const char *string);
+
 	//==============================================================
 	//Key Listener interface
 	void HandleKeyEvent(const KeyEvent &kevent);
@@ -85,8 +89,6 @@ public:
 	void ExecConfig(const char *filename);
 	void WriteCVars(FILE *fp);
 
-	//just pass a string to be parsed and exec'ed
-	void ExecString(const char *string);
 	void ExecCommand(CCommand * cmd, const char * cmdString);
 
 	CCommand * GetCommandByName(const char * cmdString);

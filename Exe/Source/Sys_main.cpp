@@ -31,12 +31,17 @@ extern CVoid*	g_pVoid;
 //Console loopback func
 //======================================================================================
 
-#define CMD_QUIT	0
-#define CMD_MAP		1
+namespace
+{
+	enum
+	{
+		CMD_QUIT = 0,
+		CMD_MAP  = 1
+	};
+}
 
-static void CFuncDisconnect(int argc, char** argv);	//disconnect from server + shutdown if local 
-static void CFuncConnect(int argc, char ** argv);	//connect to a server
-void CToggleConsole(int argc, char** argv);			//this should be non-static so the console can access it
+//this should be non-static so the console can access it
+void CToggleConsole(int argc, char** argv);			
 
 //======================================================================================
 //Global access functions for private data
@@ -111,7 +116,6 @@ CVoid::CVoid(const char * cmdLine)
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("map",CMD_MAP,this );
 	System::GetConsole()->RegisterCommand("connect",CMD_MAP,this);
-//	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
 
 /*
@@ -415,28 +419,6 @@ void CVoid::RunFrame()
 }
 
 /*
-==========================================
-Handle Commands
-==========================================
-*/
-void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
-{
-	switch(cmdId)
-	{
-	case CMD_QUIT:
-		{
-			CFuncQuit(numArgs,szArgs);
-			break;
-		}
-	case CMD_MAP:
-		{
-			CFuncMap(numArgs,szArgs);
-			break;
-		}
-	}
-}
-
-/*
 ======================================
 Init Game
 ======================================
@@ -691,36 +673,21 @@ void CVoid::LostFocus()
 		m_pRParms->active = false;
 }
 
-
-//==============================================================================================
-//Other Utility Functions
-//==============================================================================================
-
 /*
-const char * CVoid::GetCurrentPath() const
-{	return m_pFileSystem->GetCurrentPath();
-}
-*/
+==========================================
 
-/*
-const char * CVoid::GetExePath() const
-{	return m_exePath;
-}
+==========================================
 */
-/*
-	friend const char * System::GetExePath();
-	friend const char*  System::GetCurrentPath();
-	friend eGameState   System::GetGameState();
-	friend void	System::SetGameState(eGameState state);
-
-eGameState  CVoid::GetGameState()  const
-{	return m_gameState;
+void CVoid::HandleMM(WPARAM wParam, LPARAM lParam)
+{
+#ifdef INCLUDE_MUSIC
+	if(m_pMusic)
+		m_pMusic->HandleMCIMsg(wParam,lParam);
+#endif
 }
-void CVoid::SetGameState(eGameState state)
-{	m_gameState = state;
-}
-*/
 
+//======================================================================================
+//======================================================================================
 
 /*
 ==========================================
@@ -758,7 +725,6 @@ void CVoid::Error(char *error, ...)
 				0);
 }
 
-
 /*
 =====================================
 Write the configuration file
@@ -783,22 +749,44 @@ void CVoid::WriteConfig(char *config)
 //======================================================================================
 //Console loopback functions
 //======================================================================================
+
+/*
+==========================================
+Handle Commands
+==========================================
+*/
+void CVoid::HandleCommand(HCMD cmdId, int numArgs, char ** szArgs)
+{
+	switch(cmdId)
+	{
+	case CMD_QUIT:
+		{
+			CFuncQuit();
+			break;
+		}
+	case CMD_MAP:
+		{
+			CFuncMap(numArgs,szArgs);
+			break;
+		}
+	}
+}
+
 /*
 ===============================================
 quit game - 
 disconnect client + shutdown server + exit game
 ===============================================
 */
-void CVoid::CFuncQuit(int argc, char** argv)
+void CVoid::CFuncQuit()
 {
 	ComPrintf("CVoid::Quit\n");
-	
+
 	//Win32 func
 	PostMessage(System::GetHwnd(),	// handle of destination window 
 				WM_QUIT,			// message to post 
 				0,					// first message parameter 
 				0);					// second message parameter 
-
 }
 
 /*
@@ -822,59 +810,6 @@ void CVoid::CFuncMap(int argc, char** argv)
 		return;
 	}
 	ComPrintf("CVoid::Map: invalid arguments\n");
-}
-
-
-
-
-
-
-
-
-
-
-
-/*
-======================================
-Disconnect
-disconnect from server + shutdown server if local 
-======================================
-*/
-void CFuncDisconnect(int argc, char** argv)
-{
-	if(g_pClient->m_ingame)
-		g_pClient->Disconnect();
-#ifndef __VOIDALPHA
-	if(g_pServer->m_active)
-#endif
-		g_pVoid->ShutdownServer();
-}
-
-
-/*
-=====================================
-Connect
-=====================================
-*/
-void CFuncConnect(int argc, char ** argv)
-{
-	//List Current Search Paths
-//	g_pFileSystem->ListSearchPaths();
-
-	//Print out the list of files in added archives
-//	g_pFileSystem->ListArchiveFiles();
-/*
-	if(argc ==2)
-	{
-		if(ValidIP(argv[1]))
-			g_pClient->ConnectTo(argv[1],36666);
-		else
-			ComPrintf("CVoid::CFuncConnect:INVALID IP ADDR %s\n",argv[1]);
-	}
-//TEMP
-	else
-		g_pClient->ConnectTo("24.112.133.112",36666);
-*/
 }
 
 /*

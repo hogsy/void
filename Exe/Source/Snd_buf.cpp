@@ -31,7 +31,7 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-    dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_PRIMARYBUFFER;
+    dsbdesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_PRIMARYBUFFER; //DSBCAPS_CTRLPAN
 	dsbdesc.guid3DAlgorithm = GUID_NULL;
     dsbdesc.dwBufferBytes = 0;
     dsbdesc.lpwfxFormat = 0; 
@@ -48,6 +48,7 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Set Format:");
+		Destroy();
 		return false;
 	}
 
@@ -55,9 +56,17 @@ bool CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf)
 	if(FAILED(hr))
 	{
 		PrintDSErrorMessage(hr,"CPrimaryBuffer::Create:Can't start mixing:");
+		Destroy();
 		return false;
 	}
-	
+
+	if(!SetVolume(m_volume))
+	{
+		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");
+		Destroy();
+		return false;
+	}
+
 	ComPrintf("CPrimaryBuffer::Create: OK\n");
 	return true;
 }
@@ -114,13 +123,42 @@ void CPrimaryBuffer::PrintStats() const
 	ComPrintf(" %d bytes\n",dsCaps.dwBufferBytes);
 }
 
+/*
+==========================================
+Master Volume
+==========================================
+*/
+long CPrimaryBuffer::GetVolume()
+{
+	if(!m_pDSBuffer)
+		return 0;
 
-ulong CPrimaryBuffer::GetVolume()
-{	return m_volume;
+	long lvol=0;
+	if(FAILED(m_pDSBuffer->GetVolume(&lvol)))
+	{
+		ComPrintf("CPrimaryBuffer:GetVolume: Failed to get volume\n");
+		return 0;
+	}
+	return lvol;
 }
 
-void CPrimaryBuffer::SetVolume(ulong vol)
+bool CPrimaryBuffer::SetVolume(long vol)
 {
+	if(!m_pDSBuffer)
+	{
+		m_volume = vol;
+		return true;
+	}
+
+	HRESULT hr = m_pDSBuffer->SetVolume(vol);
+	if(FAILED(hr))
+	{
+		PrintDSErrorMessage(hr,"CPrimaryBuffer::SetVolume:");
+		ComPrintf("Unable to set to %d db\n",vol);
+		return false;
+	}
+	m_volume = vol;
+	return true;
 }
 
 
