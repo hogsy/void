@@ -1,4 +1,4 @@
-
+#include "Standard.h"
 #include "Img_entry.h"
 #include "Tex_image.h"
 #include "ShaderManager.h"
@@ -12,9 +12,11 @@ CImageCacheEntry::CImageCacheEntry(const char *file)
 {
 	imagefile = new char[strlen(file)+1];
 	strcpy(imagefile, file);
+	
 	tex_bin = -1;
 	mShaderBin = -1;
 	mRefCount = 1;
+	
 	LoadTexture();
 }
 
@@ -26,7 +28,7 @@ Destructor
 CImageCacheEntry::~CImageCacheEntry()
 {
 	if (imagefile)
-		delete imagefile;
+		delete [] imagefile;
 
 	if (tex_bin != -1)
 		g_pRast->TextureBinDestroy(tex_bin);

@@ -1,8 +1,6 @@
 #ifndef REN_CACHE_H
 #define REN_CACHE_H
 
-#include "Com_vector.h"
-
 #define CACHE_PASS_SKY			0
 #define	CACHE_PASS_ZFILL		1
 #define CACHE_PASS_ZBUFFER		2

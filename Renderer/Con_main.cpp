@@ -27,7 +27,7 @@ CRConsole::CRConsole(): m_seperatorchar('^'),
 
 	//Allocate space for Lines
 	for (int i = 0; i < CON_MAX_LINES; i++)
-		m_lines[i] = new Conline_t();
+		m_lines[i] = new Conline_t;
 	
 	g_pConsole->RegisterCVar(&m_conSpeed);
 	g_pConsole->RegisterCVar(&m_conAlpha);

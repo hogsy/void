@@ -1,9 +1,7 @@
 #ifndef R_CONSOLERENDERER_H
 #define R_CONSOLERENDERER_H
 
-#include "I_console.h"
 #include "I_renderer.h"
-#include "Com_cvar.h"
 
 /*
 ======================================================================================

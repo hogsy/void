@@ -1,8 +1,5 @@
-
 #include "Standard.h"
 #include "gl_rast.h"
-
-
 
 /*
 =======================================

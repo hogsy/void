@@ -1,6 +1,4 @@
-
 #ifdef DYNAMIC_GL
-
 
 //
 // replacement <gl/gl.h> - has everything, but replacement function defs

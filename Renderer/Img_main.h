@@ -1,8 +1,9 @@
 #ifndef IMG_MAIN_H
 #define IMG_MAIN_H
 
-#include "Standard.h"
-#include "Img_entry.h"
+#include "I_clientRenderer.h"
+
+class CImageCacheEntry;
 
 class CImageManager
 {
@@ -25,12 +26,12 @@ public:
 	void UnLoadTextures(void);
 	void LoadTextures(void);
 
-	void Set(CacheType cache, int index) { caches[cache][index]->Set(); }
+	void Set(CacheType cache, int index);
 
 private:
 
 	bool ready;
-	CImageCacheEntry *caches[CACHE_NUMCACHES][GAME_MAXIMAGES];
+	CImageCacheEntry * caches[CACHE_NUMCACHES][GAME_MAXIMAGES];
 };
 
 #endif

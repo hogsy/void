@@ -1,9 +1,5 @@
-
 #ifndef MDL_ENTRY_H
 #define MDL_ENTRY_H
-
-#include "Standard.h"
-
 
 class CModelCacheEntry
 {
@@ -11,23 +7,17 @@ public:
 	CModelCacheEntry();
 	virtual ~CModelCacheEntry();
 
-
 	virtual void LoadModel(const char *file)=0;
 	virtual void Draw(int skin, int fframe, int cframe, float frac)=0;
-	bool IsFile(const char *file) { return (strcmp(file, modelfile)==0); }
+	
+	void LoadSkins();
+	void UnLoadSkins();
+	int  Release()	{ return --mRefCount; }
+	void AddRef()	{ mRefCount++;	}
 
-	void LoadSkins(void);
-	void UnLoadSkins(void);
-
-	int GetNumSkins(void)	{ return num_skins;		}
-	int	GetNumFrames(void)	{ return num_frames;	}
-
-	int  Release(void)	{ return --mRefCount; }
-	void AddRef(void)	{ mRefCount++;	}
-
-private:
-
-	int mRefCount;
+	bool IsFile(const char *file) const	{	return (strcmp(file, modelfile)==0); 	}
+	int  GetNumSkins() const	 { return num_skins;	}
+	int	 GetNumFrames() const { return num_frames;	}
 
 protected:
 	// skin info
@@ -41,6 +31,9 @@ protected:
 
 	// frame data
 	int		 num_frames;
+
+private:
+	int mRefCount;
 };
 
 

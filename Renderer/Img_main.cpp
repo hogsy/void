@@ -1,5 +1,5 @@
-#include "Cl_defs.h"
-#include "I_clientRenderer.h"
+#include "Standard.h"
+#include "Img_entry.h"
 #include "Img_main.h"
 
 /*
@@ -11,11 +11,11 @@ CImageManager::CImageManager()
 {
 	ready = true;
 	// reset
-	for (int c=0; c<CACHE_NUMCACHES; c++)
+	int c, e;
+	for (c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<GAME_MAXIMAGES; e++)
-		{	caches[c][e] = NULL;
-		}
+		for (e=0; e<GAME_MAXIMAGES; e++)
+			caches[c][e] = NULL;
 	}
 }
 
@@ -26,9 +26,10 @@ Destructor
 */
 CImageManager::~CImageManager()
 {
-	for (int c=0; c<CACHE_NUMCACHES; c++)
+	int c, e;
+	for (c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<GAME_MAXIMAGES; e++)
+		for (e=0; e<GAME_MAXIMAGES; e++)
 		{
 			if (caches[c][e])
 			{
@@ -38,6 +39,10 @@ CImageManager::~CImageManager()
 			}
 		}
 	}
+}
+
+void CImageManager::Set(CacheType cache, int index)
+{	caches[cache][index]->Set(); 
 }
 
 /*

@@ -5,23 +5,20 @@
 #pragma warning(disable : 4305)		//truncation from const double to float
 
 #include "Com_defs.h"
-
-#include "I_hunkmem.h"
-#include "I_renderer.h"
-
 #include "Com_cvar.h"
 #include "Com_vector.h"
 #include "Com_world.h"
+#include "Com_camera.h"
+
+#include "I_renderer.h"
 
 //Renderer Info
-extern RenderInfo_t g_rInfo;	
-
-//Console Interface for registering CVars
+extern RenderInfo_t g_rInfo;
+//Console Interface for registering CVars	
 extern I_Console *  g_pConsole;
 
 // MUST be after declaration of g_pConsole
 #include "Rasterizer.h"
-
 // Rasterizer Interface
 extern I_Rasterizer  * g_pRast;
 

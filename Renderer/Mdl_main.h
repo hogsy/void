@@ -1,14 +1,7 @@
-
 #ifndef MDL_MAIN_H
 #define MDL_MAIN_H
 
-#include "Standard.h"
-#include "I_file.h"
-#include "Cl_defs.h"
-#include "Mdl_entry.h"
 #include "I_clientRenderer.h"
-
-
 
 #ifdef _DEBUG
 #define MAX_DRAWMODEL_ALLOCS 64
@@ -17,6 +10,8 @@
 #define MAX_DRAWMODEL_ALLOCS 16
 #define	DRAWMODELS_PER_ALLOC 16
 #endif
+
+class CModelCacheEntry;
 
 
 class CModelManager
@@ -65,7 +60,6 @@ private:
 	void drawmodelRelease(drawmodel_t *d);
 
 	bool ready;
-
 
 	CModelCacheEntry *caches[CACHE_NUMCACHES][GAME_MAXMODELS];
 };

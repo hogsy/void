@@ -4,16 +4,12 @@
 #include "Ren_cache.h"
 #include "Tex_hdr.h"
 #include "Con_main.h"
-#include "Mdl_main.h"
-#include "Hud_main.h"
 #include "Client.h"
 
+
 extern CRConsole * g_prCons;
-extern CVar *	g_pVidSynch;
-
-
-//eyepoint_t	eye;			// where we're gonna draw from
-const CCamera * camera=0;
+extern CVar		 * g_pVidSynch;
+const  CCamera   * camera=0;
 
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
 int			eye_leaf;

@@ -40,20 +40,20 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	//Create different subsystems
 
 	//Start the console first thing
-	g_prCons= new CRConsole();
+	g_prCons   = new CRConsole();
 	g_pShaders = new CShaderManager();
-	g_pTex  = new CTextureManager();
-	g_pClient = new CClientRenderer();
+	g_pTex     = new CTextureManager();
+	g_pClient  = new CClientRenderer();
 
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
 	if (_stricmp(m_cRast.string, "gl")==0)
 		g_pRast = new COpenGLRast();
-	else if (_stricmp(m_cRast.string, "d3dx")==0)
-		g_pRast = new CRastD3DX();
-	else
+	else if(_stricmp(m_cRast.string,"none")==0)
 		g_pRast = new CRastNone();
+	else
+		g_pRast = new CRastD3DX();
 
 	g_pConsole->RegisterCVar(&m_cFull,this);
 	g_pConsole->RegisterCVar(&m_cBpp,this);
@@ -87,7 +87,7 @@ CRenExp::~CRenExp()
 		delete g_prCons;
 	g_prCons = 0;
 
-	g_pConsole = 0;
+//	g_pConsole = 0;
 }
 
 

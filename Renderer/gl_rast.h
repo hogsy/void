@@ -1,9 +1,8 @@
 #ifndef	RAST_GL_H
 #define RAST_GL_H
 
-#include <windows.h>
-#include "gl.h"
 #include "Rasterizer.h"
+#include "gl.h"
 
 
 class COpenGLRast : public I_Rasterizer
@@ -114,9 +113,5 @@ private:
 	vector_t	mColor;
 	float		mAlpha;
 };
-
-void FError(char *error, ...);
-void Error(char *error, ...);
-
 
 #endif

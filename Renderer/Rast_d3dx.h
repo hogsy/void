@@ -1,14 +1,12 @@
 #ifndef	RAST_D3DX_H
 #define RAST_D3DX_H
 
-
 #define D3D_OVERLOADS
 #include <windows.h>
 #include <d3d.h>
 #include <d3dx.h>
 
 #include "Rasterizer.h"
-
 
 class CRastD3DX : public I_Rasterizer
 {

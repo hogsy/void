@@ -2,7 +2,6 @@
 #define INC_RENDERER_INTERFACE
 
 #include "I_void.h"
-#include "Com_vector.h"
 
 #ifdef RENDERER_EXPORTS
 #define RENDERER_API __declspec(dllexport)
@@ -94,49 +93,13 @@ struct I_ConsoleRenderer
 	virtual void AddLine(const char *line, LineColor color=DEFAULT, int size=0) = 0;
 };
 
-
-/*
-======================================
-The camera class.
-keeps refs to client angle/position data. 
-Client creates this locally when starting into a game
-
-TODO, change this to subclass EntityState ?
-======================================
-*/
-class CCamera
-{
-public:
-
-	CCamera(vector_t & rorigin,
-			vector_t & rangles,
-			vector_t & rblend
-//			,vector_t & rforward,
-//			vector_t & rright,
-			//vector_t & rup
-			): origin(rorigin), angles(rangles), blend(rblend)
-							 //,forward(rforward), right(rright), up(rup)
-	{}
-	
-	~CCamera() {} 
-
-	vector_t & origin;
-	vector_t & angles;
-	vector_t & blend;
-	
-/*	vector_t & forward;
-	vector_t & right;
-	vector_t & up;
-*/
-};
-
-
 /*
 ==========================================
 Renderer Interface
 ==========================================
 */
 struct I_ClientRenderer;
+class  CCamera;
 class  CWorld;
 
 struct I_Renderer

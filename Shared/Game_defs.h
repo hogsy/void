@@ -1,14 +1,16 @@
 #ifndef VOID_GAME_DEFS
 #define VOID_GAME_DEFS
 
+#include "Com_defs.h"
 #include "Com_vector.h"
 #include "Com_trace.h"
 
 /*
 ======================================
-Basic "game" definitions
+Basic "game" definitions.
 ======================================
 */
+
 const int	GAME_MAXMODELS	= 256;
 const int	GAME_MAXSOUNDS	= 256;
 const int	GAME_MAXIMAGES	= 256;
@@ -76,8 +78,8 @@ Client sends this to the server as frequently as possible
 */
 struct ClCmd
 {
-	float	time;
-	int		angles[3];
+	byte	time;			//Frame Time
+	int		angles[3];		//Current View angels
 	short	forwardmove, 
 			rightmove, 
 			upmove;

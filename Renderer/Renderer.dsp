@@ -134,10 +134,6 @@ SOURCE=.\Con_cmds.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Con_cmds.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Con_main.cpp
 # End Source File
 # Begin Source File
@@ -243,6 +239,10 @@ SOURCE=..\..\Mssdk\Include\d3dxsprite.h
 # Begin Source File
 
 SOURCE=..\Shared\Bsp_file.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_camera.h
 # End Source File
 # Begin Source File
 

@@ -1,9 +1,8 @@
-
 #ifndef MDL_MD2_H
 #define MDL_MD2_H
 
+#include "I_clientRenderer.h"
 #include "Mdl_entry.h"
-
 
 class CModelMd2 : public CModelCacheEntry
 {

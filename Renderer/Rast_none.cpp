@@ -1,8 +1,5 @@
-
 #include "Standard.h"
 #include "Rast_none.h"
-
-
 
 /*
 =======================================

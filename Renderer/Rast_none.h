@@ -1,9 +1,7 @@
 #ifndef	RAST_NONE_H
 #define RAST_NONE_H
 
-#include <windows.h>
 #include "Rasterizer.h"
-
 
 class CRastNone : public I_Rasterizer
 {

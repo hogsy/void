@@ -1,7 +1,6 @@
 #ifndef _TEX_IMAGE_
 #define _TEX_IMAGE_
 
-#include "Standard.h"
 #include "I_file.h"
 
 //======================================================================================

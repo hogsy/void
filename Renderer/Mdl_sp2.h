@@ -1,7 +1,7 @@
-
 #ifndef MDL_SP2_H
 #define MDL_SP2_H
 
+#include "I_clientRenderer.h"
 #include "Mdl_entry.h"
 
 

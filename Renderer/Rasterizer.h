@@ -1,10 +1,7 @@
 #ifndef RASTERIZER_H
 #define RASTERIZER_H
 
-
-#include "standard.h"
-#include "Com_cvar.h"
-
+//#include "Standard.h"
 
 // max number of possible mipmaps 10 -> 1024 max dim size
 #define MAX_MIPMAPS 11

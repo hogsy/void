@@ -1,8 +1,6 @@
 #ifndef IMG_ENTRY_H
 #define IMG_ENTRY_H
 
-#include "Standard.h"
-
 class CImageCacheEntry
 {
 public:

@@ -1,6 +1,8 @@
 #ifndef VOID_CLIENT_RENDERER
 #define VOID_CLIENT_RENDERER
 
+#include "Cl_defs.h"
+
 /*
 ============================================================================
 This header is shared between the renderer, the exe and the clientside dll.
@@ -25,8 +27,7 @@ enum EHudItemType
 	HUDMODEL
 };
 
-#define HUD_DEFAULTMSGTIME	3.0
-struct ClEntity;
+const float HUD_DEFAULTMSGTIME = 3.0f;
 
 /*
 ==========================================

@@ -1,8 +1,7 @@
-
+#include "Standard.h"
 #include "Mdl_entry.h"
 #include "Tex_image.h"
 #include "ShaderManager.h"
-
 
 /*
 =======================================
@@ -18,7 +17,6 @@ CModelCacheEntry::CModelCacheEntry()
 	skin_names = NULL;
 	num_frames = 0;
 }
-
 
 /*
 =======================================
@@ -80,7 +78,7 @@ void CModelCacheEntry::LoadSkins(void)
 	skin_bin = g_pRast->TextureBinInit(num_skins);
 	mShaderBin = g_pShaders->BinInit(num_skins);
 
-	CImageReader texReader; // = new CImageReader();
+	CImageReader texReader;
 
 	for (int s=0; s<num_skins; s++)
 	{
@@ -111,7 +109,6 @@ void CModelCacheEntry::LoadSkins(void)
 		g_pShaders->LoadShader(mShaderBin, s, texname);
 		g_pRast->TextureLoad(skin_bin, s, &tdata);
 	}
-//	delete texReader;
 }
 
 /*
