@@ -75,7 +75,7 @@ bsp_brush_side_t* new_bsp_brush_side(void);
 void free_bsp_brush_side(bsp_brush_side_t *s);
 bsp_brush_t* copy_brush(bsp_brush_t *in);
 void copy_brush2(bsp_brush_t *in,  bsp_brush_t *out);
-void clip_side(bsp_brush_side_t *s, int plane);
+int clip_side(bsp_brush_side_t *s, int plane);
 void clip_brush(bsp_brush_t *b, plane_t *plane);
 void calc_brush_bounds(bsp_brush_t *b);
 int bsp_test_brush(bsp_brush_t *b, int plane);

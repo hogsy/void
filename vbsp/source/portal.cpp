@@ -4,6 +4,8 @@
 #include "portal.h"
 
 
+#include <memory.h>
+
 portal_t portals[MAX_MAP_PORTALS];
 int num_portals=0;
 
@@ -22,64 +24,6 @@ portal_t* get_portal(void)
 	return &portals[num_portals-1];
 }
 
-
-/*
-============
-brushes_touching
-============
-*/
-bsp_brush_side_t* brushes_touching(bsp_brush_t *b1, bsp_brush_t *b2)
-{
-	bsp_brush_side_t *s1, *s2, *tmp;
-	for (s1=b1->sides; s1; s1=s1->next)
-	{
-		for (s2=b2->sides; s2; s2=s2->next)
-		{
-			if (s1->plane == (s2->plane^1))
-			{
-				// we have an opposing plane - make sure the verts are overlapping
-				// create a new side withing the plane and clip it to all other planes
-				// of the brushes.  if there is anything left, it overlaps
-				bsp_brush_side_t *ns = new_bsp_brush_side();
-				ns->plane = s1->plane;
-				make_base_side(ns);
-
-				for (tmp=b1->sides; tmp; tmp=tmp->next)
-				{
-					if ((tmp->plane|1) != (ns->plane|1))
-					{
-						clip_side(ns, tmp->plane);
-						if (ns->num_verts<3)
-						{
-							free_bsp_brush_side(ns);
-							goto nomatch;
-						}
-					}
-				}
-
-				for (tmp=b2->sides; tmp; tmp=tmp->next)
-				{
-					if ((tmp->plane|1) != (ns->plane|1))
-					{
-						clip_side(ns, tmp->plane);
-						if (ns->num_verts<3)
-						{
-							free_bsp_brush_side(ns);
-							goto nomatch;
-						}
-					}
-				}
-
-				// we got here - there are still verts in ns
-				return ns;
-			}
-nomatch:;
-
-		}
-	}
-
-	return NULL;
-}
 
 /*
 ===========
@@ -120,44 +64,258 @@ bsp_node_t* next_leaf(bsp_node_t *n)
 }
 
 
+
 /*
 ===========
-portal_create - creates all portals connecting leafs
+portal_parent_clip - clip portal to all parents
 ===========
 */
-void portal_create(bsp_node_t *head)
+void portal_parent_clip(bsp_node_t *n, bsp_brush_side_t *s)
 {
-	int num=0;
-	bsp_node_t *n1, *n2;
-	for (n1=next_leaf(head); n1; n1=next_leaf(n1))
-	{ 
-		if (n1->plane != -1)
-			continue;
+	if (!n->parent)
+		return;
 
-		for (n2=next_leaf(n1); n2; n2=next_leaf(n2))
+	// clip away the part on the other side of the node
+	if (n == n->parent->children[0])
+		clip_side(s, n->parent->plane^1);
+	else
+		clip_side(s, n->parent->plane);
+
+	portal_parent_clip(n->parent, s);
+}
+
+
+
+/*
+===========
+portal_child_clip - split list head by all children of node
+===========
+*/
+void portal_child_clip(portal_t *p)
+{
+	if ((p->nodes[0]->plane == -1) && (p->nodes[1]->plane == -1))
+	{
+		bsp_node_t *front = p->nodes[0];
+		bsp_node_t *back  = p->nodes[1];
+
+		// add this portal to it's two nodes
+		p->next[0] = front->portals;
+		p->next[1] =  back->portals;
+		front->portals = p;
+		back->portals = p;
+		return;
+	}
+
+	portal_t	*newport;
+	bsp_node_t *nodes[2];
+	nodes[0] = p->nodes[0];
+	nodes[1] = p->nodes[1];
+
+	bsp_brush_side_t *sides[4];	// front,front / front,back / back,front / back,back
+	sides[0] = p->side;
+	for (int i=1; i<4; i++)
+	{
+		sides[i] = new_bsp_brush_side();
+		memcpy(sides[i], sides[0], sizeof(bsp_brush_side_t));
+	}
+
+	if (nodes[0]->plane != -1)
+	{
+		clip_side(sides[0], nodes[0]->plane^1);
+		clip_side(sides[1], nodes[0]->plane^1);
+		clip_side(sides[2], nodes[0]->plane);
+		clip_side(sides[3], nodes[0]->plane);
+	}
+
+	if (nodes[1]->plane != -1)
+	{
+		clip_side(sides[0], nodes[1]->plane^1);
+		clip_side(sides[1], nodes[1]->plane);
+		clip_side(sides[2], nodes[1]->plane^1);
+		clip_side(sides[3], nodes[1]->plane);
+	}
+
+
+	// if frontside wasn't actually split
+	if (nodes[0]->plane == -1)
+	{
+
+		// if we only have 1 portal connecting these nodes...
+
+		free_bsp_brush_side(sides[2]);
+		free_bsp_brush_side(sides[3]);
+
+		// portal on backside of plane
+		if (sides[0]->num_verts < 3)
 		{
-			if (n2->plane != -1)
-				continue;
+			free_bsp_brush_side(sides[0]);
+			p->side = sides[1];
+			p->nodes[1] = nodes[1]->children[1];
 
-			// see if the volumes of these nodes touch
-			bsp_brush_side_t *touch = brushes_touching(n1->volume, n2->volume);
+			portal_child_clip(p);
+			return ;
+		}
 
-			if (touch)
+		// portal on frontside of plane
+		else if (sides[1]->num_verts < 3)
+		{
+			free_bsp_brush_side(sides[1]);
+			p->side = sides[0];
+			p->nodes[1] = nodes[1]->children[0];
+
+			portal_child_clip(p);
+			return;
+		}
+
+		// else we have 2 portals
+
+		newport = get_portal();
+		newport->side = sides[1];
+		newport->nodes[0] = nodes[0];
+		newport->nodes[1] = nodes[1]->children[1];
+		portal_child_clip(newport);
+
+		newport = p;
+		newport->nodes[1] = nodes[1]->children[0];
+		portal_child_clip(newport);
+
+		return;
+	}
+
+	// if backside wasn't actually split
+	else if (p->nodes[1]->plane == -1)
+	{
+		free_bsp_brush_side(sides[1]);
+		free_bsp_brush_side(sides[3]);
+
+		// if we only have 1 portal connecting these nodes...
+
+		// portal on backside of plane
+		if (sides[0]->num_verts < 3)
+		{
+			free_bsp_brush_side(sides[0]);
+			p->side = sides[2];
+			p->nodes[0] = nodes[0]->children[1];
+
+			portal_child_clip(p);
+			return;
+		}
+
+		// portal on frontside of plane
+		else if (sides[2]->num_verts < 3)
+		{
+			free_bsp_brush_side(sides[2]);
+			p->side = sides[0];
+			p->nodes[0] = nodes[0]->children[0];
+
+			portal_child_clip(p);
+			return;
+		}
+
+		// else we have 2 portals
+
+		newport = get_portal();
+		newport->side = sides[2];
+		newport->nodes[0] = nodes[0]->children[1];
+		newport->nodes[1] = nodes[1];
+		portal_child_clip(newport);
+
+		newport = p;
+		newport->nodes[0] = nodes[0]->children[0];
+		portal_child_clip(newport);
+
+		return;
+	}
+
+	// we have all 2 split planes, possibly 4 portals
+	else
+	{
+		bool any = false;
+
+		for (int i=0; i<4; i++)
+		{
+			if (sides[i]->num_verts >= 3)
 			{
-				num++;
-				portal_t *p = get_portal();
-				p->side = touch;
-				p->nodes[0] = n1;
-				p->nodes[1] = n2;
-				p->next[0] = n1->portals;
-				p->next[1] = n2->portals;
-				n1->portals = p;
-				n2->portals = p;
+				if (!any)
+					newport = p;
+				else
+					newport = get_portal();
+
+				any = true;
+				newport->side = sides[i];
+
+				switch (i)
+				{
+				case 0:
+					newport->nodes[0] = nodes[0]->children[0];
+					newport->nodes[1] = nodes[1]->children[0];
+					break;
+				case 1:
+					newport->nodes[0] = nodes[0]->children[0];
+					newport->nodes[1] = nodes[1]->children[1];
+					break;
+				case 2:
+					newport->nodes[0] = nodes[0]->children[1];
+					newport->nodes[1] = nodes[1]->children[0];
+					break;
+				case 3:
+					newport->nodes[0] = nodes[0]->children[1];
+					newport->nodes[1] = nodes[1]->children[1];
+					break;
+				}
+
+				portal_child_clip(newport);
+
 			}
 		}
 	}
+}
 
-	v_printf("%d portals.  ", num);
+
+
+
+/*
+===========
+portal_create_node - create all portals for this node
+===========
+*/
+void portal_create_node(bsp_node_t *node)
+{
+	bsp_brush_side_t *baseside = new_bsp_brush_side();
+	baseside->plane = node->plane;
+	make_base_side(baseside);
+
+	// clip to all parent nodes, then split between children
+	portal_parent_clip(node, baseside);
+
+	if (baseside->num_verts < 3)
+		v_printf("base < 3\n");
+
+	portal_t *baseportal = get_portal();
+	baseportal->side = baseside;
+	baseportal->nodes[0] = node->children[0];
+	baseportal->nodes[1] = node->children[1];
+	baseportal->next[0] = NULL;
+
+	portal_child_clip(baseportal);
+}
+
+
+/*
+===========
+portal_create_r - creates all portals connecting leafs
+===========
+*/
+void portal_create_r(bsp_node_t *head)
+{
+	if (head->plane == -1)
+		return;
+
+	portal_create_node(head);
+
+
+	portal_create_r(head->children[0]);
+	portal_create_r(head->children[1]);
 }
 
 
@@ -340,64 +498,6 @@ void portal_remove_invis(bsp_node_t *head)
 
 /*
 ==========
-portal_remove_outside - get rid of as many outside nodes as possible
-==========
-*/
-bsp_node_t outside_node;
-
-void portal_remove_outside_r(bsp_node_t *node)
-{
-	if (node->plane == -1)
-		return;
-
-	for (int i=0; i<2; i++)
-	{
-		portal_remove_outside_r(node->children[i]);
-
-	// outside leaf is always the same
-	// nodes that are outside are leaked - not a big deal
-		if (node->children[i]->outside)
-		{
-			// free brushes/volume
-			if (node->children[i]->brushes)
-				free_bsp_brush(node->children[i]->brushes);
-			free_bsp_brush(node->children[i]->volume);
-
-			node->children[i] = &outside_node;
-		}
-	}
-
-	// if both are outside, so is parent
-	if (node->children[0] == node->children[1])
-	{
-		node->outside = true;
-		node->plane = -1;
-	}
-}
-
-void portal_remove_outside(bsp_node_t *head)
-{
-// FIXME - make leafs without any brushes but solid outside nodes??
-
-	outside_node.brushes		= NULL;
-	outside_node.children[0]	= NULL;
-	outside_node.children[1]	= NULL;
-	outside_node.contents		= CONTENTS_SOLID;
-	outside_node.outside		= true;
-	outside_node.parent			= NULL;
-	outside_node.plane			= -1;
-	outside_node.portals		= NULL;
-	outside_node.volume			= bsp_build_volume();
-
-	portal_remove_outside_r(head);
-
-	if (head->outside)
-		v_printf("WARNING: everything outside\n");
-}
-
-
-/*
-==========
 portal_remove - remove the portal from it's two leaf lists.  portal is leaked - not a big deal
 ==========
 */
@@ -442,6 +542,72 @@ void portal_remove(portal_t *p)
 	}
 
 	free_bsp_brush_side(p->side);
+}
+
+
+/*
+==========
+portal_remove_outside - get rid of as many outside nodes as possible
+==========
+*/
+bsp_node_t outside_node;
+
+void portal_remove_outside_r(bsp_node_t *node)
+{
+	if (node->plane == -1)
+	{
+		// remove any portals to this leaf cause they all point outside
+		if (node->outside)
+		{
+			while (node->portals)
+				portal_remove(node->portals);
+		}
+
+		return;
+	}
+
+	for (int i=0; i<2; i++)
+	{
+		portal_remove_outside_r(node->children[i]);
+
+	// outside leaf is always the same
+	// nodes that are outside are leaked - not a big deal
+		if (node->children[i]->outside)
+		{
+			// free brushes/volume
+			if (node->children[i]->brushes)
+				free_bsp_brush(node->children[i]->brushes);
+			free_bsp_brush(node->children[i]->volume);
+
+		}
+	}
+
+	// if both are outside, so is parent
+	if (node->children[0]->outside && node->children[1]->outside)
+	{
+		node->outside = true;
+		node->plane = -1;
+	}
+}
+
+void portal_remove_outside(bsp_node_t *head)
+{
+// FIXME - make leafs without any brushes but solid outside nodes??
+
+	outside_node.brushes		= NULL;
+	outside_node.children[0]	= NULL;
+	outside_node.children[1]	= NULL;
+	outside_node.contents		= CONTENTS_SOLID;
+	outside_node.outside		= true;
+	outside_node.parent			= NULL;
+	outside_node.plane			= -1;
+	outside_node.portals		= NULL;
+	outside_node.volume			= bsp_build_volume();
+
+	portal_remove_outside_r(head);
+
+	if (head->outside)
+		v_printf("WARNING: everything outside\n");
 }
 
 
@@ -538,7 +704,6 @@ void portal_file(char *name)
 
 	int num=0;
 
-	v_printf("writing portal file: ");
 	FILE *f = fopen(name, "w");
 	fprintf(f, "%s\n", "VoidPortalFile");
 	for (int p=0; p<npportals; p++)
@@ -561,8 +726,8 @@ void portal_file(char *name)
 
 		for (int v=0; v<pportals[p]->side->num_verts; v++)
 			fprintf(f, " ( %f %f %f)",	pportals[p]->side->verts[v].x,
-												pportals[p]->side->verts[v].y,
-												pportals[p]->side->verts[v].z);
+										pportals[p]->side->verts[v].y,
+										pportals[p]->side->verts[v].z);
 
 		fprintf(f, "\n");
 
@@ -581,7 +746,10 @@ portal_run - do all portal related processing
 */
 void portal_run(bsp_node_t *head)
 {
-	portal_create(head);
+	portal_create_r(head);
+	v_printf("%d portals\n", num_portals);
+
+	// find and get rid of all outside nodes
 	portal_mark_outside_leafs(head);
 	portal_flood_outside(head);
 
@@ -607,9 +775,9 @@ void portal_run(bsp_node_t *head)
 
 //	portal_remove_unwanted(head);	// remove everything except what can be walked through
 //	portal_remove_outside(head);	// get rid of all nodes that are outside
+
 	portal_print_list(head);		// find the portals to print, cant until we have leafs numbered (when bsp written)
 }
-
 
 
 

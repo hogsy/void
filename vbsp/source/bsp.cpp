@@ -277,7 +277,7 @@ clip_side
 #define PLANE_FRONT	1
 #define PLANE_BACK	-1
 #define CLIP_EPSILON 0.001
-void clip_side_p(bsp_brush_side_t *s, plane_t *p)
+int clip_side_p(bsp_brush_side_t *s, plane_t *p)
 {
 	int			num_cverts = 0;
 	vector_t	clipverts[MAX_FACE_VERTS+1];
@@ -306,11 +306,11 @@ void clip_side_p(bsp_brush_side_t *s, plane_t *p)
 	}
 
 	if (allin)
-		return;
+		return PLANE_BACK;
 	if (allout)
 	{
 		s->num_verts = 0;
-		return;
+		return PLANE_FRONT;
 	}
 
 	dists[i] = dists[0];
@@ -347,11 +347,13 @@ void clip_side_p(bsp_brush_side_t *s, plane_t *p)
 		Error("clipped face to too many verts");
 	memcpy(s->verts, clipverts, sizeof(vector_t) * num_cverts);
 	s->num_verts = num_cverts;
+
+	return PLANE_ON;
 }
 
-void clip_side(bsp_brush_side_t *s, int plane)
+int clip_side(bsp_brush_side_t *s, int plane)
 {
-	clip_side_p(s, &planes[plane]);
+	return clip_side_p(s, &planes[plane]);
 }
 
 /*
