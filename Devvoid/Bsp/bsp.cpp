@@ -429,7 +429,7 @@ bsp_brush_side_t* bsp_sky_side_clip(bsp_brush_side_t *clipper, bsp_brush_side_t 
 	{
 		int nv = (v+1) % clipper->num_verts;
 
-		vector_t a = clipper->verts[v] = clipper->verts[nv];
+		vector_t a = clipper->verts[v] - clipper->verts[nv];
 		CrossProduct(clipper->verts[nv], a, clipplanes[v].norm);
 		clipplanes[v].norm.Normalize();
 		clipplanes[v].d = 0;

@@ -122,7 +122,7 @@ int get_plane(plane_t plane)
 	num_planes++;
 
 	// make opposing one
-	plane.norm.Inverse();
+	plane.norm.Inverse(planes[num_planes].norm);
 	planes[num_planes].d = -plane.d;
 	num_planes++;
 

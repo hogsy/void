@@ -34,57 +34,6 @@ bool quick_test_intersect(bsp_brush_t *b1, bsp_brush_t *b2)
 	return false;
 }
 
-/*
-==============
-slow_test_intersect - test all points to all planes
-==============
-
-bool slow_test_intersect(bsp_brush_t *b1, bsp_brush_t *b2)
-{
-	bsp_brush_side_t *s, *s1;
-	for (s=b1->sides; s; s=s->next)
-	{
-		for (int v=0; v<s->num_verts; v++)
-		{
-			bool inside = true;
-			for (s1=b2->sides; s1; s1=s1->next)
-			{
-				if ((dot(s->verts[v], planes[s1->plane].norm) - planes[s1->plane].d) >-0.01f)
-				{
-					inside = false;
-					break;
-				}
-			}
-
-			if (inside)
-				return true;
-		}
-	}
-
-	// now try the other way cause one could be completely inside the other
-	for (s=b2->sides; s; s=s->next)
-	{
-		for (int v=0; v<s->num_verts; v++)
-		{
-			bool inside = true;
-			for (s1=b1->sides; s1; s1=s1->next)
-			{
-				if ((dot(s->verts[v], planes[s1->plane].norm) - planes[s1->plane].d) > 0.01f)
-				{
-					inside = false;
-					break;
-				}
-			}
-
-			if (inside)
-				return true;
-		}
-	}
-
-	return false;
-}
-*/
-
 
 /*
 ===========
@@ -256,7 +205,8 @@ bsp_brush_t* brush_intersect(bsp_brush_t* b1, bsp_brush_t *b2)
 	inter->contents = b1->contents | b2->contents;
 
 	// make sure there is a volume to it
-	if (brush_volume(inter) < 0.5f)
+	float volume = brush_volume(inter);
+	if (volume < 1)
 	{
 		free_bsp_brush(inter);
 		return NULL;
@@ -317,20 +267,18 @@ bsp_brush_t* run_csg(bsp_brush_t *head)
 
 						// insert all subtracted brushes into the list
 						tmp2 = brush_subtract(b1, tmp);
-//						if (tmp2)
-//						{
-							tail->next = tmp2;
-							while (tail->next)
-								tail = tail->next;
-//						}
+
+						tail->next = tmp2;
+						while (tail->next)
+							tail = tail->next;
+
 
 						tmp3 = brush_subtract(b2, tmp);
-//						if (tmp3)
-//						{
-							tail->next = tmp3;
-							while (tail->next)
-								tail = tail->next;
-//						}
+
+						tail->next = tmp3;
+						while (tail->next)
+							tail = tail->next;
+
 
 						// add the intersection to the end
 						tail->next = tmp;
