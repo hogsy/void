@@ -569,7 +569,6 @@ void CRastD3DX::PolyVertexf(vector_t &vert)
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
-
 }
 void CRastD3DX::PolyVertexi(int x, int y)
 {
@@ -579,7 +578,6 @@ void CRastD3DX::PolyVertexi(int x, int y)
 									0,
 									mTexCoords[0], mTexCoords[1]);
 	mNumVerts++;
-
 }
 void CRastD3DX::PolyTexCoord(float s, float t)
 {
