@@ -14,11 +14,9 @@ to write directly to client channels.
 class CNetClChan
 {
 public:
-
 	enum
 	{	MAX_BACKBUFFERS = 4
 	};
-
 
 	CNetClChan();
 	~CNetClChan();
@@ -36,22 +34,14 @@ public:
 
 	//keep track of how many spawn messages have been sent
 	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
-
 	byte	m_spawnState;
 	int		m_state;
 
 	//back buffers for client reliable data
-
 	bool	m_bBackbuf;
 	int		m_numBuf;
 	CBuffer	m_backBuffer[MAX_BACKBUFFERS];
-
-	//Game specifc
-	char	m_name[32];
 };
 
-
 }
-
-
 #endif

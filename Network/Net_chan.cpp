@@ -61,7 +61,7 @@ void CNetChan::Reset()
 
 	m_lastReceived = 0.0f;
 	m_clearTime = 0.0f;
-//	m_rate = 0.0f;
+	m_rate = 0.0f;
 
 	m_bFatalError = false;
 }

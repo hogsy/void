@@ -19,10 +19,7 @@ struct CNetServer::NetChallenge
 Constructor/Destructor
 ======================================
 */
-CNetServer::CNetServer(I_Server & server, ServerState & svstate) : 
-						m_svState(svstate),
-							m_server(server)
-						//m_pServer(server)
+CNetServer::CNetServer()
 {	
 	m_clChan = new CNetClChan[SV_MAX_CLIENTS];
 	m_pSock  = new CNetSocket(&m_recvBuf);
@@ -32,10 +29,16 @@ CNetServer::CNetServer(I_Server & server, ServerState & svstate) :
 	memset(m_printBuffer,0,sizeof(m_printBuffer));
 }
 
+void CNetServer::Create(I_Server * server, ServerState * state)
+{	
+	m_pServer = server;
+	m_pSvState = state;
+}
 
 CNetServer::~CNetServer()
 {	
-//	m_pServer = 0;
+	m_pSvState = 0;
+	m_pServer = 0;
 	delete [] m_challenges;
 	delete [] m_clChan;
 	delete m_pSock;
@@ -98,19 +101,19 @@ bool CNetServer::Init()
 	//Default to loopback
 	if(boundAddr[0] == '\0')
 		strcpy(boundAddr,"127.0.0.1");
-	sprintf(m_svState.localAddr,"%s:%d",boundAddr,m_svState.port);
+	sprintf(m_pSvState->localAddr,"%s:%d",boundAddr,m_pSvState->port);
 
 	//Validate address
-	CNetAddr netaddr(m_svState.localAddr);
+	CNetAddr netaddr(m_pSvState->localAddr);
 	if(!netaddr.IsValid())
 	{
-		m_svState.localAddr[0] = 0;
+		m_pSvState->localAddr[0] = 0;
 		ComPrintf("CNetServer::Init:Unable to resolve ip address\n");
 		return false;
 	}
 
 	//Save Local Address
-	CNetAddr::SetLocalServerAddr(m_svState.localAddr);
+	CNetAddr::SetLocalServerAddr(m_pSvState->localAddr);
 	if(!m_pSock->Bind(netaddr))
 	{
 		ComPrintf("CNetServer::Init:Unable to bind socket\n");
@@ -128,7 +131,7 @@ Send disconnects to clients
 void CNetServer::Shutdown()
 {
 	//Send disconnect messages to clients, if active
-	for(int i=0;i<m_svState.maxClients;i++)
+	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
 		if(m_clChan[i].m_state != CL_SPAWNED) 
 			continue;
@@ -136,9 +139,9 @@ void CNetServer::Shutdown()
 	}
 
 	//Update State
-	m_svState.numClients = 0;
-	m_svState.levelId = 0;
-	memset(m_svState.worldname,0,sizeof(m_svState.worldname));
+	m_pSvState->numClients = 0;
+	m_pSvState->levelId = 0;
+	memset(m_pSvState->worldname,0,sizeof(m_pSvState->worldname));
 
 	m_pSock->Close();
 }
@@ -151,7 +154,7 @@ clients to reconnect
 */
 void CNetServer::Restart()
 {
-	for(int i=0;i<m_svState.maxClients;i++)
+	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
 		if(m_clChan[i].m_state == CL_SPAWNED)
 			SendReconnect(i);
@@ -189,11 +192,11 @@ void CNetServer::HandleStatusReq()
 
 	//Status info
 	m_sendBuf.Write(VOID_PROTOCOL_VERSION);	//Protocol
-	m_sendBuf.Write(m_svState.gameName);	//Game
-	m_sendBuf.Write(m_svState.hostName);	//Hostname
-	m_sendBuf.Write(m_svState.worldname);	//Map name
-	m_sendBuf.Write(m_svState.maxClients);	//max clients
-	m_sendBuf.Write(m_svState.numClients);	//cur clients
+	m_sendBuf.Write(m_pSvState->gameName);	//Game
+	m_sendBuf.Write(m_pSvState->hostName);	//Hostname
+	m_sendBuf.Write(m_pSvState->worldname);	//Map name
+	m_sendBuf.Write(m_pSvState->maxClients);	//max clients
+	m_sendBuf.Write(m_pSvState->numClients);	//cur clients
 	
 	m_pSock->Send(m_sendBuf);
 }
@@ -205,7 +208,7 @@ Respond to challenge request
 */
 void CNetServer::HandleChallengeReq()
 {
-	if(m_svState.numClients >= m_svState.maxClients)
+	if(m_pSvState->numClients >= m_pSvState->maxClients)
 	{
 		SendRejectMsg("Server is full");
 		return;
@@ -281,7 +284,7 @@ void CNetServer::HandleConnectReq()
 	//Check if this client is already connected
 	int  emptySlot = -1;
 	bool reconnect = false;
-	for(i=0;i<m_svState.maxClients;i++)
+	for(i=0;i<m_pSvState->maxClients;i++)
 	{
 		if((emptySlot == -1) && m_clChan[i].m_state == CL_FREE)
 			emptySlot = i;
@@ -304,7 +307,7 @@ void CNetServer::HandleConnectReq()
 	}
 
 	//Didn't find any duplicates. now find an empty slot
-	if(i == m_svState.maxClients)
+	if(i == m_pSvState->maxClients)
 	{
 		//Reject if we didnt find a slot
 		if(emptySlot == -1)
@@ -313,7 +316,7 @@ void CNetServer::HandleConnectReq()
 			return;
 		}
 		//update client counts
-		m_svState.numClients ++;		
+		m_pSvState->numClients ++;		
 		i = emptySlot;
 	}
 
@@ -323,32 +326,20 @@ void CNetServer::HandleConnectReq()
 	m_clChan[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
 
 	//Check if game server accepts the client
-	char * reason = 0;
-	if(!m_server.ValidateClConnection(i,reconnect,m_recvBuf,&reason))
+	if(!m_pServer->ValidateClConnection(i,reconnect,m_recvBuf))
 	{
-		SendRejectMsg(reason);
 		m_clChan[i].Reset();
 		return;
 	}
 
 	//All validation complete. This is now a connected client
-	
-
-
-//	m_server.OnClientConnect(i,m_recvBuf);
-
-//	m_clChan[i].m_netChan.SetRate(m_recvBuf.ReadInt());
-//	strcpy(m_clChan[i].m_name, m_recvBuf.ReadString());
-
 	//last OOB message, send the client an accept packet
 	//now the client needs to request spawn parms from use
 	m_sendBuf.Reset();
 	m_sendBuf.Write(-1);
 	m_sendBuf.Write(S2C_ACCEPT);
-	m_sendBuf.Write(m_svState.levelId);
+	m_sendBuf.Write(m_pSvState->levelId);
 	m_pSock->Send(m_sendBuf);
-
-//ComPrintf("SV: %s connected\n",m_clChan[i].m_name) ;
 }
 
 /*
@@ -375,7 +366,6 @@ void CNetServer::ProcessQueryPacket()
 //======================================================================================
 //Spawning protocol
 //======================================================================================
-
 /*
 ======================================
 Send requested spawn parms
@@ -415,8 +405,7 @@ void CNetServer::SendSpawnParms(int chanId)
 		}
 		break;
 	}
-
-	ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnState);
+ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnState);
 }
 
 /*
@@ -429,9 +418,9 @@ void CNetServer::ParseSpawnMessage(int chanId)	//Client hasn't spawned yet
 {
 	//Check if client is trying to spawn into current map
 	int levelid = m_recvBuf.ReadInt();
-	if( levelid != m_svState.levelId)
+	if( levelid != m_pSvState->levelId)
 	{
-ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", chanId, levelid ,m_svState.levelId);
+ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", chanId, levelid ,m_pSvState->levelId);
 		SendReconnect(chanId);
 		return;
 	}
@@ -444,15 +433,15 @@ ComPrintf("SV:Client(%d) requesting spawn level %d\n", chanId, spawnparm);
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
-		m_server.OnClientDrop(chanId, CL_CONNECTED, "disconnected");
+		m_pServer->OnClientDrop(chanId, CL_CONNECTED, "disconnected");
 		m_clChan[chanId].Reset();
-		m_svState.numClients--;
+		m_pSvState->numClients--;
 		return;	
 	}
 	else if(spawnparm == SVC_BEGIN+1)
 	{
 		m_clChan[chanId].m_state = CL_SPAWNED;
-		m_server.OnClientSpawn(chanId);
+		m_pServer->OnClientSpawn(chanId);
 	}
 	else
 	{
@@ -478,32 +467,31 @@ void CNetServer::ClientPrintf(int chanId, const char * message, ...)
 
 	if(m_clChan[chanId].m_state == CL_SPAWNED)
 	{
-		ChanBegin(chanId,SV_PRINT,strlen(m_printBuffer));
-		ChanWrite(chanId,m_printBuffer);
+		BeginWrite(chanId,SV_PRINT,strlen(m_printBuffer));
+		Write(m_printBuffer);
+		FinishWrite();
 	}
 }
 
 /*
 ======================================
-Broadcast message to all the clients except the given one
+Broadcast message to all the clients
 ======================================
 */
-void CNetServer::BroadcastPrintf(int chanId, const char* message, ...)
+void CNetServer::BroadcastPrintf(const char* message, ...)
 {
 	va_list args;
 	va_start(args, message);
 	vsprintf(m_printBuffer, message, args);
 	va_end(args);
 
-	for(int i=0;i<m_svState.maxClients;i++)
+	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
-		if(i == chanId)
-			continue;
-
 		if(m_clChan[i].m_state == CL_SPAWNED)
 		{
-			ChanBegin(i,SV_PRINT,strlen(m_printBuffer));
-			ChanWrite(i,m_printBuffer);
+			BeginWrite(i,SV_PRINT,strlen(m_printBuffer));
+			Write(m_printBuffer);
+			FinishWrite();
 		}
 	}
 }
@@ -520,7 +508,7 @@ void CNetServer::SendReconnect(int chanId)
 	m_clChan[chanId].m_netChan.PrepareTransmit();
 	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
 
-	m_server.OnLevelChange(chanId);
+	m_pServer->OnLevelChange(chanId);
 
 	m_clChan[chanId].m_state = CL_INUSE;
 }
@@ -538,10 +526,10 @@ void CNetServer::SendDisconnect(int chanId, const char * reason)
 	m_clChan[chanId].m_netChan.PrepareTransmit();
 	m_pSock->SendTo(&m_clChan[chanId].m_netChan);
 
-	m_server.OnClientDrop(chanId,m_clChan[chanId].m_state,reason);
+	m_pServer->OnClientDrop(chanId,m_clChan[chanId].m_state,reason);
 
 	m_clChan[chanId].Reset();
-	m_svState.numClients--;
+	m_pSvState->numClients--;
 }
 
 /*
@@ -562,7 +550,7 @@ void CNetServer::ReadPackets()
 		}
 
 		//then it should belong to a client
-		for(int i=0;i<m_svState.maxClients;i++)
+		for(int i=0;i<m_pSvState->maxClients;i++)
 		{
 			//match client
 			if(m_clChan[i].m_netChan.MatchAddr(m_pSock->GetSource()))
@@ -574,7 +562,7 @@ void CNetServer::ReadPackets()
 				{
 //ComPrintf("SV: Msg from Spawned client\n");
 
-					m_server.HandleClientMsg(i, m_recvBuf);
+					m_pServer->HandleClientMsg(i, m_recvBuf);
 					m_clChan[i].m_bSend = true;
 				}
 				//client hasn't spawned yet. is asking for parms
@@ -596,7 +584,7 @@ Send updates to clients
 */
 void CNetServer::SendPackets()
 {
-	for(int i=0;i<m_svState.maxClients;i++)
+	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
 		if(m_clChan[i].m_state == CL_FREE)
 			continue;
@@ -644,15 +632,8 @@ void CNetServer::SendPackets()
 	}
 }
 
-
-
-
-
-
-
 //======================================================================================
 //======================================================================================
-
 /*
 ==========================================
 Initialize/Release Winsock

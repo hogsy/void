@@ -87,6 +87,41 @@ struct ServerState
 
 /*
 ======================================
+Write to Client Network Channels
+======================================
+*/
+enum
+{
+	MULTICAST_NONE,
+	MULTICAST_ALL,
+	MULTICAST_PVS,
+	MULTICAST_PHS,
+	
+	//all except the given chanID
+	MULTICAST_ALL_X,	
+	MULTICAST_PVS_X,
+	MULTICAST_PHS_X
+};
+
+struct NetChanWriter
+{
+	virtual void BeginWrite(int chanId, byte msgid, int estSize)=0;
+	virtual void Write(byte b)=0;
+	virtual void Write(char c)=0;
+	virtual void Write(short s)=0;
+	virtual void Write(int i)=0;
+	virtual void Write(float f)=0;
+	virtual void Write(const char *string)=0;
+	virtual void WriteCoord(float c)=0;
+	virtual void WriteAngle(float a)=0;
+	virtual void WriteData(byte * data, int len)=0;
+	virtual void FinishWrite()=0;
+	
+	virtual const NetChanState & GetState(int chanId) const=0;
+};
+
+/*
+======================================
 The Network library needs access to
 game/frame time variables
 ======================================

@@ -2,6 +2,14 @@
 EXE
 ==============================================================
 //soon
+
+
+fix signon buffers
+figure out another logon process ?
+add broadcast support.
+
+
+
 error/logging/handling
 add 3d sound buffers and a listener
 add client command buffering

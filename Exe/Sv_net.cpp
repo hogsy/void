@@ -4,27 +4,24 @@
 #include "Net_protocol.h"
 
 
-
 //Network Handler
 bool CServer::ValidateClConnection(int chanId, bool reconnect,
-							  CBuffer &buffer, 
-							  char ** reason)
+							  CBuffer &buffer)
 {	
 
 	if(m_client[chanId].inUse)
 	{
-		*reason = "Bad Client slot";
+		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
 
 	strcpy(m_client[chanId].name, buffer.ReadString());
-	m_pNet->ChanSetRate(chanId, buffer.ReadInt());
+	m_net.SetChanRate(chanId, buffer.ReadInt());
 	m_client[chanId].inUse = true;
 
-	m_pNet->BroadcastPrintf(-1,"%s connected", m_client[chanId].name);
+	m_net.BroadcastPrintf("%s connected", m_client[chanId].name);
 	return true;
 }
-
 
 
 void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
@@ -56,9 +53,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 //					continue;
 				if(m_client[i].inUse)
 				{
-					m_pNet->ChanBegin(i,SV_TALK, len);
-					m_pNet->ChanWrite(i,m_client[clNum].name);
-					m_pNet->ChanWrite(i,msg);
+					m_net.BeginWrite(i,SV_TALK, len);
+					m_net.Write(m_client[clNum].name);
+					m_net.Write(msg);
+					m_net.FinishWrite();
 				}
 			}
 
@@ -71,26 +69,20 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			if(id == 'n')
 			{
 				const char * clname = buffer.ReadString();
-				m_pNet->BroadcastPrintf(-1,"%s renamed to %s", m_client[clNum].name, clname);
+				m_net.BroadcastPrintf("%s renamed to %s", m_client[clNum].name, clname);
 				strcpy(m_client[clNum].name, clname);
 			}
 			else if (id == 'r')
 			{
 				int rate = buffer.ReadInt();
 ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
-				//client.m_pNetChan->m_rate =1.0/rate;
-				m_pNet->ChanSetRate(clNum,rate);
+				m_net.SetChanRate(clNum,rate);
 			}
 			break;
 		}
 	case CL_DISCONNECT:
 		{
-			m_pNet->SendDisconnect(clNum,0);
-		
-/*			m_p
-			//client.Reset();
-			m_svState.numClients --;
-*/
+			m_net.SendDisconnect(clNum,0);
 			break;
 		}
 	}
@@ -103,14 +95,14 @@ ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
 void CServer::OnClientSpawn(int clNum)
 {
 	//Check chanIds to see what client spawned
-	m_pNet->BroadcastPrintf(-1, "%s entered the game", m_client[clNum].name);
+	m_net.BroadcastPrintf("%s entered the game", m_client[clNum].name);
 //	m_client[clNum].name
 }
 
 void CServer::OnClientDrop(int clNum, int state, 
 					  const char * reason )
 {
-	m_pNet->BroadcastPrintf(-1,"%s disconnected", m_client[clNum].name);
+	m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
 	m_client[clNum].inUse = false;
 	m_svState.numClients --;
 }

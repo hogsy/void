@@ -20,10 +20,12 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
-					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE)
+					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
+					m_chanWriter(m_net)
 {
+
 	//Initialize Network Server
-	m_pNet = new CNetServer(*this, m_svState);
+	m_net.Create(this, &m_svState);
 
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
@@ -48,9 +50,7 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCH
 }	
 
 CServer::~CServer()
-{	
-	Shutdown();
-	delete m_pNet;
+{	Shutdown();
 }
 
 
@@ -61,7 +61,7 @@ Initialize the Server
 */
 bool CServer::Init()
 {
-	if(!m_pNet->Init())
+	if(!m_net.Init())
 		return false;
 
 	//more initialization here ?
@@ -79,7 +79,7 @@ void CServer::Shutdown()
 	if(!m_active)
 		return;
 
-	m_pNet->Shutdown();
+	m_net.Shutdown();
 
 	m_active = false;
 
@@ -104,7 +104,7 @@ void CServer::Restart()
 
 	m_active = false;
 
-	m_pNet->Restart();
+	m_net.Restart();
 
 	if(m_pWorld)
 	{
@@ -130,12 +130,12 @@ void CServer::RunFrame()
 	srand((uint)System::g_fcurTime);
 
 	//Get updates
-	m_pNet->ReadPackets();
+	m_net.ReadPackets();
 
 	//Run game
 
 	//write to clients
-	m_pNet->SendPackets();
+	m_net.SendPackets();
 }
 
 //======================================================================================
@@ -244,10 +244,10 @@ void CServer::LoadWorld(const char * mapname)
 	//Create Sigon-message. includes static entity baselines
 	//=======================
 	//all we need is the map name right now
-	m_pNet->m_numSignOnBuffers = 1;
-	m_pNet->m_signOnBuf[0].Write(SVC_INITCONNECTION);
-	m_pNet->m_signOnBuf[0].Write(m_svState.gameName);
-	m_pNet->m_signOnBuf[0].Write(m_svState.worldname);
+	m_net.m_numSignOnBuffers = 1;
+	m_net.m_signOnBuf[0].Write(SVC_INITCONNECTION);
+	m_net.m_signOnBuf[0].Write(m_svState.gameName);
+	m_net.m_signOnBuf[0].Write(m_svState.worldname);
 
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!bRestarting && !m_cDedicated.bval)
@@ -271,7 +271,7 @@ void CServer::PrintServerStatus()
 	ComPrintf("Port        : %d\n", m_svState.port);
 
 /*	if(m_active)
-		m_pNet->PrintStatus();
+		m_net.PrintStatus();
 	else
 	{
 		ComPrintf("Server is inactive\n");

@@ -30,27 +30,17 @@ public:
 	void RunFrame();
 
 	//Network Handler
-	bool ValidateClConnection(int chanId, bool reconnect,
-							  CBuffer &buffer, 
-							  char ** reason);
-
+	bool ValidateClConnection(int chanId, bool reconnect,CBuffer &buffer);
 	void HandleClientMsg(int chanId, CBuffer &buffer);
 	void OnClientSpawn(int chanId);
 	void OnLevelChange(int chanId);
-	void OnClientDrop(int chanId, int state, 
-					  const char * reason = 0);
+	void OnClientDrop(int chanId, int state, const char * reason= 0);
 
 	//Console Handler Interface
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
 private:
-
-	ServerState m_svState;
-
-	CEntClient  m_client[SV_MAX_CLIENTS];
-
-	CNetServer * m_pNet;
 
 	bool Init();
 	void Shutdown();
@@ -62,6 +52,13 @@ private:
 	//=================================================
 	world_t	*	m_pWorld;
 	bool		m_active;
+
+	CNetServer	m_net;
+	ServerState m_svState;
+
+	CEntClient  m_client[SV_MAX_CLIENTS];
+
+	NetChanWriter & m_chanWriter;
 
 	//=================================================
 	//CVars

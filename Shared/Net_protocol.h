@@ -7,7 +7,6 @@ Contains common definitions needed by both the Network library
 and the game code.
 ======================================================================================
 */
-
 const int  VOID_PROTOCOL_VERSION = 1;		//Current protcol version
 
 //Connnectionless client to Server messages
@@ -35,20 +34,18 @@ Once the client has received and acked all the messages it switches to Ingame mo
 once the server has received all the acks it switches its netclient to Ingame mode
 ======================================================================================
 */
-
 const byte SVC_INITCONNECTION= 1;	//Send the server vars, map info
 const byte SVC_MODELLIST	 = 2;	//Sequenced list of models in use
 const byte SVC_SOUNDLIST	 = 3;	//Sequenced list of sounds in use 
 const byte SVC_IMAGELIST	 = 4;	//Sequenced list of images in use 
 const byte SVC_BASELINES	 = 5;	//Static entity baselines data
-const byte SVC_BEGIN		 = 6;	//ready to spawnDynamic Spawning info. client is assumed to be spawned after this
+const byte SVC_BEGIN		 = 6;	//ready to spawn
 
 /*
 ======================================================================================
 The Game Protocol
 ======================================================================================
 */
-
 //Client to server
 const byte CL_BAD			= 0;	//Drop me
 const byte CL_NOP			= 1;	//Nothing doing. Keep alive
