@@ -248,7 +248,6 @@ void CRConsole::RegisterFuncs()
 	RegCVar(&g_pMultiTexture, "r_multitexture", "1", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_MultiTexture);
 	RegCVar(&g_pVidSynch, "r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
 
-
 	RegCFunc("screenshot", &CFunc_PCXShot);
 	RegCFunc("tgashot", &CFunc_TGAShot);
 }

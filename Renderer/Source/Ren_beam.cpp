@@ -1,9 +1,5 @@
-
-
-
 #include "standard.h"
 #include "ren_cache.h"
-
 
 extern	vector_t	forward, right, up;	// view directions
 extern	plane_t frust[5];				// frustum
@@ -31,6 +27,29 @@ defs only needed for beam tree
 #define BEAMS_PER_ALLOC		128
 
 
+struct beam_node_t
+{
+	beam_node_t() { stat = 0; children[0] = 0; children[1] = 0; }
+
+	plane_t	p;
+	int		stat;
+	beam_node_t * children[2];
+};
+
+
+struct sil_t
+{
+	sil_t() { nedges = 0; area = 0.0f; polys = 0;  next = 0; }
+
+	vector_t		edges[32][2];
+	int				nedges;
+	vector_t		center;
+	float			area;
+	cpoly_t			*polys;
+	sil_t			*next;
+};
+
+/*
 typedef struct beam_node_s
 {
 	plane_t	p;
@@ -48,7 +67,7 @@ typedef struct sil_s
 	cpoly_t			*polys;
 	struct	sil_s	*next;
 } sil_t;
-
+*/
 
 beam_node_t *beam_head=NULL;
 
@@ -168,7 +187,6 @@ void free_beam_t(beam_node_t *n)
 	free_beam_t(n->children[1]);
 	free_beam(n);
 }
-
 
 
 /*

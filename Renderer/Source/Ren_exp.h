@@ -46,8 +46,6 @@ private:
 	static CVar *	m_cWndX;
 	static CVar *   m_cWndY;
 	static CVar *   m_cGLExt;
-
-	VoidExport_t*	m_pImport;		//Imported Interface
 };
 
 extern CRenExp * g_pRenExp;

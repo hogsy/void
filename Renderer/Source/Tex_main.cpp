@@ -67,6 +67,8 @@ bool CTextureManager::Init()
 
 	ConPrint("CTextureManager::Init:Creating base textures");
 
+	m_texReader.LockBuffer(TEX_MAXTEXTURESIZE);
+
 	//Generate and load base textures
 	glGenTextures(m_numBaseTextures, tex->base_names);
 	for(count=0;count<m_numBaseTextures;count++)
@@ -93,6 +95,9 @@ bool CTextureManager::Init()
 		
 		m_texReader.Reset();
 	}
+
+	m_texReader.UnlockBuffer();
+
 	m_loaded = BASE_TEXTURES;
 	return true;
 }
@@ -177,6 +182,9 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	
 	glGenTextures(tex->num_textures, tex->tex_names);
 
+	m_texReader.LockBuffer(TEX_MAXTEXTURESIZE);
+	m_texReader.LockMipMapBuffer(TEX_MAXMIPMAPSIZE);
+
 	for (t = 0; t < tex->num_textures; t++)
 	{
 		LoadTexture(map->textures[t]);
@@ -257,6 +265,9 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		}
 		m_texReader.Reset();
 	}
+
+	m_texReader.UnlockBuffer();
+	m_texReader.UnlockMipMapBuffer();
 
 	m_loaded = ALL_TEXTURES;
 	return true;

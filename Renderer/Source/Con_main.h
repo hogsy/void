@@ -1,12 +1,10 @@
-#ifndef CONSOLE_H
-#define CONSOLE_H
+#ifndef CONSOLERENDERER_H
+#define CONSOLERENDERER_H
 
 #include "I_console.h"
 
-
 #define CON_MAX_LINES			200
 #define CON_MAX_CHARS_PER_LINE	200			// 8 pixels each at 1600
-
 
 //This is just the console renderer
 //Shouldnt need to worry about logging here.
@@ -41,7 +39,6 @@ public:
 
 	void RegCFunc(const char *funcname, 
 				  CFUNC pfunc);
-
 	
 	void Printf(char *msg,...);
 
@@ -53,11 +50,12 @@ private:
 	void RegisterFuncs();
 
 	//struct to store a line in the console
-	typedef struct Conline_s
+	struct Conline_t
 	{
+		Conline_t() { length = 0; line[0] = '\0'; }
 		int		length;
 		char 	line[CON_MAX_CHARS_PER_LINE];
-	}Conline_t;
+	};
 	Conline_t * m_lines[CON_MAX_LINES];
 
 	//Console status
@@ -80,7 +78,6 @@ private:
 	
 	//CVars
 	static CVar *	g_pConspeed;
-//	static CVar g_pConspeed;
 
 	bool		m_condown;		// is the console down
 	bool		m_fullscreen;	// fullscreen console?

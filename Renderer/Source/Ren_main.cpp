@@ -3,7 +3,7 @@
 #include "Ren_main.h"
 #include "Ren_sky.h"
 #include "Ren_beam.h"
-//#include "Tex_main.h"
+
 #include "Tex_hdr.h"
 #include "Clip.h"
 #include "Con_main.h"
@@ -261,7 +261,6 @@ Draw the current frame
 ***********************/
 void r_drawframe(vector_t *origin, vector_t *angles)
 {
-
 //FIXME !!!!!!!!!!!!!!!!!!!!!
 	eye.origin = *origin;
 	eye.angles = *angles;

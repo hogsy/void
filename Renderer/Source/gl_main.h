@@ -56,7 +56,7 @@ private:
 
 	//Windowed Screen Co-ordinates
 	int	m_wndXpos;
-	int    m_wndYpos;
+	int m_wndYpos;
 };
 
 extern CGLUtil * g_pGL;

@@ -40,16 +40,14 @@ saved rendering info
 
 CRenExp::CRenExp(VoidExport_t * pVExp)
 {
-	m_pImport = pVExp;
-	
 	//Set Global Time pointers
-	g_pCurTime = m_pImport->curtime; 
-	g_pFrameTime = m_pImport->frametime;
+	g_pCurTime = pVExp->curtime; 
+	g_pFrameTime = pVExp->frametime;
 
 	//Create different subsystems
 
 	//Start the console first thing
-	g_prCons= new CRConsole(m_pImport->vconsole);
+	g_prCons= new CRConsole(pVExp->vconsole);
 	g_pTex  = new CTextureManager();
 	g_prHud = new CRHud();
 	
@@ -75,7 +73,6 @@ Destructor
 */
 CRenExp::~CRenExp()
 {
-	m_pImport = 0;
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;
@@ -105,7 +102,6 @@ bool CRenExp::InitRenderer()
 {
 	//Set all global pointers to null
 	world	= NULL;
-
 
 	//Setup initial state
 	g_rInfo.bpp = (int)m_cBpp->value;
@@ -286,7 +282,7 @@ Load a World
 */
 bool CRenExp::LoadWorld(world_t *level, int reload)
 {
-	if(!world)
+	if(!world && level)
 	{
 		_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 
@@ -533,6 +529,3 @@ bool CRenExp::CVar_Bpp(const CVar * var, int argc, char** argv)
 	}
 	return false;
 }
-
-
-

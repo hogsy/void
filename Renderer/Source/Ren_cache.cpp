@@ -307,8 +307,10 @@ extern CVar *  g_pMultiTexture;
 void cache_purge(void)
 {
 
-	if (g_pMultiTexture->value && (g_rInfo.rflags&RFLAG_MULTITEXTURE) && 
-		!(g_rInfo.rflags&RFLAG_FULLBRIGHT) && world->nlightdefs && world->light_size)
+	if (g_pMultiTexture->value && 
+		(g_rInfo.rflags&RFLAG_MULTITEXTURE) && 
+		!(g_rInfo.rflags&RFLAG_FULLBRIGHT) 
+		&& world->nlightdefs && world->light_size)
 		cache_purge_multi();
 	else
 		cache_purge_single();

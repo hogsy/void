@@ -27,7 +27,12 @@ public:
 	
 	EImageFormat GetFormat(){ return format; }
 	byte *		 GetData()  { return data; }
-	
+
+	void LockBuffer(uint size);
+	void UnlockBuffer();
+
+	void LockMipMapBuffer(uint size);
+	void UnlockMipMapBuffer();
 
 	bool Read(const char *file);				//Read texture from path
 	bool ReadLightMap(unsigned char **stream);	//Read lightmap textures from world file
@@ -43,6 +48,10 @@ public:
 
 protected:
 
+	uint			buffersize;
+	uint			mipbuffersize;
+	
+	byte *			mipmapdata;
 	byte *			data;
 	int				width,
 					height;

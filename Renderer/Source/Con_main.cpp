@@ -2,16 +2,11 @@
 
 #include "Standard.h"
 
-//#include "Tex_main.h"
 #include "Tex_hdr.h"
 #include "Hud_main.h"
 
 #define CONBACK_INDEX			1
 #define CON_DIFFERENTIAL		150
-
-#if RENDERER_LOGFILE 
-FILE	  * m_logfile;			// console log
-#endif
 
 
 CRConsole * g_prCons;
@@ -31,26 +26,28 @@ CRConsole::CRConsole(I_ExeConsole * p_eCons): m_seperatorchar('^'),
 	m_alpha = 0.0;
 	m_curline = 0;
 
-	memset(m_lines,0,sizeof(Conline_t *) * CON_MAX_LINES);
+	//Allocate space for Lines
+	for (int i = 0; i < CON_MAX_LINES; i++)
+	{
+		m_lines[i] = new Conline_t();
+		if (m_lines[i] == NULL) 
+		{
+			FError("Con_Init::Couldnt allocate space for Console line %d\n",i);
+			return;
+		}
+	}
 	RegisterFuncs();
-
-#if RENDERER_LOGFILE 
-	//open logfile
-//	char f[260];
-//	strcat(f, "\\console.log");
-	m_logfile = fopen("E:\\Void\\Console.log", "w");
-#endif
 }
 
 
 CRConsole::~CRConsole()
 {
-#if RENDERER_LOGFILE 
-	// close the log
-	if (m_logfile)
-		fclose(m_logfile);
-#endif
 	m_pExeCons = 0;
+	for (int c = 0; c < CON_MAX_LINES; c++)
+	{
+		if(m_lines[c])
+			delete m_lines[c];
+	}
 }
 
 /*
@@ -65,18 +62,6 @@ bool CRConsole::Init(bool fullscreen, bool down)
 	m_fullscreen = fullscreen;
 	UpdateRes();
 	m_condown = down;
-
-	//allocate all mem that will be needed
-	for (int i = 0; i < CON_MAX_LINES; i++)
-	{
-		m_lines[i] = new Conline_t;
-		if (m_lines[i] == NULL) 
-		{
-			FError("Con_Init::Couldnt allocate space for Console line %d\n",i);
-			return false;
-		}
-		memset (m_lines[i], 0, sizeof(Conline_t));
-	}
 	return true;
 }
 
@@ -88,18 +73,7 @@ Console Shutdown Func
 */
 
 bool CRConsole::Shutdown()
-{
-//
-// free all mem
-//
-	int c;
-	for (c = 0; c < CON_MAX_LINES; c++)
-	{
-		if(m_lines[c])
-			delete m_lines[c];
-	}
-
-	return true;
+{	return true;
 }
 
 
@@ -122,15 +96,6 @@ void CRConsole::Printf(char *msg, ...)
 	va_end(args);
 
 	m_pExeCons->dprint(buff);
-
-	//write to log
-#if RENDERER_LOGFILE 
-	if(m_logfile)
-	{
-		fprintf(m_logfile, "%s\n", buff);
-		fflush(m_logfile);
-	}
-#endif
 }
 
 /*
@@ -171,7 +136,8 @@ void CRConsole::Draw()
 		}
 	case CON_CLOSING:
 		{
-			m_alpha -= (*g_pFrameTime * g_pConspeed->value);
+//			m_alpha -= (*g_pFrameTime * g_pConspeed->value);
+			m_alpha -= (*g_pFrameTime * 500);
 			
 			if(m_condown)
 				m_status = CON_OPENING;
@@ -193,7 +159,8 @@ void CRConsole::Draw()
 				break;
 			}
 
-			m_alpha += (*g_pFrameTime * g_pConspeed->value);
+//			m_alpha += (*g_pFrameTime * g_pConspeed->value);
+			m_alpha += (*g_pFrameTime * 500);
 			
 			if (m_alpha >= 255 + CON_DIFFERENTIAL)
 			{
@@ -264,7 +231,6 @@ void CRConsole::Draw()
 	else
 		glVertex2i(0, g_rInfo.height/2);
 
-
 	glEnd();
 
 	//print all our text over the top
@@ -278,7 +244,8 @@ void CRConsole::Draw()
 
 /*
 ======================================
-Print Current Console Messages - assumes view and tex filter are ok
+Print Current Console Messages - 
+assumes view and tex filter are ok
 ======================================
 */
 
@@ -472,6 +439,7 @@ void CRConsole::PrintBuffer()
 			t = (m_lines[l]->line[c] / 16) * 0.0625f;
 
 
+
 			glColor4f(ftop, ftop, ftop, ftop);
 			glTexCoord2f(s, t);
 			glVertex2i(x1, y1);
@@ -513,7 +481,6 @@ void CRConsole::AddMessage(char *buff, bool first)
 		m_lines[l] = m_lines[l-1];
 
 	m_lines[0] = last;
-
 
 	//set up the new entry
 	last->length = strlen(buff) + 2;
@@ -609,10 +576,6 @@ void CRConsole::PrintRecursive(bool first, char *msg)
 		g_prHud->PrintMessage(msg);
 }
 
-
-
-
-
 /*
 ====================================================================================
 I_RConsole Implementation
@@ -677,8 +640,7 @@ Add a line to the console buffer
 ==========================================
 */
 void  CRConsole::AddLine(char *line, int color, int size)
-{
-	PrintRecursive(true, line);
+{	PrintRecursive(true, line);
 }
 
 /*
@@ -686,13 +648,10 @@ void  CRConsole::AddLine(char *line, int color, int size)
 Pass over to the Exe
 ==========================================
 */
-
 void CRConsole::RegCVar (CVar **cvar, const char *varname, const char *varval, 
 						 CVar::CVarType vartype, int varinfo, CVAR_FUNC varfunc)
 {	m_pExeCons->RegisterCVar(cvar,varname,varval,vartype,varinfo,varfunc);
 }
-
-
 
 void CRConsole::RegCFunc(const char *funcname, CFUNC pfunc)
 {	m_pExeCons->RegisterCFunc(funcname,pfunc);

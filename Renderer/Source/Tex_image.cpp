@@ -43,14 +43,73 @@ Base Texture class
 */
 CImageReader::CImageReader()
 {
+	buffersize = 0;
 	data = 0;
 	width = height = 0;
 	type = 0;
 	format = FORMAT_NONE;
+
+	mipbuffersize = 0;
+	mipmapdata = 0;
 }
 
 CImageReader::~CImageReader()		
-{	Reset();
+{	
+	UnlockBuffer();
+	UnlockMipMapBuffer();
+	Reset();
+}
+
+/*
+==========================================
+Lock a static buffer to do texture i/o
+avoid continously allocing and freeing memory
+==========================================
+*/
+void CImageReader::LockBuffer(uint size)
+{
+	UnlockBuffer();
+
+	data = new byte[size];
+	if(!data)
+	{
+		FError("CImageReader::LockBuffer: Failed to alloc %d\n", size);
+		return;
+	}
+	buffersize = size;
+}
+
+void CImageReader::UnlockBuffer()
+{
+	buffersize = 0;
+	if(data)
+	{
+		delete [] data;
+		data = 0;
+	}
+}
+
+void CImageReader::LockMipMapBuffer(uint size)
+{
+	UnlockMipMapBuffer();
+
+	mipmapdata = new byte[size];
+	if(!mipmapdata)
+	{
+		FError("CImageReader::LockMipMapBuffer: Failed to alloc %d\n", size);
+		return;
+	}
+	mipbuffersize = size;
+}
+
+void CImageReader::UnlockMipMapBuffer()
+{
+	mipbuffersize = 0;
+	if(mipmapdata)
+	{
+		delete [] mipmapdata;
+		mipmapdata = 0;
+	}
 }
 
 /*
@@ -80,10 +139,12 @@ Reset the image data
 */
 void CImageReader::Reset()
 {
-	if(data)
+	//Dont release data buffer if its statically alloced
+	if(data && !buffersize)
+	{
 		delete [] data;
-
-	data = 0;
+		data = 0;
+	}
 	type = 0;
 	height = 0;
 	width = 0;
@@ -102,13 +163,18 @@ bool CImageReader::DefaultTexture()
 	height = 64;
 
 	// all raw pic data is 32 bits
-	data = new byte[width * height * 4];
+	if(buffersize < width * height * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+/*	data = new byte[width * height * 4];
 	if (data == NULL) 
 	{
 		FError("CImageReader::DefaultTexture: No mem for pic data");
 		return false;
 	}
-
+*/
 	for (unsigned int p = 0; p < width * height * 4; p++)
 	{
 		data[p] = rand();
@@ -178,14 +244,18 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 		return false;
 
 	// all raw pic data is 32 bits
-	data = new byte[width * height * 4];
-
+	if(buffersize < width * height * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+/*	data = new byte[width * height * 4];
 	if (data == NULL) 
 	{
 		FError("CImageReader::DefaultTexture: No mem for pic data");
 		return false;
 	}
-
+*/
 	for (unsigned int p = 0; p < width * height * 4; p++)
 	{
 		if (p%4 == 3)
@@ -259,12 +329,19 @@ bool CImageReader::Read_PCX()
 	height = header.height - header.y + 1;
 
 	// always store the pic in 32 bit rgba
-	data = new byte[width * height * 4];
+	if(buffersize < width * height * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+	
+/*	data = new byte[width * height * 4];
 	if(data == NULL)
 	{
 		FError("CPCX_Texture::Read:Not enough memory for texture");
 		return false;
 	}
+*/
 	memset(data, 0xFF, width * height * 4);
 
 	byte ch;
@@ -351,13 +428,20 @@ bool CImageReader::Read_TGA()
 	// alpha/no alpha?  we already know that
 	m_fileReader.GetChar();	
 
+	if(buffersize < width * height * 4)
+	{
+		buffersize = width * height * 4;
+		LockBuffer(buffersize);
+	}
+
 	// always store the pic in 32 bit rgba
-	data = new byte[width * height * 4];
+/*	data = new byte[width * height * 4];
 	if (!data)
 	{	
 		Error("CImageReader::Read_TGA:Not enough memory for texture");
 		return false;
 	}
+*/
 	memset(data, 0xFF, width * height * 4);
 	
 	for (int h=height-1; h>=0; h--)
@@ -407,9 +491,10 @@ void CImageReader::ImageReduce()
 
 	int size = (width)*(height)*4;
 
-	byte * temp = new byte[size];
-	if(!temp)	
-		FError("Mem for texture reduction");
+//	mipmapdata
+//	byte * temp = new byte[size];
+//	if(!temp)	
+//		FError("Mem for texture reduction");
 
 	for (r = 0; r < height; r++)
 	{
@@ -423,13 +508,15 @@ void CImageReader::ImageReduce()
 				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
 				color /= 4;
 
-				temp[(r*width*4) + (c*4) + s] = (byte) color;
+//				temp[(r*width*4) + (c*4) + s] = (byte) color;
+				mipmapdata[(r*width*4) + (c*4) + s] = (byte) color;
 			}
 		}
 	}
 
-	delete [] data;
-	data = temp;
+	memcpy(data,mipmapdata, size);
+//	memcpy(data,temp, size);
+//	delete [] temp;
 }
 
 

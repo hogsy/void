@@ -3,6 +3,9 @@
 
 #include "Tex_image.h"
 
+#define TEX_MAXTEXTURESIZE	1048832
+#define TEX_MAXMIPMAPSIZE	262400	
+
 class CTextureManager
 {
 public:

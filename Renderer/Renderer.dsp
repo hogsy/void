@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /G5 /MTd /W3 /WX /GX /ZI /Od /D "_DEBUG" /D "RENDERER" /D "_WIN32" /D "WIN32" /D "_WINDOWS_RENDERER" /D "RENDERER_LOGFILE" /D "RENDERER_EXPORTS" /Fr /YX /FD /c
+# ADD CPP /nologo /G5 /MTd /W3 /WX /GX /ZI /Od /D "_DEBUG" /D "RENDERER" /D "_WIN32" /D "WIN32" /D "_WINDOWS_RENDERER" /D "RENDERER_EXPORTS" /Fr /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
