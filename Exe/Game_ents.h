@@ -6,9 +6,10 @@
 #include "3dmath.h"
 
 //======================================================================================
+//SERVER ENTITIES
 //======================================================================================
-const int ENT_MAXCLASSNAME = 32;
 
+const int ENT_MAXCLASSNAME = 32;
 
 enum EntType
 {
@@ -96,15 +97,11 @@ class CEntityMaker
 {
 public:
 
-	static Entity * CreateEnt(CBuffer &parms)
+	static Entity * CreateEnt(const char * classname, CBuffer &parms)
 	{
-		char * classname = parms.ReadString();
-		if(!parms.BadRead())
-		{
-			CEntityMaker * maker = (*makerRegistry.find(std::string(classname))).second;
-			if(maker)
-				return maker->MakeEntity(parms);
-		}
+		CEntityMaker * maker = (*makerRegistry.find(std::string(classname))).second;
+		if(maker)
+			return maker->MakeEntity(parms);
 		return 0; 
 	}
 	

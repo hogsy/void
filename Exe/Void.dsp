@@ -331,10 +331,6 @@ SOURCE=.\Mus_main.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Sv_game.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Sv_main.cpp
 # End Source File
 # Begin Source File

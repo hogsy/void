@@ -23,8 +23,6 @@ public:
 };
 
 
-
-
 class CEntSpeakerMaker: public CEntityMaker
 {
 public:
@@ -37,4 +35,6 @@ public:
 
 	static const CEntSpeakerMaker registerThis;
 };
+
+
 

@@ -3,6 +3,7 @@
 
 #include "Sys_hdr.h"
 #include "Net_server.h"
+#include "Game_ents.h"
 
 //Predeclarations
 struct world_t;
@@ -12,6 +13,7 @@ struct EntClient;
 const int GAME_MAXMODELS = 256;
 const int GAME_MAXSOUNDS = 256;
 const int GAME_MAXIMAGES = 256;
+const int GAME_MAXENTITES= 1024;
 
 typedef int hMdl;
 typedef int hImg;
@@ -89,8 +91,8 @@ private:
 	//World and Entities
 	world_t	*	m_pWorld;
 	bool		m_active;
-	
-	EntClient * m_client;
+
+	EntClient * m_clients;
 
 	//=================================================
 
@@ -106,6 +108,14 @@ private:
 	CVar 	m_cHostname;	//Hostname
 	CVar 	m_cMaxClients;	//Max Clients
 	CVar	m_cGame;		//Game Dir
+
+
+	//=================================================
+	//Should be handled by the game Dll
+	Entity   ** m_entities;
+	int			m_maxEntities;
+	int			m_numEntities;
+
 };
 
 #endif

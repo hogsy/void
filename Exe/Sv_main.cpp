@@ -28,7 +28,14 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 	//Initialize Network Server
 	m_net.Create(this, &m_svState);
 
-	m_client= new EntClient[SV_MAX_CLIENTS];
+	m_clients= new EntClient[SV_MAX_CLIENTS];
+
+
+	//Game
+	m_entities = new Entity * [GAME_MAXENTITES];
+	memset(m_entities,0,(sizeof(Entity *) * GAME_MAXENTITES));
+	m_maxEntities=0;
+	m_numEntities=0;
 
 	//Default State values
 	strcpy(m_svState.gameName,"Game");
@@ -61,7 +68,12 @@ CServer::CServer() : m_cPort("sv_port", "20010", CVAR_INT, CVAR_LATCH|CVAR_ARCHI
 CServer::~CServer()
 {	
 	Shutdown();
-	delete [] m_client;
+
+	for(int i=0;i<GAME_MAXENTITES; i++)
+		if(m_entities[i]) delete m_entities[i];
+
+	delete [] m_entities;
+	delete [] m_clients;
 }
 
 
@@ -328,9 +340,9 @@ void CServer::PrintServerStatus()
 
 	for(int i=0; i<m_svState.maxClients; i++)
 	{
-		if(m_client[i].inUse)
+		if(m_clients[i].inUse)
 		{
-			ComPrintf("%s:\n", m_client[i].name);
+			ComPrintf("%s:\n", m_clients[i].name);
 
 			const NetChanState & state = m_net.ChanGetState(i);
 			ComPrintf("  Rate:%.2f\n  In:%d\n  Acked:%d\n  Out:%d\n", 
@@ -395,7 +407,18 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 void CServer::SpawnEntities(CBuffer &buf)
 {
 	//parse buffer and load entities
+	buf.BeginRead();
+	
+	//get classname
+	char * classname = buf.ReadString();
+	if(buf.BadRead())
+		return;
 
+/*	Entity * ent = CEntityMaker::CreateEnt(classname,buf);
+	if(ent)
+	{
+	}
+*/
 }
 
 

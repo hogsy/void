@@ -12,21 +12,21 @@ Validate connection request from a client
 bool CServer::ValidateClConnection(int clNum, bool reconnect,
 									CBuffer &buffer)
 {	
-	if(m_client[clNum].inUse && !reconnect)
+	if(m_clients[clNum].inUse && !reconnect)
 	{
 		m_net.SendRejectMsg("Couldn't find free client slot");
 		return false;
 	}
 
-	strcpy(m_client[clNum].name, buffer.ReadString());
+	strcpy(m_clients[clNum].name, buffer.ReadString());
 	m_net.ChanSetRate(clNum, buffer.ReadInt());
 	
-	m_client[clNum].inUse = true;
+	m_clients[clNum].inUse = true;
 
 	if(!reconnect)
 		m_svState.numClients++;
 
-	m_net.BroadcastPrintf("%s connected", m_client[clNum].name);
+	m_net.BroadcastPrintf("%s connected", m_clients[clNum].name);
 	return true;
 }
 
@@ -50,7 +50,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			int len = strlen(msg);
 			msg[len] = 0;
 			len += 4;
-			len += strlen(m_client[clNum].name);
+			len += strlen(m_clients[clNum].name);
 			
 			//Add this to all other connected clients outgoing buffers
 			for(int i=0;i<m_svState.maxClients;i++)
@@ -59,10 +59,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(i == clNum)
 					continue;
 
-				if(m_client[i].inUse)
+				if(m_clients[i].inUse)
 				{
 					m_net.ChanBeginWrite(i,SV_TALK, len);
-					m_net.ChanWrite(m_client[clNum].name);
+					m_net.ChanWrite(m_clients[clNum].name);
 					m_net.ChanWrite(msg);
 					m_net.ChanFinishWrite();
 				}
@@ -76,13 +76,13 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			if(id == 'n')
 			{
 				const char * clname = buffer.ReadString();
-				m_net.BroadcastPrintf("%s renamed to %s", m_client[clNum].name, clname);
-				strcpy(m_client[clNum].name, clname);
+				m_net.BroadcastPrintf("%s renamed to %s", m_clients[clNum].name, clname);
+				strcpy(m_clients[clNum].name, clname);
 			}
 			else if (id == 'r')
 			{
 				int rate = buffer.ReadInt();
-ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
+ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum].name, rate);
 				m_net.ChanSetRate(clNum,rate);
 			}
 			break;
@@ -105,17 +105,17 @@ void CServer::OnClientDrop(int clNum, EDisconnectReason reason)
 	switch(reason)
 	{
 	case CLIENT_QUIT:
-		m_net.BroadcastPrintf("%s disconnected", m_client[clNum].name);
+		m_net.BroadcastPrintf("%s disconnected", m_clients[clNum].name);
 		break;
 	case CLIENT_TIMEOUT:
-		m_net.BroadcastPrintf("%s timed out", m_client[clNum].name);
+		m_net.BroadcastPrintf("%s timed out", m_clients[clNum].name);
 		break;
 	case CLIENT_OVERFLOW:
-		m_net.BroadcastPrintf("%s overflowed", m_client[clNum].name);
+		m_net.BroadcastPrintf("%s overflowed", m_clients[clNum].name);
 		break;
 	}
 
-	m_client[clNum].inUse = false;
+	m_clients[clNum].inUse = false;
 	m_svState.numClients --;
 }
 
@@ -136,7 +136,7 @@ Handle Client spawning
 void CServer::OnClientSpawn(int clNum)
 {
 	//Check chanIds to see what client spawned
-	m_net.BroadcastPrintf("%s entered the game", m_client[clNum].name);
+	m_net.BroadcastPrintf("%s entered the game", m_clients[clNum].name);
 }
 
 /*
