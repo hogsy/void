@@ -1,7 +1,7 @@
 #ifndef VOID_CLIENT_BASE_ENT
 #define VOID_CLIENT_BASE_ENT
 
-#include "Game_base.h"
+#include "Game_defs.h"
 
 /*
 ======================================
@@ -77,6 +77,5 @@ struct ClClient : public ClEntity
 	float friction;
 	float maxSpeed;
 };
-
 
 #endif

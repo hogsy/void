@@ -68,6 +68,32 @@ enum
 	MODEL_SKIN_UNBOUND_LOCAL = 0X40000000
 };
 
+
+/*
+==========================================================================
+Move Stuff
+==========================================================================
+*/
+enum EMoveType
+{
+	MOVETYPE_NOCLIP,
+	MOVETYPE_BBOX,		//just a static bbox
+	MOVETYPE_MISSLE,	
+	MOVETYPE_TRAJECTORY,
+	MOVETYPE_STEP
+};
+
+struct I_World;
+struct BaseEntity;
+
+namespace EntMove {
+
+void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
+void ClientMove(BaseEntity *ent, float time);
+void SetWorld(I_World * pWorld);
+
+}
+
 /*
 ============================================================================
 Only contains data needed by routines shared between client and server code
@@ -171,30 +197,5 @@ enum EClUpdateFlags
 	SVU_FRICTION = 2,
 	SVU_MAXSPEED = 4
 };
-
-
-/*
-==========================================================================
-Move Stuff
-==========================================================================
-*/
-enum EMoveType
-{
-	MOVETYPE_NOCLIP,
-	MOVETYPE_BBOX,		//just a static bbox
-	MOVETYPE_MISSLE,	
-	MOVETYPE_TRAJECTORY,
-	MOVETYPE_STEP
-};
-
-struct I_World;
-
-namespace EntMove {
-
-void NoClipMove(BaseEntity *ent, vector_t &dir, float time);
-void ClientMove(BaseEntity *ent, float time);
-void SetWorld(I_World * pWorld);
-
-}
 
 #endif

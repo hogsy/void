@@ -1,7 +1,7 @@
 #ifndef VOID_GAME_INTERFACE
 #define VOID_GAME_INTERFACE
 
-#include "Game_base.h"
+#include "Game_defs.h"
 
 //Constants
 const int	GAME_VERSION   = 1;
