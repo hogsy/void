@@ -12,10 +12,11 @@
 #include <stdlib.h>
 
 
-void Error(char *err, ...);
-void FError(char *err, ...);
-void ComPrintf(char *err, ...);
-void v_printf(char *msg, ...);
+void Error(const char *err, ...);
+void FError(const char *err, ...);
+void ComPrintf(const char *err, ...);
+void v_printf(const char *msg, ...);
+void VFSError(const char *err);
 
 
 

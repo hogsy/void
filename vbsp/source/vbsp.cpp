@@ -15,13 +15,9 @@
 #include "portal.h"
 
 
-// OMFG FIXME - all this just to #include shaders
+// required for filesystem
 #include "Com_defs.h"
-#include "Com_Vector.h"
-#include "../Renderer/Rast_main.h"
-#include "../vbsp/source/std_lib.h"
 #include "I_file.h"
-#include "../Renderer/ShaderManager.h"
 #include "I_filesystem.h"
 
 
@@ -60,8 +56,8 @@ main
 */
 int main (int argc, char **argv)
 {
-	FILESYSTEM_Create(NULL, "E:\\Void", "E:\\Void\\Game");
-	g_pShaders = new CShaderManager();
+	FILESYSTEM_Create(&v_printf, &VFSError, "E:\\Void", "Game");
+//	g_pShaders = new CShaderManager();
 
 	printf ("======== vbsp ========\n");
 
@@ -157,7 +153,7 @@ int main (int argc, char **argv)
 	if (flog)
 		fclose(flog);
 
-	delete g_pShaders;
+//	delete g_pShaders;
 	FILESYSTEM_Free();
 
 

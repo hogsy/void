@@ -8,7 +8,7 @@ replacement printf
 */
 bool		verbose	= false;
 FILE		*flog	= NULL;
-void v_printf(char *msg, ...)
+void v_printf(const char *msg, ...)
 {
 	static char buff[1024];
 
@@ -31,7 +31,7 @@ void v_printf(char *msg, ...)
 Error - just drop everything and quit
 ============
 */
-void Error(char *err, ...)
+void Error(const char *err, ...)
 {
 	char buff[1024];
 
@@ -55,7 +55,7 @@ void Error(char *err, ...)
 FError - same as error
 ============
 */
-void FError(char *err, ...)
+void FError(const char *err, ...)
 {
 	char buff[1024];
 
@@ -79,7 +79,7 @@ void FError(char *err, ...)
 ComPrintf - same as error
 ============
 */
-void ComPrintf(char *err, ...)
+void ComPrintf(const char *err, ...)
 {
 	char buff[1024];
 
@@ -96,3 +96,21 @@ void ComPrintf(char *err, ...)
 
 	exit (1);
 }
+
+
+/*
+============
+VFSError - passed to the file system
+============
+*/
+void VFSError(const char *err)
+{
+	verbose = true;
+
+	v_printf("\n************ ERROR ************\n");
+	v_printf("%s", err);
+	v_printf("\n");
+
+	exit (1);
+}
+

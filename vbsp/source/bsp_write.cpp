@@ -10,14 +10,15 @@
 #include "com_trace.h"
 
 
-// OMFG FIXME - all this just to #include shaders
+// required for filesystem
 #include "Com_defs.h"
-#include "Com_Vector.h"
-#include "../Renderer/Rast_main.h"
-#include "../vbsp/source/std_lib.h"
 #include "I_file.h"
-#include "../Renderer/ShaderManager.h"
+#include "I_filesystem.h"
 
+
+// shaders
+#include "../Renderer/Rast_main.h"
+#include "../Renderer/ShaderManager.h"
 
 
 
@@ -206,6 +207,7 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 	tdef->vecs[1][3] = (float)tinfo->shift[1];
 
 	int w, h;
+	
 	g_pShaders->GetDims(tinfo->name, w, h);
 	tdef->vecs[0][0] /= w;
 	tdef->vecs[0][1] /= w;
@@ -215,6 +217,7 @@ void tex_map_to_bsp(map_texinfo_t *tinfo, bspf_texdef_t *tdef, int p)
 	tdef->vecs[1][1] /= h;
 	tdef->vecs[1][2] /= h;
 	tdef->vecs[1][3] /= h;
+
 }
 
 
@@ -686,6 +689,10 @@ void write_bsp(entity_t *ents, char *file)
 
 	v_printf("\nwriting bsp file %s\n", file);
 
+	// load shaders
+	g_pShaders = new CShaderManager();
+
+
 	// build all our arrays
 	num_verts			= 0;
 	num_vert_indices	= 0;
@@ -776,6 +783,8 @@ void write_bsp(entity_t *ents, char *file)
 	v_printf("%4d vert indices\n", num_vert_indices);
 	v_printf("%4d texture names\n", num_textures);
 	v_printf("%4d texdefs\n", num_texdefs);
+
+	delete g_pShaders;
 
 }
 
