@@ -251,7 +251,7 @@ void r_drawframe(const CCamera * pcamera)
 	// find eye leaf for pvs tests
 	eye_leaf = get_leaf_for_point(camera->origin);
 
-	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
+//	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
 
 // set up the view transformation
 	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);

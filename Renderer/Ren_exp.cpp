@@ -213,11 +213,13 @@ DrawFrame
 void CRenExp::Draw(const CCamera * camera)
 {
 	g_pRast->SetFocus();
+	g_pRast->ClearBuffers(/*VRAST_COLOR_BUFFER |*/ VRAST_DEPTH_BUFFER);
 	
 	if(camera)
+	{
 		r_drawframe(camera);
-
-	m_pHud->DrawHud();
+		m_pHud->DrawHud();
+	}
 	m_pRConsole->Draw();
 	
 	g_pRast->FrameEnd();
