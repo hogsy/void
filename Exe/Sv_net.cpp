@@ -92,6 +92,16 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum].name, rate);
 			m_net.SendDisconnect(clNum,CLIENT_QUIT);
 			break;
 		}
+	case CL_MOVE:
+		{
+			m_clients[clNum].origin.x = buffer.ReadCoord();
+			m_clients[clNum].origin.y = buffer.ReadCoord();
+			m_clients[clNum].origin.z = buffer.ReadCoord();
+			m_clients[clNum].angles.x = buffer.ReadAngle();
+			m_clients[clNum].angles.y = buffer.ReadAngle();
+			m_clients[clNum].angles.z = buffer.ReadAngle();
+			break;
+		}
 	}
 }
 

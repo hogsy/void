@@ -144,20 +144,25 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 					m_gameEnts[id].frame = buffer.ReadShort();
 					m_gameEnts[id].nextframe = m_gameEnts[id].frame;
 					m_gameEnts[id].frac = 0;
+					m_gameEnts[id].cache = CACHE_GAME;
 				}
 				else
 				{
-					buffer.ReadShort();
-					buffer.ReadShort();
-					buffer.ReadShort();
+					m_gameEnts[id].soundIndex = buffer.ReadShort();
+					m_gameEnts[id].volume = buffer.ReadShort();
+					m_gameEnts[id].attenuation = buffer.ReadShort();
 				}
 
 				if(buffer.BadRead())
 				{
 					ComPrintf("Error reading Ent %d\n", id);
-					memset(&m_gameEnts[id],0, sizeof(R_EntState));
+					m_gameEnts[id].Reset();
+//					m_gameEnts[id].inUse = false;
+//					m_gameEnts[id].index = -1;
 					break;
 				}
+
+				m_gameEnts[id].inUse = true;
 				m_numEnts ++;
 				id = buffer.ReadShort();
 			}

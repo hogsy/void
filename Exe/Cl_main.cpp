@@ -171,13 +171,13 @@ void CClient::BeginGame()
 	
 	VectorSet(&desired_movement, 0, 0, 0);
 
-	VectorSet(&m_gameClient.angles, 0.0f,0.0f,0.0f);
+	VectorSet(&m_gameClient.angle, 0.0f,0.0f,0.0f);
 	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
 	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
 
-	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
+	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angle, m_screenBlend);
 
 	m_ingame = true;
 
@@ -252,7 +252,7 @@ void CClient::RunFrame()
 
 		vector_t forward, up, velocity;
 		VectorSet(&velocity, 0,0,0);
-		AngleToVector(&m_gameClient.angles, &forward, 0, &up);
+		AngleToVector(&m_gameClient.angle, &forward, 0, &up);
 		m_pHud->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pHud->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
@@ -280,29 +280,41 @@ void CClient::RunFrame()
 
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 
-		//draw the ents in pvs
+		//fix me. draw ents only in the pvs
 		for(int i=0; i< GAME_MAXENTITIES; i++)
 		{
-//			m_gameEnts[i].frame = 0;
-//			m_gameEnts[i].skinnum= 0;
-			if(m_gameEnts[i].index == 0)
+			if(m_gameEnts[i].inUse && m_gameEnts[i].index >= 0)
 			{
-				m_gameEnts[i].cache = CACHE_GAME;
 				m_pModel->DrawModel(m_gameEnts[i]);	
 			}
 		}
 
 
 		m_pRender->Draw(m_pCamera);
+
+		//Write all updates
+		CBuffer &buf = m_pNetCl->GetSendBuffer();
+		
+		buf.Reset();
+		buf.Write(CL_MOVE);
+		buf.WriteCoord(m_gameClient.origin.x);
+		buf.WriteCoord(m_gameClient.origin.y);
+		buf.WriteCoord(m_gameClient.origin.z);
+		buf.WriteAngle(m_gameClient.angle.x);
+		buf.WriteAngle(m_gameClient.angle.y);
+		buf.WriteAngle(m_gameClient.angle.z);
+
 	}
 	else
 	{
 		//draw the console or menues etc
 		m_pRender->DrawConsole();
 	}
+
 	
 	//Write updates
 	m_pNetCl->SendUpdate();
+
 }
 
 
@@ -406,6 +418,7 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 void CClient::Spawn(vector_t * origin, vector_t *angles)
 {
+/*
 	static int hHowl = 0;
 	if(!hHowl)
 		hHowl = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
@@ -413,4 +426,5 @@ void CClient::Spawn(vector_t * origin, vector_t *angles)
 	static vector_t horigin;
 	VectorSet(&horigin,0,0,48);
 	m_pSound->PlaySnd(hHowl, CACHE_LOCAL, CHAN_WORLD, &horigin, 0, true);
+*/
 }

@@ -14,6 +14,55 @@ struct I_Renderer;
 struct I_RHud;
 struct I_Model;
 
+
+//A client side entitiy
+struct ClEntity : public R_EntState
+{
+	ClEntity()
+	{	Reset();
+	}
+
+	void Reset()
+	{
+		num_skins = num_frames = 0;
+		index = -1;
+		skinnum = 0;
+		frame = nextframe = 0;
+		
+		inUse = false;
+
+		Void3d::VectorSet(origin,0,0,0);
+		Void3d::VectorSet(angle,0,0,0);
+	}
+
+	virtual ~ClEntity() {}
+
+	bool inUse;
+
+	int soundIndex;
+	int	volume;
+	int	attenuation;
+};
+
+//A client side Client
+struct ClClient : public ClEntity
+{
+	ClClient() 
+	{ 
+		memset(name,0,32);
+		Void3d::VectorSet(mins,0,0,0);
+		Void3d::VectorSet(maxs,0,0,0);
+	}
+
+	char name[32];
+
+	vector_t mins;
+	vector_t maxs;
+};
+
+
+
+
 /*
 =====================================
 Client class
@@ -121,9 +170,9 @@ private:
 	//the following should be accessible by the game dll
 
 	//This is the client we should do local prediction on
-	EntClient	m_gameClient;
+	ClClient	m_gameClient;
+	ClEntity	m_gameEnts[GAME_MAXENTITIES];
 
-	R_EntState  m_gameEnts[GAME_MAXENTITIES];
 	int			m_numEnts;
 
 	//This should hook up to the game client whne the client

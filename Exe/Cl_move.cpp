@@ -261,7 +261,7 @@ void CClient::Move(vector_t *dir, float time)
 void CClient::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&m_gameClient.angles, &forward, NULL, NULL);
+	AngleToVector (&m_gameClient.angle, &forward, NULL, NULL);
 	VectorNormalize(&forward);
 	VectorAdd2(desired_movement,forward);
 }
@@ -269,7 +269,7 @@ void CClient::MoveForward()
 void CClient::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&m_gameClient.angles, &backword, NULL, NULL);
+	AngleToVector (&m_gameClient.angle, &backword, NULL, NULL);
 	VectorNormalize(&backword);
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
@@ -277,7 +277,7 @@ void CClient::MoveBackward()
 void CClient::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&m_gameClient.angles, NULL, &right, NULL);
+	AngleToVector (&m_gameClient.angle, NULL, &right, NULL);
 	VectorNormalize(&right);
 	VectorAdd2(desired_movement,right);
 }
@@ -285,41 +285,41 @@ void CClient::MoveRight()
 void CClient::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&m_gameClient.angles, NULL, &left, NULL);
+	AngleToVector (&m_gameClient.angle, NULL, &left, NULL);
 	VectorNormalize(&left);
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
 void CClient::RotateRight(float val)
 {
-	m_gameClient.angles.YAW += System::g_fframeTime * val;
-	if (m_gameClient.angles.YAW > PI)
-		m_gameClient.angles.YAW -= 2*PI;
+	m_gameClient.angle.YAW += System::g_fframeTime * val;
+	if (m_gameClient.angle.YAW > PI)
+		m_gameClient.angle.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(float val)
 {
-	m_gameClient.angles.YAW -= System::g_fframeTime * val;
-	if (m_gameClient.angles.YAW < -PI)
-		m_gameClient.angles.YAW += 2*PI;
+	m_gameClient.angle.YAW -= System::g_fframeTime * val;
+	if (m_gameClient.angle.YAW < -PI)
+		m_gameClient.angle.YAW += 2*PI;
 }
 
 void CClient::RotateUp(float val)
 {
-	m_gameClient.angles.PITCH += System::g_fframeTime * val;
-	if (m_gameClient.angles.PITCH < -PI/2)
-		m_gameClient.angles.PITCH = -PI/2;
-	if (m_gameClient.angles.PITCH > PI/2)
-		m_gameClient.angles.PITCH = PI/2;
+	m_gameClient.angle.PITCH += System::g_fframeTime * val;
+	if (m_gameClient.angle.PITCH < -PI/2)
+		m_gameClient.angle.PITCH = -PI/2;
+	if (m_gameClient.angle.PITCH > PI/2)
+		m_gameClient.angle.PITCH = PI/2;
 }
 
 void CClient:: RotateDown(float val)
 {
-	m_gameClient.angles.PITCH -= System::g_fframeTime * val;
-	if (m_gameClient.angles.PITCH < -PI/2)
-		m_gameClient.angles.PITCH = -PI/2;
-	if (m_gameClient.angles.PITCH > PI/2)
-		m_gameClient.angles.PITCH = PI/2;
+	m_gameClient.angle.PITCH -= System::g_fframeTime * val;
+	if (m_gameClient.angle.PITCH < -PI/2)
+		m_gameClient.angle.PITCH = -PI/2;
+	if (m_gameClient.angle.PITCH > PI/2)
+		m_gameClient.angle.PITCH = PI/2;
 }
 
 

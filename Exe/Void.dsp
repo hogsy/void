@@ -104,6 +104,14 @@ SOURCE=.\Snd_buf.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Snd_chan.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Snd_chan.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Snd_hdr.h
 # End Source File
 # Begin Source File

@@ -63,9 +63,6 @@ private:
 	
 	void WriteSignOnBuffer(NetSignOnBufs &signOnBuf);
 
-
-//	bool LoadEntities(NetSignOnBufs &signOnBuf);
-
 	void LoadWorld(const char * mapname);
 	void PrintServerStatus();
 

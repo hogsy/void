@@ -1,7 +1,7 @@
 #ifndef VOID_SND_WAVEFILE
 #define VOID_SND_WAVEFILE
 
-#include "Snd_main.h"
+#include "Com_defs.h"
 #include "I_file.h"
 
 namespace VoidSound {

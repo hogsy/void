@@ -169,6 +169,9 @@ void CServer::RunFrame()
 
 	//Run game
 
+	//run clients
+	//go through all the clients, find entities in their pvs and update them
+
 	//write to clients
 	m_net.SendPackets();
 }

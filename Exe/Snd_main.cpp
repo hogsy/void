@@ -1,7 +1,8 @@
 #include "Snd_main.h"
 #include "Snd_hdr.h"
-#include "Snd_wave.h"
 #include "Snd_buf.h"
+#include "Snd_chan.h"
+#include "Snd_wave.h"
 #include "Com_util.h"
 
 namespace
