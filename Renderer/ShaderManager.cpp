@@ -428,8 +428,8 @@ void CShaderManager::CachePurge(void)
 				if (shader->mPass != p)
 					continue;
 
-				// sky brushes always depthwrite
-//				g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKYVIEW) == 0);
+				// sky brushes never depthwrite
+				g_pRast->DepthWrite((shader->GetContentFlags() & CONTENTS_SKY) == 0);
 
 				g_pRast->PolyColor4f(1, 1, 1, 1);
 				g_pRast->ShaderSet(shader);

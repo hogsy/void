@@ -160,17 +160,6 @@ void CModelManager::UnloadModelAll(void)
 }
 
 
-/*
-=======================================
-GetInfo 
-=======================================
-*/
-void CModelManager::GetInfo(ClEntity &state)
-{
-//	state.numFrames = caches[state.mdlCache][state.mdlIndex]->GetNumFrames();
-//	state.numSkins  = caches[state.mdlCache][state.mdlIndex]->GetNumSkins();
-}
-
 
 /*
 =======================================
@@ -198,21 +187,22 @@ void CModelManager::Purge(void)
 		g_pRast->MatrixPush();
 
 		// add this model transform to the stack
-//		VectorInv2(walk->state->origin, trans);
 		g_pRast->MatrixTranslate(walk->state->origin.x, walk->state->origin.y, walk->state->origin.z);
 
 		g_pRast->MatrixRotateZ(walk->state->angles.YAW   * 180/PI);
 		g_pRast->MatrixRotateY(-walk->state->angles.PITCH  * 180/PI);
 		g_pRast->MatrixRotateX(walk->state->angles.ROLL * 180/PI);
 
+		int nextframe = walk->state->animInfo.currentFrame + 1;
+		if (nextframe > walk->state->animInfo.frameEnd)
+			nextframe = walk->state->animInfo.frameBegin;
+		float frac = GetCurTime();
+		frac -= floor(frac);
 
 		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, 
 																   walk->state->animInfo.currentFrame,
-																   0,
-																   0);
-																   //walk->state->anim.currentFrame++, 
-																   //walk->state->frac);
-
+																   nextframe,
+																   frac);
 		g_pRast->MatrixPop();
 
 		drawmodelRelease(walk);

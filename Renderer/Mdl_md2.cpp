@@ -287,14 +287,6 @@ void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 		g_pRast->ShaderSet(g_pShaders->GetShader(mShaderBin, skin));
 
 
-	if (frac>=1) fframe = cframe;
-	if (frac<=0) cframe = fframe;
-
-	float frame = fmodf(GetCurTime()*10, num_frames-1);
-	cframe = (int)ceilf(frame);
-	fframe = (int)floorf(frame);
-	frac = frame-fframe;
-
 	vector_t v;
 
 	float w1, w2;	// vertex weights

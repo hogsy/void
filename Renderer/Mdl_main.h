@@ -34,8 +34,6 @@ public:
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
 
-	void GetInfo(ClEntity &state);
-
 	// funcs for vid restarts
 	void LoadSkins(void);
 	void UnLoadSkins(void);

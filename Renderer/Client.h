@@ -31,9 +31,6 @@ public:
 	inline void UnloadModelAll(void)
 	{	CModelManager::UnloadModelAll();	
 	}
-	inline void GetInfo(ClEntity &state)
-	{	CModelManager::GetInfo(state);	
-	}
 
 	// Image Interface
 	inline int LoadImage(const char *image, CacheType cache, int index=-1)
