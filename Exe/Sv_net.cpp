@@ -312,6 +312,7 @@ void CServer::ReadPackets()
 		//Check if its an OOB message
 		if(m_recvBuf.ReadInt() == -1)
 		{
+ComPrintf("Query from: %s\n", m_pSock->GetSource().ToString());
 			ProcessQueryPacket();
 			continue;
 		}

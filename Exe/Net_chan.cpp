@@ -63,7 +63,7 @@ bool CNetChan::CanSend()
 {
 	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
-ComPrintf("CNetChan::Choked\n");
+//ComPrintf("CNetChan::Choked\n");
 	m_numChokes ++;
 	return false;
 }

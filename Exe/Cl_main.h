@@ -98,8 +98,8 @@ private:
 
 	//==================================================
 	//Client side stuff
-	int		m_hsTalk;		//handle to talk sound
-	int		m_hsMessage;	//handle to server message sound
+	int			m_hsTalk;		//handle to talk sound
+	int			m_hsMessage;	//handle to server message sound
 
 	//==================================================
 	//the following should be accessible by the game dll

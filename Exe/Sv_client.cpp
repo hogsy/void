@@ -12,15 +12,15 @@ Constructor/Destructor
 */
 SVClient::SVClient()
 {
-	for(int i=0; i< MAX_BACKBUFFERS; i++)
-		m_backBuffer[i] = new CBuffer(MAX_DATAGRAM_SIZE);
+//	for(int i=0; i< MAX_BACKBUFFERS; i++)
+//		m_backBuffer[i] = new CBuffer(MAX_DATAGRAM_SIZE);
 	Reset();
 }
 
 SVClient::~SVClient()
 {
-	for(int i=0; i< MAX_BACKBUFFERS; i++)
-		delete m_backBuffer[i];
+//	for(int i=0; i< MAX_BACKBUFFERS; i++)
+//		delete m_backBuffer[i];
 }
 
 /*
@@ -52,7 +52,8 @@ void SVClient::ValidateBuffer()
 	if(m_bBackbuf)
 	{
 		//drop client if overflowed
-		if(m_backBuffer[m_numBuf]->OverFlowed())
+		//if(m_backBuffer[m_numBuf]->OverFlowed())
+		if(m_backBuffer[m_numBuf].OverFlowed())
 		{
 ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_netChan.m_addr.ToString());
 			m_bDropClient = true;
@@ -77,7 +78,8 @@ void SVClient::MakeSpace(int reqsize)
 		else
 		{
 			//if the current backbuffer doesnt have any space, then move to the next one
-			if(m_backBuffer[m_numBuf]->GetSize() + reqsize >= m_backBuffer[m_numBuf]->GetMaxSize())
+			//if(m_backBuffer[m_numBuf]->GetSize() + reqsize >= m_backBuffer[m_numBuf]->GetMaxSize())
+			if(m_backBuffer[m_numBuf].GetSize() + reqsize >= m_backBuffer[m_numBuf].GetMaxSize())
 			{
 				//drop client if we have filled up the LAST backbuffer,
 				if(m_numBuf + 1 == MAX_BACKBUFFERS)
@@ -87,7 +89,8 @@ ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.m_addr.To
 					return;
 				}
 				m_numBuf++;
-				m_backBuffer[m_numBuf]->Reset();
+				//m_backBuffer[m_numBuf]->Reset();
+				m_backBuffer[m_numBuf].Reset();
 			}
 		}
 	}
@@ -103,14 +106,17 @@ bool SVClient::ReadyToSend()
 	if(m_bBackbuf)
 	{
 		//Does the outgoing buffer have space ?
-		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf]->GetSize() <
+//		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf]->GetSize() <
+		if(m_netChan.m_buffer.GetSize() + m_backBuffer[m_numBuf].GetSize() <
 		   m_netChan.m_buffer.GetMaxSize())
 		{
 ComPrintf("SV Writing to backbuffer\n");
 			//Write to sock buffer
-			m_netChan.m_buffer.Write((*m_backBuffer[m_numBuf]));
+			//m_netChan.m_buffer.Write((*m_backBuffer[m_numBuf]));
+			m_netChan.m_buffer.Write(m_backBuffer[m_numBuf]);
 			//reset buffer. 
-			m_backBuffer[m_numBuf]->Reset();
+			//m_backBuffer[m_numBuf]->Reset();
+			m_backBuffer[m_numBuf].Reset();
 
 			if(m_numBuf == 0)		
 				m_bBackbuf = false;	//No more backbuffers
@@ -155,7 +161,8 @@ void SVClient::WriteByte(byte b)
 		m_netChan.m_buffer.Write(b);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(b);
+//		m_backBuffer[m_numBuf]->Write(b);
+		m_backBuffer[m_numBuf].Write(b);
 		ValidateBuffer();
 	}
 }
@@ -166,7 +173,8 @@ void SVClient::WriteChar(char c)
 		m_netChan.m_buffer.Write(c);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(c);
+		//m_backBuffer[m_numBuf]->Write(c);
+		m_backBuffer[m_numBuf].Write(c);
 		ValidateBuffer();
 	}
 }
@@ -177,7 +185,8 @@ void SVClient::WriteShort(short s)
 		m_netChan.m_buffer.Write(s);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(s);
+		//m_backBuffer[m_numBuf]->Write(s);
+		m_backBuffer[m_numBuf].Write(s);
 		ValidateBuffer();
 	}
 }
@@ -188,7 +197,8 @@ void SVClient::WriteInt(int i)
 		m_netChan.m_buffer.Write(i);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(i);
+		//m_backBuffer[m_numBuf]->Write(i);
+		m_backBuffer[m_numBuf].Write(i);
 		ValidateBuffer();
 	}
 }
@@ -199,7 +209,8 @@ void SVClient::WriteFloat(float f)
 		m_netChan.m_buffer.Write(f);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(f);
+		//m_backBuffer[m_numBuf]->Write(f);
+		m_backBuffer[m_numBuf].Write(f);
 		ValidateBuffer();
 	}
 }
@@ -210,7 +221,8 @@ void SVClient::WriteString(const char *string)
 		m_netChan.m_buffer.Write(string);
 	else
 	{
-		m_backBuffer[m_numBuf]->Write(string);
+		//m_backBuffer[m_numBuf]->Write(string);
+		m_backBuffer[m_numBuf].Write(string);
 		ValidateBuffer();
 	}
 }
@@ -221,7 +233,8 @@ void SVClient::WriteCoord(float c)
 		m_netChan.m_buffer.WriteCoord(c);
 	else
 	{
-		m_backBuffer[m_numBuf]->WriteCoord(c);
+		//m_backBuffer[m_numBuf]->WriteCoord(c);
+		m_backBuffer[m_numBuf].WriteCoord(c);
 		ValidateBuffer();
 	}
 }
@@ -232,7 +245,8 @@ void SVClient::WriteAngle(float a)
 		m_netChan.m_buffer.WriteAngle(a);
 	else
 	{
-		m_backBuffer[m_numBuf]->WriteAngle(a);
+		//m_backBuffer[m_numBuf]->WriteAngle(a);
+		m_backBuffer[m_numBuf].WriteAngle(a);
 		ValidateBuffer();
 	}
 }
@@ -245,7 +259,8 @@ void SVClient::WriteData(byte * data, int len)
 	else	
 	{
 		//write to current backbuffer
-		m_backBuffer[m_numBuf]->WriteData(data,len);
+		//m_backBuffer[m_numBuf]->WriteData(data,len);
+		m_backBuffer[m_numBuf].WriteData(data,len);
 		ValidateBuffer();
 	}
 }

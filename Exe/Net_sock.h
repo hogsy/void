@@ -13,6 +13,8 @@ public:
 
 	bool Create(int addrFamily, int type, int protocol, bool blocking = false);
 	void Close();
+
+	void Disconnect();
 	
 	bool Bind(const CNetAddr &addr);
 

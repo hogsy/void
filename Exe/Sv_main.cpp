@@ -34,17 +34,15 @@ CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
 {
 	m_pSock = new CNetSocket(&m_recvBuf);
 
-	m_numSignOnBuffers=0;
-/*	for(int i=0;i<MAX_SIGNONBUFFERS;i++)
-		m_signOnBuf[i].Create(MAX_DATAGRAM_SIZE);
-*/
 	m_worldName[0] = 0;
 	m_pWorld = 0;
 	
 	//Server State
 	m_active = false;
 	m_numClients = 0;
+	
 	m_levelNum = 0;
+	m_numSignOnBuffers=0;
 
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
@@ -371,9 +369,10 @@ void CServer::PrintServerStatus()
 	for(int i=0; i<m_numClients; i++)
 	{
 		if(m_clients[i].m_state == CL_CONNECTED)
-			ComPrintf("%s - Connecting\n", m_clients[i].m_name);
+			ComPrintf("%s : Connecting\n", m_clients[i].m_name);
 		else if(m_clients[i].m_state == CL_SPAWNED)
-			ComPrintf("%s - Ingame\n", m_clients[i].m_name);
+			ComPrintf("%s: Rate %.2f: Chokes %d\n", m_clients[i].m_name, 
+				1/m_clients[i].m_netChan.m_rate, m_clients[i].m_netChan.m_numChokes);
 	}
 }
 

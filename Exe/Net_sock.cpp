@@ -46,6 +46,12 @@ bool CNetSocket::Create(int addrFamily, int type, int protocol, bool blocking)
 	return true;
 }
 
+void CNetSocket::Disconnect()
+{
+	if(m_socket != INVALID_SOCKET)
+		shutdown(m_socket,SD_BOTH);
+}
+
 /*
 ==========================================
 Close the socket
@@ -55,6 +61,7 @@ void CNetSocket::Close()
 {
 	if(m_socket != INVALID_SOCKET)
 	{
+		Disconnect();	
 		closesocket(m_socket);
 		m_socket = INVALID_SOCKET;
 	}
@@ -126,6 +133,11 @@ bool CNetSocket::Recv()
 		int err = WSAGetLastError();
 		if(err == WSAEWOULDBLOCK)
 			return false;
+		//Socket has been shutdown
+		if(err == WSAECONNRESET)
+		{
+			return false;
+		}
 		if(err == WSAEMSGSIZE)
 		{
 			ComPrintf("CNetSocket::Recv: Oversize packet from %s\n", inet_ntoa (m_srcSockAddr.sin_addr));

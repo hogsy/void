@@ -386,8 +386,8 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 		Disconnect();
 
 	//Create Socket
-	if(!m_sock.ValidSocket())
-	{
+//	if(!m_sock.ValidSocket())
+//	{
 		if(!m_sock.Create(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
 		{
 			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt create socket");
@@ -395,7 +395,7 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 		}
 
 		//Bind to local addr
-		char localAddr[32];
+/*		char localAddr[32];
 		sprintf(localAddr,"127.0.0.1:%d",CL_DEFAULT_PORT);
 
 		CNetAddr naddr(localAddr);
@@ -404,7 +404,8 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 			PrintSockError(WSAGetLastError(),"CClient::Init: Couldnt bind socked\n");
 			return;
 		}
-	}
+*/
+//	}
 
 	//Send a connection request
 	CNetAddr netAddr(ipaddr);
@@ -417,7 +418,10 @@ void CClientNetHandler::ConnectTo(const char * ipaddr)
 
 	CNetAddr localAddr("localhost");
 	if(localAddr == netAddr)
+	{
+m_refClient.Print(CClient::DEFAULT,"CL: Connecting to local Server\n");
 		m_bLocalServer = true;
+	}
 
 	//Now initiate a connection request
 	m_netState = CL_INUSE;
@@ -438,20 +442,19 @@ void CClientNetHandler::Disconnect(bool serverPrompted)
 		if(!serverPrompted)
 		{
 			//Kill server if local
+			//send disconnect message if remote
+//m_refClient.Print(CClient::DEFAULT, "CL: sent disconnect\n");
+			m_netChan.m_buffer.Reset();
+			m_netChan.m_buffer.Write(CL_DISCONNECT);
+			m_netChan.PrepareTransmit();
+			m_sock.Send(m_netChan.m_sendBuffer);
+			m_sock.Disconnect();
+
 			if(m_bLocalServer)
 				System::GetConsole()->ExecString("killserver");
-			//send disconnect message if remote
-			else
-			{
-				m_netChan.m_buffer.Reset();
-				m_netChan.m_buffer.Write(CL_DISCONNECT);
-				m_netChan.PrepareTransmit();
-				m_sock.Send(m_netChan.m_sendBuffer);
-			}
 		}
 		m_refClient.UnloadWorld();
 	}
-
 
 	m_netChan.Reset();
 	
