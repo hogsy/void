@@ -70,7 +70,7 @@ private:
 	void RotateDown(float val=5.0);
 
 	void CamPath();
-	void Talk(const char * msg);
+	void Talk(const char * string);
 
 	bool LoadWorld(const char *worldname);
 	bool UnloadWorld();

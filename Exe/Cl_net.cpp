@@ -15,48 +15,72 @@ entity baselines
 */
 void CClient::HandleSpawnParms()
 {
-	m_netChan.BeginRead();
-
+	//We got a response to reset Resend requests
 	m_numResends = 0;
 
+	m_netChan.BeginRead();
 	int id = m_buffer.ReadInt();
+	
+	//Reconnect, the server probably changed maps 
+	//while we were getting spawn info. start again
+	if(id == SV_RECONNECT)
+	{
+		m_state = CL_INUSE;
+		m_spawnState = 0;
 
-ComPrintf("CL: Got spawn parms %d\n",id);
+		//Flow Control
+		m_fNextSendTime = 0.0f;
+		m_szLastOOBMsg = 0;
+		m_numResends = 0;
 
+		SendChallengeReq();
+		return;
+	}
+
+	//Got spawn data
 	if(id == m_spawnState + 1)
 	{
+		//Update spawnstate
 		m_spawnState = id;
 		m_fNextSendTime = 0.0f;
 
-		//got initial data, now ask for more
-		if(m_spawnState == SVC_INITCONNECTION)
+		switch(m_spawnState)
 		{
-			char * game = m_buffer.ReadString();
-			ComPrintf("Game : %s\n", game);
-			char * map = m_buffer.ReadString();
-			ComPrintf("Map : %s\n", map);
-			
-			LoadWorld(map);
+		case SVC_INITCONNECTION:
+			{
+				char * game = m_buffer.ReadString();
+				ComPrintf("Game : %s\n", game);
+				char * map = m_buffer.ReadString();
+				ComPrintf("Map : %s\n", map);
 
-		}
-		else if(m_spawnState == SVC_SPAWN)
-		{
-ComPrintf("CL: Client is ready to SPAWN\n");
-			m_state = CL_SPAWNED;
-			return;
+				LoadWorld(map);
+				break;
+			}
+		case SVC_MODELLIST:
+			break;
+		case SVC_SOUNDLIST:
+			break;
+		case SVC_IMAGELIST:
+			break;
+		case SVC_BASELINES:
+			break;
+		case SVC_BEGIN:
+			{
+				break;
+			}
 		}
 	}
 }
 
-
 /*
 ======================================
-
+Handle response to any OOB messages
+the client might have sent
 ======================================
 */
 void CClient::HandleOOBMessage()
 {
-	char * msg = m_buffer.ReadString();
+	const char * msg = m_buffer.ReadString();
 	
 	if(!strcmp(msg,S2C_CHALLENGE))
 	{
@@ -68,16 +92,22 @@ void CClient::HandleOOBMessage()
 
 		//Got challenge, now send connection request
 		SendConnectReq();
+ComPrintf("CL: Got challenge %d\n", m_challenge);
+		return;
+	}
 
-//ComPrintf("CL: challenge %d\n", m_challenge);
+	if(!strcmp(msg, S2C_REJECT))
+	{
+		Disconnect();
+ComPrintf("CL: Server rejected connection: %s\n", m_buffer.ReadString());
 		return;
 	}
 	
 	//We have been accepted. Now get ready to receive spawn parms
 	if(!strcmp(msg,S2C_ACCEPT))
 	{
-		m_state = CL_CONNECTED;
 		m_levelId = m_buffer.ReadInt();
+		m_state = CL_CONNECTED;
 
 		m_szLastOOBMsg = 0;
 		m_fNextSendTime = 0.0f;
@@ -109,7 +139,23 @@ void CClient::ReadPackets()
 		//in game.
 		if(m_state == CL_SPAWNED)
 		{
-			return;
+//ComPrintf("CL: Reading update\n");
+			m_netChan.BeginRead();
+
+			int msgId = m_buffer.ReadInt();
+			if(msgId == -1)
+				continue;
+
+			switch(msgId)
+			{
+			case SV_TALK:
+				char name[32];
+				strcpy(name,m_buffer.ReadString());
+ComPrintf("%s: %s\n", name , m_buffer.ReadString());
+System::GetSoundManager()->Play(m_hsTalk);
+				break;
+			}
+			continue;
 		}
 		//in the connection phase, expecting spawn parms
 		else if(m_state == CL_CONNECTED)
@@ -132,7 +178,7 @@ void CClient::ReadPackets()
 
 /*
 ======================================
-
+Send off any messages we need to
 ======================================
 */
 void CClient::SendUpdates()
@@ -140,8 +186,16 @@ void CClient::SendUpdates()
 	if(!m_pSock->ValidSocket())
 		return;
 
+	//we have spawned. send update packet
 	if(m_state == CL_SPAWNED)
 	{
+		if(m_netChan.CanSend() && m_netChan.m_buffer.GetSize())
+		{
+			m_netChan.PrepareTransmit();
+			m_pSock->Send(m_netChan.m_sendBuffer);
+			m_netChan.m_buffer.Reset();
+//ComPrintf("CL: Client sending update\n");
+		}
 		return;
 	}
 
@@ -158,9 +212,8 @@ ComPrintf("CL: Timed out\n");
 	{
 		//Its been a while and our reliable packet hasn't been answered, try again
 		if(m_fNextSendTime < System::g_fcurTime)
-		{	m_netChan.m_reliableBuffer.Reset();
-		}
-
+			m_netChan.m_reliableBuffer.Reset();
+		
 		//Ask for next spawn parm if we have received a reply to the last
 		//otherwise, keep asking for the last one
 		if(m_netChan.CanSendReliable())
@@ -171,9 +224,20 @@ ComPrintf("CL: Timed out\n");
 			m_netChan.PrepareTransmit();
 
 			m_pSock->Send(m_netChan.m_sendBuffer);
-			m_fNextSendTime = System::g_fcurTime + 1.0f;
-			m_numResends ++;
-ComPrintf("Client sending spawnstate %d\n", m_spawnState+1);
+
+			//We got all the necessary info. just ack and switch to spawn mode
+			if(m_spawnState == SVC_BEGIN)
+			{
+ComPrintf("CL: Client is ready to SPAWN\n");
+				m_state = CL_SPAWNED;
+
+			}
+			else
+			{
+				m_fNextSendTime = System::g_fcurTime + 1.0f;
+				m_numResends ++;
+//ComPrintf("CL: Asking for spawnstate %d\n", m_spawnState+1);
+			}
 		}
 	}
 	//Unconnected socket. sends OOB queries
@@ -247,7 +311,7 @@ void CClient::SendChallengeReq()
 	m_fNextSendTime = System::g_fcurTime + 2.0f;
 	m_numResends ++;
 
-ComPrintf("Requesting Challenge from %s\n", m_svServerAddr);
+ComPrintf("CL: Requesting Challenge from %s\n", m_svServerAddr);
 }
 
 
@@ -317,6 +381,7 @@ void CClient::Disconnect()
 	m_svServerAddr[0] = 0;
 	m_bLocalServer = false;
 	
+	m_levelId = 0;
 	m_state = CL_FREE;
 	m_spawnState = 0;
 
@@ -324,4 +389,32 @@ void CClient::Disconnect()
 	m_fNextSendTime = 0.0f;
 	m_szLastOOBMsg = 0;
 	m_numResends = 0;
+}
+
+
+/*
+=====================================
+Talk message sent to server if 
+we are connected
+=====================================
+*/
+void CClient::Talk(const char *string)
+{
+	if(m_state != CL_SPAWNED)
+		return;
+
+	//parse to right after "say"
+	const char * msg = string + 4;
+	while(*msg && *msg == ' ')
+		msg++;
+
+	if(!*msg || *msg == '\0')
+		return;
+
+	ComPrintf("%s: %s\n", m_clname.string, msg);
+	System::GetSoundManager()->Play(m_hsTalk);
+
+	//Send this reliably
+	m_netChan.m_buffer += CL_TALK;
+	m_netChan.m_buffer += msg;
 }

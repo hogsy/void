@@ -48,7 +48,7 @@ const int SVC_MODELLIST		= 2;	//Sequenced list of models in use
 const int SVC_SOUNDLIST		= 3;	//Sequenced list of sounds in use 
 const int SVC_IMAGELIST		= 4;	//Sequenced list of images in use 
 const int SVC_BASELINES		= 5;	//Static entity baselines data
-const int SVC_SPAWN			= 6;	//Dynamic Spawning info. client is assumed to be spawned after this
+const int SVC_BEGIN			= 6;	//ready to spawnDynamic Spawning info. client is assumed to be spawned after this
 
 //======================================================================================
 //Game Protocol
@@ -61,15 +61,20 @@ const int CL_NOP			= 1;	//Nothing doing. Keep alive
 const int CL_MOVE			= 2;	//angles/velocity
 const int CL_STRING			= 3;	//Command string
 const int CL_DELTA			= 4;	//update a specific field only ?
+const int CL_TALK			= 5;	//client said something
 
 //===============================
 //Server to Client
-const int SVC_BAD			= 0;
-const int SVC_NOP			= 1;
-const int SVC_DISCONNECT	= 2;	// Server going down
-const int SVC_UPDATESTAT	= 3;	
-const int SVC_STUFFCMD		= 4;	// Client will execute this locally
-const int SVC_HUDPRINT		= 5;    // Client will print this locally
+const int SV_BAD			= 0;
+const int SV_NOP			= 1;
+const int SV_DISCONNECT		= 2;	// Server going down
+const int SV_UPDATESTAT		= 3;	
+const int SV_STUFFCMD		= 4;	// Client will execute this locally
+const int SV_HUDPRINT		= 5;    // Client will print this locally
+const int SV_TALK			= 7;	// chat message
+const int SV_RECONNECT		= 8;	// Server is changing maps, tell all clients to reconnect
+
+
 
 /*
 #define	svc_setview			5	// [short] entity number

@@ -46,10 +46,10 @@ public:
 	CNetBuffer  m_reliableBuffer;		//Internal, keep reliable messages for retransmit
 	
 	
-	int	m_inMsgId;				//Latest incoming messageId
-	int m_inAckedMsgId;			//Latest remotely acked message.
-	int m_outMsgId;				//Outgoing messageId
-	int m_lastOutReliableMsgId;	//Id of the last reliable message sent
+	uint	m_inMsgId;				//Latest incoming messageId
+	uint m_inAckedMsgId;			//Latest remotely acked message.
+	uint m_outMsgId;				//Outgoing messageId
+	uint m_lastOutReliableMsgId;	//Id of the last reliable message sent
 
 	int m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
 	int m_bInReliableAcked;		//Was the last reliabled message acked by the remote host ?

@@ -266,9 +266,6 @@ void CServer::LoadWorld(const char * mapname)
 	m_signOnBuf[0] += m_cGame.string;
 	m_signOnBuf[0] += m_worldName;
 
-//	strcpy(m_szSignOnBuf[0], m_worldName);
-//	m_signOnBufSize[0]= strlen(m_szSignOnBuf[0]);
-
 	//if its not a dedicated server, then push "connect loopback" into the console
 	if(!m_cDedicated.bval)
 		System::GetConsole()->ExecString("connect localhost");
@@ -380,6 +377,9 @@ ComPrintf("SV:Reconnect from %s\n", m_pSock->GetSource().ToString());
 			SendRejectMsg("Server full");
 			return;
 		}
+
+		//update client counts
+		m_numClients ++;
 	}
 
 	//We now have a new client slot. create it
@@ -398,8 +398,6 @@ ComPrintf("SV:Reconnect from %s\n", m_pSock->GetSource().ToString());
 	m_sendBuf += m_levelNum;
 	m_pSock->Send(m_sendBuf);
 
-	//update client counts
-	m_numClients ++;
 ComPrintf("SV: %s connected\n",m_clients[i].m_name) ;
 }
 
@@ -412,6 +410,7 @@ void CServer::HandleChallengeReq()
 {
 	if(m_numClients >= m_cMaxClients.ival)
 	{
+ComPrintf("SV: Rejecting, server full\n");
 		SendRejectMsg("Server is full");
 		return;
 	}
@@ -471,6 +470,43 @@ void CServer::ProcessQueryPacket()
 		HandleChallengeReq();
 }
 
+
+/*
+======================================
+Parse client message
+======================================
+*/
+void CServer::ParseClientMessage(SVClient &client)
+{
+	//Check packet id to see what the client send
+	int packetId = m_recvBuf.ReadInt();
+	switch(packetId)
+	{
+	case CL_TALK:
+		{
+			char * msg = m_recvBuf.ReadString();
+			int len = strlen(msg) + strlen(client.m_name);
+		
+			//Add this to all other connected clients outgoing buffers
+			for(int i=0; i<m_cMaxClients.ival;i++)
+			{
+				if(&m_clients[i] == &client)
+					continue;
+				
+				if(m_clients[i].m_state == CL_SPAWNED)
+				{
+					m_clients[i].BeginMessage(SV_TALK,len);
+					m_clients[i].WriteString(client.m_name);
+					m_clients[i].WriteString(msg);
+				}
+			}
+//ComPrintf("SV: %s : %s\n", client.m_name, msg);
+			break;	
+		}
+	}
+}
+
+
 /*
 ==========================================
 Read any waiting packets
@@ -478,49 +514,61 @@ Read any waiting packets
 */
 void CServer::ReadPackets()
 {
-	int packetId = 0;
 	while(m_pSock->Recv())
 	{
-		packetId = m_recvBuf.ReadInt();
-
-		if(packetId == -1)
+		//Check if its an OOB message
+		if(m_recvBuf.ReadInt() == -1)
 		{
 			ProcessQueryPacket();
 			continue;
 		}
 
-		//otherwise, it must belong to a client
+		//then it should belong to a client
 		for(int i=0; i<m_cMaxClients.ival;i++)
 		{
+			//match client
 			if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
 			{
-				//client hasn't spawned yet. probably just asking for info
+				m_recvBuf.BeginRead();
+				m_clients[i].m_netChan.BeginRead();
+
+				//client hasn't spawned yet. is asking for parms
 				if(m_clients[i].m_state == CL_CONNECTED)
 				{
-					m_recvBuf.BeginRead();
-					m_clients[i].m_netChan.BeginRead();
-					
-					//Make sure the client is trying to connect to this map
-					int b = m_recvBuf.ReadInt();
-					if(b != m_levelNum)
+					//Check if client is trying to spawn into current map
+					int levelid = m_recvBuf.ReadInt();
+					if( levelid != m_levelNum)
 					{
-ComPrintf("SV: Client needs to reconnect, bad levelid %d != %d\n",b,m_levelNum);
-						//Tell the client to reconnect
-						m_clients[i].m_state = CL_INUSE;
-						return;
+//ComPrintf("SV: Client needs to reconnect, bad levelid %d != %d\n", levelid ,m_levelNum);
+						SendReconnect(m_clients[i]);
+						continue;
 					}
 
 					//Find out what spawn message the client is asking for
-					m_clients[i].m_spawnState = m_recvBuf.ReadInt();
-ComPrintf("SV: Client requesting spawn level %d\n", m_clients[i].m_spawnState);
-					
+					int spawnstate = m_recvBuf.ReadInt();
+					if(spawnstate == SVC_BEGIN+1)
+					{
+						m_clients[i].m_state = CL_SPAWNED;
+//ComPrintf("SV: Client has spawned\n");
+					}
+					else
+					{
+						m_clients[i].m_spawnState = spawnstate;
+//ComPrintf("SV: Client requesting spawn level %d\n", m_clients[i].m_spawnState);
+					}
 					m_clients[i].m_bSend = true;
 				}
-				return;
+				else if(m_clients[i].m_state == CL_SPAWNED)
+				{
+//					m_clients[i].m_netChan.BeginRead();
+					m_clients[i].m_bSend = true;
+//ComPrintf("SV: Msg from Spawned client\n");
+					ParseClientMessage(m_clients[i]);
+				}
+				break;
 			}
 		}
-		//unknown packet
-ComPrintf("SV: unknown packet from %s\n", m_pSock->GetSource().ToString());
+//ComPrintf("SV: unknown packet from %s\n", m_pSock->GetSource().ToString());
 	}
 }
 
@@ -528,28 +576,35 @@ ComPrintf("SV: unknown packet from %s\n", m_pSock->GetSource().ToString());
 //======================================================================================
 
 /*
-const int SVC_INITCONNECTION	= 1;	//Send the server vars, map info, game data
-const int SVC_MODELLIST			= 2;	//Sequenced list of all the models in use on the server
-const int SVC_SOUNDLIST			= 3;	//Sequenced list of all the sounds in use on the server
-const int SVC_IMAGELIST			= 4;	//Sequenced list of all the images in use on the server
-const int SVC_BASELINES			= 5;	//Entity baselines
-const int SVC_SPAWN				= 6;	//Spawning info. The client is assumed to be spawned after this
-*/
+======================================
 
+======================================
+*/
+void CServer::SendReconnect(SVClient &client)
+{
+	client.m_netChan.m_buffer.Reset();
+	client.m_netChan.m_buffer += SV_RECONNECT;
+	client.m_netChan.PrepareTransmit();
+	m_pSock->SendTo(client.m_netChan.m_sendBuffer, client.m_netChan.m_addr);
+	client.m_state = CL_INUSE;
+}
+
+/*
+======================================
+Send requested spawn parms
+======================================
+*/
 void CServer::SendSpawnParms(SVClient &client)
 {
-	//What spawn level does the client want ?
 	client.m_netChan.m_buffer.Reset();
+
+	//What spawn level does the client want ?
 	switch(client.m_spawnState)
 	{
 	case SVC_INITCONNECTION:
 		{
 			//Send 1st signon buffer
 			client.m_netChan.m_buffer += m_signOnBuf[0];
-/*
-			client.m_netChan.m_reliableBuffer += m_cGame.string;
-			client.m_netChan.m_reliableBuffer += m_cGame.string;
-*/
 			break;
 		}
 	case SVC_MODELLIST:
@@ -562,19 +617,24 @@ void CServer::SendSpawnParms(SVClient &client)
 			client.m_netChan.m_buffer += SVC_IMAGELIST;
 		break;
 	case SVC_BASELINES:
+		{
 			client.m_netChan.m_buffer += SVC_BASELINES;
-		break;
-	case SVC_SPAWN:	
-			client.m_netChan.m_buffer += SVC_SPAWN;
-//			client.m_netChan.m
+			break;
+		}
+	case SVC_BEGIN:
+		{
+			//consider client to be spawned now
+			client.m_netChan.m_buffer += SVC_BEGIN;
+		}
 		break;
 	}
 	client.m_netChan.PrepareTransmit();
+//ComPrintf("SV: Sending spawn parms %d\n",client.m_spawnState);
 }
 
 /*
 ======================================
-
+Send updates to clients
 ======================================
 */
 void CServer::WritePackets()
@@ -595,21 +655,29 @@ void CServer::WritePackets()
 		//In game clients
 		if(m_clients[i].m_state == CL_SPAWNED)
 		{
-		}
-		//havent spawned yet
-		else if(m_clients[i].m_state == CL_CONNECTED)
-		{
-ComPrintf("CL: Need to send spawn parms\n");
-			SendSpawnParms(m_clients[i]);
+/*			if(m_clients[i].m_netChan.m_buffer.GetSize())
+			{
+				int size = m_clients[i].m_netChan.m_buffer.GetSize();
+			}
+*/
+			m_clients[i].m_netChan.PrepareTransmit();
+			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+			//m_clients[i].m_bSend = false;
+//ComPrintf("SV:: Sending spawned message\n");
+			continue;
 		}
 		
-		m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
-		m_clients[i].m_bSend = false;
+		//havent spawned yet. need to send spawn info
+		if(m_clients[i].m_state == CL_CONNECTED)
+		{
+			SendSpawnParms(m_clients[i]);
+			m_pSock->SendTo(m_clients[i].m_netChan.m_sendBuffer, m_clients[i].m_netChan.m_addr);
+			m_clients[i].m_bSend = false;
+		}
 	}
 }
 
-
-
+//======================================================================================
 /*
 ==========================================
 Run a server frame
@@ -632,7 +700,7 @@ void CServer::RunFrame()
 	WritePackets();
 }
 
-
+//======================================================================================
 //======================================================================================
 /*
 ==========================================

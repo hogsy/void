@@ -30,6 +30,7 @@ Reset the client
 */
 void SVClient::Reset()
 {
+	m_id = 0;
 	m_netChan.Reset();
 	m_state = CL_FREE;
 	m_numBuf=0;
@@ -152,10 +153,10 @@ bool SVClient::ReadyToSend()
 //======================================================================================
 //======================================================================================
 
-void SVClient::BeginMessage(char msgid, int estSize)
+void SVClient::BeginMessage(int msgid, int estSize)
 {
 	MakeSpace(estSize);
-	WriteByte(msgid);
+	WriteInt(msgid);
 }
 
 

@@ -21,7 +21,8 @@ struct SVClient
 	void ValidateBuffer();
 	void Reset();
 	
-	void BeginMessage(char msgid, int estSize);
+	//fix me, shoud be cahr
+	void BeginMessage(int msgid, int estSize);
 	
 	void WriteByte(byte b);
 	void WriteChar(char c);
@@ -36,11 +37,11 @@ struct SVClient
 	bool ReadyToSend();
 
 	//Flags and States
-	bool		m_bDropClient;	//drop client if this is true	
+	bool		m_bDropClient;	//drop client if this is true
 	bool		m_bSend;
 
 	//keep track of how many spawn messages have been sent
-	//when it equals SVC_SPAWN, then the client will be assumed to have spawned
+	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
 	int			m_spawnState;
 
 	int			m_state;
@@ -54,6 +55,7 @@ struct SVClient
 	CNetBuffer* m_backBuffer[MAX_BACKBUFFERS];
 
 	//Game specifc
+	int			m_id;
 	char		m_name[32];
 };
 

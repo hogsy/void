@@ -63,7 +63,7 @@ bool CNetChan::CanSend()
 {
 	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
-ComPrintf("Choked\n");
+ComPrintf("CNetChan::Choked\n");
 	m_numChokes ++;
 	return false;
 }
@@ -86,7 +86,7 @@ void CNetChan::SetRate(int rate)
 {
 	if(rate < 1000 || rate > 10000)
 		rate = 2500;
-	m_rate = 1/rate;
+	m_rate = 1.0/rate;
 }
 
 
@@ -138,7 +138,7 @@ void CNetChan::PrepareTransmit()
 	// copy the reliable message to the packet first
 	if(send_reliable)
 	{
-ComPrintf("CNetChan: Sending reliably\n");
+//ComPrintf("CNetChan: Sending reliably\n");
 		m_sendBuffer += m_reliableBuffer;
 		m_lastOutReliableMsgId = m_outMsgId;
 		m_bInReliableMsg = 1;

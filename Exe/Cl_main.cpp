@@ -240,54 +240,6 @@ void CClient::RunFrame()
 
 	SendUpdates();
 }
-/*
-=====================================
-Talk message sent to server if 
-we are connected
-=====================================
-*/
-void CClient::Talk(const char *msg)
-{
-#if 0
-	if((m_ingame==true) &&  (argc > 1))
-	{
-		char message[80];
-		char *p = message;
-
-		//reconstruct message
-		for(int x=0;x<=argc;x++)
-		{
-			char *c = argv[x];
-			
-			while(*c && *c!='\0')
-			{
-				*p=*c;
-				c++;
-				p++;
-			}
-			
-			//no more strings, break
-			if((x+1)>=argc)
-			{
-				*p = '\0';
-				break;
-			}
-			//add a space
-			*p = ' ';
-			p++;
-		}
-/*
-		g_pClient->m_sendBuf.WriteLong(g_pClient->m_sendseq);
-		g_pClient->m_sendBuf.WriteByte(CL_STRING);
-		g_pClient->m_sendBuf.WriteString(message);
-		g_pClient->m_sendseq++;
-		g_pClient->m_sock.bsend=true;
-*/
-//		ComPrintf("%s:%s\n",g_pClient->m_clname->string,message);
-		return;
-	}
-#endif
-}
 
 //======================================================================================
 //======================================================================================
@@ -349,7 +301,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_DISCONNECT:
 		Disconnect();
 	case CMD_TALK:
-		Talk(parms.StringTok(1));
+		Talk(parms.String());
 		break;
 	}
 }

@@ -86,11 +86,15 @@ private:
 	void HandleConnectReq();
 	void HandleChallengeReq();
 
+	void ParseClientMessage(SVClient &client);
+
 	//FRAME proceedures
 	void ProcessQueryPacket();
 	void ReadPackets();
 	void WritePackets();
+	
 	void SendSpawnParms(SVClient &client);
+	void SendReconnect(SVClient &client);
 
 	//=================================================
 	//CVars
