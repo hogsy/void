@@ -10,14 +10,14 @@
 Constructor/Destructor
 ==========================================
 */
-CClientCmdHandler::CClientCmdHandler(CClient &owner) : 
+CClientGameCmd::CClientGameCmd(CClient &owner) : 
 							m_Parms(80), m_refClient(owner)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
 }
 
-CClientCmdHandler::~CClientCmdHandler()
+CClientGameCmd::~CClientGameCmd()
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 		m_cmdBuffer[i] = 0;
@@ -29,7 +29,7 @@ CClientCmdHandler::~CClientCmdHandler()
 Activate/Deactivate Listener
 ==========================================
 */
-void CClientCmdHandler::SetListenerState(bool on)
+void CClientGameCmd::SetListenerState(bool on)
 {
 	if(on = true)
 	{
@@ -48,7 +48,7 @@ void CClientCmdHandler::SetListenerState(bool on)
 Run all the commands added into the buffer
 ==========================================
 */
-void CClientCmdHandler::RunCommands()
+void CClientGameCmd::RunCommands()
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -67,7 +67,7 @@ void CClientCmdHandler::RunCommands()
 Handle Key Event
 ==========================================
 */
-void CClientCmdHandler::HandleKeyEvent(const KeyEvent &kevent)
+void CClientGameCmd::HandleKeyEvent(const KeyEvent &kevent)
 {
 	//check if there is a command bound to that key
 	if(m_cmdKeys[(kevent.id)].szCommand[0])
@@ -91,7 +91,7 @@ void CClientCmdHandler::HandleKeyEvent(const KeyEvent &kevent)
 Handle Cursor Move Event
 ==========================================
 */
-void CClientCmdHandler::HandleCursorEvent(const float &ix,
+void CClientGameCmd::HandleCursorEvent(const float &ix,
 										  const float &iy,
 										  const float &iz)
 {
@@ -105,7 +105,7 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 Bind a command to a key
 ==========================================
 */
-void CClientCmdHandler::BindFuncToKey(const CParms &parms)
+void CClientGameCmd::BindFuncToKey(const CParms &parms)
 {
 	//no arguments
 	int argc = parms.NumTokens();
@@ -179,7 +179,7 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 Default key bindings
 ======================================
 */
-void CClientCmdHandler::IntializeBinds()
+void CClientGameCmd::IntializeBinds()
 {
 	CParms parms(80);
 
@@ -217,7 +217,7 @@ void CClientCmdHandler::IntializeBinds()
 Unbind a key
 ==========================================
 */
-void CClientCmdHandler::Unbind(const CParms &parms)
+void CClientGameCmd::Unbind(const CParms &parms)
 {
 	if(parms.NumTokens() <2)
 	{
@@ -265,7 +265,7 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 Print out a list of current binds
 ==========================================
 */
-void CClientCmdHandler::BindList() const
+void CClientGameCmd::BindList() const
 {
 	ComPrintf(" Client Bindings \n");
 	ComPrintf("=================\n");
@@ -301,7 +301,7 @@ void CClientCmdHandler::BindList() const
 Unbind all the keys
 ==========================================
 */
-void CClientCmdHandler::Unbindall()
+void CClientGameCmd::Unbindall()
 {
 	for(int i=0;i<256;i++)
 	{
@@ -319,7 +319,7 @@ void CClientCmdHandler::Unbindall()
 Add command to execute buffer
 ==========================================
 */
-void CClientCmdHandler::AddToCmdBuffer(ClientKey * const pcommand)
+void CClientGameCmd::AddToCmdBuffer(ClientKey * const pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -340,7 +340,7 @@ void CClientCmdHandler::AddToCmdBuffer(ClientKey * const pcommand)
 Remove from execute buffer
 ==========================================
 */
-void CClientCmdHandler::RemoveFromCmdBuffer(const ClientKey * pcommand)
+void CClientGameCmd::RemoveFromCmdBuffer(const ClientKey * pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
@@ -357,7 +357,7 @@ void CClientCmdHandler::RemoveFromCmdBuffer(const ClientKey * pcommand)
 Write all the bound commands to file
 ==========================================
 */
-void CClientCmdHandler::WriteBinds(const char * szBindsfile)
+void CClientGameCmd::WriteBinds(const char * szBindsfile)
 {
 	char file[COM_MAXPATH];
 	sprintf(file,"%s/%s",System::GetExePath(),szBindsfile);
@@ -365,7 +365,7 @@ void CClientCmdHandler::WriteBinds(const char * szBindsfile)
 	FILE * fp = fopen(file,"w");
 	if(!fp)
 	{
-		ComPrintf("CClientCmdHandler::WriteBinds\n");
+		ComPrintf("CClientGameCmd::WriteBinds\n");
 		return;
 	}
 

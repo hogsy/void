@@ -11,7 +11,6 @@ using namespace VoidSound;
 Constructor/Destructor
 ==========================================
 */
-
 CSoundChannel::CSoundChannel()
 {
 	m_pDSBuffer= 0;

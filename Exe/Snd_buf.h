@@ -71,7 +71,7 @@ public:
 	bool  InUse()	   const;
 	void  PrintStats() const;
 	IDirectSoundBuffer * GetDSBuffer() const;
-	CWaveFile		   * GetWaveData() const;
+	const CWaveFile	   * GetWaveData() const;
 	const char         * GetFilename() const;
 	
 private:

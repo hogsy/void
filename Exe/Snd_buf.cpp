@@ -1,3 +1,4 @@
+#include "Sys_hdr.h"
 #include "Snd_hdr.h"
 #include "Snd_buf.h"
 
@@ -200,15 +201,6 @@ bool CSoundBuffer::Create(const char * path)
 	if(!m_pWaveFile)
 		return false;
 
-/*	m_pWaveData = new CWaveFile(path);
-	if(m_pWaveData->IsEmpty())
-	{
-		delete m_pWaveData;
-		m_pWaveData = 0;
-		return false;
-	}
-*/
-
 	WAVEFORMATEX waveFormat;
 	// Set up wave format structure. 
     memset(&waveFormat, 0, sizeof(WAVEFORMATEX)); 
@@ -267,7 +259,6 @@ void CSoundBuffer::Destroy()
 	{
 		m_pDSBuffer->Release();
 		m_pDSBuffer = 0;
-//		delete m_pWaveData;
 		GetWaveManager()->Release(m_pWaveFile);
 		m_pWaveFile = 0;
 	}
@@ -288,9 +279,9 @@ bool CSoundBuffer::InUse() const
 const char * CSoundBuffer::GetFilename() const 
 { 
 	if(m_pWaveFile) 
-	return m_pWaveFile->GetFileName(); 
+		return m_pWaveFile->GetFileName(); 
   return 0; 
 }
 
 IDirectSoundBuffer * CSoundBuffer::GetDSBuffer() const { return m_pDSBuffer; }
-CWaveFile		   * CSoundBuffer::GetWaveData() const { return m_pWaveFile; }
+const CWaveFile	   * CSoundBuffer::GetWaveData() const { return m_pWaveFile; }

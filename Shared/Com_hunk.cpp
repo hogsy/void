@@ -1,3 +1,4 @@
+#include "Com_defs.h"
 #include "Com_hunk.h"
 
 I_HunkManager * g_pHunkManager=0;

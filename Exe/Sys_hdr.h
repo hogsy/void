@@ -3,10 +3,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#define __VOIDALPHA	1
-
 #include "Com_defs.h"
 #include "Com_mem.h"
+#include "Com_parms.h"
 
 #include "I_hunkmem.h"
 #include "I_console.h"

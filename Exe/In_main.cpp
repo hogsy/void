@@ -17,7 +17,7 @@ LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 Constructor
 =====================================
 */
-CInput::CInput() : m_pVarExclusive("in_ex","0", CVAR_INT,CVAR_ARCHIVE)
+CInput::CInput() : m_pVarExclusive("in_ex","false", CVAR_BOOL,CVAR_ARCHIVE)
 {
 	m_pStateManager = new CInputState();
 

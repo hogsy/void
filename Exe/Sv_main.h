@@ -2,7 +2,9 @@
 #define VOID_GAME_SERVER
 
 #include "Sys_hdr.h"
+#include "Com_buffer.h"
 #include "Net_server.h"
+#include "Com_vector.h"
 #include "I_game.h"
 
 /*

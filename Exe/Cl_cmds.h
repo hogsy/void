@@ -109,14 +109,14 @@ Client Command Handler
 ======================================
 */
 
-class CClientCmdHandler : public I_InKeyListener,
-								 I_InCursorListener
+class CClientGameCmd : public I_InKeyListener,
+									 I_InCursorListener
 {
 public:
 
 	//FIXME, change parm to just a vector to hold mouse co-ords ?
-	CClientCmdHandler(CClient &owner);
-	~CClientCmdHandler();
+	CClientGameCmd(CClient &owner);
+	~CClientGameCmd();
 
 	void IntializeBinds();
 

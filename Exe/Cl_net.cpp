@@ -1,3 +1,27 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include "Cl_main.h"
 #include "I_renderer.h"
 #include "I_hud.h"
@@ -378,7 +402,7 @@ bool CClient::ValidateRate(const CParms &parms)
 		return false;
 	}
 
-	if(rate < 1000 || rate > 30000)
+	if(rate < 1000 || rate > 10000)
 	{
 		ComPrintf("Rate is out of range\n");
 		return false;
@@ -415,3 +439,4 @@ void CClient::ShowNetStats()
 	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
 }
+

@@ -2,7 +2,10 @@
 #define VOID_CLIENT_MAIN
 
 #include "Sys_hdr.h"
+#include "Com_buffer.h"
+#include "Net_defs.h"
 #include "Net_client.h"
+#include "Com_vector.h"
 #include "Cl_defs.h"
 #include "I_clientRenderer.h"
 
@@ -102,7 +105,7 @@ private:
 	//==================================================
 	//Subsystems
 
-	friend class CClientCmdHandler;
+	friend class CClientGameCmd;
 	
 	I_Renderer		  * m_pRender;
 	I_ClientRenderer  * m_pClRen;
@@ -110,7 +113,7 @@ private:
 
 	CSoundManager	  * m_pSound;
 	CMusic		      * m_pMusic;
-	CClientCmdHandler * m_pCmdHandler;
+	CClientGameCmd    * m_pCmdHandler;
 	CNetClient		  * m_pNetCl;
 
 	//==================================================

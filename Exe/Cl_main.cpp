@@ -37,7 +37,7 @@ CClient::CClient(I_Renderer * prenderer,
 	m_pClRen = m_pRender->GetClient();
 	m_pHud   = m_pRender->GetHud();
 
-	m_pCmdHandler = new CClientCmdHandler(*this);
+	m_pCmdHandler = new CClientGameCmd(*this);
 
 	//Setup network listener
 	m_pNetCl= new CNetClient(this);

@@ -2,6 +2,9 @@
 #define VOID_CONSOLE_CLASS
 
 //#define VOID_DOS_CONSOLE	1
+
+#include "In_defs.h"
+
 /*
 ==========================================
 Console Command

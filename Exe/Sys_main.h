@@ -3,24 +3,26 @@
 
 #define INCLUDE_MUSIC
 
-#include "Sys_hdr.h"
-#include "Sys_time.h"
-#include "In_main.h"
-#include "Mus_main.h"
-#include "Sv_main.h"
-#include "I_renderer.h"
-#include "I_filesystem.h"
-#include "Sys_exp.h"
-#include "Cl_main.h"
-#include "Snd_main.h"
 #include "Sys_cons.h"
+#include "Sys_time.h"
 
 //========================================================================================
 
 const char VOID_MAINWINDOWCLASS[]	= "Void";
 const char VOID_MAINWINDOWTITLE[]	= "Void";
-
 const char VOID_DEFAULTBINARYNAME[]	= "Void.exe";
+
+
+struct	VoidExport;
+struct  I_Renderer;
+struct 	RenderInfo_t;
+
+class	CInput;
+class	CFileSystem;
+class	CServer;
+class	CClient;
+class	CSoundManager;
+class	CMusic;
 
 //========================================================================================
 

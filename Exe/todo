@@ -2,7 +2,6 @@ EXE
 ==============================================================
 -Move client movement to server
 -Add free/in use SoundSource lists in 3dsound manager
--Add proper channel allocation with channel properties ?
 
 
 

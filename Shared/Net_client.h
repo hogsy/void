@@ -35,6 +35,8 @@ namespace VoidNet
 	class CNetChan;
 }
 
+struct NetChanState;
+
 /*
 ======================================================================================
 Responsible for handling all network communication for the client

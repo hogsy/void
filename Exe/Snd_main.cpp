@@ -620,7 +620,7 @@ Stop the given channel
 */
 void CSoundManager::SStop(int channel)
 {
-	if(channel >= 0)
+	if(channel >= 0 && channel < MAX_CHANNELS)
 	{
 		if(m_Channels[channel].IsPlaying())
 		{
@@ -629,7 +629,7 @@ void CSoundManager::SStop(int channel)
 			return;
 		}
 	}
-	ComPrintf("Usage : sstop <channel num>\n");
+	ComPrintf("Usage : sstop <channel num 1-16>\n");
 }
 
 /*

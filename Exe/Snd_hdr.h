@@ -1,7 +1,6 @@
 #ifndef VOID_SOUND_PRIVHDR
 #define VOID_SOUND_PRIVHDR
 
-#include <windows.h>
 #include <mmsystem.h>
 #include <dsound.h>
 
