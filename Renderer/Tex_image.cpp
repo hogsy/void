@@ -667,17 +667,20 @@ Write am Image to Disk - only 24 bit rgb images work
 
 void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 {
+	char path[COM_MAXPATH];
+	strcpy(path,name);
+
 	if(!m_pData)
 	{
-		ComPrintf("CImageWriter::Write: No file data to write to %s\n", name);
+		ComPrintf("CImageWriter::Write: No file data to write to %s\n", path);
 		return;
 	}
 
 	FILE *fp;
-	fp = fopen(name,"w+b");
+	fp = fopen(path,"wb");
 	if(!fp)
 	{
-		ComPrintf("CImageWriter::Write: Unable to open %s for writing\n", name);
+		ComPrintf("CImageWriter::Write: Unable to open %s for writing\n", path);
 		return;
 	}
 
@@ -692,7 +695,7 @@ void CImageWriter::Write(const char *name, EImageFileFormat iformat)
 	}
 	fclose(fp);
 
-	ComPrintf("CImageReader::Write:Wrote %s\n", name);
+	ComPrintf("CImageReader::Write: Wrote %s\n", path);
 }
 
 /*
@@ -764,7 +767,6 @@ void CImageWriter::Write_PCX( FILE *fp)
 	fwrite(&pcx, sizeof(PCX_header), 1, fp);
 	// write the rest
 	fwrite(pack2, length, 1, fp);
-	
 	delete [] pack2;
 }
 
@@ -775,7 +777,7 @@ void CImageWriter::Write_PCX( FILE *fp)
 Write TGA file
 ==========================================
 */
-void CImageWriter::Write_TGA( FILE *fp)
+void CImageWriter::Write_TGA(FILE *fp)
 {
 	// write output file 
 	fputc(0, fp);
@@ -813,9 +815,6 @@ void CImageWriter::Write_TGA( FILE *fp)
 	}
 }
 
-//======================================================================================
-//======================================================================================
-
 
 /*
 typedef struct TGA_Header
@@ -845,129 +844,3 @@ Image Type           Description
 
 
 
-#if 0
-//
-// Load a jpeg using jpeglib
-//
-
-// This procedure is called by the IJPEG library when an error
-// occurs.
-static void error_exit (j_common_ptr pcinfo){
-	// Create the message string
-	char sz[256];
-	(pcinfo->err->format_message) (pcinfo, sz);
-
-	err->CriticalError(ERROR_FORMAT_NOT_SUPPORTED, "%s\n",sz);
-}
-
-
-static void init_source (j_decompress_ptr cinfo){
-}
-
-
-static boolean fill_input_buffer (j_decompress_ptr cinfo){
-	struct jpeg_source_mgr * src = cinfo->src;
-	static JOCTET FakeEOI[] = { 0xFF, JPEG_EOI };
-
-	/* Generate warning */
-	err->Log(UNKNOWN_ERROR, "Premature end of file\n");
-  
-	/* Insert a fake EOI marker */
-	src->next_input_byte = FakeEOI;
-	src->bytes_in_buffer = 2;
-
-	return TRUE;
-}
-
-
-static void skip_input_data (j_decompress_ptr cinfo, long num_bytes) {
-	struct jpeg_source_mgr * src = cinfo->src;
-  
-	if(num_bytes >= (long)src->bytes_in_buffer) {
-		fill_input_buffer(cinfo);
-		return;
-	}
-
-	src->bytes_in_buffer -= num_bytes;
-	src->next_input_byte += num_bytes;
-}
-
-
-void term_source (j_decompress_ptr cinfo){
-  /* no work necessary here */
-}
-
-
-void TexMng::JPG_Decode(VFile *vf, texinfo *tex){
-	
-	jpeg_decompress_struct cinfo;	// IJPEG decoder state.
-	jpeg_error_mgr         jerr;	// Custom error manager.
-
-	cinfo.err = jpeg_std_error (&jerr);
-	jerr.error_exit = error_exit;	// Register custom error manager.
-
-	jpeg_create_decompress (&cinfo);
-
-	
-	struct jpeg_source_mgr * src;
-	//jpeg_stdio_src(&cinfo, fp);
-	
-	cinfo.src= (struct jpeg_source_mgr *) (*cinfo.mem->alloc_small) 
-		((j_common_ptr) &cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_source_mgr));
-
-	
-	src = cinfo.src;
-
-	src->init_source = init_source;
-	src->fill_input_buffer = fill_input_buffer;
-	src->skip_input_data = skip_input_data;
-	src->resync_to_restart = jpeg_resync_to_restart;	// use default method
-	src->term_source = term_source;
-
-	// Set up data pointer
-	src->bytes_in_buffer = vf->size;
-	src->next_input_byte = vf->mem;
-
-	jpeg_read_header (&cinfo, TRUE);
-
-	cinfo.do_fancy_upsampling = FALSE;		// fast decompression
-
-    cinfo.dct_method = JDCT_FLOAT;			// Choose floating point DCT method.
-
-
-
-	jpeg_start_decompress(&cinfo);
-
-    tex->m_width = cinfo.output_width;
-    tex->m_height = cinfo.output_height;
-
-	if (cinfo.out_color_space == JCS_GRAYSCALE){
-		/*tex->bpp=1;
-		tex->mem = (byte *) malloc(1*tex->m_width*tex->m_height);
-		if (!tex->mem) {
-			tex->mem=NULL;
-			return;
-		}*/
-		err->CriticalError(UNKNOWN_ERROR,"grayscale not supported!!!");
-	}
-	else{
-		tex->bpp=3;
-		tex->mem = (byte *) malloc(3*tex->m_width*tex->m_height);
-		if (!tex->mem) {
-			return;
-		}
-		
-		byte *pDst=tex->mem;
-		byte **ppDst=&pDst;
-		int num_scanlines=0;
-		while (cinfo.output_scanline < cinfo.output_height){
-			num_scanlines=jpeg_read_scanlines (&cinfo, ppDst, 1);
-			*ppDst += num_scanlines * 3 * cinfo.output_width;
-		}
-	}
-	
-	jpeg_finish_decompress(&cinfo);
-
-	jpeg_destroy_decompress (&cinfo);
-}
-#endif

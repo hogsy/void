@@ -36,7 +36,7 @@ CVar g_varGLExtensions("r_glExts", "None", CVAR_STRING, CVAR_READONLY);
 Take a screen shot, write it to disk
 ======================================
 */
-void ScreenShot(const char *name, EImageFileFormat type)
+void ScreenShot(EImageFileFormat type)
 {
 	char checkname[260];
 
@@ -44,41 +44,33 @@ void ScreenShot(const char *name, EImageFileFormat type)
 	sprintf(checkname, "%s\\%s\\", GetCurPath(), "Shots");
 	Util::ConfirmDir(checkname);
 
-	if (!name)
-	{
-		int	  i;
-		FILE *f=0;
-		char  shotname[80]; 
 
-		if(type== FORMAT_PCX)
-			strcpy(shotname,"void00.pcx");
-		else
-			strcpy(shotname,"void00.tga");
+	FILE *fp =0;
+	char  shotname[80]; 
 
-		for (i=0 ; i<=99 ; i++) 
-		{
-			shotname[4] = i/10 + '0';
-			shotname[5] = i%10 + '0';
-			sprintf(checkname,"%s\\%s\\%s", GetCurPath(), "Shots", shotname);
-			f = fopen(checkname,"rb");
-			if (!f)
-				break;
-			fclose(f);
-			f = 0;
-		}
-
-		if (i== 100) 
-		{
-			ComPrintf("Too many Screenshots in Shots folder. Please remove some\n");
-			return;
-		}
-	}
+	if(type== FORMAT_PCX)
+		strcpy(shotname,"void00.pcx");
 	else
+		strcpy(shotname,"void00.tga");
+
+	for (int i=0 ; i<=99 ; i++) 
 	{
-		if(type == FORMAT_PCX)
-			sprintf(checkname, "%s\\%s\\%s.pcx", GetCurPath(), "Shots", name);
-		else
-			sprintf(checkname, "%s\\%s\\%s.tga", GetCurPath(), "Shots", name);
+		shotname[4] = i/10 + '0';
+		shotname[5] = i%10 + '0';
+		sprintf(checkname,"%s/Shots/%s", GetCurPath(), shotname);
+
+		fp = fopen(checkname,"rb");
+
+		if (!fp)
+			break;
+		fclose(fp);
+
+	}
+
+	if (i== 100) 
+	{
+		ComPrintf("Too many Screenshots in Shots folder. Please remove some\n");
+		return;
 	}
 
 	//Got file name, Now actually take the shot and write it
@@ -109,22 +101,12 @@ void CRConsole::HandleCommand(int cmdId, const CParms &parms)
 	{
 	case CMD_TGASHOT:
 		{
-			char fileName[80];
-			parms.StringTok(1,fileName,80);
-			if(strlen(fileName))
-				ScreenShot(fileName,FORMAT_TGA);
-			else
-				ScreenShot(0,FORMAT_TGA);
+			ScreenShot(FORMAT_TGA);
 			break;
 		}
 	case CMD_PCXSHOT:
 		{
-			char fileName[80];
-			parms.StringTok(1,fileName,80);
-			if(strlen(fileName))
-				ScreenShot(fileName,FORMAT_PCX);
-			else
-				ScreenShot(0,FORMAT_PCX);
+			ScreenShot(FORMAT_PCX);
 			break;
 		}
 	}
