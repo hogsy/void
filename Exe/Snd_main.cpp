@@ -30,7 +30,6 @@ namespace
 BOOL CALLBACK EnumSoundDevices(LPGUID lpGuid,  const char * szDesc,
 							  const char * szModule, void * pContext);
 
-
 /*
 ======================================
 A Sound Source
@@ -64,10 +63,11 @@ CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCH
 								 m_cRollOffFactor("snd_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE)
+								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_pPrimary(new CPrimaryBuffer)
 {
 	m_pListener = 0;	
-	m_pPrimary = new CPrimaryBuffer;
+//	m_pPrimary = new CPrimaryBuffer;
 
 	m_pWaveManager = new CWaveManager(MAX_WAVEFILES);
 
