@@ -1,9 +1,6 @@
-
-
 #include "Mdl_md2.h"
 #include "I_file.h"
 #include "Client.h"
-
 
 typedef struct
 {
@@ -26,8 +23,6 @@ typedef struct
    int offsetEnd;
 } md2_header_t;
 
-
-
 /*
 =======================================
 Constructor 
@@ -37,6 +32,7 @@ CModelMd2::CModelMd2()
 {
 	frames = NULL;
 	cmds = NULL;
+	skin_names = NULL;
 }
 
 
@@ -54,8 +50,9 @@ CModelMd2::~CModelMd2()
 		delete [] frames;
 	}
 
+	//Delete raw memory
 	if (cmds)
-		delete cmds;
+		delete [] cmds;
 }
 
 
@@ -70,10 +67,9 @@ void CModelMd2::LoadModel(const char *file)
 	modelfile = new char[strlen(file)+1];
 	strcpy(modelfile, file);
 
-	ComPrintf("loading %s\n", modelfile);
+	ComPrintf("CModelMd2::LoadModel: Loading %s\n", modelfile);
 
 	CFileBuffer	 fileReader;
-
 	if(!fileReader.Open(modelfile))
 	{
 		// load default model
@@ -82,11 +78,10 @@ void CModelMd2::LoadModel(const char *file)
 		return;
 	}
 
-
 	md2_header_t header;
 	fileReader.Read(&header, sizeof(md2_header_t), 1);
 
-// make sure it's a valid md2
+	// make sure it's a valid md2
 	if ((header.id != 0x32504449) || (header.version != 8))
 	{
 		ComPrintf("%s - invalid md2 file", modelfile);
@@ -98,19 +93,14 @@ void CModelMd2::LoadModel(const char *file)
 	num_skins = header.numSkins;
 	num_frames= header.numFrames;
 
-
-// the gl command list
-	cmds = (void*) new byte[header.numGlCommands * 4];
-	if (!cmds) FError("mem for model command list");
+	// the gl command list
+	cmds = new byte [header.numGlCommands * 4];
 	fileReader.Seek(header.offsetGlCommands, SEEK_SET);
 	fileReader.Read(cmds, 4, header.numGlCommands);
 
-
-// vertex info for all frames
-	frames = new vector_t*[num_frames];
-	if (!frames) FError("mem for model frames");
+	// vertex info for all frames
+	frames = new vector_t* [num_frames];
 	fileReader.Seek(header.offsetFrames, SEEK_SET);
-
 
 	int f, v;
 	byte vertex[4];
@@ -120,8 +110,6 @@ void CModelMd2::LoadModel(const char *file)
 	for (f = 0; f < num_frames; f++)
 	{
 		frames[f] = new vector_t[header.numVertices];
-		if (!frames[f]) 
-			FError("mem for frame vertices");
 
 		fileReader.Read(&scale, sizeof(float), 3);
 		fileReader.Read(&trans, sizeof(float), 3);
@@ -140,9 +128,7 @@ void CModelMd2::LoadModel(const char *file)
 
 
 	// skin names
-	skin_names = new char*[header.numSkins];
-	if (!skin_names) FError("mem for skin names");
-
+	skin_names = new char* [header.numSkins];
 
 	fileReader.Seek(header.offsetSkins, SEEK_SET);
 	for (int s=0; s<header.numSkins; s++)
@@ -152,7 +138,6 @@ void CModelMd2::LoadModel(const char *file)
 		fileReader.Read(tskin, 64, 1);
 
 		skin_names[s] = new char[64];
-		if (!skin_names[s])	 FError("mem for skin names2");
 
 		// strip path and extension
 		for (int c=strlen(tskin); c>=0; c--)
@@ -187,10 +172,8 @@ void CModelMd2::LoadFail()
 	int *cmdint;
 	model_glcmd_t *glcmd;
 
-
-// the gl command list
-	cmds = (void*) new byte[33*4];
-	if (!cmds) FError("mem for model fail!");
+	// the gl command list
+	cmds = new byte [33*4];
 
 	cmdint = (int*)cmds;
 	*cmdint = -6;	// triangle fan
@@ -261,12 +244,9 @@ void CModelMd2::LoadFail()
 
 	*cmdint = 0;
 
-// vertex info
-	frames = new vector_t*[1];
-	if (!frames) FError("mem for model fail frames");
-
+	// vertex info
+	frames = new vector_t* [1];
 	frames[0] = new vector_t[5];
-	if (!frames[0]) FError("mem for model fail vertices");
 
 	frames[0][0].x = 0;
 	frames[0][0].y = 0;
@@ -289,20 +269,13 @@ void CModelMd2::LoadFail()
 	frames[0][4].z = 0;
 
 
-
 	// skin names
-
 	skin_names = new char*[1];
-	if (!skin_names) FError("mem for skin names3");
-
 	// md2 skin name list is 64 char strings
 	skin_names[0] = new char[64];
-	if (!skin_names[0])	 FError("mem for skin names4");
-
 	strcpy(skin_names[0], "none");
 	LoadSkins();
 }
-
 
 
 /*

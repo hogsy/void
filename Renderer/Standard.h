@@ -4,7 +4,6 @@
 //disable those damn warnings
 #pragma warning(disable : 4305)		//truncation from const double to float
 
-#include "Com_mem.h"
 #include "Com_defs.h"
 
 #include "I_hunkmem.h"

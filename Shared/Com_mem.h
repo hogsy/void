@@ -1,7 +1,7 @@
 #ifndef VOID_COM_MEMORYMANAGER
 #define VOID_COM_MEMORYMANAGER
 
-#include "Com_defs.h"
+#include <crtdbg.h>
 
 /*
 ======================================
@@ -9,99 +9,83 @@ Must be defined in module to handle
 out of memory conditions
 ======================================
 */
-int HandleOutOfMemory(size_t size);
+extern const char MEM_SZLOGFILE[];
+extern int HandleOutOfMemory(size_t size);
 
 
-/*/
-======================================================================================
-Every module includes this
-a global object is created on the stack, and we use that to allocate
-all dynamic memory in the module
-======================================================================================
+/*
+================================================
+Memory Funcs
+================================================
 */
-class CMemManager 
-{
-public:
-
-	CMemManager(const char * memfile);
-	~CMemManager();
-
-	void Init();
-	void Shutdown(void);
-	
-	void * Malloc(uint size);
-	void * Realloc(void *mem, uint size);
-	void Free(void *mem);
+void *	Mem_Malloc(uint size);
+void *	Mem_Realloc(void *mem, uint size);
+void	Mem_Free(void *mem);
 
 #ifdef _DEBUG
-	void * MallocDbg(uint size, const char * file, int line);
-	void * ReallocDbg(void *mem, uint size, const char * file, int line);
-	void FreeDbg(void *mem);
+
+void *	Mem_MallocDbg(uint size, const char * file, int line);
+void *	Mem_ReallocDbg(void *mem, uint size, const char * file, int line);
+void	Mem_FreeDbg(void *mem);
+
 #endif
-	
-	void PrintStats();
-	bool Validate();
 
-private:
-
-	ulong m_numAllocs;
-	ulong m_curAllocs;
-	ulong m_memAllocated;
-
-#ifdef _DEBUG
-	HFILE	* h_memfile;
-#endif
-};
-
-//The global reference to the mem manager
-extern CMemManager g_memManager;
-
-//======================================================================================
-//global Custom allocator funcs
-//======================================================================================
-
+/*
+================================================
+Definitions to override regular funcs
+================================================
+*/
 //Debug mode
 #ifdef _DEBUG
 
-#define MALLOC(size)		g_memManager.MallocDbg(size,__FILE__,__LINE__)
-#define REALLOC(p,size)		g_memManager.ReallocDbg(p,size,__FILE__,__LINE__)
-#define FREE(p)				g_memManager.FreeDbg(p)
+#define MALLOC(size)		Mem_MallocDbg(size,__FILE__,__LINE__)
+#define REALLOC(p,size)		Mem_ReallocDbg(p,size,__FILE__,__LINE__)
+#define FREE(p)				Mem_FreeDbg(p)
 
-//standard new/delete
-inline void* operator new(uint size)
-{	return g_memManager.MallocDbg(size,__FILE__,__LINE__);
+//default new/delete
+inline void* __cdecl operator new(uint size)
+{	return Mem_MallocDbg(size,__FILE__,__LINE__);
 }
-inline void  operator delete (void* ptr, const char * file, int line)
-{	g_memManager.FreeDbg(ptr);	
-}
-
-//Placement new/delete
-inline void* operator new(uint size, const char * file, int line)
-{	return g_memManager.MallocDbg(size,file,line);
+inline void  __cdecl operator delete (void* ptr)
+{	Mem_FreeDbg(ptr);
 }
 
-inline void  operator delete (void* ptr)
-{	g_memManager.FreeDbg(ptr);	
+//Custom new/delete
+inline void* __cdecl operator new(uint size, const char * file, int line)
+{	return Mem_MallocDbg(size,file,line);
 }
 
-#define DEBUG_NEW new(__FILE__,__LINE__)
-#define new DEBUG_NEW
+inline void  __cdecl operator delete (void* ptr, const char * file, int line)
+{	Mem_FreeDbg(ptr);	
+}
 
 //Release mode
 #else
 
-#define MALLOC(size)		g_memManager.Malloc(size)
-#define REALLOC(p,size)		g_memManager.Realloc(p, size)
-#define FREE(p)				g_memManager(p)
+#define MALLOC(size)		Mem_Malloc(size)
+#define REALLOC(p,size)		Mem_Realloc(p, size)
+#define FREE(p)				Mem_Free(p)
 
-inline void* operator new(uint size)
-{	return g_memManager.Malloc(size);
+inline void* __cdecl operator new(uint size)
+{	return Mem_Malloc(size);
 }
 
-inline void  operator delete(void* ptr)	 
-{	g_memManager.Free(ptr);	
+inline void  __cdecl operator delete(void* ptr)	 
+{	Mem_Free(ptr);	
 }
-
 #endif
+
+/*
+================================================
+Override new to use 3 parms in debug mode
+================================================
+*/
+#ifdef _DEBUG
+	#define VOID_NEW new(__FILE__,__LINE__)
+#else
+	#define VOID_NEW new
+#endif
+
+#define new	VOID_NEW
 
 #endif

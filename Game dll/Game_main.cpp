@@ -2,7 +2,8 @@
 #include "Game_ents.h"
 #include "Game_defs.h"
 
-CMemManager g_memManager("mem_game.log");
+//CMemManager g_memManager("mem_game.log");
+const char MEM_SZLOGFILE[] = "mem_game.log";
 
 I_GameHandler * g_pImports=0;
 I_Console * g_pCons=0;

@@ -33,6 +33,8 @@ typedef unsigned int  uint;
 typedef unsigned short ushort;
 typedef unsigned word;
 
+#include <Com_mem.h>
+
 //Every apps common print function
 void ComPrintf(const char* text, ...);
 

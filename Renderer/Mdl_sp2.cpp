@@ -21,8 +21,7 @@ Constructor
 =======================================
 */
 CModelSp2::CModelSp2()
-{
-	frames = NULL;
+{	frames = NULL;
 }
 
 
@@ -34,7 +33,7 @@ Destructor
 CModelSp2::~CModelSp2()
 {
 	if (frames)
-		delete frames;
+		delete [] frames;
 }
 
 
@@ -65,7 +64,7 @@ void CModelSp2::LoadModel(const char *file)
 	sp2_header_t header;
 	fileReader.Read(&header, sizeof(sp2_header_t), 1);
 
-// make sure it's a valid sp2
+	// make sure it's a valid sp2
 	if ((header.ident != (('2'<<24)+('S'<<16)+('D'<<8)+'I')) || (header.version != 2))
 	{
 		ComPrintf("%s - invalid sp2 file", modelfile);
@@ -79,7 +78,7 @@ void CModelSp2::LoadModel(const char *file)
 
 
 	frames = new sp2_frame_t[num_frames];
-	if (!frames) FError("mem for sp2 frames");
+
 	fileReader.Read(frames, sizeof(sp2_frame_t), num_frames);
 	fileReader.Close();
 
@@ -93,7 +92,6 @@ void CModelSp2::LoadModel(const char *file)
 	{
 		// md2 skin name list is 64 char strings
 		skin_names[s] = new char[64];
-		if (!skin_names[s])	 FError("mem for skin names2");
 
 		// strip path and extension
 		for (int c=strlen(frames[s].skin_name); c>=0; c--)
@@ -127,7 +125,7 @@ void CModelSp2::LoadFail()
 
 
 	frames = new sp2_frame_t[num_frames];
-	if (!frames) FError("mem for sp2 frames");
+
 	frames[0].height = 32;
 	frames[0].width  = 32;
 	frames[0].origin_x = 16;
@@ -135,11 +133,9 @@ void CModelSp2::LoadFail()
 
 	// skin names
 	skin_names = new char*[1];
-	if (!skin_names) FError("mem for skin names3");
 
 	// sp2 skin name list is 64 char strings
 	skin_names[0] = new char[64];
-	if (!skin_names[0])	 FError("mem for skin names4");
 
 	strcpy(skin_names[0], "none");
 	LoadSkins();

@@ -6,7 +6,8 @@
 Local vars
 ==========================================
 */
-CMemManager		g_memManager("mem_fs.log");
+const char MEM_SZLOGFILE [] = "mem_fs.log";
+//CMemManager		g_memManager("mem_fs.log");
 
 I_HunkManager * g_pHunkManager = 0;
 I_Console     * g_pConsole = 0;
