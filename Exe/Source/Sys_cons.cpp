@@ -1,12 +1,18 @@
 #include "Sys_hdr.h"
+#include "Sys_cons.h"
 
 static void HandleBool   (CVar *var, int argc,  char** argv);
 static void HandleInt    (CVar *var, int argc,  char** argv);
 static void HandleString (CVar *var, int argc,  char** argv);
 static void HandleFloat  (CVar *var, int argc,  char** argv);
 
-static void CFunctest(int argc,  char** argv);
+void CFunctest(int argc,  char** argv);
 void CToggleConsole(int argc, char** argv);			//Console toggle hack
+
+
+I_Console * Sys_GetConsole()
+{	return g_pConsole;
+}
 
 /*
 ======================================
@@ -70,7 +76,7 @@ CConsole::~CConsole()
 Initialize the Console
 ==========================================
 */
-bool CConsole::Init(I_RConsole * prcons)
+bool CConsole::Init(I_ConsoleRenderer * prcons)
 {
 	// Create a debugging window
 #ifdef DOSCONS
@@ -139,7 +145,7 @@ and handle any arguments
 */
 void ComPrintf(char* text, ...)
 {
-	if(g_pCons)
+	if(g_pConsole)
 	{
 		static char textBuffer[1024];
 		va_list args;
@@ -147,7 +153,7 @@ void ComPrintf(char* text, ...)
 		vsprintf(textBuffer, text, args);
 		va_end(args);
 		
-		g_pCons->dprint(textBuffer);
+		g_pConsole->dprint(textBuffer);
 	}
 }
 
@@ -228,8 +234,8 @@ void CConsole::HandleInput(const int &i)
 			//Print all the CVars and cmds that match the given string
 			const char * p = m_szCBuffer.GetString();
 			char * lastmatch=0;
-			CPtrList<CVar> * pcvar = g_pCons->m_pcList;
-			CPtrList<CFunc> * pcfunc = g_pCons->m_pfList;
+			CPtrList<CVar> * pcvar = g_pConsole->m_pcList;
+			CPtrList<CFunc> * pcfunc = g_pConsole->m_pfList;
 
 			ComPrintf("\n");
 			while(pcvar->item || pcfunc->item)
@@ -492,7 +498,7 @@ void CVarlist(int argc,  char** argv)
 	if(argc==2)
 	{
 		int len= strlen(argv[1]);
-		for (CPtrList<CVar> *temp= g_pCons->m_pcList ; temp->item ; temp=temp->next)
+		for (CPtrList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			if(strncmp(temp->item->name,argv[1], len)==0)
 				ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
@@ -500,7 +506,7 @@ void CVarlist(int argc,  char** argv)
 	}
 	else
 	{	
-		for (CPtrList<CVar> *temp= g_pCons->m_pcList ; temp->item ; temp=temp->next)
+		for (CPtrList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
 		}
@@ -523,7 +529,7 @@ void CFunclist(int argc,  char** argv)
 	if(argc==2)
 	{
 		int len= strlen(argv[1]);
-		for (CPtrList<CFunc> *temp= g_pCons->m_pfList ; temp->item ; temp=temp->next)
+		for (CPtrList<CFunc> *temp= g_pConsole->m_pfList ; temp->item ; temp=temp->next)
 		{
 			if(strncmp(temp->item->name,argv[1], len)==0)
 				ComPrintf("%s\n",temp->item->name);
@@ -531,7 +537,7 @@ void CFunclist(int argc,  char** argv)
 	}
 	else
 	{	
-		for (CPtrList<CFunc> *temp= g_pCons->m_pfList ; temp->item ; temp=temp->next)
+		for (CPtrList<CFunc> *temp= g_pConsole->m_pfList ; temp->item ; temp=temp->next)
 		{	ComPrintf("%s\n",temp->item->name);
 		}
 	}
@@ -561,7 +567,7 @@ void HandleString (CVar *var, int argc,  char** argv)
 			strcat(newstr," ");
 			strcat(newstr,argv[i]);
 		}
-		g_pCons->CVarSet(&var,newstr);
+		g_pConsole->CVarSet(&var,newstr);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -579,7 +585,7 @@ void  HandleInt (CVar *var, int argc,  char** argv)
 	{
 		int temp=0;
 		if(sscanf(argv[1],"%d",&temp))
-			g_pCons->CVarSet(&var,(float)temp);
+			g_pConsole->CVarSet(&var,(float)temp);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -597,7 +603,7 @@ void HandleFloat (CVar *var, int argc,  char** argv)
 	{
 		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			g_pCons->CVarSet(&var,temp);
+			g_pConsole->CVarSet(&var,temp);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }
@@ -615,11 +621,11 @@ void HandleBool (CVar *var , int argc,  char** argv)
 	{
 		float temp=0;
 		if(sscanf(argv[1],"%f",&temp))
-			g_pCons->CVarSet(&var,temp);
+			g_pConsole->CVarSet(&var,temp);
 		else if(!strcmp(argv[1],"true"))
-			g_pCons->CVarSet(&var,1.0f);
+			g_pConsole->CVarSet(&var,1.0f);
 		else
-			g_pCons->CVarSet(&var,0.0f);
+			g_pConsole->CVarSet(&var,0.0f);
 	}
 	ComPrintf("%s = \"%s\"\n",var->name,var->string);
 }

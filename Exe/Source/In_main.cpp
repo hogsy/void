@@ -2,6 +2,7 @@
 #include "In_hdr.h"
 #include "In_kb.h"
 #include "In_mouse.h"
+#include "Sys_cons.h"
 
 //========================================================================================
 //========================================================================================
@@ -35,7 +36,8 @@ CInput::CInput()
 	m_pDInput = 0;
 
 	//Register CVars
-	g_pCons->RegisterCVar(&m_pVarExclusive,"in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
+//	g_pCons->RegisterCVar(&m_pVarExclusive,"in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
+	m_pVarExclusive = Sys_GetConsole()->RegisterCVar("in_ex","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CSetExclusive);
 }
 
 /*
@@ -370,7 +372,7 @@ void In_DIErrorMessageBox(HRESULT err, char * msg)
 		case DI_POLLEDDEVICE: strcat(error,"POLLEDDEVICE"); break;
 		default: strcat(error,"UNKNOWNERROR");	break;
 	}
-	g_pCons->MsgBox(error);
+	g_pConsole->MsgBox(error);
 }
 
 

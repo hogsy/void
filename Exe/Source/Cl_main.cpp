@@ -2,7 +2,9 @@
 #include "I_renderer.h"
 #include "Cl_cmds.h"
 #include "Sys_main.h"
+#include "Sys_hdr.h"
 
+#include "Sys_cons.h"
 
 extern CVoid		*g_pVoid;
 extern world_t		*g_pWorld;
@@ -59,17 +61,19 @@ CClient::CClient():m_sock(&m_recvBuf,&m_sendBuf)
 
 	m_rHud = 0;
 
+/*
 	g_pCons->RegisterCVar(&m_clport,"cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	g_pCons->RegisterCVar(&m_clrate,"cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
 	g_pCons->RegisterCVar(&m_clname,"cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
 	g_pCons->RegisterCVar(&m_noclip,"cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
-/*
-	g_pCons->RegisterCVar(&m_clport);
-	g_pCons->RegisterCVar(&m_clrate);
-	g_pCons->RegisterCVar(&m_clname);
-	g_pCons->RegisterCVar(&m_noclip);
 */
-	g_pCons->RegisterCFunc("say", &Talk);
+	m_clport = Sys_GetConsole()->RegisterCVar("cl_port","36667", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clrate = Sys_GetConsole()->RegisterCVar("cl_rate","0",	   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);
+	m_clname = Sys_GetConsole()->RegisterCVar("cl_name","Player",CVar::CVAR_STRING, CVar::CVAR_ARCHIVE);//,&Name);
+	m_noclip = Sys_GetConsole()->RegisterCVar("cl_noclip","0",   CVar::CVAR_INT,	CVar::CVAR_ARCHIVE);//,&Name);
+
+	
+	Sys_GetConsole()->RegisterCFunc("say", &Talk);
 
 
 	RegCommands();
@@ -158,7 +162,7 @@ bool CClient::CloseNet()
 
 #ifndef __VOIDALPHA
 	return m_sock.Close();
-#elif
+#else
 	return true;
 #endif
 }
@@ -257,8 +261,8 @@ bool CClient::LoadWorld(world_t *world)
 //	g_pRender->Con_ToggleFullscreen(falselk;);
 //	g_pRender->Con_Toggle(false);
 
-	g_pCons->ToggleFullscreen(false);
-	g_pCons->Toggle(false);
+	g_pConsole->ToggleFullscreen(false);
+	g_pConsole->Toggle(false);
 	
 	ComPrintf("CClient::Load World: OK\n");
 
@@ -280,8 +284,8 @@ bool CClient::UnloadWorld()
 		return false;
 	}
 
-	g_pCons->ToggleFullscreen(true);
-	g_pCons->Toggle(true);
+	g_pConsole->ToggleFullscreen(true);
+	g_pConsole->Toggle(true);
 	return g_pVoid->UnloadWorld();
 //	return true;
 }

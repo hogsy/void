@@ -207,16 +207,17 @@ CSound::CSound()
 	//sound list
 	m_pWavelist = 0;
 
-	g_pCons->RegisterCFunc("splay",&SPlay);
-	g_pCons->RegisterCFunc("sstop",&SStop);
-	g_pCons->RegisterCFunc("spause",&SPause);
-	g_pCons->RegisterCFunc("sresume",&SResume);
+	Sys_GetConsole()->RegisterCFunc("splay",&SPlay);
+	Sys_GetConsole()->RegisterCFunc("sstop",&SStop);
+	Sys_GetConsole()->RegisterCFunc("spause",&SPause);
+	Sys_GetConsole()->RegisterCFunc("sresume",&SResume);
 
-//	g_pCons->RegisterCVar(&m_pvolume);
-//	g_pCons->RegisterCVar(&m_pChannels);
-
+/*
 	g_pCons->RegisterCVar(&m_pvolume,"s_vol","0",CVar::CVAR_INT,0,&SVolume);
 	g_pCons->RegisterCVar(&m_pChannels,"s_chans","8",CVar::CVAR_INT,CVar::CVAR_ARCHIVE|CVar::CVAR_LATCH);
+*/
+	m_pvolume  = Sys_GetConsole()->RegisterCVar("s_vol","0",CVar::CVAR_INT,0,&SVolume);
+	m_pChannels= Sys_GetConsole()->RegisterCVar("s_chans","8",CVar::CVAR_INT,CVar::CVAR_ARCHIVE|CVar::CVAR_LATCH);
 }
 
 

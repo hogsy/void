@@ -21,9 +21,7 @@ config files
 ==========================================
 */
 
-void ComPrintf(char* text, ...);
-
-class CConsole: public I_ExeConsole,	//Console interface exported to other modules
+class CConsole: public I_Console,	//Console interface exported to other modules
 				public I_InKeyListener	//Key Event listener interface	
 {
 public:
@@ -35,12 +33,19 @@ public:
 	void dprint(char* text);
 
 	//CVar Registration
+/*	
 	void RegisterCVar(CVar **cvar, 
 					  const char *varname, 
 					  const char *varval,		//scanned to sting/float/int 
 					  CVar::CVarType vartype,	//var type - can be float/int/char * etc
 					  int varflags,				//extra parm, locked vars etc
 					  CVAR_FUNC varfunc=0);		//validation func
+*/
+	CVar * RegisterCVar(const char *varname, 
+					    const char *varval,		//scanned to sting/float/int 
+					    CVar::CVarType vartype,	//var type - can be float/int/char * etc
+					    int varflags,			//extra parm, locked vars etc
+					    CVAR_FUNC varfunc=0);	//validation func
 
 	void RegisterCFunc(const char *funcname,
 					  CFUNC pfunc);
@@ -60,7 +65,7 @@ public:
 	CConsole();
 	~CConsole();
 
-	bool Init(I_RConsole * prcons);
+	bool Init(I_ConsoleRenderer * prcons);
 	bool Shutdown();
 
 	//Message Boxes
@@ -75,7 +80,6 @@ public:
 
 	CFUNC GetFuncByName(const char * fname);
 
-		
 	//Console funcs
     void ToggleFullscreen(bool full);
     void Toggle(bool down);
@@ -96,8 +100,8 @@ private:
 	//Args
 	char **			m_szargv;		//console arguments
 
-	I_RConsole	    *m_prCons;
-	FILE			*m_pflog;		//log file
+	I_ConsoleRenderer   *m_prCons;
+	FILE				*m_pflog;		//log file
 
 	CSBuffer		 m_szCBuffer;	//Static buffer used to console line
 	CQueue<char>	*m_CmdBuffer;	//Command Buffer for doskey type functionality
@@ -110,6 +114,6 @@ private:
 #endif
 };
 
-extern CConsole *g_pCons;
+extern CConsole *g_pConsole;
 
 #endif

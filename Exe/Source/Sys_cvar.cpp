@@ -9,6 +9,64 @@ Register CVar
 Initialize CVar and alphabetically add to list
 ==========================================
 */
+
+CVar * CConsole::RegisterCVar(const char *varname, 
+							const char *varval,
+							CVar::CVarType vartype, 
+							int varflags,
+							CVAR_FUNC varfunc)
+{
+	CVar *var = new CVar();
+	var->name = new char[strlen(varname)+1];
+	strcpy(var->name,varname);
+	if(varfunc)
+		var->func = varfunc;
+	var->type = vartype;
+	var->flags = varflags;
+	CVarForceSet(&var,varval);
+
+	//Add Item to CvarList
+	CPtrList<CVar>* i1 = m_pcList;
+	CPtrList<CVar>* i2 = 0;
+	
+	//Loop till there are no more items in list, or the variable name is 
+	//bigger than the item in the list
+	while(i1->next && i1->item && (strcmp(var->name, i1->item->name) > 0))
+	{
+		i2 = i1;
+		i1 = i1->next;
+	}
+
+	//didnt loop
+	if(i2 == 0)
+	{
+		//New item comes before the first item in the list
+		if(m_pcList->item)
+		{
+			CPtrList<CVar> * newentry = new CPtrList <CVar>;
+			newentry->item = var;
+			newentry->next = i1;
+			m_pcList = newentry;
+		}
+		//List is empty, add to it
+		else
+		{
+			i1->item = var;
+			i1->next = new CPtrList<CVar>;
+		}
+	}
+	//Item comes after the item in list pointer to by i2, and before i1
+	else
+	{
+		CPtrList<CVar> * newentry = new CPtrList <CVar>;
+		newentry->item = var;
+		i2->next = newentry;
+		newentry->next = i1;
+	}
+	return var;
+}
+
+/*
 void CConsole::RegisterCVar(CVar **var, 
 							const char *varname, 
 							const char *varval,
@@ -65,6 +123,7 @@ void CConsole::RegisterCVar(CVar **var,
 		newentry->next = i1;
 	}
 }
+*/
 
 /*
 ==========================================

@@ -52,13 +52,13 @@ CMusic::CMusic()
 {
 	musinfo.state  = M_INACTIVE;
 
-	g_pCons->RegisterCFunc("mplay",&MusPlay);
-	g_pCons->RegisterCFunc("mstop",&MusStop);
-	g_pCons->RegisterCFunc("mpause",&MusPause);
-	g_pCons->RegisterCFunc("mresume",&MusResume);
+	Sys_GetConsole()->RegisterCFunc("mplay",&MusPlay);
+	Sys_GetConsole()->RegisterCFunc("mstop",&MusStop);
+	Sys_GetConsole()->RegisterCFunc("mpause",&MusPause);
+	Sys_GetConsole()->RegisterCFunc("mresume",&MusResume);
 	
-	//g_pCons->RegisterCVar(&m_pvolume);
-	g_pCons->RegisterCVar(&m_pvolume,"mvol","0",CVar::CVAR_INT,0,&MusVolume);
+//	g_pCons->RegisterCVar(&m_pvolume,"mvol","0",CVar::CVAR_INT,0,&MusVolume);
+	m_pvolume = Sys_GetConsole()->RegisterCVar("mvol","0",CVar::CVAR_INT,0,&MusVolume);
 }
 
 /*

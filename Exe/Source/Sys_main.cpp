@@ -1,7 +1,5 @@
-#define __VOIDALPHA	1
-#define INCLUDE_MUSIC	1
-
 #include "Sys_main.h"
+#include "Sys_cons.h"
 #include "Sv_main.h"
 #include "Cl_main.h"
 #include "In_main.h"
@@ -14,14 +12,14 @@
 HWND		g_hWnd;
 HINSTANCE	g_hInst;
 char		g_exedir[COM_MAXPATH];
-//char		g_gamedir[COM_MAXPATH];
+
 eGameState	g_gameState;
 
 //pointers to subsystems
 //========================================================================================
-CConsole	* g_pCons =0;		//Console
-CInput		* g_pInput=0;		//Input 
-CClient		* g_pClient=0;		//Client and UI
+CConsole	* g_pConsole =0;	//Console
+CInput		* g_pInput   =0;	//Input 
+CClient		* g_pClient  =0;	//Client and UI
 
 #ifdef INCLUDE_SOUND
 CSound		* g_pSound=0;		//Sound Subsystem
@@ -73,17 +71,17 @@ CVoid::CVoid(HINSTANCE hInstance,
 	g_pTime = new CTime();						
 
 	//Create the game console
-	g_pCons = new CConsole();
+	g_pConsole = new CConsole();
 	
 	//Create the file system
-	g_pFileSystem = FILESYSTEM_Create(g_pCons);
+	g_pFileSystem = FILESYSTEM_Create(g_pConsole);
 	
 	//Create the input system
 	g_pInput= new CInput();					
 	
 	//Export structure
 	g_pExport= new VoidExport_t(&g_fcurTime, &g_fframeTime);
-	g_pExport->vconsole = (I_ExeConsole*)g_pCons;
+	g_pExport->vconsole = (I_Console*)g_pConsole;
 	
 	//Create the Renderer
 	g_pRender= RENDERER_Create(g_pExport); 
@@ -110,10 +108,10 @@ CVoid::CVoid(HINSTANCE hInstance,
 	//Set game state - full screen console - not connected
 	g_gameState = INCONSOLE;
 
-	g_pCons->RegisterCFunc("quit",&CFuncQuit);			
-	g_pCons->RegisterCFunc("exit",&CFuncQuit);			
-	g_pCons->RegisterCFunc("map", &CFuncMap);
-	g_pCons->RegisterCFunc("connect",&CFuncConnect);
+	Sys_GetConsole()->RegisterCFunc("quit",&CFuncQuit);			
+	Sys_GetConsole()->RegisterCFunc("exit",&CFuncQuit);			
+	Sys_GetConsole()->RegisterCFunc("map", &CFuncMap);
+	Sys_GetConsole()->RegisterCFunc("connect",&CFuncConnect);
 //	g_pCons->RegisterCFunc("disconnect", &CFuncDisconnect);
 }
 
@@ -173,9 +171,10 @@ CVoid::~CVoid()
 
 	FILESYSTEM_Free();
 
-	if(g_pCons)
-	{		delete g_pCons;
-		g_pCons = 0;
+	
+	if(g_pConsole)
+	{		delete g_pConsole;
+		g_pConsole = 0;
 	}
 }
 
@@ -218,10 +217,10 @@ bool CVoid::Init()
 	//parse Command line
 //	ParseCmdLine(lpCmdLine);
 
-	g_pCons->ExecConfig("default.cfg");
-	g_pCons->ExecConfig("void.cfg");
+	g_pConsole->ExecConfig("default.cfg");
+	g_pConsole->ExecConfig("void.cfg");
 
-	if(!g_pCons->Init(g_pRender->GetConsole()))
+	if(!g_pConsole->Init(g_pRender->GetConsole()))
 	{
 		Error("CVoid::Init: Could not Intialize the console");
 		return false;
@@ -307,11 +306,11 @@ bool CVoid::Init()
 	}
 #endif
 
-	GetInputFocusManager()->SetKeyListener(g_pCons,true);
+	GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
 	g_pTime->Reset();
 	
-	g_pCons->ExecConfig("autoexec.cfg");
+	g_pConsole->ExecConfig("autoexec.cfg");
 
 	ShowWindow(g_hWnd, SW_NORMAL); 
 	UpdateWindow(g_hWnd);
@@ -371,8 +370,8 @@ bool CVoid :: Shutdown()
 	sprintf(configname,"%s\\void.cfg",g_exedir);
 	WriteConfig(configname);
 
-	if(g_pCons)
-		g_pCons->Shutdown(); 
+	if(g_pConsole)
+		g_pConsole->Shutdown(); 
 
 	//Release COM library
 	CoUninitialize();
@@ -642,7 +641,7 @@ void CVoid::WriteConfig(char *config)
 		FILE * fp = fopen(config,"w");
 		if(fp != NULL)
 		{
-			g_pCons->WriteCVars(fp);
+			g_pConsole->WriteCVars(fp);
 			if(g_pClient)
 				g_pClient->WriteBindTable(fp);
 			fclose(fp);
@@ -748,7 +747,7 @@ void CToggleConsole(int argc, char** argv)
 	if(g_gameState == INGAMECONSOLE)
 	{
 		g_gameState = INGAME;
-		g_pCons->Toggle(false);
+		g_pConsole->Toggle(false);
 		g_pClient->SetInputState(true);
 	}
 	else if(g_gameState == INGAME)
@@ -760,10 +759,10 @@ void CToggleConsole(int argc, char** argv)
 		GetInputFocusManager()->SetCursorListener(0);
 
 		//In_SetKeyHandler(&ConsoleHandleKey,true);
-		GetInputFocusManager()->SetKeyListener(g_pCons,true);
+		GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
 		g_gameState = INGAMECONSOLE;
-		g_pCons->Toggle(true);
+		g_pConsole->Toggle(true);
 	}
 }
 

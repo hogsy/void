@@ -114,7 +114,8 @@ CKeyboard::CKeyboard()
 	//Default to self as listener
 	SetKeyListener(this,false,IN_DEFAULTREPEATRATE);
 
-	g_pCons->RegisterCVar(&m_pVarKbMode,"kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
+//	g_pCons->RegisterCVar(&m_pVarKbMode,"kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
+	m_pVarKbMode = Sys_GetConsole()->RegisterCVar("kb_mode","1",CVar::CVAR_INT,CVar::CVAR_ARCHIVE, &CKBMode);
 }
 
 /*

@@ -3,12 +3,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#define _VOID_EXE_ 1				// used by shared files
-
-//disable warnings
-//#pragma warning(disable : 4018)     // signed/unsigned mismatch
-//#pragma warning(disable : 4305)		// truncation from const double to float
-
 #include <winsock2.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -18,18 +12,25 @@
 #include <mmsystem.h>
 #include <direct.h>
 
+
+#define _VOID_EXE_ 1				// used by shared files
+
+#define __VOIDALPHA	1
+
+#define INCLUDE_MUSIC	1
+
+
 #include "Com_defs.h"
 #include "Com_mem.h"
 
+#include "I_console.h"
 #include "I_filesystem.h"
 
-#include "Sys_cons.h"
 #include "Util_sys.h"
 #include "World.h"
 
 #define INITGUID
 
-#define PROTOCOL_VERSION	1
 
 enum eGameState
 {
@@ -39,14 +40,17 @@ enum eGameState
 	INGAME
 };
 
+I_Console *	Sys_GetConsole();
+
 extern HWND			g_hWnd;
 extern HINSTANCE	g_hInst;
 extern char			g_exedir[COM_MAXPATH];
-//extern char			g_gamedir[COM_MAXPATH];
 
+//Current Time
 extern float		g_fframeTime;
 extern float		g_fcurTime;
 
+//Current Game State
 extern eGameState	g_gameState;
 
 #endif

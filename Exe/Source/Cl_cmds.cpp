@@ -10,6 +10,7 @@ Client Command Handling
 */
 #include "Cl_main.h"
 #include "Cl_cmds.h"
+#include "Sys_cons.h"
 
 
 //============================================================================
@@ -77,7 +78,7 @@ void CClient::HandleKeyEvent	(const KeyEvent_t &kevent)
 		{
 			//execute and return
 			//commandstring
-			g_pCons->ExecString(m_clientkeys[(kevent.id)].szCommand);
+			g_pConsole->ExecString(m_clientkeys[(kevent.id)].szCommand);
 			//m_clientkeys[(kevent.id)].pFunc(1,0);
 		}
 	}
@@ -188,7 +189,7 @@ void CClient::BindFuncToKey(int argc, char** argv)
 
 	
 	//Get the requested function, and bind it to the key
-	m_clientkeys[keynum].pFunc = g_pCons->GetFuncByName(argv[2]);
+	m_clientkeys[keynum].pFunc = g_pConsole->GetFuncByName(argv[2]);
 	if(!m_clientkeys[keynum].pFunc)
 	{
 		ComPrintf("%s is not a valid command\n",argv[2]);
@@ -354,19 +355,19 @@ Register the EXE Client Commands
 
 void CClient::RegCommands()
 {
-	g_pCons->RegisterCFunc("+forward",&MoveForward);
-	g_pCons->RegisterCFunc("+back",&MoveBackward);
-	g_pCons->RegisterCFunc("+moveleft",&MoveLeft);
-	g_pCons->RegisterCFunc("+moveright",&MoveRight);
-	g_pCons->RegisterCFunc("+right",&KRotateRight);
-	g_pCons->RegisterCFunc("+left",&KRotateLeft);
-	g_pCons->RegisterCFunc("+lookup",&KRotateUp);
-	g_pCons->RegisterCFunc("+lookdown",&KRotateDown);
-	g_pCons->RegisterCFunc("bind", &BindFuncToKey);
-	g_pCons->RegisterCFunc("bindlist", &BindList);
-	g_pCons->RegisterCFunc("cam", &CamPath);
-	g_pCons->RegisterCFunc("unbind", &Unbind);
-	g_pCons->RegisterCFunc("unbindall", &Unbindall);
+	Sys_GetConsole()->RegisterCFunc("+forward",&MoveForward);
+	Sys_GetConsole()->RegisterCFunc("+back",&MoveBackward);
+	Sys_GetConsole()->RegisterCFunc("+moveleft",&MoveLeft);
+	Sys_GetConsole()->RegisterCFunc("+moveright",&MoveRight);
+	Sys_GetConsole()->RegisterCFunc("+right",&KRotateRight);
+	Sys_GetConsole()->RegisterCFunc("+left",&KRotateLeft);
+	Sys_GetConsole()->RegisterCFunc("+lookup",&KRotateUp);
+	Sys_GetConsole()->RegisterCFunc("+lookdown",&KRotateDown);
+	Sys_GetConsole()->RegisterCFunc("bind", &BindFuncToKey);
+	Sys_GetConsole()->RegisterCFunc("bindlist", &BindList);
+	Sys_GetConsole()->RegisterCFunc("cam", &CamPath);
+	Sys_GetConsole()->RegisterCFunc("unbind", &Unbind);
+	Sys_GetConsole()->RegisterCFunc("unbindall", &Unbindall);
 }
 
 
