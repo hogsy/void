@@ -306,8 +306,9 @@ FILE pointer is set if its a real file
 otherwise the fileHandle and archive pointers are set
 ==========================================
 */
-uint CFileSystem::OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarchive, 
-								const char *ifilename)
+uint CFileSystem::OpenFileStream(FILE ** ifp, 
+								 int &ifileHandle, CArchive ** iarchive, 
+								 const char *ifilename)
 {
 	SearchPath_t * iterator = m_lastpath;
 	uint size = 0;
@@ -318,12 +319,12 @@ uint CFileSystem::OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarch
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			uint handle = iterator->archive->OpenFile(ifilename);
+			int handle = iterator->archive->OpenFile(ifilename);
 			if(handle >= 0)
 			{
 				size = iterator->archive->GetSize(handle);
 				ifileHandle = handle;
-				iarchive = iterator->archive;
+				*iarchive = iterator->archive;
 				return size;
 			}
 		}
@@ -340,7 +341,7 @@ uint CFileSystem::OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarch
 				size = ftell(fp );
 				fseek(fp ,0,SEEK_SET);
 				
-				ifp = fp;
+				*ifp = fp;
 				ifileHandle = 0;
 				return size;
 			}

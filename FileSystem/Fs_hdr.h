@@ -27,7 +27,7 @@ public:
 
 	virtual HFS OpenFile(const char *ifilename) =0;
 	virtual void CloseFile(HFS handle) =0;
-	virtual ulong Read(void * buf, uint size, uint count, HFS handle) =0;
+	virtual uint Read(void * buf, uint size, uint count, HFS handle) =0;
 	virtual int  GetChar(HFS handle) =0;
 	virtual bool Seek(uint offset, int origin, HFS handle) =0;
 	virtual uint GetPos(HFS handle) = 0;

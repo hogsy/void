@@ -25,11 +25,13 @@ CFileStream::~CFileStream()
 		delete [] m_filename;
 	if(m_fp)
 		::fclose(m_fp);
+
 	if(m_archive && m_filehandle >= 0)
 	{
+		m_archive->CloseFile(m_filehandle);
+		m_filehandle = -1;
+		m_archive = 0;
 	}
-	m_archive = 0;
-	m_filehandle = -1;
 }
 
 
@@ -73,7 +75,9 @@ bool CFileStream::Open(const char * ifilename)
 	if(isOpen())
 		Close();
 
-	m_size = g_pFileSystem->OpenFileStream(m_fp, m_filehandle, m_archive, ifilename);
+	m_size = g_pFileSystem->OpenFileStream(&m_fp, 
+										   m_filehandle, &m_archive,
+										   ifilename);
 	if(m_size)
 	{
 		m_filename = new char[strlen(ifilename)+1];
@@ -105,7 +109,7 @@ void CFileStream::Close()
 	if(m_archive)
 	{
 		m_archive->CloseFile(m_filehandle);
-		m_filehandle = 0;
+		m_filehandle = -1;
 		m_archive = 0;
 	}
 }
@@ -116,15 +120,18 @@ Read items of given size of given count
 into given buffer
 ===========================================
 */
-ulong CFileStream::Read(void *buf,uint size, uint count)
+uint CFileStream::Read(void *buf,uint size, uint count)
 {
-	if(!buf || !size || !count)
+	if(!size || !count)
+		return 0;
+
+	if(!buf)
 	{
 		ComPrintf("CFileStream::Read: Invalid parameters :%s\n",m_filename);
 		return 0;
 	}
 	if(m_fp)
-		return ::fread(buf,size,count, m_fp);
+		return ::fread(buf,size,count,m_fp);
 	if(m_archive)
 		return m_archive->Read(buf,size,count,m_filehandle);
 	return 0;

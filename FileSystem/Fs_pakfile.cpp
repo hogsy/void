@@ -17,7 +17,9 @@ typedef struct
 
 struct CPakFile::PakEntry_t
 {
-	PakEntry_t() { filepos = filelen = 0; };
+	PakEntry_t() { filepos = filelen = 0; }
+	virtual ~PakEntry_t() {}
+
 	char filename[56];
 	long filepos, 
 		 filelen;
@@ -47,7 +49,7 @@ CPakFile::CPakFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
-	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 }
 
@@ -56,7 +58,7 @@ CPakFile::~CPakFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	memset(m_openFiles,sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)
@@ -383,6 +385,7 @@ void CPakFile::CloseFile(HFS handle)
 {
 	if(m_openFiles[handle])
 	{
+		m_openFiles[handle]->curpos = 0;
 		m_openFiles[handle] = 0;
 		m_numOpenFiles--;
 	}
@@ -394,7 +397,7 @@ Read from the given handle
 returns bytes read
 ==========================================
 */
-ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
+uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 {
 	if(!buf || !size || !count)
 	{
@@ -404,6 +407,7 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	}
 	
 	uint bytes_req = size * count;
+
 	if(m_openFiles[handle]->curpos + bytes_req > m_openFiles[handle]->filelen)
 	{
 		ComPrintf("CPakFile::Read: FilePointer will overflow for given parms, %s\n", 
@@ -413,13 +417,13 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 
 	fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
 	
-	int bytes_read = ::fread(buf,size,count,m_fp);
-	if(bytes_read != bytes_req) 
-		ComPrintf("CPakFile::Read: Warning, only read %d of %d bytes for %s\n",
-					bytes_read, bytes_req, m_openFiles[handle]->filename);	
+	int items_read = ::fread(buf,size,count,m_fp);
+	if(items_read != count) 
+		ComPrintf("CPakFile::Read: Warning, only read %d of %d items for %s\n",
+					items_read, count, m_openFiles[handle]->filename);	
 	
-	m_openFiles[handle]->curpos += (bytes_read);
-	return bytes_read;
+	m_openFiles[handle]->curpos += (size*items_read);
+	return items_read;
 }
 
 /*

@@ -89,7 +89,7 @@ Read items of given size of given count
 into given buffer
 ===========================================
 */
-ulong CFileBuffer::Read(void *buf,uint size, uint count)
+uint CFileBuffer::Read(void *buf,uint size, uint count)
 {
 	if(!buf || !size || !count)
 	{
@@ -102,10 +102,12 @@ ulong CFileBuffer::Read(void *buf,uint size, uint count)
 	{
 		ComPrintf("CFileReader::Read: File doesn't contain requested data from current offset: %s\n",m_filename);
 		bytes_req = m_size - m_curpos;
+		bytes_req -= (bytes_req % size);
 	}
+
 	memcpy(buf,m_buffer+m_curpos,bytes_req);
 	m_curpos += (bytes_req);
-	return bytes_req;
+	return (bytes_req/size);
 }
 	
 /*

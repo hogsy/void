@@ -60,20 +60,6 @@ typedef struct ZIP_end_central_dir_record_s
 } ZIP_end_central_dir_record;
 
 
-struct CZipFile::ZipEntry_t
-{
-	ZipEntry_t() { filepos = filelen = 0; };
-	char filename[COM_MAXFILENAME];
-	ulong filepos, 
-		 filelen;
-};
-
-struct CZipFile::ZipOpenFile_t : public CZipFile::ZipEntry_t
-{
-	ZipOpenFile_t() { curpos = 0; };
-	ulong curpos;
-};
-
 //======================================================================================
 //Private Declarations
 //======================================================================================
@@ -123,7 +109,6 @@ CZipFile::CZipFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
-	memset(m_openFiles,sizeof(ZipOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
 	m_numOpenFiles = 0;
 }
 
@@ -132,7 +117,6 @@ CZipFile::~CZipFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	memset(m_openFiles,sizeof(ZipOpenFile_t *) * ARCHIVEMAXOPENFILES, 0);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)
@@ -406,7 +390,6 @@ bool CZipFile::BuildZipEntriesList(FILE * fp, int numfiles)
 			m_files[destIndex] = newfile;
 
 			m_numFiles++;
-			
 
 /*			curpos = ftell(m_fp);
 			if(fseek(fp,cdfh.relative_offset_local_header + 
@@ -569,6 +552,8 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 }
 
 
+
+
 /*
 ==========================================
 Open a file and return a handle
@@ -585,10 +570,10 @@ HFS CZipFile::OpenFile(const char *ifilename)
 	//Find free space
 	for(int i=0;i<ARCHIVEMAXOPENFILES;i++)
 	{
-		if(!m_openFiles[i])
+		if(m_openFiles[i].file == 0)
 			break;
 	}
-	if(m_openFiles[i] != 0)
+	if(m_openFiles[i].file != 0)
 	{
 		ComPrintf("CZipFile::OpenFile: Unable to find unused file handle in %s\n", m_archiveName);
 		return -1;
@@ -597,8 +582,8 @@ HFS CZipFile::OpenFile(const char *ifilename)
 	ZipEntry_t * entry= 0;
 	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
 	{
-		m_openFiles[i] = (ZipOpenFile_t *)entry;
-		m_openFiles[i]->curpos= 0;
+		m_openFiles[i].file = entry;
+		m_openFiles[i].curpos= 0;
 		m_numOpenFiles++;
 		return i;
 	}
@@ -612,9 +597,10 @@ Close the given handle
 */
 void CZipFile::CloseFile(HFS handle)
 {
-	if(m_openFiles[handle])
+	if(handle >= 0 && m_openFiles[handle].file)
 	{
-		m_openFiles[handle] = 0;
+		m_openFiles[handle].curpos = 0;
+		m_openFiles[handle].file = 0;
 		m_numOpenFiles--;
 	}
 }
@@ -624,32 +610,32 @@ void CZipFile::CloseFile(HFS handle)
 Read from the given file
 ==========================================
 */
-ulong CZipFile::Read(void * buf, uint size, uint count, HFS handle)
+uint CZipFile::Read(void * buf, uint size, uint count, HFS handle)
 {
 	if(!buf || !size || !count)
 	{
 		ComPrintf("CZipFile::Read: Invalid parameters :%s\n",
-							m_openFiles[handle]->filename);
+							m_openFiles[handle].file->filename);
 		return 0;
 	}
 	
 	uint bytes_req = size * count;
-	if(m_openFiles[handle]->curpos + bytes_req > m_openFiles[handle]->filelen)
+	if(m_openFiles[handle].curpos + bytes_req > m_openFiles[handle].file->filelen)
 	{
 		ComPrintf("CZipFile::Read: FilePointer will overflow for given parms, %s\n", 
-			m_openFiles[handle]->filename);
+			m_openFiles[handle].file->filename);
 		return 0;
 	}
 
-	fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+	fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 	
-	int bytes_read = ::fread(buf,size,count,m_fp);
-	if(bytes_read != bytes_req) 
-		ComPrintf("CZipFile::Read: Warning, only read %d of %d bytes for %s\n",
-					bytes_read, bytes_req, m_openFiles[handle]->filename);	
+	int items_read = ::fread(buf,size,count,m_fp);
+	if(items_read != count) 
+		ComPrintf("CZipFile::Read: Warning, only read %d of %d items for %s\n",
+					items_read, count, m_openFiles[handle].file->filename);	
 	
-	m_openFiles[handle]->curpos += (bytes_read);
-	return bytes_read;
+	m_openFiles[handle].curpos += (items_read*size);
+	return items_read;
 }
 
 /*
@@ -659,9 +645,9 @@ Return char at current pos and advance
 */
 int  CZipFile::GetChar(HFS handle)
 {
-	if(m_openFiles[handle]->curpos +1 <= m_openFiles[handle]->filelen)
+	if(m_openFiles[handle].curpos +1 <= m_openFiles[handle].file->filelen)
 	{
-		::fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+		::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 		return ::fgetc(m_fp);
 	}
 	return EOF;
@@ -674,26 +660,26 @@ Seek to given pos within the file data
 */
 bool CZipFile::Seek(uint offset, int origin, HFS handle)
 {
-	uint newpos = m_openFiles[handle]->filepos;
+	uint newpos = m_openFiles[handle].file->filepos;
 	switch(origin)
 	{
 	case SEEK_SET:
 			newpos += offset;
 			break;
 	case SEEK_END:
-			newpos += (m_openFiles[handle]->filelen - offset);
+			newpos += (m_openFiles[handle].file->filelen - offset);
 			break;
 	case SEEK_CUR:
-			newpos += (m_openFiles[handle]->curpos + offset);
+			newpos += (m_openFiles[handle].curpos + offset);
 			break;
 	default:
-			ComPrintf("CZipFile::Seek: Bad origin specified %s\n", m_openFiles[handle]->filename);
+			ComPrintf("CZipFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
 			return false;
 	}
-	if((newpos > m_openFiles[handle]->filepos + m_openFiles[handle]->filelen) ||
-		(newpos < m_openFiles[handle]->filepos))
+	if((newpos > m_openFiles[handle].file->filepos + m_openFiles[handle].file->filelen) ||
+		(newpos < m_openFiles[handle].file->filepos))
 	{
-		ComPrintf("CZipFile::Seek: Bad parameters. %s\n", m_openFiles[handle]->filename);
+		ComPrintf("CZipFile::Seek: Bad parameters. %s\n", m_openFiles[handle].file->filename);
 		return false;
 	}
 	return(!::fseek(m_fp,newpos,SEEK_SET));
@@ -705,7 +691,7 @@ Get current pos in the file for the handle
 ==========================================
 */
 uint CZipFile::GetPos(HFS handle)
-{	return m_openFiles[handle]->curpos;
+{	return m_openFiles[handle].curpos;
 }
 
 /*
@@ -714,7 +700,7 @@ Get size of file for this handle
 ==========================================
 */
 uint CZipFile::GetSize(HFS handle)
-{	return m_openFiles[handle]->filelen;
+{	return m_openFiles[handle].file->filelen;
 }
 
 

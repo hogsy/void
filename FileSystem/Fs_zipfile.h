@@ -14,7 +14,7 @@ public:
 
 	HFS OpenFile(const char *ifilename); 
 	void CloseFile(HFS handle);
-	ulong Read(void * buf, uint size, uint count, HFS handle);
+	uint Read(void * buf, uint size, uint count, HFS handle);
 	int  GetChar(HFS handle);
 	bool Seek(uint offset, int origin, HFS handle);
 	uint GetPos(HFS handle);
@@ -32,17 +32,31 @@ public:
 
 private:
 
-	struct ZipEntry_t;
-	struct ZipOpenFile_t;
+	struct ZipEntry_t
+	{
+		ZipEntry_t() { filepos = filelen = 0; }
 
-	ZipEntry_t		** m_files;
-	ZipOpenFile_t	*  m_openFiles[ARCHIVEMAXOPENFILES];
+		char  filename[COM_MAXFILENAME];
+		ulong filepos, 
+			  filelen;
+	};
+
+	struct ZipOpenFile_t
+	{
+		ZipOpenFile_t() { file= 0; curpos = 0;}
+		~ZipOpenFile_t(){ file= 0; }
+
+		ZipEntry_t * file;
+		ulong		 curpos;
+	};
+
+	ZipEntry_t	 ** m_files;
+	ZipOpenFile_t	m_openFiles[ARCHIVEMAXOPENFILES];
 
 	int m_numOpenFiles;
 	int m_numFiles;
 
 	FILE * m_fp;
-
 
 	ulong GetLastRecordOffset(FILE *fin);
 	bool  BuildZipEntriesList(FILE * fp, int numfiles);
