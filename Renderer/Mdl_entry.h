@@ -15,7 +15,11 @@ public:
 	int  Release()	{ return --mRefCount; }
 	void AddRef()	{ mRefCount++;	}
 
-	bool IsFile(const char *file) const	{	return (strcmp(file, modelfile)==0); 	}
+	bool IsFile(const char *file) const	
+	{	
+		if(!modelfile) return 0;
+		return (_stricmp(file, modelfile)==0); 	
+	}
 	int  GetNumSkins() const	 { return num_skins;	}
 	int	 GetNumFrames() const { return num_frames;	}
 
