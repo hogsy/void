@@ -465,6 +465,26 @@ SOURCE=..\Shared\Cl_defs.h
 SOURCE=.\Client.h
 # End Source File
 # End Group
+# Begin Group "Shader"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Shader.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Shader.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ShaderManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ShaderManager.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\plan\js.plan

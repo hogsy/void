@@ -198,7 +198,7 @@ void CModelManager::Purge(void)
 	vector_t trans;
 
 	g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
 	g_pRast->PolyColor3f(1, 1, 1);
 
 	for (walk=drawmodels; walk; walk=next)

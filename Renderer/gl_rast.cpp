@@ -550,17 +550,19 @@ void COpenGLRast::DepthFunc(EDepthFunc func)
 	{
 	case VRAST_DEPTH_NONE:
 		glDisable(GL_DEPTH_TEST);
-		break;
-
-	case VRAST_DEPTH_FILL:
+		return;
+	case VRAST_DEPTH_ALWAYS:
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_ALWAYS);
-		break;
-
+		return;
 	case VRAST_DEPTH_LEQUAL:
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
-		break;
+		return;
+	case VRAST_DEPTH_EQUAL:
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_EQUAL);
+		return;
 	}
 }
 
@@ -582,23 +584,47 @@ void COpenGLRast::BlendFunc(ESourceBlend src, EDestBlend dest)
 	case VRAST_SRC_BLEND_NONE:
 		glDisable(GL_BLEND);
 		return;
+	case VRAST_SRC_BLEND_ONE:
+		source = GL_ONE;
+		break;
 	case VRAST_SRC_BLEND_ZERO:
 		source = GL_ZERO;
 		break;
 	case VRAST_SRC_BLEND_SRC_ALPHA:
 		source = GL_SRC_ALPHA;
 		break;
+	case VRAST_SRC_BLEND_DST_COLOR:
+		source = GL_DST_COLOR;
+		break;
+	case VRAST_SRC_BLEND_INV_DST_COLOR:
+		source = GL_ONE_MINUS_DST_COLOR;
+		break;
+	case VRAST_SRC_BLEND_INV_SRC_ALPHA:
+		source = GL_ONE_MINUS_SRC_ALPHA;
+		break;
 	}
 
 	switch (dest)
 	{
-	case VRAST_DEST_BLEND_NONE:
+	case VRAST_DST_BLEND_NONE:
 		glDisable(GL_BLEND);
 		return;
-	case VRAST_DEST_BLEND_SRC_COLOR:
+	case VRAST_DST_BLEND_ONE:
+		destination = GL_ONE;
+		break;
+	case VRAST_DST_BLEND_ZERO:
+		destination = GL_ZERO;
+		break;
+	case VRAST_DST_BLEND_SRC_COLOR:
 		destination = GL_SRC_COLOR;
 		break;
-	case VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA:
+	case VRAST_DST_BLEND_INV_SRC_COLOR:
+		destination = GL_ONE_MINUS_SRC_COLOR;
+		break;
+	case VRAST_DST_BLEND_SRC_ALPHA:
+		destination = GL_SRC_ALPHA;
+		break;
+	case VRAST_DST_BLEND_INV_SRC_ALPHA:
 		destination = GL_ONE_MINUS_SRC_ALPHA;
 		break;
 	}

@@ -238,7 +238,7 @@ void cache_purge_single()
 		// sky
 		case CACHE_PASS_SKY*2:
 			g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
 			break;
 
 		case CACHE_PASS_SKY*2+1:
@@ -246,8 +246,8 @@ void cache_purge_single()
 
 		// zfill
 		case CACHE_PASS_ZFILL*2:		// texture
-			g_pRast->DepthFunc(VRAST_DEPTH_FILL);
-			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+			g_pRast->DepthFunc(VRAST_DEPTH_ALWAYS);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
 			break;
 
 
@@ -255,7 +255,7 @@ void cache_purge_single()
 			if (lightmaps)
 			{
 				g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DST_BLEND_SRC_COLOR);
 			}
 			else
 				continue;	// lighting not available or in fullbright
@@ -265,13 +265,13 @@ void cache_purge_single()
 		// zbuffer
 		case CACHE_PASS_ZBUFFER*2:		// texture
 			g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
-			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DEST_BLEND_NONE);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_NONE, VRAST_DST_BLEND_NONE);
 			break;
 
 		case CACHE_PASS_ZBUFFER*2+1:	// lightmap
 			if (lightmaps)
 			{
-				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DST_BLEND_SRC_COLOR);
 				g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			}
 			else
@@ -281,7 +281,7 @@ void cache_purge_single()
 
 		// alphablend
 		case CACHE_PASS_ALPHABLEND*2:		// texture
-			g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+			g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 			g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			g_pRast->DepthWrite(false);
 
@@ -294,7 +294,7 @@ void cache_purge_single()
 		case CACHE_PASS_ALPHABLEND*2+1:		// lightmap
 			if (lightmaps)
 			{
-				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DEST_BLEND_SRC_COLOR);
+				g_pRast->BlendFunc(VRAST_SRC_BLEND_ZERO, VRAST_DST_BLEND_SRC_COLOR);
 				g_pRast->DepthFunc(VRAST_DEPTH_LEQUAL);
 			}
 			else

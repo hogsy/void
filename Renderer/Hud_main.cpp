@@ -178,7 +178,7 @@ void CRHud::DrawHud()
 
 	g_pRast->TextureSet(tex->bin_base, 0);
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 
 	for(int i=0;i<MAX_MESSAGES;i++)
 	{

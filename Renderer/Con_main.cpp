@@ -178,7 +178,7 @@ void CRConsole::Draw()
 	if(m_fullscreen)
 		ftop = fbot = 1;
 
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 	g_pRast->DepthFunc(VRAST_DEPTH_NONE);
 	g_pRast->TextureSet(tex->bin_base, 1);
 
@@ -253,7 +253,7 @@ void CRConsole::PrintBuffer()
 
 
 	g_pRast->TextureSet(tex->bin_base, 0);
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 	g_pRast->PolyStart(VRAST_QUADS);
 
 

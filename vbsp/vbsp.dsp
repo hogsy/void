@@ -99,6 +99,22 @@ SOURCE=..\Shared\Com_vector.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Shader.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Shader.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\ShaderManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\ShaderManager.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\std_lib.cpp
 # End Source File
 # Begin Source File

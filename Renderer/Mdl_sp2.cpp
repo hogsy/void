@@ -161,7 +161,7 @@ void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
 	cframe = fframe+1;
 	frac = frame - fframe;
 
-	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DST_BLEND_INV_SRC_ALPHA);
 
 	// revers eye transform
 	g_pRast->MatrixPush();

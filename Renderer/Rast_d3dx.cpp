@@ -319,7 +319,7 @@ void CRastD3DX::DepthFunc(EDepthFunc func)
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, FALSE);
 		return;
 
-	case VRAST_DEPTH_FILL:
+	case VRAST_DEPTH_ALWAYS:
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_USEW);
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZFUNC,   D3DCMP_ALWAYS);
 		return;
@@ -327,6 +327,11 @@ void CRastD3DX::DepthFunc(EDepthFunc func)
 	case VRAST_DEPTH_LEQUAL:
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_USEW);
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZFUNC,   D3DCMP_LESSEQUAL);
+		return;
+
+	case VRAST_DEPTH_EQUAL:
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, D3DZB_USEW);
+		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ZFUNC,   D3DCMP_EQUAL);
 		return;
 	}
 }
@@ -349,23 +354,47 @@ void CRastD3DX::BlendFunc(ESourceBlend src, EDestBlend dest)
 	case VRAST_SRC_BLEND_NONE:
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
 		return;
+	case VRAST_SRC_BLEND_ONE:
+		source = D3DBLEND_ONE;
+		break;
 	case VRAST_SRC_BLEND_ZERO:
 		source = D3DBLEND_ZERO;
 		break;
 	case VRAST_SRC_BLEND_SRC_ALPHA:
 		source = D3DBLEND_SRCALPHA;
 		break;
+	case VRAST_SRC_BLEND_DST_COLOR:
+		source = D3DBLEND_DESTCOLOR;
+		break;
+	case VRAST_SRC_BLEND_INV_DST_COLOR:
+		source = D3DBLEND_INVDESTCOLOR;
+		break;
+	case VRAST_SRC_BLEND_INV_SRC_ALPHA:
+		source = D3DBLEND_INVSRCALPHA;
+		break;
 	}
 
 	switch (dest)
 	{
-	case VRAST_DEST_BLEND_NONE:
+	case VRAST_DST_BLEND_NONE:
 		m_pD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
 		return;
-	case VRAST_DEST_BLEND_SRC_COLOR:
+	case VRAST_DST_BLEND_SRC_COLOR:
 		destination = D3DBLEND_SRCCOLOR;
 		break;
-	case VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA:
+	case VRAST_DST_BLEND_INV_SRC_COLOR:
+		destination = D3DBLEND_INVSRCCOLOR;
+		break;
+	case VRAST_DST_BLEND_ONE:
+		destination = D3DBLEND_ONE;
+		break;
+	case VRAST_DST_BLEND_ZERO:
+		destination = D3DBLEND_ZERO;
+		break;
+	case VRAST_DST_BLEND_SRC_ALPHA:
+		destination = D3DBLEND_SRCALPHA;
+		break;
+	case VRAST_DST_BLEND_INV_SRC_ALPHA:
 		destination = D3DBLEND_INVSRCALPHA;
 		break;
 	}
