@@ -195,7 +195,7 @@ private:
 
 //====================================================================================
 
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_ExeConsole * pconsole);
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Console * pconsole);
 FILESYSTEM_API void FILESYSTEM_Free();
 
 #endif

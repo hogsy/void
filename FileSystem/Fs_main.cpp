@@ -11,7 +11,7 @@ Local vars
 static HFILE	* m_phMemfile=0;
 #endif
 
-static I_ExeConsole * m_pConsole = 0;
+static I_Console * m_pConsole = 0;
 CFileSystem  * g_pFileSystem = 0;
 
 /*
@@ -62,7 +62,7 @@ Create the fileSystem and return it
 copy pointer to console for cvar/printing functions
 ==========================================
 */
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_ExeConsole * pconsole)
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Console * pconsole)
 {	
 	InitMemReporting();
 

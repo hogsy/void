@@ -77,8 +77,8 @@ struct I_Renderer
 	virtual void DrawFrame(vector_t *origin,vector_t *angles) =0;
 
 	//Get other interfaces
-	virtual I_RConsole * GetConsole()=0;
-	virtual I_RHud *	 GetHud()=0;
+	virtual I_ConsoleRenderer * GetConsole()=0;
+	virtual I_RHud *			GetHud()=0;
 
 	//Windowing
 	virtual void MoveWindow(int x, int y) = 0;

@@ -77,8 +77,8 @@ Init func
 */
 bool CMemManager::Init()
 {
-	if(g_pCons)
-		g_pCons->RegisterCFunc("mem_print",&CMemPrintHunk);
+//	if(g_pCons)
+//		g_pCons->RegisterCFunc("mem_print",&CMemPrintHunk);
 	return true;
 }
 
@@ -107,9 +107,11 @@ uint CMemManager::CreateHunk(const char * name, uint size)
 			//Failed to reserve it. Error !
 			if(hunkPool[i].basePtr == NULL)
 			{
+/*
 				if(g_pCons)
 					ComPrintf("CMemManager::CreateHunk: Unable to reserve <%d> bytes for <%s>\n",
 										size, name);
+*/
 				return -1;
 			}
 
@@ -141,16 +143,16 @@ void* CMemManager::AllocHunk(uint size,uint id)
 	if(!(hunkPool[id].flags & E_MEMINUSE) ||
 		(hunkPool[id].basePtr == 0))
 	{
-		if(g_pCons)
-			ComPrintf("CMemManager::AllocHunk: Hunk is unreserved, can't alloc\n");
+//		if(g_pCons)
+//			ComPrintf("CMemManager::AllocHunk: Hunk is unreserved, can't alloc\n");
 		return 0;
 	}
 
 	if(hunkPool[id].curSize + size >= hunkPool[id].maxSize)
 	{
-		if(g_pCons)
-			ComPrintf("CMemManager::AllocHunk: Unable to alloc <%d> bytes for <%s>\n",
-								size, hunkPool[id].name);
+//		if(g_pCons)
+//			ComPrintf("CMemManager::AllocHunk: Unable to alloc <%d> bytes for <%s>\n",
+//								size, hunkPool[id].name);
 		return 0;
 	}
 
@@ -174,8 +176,8 @@ void CMemManager::FreeHunk(uint id)
 	if(!(hunkPool[id].flags & E_MEMINUSE) ||
 		(hunkPool[id].basePtr == 0))
 	{
-		if(g_pCons)
-			ComPrintf("CMemManager::AllocHunk: Hunk is empty, can't free\n");
+//		if(g_pCons)
+//			ComPrintf("CMemManager::AllocHunk: Hunk is empty, can't free\n");
 		return;
 	}
 

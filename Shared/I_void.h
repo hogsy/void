@@ -25,7 +25,7 @@ struct VoidExport_t
 	float* frametime;
 
 	//Add interfaces here
-	I_ExeConsole * vconsole;
+	I_Console * vconsole;
 };
 
 

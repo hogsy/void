@@ -8,14 +8,13 @@
 Exe Console Interface
 ==========================================
 */
-struct I_ExeConsole
+struct I_Console
 {
 	//Print Functions
 	virtual void dprint(char* text)=0;
 
 	//Cvar Registrations
-	virtual void RegisterCVar( CVar **cvar, 
-							  const char *varname, 
+	virtual CVar * RegisterCVar(const char *varname, 
 							  const char *varval,		//scanned to sting/float/int 
 							  CVar::CVarType vartype,	//var type - can be float/int/char * etc
 							  int varflags,				//extra parm, locked vars etc
@@ -37,7 +36,7 @@ struct I_ExeConsole
 Renderer Console Interface
 ==========================================
 */
-struct I_RConsole
+struct I_ConsoleRenderer
 {
 	virtual void Toggle(bool down) = 0;
 	virtual void ToggleFullscreen(bool full) = 0;
