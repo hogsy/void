@@ -32,17 +32,12 @@ namespace
 
 using namespace VoidInput;
 
-//========================================================================================
-//========================================================================================
-
 /*
 =====================================
 Constructor
 =====================================
 */
-CKeyboard::CKeyboard(CInputState * pStateManager) : 
-				m_pVarKbMode("kb_mode","1",CVAR_INT,CVAR_ARCHIVE)
-
+CKeyboard::CKeyboard(CInputState * pStateManager) 
 {
 	m_pKeyboard = this;
 
@@ -59,8 +54,6 @@ CKeyboard::CKeyboard(CInputState * pStateManager) :
 	memset(m_aCharVal, 0,  IN_NUMKEYS*sizeof(int));
 	memset(m_aKeyState, 0, IN_NUMKEYS*sizeof(BYTE));
 	memset(m_aDIBufKeydata,0,KB_DIBUFFERSIZE*sizeof(DIDEVICEOBJECTDATA));
-
-	System::GetConsole()->RegisterCVar(&m_pVarKbMode,this);
 }
 
 /*
@@ -74,6 +67,80 @@ CKeyboard::~CKeyboard()
 	m_pDIKb = 0;
 	m_pStateManager = 0;
 	m_pKeyboard = 0;
+}
+
+
+/*
+================================================
+Set the mouse mode, Reinitialize if needed
+================================================
+*/
+bool CKeyboard::SetKeyboardMode(EKbMode mode)
+{
+	//If mode is the same as current
+	if(m_eKbMode == mode)
+		return true;
+
+	//Just change mode and return if the mouse has not been created
+	if(m_eKbState == DEVNONE)
+	{
+		m_eKbMode = mode;
+		return true;
+	}
+
+	//Otherwise restart input with the new mode
+	Shutdown();
+	m_eKbMode = mode;
+	return Init();
+}
+
+/*
+=====================================
+Intialize the mouse
+The mouse mode SHOULD have been set
+by a config file by now, or else it 
+will default to DI_IMMEDIATE
+=====================================
+*/
+bool CKeyboard::Init()
+{
+	HRESULT hr;
+
+	//Activate the current mode
+	switch(m_eKbMode)
+	{
+	case KB_WIN32HOOK:
+    case KB_WIN32POLL:
+		{
+			//Initialize to the mode
+			hr = Win32_Init(m_eKbMode);
+			break;
+		}
+	case KB_DIBUFFERED:
+	case KB_DIIMMEDIATE:
+		{
+			//Initialize to the mode
+			hr = DI_Init(m_eKbMode);
+			break;
+		}
+	case KB_NONE:
+	default:
+		{
+			DIErrorMessageBox(E_FAIL,"CKeyboard::Init: No mode set\n");
+			return false;
+		}
+	}
+
+	if(FAILED(hr))
+	{
+		DIErrorMessageBox(hr,"CKeyboard::Init:");
+		return false;
+	}
+
+	//Update state
+	m_eKbState = DEVINITIALIZED;
+	Acquire();
+	return true;
 }
 
 /*
@@ -105,63 +172,6 @@ void CKeyboard :: Shutdown()
 	ComPrintf("CKeyboard::Shutdown:OK\n");
 }
 
-/*
-===========================================
-Initializes the keyboard to the given mode
-===========================================
-*/
-HRESULT	CKeyboard::Init(int exclusive,EKbMode mode)
-{
-	if(exclusive)
-		m_bExclusive = true;
-
-	//mode specified as NONE when the device is first initialized
-	if(mode == KB_NONE)
-	{
-		//then default to what we read from the config files
-		if(m_eKbMode != KB_NONE)
-			mode = m_eKbMode;
-		//If read nothing from config, then default to BUFFERED
-		else
-			mode = KB_DIBUFFERED;
-	}
-
-	//If the device is active and is in the same mode 
-	//then we don't need to do anything
-	if((m_eKbMode == mode) && (m_eKbState != DEVNONE))
-	{
-		ComPrintf("CKeyboard::InitMode: Already in given mode\n");
-		return DI_OK;
-	}
-
-	HRESULT hr;
-	switch(mode)
-	{
-	case KB_WIN32HOOK:
-    case KB_WIN32POLL:
-		{
-			//Initialize to the mode
-			hr = Win32_Init(mode);
-			if(FAILED(hr))
-				return hr;
-			break;
-		}
-	case KB_DIBUFFERED:
-	case KB_DIIMMEDIATE:
-		{
-			//Initialize to the mode
-			hr = DI_Init(mode);
-			if(FAILED(hr))
-				return hr;
-			break;
-		}
-	}
-	m_eKbState = DEVINITIALIZED;
-	
-	//Try to acquire the kb now
-	Acquire();
-	return DI_OK;
-}
 
 /*
 =====================================
@@ -170,9 +180,6 @@ DirectInput init
 */
 HRESULT CKeyboard::DI_Init(EKbMode mode)
 {
-	if(m_eKbState != DEVNONE)
-		Shutdown();
-
 	//Create the device
 	HRESULT hr = (VoidInput::GetDirectInput())->CreateDeviceEx( GUID_SysKeyboard, 
 										IID_IDirectInputDevice7, 
@@ -250,12 +257,10 @@ HRESULT CKeyboard::DI_Init(EKbMode mode)
 
 		//Set Update pointer
 		ComPrintf("CKeyboard::InitMode:Initialized DI Buffered mode\n");
-		m_eKbMode = KB_DIBUFFERED;
 	}
 	else if(mode == KB_DIIMMEDIATE)
 	{
 		ComPrintf("CKeyboard::InitMode:Intialized to DI Immediate mode\n");
-		m_eKbMode = KB_DIIMMEDIATE;
 	}
 	SetCharTable(KB_DIIMMEDIATE);
 	return DI_OK;
@@ -286,15 +291,11 @@ Win32 Initialize
 */
 HRESULT	CKeyboard::Win32_Init(EKbMode mode)
 {
-	if(m_eKbState != DEVNONE)
-		Shutdown();
-
 	if(mode == KB_WIN32POLL)
 		ComPrintf("CKeyboard::InitMode:Initialized Win32 Polling mode\n");
 	else
 		ComPrintf("CKeyboard::InitMode:Initialized Win32 Hook\n");
 
-	m_eKbMode = mode;
 	SetCharTable(mode);
 	return DI_OK;
 }
@@ -312,158 +313,9 @@ bool CKeyboard::Win32_Shutdown()
 }
 
 
-/*
-===========================================
-Acquire the keyboard
-===========================================
-*/
-HRESULT CKeyboard::Acquire()
-{
-	if(m_eKbState == DEVACQUIRED)
-		return S_OK;
+//==========================================================================
+//==========================================================================
 
-	if(m_eKbMode == KB_NONE)
-	{
-		ComPrintf("CKeyboard::Acquire failed. Keyboard is not intialized\n");
-		return DIERR_NOTINITIALIZED;
-	}
-
-	if(m_eKbMode == KB_WIN32HOOK)
-	{
-		hWinKbHook = ::SetWindowsHookEx(WH_KEYBOARD,		// type of hook to install
-									&Win32_KeyboardProc,	// address of hook procedure
-									System::GetHInstance(),	// handle to application instance
-								  ::GetCurrentThreadId());	// identity of thread to install hook for
-	
-		if(hWinKbHook == 0)
-		{
-			ComPrintf("CKeyboard::Win32_Init : Failed to set Kb Hook\n");
-			return E_FAIL;
-		}
-	}
-	else if((m_eKbMode == KB_DIBUFFERED || m_eKbMode == KB_DIIMMEDIATE))
-	{
-		if(!m_pDIKb)
-		{
-			ComPrintf("CKeyboard::Acquire failed. DI is not intialized\n");
-			return DIERR_NOTINITIALIZED;
-		}
-
-		HRESULT hr = m_pDIKb->Acquire();
-		if(FAILED(hr))
-		{
-			ComPrintf("CKeyboard::Unable to acquire the keyboard\n");
-			m_eKbState = DEVINITIALIZED;
-			return hr;
-		}
-	}
-	ComPrintf("CKeyboard::Acquire :OK\n");
-	m_eKbState = DEVACQUIRED;
-	return DI_OK;
-}
-
-/*
-===========================================
-Unacquire the keyboard
-===========================================
-*/
-bool CKeyboard::UnAcquire()
-{
-	if(m_eKbState == DEVACQUIRED)
-	{
-		if(m_eKbMode == KB_WIN32HOOK)
-		{
-			if(hWinKbHook)
-				UnhookWindowsHookEx(hWinKbHook);
-		}
-		else if(m_eKbMode == KB_DIBUFFERED || m_eKbMode == KB_DIIMMEDIATE)
-		{
-			FlushKeyBuffer();
-			m_pDIKb->Unacquire();
-		}
-		m_eKbState = DEVINITIALIZED;
-		ComPrintf("CKeyboard::UnAcquire :OK\n");
-	}
-	return true;
-}
-
-/*
-===========================================
-Toggle Exclusive Mode
-===========================================
-*/
-HRESULT	CKeyboard::SetExclusive(bool exclusive)
-{
-	if(m_pDIKb && 
-	   ((m_eKbMode == KB_DIIMMEDIATE) ||
- 	    (m_eKbMode == KB_DIBUFFERED)))
-	{
-		if(exclusive && !m_bExclusive)
-		{
-			//Try changing to DI Exclusive mode is using DirectInput
-			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
-													DISCL_FOREGROUND|DISCL_EXCLUSIVE);
-			if(FAILED(hr))
-				return hr;
-			ComPrintf("CKeyboard::SetExclusive, Now in Exclusive Mode\n");
-			Acquire();
-			m_bExclusive = true;
-			return hr;
-		}
-		else if(!exclusive && m_bExclusive)
-		{
-			UnAcquire();
-			HRESULT hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
-														DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
-			if(FAILED(hr))
-				return hr;
-			ComPrintf("CKeyboard::SetExclusive, Now in Non-Exclusive Mode\n");
-			Acquire();
-			m_bExclusive = false;
-			return hr;
-		}
-		return DI_OK;
-	}
-	//In another Input mode. just set and return
-	m_bExclusive = exclusive;
-	return DI_OK;
-}
-
-/*
-===========================================
-Returns current State
-===========================================
-*/
-int	 CKeyboard::GetDeviceState() const
-{ return m_eKbState; 
-}
-
-/*
-===========================================
-Flushes current data
-===========================================
-*/
-void CKeyboard::FlushKeyBuffer()
-{
-	if(m_pDIKb && m_eKbMode == CKeyboard::KB_DIBUFFERED)
-	{
-		DWORD num= INFINITE;
-		m_pDIKb->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),NULL,&num,0);
-	}
-	m_pStateManager->FlushKeys();
-}
-
-
-bool CKeyboard::HandleCVar(const CVarBase * cvar, const CParms &parms)
-{
-	if(cvar == &m_pVarKbMode)
-		return CKBMode((CVar*)cvar, parms);
-	return false;
-}
-
-
-//========================================================================================
 /*
 ===========================================
 Update the Keyboard,
@@ -638,58 +490,144 @@ void CKeyboard::Update_Win32()
 //======================================================================================
 
 /*
-=====================================
-Change keyboard mode
-=====================================
+===========================================
+Acquire the keyboard
+===========================================
 */
-bool CKeyboard::CKBMode(const CVar * cvar, const CParms &parms)
+bool CKeyboard::Acquire()
 {
-	if(parms.NumTokens() > 1)
-	{
-		int mode = parms.IntTok(1);
-
-		//Check for Vaild value
-		if(mode < KB_DIBUFFERED ||  mode > KB_WIN32POLL)
-		{
-			ComPrintf("CKeyboard::CKBMode:Invalid mode\n");
-			return false;
-		}
-
-		//Allow configs to change the mode if its valid
-		//even before the mouse actually inits
-		if(m_eKbState == DEVNONE) 
-		{
-			m_eKbMode = (EKbMode)mode;
-			return true;
-		}
-
-		if(FAILED(Init(m_bExclusive,(EKbMode)mode)))
-		{
-			ComPrintf("CKeyboard:CKBMode: Couldnt change to mode %d\n",mode);
-			return false;
-		}
+	if(m_eKbState == DEVACQUIRED)
 		return true;
+
+	if(m_eKbMode == KB_NONE)
+	{
+		ComPrintf("CKeyboard::Acquire failed. Keyboard is not intialized\n");
+		return false;
 	}
 
-	ComPrintf("Keyboard Mode is %d\n",m_eKbMode);
-	switch(m_eKbMode)
+	if(m_eKbMode == KB_WIN32HOOK)
 	{
-	case KB_NONE:
-		ComPrintf("CKeyboard mode::No mode set\n");
-	case KB_DIBUFFERED:
-		ComPrintf("CKeyboard mode::DirectInput Buffered mode\n");
-		break;
-	case KB_DIIMMEDIATE:
-		ComPrintf("CKeyboard mode::DirectInput Immediate mode\n");
-		break;
-	case KB_WIN32POLL:
-		ComPrintf("CKeyboard mode::Win32 Keyboard polling\n");
-		break;
-	case KB_WIN32HOOK:
-		ComPrintf("CKeyboard mode::Win32 Keyboard Hooks\n");
-		break;
+		hWinKbHook = ::SetWindowsHookEx(WH_KEYBOARD,		// type of hook to install
+									&Win32_KeyboardProc,	// address of hook procedure
+									System::GetHInstance(),	// handle to application instance
+								  ::GetCurrentThreadId());	// identity of thread to install hook for
+	
+		if(hWinKbHook == 0)
+		{
+			ComPrintf("CKeyboard::Win32_Init : Failed to set Kb Hook\n");
+			return false;
+		}
 	}
-	return false;
+	else if((m_eKbMode == KB_DIBUFFERED || m_eKbMode == KB_DIIMMEDIATE))
+	{
+		if(!m_pDIKb)
+		{
+			ComPrintf("CKeyboard::Acquire failed. DI is not intialized\n");
+			return false;
+		}
+
+		HRESULT hr = m_pDIKb->Acquire();
+		if(FAILED(hr))
+		{
+			DIErrorMessageBox(hr,"CKeyboard::Acquire");
+//			ComPrintf("CKeyboard::Unable to acquire the keyboard\n");
+			m_eKbState = DEVINITIALIZED;
+			return false;
+		}
+	}
+	ComPrintf("CKeyboard::Acquire :OK\n");
+	m_eKbState = DEVACQUIRED;
+	return true;
+}
+
+/*
+===========================================
+Unacquire the keyboard
+===========================================
+*/
+bool CKeyboard::UnAcquire()
+{
+	if(m_eKbState == DEVACQUIRED)
+	{
+		if(m_eKbMode == KB_WIN32HOOK)
+		{
+			if(hWinKbHook)
+				UnhookWindowsHookEx(hWinKbHook);
+		}
+		else if(m_eKbMode == KB_DIBUFFERED || m_eKbMode == KB_DIIMMEDIATE)
+		{
+			FlushKeyBuffer();
+			m_pDIKb->Unacquire();
+		}
+		m_eKbState = DEVINITIALIZED;
+		ComPrintf("CKeyboard::UnAcquire :OK\n");
+	}
+	return true;
+}
+
+/*
+===========================================
+Toggle Exclusive Mode
+===========================================
+*/
+bool CKeyboard::SetExclusive(bool bExclusive)
+{
+	if(m_pDIKb && 
+	   ((m_eKbMode == KB_DIIMMEDIATE) ||
+ 	    (m_eKbMode == KB_DIBUFFERED)))
+	{
+		if(bExclusive == m_bExclusive)
+			return true;
+
+		HRESULT hr;
+
+		if(bExclusive)
+		{
+			//Try changing to DI Exclusive mode is using DirectInput
+			UnAcquire();
+			hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
+								DISCL_FOREGROUND|DISCL_EXCLUSIVE);
+			if(FAILED(hr))
+			{
+				DIErrorMessageBox(hr,"CKeyboard::SetExclusive: Change to exclusive");
+				return false;
+			}
+			ComPrintf("CKeyboard::SetExclusive, Now in Exclusive Mode\n");
+		}
+		else
+		{
+			UnAcquire();
+			HRESULT hr = m_pDIKb->SetCooperativeLevel(System::GetHwnd(), 
+														DISCL_FOREGROUND|DISCL_NONEXCLUSIVE);
+			if(FAILED(hr))
+			{
+				DIErrorMessageBox(hr,"CKeyboard::SetExclusive: Change to nonexclusive");
+				return false;
+			}
+			ComPrintf("CKeyboard::SetExclusive, Now in Non-Exclusive Mode\n");
+		}
+
+		if(!Acquire())
+			return false;
+	}
+	
+	m_bExclusive = bExclusive;
+	return true;
+}
+
+/*
+===========================================
+Flushes current data
+===========================================
+*/
+void CKeyboard::FlushKeyBuffer()
+{
+	if(m_pDIKb && m_eKbMode == CKeyboard::KB_DIBUFFERED)
+	{
+		DWORD num= INFINITE;
+		m_pDIKb->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),NULL,&num,0);
+	}
+	m_pStateManager->FlushKeys();
 }
 
 /*

@@ -64,13 +64,15 @@ bool CMouse::SetMouseMode(EMouseMode mode)
 		return true;
 
 	//Just change mode and return if the mouse has not been created
-	m_eMouseMode = mode;
-
 	if(m_eMouseState == DEVNONE)
+	{
+		m_eMouseMode = mode;
 		return true;
+	}
 
 	//Otherwise restart input with the new mode
 	Shutdown();
+	m_eMouseMode = mode;
 	return Init();
 }
 

@@ -30,7 +30,7 @@ public:
 	void Shutdown();			//Shutdown the Input System
 
 	bool SetExclusive(bool on);
-	bool GetExclusiveVar();
+	bool GetExclusiveVar() const;
 
 	void Acquire();				//Acquire all devices
 	bool AcquireMouse();		//Unacquire Mouse
@@ -66,14 +66,17 @@ private:
 	CVar m_pVarSens;
 	CVar m_pVarInvert;
 	
-	CVar m_pVarMouseMode;
 	CVar m_pVarMouseFilter;
-
+	CVar m_pVarMouseMode;
+	CVar m_pVarKbMode;
+	
 	bool CSetExclusive(const CVar * var, const CParms &parms);
 	bool CXSens(const CVar * var, const CParms &parms);
 	bool CYSens(const CVar * var, const CParms &parms);
 	bool CSens(const CVar *var, const CParms &parms);
+	
 	bool CMouseMode(const CVar *var, const CParms &parms);
+	bool CKBMode(const CVar * cvar, const CParms &parms);
 };
 
 #endif

@@ -9,8 +9,6 @@ using namespace VoidInput;
 
 LPDIRECTINPUT7	m_pDInput=0;//The direct input object
 
-
-
 /*
 =====================================
 Constructor
@@ -23,6 +21,7 @@ CInput::CInput() :
 				m_pVarSens ("in_sens","5.0",CVAR_FLOAT,CVAR_ARCHIVE),
 				m_pVarInvert("in_invert","0",CVAR_BOOL,CVAR_ARCHIVE),
 				m_pVarMouseMode("in_mousemode","1",CVAR_INT,CVAR_ARCHIVE),
+				m_pVarKbMode("in_kbmode","1",CVAR_INT, CVAR_ARCHIVE),
 				m_pVarMouseFilter("in_filter","0",CVAR_BOOL, CVAR_ARCHIVE)
 {
 	m_pStateManager = new CInputState();
@@ -37,6 +36,7 @@ CInput::CInput() :
 	System::GetConsole()->RegisterCVar(&m_pVarSens,this);
 	System::GetConsole()->RegisterCVar(&m_pVarInvert,this);
 	System::GetConsole()->RegisterCVar(&m_pVarMouseMode,this);
+	System::GetConsole()->RegisterCVar(&m_pVarKbMode,this);
 	System::GetConsole()->RegisterCVar(&m_pVarMouseFilter, this);
 }
 
@@ -90,7 +90,6 @@ bool CInput::Init()
 
 	m_pMouse->SetExclusive(m_pVarExclusive.bval);
 	m_pMouse->SetMouseMode((CMouse::EMouseMode)m_pVarMouseMode.ival);
-	
 	if(!m_pMouse->Init())
 	{
 		Shutdown();
@@ -98,11 +97,11 @@ bool CInput::Init()
 	}
 
 
-	hr =m_pKb->Init(m_pVarExclusive.ival, CKeyboard::KB_NONE); 
-	if(FAILED(hr))
+	m_pKb->SetExclusive(m_pVarExclusive.bval);
+	m_pKb->SetKeyboardMode((CKeyboard::EKbMode)m_pVarKbMode.ival);
+	if(!m_pKb->Init())
 	{
 		Shutdown();
-		DIErrorMessageBox(hr,"CInput::Init:Keyboard Intialization failed");
 		return false;
 	}
 	return true;
@@ -159,7 +158,7 @@ bool CInput::AcquireKeyboard()
 		return false;
 	
 	//Already acquired, or acquring was successful
-	if((m_pKb->GetDeviceState() == DEVACQUIRED) || (SUCCEEDED(m_pKb->Acquire())))
+	if((m_pKb->GetDeviceState() == DEVACQUIRED) || m_pKb->Acquire())
 		return true;
 
 	ComPrintf("CInput::Acquire::Couldn't acquire Keyboard\n");
@@ -219,7 +218,7 @@ bool CInput::UnAcquireKeyboard()
 Unacquire Input devices
 =====================================
 */
-void CInput :: UnAcquire()
+void CInput::UnAcquire()
 {
 	UnAcquireKeyboard();
 	UnAcquireMouse();
@@ -236,10 +235,14 @@ void CInput::Resize(int x, int y, int w, int h)
 }
 
 
+/*
+================================================
+Set exclusive mode
+================================================
+*/
 bool CInput::SetExclusive(bool on)
 {
-	if(!m_pMouse->SetExclusive(on) ||
-	   FAILED(m_pKb->SetExclusive(on)))
+	if(!m_pMouse->SetExclusive(on) ||  !m_pKb->SetExclusive(on))
 	{
 		if(on)
 			ComPrintf("Failed to change Input mode to Exclusive\n");
@@ -249,11 +252,6 @@ bool CInput::SetExclusive(bool on)
 	}
 	return true;
 }
-
-bool CInput::GetExclusiveVar()
-{	return m_pVarExclusive.bval;
-}
-
 
 /*
 =====================================
@@ -274,6 +272,8 @@ void CInput::UpdateDevices()
 	m_pKb->Update();
 }
 
+
+bool CInput::GetExclusiveVar() const {	return m_pVarExclusive.bval; }
 I_InputFocusManager * CInput::GetFocusManager() { return m_pStateManager; }
 
 //========================================================================================
@@ -327,7 +327,7 @@ bool CInput::CMouseMode(const CVar * var, const CParms &parms)
 			
 		if(!m_pMouse->SetMouseMode((CMouse::EMouseMode)mode))
 		{
-			ComPrintf("CMouse:CMouseMode: Couldn't change to mode %d\n",mode);
+			ComPrintf("CInput:CMouseMode: Couldn't change to mode %d\n",mode);
 			return false;
 		}
 		return true;
@@ -339,15 +339,62 @@ bool CInput::CMouseMode(const CVar * var, const CParms &parms)
 	switch(m_pMouse->GetMouseMode())
 	{
 	case CMouse::M_NONE:
-		ComPrintf("CMouse mode::Not intialized\n");
+		ComPrintf("Mouse mode::Not intialized\n");
 	case CMouse::M_DIIMMEDIATE:
-		ComPrintf("CMouse mode::DirectInput Immediate mode\n");
+		ComPrintf("Mouse mode::DirectInput Immediate mode\n");
 		break;
 	case CMouse::M_DIBUFFERED:
-		ComPrintf("CMouse mode::DirectInput Buffered mode\n");
+		ComPrintf("Mouse mode::DirectInput Buffered mode\n");
 		break;
 	case CMouse::M_WIN32:
-		ComPrintf("CMouse mode::Win32 Mouse polling\n");
+		ComPrintf("Mouse mode::Win32 Mouse polling\n");
+		break;
+	}
+	return false;
+}
+
+/*
+================================================
+Change keyboard mode
+================================================
+*/
+bool CInput::CKBMode(const CVar * cvar, const CParms &parms)
+{
+	if(parms.NumTokens() > 1)
+	{
+		int mode = parms.IntTok(1);
+
+		//Check for Vaild value
+		if(mode < CKeyboard::KB_DIBUFFERED ||  mode > CKeyboard::KB_WIN32POLL)
+		{
+			ComPrintf("Invalid Keyboard mode specified\n");
+			return false;
+		}
+
+		if(!m_pKb->SetKeyboardMode((CKeyboard::EKbMode)mode))
+		{
+			ComPrintf("CInput:CKBMode: Couldnt change to mode %d\n",mode);
+			return false;
+		}
+		return true;
+	}
+
+	ComPrintf("Keyboard Mode is %d\n", m_pKb->GetKeyboardMode());
+	switch(m_pKb->GetKeyboardMode())
+	{
+	case CKeyboard::KB_NONE:
+		ComPrintf("Keyboard mode::No mode set\n");
+	case CKeyboard::KB_DIBUFFERED:
+		ComPrintf("Keyboard mode::DirectInput Buffered mode\n");
+		break;
+	case CKeyboard::KB_DIIMMEDIATE:
+		ComPrintf("Keyboard mode::DirectInput Immediate mode\n");
+		break;
+	case CKeyboard::KB_WIN32POLL:
+		ComPrintf("Keyboard mode::Win32 Keyboard polling\n");
+		break;
+	case CKeyboard::KB_WIN32HOOK:
+		ComPrintf("Keyboard mode::Win32 Keyboard Hooks\n");
 		break;
 	}
 	return false;
@@ -434,6 +481,8 @@ bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		return CSens((CVar*)cvar,parms);
 	else if(cvar == &m_pVarMouseMode)
 		return CMouseMode((CVar*)cvar,parms);
+	else if(cvar == &m_pVarKbMode)
+		return CKBMode((CVar*)cvar,parms);
 	else if(cvar == &m_pVarMouseFilter)
 	{
 		if(parms.NumTokens() > 1)
@@ -472,7 +521,6 @@ bool CInput::HandleCVar(const CVarBase * cvar, const CParms &parms)
 
 //======================================================================================
 //======================================================================================
-
 
 
 namespace VoidInput {

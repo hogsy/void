@@ -21,8 +21,7 @@ public:
 		M_DIBUFFERED  = 2,
 		M_WIN32       = 3
 	};
-	//=============================================
-
+	
 	CMouse(CInputState * pStateManager);
 	~CMouse();
 
