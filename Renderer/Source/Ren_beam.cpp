@@ -10,7 +10,6 @@ vector_t lines[1024][2];
 int		 num_lines;
 
 
-
 /*
 ===========
 defs only needed for beam tree
@@ -644,7 +643,7 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 		for ( ; sil->polys; sil->polys = next)
 		{
 			next = sil->polys->next;
-			cache_add_poly(sil->polys);
+			cache_add_poly(sil->polys, CACHE_PASS_ZFILL);	// polys from beam tree are always perfect
 		}
 
 		free_sil(sil);
@@ -757,8 +756,37 @@ void beam_insert_r(beam_node_t *node, sil_t *sil)
 }
 
 
-void beam_insert(bspf_brush_t *br)
+void beam_insert(bspf_brush_t *br, int contents)
 {
+	// non-solid are never passed through beam tree
+	if (!(contents & CONTENTS_SOLID))
+	{
+		int cpass;
+		if (contents & CONTENTS_TRANSLUCENT)
+			cpass = CACHE_PASS_ALPHABLEND;
+
+		else
+			cpass = CACHE_PASS_ZBUFFER;
+
+		for (int s=0; s<br->num_sides; s++)
+		{
+			cpoly_t *poly = get_poly();
+			poly->poly.num_vertices = world->sides[s+br->first_side].num_verts;
+			poly->poly.texdef		= world->sides[s+br->first_side].texdef;
+			poly->poly.lightdef		= world->sides[s+br->first_side].lightdef;
+
+			for (int v=0; v<poly->poly.num_vertices; v++)
+			{
+				VectorCopy(world->verts[world->iverts[world->sides[s+br->first_side].first_vert+v]], poly->poly.vertices[v]);
+			}
+
+			cache_add_poly(poly, CACHE_PASS_ALPHABLEND);
+		}
+
+		return;
+	}
+
+
 	sil_t *bsil = sil_build(br);
 	if (!bsil)
 		return;

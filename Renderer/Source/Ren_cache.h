@@ -3,13 +3,11 @@
 
 #include "3dmath.h"
 
-/*
-typedef struct cpoly_s
-{
-	poly_t	poly;
-	struct	cpoly_s *next;
-} cpoly_t;
-*/
+#define	CACHE_PASS_ZFILL		0
+#define CACHE_PASS_ZBUFFER		1
+#define	CACHE_PASS_ALPHABLEND	2
+#define CACHE_PASS_NUM			3
+
 
 struct cpoly_t
 {
@@ -19,7 +17,7 @@ struct cpoly_t
 	cpoly_t *next;
 };
 
-void cache_add_poly(cpoly_t *poly);
+void cache_add_poly(cpoly_t *poly, int cache);
 void cache_destroy(void);
 void cache_purge(void);
 cpoly_t* get_poly(void);

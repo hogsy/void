@@ -16,7 +16,8 @@ struct tex_t
 		tex_names = 0;
 		light_names = 0;
 		dims = 0;
-		polycaches = 0;
+		for (int i=0; i<CACHE_PASS_NUM; i++)
+			polycaches[i] = 0;
 	}
 
 	unsigned int num_textures;
@@ -25,7 +26,7 @@ struct tex_t
 	GLuint		*tex_names;
 	GLuint		*light_names;
 	dimension_t	*dims;
-	cpoly_t		**polycaches;
+	cpoly_t		**polycaches[CACHE_PASS_NUM];	// [0] - zfill, [1] - zbuffered
 };
 
 extern tex_t *tex;

@@ -109,39 +109,6 @@ void r_init(void)
 //===========================================================
 //	draw node - draws this node, then what's behind it
 //===========================================================
-/*
-==============
-r_draw_brush
-==============
-
-void r_draw_brush(int n)
-{
-	//
-	// just add polys to the cache
-	// this is where the beam tree / c-buffer / s-buffer / whatever insertion would be
-	int endp = world->brushes[n].first_side + world->brushes[n].num_sides;
-	for (int p=world->brushes[n].first_side; p<endp; p++)
-	{
-		// backface cull
-		if (dot(forward, world->planes[world->sides[p].plane].norm) > 0)
-			continue;
-
-		cpoly_t *poly = get_poly();
-		poly->poly.num_vertices = world->sides[p].num_verts;
-		poly->poly.texdef = world->sides[p].texdef;
-		poly->poly.lightdef = world->sides[p].lightdef;
-
-		for (int v=0; v<poly->poly.num_vertices; v++)
-		{
-			VectorCopy(world->verts[world->iverts[world->sides[p].first_vert+v]], poly->poly.vertices[v]);
-		}
-
-		cache_add_poly(poly);
-	}
-}
-*/
-
-
 void r_draw_leaf(int l)
 {
 	//
@@ -169,7 +136,7 @@ void r_draw_leaf(int l)
 
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
 	for (int b=world->leafs[l].first_brush; b < endb; b++)
-		beam_insert(&world->brushes[b]);
+		beam_insert(&world->brushes[b], world->leafs[l].contents);
 }
 
 
@@ -257,9 +224,6 @@ build and draw the world
 ***********************/
 void r_draw_world(vector_t *blend)
 {
-	// turn on zbuffering for now
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
 	glColor3fv(&blend->x);
 
 	build_frust();

@@ -177,13 +177,16 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		return false;
 	}
 
-	tex->polycaches = new cpoly_t* [tex->num_textures];
-	if (!tex->polycaches) 
+	for (int i=0; i<CACHE_PASS_NUM; i++)
 	{
-		FError("mem for map tex cache");
-		return false;
+		tex->polycaches[i] = new cpoly_t* [tex->num_textures];
+		if (!tex->polycaches[i]) 
+		{
+			FError("mem for map tex cache");
+			return false;
+		}
+		memset(tex->polycaches[i], 0, sizeof(cpoly_t**) * tex->num_textures);
 	}
-	memset(tex->polycaches, 0, sizeof(cpoly_t**) * tex->num_textures);
 
 	tex->dims = new dimension_t[tex->num_textures];
 	if (!tex->dims) 
@@ -350,10 +353,11 @@ bool CTextureManager::UnloadWorldTextures()
 	delete [] tex->tex_names;
 	tex->num_textures = 0;
 
-//	free (tex->cache);
-//	tex->cache = NULL;
-	delete [] tex->polycaches;
-	tex->polycaches = NULL;
+	for (int i=0; i<CACHE_PASS_NUM; i++)
+	{
+		delete [] tex->polycaches[i];
+		tex->polycaches[i] = NULL;
+	}
 
 	// free lightmaps
 	if (tex->num_lightmaps)
