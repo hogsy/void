@@ -185,9 +185,11 @@ void CGameClient::RunFrame(float frameTime)
 		m_cmd.time = 255.0f;
 
 	//Print misc crap
-	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
-	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
-	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
+	m_pClGame->HudPrintf(0,100,0,"ORIGIN: %.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
+//	m_pClGame->HudPrintf(0,120,0,"MINS  : %.2f,%.2f,%.2f", m_pGameClient->mins.x,m_pGameClient->mins.y,m_pGameClient->mins.z);
+//	m_pClGame->HudPrintf(0,140,0,"MAXS  : %.2f,%.2f,%.2f", m_pGameClient->maxs.x,m_pGameClient->maxs.y,m_pGameClient->maxs.z);
+//	m_pClGame->HudPrintf(0,120,0,"FORWARD: %.2f,%.2f,%.2f", m_vecForward.x,m_vecForward.y,m_vecForward.z);
+//	m_pClGame->HudPrintf(0,140,0,"UP     : %.2f,%.2f,%.2f", m_vecUp.x,m_vecUp.y,m_vecUp.z);	
 //	m_pClGame->HudPrintf(0,160,0,"ANGLES : %.2f,%.2f,%.2f", m_pGameClient->angles.x,m_pGameClient->angles.y,m_pGameClient->angles.z);
 
 	//Drawing

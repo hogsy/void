@@ -141,10 +141,7 @@ Acquire the mouse
 bool CInput::AcquireMouse()
 {
 	//If device has not been initialized then just return
-	if(!m_pMouse)
-		return true;
-		
-	if(m_pMouse->GetDeviceState() == DEVNONE)
+	if(!m_pMouse || (m_pMouse->GetDeviceState() == DEVNONE))
 		return false;
 	
 	//Already acquired, or acquring was successful
@@ -162,11 +159,8 @@ Acquire the Keyboard
 */
 bool CInput::AcquireKeyboard()
 {
-	if(!m_pKb)
-		return true;
-
 	//If device has not been initialized then just return
-	if(!m_pKb->GetDeviceState() == DEVNONE)
+	if(!m_pKb || (m_pKb->GetDeviceState() == DEVNONE))
 		return false;
 	
 	//Already acquired, or acquring was successful

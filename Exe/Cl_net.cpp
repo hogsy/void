@@ -319,26 +319,35 @@ void CGameClient::ReadClientInfo(CBuffer &buffer)
 	strcpy(szCharacter,buffer.ReadString());
 
 	char * skin = strchr(szCharacter,'/');
-
-	//Bad string, deal with it
+	
+	//See if a skin name was given
 	if(!skin)
 	{
-		ComPrintf("CL: Unable to get skinname: %s: Defaulting to %s\n", 
-					szCharacter, m_cvDefaultChar.string);
+		ComPrintf("CL: Unable to get skinname: %s: Defaulting to %s\n", szCharacter, m_cvDefaultChar.string);
 		strcpy(szCharacter,m_cvDefaultChar.string);
+		//reset to default character
+		skin = strchr(szCharacter,'/');
 	}
 
+	//Load skin
 	char path[COM_MAXPATH];
 	sprintf(path,"Models/Player/%s", szCharacter);
+ComPrintf("CL: REMOTE : Loading player skin: %s\n", path);
+	
 	m_clients[num].skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
 	m_clients[num].skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
-	char modelName[CL_MAXMODELNAME];
-	strncpy(modelName,szCharacter, skin-szCharacter);
-	sprintf(path,"Models/Player/%s/tris.md2", modelName);
+	//Load Model
+	strncpy(m_clients[num].model, szCharacter, skin-szCharacter);
+	sprintf(path,"Models/Player/%s/tris.md2", m_clients[num].model);
+ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
+
 	m_clients[num].mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_clients[num].mdlCache = CACHE_LOCAL;
 
+	//Setup bounding box. gravity,. friction etc here as well
+	m_clients[num].mins = VEC_CLIENT_MINS;
+	m_clients[num].maxs = VEC_CLIENT_MAXS;
 	m_clients[num].inUse = true;
 
 	ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
@@ -425,9 +434,9 @@ locally have it
 */
 bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 {
+	char modelName[CL_MAXMODELNAME];
 	const char * szCharacter = stringval.String();
 	char * pSkin = strchr(szCharacter,'/');
-	char modelName[CL_MAXMODELNAME];
 
 	if(pSkin)
 		strncpy(modelName,szCharacter,pSkin-szCharacter);
@@ -435,7 +444,6 @@ bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 		strncpy(modelName,szCharacter,CL_MAXMODELNAME);
 
 	//Try to load the given model
-	
 	char path[COM_MAXPATH];
 	I_FileReader * pFile = System::CreateFileReader(FILE_BUFFERED);
 
@@ -473,7 +481,6 @@ bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 
 	m_cvCharacter.ForceSet(path);
 
-
 	//Now unload the current stuff, and load the new stuff
 	if(m_ingame)
 	{
@@ -485,6 +492,7 @@ bool CGameClient::ValidateCharacter(const CStringVal &stringval)
 		m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
 		sprintf(path,"Models/Player/%s/tris.md2",modelName);
+
 		m_pGameClient->mdlCache = CACHE_LOCAL;
 		m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 		strcpy(m_pGameClient->model,modelName);
@@ -519,20 +527,26 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	//Load model Resources
 	char path[COM_MAXPATH];
 	char * skin = strchr(m_cvCharacter.string,'/');
+	
 	if(skin)
+	{
 		strncpy(m_pGameClient->model, m_cvCharacter.string, skin - m_cvCharacter.string);
+		
+		skin++;
+		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,skin);
+	}
 	else
+	{
 		strcpy(m_pGameClient->model, m_cvCharacter.string);
+		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,m_pGameClient->model);
+	}
 
-	if(skin)
-		sprintf(path,"Models/Player/%s", m_cvCharacter.string);
-	else
-		sprintf(path,"Models/Player/%s/%s", m_cvCharacter.string,m_cvCharacter.string);
-
+ComPrintf("CL: LOCAL: Loading player skin: %s\n", path);
 	m_pGameClient->skinNum = m_pClGame->RegisterImage(path, CACHE_LOCAL);
 	m_pGameClient->skinNum |= MODEL_SKIN_UNBOUND_LOCAL;
 
 	sprintf(path,"Models/Player/%s/tris.md2",m_pGameClient->model);
+ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 	m_pGameClient->mdlIndex = m_pClGame->RegisterModel(path, CACHE_LOCAL);
 	m_pGameClient->mdlCache = CACHE_LOCAL;
 	
@@ -557,7 +571,6 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 		}
 	}
 
-	
 	m_ingame = true;
 	m_campath = -1;
 	m_vecBlend.Set(0.0f,0.0f,0.0f);

@@ -155,7 +155,7 @@ void CGameClient::UpdatePosition(const float &time)
 	else
 	{
 		m_bOnGround = false;
-		m_pClGame->HudPrintf(0,160,0,"IN AIR");
+//		m_pClGame->HudPrintf(0,160,0,"IN AIR");
 	}
 
 }
