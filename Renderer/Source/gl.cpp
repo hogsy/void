@@ -49,6 +49,7 @@ GLVIEWPORT			glViewport			= NULL;
 //====================================================================================
 GLMULTITEXCOORD2FARB	glMultiTexCoord2fARB	= NULL;
 GLACTIVETEXTUREARB		glActiveTextureARB		= NULL;
+WGLSWAPINTERVALEXT		wglSwapIntervalEXT		= NULL;
 
 
 // wgl* functions
@@ -425,6 +426,7 @@ void OpenGLGetExtensions(void)
 {
 	glMultiTexCoord2fARB	= (GLMULTITEXCOORD2FARB)	_wglGetProcAddress("glMultiTexCoord2fARB");
 	glActiveTextureARB		= (GLACTIVETEXTUREARB)		_wglGetProcAddress("glActiveTextureARB");
+	wglSwapIntervalEXT		= (WGLSWAPINTERVALEXT)		_wglGetProcAddress("wglSwapIntervalEXT");
 }
 
 

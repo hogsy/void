@@ -6,6 +6,7 @@ CVar *	g_pFullbright;
 CVar *	g_pDrawSils;
 CVar *  g_pFov;
 CVar *  g_pMultiTexture;
+CVar *	g_pVidSynch;
 
 /*
 ======================================
@@ -206,6 +207,38 @@ bool CVar_Fov(const CVar * var, int argc, char** argv)
 }
 
 
+/*
+=======================================
+toggle vid synch
+=======================================
+*/
+bool CVar_VidSynch(const CVar * var, int argc, char** argv)
+{
+	if(argc<=1)
+		ConPrint("r_vidsynch = %d\n", var->value);
+
+	else
+	{
+		int temp=0;
+
+		if(argv[1] && sscanf(argv[1],"%d",&temp))
+		{
+			if (rInfo->rflags & RFLAG_SWAP_CONTROL)
+			{
+				if (temp)
+					wglSwapIntervalEXT(1);
+				else
+					wglSwapIntervalEXT(0);
+			}
+
+		}
+		else
+			return false;
+	}
+
+	return true;
+}
+
 
 /************************************************
 register all commands/functions relevant to the renderer
@@ -217,6 +250,7 @@ void CRConsole::RegisterFuncs()
 	RegCVar(&g_pConspeed,"r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
 	RegCVar(&g_pFov, "r_fov", "90", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_Fov);
 	RegCVar(&g_pMultiTexture, "r_multitexture", "1", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_MultiTexture);
+	RegCVar(&g_pVidSynch, "r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
 
 
 	RegCFunc("screenshot", &cfunc_screenshot);

@@ -44,8 +44,9 @@ CGLUtil::~CGLUtil()
 		delete [] m_devmodes;
 	m_nummodes = 0;
 
-	::ChangeDisplaySettings(NULL, 0);
 	OpenGLUnInit();
+
+//	::ChangeDisplaySettings(NULL, 0);
 
 	ConPrint("GL::Final Shutdown OK\n");
 }
@@ -120,6 +121,20 @@ bool CGLUtil::Init()
 
 	::GetClientRect(rInfo->hWnd, &wrect);
 
+
+	//3dfx 3d only card. default to fullscreen mode
+	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
+		rInfo->rflags |= RFLAG_FULLSCREEN;
+
+	// change display before we do anythign with gl
+	if (rInfo->rflags & RFLAG_FULLSCREEN)
+		g_pGL->GoFull(rInfo->width, rInfo->height, rInfo->bpp);
+
+	else
+		g_pGL->GoWindowed(rInfo->width, rInfo->height);
+
+
+
 	rInfo->hDC = ::GetDC(rInfo->hWnd);
 
 	if (!SetupPixelFormat())
@@ -128,22 +143,20 @@ bool CGLUtil::Init()
 		return false;
 	}
 
+	::ReleaseDC(rInfo->hWnd, rInfo->hDC);
+	rInfo->hDC = ::GetDC(rInfo->hWnd);
+
+	ConPrint("c1");
 	rInfo->hRC = _wglCreateContext(rInfo->hDC);
+	ConPrint("c2");
 	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
+	ConPrint("c3");
 
 	rInfo->width  = wrect.right - wrect.left;
 	rInfo->height = wrect.bottom - wrect.top;
 
 	// get extension pointers
 	OpenGLGetExtensions();
-
-	//3dfx 3d only card. default to fullscreen mode
-	if(strcmp(m_gldriver,SZ_3DFX_3DONLY_GLDRIVER)==0)
-		rInfo->rflags |= RFLAG_FULLSCREEN;
-
-	if (rInfo->rflags & RFLAG_FULLSCREEN)
-		g_pGL->GoFull(rInfo->width, rInfo->height, rInfo->bpp);
-
 
 	//Check for GL flags
 	ConPrint("\nGL_VENDOR: %s\n", glGetString(GL_VENDOR));
@@ -167,6 +180,9 @@ bool CGLUtil::Init()
 			// check for extensions we want
 			if (!strcmp(start, "GL_ARB_multitexture"))
 				rInfo->rflags |= RFLAG_MULTITEXTURE;
+
+			else if (!strcmp(start, "WGL_EXT_swap_control"))
+				rInfo->rflags |= RFLAG_SWAP_CONTROL;
 
 			start = &ext2[i+1];
 		}
@@ -202,6 +218,7 @@ Shutdown opengl
 
 bool CGLUtil::Shutdown()
 {
+	ConPrint("shut");
 	_wglMakeCurrent(rInfo->hDC, rInfo->hRC);
 
 	if (rInfo)
@@ -211,6 +228,10 @@ bool CGLUtil::Shutdown()
 	}
 
 	_wglMakeCurrent(NULL, NULL);
+	ConPrint("shut1");
+	::ChangeDisplaySettings(NULL, 0);
+
+
 	rInfo->ready = false;
 	return true;
 }
@@ -223,6 +244,7 @@ Change to FullScreen Mode
 */
 bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 {
+
 	//minimum requirements
 	if (width < 640)
 		width = 640;
@@ -313,21 +335,21 @@ bool CGLUtil::GoFull(unsigned int width, unsigned int height, unsigned int bpp)
 	::ShowWindow(rInfo->hWnd, SW_MAXIMIZE);
 
 	// FIXME - support fullscreen too (different window style)
-/*	
-		??Dont need this
+
+//		??Dont need this
 
   ::AdjustWindowRect(&wrect, 
 					   WS_BORDER | WS_DLGFRAME | WS_POPUP,
 					   FALSE);
 
 	::SetWindowPos(rInfo->hWnd,
-				   HWND_TOP,//MOST,
+				   HWND_TOPMOST,
 				   wrect.left,
 			       wrect.top,
 			       wrect.right - wrect.left,
 			       wrect.bottom - wrect.top,
 			       0);
-*/
+
 	return true;
 }
 
@@ -346,11 +368,11 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	::ChangeDisplaySettings(NULL, 0);
+
+//	::ChangeDisplaySettings(NULL, 0);
 	::ShowWindow(rInfo->hWnd, SW_NORMAL);
 
-	if (rInfo->rflags & RFLAG_FULLSCREEN)
-		rInfo->rflags ^= RFLAG_FULLSCREEN;
+	rInfo->rflags &= ~RFLAG_FULLSCREEN;
 
 /*
 	::SetWindowPos(rInfo->hWnd,
@@ -364,6 +386,7 @@ bool CGLUtil::GoWindowed(unsigned int width, unsigned int height)
 
 	rInfo->width  = width;
 	rInfo->height = height;
+	ConPrint("wind");
 	return true;
 }
 
@@ -452,58 +475,54 @@ bool CGLUtil::UpdateDisplaySettings(unsigned int width,
 	//see if we have to toggle fullscreen
 	if(fullscreen)
 	{
-		if(!GoFull(width,height,bpp))
+		rInfo->rflags |= RFLAG_FULLSCREEN;
+		if (!Init())
 		{
 			ConPrint("GL::UpdateDisplaySettings: Unable to select fullscreen mode\n");
-			GoWindowed(width,height);
+			rInfo->rflags &= ~RFLAG_FULLSCREEN;
 			Init();
 			return false;
 		}
+	}
 
+	else
+	{
+
+	/*
+		//Windowed Mode
+		for (int mode = 0; mode < m_nummodes; mode++)
+		{
+			if((m_devmodes[mode].dmPelsWidth == width) &&
+			   (m_devmodes[mode].dmPelsHeight== height) &&
+			   (m_devmodes[mode].dmBitsPerPel == bpp))
+				break;
+		}
+
+		if(mode == m_nummodes)
+		{
+			GoWindowed(m_safeX,m_safeY);
+			ConPrint("GL::UpdateDisplaySettings:Unsupported windowed resolution\n");
+			return false;
+		}
+	*/
+		rInfo->rflags &= ~RFLAG_FULLSCREEN;
 		if(!Init())
 		{
 			// if we couldn't start with the new settings, go back to windowed mode
-			ConPrint("GL::UpdateDisplaySettings: Unable to intalize in fullscreen mode, defaulting to windowed\n");
+	//		ConPrint("GL::UpdateDisplaySettings: Unable to intalize in given mode, defaulting to windowed\n");
+	//		Shutdown();
+
+			//FIX ME
 			Shutdown();
-			GoWindowed(width,height);
+			rInfo->rflags |= RFLAG_FULLSCREEN;
 			Init();
 			return false;
 		}
-		ConPrint("GL::UpdateDisplaySettings::Display change successful\n");
-		return true;
-	}
-	
-	//Windowed Mode
-	for (int mode = 0; mode < m_nummodes; mode++)
-	{
-		if((m_devmodes[mode].dmPelsWidth == width) &&
-		   (m_devmodes[mode].dmPelsHeight== height) &&
-		   (m_devmodes[mode].dmBitsPerPel == bpp))
-			break;
 	}
 
-	if(mode == m_nummodes)
-	{
-		GoWindowed(m_safeX,m_safeY);
-		ConPrint("GL::UpdateDisplaySettings:Unsupported windowed resolution\n");
-		return false;
-	}
 
-	GoWindowed(width,height);
-	
-	if(!Init())
-	{
-		// if we couldn't start with the new settings, go back to windowed mode
-		ConPrint("GL::UpdateDisplaySettings: Unable to intalize in given mode, defaulting to windowed\n");
-		Shutdown();
-
-		//FIX ME
-		GoWindowed(m_safeX,m_safeY);
-		Init();
-		return false;
-	}
 	ConPrint("GL::UpdateDisplaySettings::Display change successful\n");
-	
+
 	m_safeX = rInfo->width;
 	m_safeY = rInfo->height;
 	return true;

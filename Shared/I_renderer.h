@@ -15,6 +15,8 @@ Renderer info struct
 #define RFLAG_FULLSCREEN	0x00000001
 #define RFLAG_FULLBRIGHT	0x00000002
 #define RFLAG_MULTITEXTURE	0x00000004
+#define RFLAG_SWAP_CONTROL	0x00000008
+
 
 typedef struct RenderInfo_t
 {

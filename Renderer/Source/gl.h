@@ -1224,6 +1224,7 @@ typedef	void (APIENTRY * GLVIEWPORT) (GLint x, GLint y, GLsizei width, GLsizei h
 // gl extensions
 typedef void (APIENTRY * GLMULTITEXCOORD2FARB) (GLenum target, GLfloat s, GLfloat t);
 typedef void (APIENTRY * GLACTIVETEXTUREARB) (GLenum target);
+typedef BOOL (APIENTRY * WGLSWAPINTERVALEXT) (int interval);
 
 
 // wgl* functions
@@ -1291,6 +1292,7 @@ extern	GLVIEWPORT glViewport;
 // gl extensions
 extern	GLMULTITEXCOORD2FARB glMultiTexCoord2fARB;
 extern	GLACTIVETEXTUREARB glActiveTextureARB;
+extern	WGLSWAPINTERVALEXT wglSwapIntervalEXT;
 
 // wgl* functions
 extern	WGLCREATECONTEXT	_wglCreateContext;
