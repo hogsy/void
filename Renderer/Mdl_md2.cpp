@@ -120,7 +120,8 @@ void CModelMd2::LoadModel(const char *file)
 	for (f = 0; f < num_frames; f++)
 	{
 		frames[f] = new vector_t[header.numVertices];
-		if (!frames[f]) FError("mem for frame vertices");
+		if (!frames[f]) 
+			FError("mem for frame vertices");
 
 		fileReader.Read(&scale, sizeof(float), 3);
 		fileReader.Read(&trans, sizeof(float), 3);

@@ -1,10 +1,10 @@
 #include "Com_world.h"
 
 #ifndef _VLIGHT_
-#include "I_file.h"
+	#include "I_file.h"
 #else
-#include "stdio.h"
-void v_printf(char *msg, ...);
+	#include "stdio.h"
+	void v_printf(char *msg, ...);
 #endif
 
 //Static data
@@ -430,6 +430,7 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 {
 	// or return cached pointer to client if the local server has alreadly loaded it
 #ifndef _VLIGHT_
+
 	if(!strcmp(m_szFileName,szFileName) && m_pWorld)
 	{
 		m_refCount++;
@@ -490,7 +491,6 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 
 #else
 
-
 	if(!strcmp(m_szFileName,szFileName) && m_pWorld)
 	{
 		m_refCount++;
@@ -508,7 +508,6 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 	if(!f)
 	{
 		v_printf("CWorld::CreateWorld: Could not open %s\n",szFileName);
-		fclose(f);
 		return 0;
 	}
 
@@ -550,7 +549,6 @@ CWorld * CWorld::CreateWorld(const char * szFileName)
 
 	fclose(f);
 
-
 #endif
 
 	//Cache pointer to the last loaded world
@@ -569,14 +567,15 @@ void CWorld::DestroyWorld(CWorld * pWorld)
 {
 	if(!pWorld)
 		return;
+
 	if(pWorld == m_pWorld)
 	{
 		m_refCount--;
 		if(m_refCount > 0)
 			return;
-		m_pWorld = 0;
+		delete m_pWorld;
+		pWorld = 0;
 	}
-	delete pWorld;
 }
 
 
