@@ -15,6 +15,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "Game Dll"="..\Game Dll\Game Dll.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "Network"=..\Network\Network.dsp - Package Owner=<4>
 
 Package=<5>
@@ -62,18 +74,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Network
     End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "Void Game"="..\Void Game\Void Game.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
 }}}
 
 ###############################################################################
