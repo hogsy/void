@@ -1,4 +1,5 @@
 #include "I_filesystem.h"
+#include "Fs_hdr.h"
 
 extern CFileSystem * g_pFileSystem;
 
@@ -36,9 +37,16 @@ uint CFileStream::GetPos() const
 { 
 	if(m_fp)	
 		return ::ftell(m_fp);
+	else if(m_archive)
+		return m_archive->GetPos(m_filehandle);
 	return 0;
 }
 
+/*
+==========================================
+Get Files size
+==========================================
+*/
 uint CFileStream::GetSize() const 
 { return m_size; 
 }
@@ -48,7 +56,7 @@ uint CFileStream::GetSize() const
 Is the File open ?
 =====================================
 */
-bool CFileStream::isOpen()
+bool CFileStream::isOpen() const
 {	
 	if(m_size && (m_fp || (m_filehandle >= 0 && m_archive)))
 		return true;
@@ -65,7 +73,8 @@ bool CFileStream::Open(const char * ifilename)
 	if(isOpen())
 		Close();
 
-	if(g_pFileSystem->OpenFileStream(this,ifilename))
+	m_size = g_pFileSystem->OpenFileStream(m_fp, m_filehandle, m_archive, ifilename);
+	if(m_size)
 	{
 		m_filename = new char[strlen(ifilename)+1];
 		strcpy(m_filename, ifilename);
@@ -89,7 +98,16 @@ void CFileStream::Close()
 	m_size = 0;	
 
 	if(m_fp)
+	{
 		::fclose(m_fp);
+		m_fp =0;
+	}
+	if(m_archive)
+	{
+		m_archive->CloseFile(m_filehandle);
+		m_filehandle = 0;
+		m_archive = 0;
+	}
 }
 
 /*
@@ -107,6 +125,8 @@ ulong CFileStream::Read(void *buf,uint size, uint count)
 	}
 	if(m_fp)
 		return ::fread(buf,size,count, m_fp);
+	if(m_archive)
+		return m_archive->Read(buf,size,count,m_filehandle);
 	return 0;
 }
 	
@@ -119,6 +139,8 @@ int CFileStream::GetChar()
 {
 	if(m_fp)
 		return ::fgetc(m_fp);
+	if(m_archive)
+		return m_archive->GetChar(m_filehandle);
 	return 0;
 }
 
@@ -131,5 +153,7 @@ bool CFileStream::Seek(uint offset, int origin)
 {
 	if(m_fp)
 		return !(::fseek(m_fp,offset,origin));
+	if(m_archive)
+		return m_archive->Seek(offset,origin,m_filehandle);
 	return false;
 }

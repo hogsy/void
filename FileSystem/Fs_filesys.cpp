@@ -2,7 +2,6 @@
 #include "Fs_zipfile.h"
 #include "I_filesystem.h"
 
-
 /*
 ===========================================
 Supported File Types
@@ -234,7 +233,7 @@ Loads the requested file into given buffer.
 buffer needs to be null. Its allocated here
 ===========================================
 */
-uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, const char *ifilename)
+uint CFileSystem::LoadFileData(byte ** ibuffer, uint buffersize, const char *ifilename)
 {
 	uint size = 0;
 	SearchPath_t * iterator = m_lastpath;
@@ -245,7 +244,6 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, const char *if
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			//size = iterator->archive->OpenFile(ifilename,ibuffer);
 			size = iterator->archive->LoadFile(ibuffer,buffersize,ifilename);
 			if(size)
 				return size;
@@ -289,10 +287,18 @@ uint CFileSystem::LoadFileData(byte ** ibuffer, uint &buffersize, const char *if
 }
 
 
-
-bool CFileSystem::OpenFileStream(CFileStream * fstream, const char *ifilename)
+/*
+==========================================
+Try to  Open a fileStream
+FILE pointer is set if its a real file
+otherwise the fileHandle and archive pointers are set
+==========================================
+*/
+uint CFileSystem::OpenFileStream(FILE * ifp, uint &ifileHandle, CArchive * iarchive, 
+								const char *ifilename)
 {
 	SearchPath_t * iterator = m_lastpath;
+	uint size = 0;
 	
 	while(iterator->prev)
 	{
@@ -300,10 +306,14 @@ bool CFileSystem::OpenFileStream(CFileStream * fstream, const char *ifilename)
 		//Try opening as an archive
 		if(iterator->archive)
 		{
-			//size = iterator->archive->OpenFile(ifilename,ibuffer);
-			//size = iterator->archive->LoadFile(ibuffer,buffersize,ifilename);
-			//if(size)
-			//	return size;
+			uint handle = iterator->archive->OpenFile(ifilename);
+			if(handle >= 0)
+			{
+				size = iterator->archive->GetSize(handle);
+				ifileHandle = handle;
+				iarchive = iterator->archive;
+				return size;
+			}
 		}
 		//Try opening as a standard file
 		else
@@ -311,106 +321,15 @@ bool CFileSystem::OpenFileStream(CFileStream * fstream, const char *ifilename)
 			char filepath[COM_MAXPATH];
 			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
 			
-			fstream->m_fp = fopen(filepath,"r+b");
-			if(fstream->m_fp)
-			{
-				fseek(fstream->m_fp ,0,SEEK_END);
-				fstream->m_size = ftell(fstream->m_fp );
-				fseek(fstream->m_fp ,0,SEEK_SET);
-				return true;
-			}
-		}
-	}
-	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
-	return false;
-}
-
-/*
-
-SearchPath_t * CFileSystem::GetFilePath(const char *ifilename)
-{
-	SearchPath_t * iterator = m_lastpath;
-	while(iterator->prev)
-	{
-		iterator = iterator->prev;
-		
-		//Try opening as an archive
-		if(iterator->archive)
-		{
-			if(iterator->archive->HasFile(ifilename))
-				return iterator;
-		}
-		//Try opening as a standard file
-		else
-		{
-			char filepath[COM_MAXPATH];
-			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
 			FILE * fp = fopen(filepath,"r+b");
 			if(fp)
 			{
-				fclose(fp);
-				return iterator;
-			}
-		}
-	}
-	ComPrintf("CFileSystem::GetFilePath:File not found %s\n", ifilename);
-	return 0;
-}
-
-*/
-/*
-int  CFileSystem::LoadFileBuffer(byte ** ibuffer, const char *ifilename);
-{
-	uint size = 0;
-	SearchPath_t * iterator = m_lastpath;
-	
-	while(iterator->prev)
-	{
-		iterator = iterator->prev;
-		
-		//Try opening as an archive
-		if(iterator->archive)
-		{
-			if(size = iterator->archive->LoadFile(fbuffer->m_buffer,
-									   fbuffer->m_buffersize,
-									   fbuffer->m_staticbuffer,ifilename))
-				return size;
-		}
-		//Try opening as a standard file
-		else
-		{
-			char filepath[COM_MAXPATH];
-			sprintf(filepath,"%s/%s/%s", m_exepath, iterator->path, ifilename);
-			FILE * fp = fopen(filepath,"r+b");
-			if(fp)
-			{
-				fseek(fp,0,SEEK_END);
-				size = ftell(fp);
-				fseek(fp,0,SEEK_SET);
-
-				if(!staticbuffer)
-				{
-					if(fbuffer->m_buffer)
-					{
-						free(fbuffer->m_buffer);
-						fbuffer->m_buffer = 0;
-					}
-					fbuffer->m_buffer = (byte*)MALLOC(size);
-					fbuffer->m_buffersize = size;
-				}
-				else
-				{
-					if(size > buffersize)
-					{
-						free(fbuffer->m_buffer);
-						fbuffer->m_buffer = (byte*)MALLOC(size);
-						fbuffer->m_buffersize = size;
-					}
-				}
-
-				//fill the file buffer
-				fread(fbuffer->m_buffer,sizeof(byte),size,fp);
-				fclose(fp);
+				fseek(fp ,0,SEEK_END);
+				size = ftell(fp );
+				fseek(fp ,0,SEEK_SET);
+				
+				ifp = fp;
+				ifileHandle = 0;
 				return size;
 			}
 		}
@@ -418,7 +337,6 @@ int  CFileSystem::LoadFileBuffer(byte ** ibuffer, const char *ifilename);
 	ComPrintf("CFileSystem::Open:File not found %s\n", ifilename);
 	return 0;
 }
-*/
 
 
 /*

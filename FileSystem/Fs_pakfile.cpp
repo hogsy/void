@@ -103,22 +103,47 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	m_numFiles = phead.dirlen / PAKENTRYSIZE;
 
 	m_files = new PakEntry_t * [m_numFiles];
+	memset(m_files,0, sizeof(PakEntry_t *) * m_numFiles);
 
 	//Seek to the fileinfo offset
 	fseek(m_fp,	phead.dirofs, SEEK_SET);
 
+	int i,j,
+		destIndex =0;		
 	PakEntry_t * temp= 0;
-	for(int i= 0; i< m_numFiles;i++)
+
+	for(i= 0; i< m_numFiles;i++)
 	{
 		temp = new PakEntry_t();
 		fread(temp,sizeof(PakEntry_t),1,m_fp);
+		
+		//Find a place to insert the new entry
+		destIndex = i;	//default to last position
 
+		for(j=0;j<i;j++)
+		{
+			if(!m_files[j])
+				break;
 
-		m_files[i] = temp;
+			//If new filename is smaller then entry at current index, 
+			//then shift all the entires forward to make space for new entry
+			if(strcmp(temp->filename, m_files[j]->filename) < 0)
+			{
+				destIndex = j;
+
+				//start from the last entry and
+				//move all the old pointers forward by one
+				j = i;
+				while(j > destIndex)
+				{
+					m_files[j] = m_files[j-1];
+					j--;
+				}
+				break;
+			}
+		}
+		m_files[destIndex] = temp;
 	}
-	QuickSortFileEntries(m_files,m_numFiles);
-
-	totalCOMPS;
 
 	strcpy(m_archiveName,archivepath);
 	ComPrintf("%s, Added %d entries\n", m_archiveName,m_numFiles);
@@ -230,7 +255,7 @@ QuickSort PakEntry array
 */
 void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
 {
-	if(numitems < 2)
+/*	if(numitems < 2)
 		return;
 
 	int maxindex = numitems-1;
@@ -271,6 +296,7 @@ void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
 		sorted[i] = 0;
 	}
 	delete [] sorted;
+*/
 }
 
 /*
@@ -342,6 +368,7 @@ HFS CPakFile::OpenFile(const char *ifilename)
 	{
 		m_openFiles[i] = (PakOpenFile_t *)entry;
 		m_openFiles[i]->curpos= 0;
+		m_numOpenFiles++;
 		return i;
 	}
 	return -1;
@@ -355,7 +382,10 @@ Close file
 void CPakFile::CloseFile(HFS handle)
 {
 	if(m_openFiles[handle])
+	{
 		m_openFiles[handle] = 0;
+		m_numOpenFiles--;
+	}
 }
 
 /*
@@ -376,7 +406,7 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	uint bytes_req = size * count;
 	if(m_openFiles[handle]->curpos + bytes_req > m_openFiles[handle]->filelen)
 	{
-		ComPrintf("CFileReader::Read: FilePointer will overflow for given parms, %s\n", 
+		ComPrintf("CPakFile::Read: FilePointer will overflow for given parms, %s\n", 
 			m_openFiles[handle]->filename);
 		return 0;
 	}
@@ -385,7 +415,7 @@ ulong CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	
 	int bytes_read = ::fread(buf,size,count,m_fp);
 	if(bytes_read != bytes_req) 
-		ComPrintf("CFileReader::Read: Warning, only read %d of %d bytes for %s\n",
+		ComPrintf("CPakFile::Read: Warning, only read %d of %d bytes for %s\n",
 					bytes_read, bytes_req, m_openFiles[handle]->filename);	
 	
 	m_openFiles[handle]->curpos += (bytes_read);
@@ -428,13 +458,13 @@ bool CPakFile::Seek(uint offset, int origin, HFS handle)
 			newpos += (m_openFiles[handle]->curpos + offset);
 			break;
 	default:
-			ComPrintf("CFileReader::Seek: Bad origin specified %s\n", m_openFiles[handle]->filename);
+			ComPrintf("CPakFile::Seek: Bad origin specified %s\n", m_openFiles[handle]->filename);
 			return false;
 	}
 	if((newpos > m_openFiles[handle]->filepos + m_openFiles[handle]->filelen) ||
 		(newpos < m_openFiles[handle]->filepos))
 	{
-		ComPrintf("CFileReader::Seek: Bad parameters. %s\n", m_openFiles[handle]->filename);
+		ComPrintf("CPakFile::Seek: Bad parameters. %s\n", m_openFiles[handle]->filename);
 		return false;
 	}
 	return(!::fseek(m_fp,newpos,SEEK_SET));

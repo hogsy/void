@@ -2,8 +2,6 @@
 
 extern CFileSystem * g_pFileSystem;
 
-
-
 /*
 ==========================================
 Constructor and Destructor
@@ -26,17 +24,12 @@ CFileBuffer::~CFileBuffer()
 		free(m_buffer);
 }
 
-
-
-uint CFileBuffer::GetPos() const  { return m_curpos; }
-uint CFileBuffer::GetSize() const { return m_size; }
-
 /*
 =====================================
 Is the File open ?
 =====================================
 */
-bool CFileBuffer::isOpen()
+bool CFileBuffer::isOpen() const
 {	
 	if(m_size)
 		return true;
@@ -159,16 +152,29 @@ bool CFileBuffer::Seek(uint offset, int origin)
 }
 
 /*
-uint CFileReader::GetFileSize(const char * filename)
-{
-	return 0;
+==========================================
+Get current position in buffer
+==========================================
+*/
+uint CFileBuffer::GetPos() const  
+{ return m_curpos; 
 }
 
-bool CFileReader::LoadFile(void *buf, const uint &bufsize, const char * filename)
-{
-	return false;
-}
+/*
+==========================================
+Get files size
+==========================================
 */
+uint CFileBuffer::GetSize() const 
+{ return m_size; 
+}
+
+
+
+
+
+
+
 
 /*
 ===========================================

@@ -32,9 +32,6 @@ public:
 
 private:
 
-	ulong GetCentralDirOffset(FILE *fin);
-	bool  BuildZipEntriesList(FILE * fp, int numfiles);
-
 	struct ZipEntry_t;
 	struct ZipOpenFile_t;
 
@@ -45,6 +42,14 @@ private:
 	int m_numFiles;
 
 	FILE * m_fp;
+
+
+	ulong GetLastRecordOffset(FILE *fin);
+	bool  BuildZipEntriesList(FILE * fp, int numfiles);
+	bool  BinarySearchForEntry(const char *name,	
+							  ZipEntry_t ** array, 
+							  ZipEntry_t ** item,
+							  int low, int high);
 
 };
 
