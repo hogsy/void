@@ -175,13 +175,14 @@ bool CSoundManager::Init()
 	strcpy(m_szSoundDriver,"Primary Sound driver");
 
 	//Check sound drivers avaiblable
+#if 0
 	hr = DirectSoundEnumerate((LPDSENUMCALLBACK)EnumSoundDevices, 0);
 	if(FAILED(hr))
 	{
 		ComPrintf("CSound::Init Failed to enumerate DirectSound Interface\n");
 		return false;
 	}
-
+#endif
 
 	ComPrintf("CSound::Init: Initializing %s\n", m_szSoundDriver);
 	

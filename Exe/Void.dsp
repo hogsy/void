@@ -500,7 +500,11 @@ SOURCE=..\Shared\I_game.h
 # End Group
 # Begin Source File
 
-SOURCE=.\todo
+SOURCE=.\features.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\tasks.txt
 # End Source File
 # End Target
 # End Project
