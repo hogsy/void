@@ -14,8 +14,8 @@ Constructor
 =======================================
 */
 CRConsole::CRConsole(): m_seperatorchar('^'),
-						m_conSpeed("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-						m_conAlpha("r_conalpha","200", CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+						m_conSpeed("r_conspeed","500",CVAR_INT,CVAR_ARCHIVE),
+						m_conAlpha("r_conalpha","200", CVAR_INT,CVAR_ARCHIVE)
 						
 {
 	m_statuslen = 0;

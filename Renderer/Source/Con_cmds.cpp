@@ -296,12 +296,12 @@ void CRConsole::RegisterConObjects()
 	g_pConsole->RegisterCommand("tga_shot",CMD_TGASHOT,this);
 	g_pConsole->RegisterCommand("pcx_shot",CMD_PCXSHOT,this);
 
-	g_pFullbright= new CVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	g_pFov		 = new CVar("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	g_pVidSynch  = new CVar("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
-	g_pMultiTexture = new CVar("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	g_p32BitTextures = new CVar("r_32bittextures","1", CVar::CVAR_BOOL,CVar::CVAR_ARCHIVE);
-	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVar::CVAR_FLOAT,CVar::CVAR_ARCHIVE);
+	g_pFullbright= new CVar("r_fullbright","0",CVAR_INT,CVAR_ARCHIVE);
+	g_pFov		 = new CVar("r_fov","90", CVAR_INT,CVAR_ARCHIVE);
+	g_pVidSynch  = new CVar("r_vidsynch","0",CVAR_INT, CVAR_ARCHIVE);
+	g_pMultiTexture = new CVar("r_multitexture","1", CVAR_INT,CVAR_ARCHIVE);
+	g_p32BitTextures = new CVar("r_32bittextures","1", CVAR_BOOL,CVAR_ARCHIVE);
+	g_pBeamTolerance = new CVar("r_beamtolerance","25", CVAR_FLOAT,CVAR_ARCHIVE);
 
 	g_pConsole->RegisterCVar(g_pFullbright,this);
 	g_pConsole->RegisterCVar(g_pFov,this);

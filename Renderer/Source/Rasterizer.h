@@ -90,8 +90,8 @@ Rasterizer Interface
 class I_Rasterizer
 {
 public:
-	I_Rasterizer() :	m_cWndX("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-						m_cWndY("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE)
+	I_Rasterizer() :	m_cWndX("r_wndx","80",CVAR_INT,CVAR_ARCHIVE),
+						m_cWndY("r_wndy","40",CVAR_INT,CVAR_ARCHIVE)
 		{	g_pConsole->RegisterCVar(&m_cWndX);	g_pConsole->RegisterCVar(&m_cWndY);	}
 
 	virtual ~I_Rasterizer() { }

@@ -122,7 +122,7 @@ bool CTextureManager::Shutdown()
 LoadWorld Textures
 ==========================================
 */
-bool CTextureManager::LoadWorldTextures(world_t *map)
+bool CTextureManager::LoadWorldTextures(world_t * map)
 {
 	if(m_loaded != BASE_TEXTURES)
 		return false;

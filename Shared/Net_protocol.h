@@ -30,24 +30,32 @@ const char VNET_PING[]			= "ping";
 ======================================================================================
 Connection spawning protocol
 When the server sends client the S2C_ACCEPT message, the client switches to Spawn mode.
-The client then starts a reliable sequence of requesting the following spawn parms 
-from the server.
 
-The spawnParm request packet is made up of a Parm id, and the number of packets
-already received
+The client then starts a reliable sequence of messages to request spawning data from
+the server. 
 
-  reliably sends each of the following messages to the server one by one.
+Spawndata consists of server messages, and model/image/sound lists which associate
+an index with a resource to save up on in-game entity update messages.
+
+The spawnParm request packet sent by the client is made up of a Parm id which tells 
+the server which spawn sequence the client is querying for, and the sequence num
+which tells which packet in the sequence the client wants. 
+
+If the packetNum is 999, then the server replies with the NEXT sequence Id. and packetnum 0.
+If the packetNum is valid, then the server replies with the same sequence ID, and 999, if 
+there are no more packets in the given sequence.
 
 Once the client has received and acked all the messages it switches to Ingame mode and.
 once the server has received all the acks it switches its netclient to Ingame mode
 ======================================================================================
 */
-const byte SVC_INITCONNECTION= 1;	//Send the server vars, map info
+const int  SVC_LASTSPAWNMSG  = 999;
+const byte SVC_GAMEINFO		 = 1;	//Send the server vars, map info
 const byte SVC_MODELLIST	 = 2;	//Sequenced list of models in use
 const byte SVC_SOUNDLIST	 = 3;	//Sequenced list of sounds in use 
 const byte SVC_IMAGELIST	 = 4;	//Sequenced list of images in use 
 const byte SVC_BASELINES	 = 5;	//Static entity baselines data
-const byte SVC_BEGIN		 = 6;	//ready to spawn
+const byte SVC_BEGIN		 = 6;   //Spawn NOW !
 
 /*
 ======================================================================================

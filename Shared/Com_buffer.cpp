@@ -26,6 +26,8 @@ CBuffer::~CBuffer()
 
 void  CBuffer::Reset()
 {
+	m_badRead = false;
+	m_overFlowed = false;
 	m_curSize = 0;
 	m_readCount = 0;
 }

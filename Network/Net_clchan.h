@@ -34,8 +34,8 @@ public:
 
 	//keep track of how many spawn messages have been sent
 	//when it equals SVC_BEGIN, then the client will be assumed to have spawned
-	byte	m_spawnState;	
-	int     m_spawnLevel;
+	byte    m_spawnLevel;
+	int		m_spawnReqId;
 
 	int		m_state;
 

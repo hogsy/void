@@ -58,7 +58,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 {
 	switch(msgId)
 	{
-	case SVC_INITCONNECTION:
+	case SVC_GAMEINFO:
 		{
 			char * game = buffer.ReadString();
 //ComPrintf("CL: Game: %s\n", game);
@@ -76,11 +76,6 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		break;
 	case SVC_BASELINES:
 		break;
-	case SVC_BEGIN:
-		{
-		
-			break;
-		}
 	}
 }
 
@@ -91,6 +86,7 @@ Handle disconnect from server
 */
 void CClient::HandleDisconnect(bool listenserver)
 {
+	ComPrintf("KILLING SERVER\n");
 	//Kill server if local
 	if(listenserver)
 		System::GetConsole()->ExecString("killserver");

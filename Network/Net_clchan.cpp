@@ -29,7 +29,7 @@ void CNetClChan::Reset()
 	m_netChan.Reset();
 	
 	m_spawnLevel = 0;
-	m_spawnState = 0;
+	m_spawnReqId = 0;
 
 	m_state = CL_FREE;
 	m_numBuf=0;
@@ -123,13 +123,6 @@ ComPrintf("SV Writing to backbuffer\n");
 	{
 		m_netChan.m_buffer.Reset();
 		m_bDropClient = true;
-		//broadcast and drop client here
-/*		SV_BroadcastPrintf (PRINT_HIGH, "%s overflowed\n", c->name);
-		Con_Printf ("WARNING: reliable overflow for %s\n",c->name);
-		SV_DropClient (c);
-		c->send_message = true;
-		c->netchan.cleartime = 0;	// don't choke this message
-*/
 	}
 
 	// only send messages if the client has sent one

@@ -38,18 +38,18 @@ struct NetSignOnBufs
 {
 	enum
 	{
-		MAX_IMAGE_BUFS = 4
-		MAX_MODEL_BUFS = 4
-		MAX_SOUND_BUFS = 4
+		MAX_IMAGE_BUFS = 4,
+		MAX_MODEL_BUFS = 4,
+		MAX_SOUND_BUFS = 4,
 		MAX_ENTITY_BUFS = 4
 	};
 
 	NetSignOnBufs() 
 	{
-		numImageBufs = 0;
-		numModelBufs = 0;
-		numSoundBufs = 0;
-		numEntityBufs = 0;
+		numImageBufs = 1;
+		numModelBufs = 1;
+		numSoundBufs = 1;
+		numEntityBufs = 1;
 	}
 
 	CBuffer  gameInfo;

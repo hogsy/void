@@ -83,8 +83,8 @@ private:
 	int		m_challenge;
 
 	//Spawning Info
-	byte	m_spawnState;
-	int		m_spawnLevel;
+	byte	m_spawnLevel;
+	int		m_spawnNextPacket;
 
 	int		m_netState;
 

@@ -5,6 +5,8 @@
 #include "I_renderer.h"
 #include "In_defs.h"
 
+using namespace std;
+
 //#define VOID_DOS_CONSOLE	1
 
 /*

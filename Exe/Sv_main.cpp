@@ -285,7 +285,7 @@ void CServer::LoadWorld(const char * mapname)
 		return;
 	}
 	
-	buf.gameInfo.Write(SVC_INITCONNECTION);
+//	buf.gameInfo.Write(SVC_INITCONNECTION);
 	buf.gameInfo.Write(m_svState.gameName);
 	buf.gameInfo.Write(m_svState.worldname);
 

@@ -24,7 +24,7 @@ public:
 	void Reset();
 	
 	void SetRate(int rate);	
-	void ResetReliable();
+//	void ResetReliable();
 
 	bool MatchAddr(const CNetAddr &addr) const;
 	const CNetAddr & GetAddr() const;

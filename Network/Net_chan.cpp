@@ -231,9 +231,10 @@ bool CNetChan::BeginRead()
 Misc Util
 ======================================
 */
-void CNetChan::ResetReliable()
+/*void CNetChan::ResetReliable()
 {	m_reliableBuffer.Reset();
 }
+*/
 
 //also check Port here ?
 bool CNetChan::MatchAddr(const CNetAddr &addr) const

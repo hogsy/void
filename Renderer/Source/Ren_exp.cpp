@@ -29,9 +29,9 @@ configs have been excuted to update the cvars with the
 saved rendering info
 =======================================
 */
-CRenExp::CRenExp() : m_cFull("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-					 m_cBpp("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE),
-					 m_cRes("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE)
+CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
+					 m_cBpp("r_bpp", "16",CVAR_INT,CVAR_ARCHIVE),
+					 m_cRes("r_res", "640 480",CVAR_STRING,CVAR_ARCHIVE)
 {
 	//Create different subsystems
 

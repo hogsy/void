@@ -22,8 +22,7 @@
 const int COM_MAXPATH	  = 256;
 const int COM_MAXFILENAME = 128;
 
-using namespace std;
-typedef list<string> StringList;
+typedef std::list<std::string> StringList;
 
 #ifndef byte
 typedef unsigned char byte;

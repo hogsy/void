@@ -30,8 +30,8 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 	m_fNextSendTime= 0.0f;	
 	m_szLastOOBMsg= 0;
 
-	m_spawnState=0;
 	m_spawnLevel=0;
+	m_spawnNextPacket=0;
 
 	m_netState= CL_FREE;
 }
@@ -142,15 +142,22 @@ void CNetClient::SendUpdate()
 			{
 				m_pNetChan->m_buffer.Reset();
 				m_pNetChan->m_buffer.Write(m_levelId);
-				m_pNetChan->m_buffer.Write((byte)(m_spawnState + 1));
+				m_pNetChan->m_buffer.Write((byte)m_spawnLevel);
+				m_pNetChan->m_buffer.Write((int)m_spawnNextPacket);
+
+				m_pNetChan->PrepareTransmit();
+				m_pSock->SendTo(m_pNetChan);
+
+				//We just sent an Ack to the last spawn message of a sequence
+				//Switch to next sequence now, or in game mode, if this was
+				//the last sequence
+				//we got everything we needed
+				if(m_spawnLevel == SVC_BEGIN)
+				{
+					m_spawnLevel = 0;
+					m_netState = CL_INGAME;
+				}
 			}
-
-			m_pNetChan->PrepareTransmit();
-			m_pSock->SendTo(m_pNetChan);
-
-			
-			if(m_spawnState == SVC_BEGIN)
-				m_netState = CL_INGAME;
 		}
 		//Resent OOB queries
 		else if((m_netState == CL_INUSE) && 
@@ -180,16 +187,14 @@ entity baselines
 void CNetClient::HandleSpawnParms()
 {
 	//We got a response to reset Resend requests
-	byte id = m_buffer.ReadByte();
+	byte id      = m_buffer.ReadByte();
 
-m_pClient->Print("CL: Got spawn level %d\n", (int)id);
-	
 	//Reconnect, the server probably changed maps 
 	//while we were getting spawn info. start again
 	if(id == SV_DISCONNECT)
 	{
-		m_pClient->Print("%s\n", m_buffer.ReadString());
-		Disconnect();
+		m_pClient->Print("Disconnected: %s\n", m_buffer.ReadString());
+		Disconnect(true);
 		return;
 	}
 	if(id == SV_RECONNECT)
@@ -199,15 +204,18 @@ m_pClient->Print("CL: Got spawn level %d\n", (int)id);
 		return;
 	}
 
-	//Got spawn data
-	if(id == m_spawnState + 1)
-	{
-		//Update spawnstate
-		m_spawnState = id;
-		m_fNextSendTime = 0.0f;
+	int  packNum = m_buffer.ReadInt();
+m_pClient->Print("CL: Got spawn level %d. Packet %d\n", id, packNum);
 
-		m_pClient->HandleSpawnMsg(m_spawnState,m_buffer);
-	}
+	m_fNextSendTime = 0.0f;
+
+	//Update spawnstate
+	m_spawnLevel = id;
+	m_spawnNextPacket = packNum;
+
+	//Don't process if it was the last packet of the sequence. 
+	//Ack it then, switch to next stage
+	m_pClient->HandleSpawnMsg(m_spawnLevel,m_buffer);
 }
 
 /*
@@ -248,6 +256,9 @@ void CNetClient::HandleOOBMessage()
 
 		m_szLastOOBMsg = 0;
 		m_fNextSendTime = 0.0f;
+
+		
+		m_spawnLevel = SVC_GAMEINFO;
 		
 		//Setup the network channel. 
 		//Only reliable messages are sent until spawned
@@ -397,8 +408,8 @@ void CNetClient::Disconnect(bool serverPrompted)
 	m_levelId = 0;
 	m_netState = CL_FREE;
 	
-	m_spawnState = 0;
-	m_spawnLevel=0;
+	m_spawnLevel = 0;
+	m_spawnNextPacket=0;
 
 	//Flow Control
 	m_fNextSendTime = 0.0f;

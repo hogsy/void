@@ -14,8 +14,7 @@ struct CNetServer::NetChallenge
 };
 
 enum
-{
-	MAX_CHALLENGES =  512
+{	MAX_CHALLENGES =  512
 };
 
 //======================================================================================
@@ -114,7 +113,6 @@ bool CNetServer::Init()
 			ComPrintf(": Loopback\n");
 	}
 
-
 	//If we found theaddress we were looking for then use that
 	if(bFoundAddr)
 		strcpy(szBestAddr,m_pSvState->localAddr);
@@ -188,7 +186,6 @@ void CNetServer::Restart()
 //======================================================================================
 //OOB Connections
 //======================================================================================
-
 /*
 ======================================
 Send a rejection message to the client
@@ -404,43 +401,119 @@ Send requested spawn parms
 */
 void CNetServer::SendSpawnParms(int chanId)
 {
+	bool error = false;
+	int  reqNum = m_clChan[chanId].m_spawnReqId;
+
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
 
-	//What spawn level does the client want ?
-	switch(m_clChan[chanId].m_spawnState)
+	//Give it the next thing to request
+	if(reqNum == SVC_LASTSPAWNMSG)
 	{
-	case SVC_INITCONNECTION:
+		m_clChan[chanId].m_netChan.m_buffer.Write(m_clChan[chanId].m_spawnLevel+1);
+		m_clChan[chanId].m_netChan.m_buffer.Write(0);
+		return;
+	}
+
+	//What spawn level does the client want ?
+	switch(m_clChan[chanId].m_spawnLevel)
+	{
+	case SVC_GAMEINFO:
 		{
-			//Send 1st signon buffer
+			if(reqNum > 0)
+			{
+				error = true;
+				break;
+			}
+
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_GAMEINFO);
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.gameInfo);
-//			m_pSock->SendTo(m_signOnBufs.gameInfo, m_clChan[chanId].m_netChan.GetAddr());
-//			return;
 			break;
 		}
 	case SVC_MODELLIST:
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_MODELLIST);
-		break;
-	case SVC_SOUNDLIST:
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_SOUNDLIST);
-		break;
-	case SVC_IMAGELIST:
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_IMAGELIST);
-		break;
-	case SVC_BASELINES:
 		{
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BASELINES);
+			if(reqNum >= m_signOnBufs.numModelBufs)
+			{
+				error = true;
+				break;
+			}
+
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_MODELLIST);
+			//Will this be the last packet in the sequence, then let the client known
+			//so it doesnt ask for anymore
+			if((reqNum + 1) == m_signOnBufs.numModelBufs)
+				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
+			else
+				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.modelList[reqNum]);
 			break;
 		}
-	case SVC_BEGIN:
+	case SVC_SOUNDLIST:
 		{
-			//consider client to be spawned now
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BEGIN);
-		}
-		break;
-	}
-	
+			if(reqNum >= m_signOnBufs.numSoundBufs)
+			{
+				error = true;
+				break;
+			}
 
-ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnState);
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_SOUNDLIST);
+
+			if((reqNum + 1) >= m_signOnBufs.numSoundBufs)
+				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
+			else
+				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.soundList[reqNum]);
+			break;
+		}
+	case SVC_IMAGELIST:
+		{
+			if(reqNum >= m_signOnBufs.numImageBufs)
+			{
+				error = true;
+				break;
+			}
+
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_IMAGELIST);
+
+			if((reqNum + 1) >= m_signOnBufs.numImageBufs)
+				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
+			else
+				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.imageList[reqNum]);
+			break;
+		}
+	case SVC_BASELINES:
+		{
+			if(reqNum >= m_signOnBufs.numModelBufs)
+			{
+				error = true;
+				break;
+			}
+
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BASELINES);
+
+			if((reqNum + 1) >= m_signOnBufs.numEntityBufs)
+				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
+			else
+				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.entityList[reqNum]);
+			break;
+		}
+	default:
+		{
+			error = true;
+			break;
+		}
+	}
+
+	if(error)
+	{
+		ComPrintf("SV:Client(%d) Requested bad spawnlevel %d(%d)\n", 
+			chanId, m_clChan[chanId].m_spawnLevel, reqNum);
+		SendDisconnect(chanId,CLIENT_BADMSG);
+		return;
+	}
+ComPrintf("SV:Client(%d) Sending spawn level %d\n", chanId, m_clChan[chanId].m_spawnLevel);
 }
 
 /*
@@ -449,34 +522,44 @@ Received a message from a spawning client
 who wants to request the next round of spawn info
 ======================================
 */
-void CNetServer::ParseSpawnMessage(int chanId)	//Client hasn't spawned yet
+void CNetServer::ParseSpawnMessage(int chanId)
 {
 	//Check if client is trying to spawn into current map
 	int levelid = m_recvBuf.ReadInt();
-
 	if(m_recvBuf.BadRead())
-	{
+	{	
+		m_recvBuf.Reset();
 		SendDisconnect(chanId,CLIENT_BADMSG);
 		return;
 	}
 
 	if( levelid != m_pSvState->levelId)
 	{
-ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", chanId, levelid ,m_pSvState->levelId);
+		ComPrintf("SV:Client(%d) needs to reconnect, bad levelid %d != %d\n", 
+					chanId, levelid ,m_pSvState->levelId);
 		SendReconnect(chanId);
 		return;
 	}
 
 	//Find out what spawn message the client is asking for
 	byte spawnparm = m_recvBuf.ReadByte();
-
-ComPrintf("SV:Client(%d) requesting spawn level %d\n", chanId, spawnparm);
-
 	if(m_recvBuf.BadRead())
 	{
+		m_recvBuf.Reset();
 		SendDisconnect(chanId,CLIENT_BADMSG);
 		return;
 	}
+
+	int  reqNum    = m_recvBuf.ReadInt();
+	if(m_recvBuf.BadRead())
+	{
+		m_recvBuf.Reset();
+		SendDisconnect(chanId,CLIENT_BADMSG);
+		return;
+	}
+
+	ComPrintf("SV:Client(%d) Requesting Spawn, Level:%d  Num:%d\n", chanId, spawnparm, reqNum);
+	
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
@@ -484,16 +567,19 @@ ComPrintf("SV:Client(%d) requesting spawn level %d\n", chanId, spawnparm);
 		m_clChan[chanId].Reset();
 		return;	
 	}
-	else if(spawnparm == SVC_BEGIN+1)
+
+	//Just acked the last packet. change to ingame more
+	if((reqNum == 0) && (spawnparm == SVC_BEGIN))
 	{
+		m_clChan[chanId].m_spawnLevel = 0;
 		m_clChan[chanId].m_state = CL_INGAME;
 		m_pServer->OnClientSpawn(chanId);
 	}
 	else
 	{
-		m_clChan[chanId].m_spawnState = spawnparm;
+		m_clChan[chanId].m_spawnReqId = reqNum;
+		m_clChan[chanId].m_spawnLevel = spawnparm;
 	}
-	m_clChan[chanId].m_bSend = true;
 }
 
 //======================================================================================
@@ -617,6 +703,7 @@ void CNetServer::ReadPackets()
 			{
 				m_recvBuf.BeginRead();
 				m_clChan[i].m_netChan.BeginRead();
+				m_clChan[i].m_bSend = true;
 
 				if(m_clChan[i].m_state == CL_INGAME)
 				{
@@ -626,7 +713,6 @@ void CNetServer::ReadPackets()
 				{
 					ParseSpawnMessage(i);
 				}
-				m_clChan[i].m_bSend = true;
 				break;
 			}
 		}
