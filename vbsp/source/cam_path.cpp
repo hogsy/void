@@ -7,192 +7,196 @@ implementation of smooth camera paths
 #include "entity.h"
 #include <string.h>
 
-#define MAX_CAM_VERTS 100
+#define MAX_CAM_VERTS 256
+#define MAX_EQUATIONS (MAX_CAM_VERTS-1)
 typedef float control_t[3];
 typedef float eq_p[4];	// At^3 + Bt^2 + Ct + D
 typedef eq_p eq_t[3];		// equations for our 3 components
 
+eq_t	eqs[MAX_EQUATIONS];
 
 
-
-/*
-==========
-take the determinant of a nxn matrix
-subscripts are as follows:
-[[0 1 2]
- [3 4 5]
- [6 7 8]]
-and
-[[ 0  1  2  3]
- [ 4  5  6  7]
- [ 8  9 10 11]
- [12 13 14 15]]
-and so on
-==========
-*/
-double det(int n, float *m)
+//--------
+// use gaussian elimination with partial pivoting to solve a system
+// n = number of equations, m=augmented matrix, put results in coef
+//--------
+void GaussElim(int n, float *m, float *coef)
 {
-	double ret;
+	int r,c,r1;
+	float *rows[MAX_EQUATIONS*4];
 
-	// 2x2 matrix - easy compute det
-	if (n == 2)
+	for (r=0; r<n; r++)
+		rows[r] = &m[r*(n+1)];
+
+
+	for (r=0; r<(n-1); r++)
 	{
-		ret = (m[0] * m[3]) -
-			  (m[1] * m[2]);
-
-
-	}
-
-	// matrix is a 3x3 - calculate determinant straight forward
-	else if (n == 3)
-	{
-		ret = (m[0] * m[4] * m[8]) +
-			  (m[1] * m[5] * m[6]) +
-			  (m[2] * m[3] * m[7]) -
-			  (m[2] * m[4] * m[6]) -
-			  (m[0] * m[5] * m[7]) -
-			  (m[1] * m[3] * m[8]);
-	}
-
-	// have to do it recursively
-	else
-	{
-		int coef = 1;
-		ret = 0;
-
-		// our n-1 x n-1 matrix
-		float *mat = (float*)malloc(sizeof(float) * (n-1) * (n-1));
-
-		// have to get a sub-determinant for each row
-		for (int td=0; td<n; td++)
+		// partial pivoting - find the row we want to use
+		int best = r;
+		for (r1=r+1; r1<n; r1++)
 		{
-			float *matp = mat;
-			for (int r=0; r<n; r++)
-			{
-				// skip a row
-				if (r == td)
-					continue;
+			if (fabs(rows[r1][r]) > fabs(rows[best][r]))
+				best = r1;
+		}
 
-				// always skip the first column
-				for (int c=1; c<n; c++)
-				{
-					*matp = m[r*n + c];
-					matp++;
-				}
+		// swap rows
+		if (best != r)
+		{
+			float *tmp = rows[r];
+			rows[r] = rows[best];
+			rows[best] = tmp;
+		}
+
+		if (fabs(rows[r][r]) == 0)
+			exit(5);	// close to singular
+
+		// elimination using row r
+		for (r1=r+1; r1<n; r1++)
+		{
+			float scale = rows[r1][r] / rows[r][r];
+			for (c=(r+1); c<(n+1); c++)
+				rows[r1][c] -= rows[r][c]*scale;
+		}
+	}
+
+
+	// back substitution
+	for (r=(n-1); r>=0; r--)
+	{
+		coef[r] = 0;
+		for (c=(r+1); c<n; c++)
+			coef[r] += rows[r][c]*coef[c];
+
+		coef[r] -= rows[r][n];
+		coef[r] /= -rows[r][r];
+	}
+
+}
+
+
+
+void cam_get_eq_data(control_t *controls, int num_controls)
+{
+	int ncoefs = (num_controls-1)*4;
+	int rowsize= ncoefs+1;
+
+	int r,c;
+
+	float *m = (float*)malloc(sizeof(float)*ncoefs*rowsize);
+	float *coef = (float*)malloc(sizeof(float)*ncoefs);
+
+
+	for (int i=0; i<3; i++)
+	{
+		memset(m, 0, sizeof(float)*ncoefs*rowsize);
+
+		for (int t=0; t<num_controls; t++)
+		{
+			// data fitting that uses this point
+
+			// left side equation
+			if (t!=0)
+			{
+				r = (t-1)*4+1;
+				c = (t-1)*4;
+
+				m[r*rowsize+c+0] = (float)(t*t*t);
+				m[r*rowsize+c+1] = (float)(t*t);
+				m[r*rowsize+c+2] = (float)(t);
+				m[r*rowsize+c+3] = (float)(1);
+				m[(r+1)*rowsize-1] = controls[t][i];
 			}
 
-			ret += coef * m[td*n] * det(n-1, mat);
-			coef *= -1;
+			// right side equation
+			if (t!=(num_controls-1))
+			{
+				r = t*4;
+				c = t*4;
+
+				m[r*rowsize+c+0] = (float)(t*t*t);
+				m[r*rowsize+c+1] = (float)(t*t);
+				m[r*rowsize+c+2] = (float)(t);
+				m[r*rowsize+c+3] = (float)(1);
+				m[(r+1)*rowsize-1] = controls[t][i];
+			}
+
+
+			// derivative fitting - only for interior points
+			if ((t==0) || (t == (num_controls-1)))
+				continue;
+
+			r = (t-1)*4 + 2;
+			c = (t-1)*4;
+
+
+			// first derivative
+			m[r*rowsize+c+0] = (float)( 3*t*t);
+			m[r*rowsize+c+1] = (float)( 2*t);
+			m[r*rowsize+c+2] = (float)( 1);
+			m[r*rowsize+c+4] = (float)(-3*t*t);
+			m[r*rowsize+c+5] = (float)(-2*t);
+			m[r*rowsize+c+6] = (float)(-1);
+
+			// second derivative
+			r++;
+			m[r*rowsize+c+0] = (float)( 6*t);
+			m[r*rowsize+c+1] = (float)( 2);
+			m[r*rowsize+c+4] = (float)(-6*t);
+			m[r*rowsize+c+5] = (float)(-2);
 		}
 
-		free(mat);
-	}
-
-	return ret;
-}
-
+		// two more equations for the end points
 
 /*
-==============
-cam_get_eq
-==============
-*/
-void cam_get_eq(eq_t eq, int e, control_t *controls, int num_controls)
-{
-	int p1, p2;
-	control_t s1, s2;
-
-	// which control points we need to pass through
-	p1 = e;
-	p2 = e+1;
-
-	// set up slops at control points
-	if (p1 == 0)
-	{
-		s1[0] = controls[1][0] - controls[0][0];
-		s1[1] = controls[1][1] - controls[0][1];
-		s1[2] = controls[1][2] - controls[0][2];
-	}
-	else
-	{
-		s1[0] = controls[p1+1][0] - controls[p1-1][0];
-		s1[1] = controls[p1+1][1] - controls[p1-1][1];
-		s1[2] = controls[p1+1][2] - controls[p1-1][2];
-	}
-
-	if (p2 == num_controls-1)
-	{
-		s2[0] = controls[num_controls-1][0] - controls[num_controls-2][0];
-		s2[1] = controls[num_controls-1][1] - controls[num_controls-2][1];
-		s2[2] = controls[num_controls-1][2] - controls[num_controls-2][2];
-	}
-	else
-	{
-		s2[0] = controls[p2+1][0] - controls[p2-1][0];
-		s2[1] = controls[p2+1][1] - controls[p2-1][1];
-		s2[2] = controls[p2+1][2] - controls[p2-1][2];
-	}
-
-
-
-	float *base = (float*)malloc(sizeof(float) * 16);
-	float *num  = (float*)malloc(sizeof(float) * 16);
-
-// the 2 points we have to pass through
-// satisfy equation At^3 + Bt^2 + Ct + D
-	base[0] = (float)p1*p1*p1;
-	base[1] = (float)p1*p1;
-	base[2] = (float)p1;
-	base[3] = 1;
-
-	base[4] = (float)p2*p2*p2;
-	base[5] = (float)p2*p2;
-	base[6] = (float)p2;
-	base[7] = 1;
-
-// the 2 slopes we need
-// satisfy equation 3At^2 + 2Bt + C
-	base[8 ] = (float)3*p1*p1;
-	base[9 ] = (float)2*p1;
-	base[10] = 1;
-	base[11] = 0;
-
-	base[12] = (float)3*p2*p2;
-	base[13] = (float)2*p2;
-	base[14] = 1;
-	base[15] = 0;
-
-
-
-	double dbase = det (4, base);
-	if (dbase == 0)
-	{
-		free(base);
-		free(num);
-		Error("dbase == 0!");
-	}
-
-	// for each dim (x,y,z)
-	for (int c=0; c<3; c++)
-	{
-		// each coefficient
-		for (int d=0; d<4; d++)
+		if (mode == 1)
 		{
-			memcpy(num, base, sizeof(float) * 16);
-			num[ 0 + d] = controls[p1][c];
-			num[ 4 + d] = controls[p2][c];
-			num[ 8 + d] = s1[c];
-			num[12 + d] = s2[c];
+			// "natural" spline - second derivative at endpoints == 0
+			r = ncoefs-2;
+			c = 0;
+			m[r*rowsize+c+0] = 0;
+			m[r*rowsize+c+1] = 2;
 
-			eq[c][3-d] = (float)(det(4, num) / dbase);
+			r++;
+			c = rowsize-5;
+			m[r*rowsize+c+0] = (num_controls-1) * 6;
+			m[r*rowsize+c+1] = 2;
+		}
+
+		else
+*/		{
+			// not-a-knot / extrapolation
+			r = ncoefs-2;
+			c = 0;
+			m[r*rowsize+c+0] = 8;
+			m[r*rowsize+c+1] = 4;
+			m[r*rowsize+c+2] = 2;
+			m[r*rowsize+c+3] = 1;
+			m[(r+1)*rowsize-1] = controls[2][i];
+
+
+			r++;
+			c = rowsize-5;
+			m[r*rowsize+c+0] = (float)((num_controls-3)*(num_controls-3)*(num_controls-3));
+			m[r*rowsize+c+1] = (float)((num_controls-3)*(num_controls-3));
+			m[r*rowsize+c+2] = (float)((num_controls-3));
+			m[r*rowsize+c+3] = (float)(1);
+			m[(r+1)*rowsize-1] = controls[(num_controls-3)][i];
+		}
+
+		GaussElim(ncoefs, m, coef);
+
+		// copy data into our eq structs
+		for (r=0; r<ncoefs; r++)
+		{
+			eqs[r/4][i][3-r%4] = coef[r];
 		}
 	}
 
-	free(num);
-	free(base);
+
+	free(m);
+	free(coef);
+
 }
-
-
 
 
 /*
@@ -205,12 +209,10 @@ are vector keys
 */
 void cam_calc_eqs(entity_t *head, vector_t *verts, int n)
 {
-	eq_t eq;
+	cam_get_eq_data((control_t*)(void*)verts, n);
+
 	for (int e=0; e<n-1; e++)
 	{
-		cam_get_eq(eq, e, (control_t*)(void*)verts, n);
-
-
 		// add these keys
 		char keyname[] = "e00t0";
 		char value[1024];
@@ -220,7 +222,7 @@ void cam_calc_eqs(entity_t *head, vector_t *verts, int n)
 		for (int i=0; i<4; i++)
 		{
 			keyname[4] = i + '0';
-			sprintf(value, "%lf %lf %lf", eq[0][i], eq[1][i], eq[2][i]);
+			sprintf(value, "%lf %lf %lf", eqs[0][i], eqs[1][i], eqs[2][i]);
 
 			vkey_t *nkey = get_key();
 			strcpy(nkey->k.name, keyname);
