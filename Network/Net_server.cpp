@@ -28,8 +28,6 @@ CNetServer::CNetServer()
 	m_pSock  = new CNetSocket(&m_recvBuf);
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 	m_clChan = 0;
-
-	memset(m_printBuffer,0,sizeof(m_printBuffer));
 }
 
 CNetServer::~CNetServer()
@@ -222,12 +220,12 @@ void CNetServer::HandleStatusReq(bool full)
 		m_sendBuf.WriteString(S2C_FULLSTATUS);
 
 	//Status info
-	m_sendBuf.WriteInt(VOID_PROTOCOL_VERSION);	//Protocol
-	m_sendBuf.WriteString(m_pSvState->gameName);		//Game
+	m_sendBuf.WriteInt(VOID_PROTOCOL_VERSION);		//Protocol
+	m_sendBuf.WriteString(m_pSvState->gameName);	//Game
 	m_sendBuf.WriteString(m_pSvState->hostName);	//Hostname
 	m_sendBuf.WriteString(m_pSvState->worldname);	//Map name
-	m_sendBuf.WriteInt(m_pSvState->maxClients);//max clients
-	m_sendBuf.WriteInt(m_pSvState->numClients);//cur clients
+	m_sendBuf.WriteInt(m_pSvState->maxClients);		//max clients
+	m_sendBuf.WriteInt(m_pSvState->numClients);		//cur clients
 	
 	if(full)
 		m_pServer->WriteGameStatus(m_sendBuf);
@@ -369,7 +367,6 @@ void CNetServer::HandleConnectReq()
 	m_sendBuf.WriteInt(-1);
 	m_sendBuf.WriteString(S2C_ACCEPT);
 	m_sendBuf.WriteInt(m_pSvState->levelId);
-//	m_sendBuf.WriteInt(i);		//Give client the slot number
 	m_pSock->Send(m_sendBuf);
 }
 
@@ -408,19 +405,10 @@ void CNetServer::SendSpawnParms(int chanId)
 {
 	bool error = false;
 	int  lastInSeq = 0;
-
 	int  reqNum = m_clChan[chanId].m_spawnReqId;
 
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
-
-	//Give it the next thing to request
-/*	if(reqNum == SVC_LASTSPAWNMSG)
-	{
-		m_clChan[chanId].m_netChan.m_buffer.Write(m_clChan[chanId].m_spawnLevel+1);
-		m_clChan[chanId].m_netChan.m_buffer.Write(0);
-		return;
-	}
-*/
+	
 	//What spawn level does the client want ?
 	switch(m_clChan[chanId].m_spawnLevel)
 	{
@@ -591,7 +579,7 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	}
 
 //ComPrintf("SV:Client(%d) Requesting Spawn, Level:%d  Num:%d\n", chanId, spawnparm, reqNum);
-	
+
 	//Client aborted connection
 	if(spawnparm == CL_DISCONNECT)
 	{
@@ -599,20 +587,8 @@ void CNetServer::ParseSpawnMessage(int chanId)
 		m_clChan[chanId].Reset();
 		return;	
 	}
-
-	//Just acked the last packet. change to ingame mode
-/*	if((reqNum == 0) && (spawnparm == SVC_BEGIN)) // + 1))
-	{
-		m_clChan[chanId].m_spawnLevel = 0;
-		m_clChan[chanId].m_state = CL_INGAME;
-		m_pServer->OnClientSpawn(chanId);
-	}
-	else
-	{
-*/
-		m_clChan[chanId].m_spawnReqId = reqNum;
-		m_clChan[chanId].m_spawnLevel = spawnparm;
-//	}
+	m_clChan[chanId].m_spawnReqId = reqNum;
+	m_clChan[chanId].m_spawnLevel = spawnparm;
 }
 
 //======================================================================================
@@ -622,17 +598,12 @@ void CNetServer::ParseSpawnMessage(int chanId)
 Print a server message to a given client
 ======================================
 */
-void CNetServer::ClientPrintf(int chanId, const char * message, ...)
+void CNetServer::ClientPrintf(int chanId, const char * message)
 {
-	va_list args;
-	va_start(args, message);
-	vsprintf(m_printBuffer, message, args);
-	va_end(args);
-
 	if(m_clChan[chanId].m_state == CL_INGAME)
 	{
-		ChanBeginWrite(chanId,SV_PRINT,strlen(m_printBuffer));
-		ChanWriteString(m_printBuffer);
+		ChanBeginWrite(chanId,SV_PRINT,strlen(message));
+		ChanWriteString(message);
 		ChanFinishWrite();
 	}
 }
@@ -642,19 +613,14 @@ void CNetServer::ClientPrintf(int chanId, const char * message, ...)
 Broadcast message to all the clients
 ======================================
 */
-void CNetServer::BroadcastPrintf(const char* message, ...)
+void CNetServer::BroadcastPrintf(const char* message)
 {
-	va_list args;
-	va_start(args, message);
-	vsprintf(m_printBuffer, message, args);
-	va_end(args);
-
 	for(int i=0;i<m_pSvState->maxClients;i++)
 	{
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
-			ChanBeginWrite(i,SV_PRINT,strlen(m_printBuffer));
-			ChanWriteString(m_printBuffer);
+			ChanBeginWrite(i,SV_PRINT,strlen(message));
+			ChanWriteString(message);
 			ChanFinishWrite();
 		}
 	}
