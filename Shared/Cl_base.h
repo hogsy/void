@@ -30,7 +30,8 @@ struct ClEntity : public BaseEntity
 		mins.Set(0,0,0);
 		maxs.Set(0,0,0);
 	
-		mdlIndex = sndIndex = -1;
+		mdlIndex = -1;
+		sndIndex = -1;
 		num = -1;
 		frameNum = nextFrame = skinNum = 0;
 		volume = attenuation = 0;
@@ -62,6 +63,7 @@ struct ClClient : public ClEntity
 	virtual void Reset()
 	{
 		ClEntity::Reset();
+
 		memset(name,0,CL_MAXNAME);
 		memset(model,0,CL_MAXMODELNAME);
 		gravity = friction = maxSpeed = 0.0f;

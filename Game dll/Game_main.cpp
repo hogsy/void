@@ -69,14 +69,27 @@ Load/Unload World
 ================================================
 */
 bool CGame::LoadWorld(I_World * pWorld)
-{	
+{
 	EntMove::SetWorld(pWorld);
 	m_pWorld = pWorld;
 	return true;
 }
 
 void CGame::UnloadWorld()
-{	EntMove::SetWorld(0);
+{
+	//Free the the non-persistant entities
+	if(entities)
+	{
+		for(int i=0;i<GAME_MAXENTITIES; i++)
+		{
+			if(entities[i]) 
+				delete entities[i];
+			entities[i] = 0;
+		}
+	}
+	numEnts = 0;
+
+	EntMove::SetWorld(0);
 	m_pWorld =	0;
 }
 

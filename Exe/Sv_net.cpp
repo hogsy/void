@@ -112,9 +112,7 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					ComPrintf("SV: Bad command from client %s:%d\n", m_clients[clNum]->name,clNum);
 					return;
 				}
-				
 				m_clients[clNum]->clCmd.UpdateCmd(m_incomingCmd);
-//				m_clients[clNum]->clCmd.moveFlags = m_incomingCmd.moveFlags;
 				break;
 			}
 		default:

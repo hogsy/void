@@ -308,7 +308,6 @@ void CServer::RunFrame()
 
 				m_net.ChanBeginWrite(i,SV_CLUPDATE, 20);
 				m_net.ChanWriteByte(m_clients[j]->num);
-//				m_net.ChanWriteByte(m_clients[i]->sendFlags);
 				
 				m_net.ChanWriteCoord(m_clients[j]->origin.x);
 				m_net.ChanWriteCoord(m_clients[j]->origin.y);
@@ -318,28 +317,9 @@ void CServer::RunFrame()
 				m_net.ChanWriteCoord(m_clients[j]->angles.y);
 				m_net.ChanWriteCoord(m_clients[j]->angles.z);
 
-/*				if(m_clients[j]->sendFlags)
-				{
-					if(m_clients[j]->sendFlags & SVU_GRAVITY)
-						m_net.ChanWriteFloat(m_clients[j]->gravity);
-					if(m_clients[j]->sendFlags & SVU_FRICTION)
-						m_net.ChanWriteFloat(m_clients[j]->friction);
-					if(m_clients[j]->sendFlags & SVU_MAXSPEED)
-						m_net.ChanWriteFloat(m_clients[j]->maxSpeed);
-				}
-*/
 				m_net.ChanFinishWrite();
 			}
 		}
-
-		//FIXME: Clean up
-/*		for(i=0;i<m_svState.maxClients;i++)
-		{
-			if(m_clients[i])
-				m_clients[i]->sendFlags = 0;
-		}
-*/
-
 	}
 
 	//write to clients
@@ -443,7 +423,6 @@ void CServer::UnloadWorld()
 	}
 }
 
-
 /*
 ======================================
 Parse and read entities
@@ -512,7 +491,7 @@ void CServer::WriteSignOnBuffer()
 	for(i=0;i<m_numImages; i++)
 	{
 		buffer.Reset();
-		buffer.WriteShort(i); //m_imageList[i].id);
+		buffer.WriteShort(i);
 		buffer.WriteString(m_imageList[i].name);
 
 		//Check if the signOn buffer has space for this entity
@@ -582,7 +561,6 @@ void CServer::WriteSignOnBuffer()
 		m_signOnBufs.soundList[numBufs].WriteBuffer(buffer);
 	}
 	m_signOnBufs.numSoundBufs= numBufs+1;
-
 
 	
 	//==================================
@@ -732,8 +710,6 @@ bool CServer::HandleCVar(const CVarBase * cvar, const CStringVal &strVal)
 	}
 	return false;
 }
-
-
 
 /*
 ==========================================
