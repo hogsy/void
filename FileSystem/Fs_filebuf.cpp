@@ -166,18 +166,30 @@ void CFileBuffer::GetToken(char *buff, bool newline)
 	}
 
 	// copy over the token we are at
+	char *ptr = buff;
 	while (1)
 	{
 		tmp = GetChar();
 		if ((tmp <= ' ') || (tmp == EOF) || (tmp == -1))
 			break;
 
-		(*buff) = tmp;
-		buff++;
+		(*ptr) = tmp;
+		ptr++;
 	}
 
 	// null terminate
-	(*buff) = 0;
+	(*ptr) = 0;
+
+
+	// if it's a comment, we don't want it
+	if ((buff[0] == '//') && (buff[1] == '//'))
+	{
+		if (!newline)
+			buff[0] = 0;
+
+		else
+			GetToken(buff, true);
+	}
 }
 
 
