@@ -184,6 +184,8 @@ private:
 
 	//=================================================
 
+	ClCmd		 m_incomingCmd;
+
 	//These should just point to the data in the GAME code
 	Entity    ** m_entities;
 	EntClient ** m_clients;

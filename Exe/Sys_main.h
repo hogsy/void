@@ -90,12 +90,9 @@ private:
 
 	//=========================================================
 
-//	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
 
 	bool CreateVoidWindow();
-	void ParseCmdLine(const char * cmdLine);	//Parse Cmd Line
-	void WriteConfig(const char *config);		//Write configuration file
 	void ToggleConsole();
 	void Quit();				
 };

@@ -237,30 +237,10 @@ static bool ChangeToVoidDir()
 
 	if(!VoidReg::DoesKeyExist("Software\\Devvoid\\Void"))
 	{
-		int ret = MessageBox(0,"Void has not been installed properly."
-						"Would you like to install it at the current path ?",
-						"Void", MB_YESNO);
-		if(ret == IDNO)
-			return false;
-		else
-		{
-			if(!::GetCurrentDirectory(COM_MAXPATH,bufPath))
-			{
-				MessageBox(0,"Fatal Error : Unable to get current directory", "Void", MB_OK);
-				return false;
-			}
-
-			sprintf(message,"Install Void to : %s", bufPath);
-			int ret = MessageBox(0,message,"Void", MB_YESNO);
-			if(ret == IDNO)
-				return false;
-
-			if(!VoidReg::AddKeyValuePair("Software\\Devvoid\\Void","Path",bufPath))
-			{
-				MessageBox(0,"Error writing registry data", "Void", MB_OK);
-				return false;
-			}
-		}
+		MessageBox(0,"Void has not been installed on this system.\r"
+					 "Please make sure you run the setup program first.",
+					 "Void", MB_OK);
+		return false;
 	}
 
 	if(!VoidReg::GetKeyValue("Software\\Devvoid\\Void","Path", bufPath, MAX_PATH))

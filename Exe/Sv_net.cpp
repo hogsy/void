@@ -75,7 +75,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				if(id == 'n')
 				{
 					const char * clname = buffer.ReadString();
-//ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
+ComPrintf("SV: %s renamed to %s\n", m_clients[clNum]->name, clname);
 					strcpy(m_clients[clNum]->name, clname);
 
 					GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X, clNum);
@@ -101,22 +101,35 @@ ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 			}
 		case CL_MOVE:
 			{
-				m_clients[clNum]->clCmd.time = buffer.ReadFloat();
-				
+				m_incomingCmd.time = ((int)buffer.ReadByte())/1000.0f;
+				m_incomingCmd.forwardmove = buffer.ReadShort();
+				m_incomingCmd.rightmove = buffer.ReadShort();
+				m_incomingCmd.upmove = buffer.ReadShort();
+				m_incomingCmd.angles[0] = buffer.ReadFloat();
+				m_incomingCmd.angles[1] = buffer.ReadFloat();
+				m_incomingCmd.angles[2] = buffer.ReadFloat();
+
+				if(buffer.BadRead())
+				{
+					ComPrintf("SV: Bad command from client %s:%d\n", m_clients[clNum]->name,clNum);
+					return;
+				}
+				m_clients[clNum]->clCmd = m_incomingCmd;
+				m_clients[clNum]->clCmd.flags = 1;
+
+/*
+				m_clients[clNum]->clCmd.time = ((int)buffer.ReadByte())/1000.0f;
 				m_clients[clNum]->clCmd.forwardmove = buffer.ReadShort();
 				m_clients[clNum]->clCmd.rightmove = buffer.ReadShort();
 				m_clients[clNum]->clCmd.upmove = buffer.ReadShort();
 				m_clients[clNum]->clCmd.angles[0] = buffer.ReadFloat();
 				m_clients[clNum]->clCmd.angles[1] = buffer.ReadFloat();
 				m_clients[clNum]->clCmd.angles[2] = buffer.ReadFloat();
-
-//				ComPrintf("SV: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
-//					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
-
-
+				ComPrintf("SV: %d %d %d\n", m_clients[clNum]->clCmd.forwardmove,
+					m_clients[clNum]->clCmd.rightmove, m_clients[clNum]->clCmd.upmove);
 				if(buffer.BadRead())
 					return;
-				m_clients[clNum]->clCmd.flags = 1;
+*/
 				break;
 			}
 		default:

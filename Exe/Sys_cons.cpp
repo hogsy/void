@@ -30,7 +30,6 @@ CConsole::CConsole(const char * curPath) : m_parms(CON_MAXARGSIZE)
 
 	//open logfile
 	char debugfilename[COM_MAXPATH];
-//	_getcwd(debugfilename,COM_MAXPATH);
 	strcpy(debugfilename,curPath);
 	strcat(debugfilename,"/debug.log");
 

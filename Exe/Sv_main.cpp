@@ -278,34 +278,40 @@ void CServer::RunFrame()
 		m_pGame->RunFrame(System::GetCurTime());
 	}
 
-	//run clients
-	//go through all the clients, find entities in their pvs and update them
-	//Add client info to all connected clients
+	//Write updates to all connected clients
 	for(int i=0;i<m_svState.maxClients;i++)
 	{
-		if(m_clients[i] && m_clients[i]->spawned && m_net.ChanCanSend(i))
+		if((!m_clients[i]) || (!m_clients[i]->spawned) || (!m_net.ChanCanSend(i)))
+			continue;
+
+		//Write clients own position, this does not include angles ?
+		m_net.ChanBeginWrite(i, SV_UPDATE, 12);
+		m_net.ChanWriteFloat(m_clients[i]->origin.x);
+		m_net.ChanWriteFloat(m_clients[i]->origin.y);
+		m_net.ChanWriteFloat(m_clients[i]->origin.z);
+		m_net.ChanFinishWrite();
+
+		//Write position AND angles of other clients in PVS
+		for(int j=0; j<m_svState.maxClients; j++)
 		{
-			for(int j=0; j<m_svState.maxClients; j++)
-			{
-				if(!m_clients[j] || !m_clients[j]->spawned) //|| i==j)
-					continue;
+			if((!m_clients[j]) || (!m_clients[j]->spawned) || (i==j))
+				continue;
 
-				m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 0);
-				m_net.ChanWriteShort(m_clients[j]->num);
-/*				
-				m_net.ChanWriteCoord(m_clients[j]->origin.x);
-				m_net.ChanWriteCoord(m_clients[j]->origin.y);
-				m_net.ChanWriteCoord(m_clients[j]->origin.z);
+			m_net.ChanBeginWrite(i,SV_CLFULLUPDATE, 20);
+			m_net.ChanWriteShort(m_clients[j]->num);
+				
+			m_net.ChanWriteCoord(m_clients[j]->origin.x);
+			m_net.ChanWriteCoord(m_clients[j]->origin.y);
+			m_net.ChanWriteCoord(m_clients[j]->origin.z);
+/*
+			m_net.ChanWriteFloat(m_clients[j]->origin.x);
+			m_net.ChanWriteFloat(m_clients[j]->origin.y);
+			m_net.ChanWriteFloat(m_clients[j]->origin.z);
 */
-				m_net.ChanWriteFloat(m_clients[j]->origin.x);
-				m_net.ChanWriteFloat(m_clients[j]->origin.y);
-				m_net.ChanWriteFloat(m_clients[j]->origin.z);
-
-				m_net.ChanWriteAngle(m_clients[j]->angles.x);
-				m_net.ChanWriteAngle(m_clients[j]->angles.y);
-				m_net.ChanWriteAngle(m_clients[j]->angles.z);
-				m_net.ChanFinishWrite();
-			}
+			m_net.ChanWriteAngle(m_clients[j]->angles.x);
+			m_net.ChanWriteAngle(m_clients[j]->angles.y);
+			m_net.ChanWriteAngle(m_clients[j]->angles.z);
+			m_net.ChanFinishWrite();
 		}
 	}
 

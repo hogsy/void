@@ -51,6 +51,20 @@ frequently as possible
 struct ClCmd
 {
 	ClCmd() { Reset(); }
+
+	ClCmd & operator = (const ClCmd & cmd)
+	{
+		time = cmd.time;
+		angles[0] = cmd.angles[0];
+		angles[1] = cmd.angles[1];
+		angles[2] = cmd.angles[2];
+		forwardmove = cmd.forwardmove;
+		rightmove = cmd.rightmove;
+		upmove = cmd.upmove;
+		flags = cmd.flags;
+		return *this;
+	}
+	
 	void Reset()
 	{ 
 		flags = 0;

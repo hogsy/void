@@ -63,7 +63,7 @@ private:
 	//Movement
 	void UpdatePosition(vector_t &dir, float time);
 	void UpdateAngles(const vector_t &angles, float time);
-	
+		
 	void MoveForward();
 	void MoveBackward();
 	void MoveRight();
@@ -76,9 +76,9 @@ private:
 
 	//==================================================
 
-	void Spawn(vector_t	*origin, vector_t *angles);
 	void UpdateViewBlends();
 
+	void Spawn(vector_t	&origin, vector_t &angles);
 
 	//==================================================
 	//CVars and Commands
@@ -112,8 +112,11 @@ private:
 
 	int			m_numEnts;
 	ClEntity 	m_entities[GAME_MAXENTITIES];
-	
+
+	int			m_numClients;
 	ClClient 	m_clients[GAME_MAXCLIENTS];
+	
+	int			m_clNum;
 	ClClient *	m_pGameClient;
 
 

@@ -424,23 +424,6 @@ void CVoid::HandleMM(WPARAM wParam, LPARAM lParam)
 		m_pMusic->HandleMCIMsg(wParam,lParam);
 }
 
-//======================================================================================
-//======================================================================================
-
-/*
-==========================================
-Parse Command line, update any CVar values
-==========================================
-*/
-void CVoid::ParseCmdLine(const char * lpCmdLine)
-{
-	ComPrintf("CVoid::Command Line :%s\n",lpCmdLine);
-//	ComPrintf("CVoid::Current Working Directory :%s\n", g_exedir);
-
-	//FIXME - break into arguments
-	//decide on an identifier scheme
-}
-
 
 //======================================================================================
 //Console loopback functions
@@ -474,15 +457,6 @@ void CVoid::ToggleConsole()
 		System::SetGameState(INGAME);
 	else if(System::GetGameState() == INGAME)
 		System::SetGameState(INGAMECONSOLE);
-}
-
-/*
-=====================================
-Write the configuration file
-=====================================
-*/
-void CVoid::WriteConfig(const char *config)
-{
 }
 
 /*

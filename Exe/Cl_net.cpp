@@ -78,8 +78,6 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				m_clients[num].inUse = true;
 
 				ComPrintf("CL: %s entered at slot %d\n", m_clients[num].name,num);
-
-
 				break;
 			}
 		case SV_CLINFOCHANGE:
@@ -98,56 +96,45 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 		case SV_CLDISCONNECT:
 			{
 				int  num = buffer.ReadByte();
-
-				if(num < 0 || num > 4)
-				{
-					return;
-				}
-
 				m_pClGame->PlaySnd2d(m_hsMessage, CACHE_LOCAL);
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
 				m_clients[num].Reset();
 				break;
 			}
+		case SV_UPDATE:
+			{
+				float x = buffer.ReadFloat();
+				float y = buffer.ReadFloat();
+				float z = buffer.ReadFloat();
+
+				if(buffer.BadRead())
+				{
+					ComPrintf("CL: Update is corrupt. Ignoring\n");
+					return;
+				}
+				
+				m_pGameClient->origin.x = x;
+				m_pGameClient->origin.y = y;
+				m_pGameClient->origin.z = z;
+				break;
+			}
 		case SV_CLFULLUPDATE:
 			{
 				int num = buffer.ReadShort();
-
-//				ComPrintf("CL UPDATED %d\n", num);
-
-				if(m_clients[num].inUse)
+//				ComPrintf("CL: updated %d\n", num);
+				if(m_clients[num].inUse && num != m_clNum)
 				{
-/*					float x = buffer.ReadFloat();
-					float y = buffer.ReadFloat();
-					float z = buffer.ReadFloat();
-
-					m_pClGame->HudPrintf(0,200,0,"%.2f, %.2f, %.2f", x,y,z);
-*/
-					m_clients[num].origin.x = buffer.ReadFloat();
+/*					m_clients[num].origin.x = buffer.ReadFloat();
 					m_clients[num].origin.y = buffer.ReadFloat();
 					m_clients[num].origin.z = buffer.ReadFloat();
-
-					
-					buffer.ReadAngle();
-					buffer.ReadAngle();
-					buffer.ReadAngle();
-
-/*					m_clients[num].angles.x = buffer.ReadAngle();
-					m_clients[num].angles.y = buffer.ReadAngle();
-					m_clients[num].angles.z = buffer.ReadAngle();
-*/
-//					return;
-
-
-/*					
+*/					
+					m_clients[num].origin.x = buffer.ReadCoord();
+					m_clients[num].origin.y = buffer.ReadCoord();
+					m_clients[num].origin.z = buffer.ReadCoord();
 					m_clients[num].angles.x = buffer.ReadAngle();
 					m_clients[num].angles.y = buffer.ReadAngle();
 					m_clients[num].angles.z = buffer.ReadAngle();
-*/
 				}
-
-//				ComPrintf("Got Update\n");
-
 				break;
 			}
 		default:
@@ -195,8 +182,7 @@ ComPrintf("CL: Map: %s\n", map);
 				buffer.ReadString(modelName,32);
 
 				if(modelId == -1 || !modelName[0])
-				{	continue;
-				}
+					continue;
 				m_pClGame->RegisterModel(modelName,CACHE_GAME,modelId);
 			}
 			break;
@@ -215,8 +201,7 @@ ComPrintf("CL: Map: %s\n", map);
 				buffer.ReadString(soundName,32);
 
 				if(soundId == -1 || !soundName[0])
-				{		continue;
-				}
+						continue;
 				m_pClGame->RegisterSound(soundName,CACHE_GAME, soundId);
 			}
 			break;
@@ -403,6 +388,7 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	m_pGameClient->Reset();
 	strcpy(m_pGameClient->name, m_cvName.string);
 	m_pGameClient->inUse = true;
+	m_clNum = clNum;
 
 	HandleGameMsg(buffer);
 
@@ -436,9 +422,10 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 
 	m_ingame = true;
 	m_pClGame->HandleNetEvent(CLIENT_BEGINGAME);
-	Spawn(0,0);
+	
+//	Spawn(0,0);
 
-	ComPrintf("CL: WE ARE CLIENT NUM %d\n", clNum);
+	ComPrintf("CL: CLIENT NUM %d\n", clNum);
 }
 
 
@@ -452,18 +439,6 @@ void CGameClient::HandleDisconnect()
 	UnloadWorld();
 	m_pClGame->UnloadWorld();
 }
-	/*
-//	ComPrintf("CL: KILLING LOCAL SERVER\n");
-
-	//Kill server if local
-	if(listenserver)
-	{
-//		ComPrintf("CL: KILLING LOCAL SERVER\n");
-		System::GetConsole()->ExecString("killserver");
-	}
-	UnloadWorld();
-*/
-
 
 /*
 ======================================

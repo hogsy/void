@@ -47,10 +47,10 @@ const byte SV_BAD			= 0;
 const byte SV_NOP			= 1;
 const byte SV_CONFIGSTRING  = 2;
 
-const byte SV_STUFFCMD		= 4;	// Client will execute this locally
-const byte SV_PRINT			= 5;    // Client will print this locally
-const byte SV_TALK			= 6;	// Chat message
-const byte SV_UPDATE		= 7;	// Clients own update. sent as much as possible
+const byte SV_STUFFCMD		= 3;	// Client will execute this locally
+const byte SV_PRINT			= 4;    // Client will print this locally
+const byte SV_TALK			= 5;	// Chat message
+const byte SV_UPDATE		= 6;	// Clients own update. sent as much as possible
 
 const byte SV_CLFULLINFO	= 7;    // complete info about a given client
 									// {num,name,modelindex,modelname,skinindex,skinname}

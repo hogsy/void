@@ -211,11 +211,7 @@ void CClient::WriteUpdate()
 	{
 		//Write all updates
 		CBuffer &buf = m_pNetCl->GetSendBuffer();
-		
 		buf.Reset();
-//		buf.WriteByte(CL_MOVE);
-//		buf.WriteFloat(m_fFrameTime);
-
 		m_pClState->WriteCmdUpdate(buf);
 	}
 }

@@ -31,8 +31,11 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 
 	m_ingame = false;
 	m_numEnts = 0;
+	m_numClients = 0;
 	
+	m_clNum = -1;
 	m_pGameClient = 0;
+	
 	m_pCamera = 0;
 	m_pWorld = 0;
 
@@ -75,8 +78,6 @@ CGameClient::~CGameClient()
 
 	delete m_pCmdHandler;
 }
-
-static float blahFrameTime = 0.0f;
 
 /*
 ================================================
@@ -121,6 +122,9 @@ void CGameClient::RunFrame(float frameTime)
 	m_cmd.angles[0] = m_pGameClient->angles.x;
 	m_cmd.angles[1] = m_pGameClient->angles.y;
 	m_cmd.angles[2] = m_pGameClient->angles.z;
+	m_cmd.time = frameTime * 1000.0f;
+	if(m_cmd.time > 255.0f)
+		m_cmd.time = 255.0f;
 
 	//Print misc crap
 	m_pClGame->HudPrintf(0,100,0,"%.2f, %.2f, %.2f", m_pGameClient->origin.x,m_pGameClient->origin.y,m_pGameClient->origin.z);
@@ -145,8 +149,6 @@ void CGameClient::RunFrame(float frameTime)
 	}
 
 	UpdateViewBlends();
-
-	blahFrameTime = frameTime;
 }
 
 
@@ -159,7 +161,8 @@ them to the buffer
 void CGameClient::WriteCmdUpdate(CBuffer &buf)
 {
 	buf.WriteByte(CL_MOVE);
-	buf.WriteFloat(blahFrameTime);
+
+	buf.WriteByte(m_cmd.time);
 
 	buf.WriteShort(m_cmd.forwardmove);
 	buf.WriteShort(m_cmd.rightmove);
@@ -169,10 +172,10 @@ void CGameClient::WriteCmdUpdate(CBuffer &buf)
 	buf.WriteFloat(m_cmd.angles[1]);
 	buf.WriteFloat(m_cmd.angles[2]);
 
-
-	m_pClGame->HudPrintf(0,180,0,"CMD: %d,%d,%d, ANG: %.2f,%.2f,%.2f, %.2fms", 
+/*	m_pClGame->HudPrintf(0,180,0,"CMD: %d,%d,%d, ANG: %.2f,%.2f,%.2f, %.2fms", 
 		m_cmd.forwardmove, m_cmd.rightmove, m_cmd.upmove, m_cmd.angles[0],m_cmd.angles[1],m_cmd.angles[2],
-		blahFrameTime);
+		m_cmd.time);
+*/
 }
 
 /*
@@ -241,8 +244,6 @@ void CGameClient::UnloadWorld()
 
 	delete m_pCamera;
 	m_pCamera = 0;
-
-	m_pGameClient = 0;
 	m_pWorld = 0;
 	
 	for(int i=0; i< GAME_MAXCLIENTS; i++)
@@ -258,6 +259,12 @@ void CGameClient::UnloadWorld()
 			m_entities[i].Reset();
 		}
 	}
+
+	m_numEnts = 0;
+	m_numClients = 0;
+	
+	m_clNum = -1;
+	m_pGameClient = 0;
 }
 
 
@@ -283,7 +290,7 @@ void CGameClient::Print(const char * msg, ...)
 
 ================================================
 */
-void CGameClient::Spawn(vector_t	*origin, vector_t *angles)
+void CGameClient::Spawn(vector_t &origin, vector_t &angles)
 {
 }
 
