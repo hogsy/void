@@ -4,9 +4,6 @@
 float	g_fframeTime=0;		//The Global Frame Time
 float	g_fcurTime=0;		//The Global Current Time 
 
-float  CTime::m_fSecsPerTick;
-_int64 CTime::m_dTimerStart;
-
 
 /*
 =====================================
@@ -51,14 +48,14 @@ bool CTime::Init()
 		// no performance counter available
 		m_dTimerStart = timeGetTime();
 		m_fSecsPerTick = 1.0f/1000.0f;
-		GetTime = &GetMMTime;
+		GetTime = &CTime::GetMMTime;
 	}
 	else
 	{ 
 		// performance counter is available, use it instead of multimedia timer
 		QueryPerformanceCounter((LARGE_INTEGER *)&m_dTimerStart);
 		m_fSecsPerTick = (float)(1.0)/((float)dTicksPerSec);
-		GetTime = &GetPerformanceCounterTime;
+		GetTime = &CTime::GetPerformanceCounterTime;
 	}
 	return true;
 }
@@ -71,7 +68,7 @@ bool CTime::Init()
 */
 void CTime::Reset()
 {
-	m_fBaseTime = GetTime();
+	m_fBaseTime =  (this->*GetTime)();
 	m_fLastTime = g_fcurTime = g_fframeTime = 0.0;
 }
 

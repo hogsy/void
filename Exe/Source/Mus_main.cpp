@@ -1,3 +1,5 @@
+#ifdef INCLUDE_MUSIC
+
 #include "Sys_hdr.h"
 #include "Mus_main.h"
 #include "Fmod/fmod.h"		//FMOD
@@ -255,3 +257,6 @@ bool MusVolume(const CVar * var, int argc, char** argv)
 {
 	return true;
 }
+
+
+#endif

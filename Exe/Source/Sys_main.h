@@ -6,10 +6,13 @@
 #include "I_renderer.h"
 
 //========================================================================================
+
 #define VOID_MAINWINDOWCLASS "Void"
 #define VOID_MAINWINDOWTITLE "Void"
 
 #define VOID_DEFAULTGAMEDIR	"Game"
+
+//========================================================================================
 
 class CVoid : public I_CmdHandler
 {

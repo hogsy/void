@@ -21,7 +21,7 @@ config files
 ==========================================
 */
 
-class CConsole: public I_Console,	//Console interface exported to other modules
+class CConsole: public I_Console,		//Console interface exported to other modules
 				public I_InKeyListener,	//Key Event listener interface	
 				public I_CmdHandler
 {
@@ -77,7 +77,6 @@ public:
 	void ExecCommand(CCommand * cmd, const char * cmdString);
 
 	CCommand * GetCommandByName(const char * cmdString);
-	//HCMD GetCommandByName(I_CmdHandler ** phandler, const char * cmdString);
 	
 	//Console funcs
     void ToggleFullscreen(bool full);
@@ -89,17 +88,15 @@ private:
 	void HandleInt    (CVar *var, int argc,  char** argv);
 	void HandleString (CVar *var, int argc,  char** argv);
 	void HandleFloat  (CVar *var, int argc,  char** argv);
-	void CFunctest(int argc, char** argv);
 
 	void HandleInput(const int &c);
 
 	//see if name matches, if it does, exec func
 	bool Exec(int argc, char ** argv);
-	bool Exec(const char * string);
-		//char ** argv);
 
 	void CVarlist(int argc, char** argv);
 	void CCmdList(int argc, char** argv);
+	void CFunctest(int argc, char** argv);
 
 	CPtrList<CVar>    *m_pcList;	//List of Cvars
 	CPtrList<CCommand> *m_pfList;	//List of Cfuncs

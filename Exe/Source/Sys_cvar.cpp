@@ -119,72 +119,7 @@ void CConsole::RegisterCommand(const char *cmdname,
 }
 
 
-/*
-void CConsole::RegisterCFunc(const char *funcname, 
-							 CFUNC pfunc)
-{
-	//Create a new command
-	CFunc *newfunc = new CFunc();
-	newfunc->name = new char[strlen(funcname)+1];
-	strcpy(newfunc->name,funcname);
-	newfunc->func = pfunc;
-
-	//Add Item to CvarList
-	CPtrList<CFunc>* i1 = m_pfList;
-	CPtrList<CFunc>* i2 = 0;
-	
-	//Loop till there are no more items in list, or the variable name is 
-	//bigger than the item in the list
-	while(i1->next && i1->item && (strcmp(newfunc->name, i1->item->name) > 0))
-	{
-		i2 = i1;
-		i1 = i1->next;
-	}
-
-	//didnt loop
-	if(i2 == 0)
-	{
-		//New item comes before the first item in the list
-		if(m_pfList->item)
-		{
-			CPtrList<CFunc> * newentry = new CPtrList <CFunc>;
-			newentry->item = newfunc;
-			newentry->next = i1;
-			m_pfList = newentry;
-		}
-		//List is empty, add to it
-		else
-		{
-			i1->item = newfunc;
-			i1->next = new CPtrList<CFunc>;
-		}
-	}
-	//Item comes after the item in list pointer to by i2, and before i1
-	else
-	{
-		CPtrList<CFunc> * newentry = new CPtrList <CFunc>;
-		newentry->item = newfunc;
-		i2->next = newentry;
-		newentry->next = i1;
-	}
-}
-
-
-CFUNC CConsole::GetFuncByName(const char * fname)
-{
-	CPtrList<CFunc>* iterator = m_pfList;
-	while(iterator->next && iterator->item)
-	{
-		if(strcmp(fname,iterator->item->name) ==0)
-			return iterator->item->func;
-		iterator = iterator->next;
-	}
-	return 0;
-}
-*/
-
 CCommand * CConsole::GetCommandByName(const char * cmdString)
-//HCMD CConsole::GetCommandByName(I_CmdHandler ** phandler, const char * cmdString)
 {
 	CPtrList<CCommand>* iterator = m_pfList;
 	while(iterator->next && iterator->item)

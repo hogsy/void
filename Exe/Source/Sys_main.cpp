@@ -19,7 +19,7 @@ world_t		* g_pWorld=0;		//The World
 //Subsystems
 //======================================================================================
 
-I_Renderer  * g_pRender=0;		//Renderer
+I_Renderer  * g_pRender  =0;	//Renderer
 CConsole	* g_pConsole =0;	//Console
 CInput		* g_pInput   =0;	//Input 
 CClient		* g_pClient  =0;	//Client and UI
@@ -37,6 +37,7 @@ CServer		* g_pServer=0;		//Network Server
 //======================================================================================
 //Global access functions for private data
 //======================================================================================
+
 HINSTANCE	Sys_GetHInstance(){ return g_hInst; }
 HWND		Sys_GetHwnd()	  { return g_hWnd;  }
 const char* Sys_GetExeDir()	  { return g_exedir;}
@@ -879,13 +880,7 @@ void CToggleConsole(int argc, char** argv)
 	}
 	else if(g_gameState == INGAME)
 	{
-		//g_pInput->SetCursorHandler(0);
-		//g_pInput->SetKeyHandler(&ConsoleHandleKey);
-		//In_SetCursorHandler(0);
-		
 		GetInputFocusManager()->SetCursorListener(0);
-
-		//In_SetKeyHandler(&ConsoleHandleKey,true);
 		GetInputFocusManager()->SetKeyListener(g_pConsole,true);
 
 		g_gameState = INGAMECONSOLE;

@@ -37,8 +37,8 @@ CConsole::CConsole()
 
 	RegisterCommand("cvarlist",CMD_CVARLIST, this);
 	RegisterCommand("cfunclist", CMD_CMDLIST,this);
-	RegisterCommand("ctest", CMD_TOGGLECONS, this);
-	RegisterCommand("contoggle", CMD_TEST,this);
+	RegisterCommand("ctest", CMD_TEST, this);
+	RegisterCommand("contoggle", CMD_TOGGLECONS,this);
 
 	//open logfile
 	char debugfilename[128];
@@ -299,6 +299,7 @@ void CConsole::ExecCommand(CCommand * cmd, const char * cmdString)
 	m_szCBuffer.Set(cmdString);	//set to string
 	int nargc=m_szCBuffer.Parse(m_szargv);
 	cmd->handler->HandleCommand(cmd->id, nargc, m_szargv);
+	m_szCBuffer.Reset();
 }
 
 bool CConsole::Exec(int argc, char** argv) 

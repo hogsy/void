@@ -5,6 +5,11 @@
 //======================================================================================
 //======================================================================================
 
+/*
+==========================================
+Constructor/Destructor
+==========================================
+*/
 CClientCmdHandler::CClientCmdHandler(CClient * pclient)
 {
 	m_pClient = pclient;
@@ -20,6 +25,11 @@ CClientCmdHandler::~CClientCmdHandler()
 }
 
 
+/*
+==========================================
+Activate/Deactivate Listener
+==========================================
+*/
 void CClientCmdHandler::SetListenerState(bool on)
 {
 	if(on = true)
@@ -34,48 +44,53 @@ void CClientCmdHandler::SetListenerState(bool on)
 	}
 }
 
-
+/*
+==========================================
+Run all the commands added into the buffer
+==========================================
+*/
 void CClientCmdHandler::RunCommands()
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
 	{
 		if(m_cmdBuffer[i])
+		{
 			g_pConsole->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
+			if(m_cmdBuffer[i]->szCommand[0] != '+')
+				m_cmdBuffer[i] = 0;
+		}
 	}
 }
 
-
+/*
+==========================================
+Handle Key Event
+==========================================
+*/
 void CClientCmdHandler::HandleKeyEvent(const KeyEvent_t &kevent)
 {
 	//check if there is a command bound to that key
 	if(m_cmdKeys[(kevent.id)].szCommand)
 	{
-		//if the command is supposed to be executed everyframe
-		//until its is released
-		if(m_cmdKeys[(kevent.id)].szCommand[0] == '+')
+		//if its a keydown event
+		if(kevent.state == BUTTONDOWN)
 		{
-			//if its a keydown event
-			if(kevent.state == BUTTONDOWN)
-			{
-				//add to command buffer
-				AddToCmdBuffer(&m_cmdKeys[(kevent.id)]);
-			}
-			else if(kevent.state == BUTTONUP)
-			{
-				//otherwise remove from buffer
-				RemoveFromCmdBuffer(&m_cmdKeys[(kevent.id)]);
-			}
+			//add to command buffer
+			AddToCmdBuffer(&m_cmdKeys[(kevent.id)]);
 		}
-		//if its regular function and if its a keydown event,
-		else if(kevent.state == BUTTONDOWN)
+		else if((kevent.state == BUTTONUP) && (m_cmdKeys[(kevent.id)].szCommand[0] == '+'))
 		{
-			//Send over to the console for execution
-			g_pConsole->ExecString(m_cmdKeys[(kevent.id)].szCommand);
+			//otherwise remove from buffer
+			RemoveFromCmdBuffer(&m_cmdKeys[(kevent.id)]);
 		}
 	}
 }
 
-
+/*
+==========================================
+Handle Cursor Move Event
+==========================================
+*/
 void CClientCmdHandler::HandleCursorEvent(const float &ix,
 										  const float &iy,
 										  const float &iz)
@@ -85,6 +100,11 @@ void CClientCmdHandler::HandleCursorEvent(const float &ix,
 }
 
 
+/*
+==========================================
+Bind a command to a key
+==========================================
+*/
 void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 {
 	//no arguments
@@ -175,7 +195,11 @@ void CClientCmdHandler::BindFuncToKey(int argc, char** argv)
 	ComPrintf("\"%s\"(%d) = \"%s\"\n",argv[1],keynum, m_cmdKeys[keynum].szCommand);
 }
 
-
+/*
+==========================================
+Unbind a key
+==========================================
+*/
 void CClientCmdHandler::Unbind(int argc, char** argv)
 {
 	if(argc <2)
@@ -218,7 +242,11 @@ void CClientCmdHandler::Unbind(int argc, char** argv)
 	ComPrintf("\"%s\" = \"\"\n",argv[1]);
 }
 
-
+/*
+==========================================
+Print out a list of current binds
+==========================================
+*/
 void CClientCmdHandler::BindList() const
 {
 	ComPrintf(" Client Bindings \n");
@@ -250,6 +278,11 @@ void CClientCmdHandler::BindList() const
 	}
 }
 
+/*
+==========================================
+Unbind all the keys
+==========================================
+*/
 void CClientCmdHandler::Unbindall()
 {
 	for(int i=0;i<256;i++)
@@ -264,7 +297,11 @@ void CClientCmdHandler::Unbindall()
 	ComPrintf("Unbound all keys.\n");
 }
 
-
+/*
+==========================================
+Add command to execute buffer
+==========================================
+*/
 void CClientCmdHandler::AddToCmdBuffer(ClientKey * const pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
@@ -281,6 +318,11 @@ void CClientCmdHandler::AddToCmdBuffer(ClientKey * const pcommand)
 	ComPrintf("Command Buffer is FULL");
 }
 
+/*
+==========================================
+Remove from execute buffer
+==========================================
+*/
 void CClientCmdHandler::RemoveFromCmdBuffer(const ClientKey * pcommand)
 {
 	for(int i=0;i<CL_CMDBUFFERSIZE;i++)
@@ -293,7 +335,11 @@ void CClientCmdHandler::RemoveFromCmdBuffer(const ClientKey * pcommand)
 	}
 }
 
-
+/*
+==========================================
+Write all the bound commands to file
+==========================================
+*/
 void CClientCmdHandler::WriteBindTable(FILE *fp)
 {
 	for(unsigned int i=0;i<256;i++)

@@ -13,7 +13,7 @@
 #include <direct.h>
 
 #define __VOIDALPHA	1
-#define INCLUDE_MUSIC	1
+//#define INCLUDE_MUSIC	1
 
 #include "Com_defs.h"
 #include "Com_mem.h"

@@ -1,9 +1,7 @@
 #ifndef VOID_SYS_TIME
 #define VOID_SYS_TIME
 
-
 #include "Sys_hdr.h"
-
 
 class CTime
 {
@@ -13,28 +11,27 @@ public:
 
 	bool Init();
 	
-	inline void Update()
+	void Update()
 	{
-		g_fcurTime = GetTime() - m_fBaseTime;
+		g_fcurTime =  (this->*GetTime)() - m_fBaseTime;
 		g_fframeTime = g_fcurTime - m_fLastTime;
 		m_fLastTime = g_fcurTime;
 	}
-	
 	void Reset();
 
 private:
 
 	float	m_fBaseTime;
 	float	m_fLastTime;
+	float	m_fSecsPerTick;
+	_int64	m_dTimerStart;
 
-	float (*CTime::GetTime)();
+	//UpdateFunc GetTime;
+	float	(CTime::*GetTime)();
 
 	//One of these gets bound to the GetTime func pointer
-	static float GetPerformanceCounterTime();
-	static float GetMMTime();
-
-	static float	m_fSecsPerTick;
-	static _int64	m_dTimerStart;
+	float	GetPerformanceCounterTime();
+	float	GetMMTime();
 };
 
 #endif
