@@ -552,12 +552,14 @@ it finds LAST
 */
 bool CConsole::GetTokenParms(const char * token, CParms * parms)
 {
-	int len = strlen(token);
+	CParms	configParm(80);
+	char	buffer[80];
 	const char * archivedString=0;
 
 	for(StrListIt itVal = m_configFileParms.begin(); itVal != m_configFileParms.end(); itVal++)
 	{
-		if(strncmp(token, itVal->c_str(), len ) == 0)
+		configParm = itVal->c_str();
+		if(strcmp(token,configParm.StringTok(0,buffer,80))==0)
 			archivedString = itVal->c_str();
 	}
 
