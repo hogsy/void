@@ -1,0 +1,208 @@
+
+#include "Standard.h"
+#include "Mdl_sp2.h"
+#include "I_file.h"
+#include "Client.h"
+
+
+
+typedef struct
+{
+	int			ident;
+	int			version;
+	int			numframes;
+} sp2_header_t;
+
+
+
+/*
+=======================================
+Constructor 
+=======================================
+*/
+CModelSp2::CModelSp2()
+{
+	frames = NULL;
+}
+
+
+/*
+=======================================
+Destructor 
+=======================================
+*/
+CModelSp2::~CModelSp2()
+{
+	if (frames)
+		delete frames;
+}
+
+
+/*
+=======================================
+LoadModel 
+=======================================
+*/
+void CModelSp2::LoadModel(const char *file)
+{
+	// save file name
+	modelfile = new char[strlen(file)+1];
+	strcpy(modelfile, file);
+
+	ComPrintf("loading %s\n", modelfile);
+
+	CFileBuffer	 fileReader;
+
+	if(!fileReader.Open(modelfile))
+	{
+		// load default model
+		fileReader.Close();
+		LoadFail();
+		return;
+	}
+
+
+	sp2_header_t header;
+	fileReader.Read(&header, sizeof(sp2_header_t), 1);
+
+// make sure it's a valid sp2
+	if ((header.ident != (('2'<<24)+('S'<<16)+('D'<<8)+'I')) || (header.version != 2))
+	{
+		ComPrintf("%s - invalid sp2 file", modelfile);
+		fileReader.Close();
+		LoadFail();
+		return;
+	}
+
+	num_skins = header.numframes;
+	num_frames= header.numframes;
+
+
+	frames = new sp2_frame_t[num_frames];
+	if (!frames) FError("mem for sp2 frames");
+	fileReader.Read(frames, sizeof(sp2_frame_t), num_frames);
+	fileReader.Close();
+
+
+	// skin names
+	skin_names = new char*[num_skins];
+	if (!skin_names) FError("mem for skin names");
+
+
+	for (int s=0; s<num_frames; s++)
+	{
+		// md2 skin name list is 64 char strings
+		skin_names[s] = new char[64];
+		if (!skin_names[s])	 FError("mem for skin names2");
+
+		// strip path and extension
+		for (int c=strlen(frames[s].skin_name); c>=0; c--)
+		{
+			if (frames[s].skin_name[c] == '.')
+				frames[s].skin_name[c] = '\0';
+
+			else if ((frames[s].skin_name[c] == '/') || (frames[s].skin_name[c] == '/'))
+			{
+				skin_names[s][0] = '_';
+				strcpy(&skin_names[s][1], &frames[s].skin_name[c+1]);
+				break;
+			}
+		}
+	}
+
+	LoadSkins();
+}
+
+
+/*
+=======================================
+LoadFail
+=======================================
+*/
+void CModelSp2::LoadFail()
+{
+	// hard code a pyramid
+	num_skins = 1;
+	num_frames= 1;
+
+
+	frames = new sp2_frame_t[num_frames];
+	if (!frames) FError("mem for sp2 frames");
+	frames[0].height = 32;
+	frames[0].width  = 32;
+	frames[0].origin_x = 16;
+	frames[0].origin_y = 16;
+
+	// skin names
+	skin_names = new char*[1];
+	if (!skin_names) FError("mem for skin names3");
+
+	// sp2 skin name list is 64 char strings
+	skin_names[0] = new char[64];
+	if (!skin_names[0])	 FError("mem for skin names4");
+
+	strcpy(skin_names[0], "none");
+	LoadSkins();
+}
+
+
+
+/*
+=======================================
+Draw
+=======================================
+*/
+extern	I_Void		  *	g_pVoidExp;
+extern const CCamera * camera;
+void CModelSp2::Draw(int skin, int fframe, int cframe, float frac)
+{
+	float frame = fmodf(g_pVoidExp->GetCurTime()*10, num_frames-1);
+	fframe = (int)floorf(frame);
+	cframe = fframe+1;
+	frac = frame - fframe;
+
+	g_pRast->BlendFunc(VRAST_SRC_BLEND_SRC_ALPHA, VRAST_DEST_BLEND_ONE_MINUS_SRC_ALPHA);
+
+	// revers eye transform
+	g_pRast->MatrixPush();
+	g_pRast->MatrixRotateY(-camera->angles.YAW   * 180/PI);
+	g_pRast->MatrixRotateX( camera->angles.PITCH * 180/PI);
+	g_pRast->MatrixRotateZ(-camera->angles.ROLL  * 180/PI);
+
+
+//	g_pRast->PolyColor4f(1, 1, 1, 1-frac);
+	g_pRast->TextureSet(skin_bin, fframe);
+	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
+	g_pRast->PolyTexCoord(0, 0);
+	g_pRast->PolyVertexi(-frames[fframe].origin_x, -frames[fframe].origin_y);
+	g_pRast->PolyTexCoord(1, 0);
+	g_pRast->PolyVertexi(frames[fframe].width-frames[fframe].origin_x, -frames[fframe].origin_y);
+	g_pRast->PolyTexCoord(1, 1);
+	g_pRast->PolyVertexi(frames[fframe].width-frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
+	g_pRast->PolyTexCoord(0, 1);
+	g_pRast->PolyVertexi(-frames[fframe].origin_x, frames[fframe].height-frames[fframe].origin_y);
+	g_pRast->PolyEnd();
+/*
+	g_pRast->PolyColor4f(1, 1, 1, frac);
+	g_pRast->TextureSet(skin_bin, cframe);
+	g_pRast->PolyStart(VRAST_TRIANGLE_FAN);
+	g_pRast->PolyTexCoord(0, 0);
+	g_pRast->PolyVertexi(-frames[cframe].origin_x, -frames[cframe].origin_y);
+	g_pRast->PolyTexCoord(1, 0);
+	g_pRast->PolyVertexi(frames[cframe].width-frames[cframe].origin_x, -frames[cframe].origin_y);
+	g_pRast->PolyTexCoord(1, 1);
+	g_pRast->PolyVertexi(frames[cframe].width-frames[cframe].origin_x, frames[cframe].height-frames[cframe].origin_y);
+	g_pRast->PolyTexCoord(0, 1);
+	g_pRast->PolyVertexi(-frames[cframe].origin_x, frames[cframe].height-frames[cframe].origin_y);
+	g_pRast->PolyEnd();
+*/
+
+	g_pRast->MatrixPop();
+}
+
+
+
+
+
+
+
