@@ -24,7 +24,7 @@ CGameClient::CGameClient(I_ClientGame * pClGame) :
 				m_cvInRate("cl_inRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvOutRate("cl_outRate","2500",	CVAR_INT,	CVAR_ARCHIVE),
 				m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-				m_cvCharacter("cl_char", "Amber/Amber", CVAR_STRING, CVAR_ARCHIVE),
+				m_cvCharacter("cl_char", "Ratamahatta/Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 				m_cvViewTilt("cl_viewtilt","0.015", CVAR_FLOAT, CVAR_ARCHIVE),
 				m_cvDefaultChar("cl_defaultChar","Amber/Amber",CVAR_STRING, CVAR_READONLY),
 				m_cvLocalMove("cl_localMove","0", CVAR_BOOL, CVAR_ARCHIVE)
