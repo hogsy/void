@@ -121,12 +121,16 @@ private:
 
 inline float SquareRoot(float n)
 {
+#ifdef DEVVOID
+	return sqrt(n);
+#else
 	if (FP_BITS(n) == 0)
 		return 0.0;                 // check for square root of 0
   
 	FP_BITS(n) = CFastMath::fastSqrtTable[(FP_BITS(n) >> 8) & 0xFFFF] | 
 				((((FP_BITS(n) - 0x3F800000) >> 1) + 0x3F800000) & 0x7F800000);
 	return n;
+#endif
 }
 
 }
