@@ -3,7 +3,7 @@
 #else
 #include "Com_defs.h"
 #include "Rast_main.h"
-#include "../Devvoid/bsp/std_lib.h"
+#include "../Devvoid/Std_lib.h"
 #endif
 
 

@@ -7,7 +7,7 @@
 #include "Com_defs.h"
 #include "Com_Vector.h"
 #include "Rast_main.h"
-#include "../vbsp/source/std_lib.h"
+#include "../Devvoid/Std_lib.h"
 #endif
 
 #include "I_file.h"
