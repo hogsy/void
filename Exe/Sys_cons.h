@@ -1,7 +1,6 @@
 #ifndef VOID_CONSOLE_CLASS
 #define VOID_CONSOLE_CLASS
 
-#include "Sys_hdr.h"
 #include "I_console.h"
 #include "I_renderer.h"
 #include "In_defs.h"
@@ -105,14 +104,11 @@ private:
 	};
 
 	//==============================================================
-
 	typedef std::list<CCommand>	 CmdList;
 	typedef std::list<CVarBase*> CVarList;
 	
 	CmdList		m_lCmds;		//List of registered commands
 	CVarList	m_lCVars;
-	
-	FILE  *		m_pflog;		//log file
 
 	CParms		m_parms;
 	
@@ -125,14 +121,14 @@ private:
 	//The Console Renderer
 	I_ConsoleRenderer	*	m_prCons;
 
+	HANDLE		m_hLogFile;	
+
 #ifdef VOID_DOS_CONSOLE
 	HANDLE		m_hOut;			//handle to console output		
 	HANDLE		m_hIn;			//handle to console in
 #endif
 
 	//==============================================================
-
-//	bool Exec	  (int argc, char** argv);	
 	void CVarlist (const CParms &parms);
 	void CCmdList (const CParms &parms);
 	void CFunctest(const CParms &parms);

@@ -2,9 +2,8 @@
 EXE
 ==============================================================
 //soon
-flush debug string on each write
-add 3d sound buffers and a listener
 error/logging/handling
+add 3d sound buffers and a listener
 add client command buffering
 command line parms
 

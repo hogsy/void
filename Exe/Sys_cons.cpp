@@ -1,3 +1,4 @@
+#include "Sys_hdr.h"
 #include "Sys_cons.h"
 #include "Com_util.h"
 #include <direct.h>
@@ -25,7 +26,6 @@ CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
 {
 	m_itCmd = 0;
 
-	m_pflog = NULL;
 	m_prCons = NULL;
 
 	//open logfile
@@ -33,7 +33,8 @@ CConsole::CConsole() : m_parms(CON_MAXARGSIZE)
 	_getcwd(debugfilename,COM_MAXPATH);
 	strcat(debugfilename,"/debug.log");
 
-	m_pflog = fopen(debugfilename, "wc");
+	m_hLogFile = ::CreateFile(debugfilename,GENERIC_WRITE, FILE_SHARE_READ, 0,
+							  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
 
 #ifdef DOSCONS
 	AllocConsole();
@@ -56,8 +57,9 @@ Destructor
 CConsole::~CConsole()
 {
 	//close log file
-	if(m_pflog)
-		fclose(m_pflog);
+	if(m_hLogFile != INVALID_HANDLE_VALUE)
+		::CloseHandle(m_hLogFile);
+
 
 #ifdef DOSCONS
 	ComPrintf("CConsole::Shutting down Console\n");
@@ -94,12 +96,10 @@ void CConsole::ComPrint(char* text)
 #endif
 	
 	//write to log
-	if(m_pflog)
-	{
-		fputs(text,m_pflog);
-//		fflush(m_pflog);
-	}
-	
+	ulong bytesWritten =0;
+	if(m_hLogFile != INVALID_HANDLE_VALUE)
+		WriteFile(m_hLogFile,text, strlen(text), &bytesWritten, 0);
+
 	//pass it the renderer
 	if (m_prCons)
 		m_prCons->AddLine(text);
