@@ -545,7 +545,7 @@ void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
 	buffer.WriteString(m_cvName.string);
 //FIXME
-	buffer.WriteString("blah");
-	buffer.WriteString("blah");
+	buffer.WriteString("amber");
+	buffer.WriteString("amber");
 	buffer.WriteInt(m_cvRate.ival);
 }

@@ -144,13 +144,14 @@ void CGameClient::UpdatePosition(const float &time)
 	//Check current position
 	TraceInfo traceInfo;
 	vector_t  end(m_pGameClient->origin);
-	vector_t  up;
+//	vector_t  up;
 
-	m_pGameClient->angles.AngleToVector(0,0,&up);
-	end.VectorMA(end,-1,up);
+//	m_pGameClient->angles.AngleToVector(0,0,&up);
+//	end.VectorMA(end,-1,up);
+	end.z -= 0.1f;
 
 	m_pWorld->Trace(traceInfo,m_pGameClient->origin, end, m_pGameClient->mins,m_pGameClient->maxs);
-	if(traceInfo.fraction <= 0.0)
+	if(traceInfo.fraction != 1)
 		m_bOnGround = true;
 	else
 		m_bOnGround = false;

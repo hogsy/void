@@ -289,8 +289,9 @@ Draw
 extern	I_Void		  *	g_pVoidExp;
 void CModelMd2::Draw(int skin, int fframe, int cframe, float frac)
 {
-	if ((skin&~(MODEL_SKIN_UNBOUND_GAME|MODEL_SKIN_UNBOUND_LOCAL)) >= num_skins)
-		return;
+	if (!(skin & (MODEL_SKIN_UNBOUND_GAME|MODEL_SKIN_UNBOUND_LOCAL)))
+		if (skin >= num_skins)
+			return;
 
 	if (skin & MODEL_SKIN_UNBOUND_GAME)
 		g_pClient->Set(CACHE_GAME, skin & ~MODEL_SKIN_UNBOUND_GAME);
