@@ -167,8 +167,8 @@ public:
 	void SendDisconnect(int chanId, EDisconnectReason reason);
 	
 	//Print a Server message to the given client(s)
-	void ClientPrintf(int chanId, const char * message, ...);
-	void BroadcastPrintf(const char* message, ...);
+	void ClientPrintf(int chanId, const char * message);
+	void BroadcastPrintf(const char* message);
 
 	//Access functions
 	NetSignOnBufs & GetSignOnBufs() { return m_signOnBufs; }
@@ -202,7 +202,6 @@ private:
 	VoidNet::CNetClChan * m_clChan;		//Client channels
 
 	char	m_szLocalAddr[NET_IPADDRLEN];
-	char	m_printBuffer[512];
 
 	NetSignOnBufs	m_signOnBufs;
 	
