@@ -51,7 +51,8 @@ CImageReader::CImageReader()
 	m_width = m_height = 0;
 	m_format = IMG_NONE;
 
-	m_pFile = CreateFileReader(FILE_STREAM);
+	//FIXME: Using a fileStream messes up textures. Investigate.
+	m_pFile = CreateFileReader(FILE_BUFFERED);
 
 	for (int i=0; i<MAX_MIPMAPS; i++)
 		m_mipmapdata[i] = NULL;

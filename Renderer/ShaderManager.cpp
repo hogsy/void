@@ -46,7 +46,7 @@ CShaderManager::CShaderManager()
 
 	I_FileReader * pFile = CreateFileReader(FILE_BUFFERED);
 
-	if (!pFile->Open("Scripts\\shaderlist.txt"))
+	if (!pFile->Open("scripts/shaderlist.txt"))
 	{
 		FError("CShaderManager:: Unable to open shaderlist.txt\n");
 		return;
