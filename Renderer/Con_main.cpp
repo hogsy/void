@@ -403,7 +403,7 @@ void CRConsole::PrintBuffer()
 	unsigned int endline = m_curline + m_maxlines - 1;
 	for(uint l = m_curline; l < endline; l++)
 	{
-		if (m_lines[l]->line[0] == '\0')
+		if (!m_lines[l] || m_lines[l]->line[0] == '\0')
 			break;
 
 		// move up one line
@@ -599,7 +599,7 @@ void CRConsole::MoveCurrentLine(LineOffset offset)
 	switch(offset)
 	{
 	case LINE_UP:
-		if((m_curline + 1 < CON_MAX_LINES) && (m_lines[m_curline]->length))
+		if(((m_curline + 1) < CON_MAX_LINES) && (m_lines[m_curline]->length))
 			m_curline++;
 		break;
 	case LINE_DOWN:
@@ -611,7 +611,7 @@ void CRConsole::MoveCurrentLine(LineOffset offset)
 	case PAGE_DOWN:
 		break;
 	case TOP:
-		while((m_curline + 1 < CON_MAX_LINES) && (m_lines[m_curline]->length))
+		while(((m_curline + 1) < CON_MAX_LINES) && (m_lines[m_curline]->length))
 			m_curline++;
 		break;
 	case BOTTOM:
