@@ -1,11 +1,9 @@
-
-
 #ifdef RENDERER
 #include "Standard.h"
 #else
 #include "Com_defs.h"
 #include "Rast_main.h"
-#include "../vbsp/source/std_lib.h"
+#include "../Devvoid/bsp/std_lib.h"
 #endif
 
 

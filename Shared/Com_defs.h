@@ -34,10 +34,6 @@ typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned word;
 
-#ifndef VBSP
-#include "Com_mem.h"
-#endif
-
 //Every apps common print function
 void ComPrintf(const char* text, ...);
 
