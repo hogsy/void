@@ -14,7 +14,7 @@
 
 #include "Com_defs.h"
 #include "I_renderer.h"
-#include "I_filesystem.h"
+#include "I_file.h"
 
 #include "gl.h"
 #include "3dMath.h"

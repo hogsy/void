@@ -15,8 +15,12 @@ CVar *	g_pVidSynch=0;
 take a screen shot
 ======================================
 */
+
 void ScreenShot(char *name,EImageFormat type)
 {
+//taking this out for a bit
+#if 0 
+
 	char	checkname[260];
 
 	//find a file name to save it to 
@@ -76,7 +80,11 @@ void ScreenShot(char *name,EImageFormat type)
 	CImageWriter imageWriter(width,height,data);
 	imageWriter.Write(checkname,type);
 	delete [] data;
+
+#endif
+
 }
+
 
 //======================================================================================
 //======================================================================================

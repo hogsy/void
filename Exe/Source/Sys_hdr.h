@@ -19,6 +19,7 @@
 #include "Com_mem.h"
 
 #include "I_console.h"
+#include "I_file.h"
 #include "I_filesystem.h"
 
 #include "Util_sys.h"

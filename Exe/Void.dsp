@@ -195,6 +195,10 @@ SOURCE=..\Shared\I_console.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\I_file.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\I_filesystem.h
 # End Source File
 # Begin Source File
