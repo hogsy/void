@@ -6,6 +6,7 @@
 #include "Snd_main.h"
 #include "Mus_main.h"
 #include "Net_client.h"
+#include "Game_ents.h"
 
 /*
 =====================================
@@ -109,7 +110,15 @@ private:
 	//==================================================
 	//the following should be accessible by the game dll
 
-	eyepoint_t  eye;
+	//This is the client we should do local prediction on
+	CEntClient	m_gameClient;
+
+	//This should hook up to the game client whne the client
+	//enters a game
+	CCamera	*	m_pCamera;
+
+	vector_t	m_screenBlend;
+
 	vector_t	desired_movement;
 	
 	int			m_campath;

@@ -5,7 +5,7 @@
 #include "clip.h"
 
 extern poly_t *tpoly;			// temporary poly
-extern eyepoint_t eye;			// where we're gonna draw from
+//extern eyepoint_t eye;			// where we're gonna draw from
 extern frustum_t *frust;		// frustum stack
 
 //sector_t sky_box;

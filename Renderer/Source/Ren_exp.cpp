@@ -181,15 +181,20 @@ I_RHud * CRenExp::GetHud()
 DrawFrame
 ==========================================
 */
+
+void CRenExp::Draw(CCamera * camera)
+{
+	r_drawframe(camera);
+
+// make sure all was well
+#ifdef _DEBUG
+	g_pRast->ReportErrors();
+#endif
+}
+
+/*
 void CRenExp::Draw(vector_t *origin, vector_t *angles, vector_t *blend)
 {
-	//draw fullscreen console
-/*	if (world == NULL)
-	{
-		r_drawcons();
-		return;		
-	}
-*/
 	//draw a frame from the current viewpoint
 	r_drawframe(origin,angles,blend);
 
@@ -199,6 +204,7 @@ void CRenExp::Draw(vector_t *origin, vector_t *angles, vector_t *blend)
 #endif
 
 }
+*/
 
 void CRenExp::DrawConsole()
 {	

@@ -228,6 +228,14 @@ SOURCE=.\Source\Ren_sky.h
 SOURCE=..\Shared\3dfx\SST1VID.H
 # End Source File
 # End Group
+# Begin Group "Other"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Ijl\ijl.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\Shared\3dmath.cpp

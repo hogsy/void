@@ -23,7 +23,7 @@ void VectorSet(vector_t *a, float x, float y, float z)
 }
 
 
-int VectorCompare (vector_t *v1, vector_t *v2)
+int VectorCompare (const vector_t *v1, const vector_t *v2)
 {
 	if (v1->x != v2->x || v1->y != v2->y || v1->z != v2->z)
 			return 0;
@@ -32,7 +32,7 @@ int VectorCompare (vector_t *v1, vector_t *v2)
 }
 
 
-int VectorCompare2 (vector_t *v1, vector_t *v2, float thresh)
+int VectorCompare2 (const vector_t *v1, const vector_t *v2, float thresh)
 {
 	if ((v1->x-v2->x < -thresh) || (v1->x-v2->x > thresh) ||
 		(v1->y-v2->y < -thresh) || (v1->y-v2->y > thresh) ||
@@ -61,7 +61,7 @@ float VectorNormalize2 (vector_t *v, vector_t *out)
 	return length;
 }
 
-void VectorMA (vector_t *veca, float scale, vector_t *vecb, vector_t *vecc)
+void VectorMA (const vector_t *veca, float scale, const vector_t *vecb, vector_t *vecc)
 {
 	vecc->x = veca->x + scale*vecb->x;
 	vecc->y = veca->y + scale*vecb->y;
@@ -69,7 +69,7 @@ void VectorMA (vector_t *veca, float scale, vector_t *vecb, vector_t *vecc)
 }
 
 
-void _CrossProduct(vector_t *a,vector_t *b, vector_t *normal)
+void _CrossProduct(const vector_t *a,const vector_t *b, vector_t *normal)
 {
 	normal->x = (a->y*b->z - a->z*b->y);
 	normal->y = (a->z*b->x - a->x*b->z);
@@ -77,7 +77,7 @@ void _CrossProduct(vector_t *a,vector_t *b, vector_t *normal)
 }
 
 
-float VectorLength(vector_t *v)
+float VectorLength(const vector_t *v)
 {
 	return (float)sqrt((v->x*v->x)+(v->y * v->y)+(v->z * v->z));
 /*
@@ -103,7 +103,7 @@ float VectorNormalize(vector_t *v)
 }
 
 
-void VectorScale (vector_t *in, float scale, vector_t *out)
+void VectorScale (const vector_t *in, float scale, vector_t *out)
 {
 	out->x = in->x*scale;
 	out->y = in->y*scale;
@@ -111,7 +111,7 @@ void VectorScale (vector_t *in, float scale, vector_t *out)
 }
 
 
-void AngleToVector (vector_t *angles, vector_t *forward, vector_t *right, vector_t *up)
+void AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, vector_t *up)
 {
 
 	float		angle;

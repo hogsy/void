@@ -105,7 +105,8 @@ struct I_Renderer
 	virtual bool InitRenderer()=0;
 	virtual bool Shutdown()=0;
 
-	virtual void Draw(vector_t *origin,vector_t *angles, vector_t *blend) =0;
+	virtual void Draw(CCamera * camera)=0;
+//	virtual void Draw(vector_t *origin,vector_t *angles, vector_t *blend) =0;
 	virtual void DrawConsole()= 0;
 	
 	//Get other interfaces

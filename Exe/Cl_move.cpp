@@ -79,32 +79,26 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 void CClient::Move(vector_t *dir, float time)
 {
 	// not in a sector, so just fly through everything
-/*	if (!eye.origin.sector)
-	{
-		VectorMA(&eye.origin, time, velocity, &eye.origin);
-		return;
-	}
-*/
 // fake gravity
 //	velocity->z -= MAXVELOCITY;
 
 
 	// figure out what dir we want to go if we're folling a path
 	if (m_campath != -1)
-		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &eye.origin, dir, time);
+		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_gameClient.origin, dir, time);
 
 	// can we clip through walls?  it's simple then
 	if (m_noclip.ival)
 	{
-		VectorMA(&eye.origin, time, dir, &eye.origin);
+		VectorMA(&m_gameClient.origin, time, dir, &m_gameClient.origin);
 		return;
 	}
 
-	if (PointContents(eye.origin) & CONTENTS_SOLID)
+/*	if (PointContents(eye.origin) & CONTENTS_SOLID)
 		m_pHud->HudPrintf(0, 30, 0, "SOLID");
 	else if (PointContents(eye.origin) & CONTENTS_WATER)
 		m_pHud->HudPrintf(0, 30, 0, "WATER");
-
+*/
 
 
 	// regular collision
@@ -120,13 +114,13 @@ void CClient::Move(vector_t *dir, float time)
 
 	for (bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
-		VectorAdd(eye.origin, (*dir), end);
-		tr = trace(eye.origin, end, &eye.mins, &eye.maxs);
+		VectorAdd(m_gameClient.origin, (*dir), end);
+		tr = trace(m_gameClient.origin, end, &m_gameClient.mins, &m_gameClient.maxs);
 
 
 		if (tr.fraction > 0)
 		{
-			VectorCopy(tr.endpos, eye.origin);
+			VectorCopy(tr.endpos, m_gameClient.origin);
 			hits = 0;
 		}
 
@@ -267,7 +261,7 @@ void CClient::Move(vector_t *dir, float time)
 void CClient::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&eye.angles, &forward, NULL, NULL);
+	AngleToVector (&m_gameClient.angles, &forward, NULL, NULL);
 	VectorNormalize(&forward);
 	VectorAdd2(desired_movement,forward);
 }
@@ -275,7 +269,7 @@ void CClient::MoveForward()
 void CClient::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&eye.angles, &backword, NULL, NULL);
+	AngleToVector (&m_gameClient.angles, &backword, NULL, NULL);
 	VectorNormalize(&backword);
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
@@ -283,7 +277,7 @@ void CClient::MoveBackward()
 void CClient::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&eye.angles, NULL, &right, NULL);
+	AngleToVector (&m_gameClient.angles, NULL, &right, NULL);
 	VectorNormalize(&right);
 	VectorAdd2(desired_movement,right);
 }
@@ -291,41 +285,41 @@ void CClient::MoveRight()
 void CClient::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&eye.angles, NULL, &left, NULL);
+	AngleToVector (&m_gameClient.angles, NULL, &left, NULL);
 	VectorNormalize(&left);
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
 void CClient::RotateRight(float val)
 {
-	eye.angles.YAW += System::g_fframeTime * val;
-	if (eye.angles.YAW > PI)
-		eye.angles.YAW -= 2*PI;
+	m_gameClient.angles.YAW += System::g_fframeTime * val;
+	if (m_gameClient.angles.YAW > PI)
+		m_gameClient.angles.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(float val)
 {
-	eye.angles.YAW -= System::g_fframeTime * val;
-	if (eye.angles.YAW < -PI)
-		eye.angles.YAW += 2*PI;
+	m_gameClient.angles.YAW -= System::g_fframeTime * val;
+	if (m_gameClient.angles.YAW < -PI)
+		m_gameClient.angles.YAW += 2*PI;
 }
 
 void CClient::RotateUp(float val)
 {
-	eye.angles.PITCH += System::g_fframeTime * val;
-	if (eye.angles.PITCH < -PI/2)
-		eye.angles.PITCH = -PI/2;
-	if (eye.angles.PITCH > PI/2)
-		eye.angles.PITCH = PI/2;
+	m_gameClient.angles.PITCH += System::g_fframeTime * val;
+	if (m_gameClient.angles.PITCH < -PI/2)
+		m_gameClient.angles.PITCH = -PI/2;
+	if (m_gameClient.angles.PITCH > PI/2)
+		m_gameClient.angles.PITCH = PI/2;
 }
 
 void CClient:: RotateDown(float val)
 {
-	eye.angles.PITCH -= System::g_fframeTime * val;
-	if (eye.angles.PITCH < -PI/2)
-		eye.angles.PITCH = -PI/2;
-	if (eye.angles.PITCH > PI/2)
-		eye.angles.PITCH = PI/2;
+	m_gameClient.angles.PITCH -= System::g_fframeTime * val;
+	if (m_gameClient.angles.PITCH < -PI/2)
+		m_gameClient.angles.PITCH = -PI/2;
+	if (m_gameClient.angles.PITCH > PI/2)
+		m_gameClient.angles.PITCH = PI/2;
 }
 
 
@@ -347,7 +341,7 @@ void CClient::CamPath()
 
 			vector_t origin;
 			key_get_vector(g_pWorld, ent, "origin", origin);
-			VectorCopy(origin, eye.origin); // move to first point of path
+			VectorCopy(origin, m_gameClient.origin); // move to first point of path
 			return;
 		}
 	}

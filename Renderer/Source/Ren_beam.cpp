@@ -3,7 +3,9 @@
 
 extern	vector_t	forward, right, up;	// view directions
 extern	plane_t frust[5];				// frustum
-extern	eyepoint_t	eye;				// where we're gonna draw from
+
+//extern	eyepoint_t	eye;				// where we're gonna draw from
+extern CCamera * camera;
 
 extern	CVar *	g_pBeamTolerance;
 
@@ -227,7 +229,8 @@ void sil_get_sky_polys(sil_t *s)
 
 		for (int v=0; v<poly->poly.num_vertices; v++)
 		{
-			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
+//			VectorAdd(eye.origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
+			VectorAdd(camera->origin, world->verts[world->iverts[world->sides[side].first_vert+v]], poly->poly.vertices[v]);
 		}
 
 		// clip to each sil edge
@@ -235,11 +238,15 @@ void sil_get_sky_polys(sil_t *s)
 		{
 			plane_t plane;
 			vector_t a, b;
-			VectorSub(s->edges[edge][0], eye.origin, a);
-			VectorSub(s->edges[edge][1], eye.origin, b);
+//			VectorSub(s->edges[edge][0], eye.origin, a);
+//			VectorSub(s->edges[edge][1], eye.origin, b);
+			VectorSub(s->edges[edge][0], camera->origin, a);
+			VectorSub(s->edges[edge][1], camera->origin, b);
+
 			_CrossProduct(&a, &b, &plane.norm);
 			VectorNormalize(&plane.norm);
-			plane.d = dot(plane.norm, eye.origin);
+//			plane.d = dot(plane.norm, eye.origin);
+			plane.d = dot(plane.norm, camera->origin);
 
 			if ((dot(plane.norm, s->center) - plane.d) <0)
 			{
@@ -346,7 +353,8 @@ sil_t* sil_build(bspf_brush_t *b)
 	for (int s=0; s<b->num_sides; s++)
 	{
 		plane_t *p = &world->planes[world->sides[s+b->first_side].plane];
-		float d = dot(p->norm, eye.origin) - p->d;
+//		float d = dot(p->norm, eye.origin) - p->d;
+		float d = dot(p->norm, camera->origin) - p->d;
 
 		// view origin on frontside of poly
 		if (d > 0.1f)
@@ -805,7 +813,8 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 	sil->nedges--;
 	vector_t a, b;
 	VectorSub(sil->edges[sil->nedges][0], sil->edges[sil->nedges][1], a);
-	VectorSub(sil->edges[sil->nedges][0], eye.origin, b);
+//	VectorSub(sil->edges[sil->nedges][0], eye.origin, b);
+	VectorSub(sil->edges[sil->nedges][0], camera->origin, b);
 
 
 	
@@ -821,7 +830,8 @@ void beam_leaf(beam_node_t *parent, int side, sil_t *sil)
 
 	_CrossProduct(&a, &b, &child->p.norm);
 	VectorNormalize(&child->p.norm);
-	child->p.d = dot(eye.origin, child->p.norm);
+//	child->p.d = dot(eye.origin, child->p.norm);
+	child->p.d = dot(camera->origin, child->p.norm);
 
 	float d = dot(sil->center, child->p.norm) - child->p.d;
 	beam_leaf(child, (d<0), sil);

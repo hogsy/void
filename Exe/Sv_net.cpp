@@ -1,6 +1,6 @@
 #include "Sv_main.h"
 #include "World.h"
-#include "Sv_ents.h"
+#include "Game_ents.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
 

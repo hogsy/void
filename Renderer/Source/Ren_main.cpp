@@ -15,7 +15,9 @@ extern CRConsole * g_prCons;
 extern CVar *	g_pVidSynch;
 
 
-eyepoint_t	eye;			// where we're gonna draw from
+//eyepoint_t	eye;			// where we're gonna draw from
+CCamera * camera=0;
+
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
 int			eye_leaf;
 
@@ -161,7 +163,8 @@ void r_draw_node(int n)
 	}
 
 	int nn;
-	float d = dot(world->planes[world->nodes[n].plane].norm, eye.origin) - world->planes[world->nodes[n].plane].d;
+//	float d = dot(world->planes[world->nodes[n].plane].norm, eye.origin) - world->planes[world->nodes[n].plane].d;
+	float d = dot(world->planes[world->nodes[n].plane].norm, camera->origin) - world->planes[world->nodes[n].plane].d;
 
 	// front to back traversal
 	if (d>=0)
@@ -194,7 +197,8 @@ void build_frust(void)
 	x = (float) tan(g_rInfo.fov * 0.5f);
 	z = x * 0.75f;			// always render in a 3:4 aspect ratio
 
-	VectorAdd(eye.origin, forward, center);
+//	VectorAdd(eye.origin, forward, center);
+	VectorAdd(camera->origin, forward, center);
 
 	VectorMA(&center, -x, &right, &a);
 	VectorMA(&a, z, &up, &a);
@@ -209,14 +213,21 @@ void build_frust(void)
 	VectorMA(&d, -z, &up, &d);
 
 // 4 sides
+/*
 	clip_build_plane3(&eye.origin, &b, &a, &frust[0]);
 	clip_build_plane3(&eye.origin, &c, &b, &frust[1]);
 	clip_build_plane3(&eye.origin, &d, &c, &frust[2]);
 	clip_build_plane3(&eye.origin, &a, &d, &frust[3]);
+*/
+	clip_build_plane3(&camera->origin, &b, &a, &frust[0]);
+	clip_build_plane3(&camera->origin, &c, &b, &frust[1]);
+	clip_build_plane3(&camera->origin, &d, &c, &frust[2]);
+	clip_build_plane3(&camera->origin, &a, &d, &frust[3]);
 
 // near-z
 	VectorCopy(forward, frust[4].norm);
-	frust[4].d = dot(frust[4].norm, eye.origin);
+//	frust[4].d = dot(frust[4].norm, eye.origin);
+	frust[4].d = dot(frust[4].norm, camera->origin);
 }
 
 
@@ -235,6 +246,7 @@ void r_draw_world()
 /***********************
 Draw the current frame
 ***********************/
+/*
 void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 {
 //FIXME !!!!!!!!!!!!!!!!!!!!!
@@ -260,6 +272,47 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 	g_pRast->MatrixRotateX(-eye.angles.PITCH * 180/PI);
 	g_pRast->MatrixRotateY( eye.angles.YAW   * 180/PI);
 	g_pRast->MatrixTranslate(eye.origin);
+
+
+	r_draw_world();
+
+// display any messages
+	g_prHud->DrawHud();
+
+// draw the console if we need to
+	g_prCons->Draw();
+
+	g_pRast->FrameEnd();
+}
+*/
+
+void r_drawframe(CCamera * pcamera)
+{
+	camera = pcamera;
+
+	AngleToVector (&camera->angles, &forward, &right, &up);
+	
+	fullblend  =  &camera->blend;
+
+	VectorNormalize(&forward);
+	VectorNormalize(&right);
+	VectorNormalize(&up);
+
+	// find eye leaf for pvs tests
+	//eye_leaf = get_leaf_for_point(eye.origin);
+	eye_leaf = get_leaf_for_point(camera->origin);
+
+	g_pRast->ClearBuffers(VRAST_COLOR_BUFFER | VRAST_DEPTH_BUFFER);
+
+// set up the view transformation
+	g_pRast->ProjectionMode(VRAST_PERSPECTIVE);
+	g_pRast->MatrixReset();
+
+	g_pRast->MatrixRotateZ( camera->angles.ROLL  * 180/PI);
+	g_pRast->MatrixRotateX(-camera->angles.PITCH * 180/PI);
+	g_pRast->MatrixRotateY( camera->angles.YAW   * 180/PI);
+
+	g_pRast->MatrixTranslate(camera->origin);
 
 
 	r_draw_world();

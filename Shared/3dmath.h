@@ -53,15 +53,15 @@ typedef struct
 
 
 // math prototypes
-int		VectorCompare (vector_t *v1, vector_t *v2);
+int		VectorCompare (const vector_t *v1, const vector_t *v2);
 float	VectorNormalize2 (vector_t *v, vector_t *out);
-void	VectorMA (vector_t *veca, float scale, vector_t *vecb, vector_t *vecc);
-void	_CrossProduct(vector_t *a,vector_t *b, vector_t *normal);
-float	VectorLength(vector_t *v);
+void	VectorMA (const vector_t *veca, float scale, const vector_t *vecb, vector_t *vecc);
+void	_CrossProduct(const vector_t *a, const vector_t *b, vector_t *normal);
+float	VectorLength(const vector_t *v);
 float	VectorNormalize(vector_t *v);
-void	VectorScale (vector_t *in, float scale, vector_t *out);
-void	AngleToVector (vector_t *angles, vector_t *forward, vector_t *right, vector_t *up);
-int		VectorCompare2 (vector_t *v1, vector_t *v2, float thresh);
+void	VectorScale (const vector_t *in, float scale, vector_t *out);
+void	AngleToVector (const vector_t *angles, vector_t *forward, vector_t *right, vector_t *up);
+int		VectorCompare2 (const vector_t *v1, const vector_t *v2, float thresh);
 void	MakeVectorPlanar(vector_t *in, vector_t *out, vector_t *norm);
 void	VectorSet(vector_t *a, float x, float y, float z);
 

@@ -3,7 +3,6 @@
 #include "Mdl_cache.h"
 
 
-
 poly_t *cache_polys;
 extern poly_t *tpoly;
 int used_polys;
@@ -210,7 +209,6 @@ void cache_purge_single()
 	bool lightmaps = ((world->nlightdefs && world->light_size) && !(g_rInfo.rflags&RFLAG_FULLBRIGHT));
 
 	g_pRast->PolyColor4f(fullblend->x, fullblend->y, fullblend->z, 1);
-
 	//
 	// single texture / multi pass rendering
 	//

@@ -17,12 +17,10 @@ Constructor
 CClient::CClient(I_Renderer * prenderer,
 				 CSoundManager * psound,
 				 CMusic	* pmusic):
-					//CVars
 					m_noclip("cl_noclip","0",   CVar::CVAR_INT,0),
 					m_clport("cl_port","20011", CVar::CVAR_INT,	CVar::CVAR_ARCHIVE| CVar::CVAR_LATCH),
 					m_clrate("cl_rate","2500",	CVar::CVAR_INT,	CVar::CVAR_ARCHIVE),
 					m_clname("cl_name","Player",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE),
-					//Pointers to subsystems
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -37,8 +35,9 @@ CClient::CClient(I_Renderer * prenderer,
 	m_fFrameTime = 0.0f;
 	
 	m_pHud = 0;
-//	m_pRender = prenderer;
-
+	
+	m_pCamera = 0;
+	
 	g_pWorld = 0;
 
 	m_hsTalk = 0;
@@ -78,6 +77,9 @@ Destroy the client
 CClient::~CClient()
 {
 	m_pNetCl->Disconnect();
+
+	if(m_pCamera)
+		delete m_pCamera;
 
 	m_pRender = 0;
 	m_pHud = 0;
@@ -129,21 +131,20 @@ bool CClient::LoadWorld(const char *worldname)
 		return false;
 	}
 
-// FIXME - should be taken care of at spawn
-// FIXME - should be actual player size
 	m_campath = -1;
 	m_acceleration = 400.0f;
 	m_maxvelocity =  200.0f;
-	VectorSet(&eye.mins, -10, -10, -40);
-	VectorSet(&eye.maxs,  10,  10,  10);
+	
 	VectorSet(&desired_movement, 0, 0, 0);
 
-	eye.angles.ROLL = 0;
-	eye.angles.PITCH = 0;
-	eye.angles.YAW = 0;
-	eye.origin.x = 0;
-	eye.origin.y = 0;
-	eye.origin.z = 48;	// FIXME - origin + view height
+	VectorSet(&m_gameClient.angles, 0,0,0);
+	VectorSet(&m_gameClient.origin, 0,0,0);	// FIXME - origin + view height
+	VectorSet(&m_gameClient.mins, -10, -10, -40);
+	VectorSet(&m_gameClient.maxs, 10, 10, 10);
+	VectorSet(&m_screenBlend,0,0,0);
+
+//	m_camera.Set(&m_gameClient.origin, &m_gameClient.angles, &m_screenBlend);
+	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angles, m_screenBlend);
 
 	m_hsTalk    = m_pSound->RegisterSound("sounds/talk.wav");
 	m_hsMessage = m_pSound->RegisterSound("sounds/message.wav");
@@ -172,6 +173,11 @@ void CClient::UnloadWorld()
 		ComPrintf("CClient::UnloadWorld - Renderer couldnt unload world\n");
 		return;
 	}
+
+//	m_camera.Reset();
+	delete m_pCamera;
+	m_pCamera = 0;
+
 	
 	world_destroy(g_pWorld);
 	g_pWorld = 0;
@@ -206,7 +212,9 @@ void CClient::RunFrame()
 		}
 
 		//Print Stats
-		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f",eye.origin.x, eye.origin.y, eye.origin.z);
+		m_pHud->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", m_gameClient.origin.x,
+													   m_gameClient.origin.y,
+													   m_gameClient.origin.z);
 
 		m_pHud->HudPrintf(0, 70,0, "%.2f : %.2f", 1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime);
 		m_fFrameTime = System::g_fcurTime;
@@ -221,17 +229,18 @@ void CClient::RunFrame()
 		m_pHud->HudPrintf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
 
 		// FIXME - put this in game dll
-		vector_t screenblend;
-		if (PointContents(eye.origin) & CONTENTS_SOLID)
-			VectorSet(&screenblend, 0.4f, 0.4f, 0.4f);
-		else if (PointContents(eye.origin) & CONTENTS_WATER)
-			VectorSet(&screenblend, 0, 1, 1);
-		else if (PointContents(eye.origin) & CONTENTS_LAVA)
-			VectorSet(&screenblend, 1, 0, 0);
+		int contents = PointContents(m_gameClient.origin);
+		if(contents & CONTENTS_SOLID)
+			VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
+		else if(contents & CONTENTS_WATER)
+			VectorSet(&m_screenBlend, 0, 1, 1);
+		else if(contents & CONTENTS_LAVA)
+			VectorSet(&m_screenBlend, 1, 0, 0);
 		else
-			VectorSet(&screenblend, 1, 1, 1);
+			VectorSet(&m_screenBlend, 1, 1, 1);
 
-		m_pRender->Draw(&eye.origin,&eye.angles, &screenblend);
+		m_pRender->Draw(m_pCamera);
+		//m_pRender->Draw(m_camera.origin, m_camera.angles, m_camera.blend);
 	}
 	else
 	{

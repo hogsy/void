@@ -150,8 +150,25 @@ struct world_t
 };
 
 
+class CCamera
+{
+public:
+
+	CCamera(vector_t & rorigin,
+			vector_t & rangles,
+			vector_t & rblend): origin(rorigin), angles(rangles), blend(rblend)
+	{}
+	
+	~CCamera() {} 
+
+	vector_t & origin;
+	vector_t & angles;
+	vector_t & blend;
+};
+
 
 // info the renderer needs to know where to render from
+/*
 typedef struct
 {
 	vector_t	origin;	// (x,y,z) location
@@ -159,7 +176,7 @@ typedef struct
 	vector_t	mins, maxs;
 
 } eyepoint_t;
-
+*/
 
 void world_destroy(world_t *world);
 world_t* world_create(char *filename);
