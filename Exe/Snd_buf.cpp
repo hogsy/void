@@ -29,7 +29,8 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf, float vol)
 	DSBUFFERDESC dsbdesc; 
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
-    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRLVOLUME; 
+    dsbdesc.dwFlags = DSBCAPS_CTRL3D | DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRLVOLUME;
+					//| DSBCAPS_CTRLPAN |DSBCAPS_CTRLFREQUENCY; 
 
   	//Create buffer. 
 	HRESULT hr = GetDirectSound()->CreateSoundBuffer(&dsbdesc,&m_pDSBuffer,0);
@@ -218,7 +219,7 @@ bool CSoundBuffer::Create(const char * path)
 	dsbdesc.dwSize  = sizeof(DSBUFFERDESC); 
 	dsbdesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | 
 					  DSBCAPS_GLOBALFOCUS |DSBCAPS_STATIC |
-					  DSBCAPS_CTRL3D; // | DSBCAPS_MUTE3DATMAXDISTANCE;
+					  DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRL3D | DSBCAPS_MUTE3DATMAXDISTANCE;
 //	dsbdesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     dsbdesc.dwBufferBytes = m_pWaveFile->m_size;
     dsbdesc.lpwfxFormat = &waveFormat; 

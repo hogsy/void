@@ -61,8 +61,8 @@ Constructor
 CSoundManager::CSoundManager() : m_cVolume("snd_vol", "9", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cHighQuality("snd_highquality", "1", CVAR_BOOL, CVAR_ARCHIVE),
 								 m_cRollOffFactor("snd_rolloff", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDopplerFactor("snd_doppler", "1.0", CVAR_FLOAT, CVAR_ARCHIVE),
-								 m_cDistanceFactor("snd_distance", "15.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDopplerFactor("snd_doppler", "0.0", CVAR_FLOAT, CVAR_ARCHIVE),
+								 m_cDistanceFactor("snd_distance", "30.0", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_cSndFps("snd_maxfps", "40", CVAR_FLOAT, CVAR_ARCHIVE),
 								 m_pPrimary(new CPrimaryBuffer)
 {
@@ -306,13 +306,14 @@ Update Listener pos
 */
 void CSoundManager::UpdateListener(const CCamera * pCamera)
 {	
-	m_listenerPos = pCamera->origin;
-	m_pListener->m_pDS3dListener->SetPosition(m_listenerPos.x, m_listenerPos.y, m_listenerPos.z, 
+	m_pListener->m_pDS3dListener->SetPosition(pCamera->origin.x, pCamera->origin.y, pCamera->origin.z, 
 											  DS3D_DEFERRED);
-//	m_pListener->m_pDS3dListener->SetVelocity(velocity.x,velocity.y, velocity.z, DS3D_DEFERRED);
+	m_pListener->m_pDS3dListener->SetVelocity(pCamera->velocity.x,pCamera->velocity.y,pCamera->velocity.z,
+											  DS3D_DEFERRED);
 	m_pListener->m_pDS3dListener->SetOrientation(pCamera->forward.x, pCamera->forward.y, pCamera->forward.z, 
 												 pCamera->up.x,pCamera->up.y, pCamera->up.z, 
 												 DS3D_DEFERRED);
+	m_listenerPos = pCamera->origin;
 }
 
 
@@ -327,10 +328,7 @@ void CSoundManager::RunFrame()
 {
 	if(m_fLastFrame > System::GetCurTime())
 		return;
-	m_fLastFrame = System::GetCurTime() + 1/m_cSndFps.fval;
-
-
-	m_pListener->m_pDS3dListener->CommitDeferredSettings();
+	m_fLastFrame = System::GetCurTime() + 1.0f/m_cSndFps.fval;
 
 	//Go through all the sound sources to play the ones in range,
 	//and stop the ones out of range. out of range nonStatic sources are removed
@@ -364,6 +362,8 @@ void CSoundManager::RunFrame()
 			}
 		}
 	}
+
+	m_pListener->m_pDS3dListener->CommitDeferredSettings();
 }
 
 /*
@@ -777,7 +777,7 @@ void CSoundManager::SPrintInfo()
 	ComPrintf("Distance Factor : %.2f\nRolloff Factor : %.2f\nDoppler Factor : %.2f\n",
 				l3dparms.flDistanceFactor,l3dparms.flRolloffFactor, l3dparms.flDopplerFactor);
 	ComPrintf("Listener pos : %.2f %.2f %.2f\n", l3dparms.vPosition.x, 
-						l3dparms.vPosition.y, l3dparms.vPosition.x);
+						l3dparms.vPosition.y, l3dparms.vPosition.z);
 }
 
 /*

@@ -111,10 +111,10 @@ bool CSoundChannel::Create3d(const CSoundBuffer &buffer,
 	if(!CreateBuffer(buffer))
 		return false;
 
-	m_pDS3dBuffer->SetMinDistance(muteDist * 0.3, DS3D_IMMEDIATE);
-	m_pDS3dBuffer->SetPosition(origin.x,origin.y, origin.z, 
-							   DS3D_IMMEDIATE);
-//	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_IMMEDIATE);
+	m_pDS3dBuffer->SetMinDistance(muteDist * 0.3, DS3D_DEFERRED);
+	m_pDS3dBuffer->SetMaxDistance(muteDist, DS3D_DEFERRED);
+	m_pDS3dBuffer->SetPosition(origin.x,origin.y, origin.z, DS3D_DEFERRED);
+	m_pDS3dBuffer->SetVelocity(0, 0, 0, DS3D_DEFERRED);
 
 	m_bInUse = true;
 	return true;

@@ -242,7 +242,9 @@ enum EClUpdateFlags
 	SVU_DEFAULT = 0,
 	SVU_GRAVITY = 1,
 	SVU_FRICTION = 2,
-	SVU_MAXSPEED = 4
+	SVU_MAXSPEED = 4,
+	SVU_ANIMSEQ = 8,	//just the predefined seq
+	SVU_ANIMALL = 16	//sequences and current frame
 };
 
 #endif

@@ -79,6 +79,7 @@ void CGameClient::HandleGameMsg(CBuffer &buffer)
 				ComPrintf("%s %s\n", m_clients[num].name, buffer.ReadString());
 				
 				//Unregister model/skin
+				//m_pClGame->UnregisterModel(CACHE_LOCAL, m_clients[num].mdlIndex);
 
 				m_clients[num].Reset();
 				break;
