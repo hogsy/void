@@ -290,7 +290,7 @@ int fill_sides(bsp_brush_side_t *si)
 		fsides[thisside].first_vert = num_vert_indices;
 		fsides[thisside].num_verts  = s->num_verts;
 		fsides[thisside].texdef = get_texdef(&map_texinfos[s->texinfo], s->plane);
-//		fsides[thisside].area = side_area(si);
+		fsides[thisside].area = side_area(si);
 
 		for (int v=0; v<s->num_verts; v++)
 		{

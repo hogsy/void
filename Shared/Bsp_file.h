@@ -3,7 +3,7 @@
 #define BSP_FILE_H
 
 #define BSP_FILE_ID	('v'<<24 | 'b'<<16 | 's'<<8 | 'p')
-#define BSP_VERSION	9
+#define BSP_VERSION	10
 
 
 #define LUMP_NODES			0
@@ -87,6 +87,7 @@ typedef struct
 	int		lightdef;
 	int		plane;
 	int		flags;
+	float	area;
 } bspf_side_t;
 
 
