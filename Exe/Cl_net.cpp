@@ -158,7 +158,6 @@ the server to update it
 */
 bool CClient::ValidateName(const CParms &parms)
 {
-//	const char * name = parms.StringTok(1);
 	char name[24];
 	parms.StringTok(1,name,24);
 

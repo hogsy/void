@@ -7,18 +7,16 @@ using namespace VoidNet;
 Constructor Destructor
 ==========================================
 */
-CNetSocket::CNetSocket(CBuffer * buffer)
+CNetSocket::CNetSocket(CBuffer * buffer) : m_pRecvBuf(buffer), 
+										   m_socket(INVALID_SOCKET)
 {
-	m_socket = INVALID_SOCKET;
-	m_pBuffer = buffer;
-
 	memset(&m_srcSockAddr,0,sizeof(SOCKADDR_IN));
 	memset(&m_destSockAddr,0,sizeof(SOCKADDR_IN));
 }
 
 CNetSocket::~CNetSocket()
 {
-	m_pBuffer = 0;
+	m_pRecvBuf = 0;
 	Close();
 }
 
@@ -113,10 +111,10 @@ bool CNetSocket::RecvFrom()
 {
 	int srcLen=  sizeof(SOCKADDR_IN);
 	
-	m_pBuffer->Reset();
+	m_pRecvBuf->Reset();
 	int ret = recvfrom(m_socket,
-					   (char*)m_pBuffer->GetData(), 
-					   m_pBuffer->GetMaxSize(), 
+					   (char*)m_pRecvBuf->GetData(), 
+					   m_pRecvBuf->GetMaxSize(), 
 					   0, (SOCKADDR*)&m_srcSockAddr, &srcLen);
 	
 	if(ret == SOCKET_ERROR)
@@ -138,7 +136,7 @@ bool CNetSocket::RecvFrom()
 		return false;
 	}
 
-	if(ret == m_pBuffer->GetMaxSize())
+	if(ret == m_pRecvBuf->GetMaxSize())
 	{
 		ComPrintf("CNetSocket::RecvFrom: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
 		return false;
@@ -146,7 +144,7 @@ bool CNetSocket::RecvFrom()
 
 //	ComPrintf("Recved %d from %s\n", ret,inet_ntoa (m_srcSockAddr.sin_addr));
 	m_srcAddr = m_srcSockAddr;
-	m_pBuffer->SetSize(ret);
+	m_pRecvBuf->SetSize(ret);
 	return true;
 }
 
@@ -162,10 +160,10 @@ bool CNetSocket::Recv()
 {
 	int srcLen=  sizeof(SOCKADDR_IN);
 	
-	m_pBuffer->Reset();
+	m_pRecvBuf->Reset();
 	int ret = recv(m_socket,
-				   (char*)m_pBuffer->GetData(), 
-				   m_pBuffer->GetMaxSize(), 
+				   (char*)m_pRecvBuf->GetData(), 
+				   m_pRecvBuf->GetMaxSize(), 
 				   0);
 	
 	if(ret == SOCKET_ERROR)
@@ -187,7 +185,7 @@ bool CNetSocket::Recv()
 		return false;
 	}
 
-	if(ret == m_pBuffer->GetMaxSize())
+	if(ret == m_pRecvBuf->GetMaxSize())
 	{
 		ComPrintf("CNetSocket::Recv: Oversize packet from %s\n",inet_ntoa (m_srcSockAddr.sin_addr));
 		return false;
@@ -195,7 +193,7 @@ bool CNetSocket::Recv()
 
 //	ComPrintf("Recved %d from %s\n", ret,inet_ntoa (m_srcSockAddr.sin_addr));
 //	m_srcAddr = m_srcSockAddr;
-	m_pBuffer->SetSize(ret);
+	m_pRecvBuf->SetSize(ret);
 	return true;
 }
 
@@ -293,8 +291,6 @@ void CNetSocket::Send(const CBuffer &buffer)
 void CNetSocket::SendTo(const CNetChan * pNetchan)
 {	SendTo(pNetchan->m_sendBuffer,pNetchan->m_addr);
 }
-
-
 
 
 

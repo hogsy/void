@@ -131,22 +131,22 @@ public:
 	void SendPackets();
 
 	//NetChanWriter Implementation
-	void BeginWrite(int chanId, byte msgid, int estSize);
-	void Write(byte b);
-	void Write(char c);
-	void Write(short s);
-	void Write(int i);
-	void Write(float f);
-	void Write(const char *string);
-	void WriteCoord(float c);
-	void WriteAngle(float a);
-	void WriteData(byte * data, int len);
-	void FinishWrite();
+	void ChanBeginWrite(int chanId, byte msgid, int estSize);
+	void ChanWrite(byte b);
+	void ChanWrite(char c);
+	void ChanWrite(short s);
+	void ChanWrite(int i);
+	void ChanWrite(float f);
+	void ChanWrite(const char *string);
+	void ChanWriteCoord(float c);
+	void ChanWriteAngle(float a);
+	void ChanWriteData(byte * data, int len);
+	void ChanFinishWrite();
 
-	const NetChanState & GetState(int chanId) const;
+	const NetChanState & ChanGetState(int chanId) const;
 	
 	//Set the Rate of the given channel
-	void SetChanRate(int chanId, int rate);
+	void ChanSetRate(int chanId, int rate);
 
 	//Reject client connection for given reason
 	void SendRejectMsg(const char * reason);
@@ -193,7 +193,7 @@ private:
 
 	const ServerState * m_pSvState;	//Server Status
 
-	char	m_szLocalAddr[24];
+	char	m_szLocalAddr[MAX_IPADDR_LEN];
 	
 	CBuffer	m_recvBuf;
 	CBuffer	m_sendBuf;

@@ -5,9 +5,7 @@
 #include "Net_defs.h"
 #include "Net_util.h"
 
-
 namespace VoidNet {
-
 /*
 ======================================
 Network channel
@@ -18,7 +16,6 @@ reliable/unreliable data streams
 class CNetChan
 {
 public:
-
 	CNetChan();
 	~CNetChan();
 
@@ -29,7 +26,6 @@ public:
 	void SetRate(int rate);	
 	void ResetReliable();
 
-	void PrintStats() const;
 	bool MatchAddr(const CNetAddr &addr) const;
 	const CNetAddr & GetAddr() const;
 	const char * GetAddrString() const;
@@ -46,18 +42,17 @@ public:
 
 	//================================================================
 	
-	NetChanState m_state;
-	CBuffer	  m_buffer;				//Write to this buffer for transmission
+	CBuffer	m_buffer;		//Write to this buffer for transmission
+	
+	float	m_lastReceived;	//Time we last received a message
+	bool	m_bFatalError;	//Flag over flow errors
 
-	float	  m_lastReceived;
-	bool	  m_bFatalError;
+	NetChanState m_state;	//Chan stat info
 
 private:
-
 	friend class CNetSocket;
 
 	double    m_clearTime;
-	double	  m_rate;				//Byte/Sec
 
 	int		  m_bInReliableMsg;		//Is the message recived supposed to be reliable ?
 	int		  m_bInReliableAcked;	//Was the last reliabled message acked by the remote host ?
@@ -72,5 +67,4 @@ private:
 };
 
 }
-
 #endif

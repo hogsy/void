@@ -131,6 +131,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg,
 				g_pVoid->Activate(true);
 			break;
 		}
+	case WM_ENTERSIZEMOVE:
+	case WM_ENTERMENULOOP:
 	case WM_SETFOCUS:
 //	case WM_MOUSEACTIVATE:
 		{

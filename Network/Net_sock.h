@@ -43,7 +43,7 @@ private:
 	//Instance Data
 	SOCKET		m_socket;
 	
-	CBuffer *   m_pBuffer;
+	CBuffer *   m_pRecvBuf;
 	
 	SOCKADDR_IN m_srcSockAddr;
 	SOCKADDR_IN m_destSockAddr;

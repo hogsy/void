@@ -17,7 +17,6 @@ CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
 {
 	Reset();
 	m_pRecvBuffer = 0;
-	m_rate = 0.0f;
 }
 
 CNetChan::~CNetChan()
@@ -50,18 +49,19 @@ void CNetChan::Reset()
 	m_addr.Reset();
 
 	m_buffer.Reset();
+
 	m_reliableBuffer.Reset();
 	m_sendBuffer.Reset();
 
 	m_state.Reset();
+	m_lastReceived = 0.0f;
 	
 	m_bOutReliableMsg = 0;
 	m_bInReliableMsg=0;			//Is the message recived supposed to be reliable ?
 	m_bInReliableAcked=0;		//Was the last reliabled message acked by the remote host ?
 
-	m_lastReceived = 0.0f;
+	
 	m_clearTime = 0.0f;
-	m_rate = 0.0f;
 
 	m_bFatalError = false;
 }
@@ -74,7 +74,7 @@ True if the bandwidth choke isn't active
 */
 bool CNetChan::CanSend() 
 {
-	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
+	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_state.rate)
 		return true;
 	m_state.numChokes ++;
 	return false;
@@ -82,7 +82,7 @@ bool CNetChan::CanSend()
 
 /*
 ======================================
-Can we safely write to the reliable buffer ?
+Can we safely write to the reliable m_buffer ?
 ======================================
 */
 bool CNetChan::CanSendReliable() 
@@ -96,9 +96,9 @@ bool CNetChan::CanSendReliable()
 
 void CNetChan::SetRate(int rate)
 {
-	if(rate < 1000 || rate > 10000)
-		rate = 2500;
-	m_rate = 1.0/rate;
+	if(m_state.rate < 1000 || m_state.rate > 10000)
+		m_state.rate = 2500;
+	m_state.rate = 1.0/rate;
 }
 
 
@@ -127,7 +127,7 @@ void CNetChan::PrepareTransmit()
 	   send_reliable = 1;
 	}
 	
-	//if the reliable transmit buffer is empty, then copy unreliable contents to it
+	//if the reliable transmit m_buffer is empty, then copy unreliable contents to it
 	if (!m_reliableBuffer.GetSize() && m_buffer.GetSize())
 	{
 		m_reliableBuffer.Reset();
@@ -165,9 +165,9 @@ void CNetChan::PrepareTransmit()
 	m_state.outMsgId++;
 
 	if (m_clearTime < System::g_fcurTime)
-		m_clearTime = System::g_fcurTime + (m_sendBuffer.GetSize() * (m_rate));
+		m_clearTime = System::g_fcurTime + (m_sendBuffer.GetSize() * (m_state.rate));
 	else
-		m_clearTime += (m_sendBuffer.GetSize() * (m_rate));
+		m_clearTime += (m_sendBuffer.GetSize() * (m_state.rate));
 }
 
 
@@ -200,7 +200,7 @@ bool CNetChan::BeginRead()
 		m_state.dropCount += 1;
 
 	//If the last reliable message we sent has been acknowledged
-	//then clear the buffer to make way for the next
+	//then clear the m_buffer to make way for the next
 	if ((bReliableAcked == m_bOutReliableMsg) ||
 		(seqacked > m_state.lastOutReliableId))
 	{
@@ -223,13 +223,11 @@ bool CNetChan::BeginRead()
 }
 
 
-void CNetChan::PrintStats() const
-{
-	ComPrintf("Rate %.2f: Chokes %d\nGoodcount %d Dropped %d\n", 1/m_rate, m_state.numChokes, m_state.goodCount, m_state.dropCount);
-	ComPrintf("In:%d  InAcked:%d Out:%d\n", m_state.inMsgId, m_state.inAckedId, m_state.outMsgId);
-}
-
-
+/*
+======================================
+Misc Util
+======================================
+*/
 void CNetChan::ResetReliable()
 {	m_reliableBuffer.Reset();
 }

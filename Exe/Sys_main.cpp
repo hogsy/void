@@ -349,6 +349,7 @@ Activiate window Event
 */
 void CVoid::Activate(bool focus)
 {
+//ComPrintf("Win: Activate");
 	if (focus == false)
 	{
 		m_pRParms->active = false;
@@ -373,6 +374,7 @@ Get Focus Event
 */
 void CVoid::OnFocus()
 {
+//ComPrintf("Focus: Activate");
 	if (m_pRParms)
 		m_pRParms->active = true;
 	

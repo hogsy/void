@@ -6,7 +6,7 @@ using namespace VoidNet;
 
 /*
 ======================================
-Constructor/Destructor
+Constructor
 ======================================
 */
 CNetClient::CNetClient(I_NetClientHandler * client): 
@@ -19,7 +19,7 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 	m_pNetChan = new CNetChan();
 	m_pNetChan->Reset();
 
-	memset(m_szServerAddr,0,24);
+	memset(m_szServerAddr,0,MAX_IPADDR_LEN);
 
 	m_bLocalServer = false;
 	
@@ -28,12 +28,17 @@ CNetClient::CNetClient(I_NetClientHandler * client):
 
 	//Flow Control
 	m_fNextSendTime= 0.0f;	
-	m_numResends= 0;		
 	m_szLastOOBMsg= 0;
 
 	m_spawnState=0;
 	m_netState= CL_FREE;
 }
+
+/*
+======================================
+Destructor
+======================================
+*/
 
 CNetClient::~CNetClient()
 {
@@ -44,7 +49,6 @@ CNetClient::~CNetClient()
 	m_szLastOOBMsg = 0;
 }
 
-//======================================================================================
 //======================================================================================
 
 /*
@@ -62,7 +66,7 @@ void CNetClient::ReadPackets()
 		//Look for messages only from the server
 		while(m_pSock->Recv())
 		{
-//m_pClient->Print("CL: Reading update\n");
+			//m_pClient->Print("CL: Reading update\n");
 			m_pNetChan->BeginRead();
 			m_pClient->HandleGameMsg(m_buffer);
 		}
@@ -71,6 +75,7 @@ void CNetClient::ReadPackets()
 	{
 		while(m_pSock->RecvFrom())
 		{
+			m_pNetChan->m_lastReceived = System::g_fcurTime;
 			if(m_netState == CL_CONNECTED)
 			{
 				HandleSpawnParms();
@@ -84,8 +89,8 @@ void CNetClient::ReadPackets()
 					HandleOOBMessage();
 					continue;
 				}
-//m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
 			}
+			//m_pClient->Print("CL: Unknown packet from %s\n", m_pSock->GetSource().ToString());
 		}	
 	}
 }
@@ -97,8 +102,16 @@ Send off any messages we need to
 */
 void CNetClient::SendUpdate()
 {
-	if(!m_pSock->ValidSocket())
+	if(m_netState == CL_FREE)
 		return;
+
+	//Check for timeouts
+	if(m_pNetChan->m_lastReceived + NET_TIMEOUT_INTERVAL < System::g_fcurTime)
+	{
+		m_pClient->Print("CL: Connection timed out\n");
+		Disconnect();
+		return;
+	}
 
 	//are we spawned ?
 	if(m_netState == CL_INGAME)
@@ -106,25 +119,26 @@ void CNetClient::SendUpdate()
 		//Checks local rate
 		if(m_pNetChan->CanSend())
 		{
-//Check for overflows here ? m_overFlowed
+			//Check for overflows in buffers
+			if(m_pNetChan->m_bFatalError || m_reliableBuf.OverFlowed())
+			{
+				m_pClient->Print("CL: Connection overflowed\n");
+				Disconnect();
+				return;
+			}
+
+			//Try to write reliable data if needed to
 			if(m_reliableBuf.GetSize() && m_pNetChan->CanSendReliable())
 			{
 				m_pNetChan->m_buffer.Write(m_reliableBuf);
 				m_reliableBuf.Reset();
 			}
+			
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
 			m_pNetChan->m_buffer.Reset();
-//m_pClient->Print("CL:  sending update\n");
+			//m_pClient->Print("CL:  sending update\n");
 		}
-		return;
-	}
-
-	//If the client has NOT spawned, then limit resends before we decide to fail
-	if(m_numResends >= 4)
-	{
-		m_pClient->Print("CL: Timed out\n");
-		Disconnect();
 		return;
 	}
 
@@ -135,10 +149,7 @@ void CNetClient::SendUpdate()
 		if(m_fNextSendTime < System::g_fcurTime)
 		{
 			m_pNetChan->ResetReliable();
-//			return;
 		}
-//		m_pNetChan->m_reliableBuffer.Reset();
-		
 		//Ask for next spawn parm if we have received a reply to the last
 		//otherwise, keep asking for the last one
 		if(m_pNetChan->CanSendReliable())
@@ -148,7 +159,8 @@ void CNetClient::SendUpdate()
 			m_pNetChan->m_buffer.Write((m_spawnState + 1));
 			m_pNetChan->PrepareTransmit();
 			m_pSock->SendTo(m_pNetChan);
-
+		
+					
 			//We got all the necessary info. just ack and switch to spawn mode
 			if(m_spawnState == SVC_BEGIN)
 			{
@@ -159,16 +171,14 @@ m_pClient->Print("CL: Client is ready to SPAWN\n");
 			else
 			{
 				m_fNextSendTime = System::g_fcurTime + 1.0f;
-				m_numResends ++;
 //m_pClient->Print("CL: Asking for spawnstate %d\n", m_spawnState+1);
 			}
+
 		}
 	}
 	//Unconnected socket. sends OOB queries
 	else if((m_netState == CL_INUSE) && (m_fNextSendTime < System::g_fcurTime))
 	{
-m_pClient->Print("CL: Resending OOB request\n");
-
 		if(m_szLastOOBMsg == C2S_GETCHALLENGE)
 			SendChallengeReq();
 		else if(m_szLastOOBMsg == C2S_CONNECT)
@@ -176,6 +186,7 @@ m_pClient->Print("CL: Resending OOB request\n");
 		return;
 	}
 }
+
 
 /*
 ======================================
@@ -190,8 +201,6 @@ entity baselines
 void CNetClient::HandleSpawnParms()
 {
 	//We got a response to reset Resend requests
-	m_numResends = 0;
-
 	m_pNetChan->BeginRead();
 	byte id = m_buffer.ReadByte();
 
@@ -201,22 +210,8 @@ m_pClient->Print("CL: Got spawn level %d\n", (int)id);
 	//while we were getting spawn info. start again
 	if(id == SV_RECONNECT)
 	{
-		Reconnect();
-/*
-		m_netState = CL_INUSE;
-		m_spawnState = 0;
-
-		//Flow Control
-		m_fNextSendTime = 0.0f;
-		m_szLastOOBMsg = 0;
-		m_numResends = 0;
-
-		Disconnect();
-
 m_pClient->Print("CL: Server asked to reconnect\n");
-
-		SendChallengeReq();
-*/
+		Reconnect();
 		return;
 	}
 
@@ -247,7 +242,6 @@ void CNetClient::HandleOOBMessage()
 		
 		m_szLastOOBMsg = 0;
 		m_fNextSendTime = 0.0f;
-		m_numResends =0;
 
 		//Got challenge, now send connection request
 		SendConnectReq();
@@ -270,7 +264,6 @@ void CNetClient::HandleOOBMessage()
 
 		m_szLastOOBMsg = 0;
 		m_fNextSendTime = 0.0f;
-		m_numResends =0;
 		
 		//Setup the network channel. 
 		//Only reliable messages are sent until spawned
@@ -304,7 +297,6 @@ void CNetClient::SendConnectReq()
 
 	m_szLastOOBMsg = C2S_CONNECT;
 	m_fNextSendTime = System::g_fcurTime + 2.0f;
-	m_numResends ++; 
 
 	m_pClient->Print("CL: Attempting to connect to %s\n", m_szServerAddr);
 }
@@ -336,7 +328,6 @@ void CNetClient::SendChallengeReq()
 
 	m_szLastOOBMsg = C2S_GETCHALLENGE;
 	m_fNextSendTime = System::g_fcurTime + 2.0f;
-	m_numResends ++;
 
 	m_pClient->Print("CL: Requesting Challenge from %s\n", m_szServerAddr);
 }
@@ -386,6 +377,8 @@ void CNetClient::ConnectTo(const char * ipaddr)
 		m_bLocalServer = true;
 	}
 
+	m_pNetChan->m_lastReceived = System::g_fcurTime;
+
 	//Now initiate a connection request
 	m_netState = CL_INUSE;
 	SendChallengeReq();
@@ -414,7 +407,7 @@ void CNetClient::Disconnect(bool serverPrompted)
 
 	m_pNetChan->Reset();
 	
-	m_szServerAddr[0] = 0;
+	memset(m_szServerAddr,0, MAX_IPADDR_LEN);
 	m_bLocalServer = false;
 	
 	m_levelId = 0;
@@ -424,7 +417,6 @@ void CNetClient::Disconnect(bool serverPrompted)
 	//Flow Control
 	m_fNextSendTime = 0.0f;
 	m_szLastOOBMsg = 0;
-	m_numResends = 0;
 
 	m_pClient->Print("CL: Disconnected\n");
 }
@@ -436,7 +428,7 @@ Disconnect and reconnect
 */
 void CNetClient::Reconnect()
 {
-	char svaddr[24];
+	char svaddr[MAX_IPADDR_LEN];
 	strcpy(svaddr,m_szServerAddr);
 	Disconnect(true);
 	ConnectTo(svaddr);

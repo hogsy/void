@@ -4,7 +4,6 @@
 #include "Net_defs.h"
 #include "Net_protocol.h"
 
-
 /*
 ======================================
 Validate connection request from a client
@@ -20,7 +19,7 @@ bool CServer::ValidateClConnection(int clNum, bool reconnect,
 	}
 
 	strcpy(m_client[clNum].name, buffer.ReadString());
-	m_net.SetChanRate(clNum, buffer.ReadInt());
+	m_net.ChanSetRate(clNum, buffer.ReadInt());
 	
 	m_client[clNum].inUse = true;
 
@@ -61,10 +60,10 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 
 				if(m_client[i].inUse)
 				{
-					m_net.BeginWrite(i,SV_TALK, len);
-					m_net.Write(m_client[clNum].name);
-					m_net.Write(msg);
-					m_net.FinishWrite();
+					m_net.ChanBeginWrite(i,SV_TALK, len);
+					m_net.ChanWrite(m_client[clNum].name);
+					m_net.ChanWrite(msg);
+					m_net.ChanFinishWrite();
 				}
 			}
 			break;	
@@ -83,7 +82,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			{
 				int rate = buffer.ReadInt();
 ComPrintf("SV: %s changed rate to %d\n", m_client[clNum].name, rate);
-				m_net.SetChanRate(clNum,rate);
+				m_net.ChanSetRate(clNum,rate);
 			}
 			break;
 		}

@@ -119,7 +119,6 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 
 	byte keynum= 0;
 
-//	const char * arg = parms.StringTok(1);
 	char keyName[32];
 	parms.StringTok(1,keyName,32);
 
@@ -156,7 +155,6 @@ void CClientCmdHandler::BindFuncToKey(const CParms &parms)
 
 	char cmdName[32];
 	parms.StringTok(2, cmdName, 32);
-	//arg = parms.StringTok(2);
 
 	m_cmdKeys[keynum].pCmd = ((CConsole*)System::GetConsole())->GetCommandByName(cmdName);
 	if(m_cmdKeys[keynum].pCmd == 0)
@@ -227,7 +225,6 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 	}
 
 	byte keynum= 0;
-//	const char * arg = parms.StringTok(1);
 	char keyName[32];
 	parms.StringTok(1,keyName,32);
 

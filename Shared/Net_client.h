@@ -88,7 +88,6 @@ private:
 
 	//Flow Control for an Unspawned client
 	float	m_fNextSendTime;	//Next send time
-	int		m_numResends;		//Max number of resends
 	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
 
 	I_NetClientHandler  * m_pClient;

@@ -18,11 +18,11 @@ enum
 Constructor/Destructor
 ======================================
 */
-CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
+CServer::CServer() : m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
-					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
+					 m_cHostname("sv_hostname", "Void Server", CVar::CVAR_STRING, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
 					 m_cMaxClients("sv_maxclients", "4", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
-					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
+					 m_cGame("sv_game", "Game", CVar::CVAR_STRING, CVar::CVAR_LATCH|CVar::CVAR_ARCHIVE),
 					 m_chanWriter(m_net)
 {
 	//Initialize Network Server
@@ -277,19 +277,34 @@ Print Status info
 */
 void CServer::PrintServerStatus()
 {
-	ComPrintf("Game Path   : %s\n", m_svState.gameName);
-	ComPrintf("Hostname	   : %s\n", m_svState.hostName);
-	ComPrintf("Max clients : %d\n", m_svState.maxClients);
-	ComPrintf("Port        : %d\n", m_svState.port);
+	ComPrintf("Game Path  : %s\n", m_svState.gameName);
+	ComPrintf("Hostname	  : %s\n", m_svState.hostName);
+	ComPrintf("Max clients: %d\n", m_svState.maxClients);
+	ComPrintf("Port       : %d\n", m_svState.port);
 
-/*	if(m_active)
-		m_net.PrintStatus();
-	else
+	if(!m_active)
 	{
 		ComPrintf("Server is inactive\n");
 		return;
 	}
-*/
+
+	ComPrintf("Local Addr : %d\n", m_svState.localAddr);
+	ComPrintf("Map name   : %s\n", m_svState.worldname);
+	ComPrintf("Map id     : %d\n", m_svState.levelId);
+
+	for(int i=0; i<m_svState.maxClients; i++)
+	{
+		if(m_client[i].inUse)
+		{
+			ComPrintf("%s:\n", m_client[i].name);
+
+			const NetChanState & state = m_net.ChanGetState(i);
+			ComPrintf("  Rate:%.2f\n  In:%d\n  Acked:%d\n  Out:%d\n", 
+						1.0/state.rate, state.inMsgId, state.inAckedId, state.outMsgId);
+			ComPrintf("  Dropped:%d\n  Good:%d\n  Chokes:%d\n", 
+					state.dropCount, state.goodCount, state.numChokes);
+		}
+	}
 }
 
 /*

@@ -246,7 +246,6 @@ Try to execute a string in the console
 void CConsole::ExecString(const char *string)
 {
 	m_parms = string;
-	//const char * szfirstArg = m_parms.StringTok(0);
 	const char * szfirstArg = m_parms.UnsafeStringTok(0);
 
 	for(CmdList::iterator itcmd = m_lCmds.begin(); itcmd != m_lCmds.end(); itcmd ++)

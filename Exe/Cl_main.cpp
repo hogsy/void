@@ -291,9 +291,9 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_CONNECT:
 		{
-			char addr[24];
-			parms.StringTok(1,addr,24);
-			m_pNetCl->ConnectTo(addr); //parms.StringTok(1));
+			char addr[MAX_IPADDR_LEN];
+			parms.StringTok(1,addr,MAX_IPADDR_LEN);
+			m_pNetCl->ConnectTo(addr);
 			break;
 		}
 	case CMD_DISCONNECT:

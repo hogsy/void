@@ -81,9 +81,9 @@ bool CNetServer::Init()
 	ulong	addrFlags=0;
 	char  * pAddrString=0;
 	bool	bFoundAddr = false;
-	char	szBestAddr[24];
+	char	szBestAddr[MAX_IPADDR_LEN];
 	
-	memset(szBestAddr,0,24);
+	memset(szBestAddr,0,MAX_IPADDR_LEN);
 	
 	for (int i=0; i<numAddrs; i++) 
 	{
@@ -502,9 +502,9 @@ void CNetServer::ClientPrintf(int chanId, const char * message, ...)
 
 	if(m_clChan[chanId].m_state == CL_INGAME)
 	{
-		BeginWrite(chanId,SV_PRINT,strlen(m_printBuffer));
-		Write(m_printBuffer);
-		FinishWrite();
+		ChanBeginWrite(chanId,SV_PRINT,strlen(m_printBuffer));
+		ChanWrite(m_printBuffer);
+		ChanFinishWrite();
 	}
 }
 
@@ -524,9 +524,9 @@ void CNetServer::BroadcastPrintf(const char* message, ...)
 	{
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
-			BeginWrite(i,SV_PRINT,strlen(m_printBuffer));
-			Write(m_printBuffer);
-			FinishWrite();
+			ChanBeginWrite(i,SV_PRINT,strlen(m_printBuffer));
+			ChanWrite(m_printBuffer);
+			ChanFinishWrite();
 		}
 	}
 }
@@ -639,7 +639,7 @@ void CNetServer::SendPackets()
 		if(m_clChan[i].m_state == CL_INGAME)
 		{
 			//Check timeout
-			if(m_clChan[i].m_netChan.m_lastReceived + SV_TIMEOUT_INTERVAL < System::g_fcurTime)
+			if(m_clChan[i].m_netChan.m_lastReceived + NET_TIMEOUT_INTERVAL < System::g_fcurTime)
 			{
 				SendDisconnect(i,CLIENT_TIMEOUT);
 				continue;
