@@ -288,13 +288,13 @@ void CClient::RunFrame()
 		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
 
 		//draw the ents in pvs
-/*		for(int i=0; i< m_numEnts; i++)
+		for(int i=0; i< m_numEnts; i++)
 		{
 			m_gameEnts[i].frame = 0;
 			m_gameEnts[i].skinnum= 0;
 			m_pModel->DrawModel(m_gameEnts[i].index, MODEL_CACHE_GAME, m_gameEnts[i]);
 		}
-*/
+
 //		m_pModel->DrawModel(m_entQuad.index, MODEL_CACHE_LOCAL, m_entQuad);
 
 		m_pRender->Draw(m_pCamera);
