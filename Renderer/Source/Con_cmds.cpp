@@ -15,7 +15,8 @@ CVar *	g_pFov=0;
 CVar *	g_pMultiTexture=0;
 CVar *	g_pVidSynch=0;
 
-/*CVar	g_pFov("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+/*
+CVar	g_pFov("r_fov","90", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 CVar	g_pMultiTexture("r_multitexture","1", CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 CVar 	g_pVidSynch("r_vidsynch","0",CVar::CVAR_INT, CVar::CVAR_ARCHIVE);
 */
@@ -36,7 +37,7 @@ void ScreenShot(char *name, EImageFileFormat type)
 
 	//find a file name to save it to 
 	sprintf(checkname, "%s\\%s\\", GetCurPath(), "Shots");
-	Util::ConfirmDir(checkname);
+	FileUtil::ConfirmDir(checkname);
 
 	if (!name)
 	{
@@ -70,9 +71,9 @@ void ScreenShot(char *name, EImageFileFormat type)
 	{
 		sprintf(checkname, "%s\\%s\\%s", GetCurPath(), "Shots", name);
 		if(type == FORMAT_PCX)
-			Util::DefaultExtension(checkname, ".pcx");
+			FileUtil::SetDefaultExtension(checkname, ".pcx");
 		else
-			Util::DefaultExtension(checkname, ".tga");
+			FileUtil::SetDefaultExtension(checkname, ".tga");
 	}
 
 	//Got file name, Now actually take the shot and write it
