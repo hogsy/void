@@ -105,7 +105,7 @@ static bspf_header_t header;
 
 #ifdef _VOID_EXE_
 
-static CFileBuffer  * m_pFile=0;
+static CFileStream  * m_pFile=0;
 
 int load_lump(int l, void **data)
 {
@@ -140,7 +140,8 @@ world_t* world_read(char *filename)
 {
 #ifdef _VOID_EXE_
 	
-	m_pFile = new CFileBuffer();
+	m_pFile = new CFileStream();
+
 	if(!m_pFile->Open(filename))
 	{
 		PRINT("World_Read:Could not open %s\n",filename);
