@@ -29,6 +29,7 @@ CClient::CClient(I_Renderer * prenderer,
 					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
 					m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
 					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
+					m_pClient(0),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -39,11 +40,11 @@ CClient::CClient(I_Renderer * prenderer,
 
 	//Setup network listener
 	m_pNetCl= new CNetClient(this);
-	m_pNetCl->SetRate(2500);
 
 	m_ingame = false;
 	m_fFrameTime = 0.0f;
 
+	m_numGameClient =0;
 	m_numEnts = 0;
 	
 	m_pCamera = 0;
@@ -81,6 +82,8 @@ CClient::CClient(I_Renderer * prenderer,
 	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 
 	m_pCmdHandler->IntializeBinds();
+
+	m_pNetCl->SetRate(m_cvRate.ival);
 }
 
 /*
@@ -161,10 +164,10 @@ void CClient::BeginGame()
 	
 	VectorSet(&desired_movement, 0, 0, 0);
 
-	VectorSet(&m_gameClient.angle, 0.0f,0.0f,0.0f);
-	VectorSet(&m_gameClient.origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
-	VectorSet(&m_gameClient.mins, -10.0f, -10.0f, -40.0f);
-	VectorSet(&m_gameClient.maxs, 10.0f, 10.0f, 10.0f);
+	VectorSet(&m_pClient->angle, 0.0f,0.0f,0.0f);
+	VectorSet(&m_pClient->origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
+	VectorSet(&m_pClient->mins, -10.0f, -10.0f, -40.0f);
+	VectorSet(&m_pClient->maxs, 10.0f, 10.0f, 10.0f);
 	VectorSet(&m_screenBlend,0.0f,0.0f,0.0f);
 
 	//Register static sound sources with SoundManager
@@ -181,7 +184,7 @@ void CClient::BeginGame()
 	}
 	
 	
-	m_pCamera = new CCamera(m_gameClient.origin, m_gameClient.angle, m_screenBlend);
+	m_pCamera = new CCamera(m_pClient->origin, m_pClient->angle, m_screenBlend);
 
 	m_ingame = true;
 
@@ -214,6 +217,7 @@ ComPrintf("CL :UNLOADED MODELS\n");
 	delete m_pCamera;
 	m_pCamera = 0;
 
+	m_pClient = 0;
 
 	int i;
 	for(i=0; i< GAME_MAXCLIENTS; i++)
@@ -239,6 +243,10 @@ ComPrintf("CL :UNLOADED MODELS\n");
 	m_ingame = false;
 }
 
+void CClient::Spawn(vector_t * origin, vector_t *angles)
+{
+}
+
 /*
 ======================================
 Client frame
@@ -255,9 +263,7 @@ void CClient::RunFrame()
 	{
 		m_pCmdHandler->RunCommands();
 
-		if (!((desired_movement.x==0) && 
-			  (desired_movement.y==0) && 
-			  (desired_movement.z==0)) || 
+		if (!((desired_movement.x==0) && (desired_movement.y==0) &&  (desired_movement.z==0)) || 
 			 (m_campath != -1))
 		{
 			VectorNormalize(&desired_movement);
@@ -267,24 +273,22 @@ void CClient::RunFrame()
 
 		//Print Stats
 		m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
-				m_gameClient.origin.x,  m_gameClient.origin.y, m_gameClient.origin.z);
+				m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
 		m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
-			1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
+				1/(System::g_fcurTime - m_fFrameTime), System::g_fcurTime, System::g_fframeTime);
 		m_fFrameTime = System::g_fcurTime;
-
 
 		vector_t forward, up, velocity;
 		VectorSet(&velocity, 0,0,0);
-		AngleToVector(&m_gameClient.angle, &forward, 0, &up);
+		AngleToVector(&m_pClient->angle, &forward, 0, &up);
 		m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
-
 
 		if(m_cvNetStats.bval)
 			ShowNetStats();
 
 		// FIXME - put this in game dll
-		int contents = PointContents(m_gameClient.origin);
+		int contents = PointContents(m_pClient->origin);
 		if(contents & CONTENTS_SOLID)
 			VectorSet(&m_screenBlend, 0.4f, 0.4f, 0.4f);
 		else if(contents & CONTENTS_WATER)
@@ -294,20 +298,15 @@ void CClient::RunFrame()
 		else
 			VectorSet(&m_screenBlend, 1, 1, 1);
 
-		m_pSound->UpdateListener(m_gameClient.origin, velocity, up, forward);
+		m_pSound->UpdateListener(m_pClient->origin, velocity, up, forward);
 
 		//fix me. draw ents only in the pvs
 		for(int i=0; i< GAME_MAXENTITIES; i++)
 		{
-			if(m_entities[i].inUse)
-			{
-				if(m_entities[i].mdlIndex >= 0)
-				{
-
-					m_pClRen->DrawModel(m_entities[i]);	
-				}
-			}
+			if(m_entities[i].inUse && (m_entities[i].mdlIndex >= 0))
+				m_pClRen->DrawModel(m_entities[i]);	
 		}
+		
 		//Draw clients
 		for(i=0; i< GAME_MAXCLIENTS; i++)
 		{
@@ -325,12 +324,12 @@ void CClient::RunFrame()
 			
 			buf.Reset();
 			buf.WriteByte(CL_MOVE);
-			buf.WriteCoord(m_gameClient.origin.x);
-			buf.WriteCoord(m_gameClient.origin.y);
-			buf.WriteCoord(m_gameClient.origin.z);
-			buf.WriteAngle(m_gameClient.angle.x);
-			buf.WriteAngle(m_gameClient.angle.y);
-			buf.WriteAngle(m_gameClient.angle.z);
+			buf.WriteCoord(m_pClient->origin.x);
+			buf.WriteCoord(m_pClient->origin.y);
+			buf.WriteCoord(m_pClient->origin.z);
+			buf.WriteAngle(m_pClient->angle.x);
+			buf.WriteAngle(m_pClient->angle.y);
+			buf.WriteAngle(m_pClient->angle.z);
 		}
 	}
 	//Write updates
@@ -444,15 +443,3 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 	return false;
 }
 
-
-void CClient::Spawn(vector_t * origin, vector_t *angles)
-{
-	
-
-/*	static ClEntity entHowl;
-	
-	entHowl.soundIndex = m_pSound->RegisterSound("sounds/wind.wav", CACHE_LOCAL);
-	Void3d::VectorSet(entHowl.origin,0,0,48);
-	m_pSound->PlaySnd(&entHowl, entHowl.soundIndex, CACHE_LOCAL, 0,0, CHAN_WORLD | CHAN_LOOPING);
-*/
-}

@@ -129,6 +129,111 @@ ComPrintf("SV Writing to backbuffer for %s\n", m_netChan.GetAddrString());
 	return true;
 }
 
+/*
+======================================
+Client Writing funcs
+======================================
+*/
+void CNetClChan::WriteByte(byte b)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteByte(b);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteByte(b);
+		ValidateBuffer();
+	}
+}
+void CNetClChan::WriteChar(char c)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteChar(c);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteChar(c);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteShort(short s)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteShort(s);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteShort(s);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteInt(int i)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteInt(i);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteInt(i);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteFloat(float &f)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteFloat(f);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteFloat(f);
+		ValidateBuffer();
+	}
+}
+
+
+void CNetClChan::WriteString(const char *string)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteString(string);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteString(string);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteCoord(float &c)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteCoord(c);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteCoord(c);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteAngle(float &a)
+{
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteAngle(a);
+	else
+	{
+		m_backBuffer[m_numBuf].WriteAngle(a);
+		ValidateBuffer();
+	}
+}
+
+void CNetClChan::WriteData(byte * data, int len)
+{
+	//no backbuffer. just write to channel
+	if(!m_bBackbuf)
+		m_netChan.m_buffer.WriteData(data,len);
+	else	
+	{
+		m_backBuffer[m_numBuf].WriteData(data,len);
+		ValidateBuffer();
+	}
+}
+
 //======================================================================================
 //Network Server Channel funcs
 //======================================================================================
@@ -140,23 +245,18 @@ bool CNetServer::ChanCanSend(int chanId)
 void CNetServer::ChanBeginWrite(const MultiCastSet &set, byte msgid, int estSize)
 {
 	ChanFinishWrite();
-
+	m_pMultiCast = &set;
 	for(int i=0; i< m_pSvState->maxClients; i++)
 	{
-		if(set.dest[i])
-		{
-			m_multicastInfo.dest[i] = set.dest[i];
+		if(m_pMultiCast->dest[i])
 			m_clChan[i].MakeSpace(estSize);
-			ChanWriteByte(msgid);
-		}
 	}
+	ChanWriteByte(msgid);
 }
-
 
 void CNetServer::ChanBeginWrite(int chanId, byte msgid, int estSize)
 {
 	ChanFinishWrite();
-
 	m_curChanId = chanId;
 	m_clChan[chanId].MakeSpace(estSize);
 	ChanWriteByte(msgid);
@@ -164,112 +264,125 @@ void CNetServer::ChanBeginWrite(int chanId, byte msgid, int estSize)
 
 void CNetServer::ChanWriteByte(byte b)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteByte(b);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteByte(b);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteByte(b);
+		return;
 	}
+	m_clChan[m_curChanId].WriteByte(b);
 }
+
+
 void CNetServer::ChanWriteChar(char c)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteChar(c);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteChar(c);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteChar(c);
+		return;
 	}
+	m_clChan[m_curChanId].WriteChar(c);
 }
 
 void CNetServer::ChanWriteShort(short s)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteShort(s);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteShort(s);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteShort(s);
+		return;
 	}
+	m_clChan[m_curChanId].WriteShort(s);
 }
 
 void CNetServer::ChanWriteInt(int i)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteInt(i);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteInt(i);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteInt(i);
+		return;
 	}
+	m_clChan[m_curChanId].WriteInt(i);
 }
 
 void CNetServer::ChanWriteFloat(float f)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteFloat(f);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteFloat(f);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteFloat(f);
+		return;
 	}
+	m_clChan[m_curChanId].WriteFloat(f);
 }
 
 void CNetServer::ChanWriteString(const char *string)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteString(string);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteString(string);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteString(string);
+		return;
 	}
+	m_clChan[m_curChanId].WriteString(string);
 }
 
 void CNetServer::ChanWriteCoord(float c)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteCoord(c);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteCoord(c);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteCoord(c);
+		return;
 	}
+	m_clChan[m_curChanId].WriteCoord(c);
 }
 
 void CNetServer::ChanWriteAngle(float a)
 {
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteAngle(a);
-	else
+	if(m_pMultiCast)
 	{
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteAngle(a);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteAngle(a);
+		return;
 	}
+	m_clChan[m_curChanId].WriteAngle(a);
 }
+
 
 void CNetServer::ChanWriteData(byte * data, int len)
 {
-	//no backbuffer. just write to channel
-	if(!m_clChan[m_curChanId].m_bBackbuf)
-		m_clChan[m_curChanId].m_netChan.m_buffer.WriteData(data,len);
-	else	
+	if(m_pMultiCast)
 	{
-		//write to current backbuffer
-		m_clChan[m_curChanId].m_backBuffer[m_clChan[m_curChanId].m_numBuf].WriteData(data,len);
-		m_clChan[m_curChanId].ValidateBuffer();
+		for(int i=0; i< m_pSvState->maxClients; i++)
+			if(m_pMultiCast->dest[i])
+				m_clChan[i].WriteData(data,len);
+		return;
 	}
+	m_clChan[m_curChanId].WriteData(data,len);
 }
 
 void CNetServer::ChanFinishWrite()
 {	
 	m_curChanId = -1;
-	m_multicastInfo.Reset();
+	m_pMultiCast = 0;			
 }
 	
-
-
+/*
+======================================
+Misc Channel related funcs
+======================================
+*/
 const NetChanState & CNetServer::ChanGetState(int chanId) const
 {	return m_clChan[chanId].m_netChan.m_state;
 }

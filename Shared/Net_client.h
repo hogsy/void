@@ -24,6 +24,9 @@ struct I_NetClientHandler
 	//Writes the Game clients userinfo
 	virtual void WriteUserInfo(CBuffer &buffer)=0;
 
+	//Put Client in game. The clNum is the clients num on the server
+	virtual void BeginGame(int clNum, CBuffer &buffer)=0;
+
 	//Client print func. Route this to the console/Client area. whatever
 	virtual void Print(const char * msg, ...)=0;
 };

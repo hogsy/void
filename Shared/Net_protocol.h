@@ -50,10 +50,11 @@ const byte SV_UPDATESTAT	= 3;
 const byte SV_STUFFCMD		= 4;	// Client will execute this locally
 const byte SV_PRINT			= 5;    // Client will print this locally
 const byte SV_TALK			= 6;	// chat message
-const byte SV_CLIENTINFO	= 7;    // info about a given client
-const byte SV_CLUPDATE		= 8;	// update a clients position
-const byte SV_DISCONNECT	= 9;	// Server going down
-const byte SV_RECONNECT		= 10;	// Server is changing maps, tell all clients to reconnect
+const byte SV_CLINFO		= 7;    // info about a given client, might create a new client
+const byte SV_CLDISCONNECT  = 8;	// A client disconnected, let everyone know
+const byte SV_CLUPDATE		= 9;	// update a clients position
+const byte SV_DISCONNECT	= 10;	// Server going down
+const byte SV_RECONNECT		= 11;	// Server is changing maps, tell all clients to reconnect
 
 
 /*

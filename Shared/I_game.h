@@ -80,7 +80,7 @@ struct EntClient : public Entity
 Multicast types
 ======================================
 */
-enum MulticastType
+enum MultiCastType
 {
 	MULTICAST_NONE,
 	MULTICAST_ALL,
@@ -105,7 +105,8 @@ struct I_GameHandler
 	virtual void ClientPrintf(int clNum, const char * msg,...)=0;
 
 	virtual NetChanWriter & GetNetChanWriter() =0;
-//	virtual void GetMulticastSet(MulticastType type, int clId, MulticastSet &set);
+	virtual void GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)=0;
+	virtual void GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vector_t &source)=0;
 
 	virtual void DebugPrint(const char * msg)=0;
 	virtual void FatalError(const char * msg)=0;

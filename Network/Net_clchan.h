@@ -26,6 +26,16 @@ public:
 	void Reset();
 	bool ReadyToSend();
 
+	void WriteByte(byte b);
+	void WriteChar(char c);
+	void WriteShort(short s);
+	void WriteInt(int i);
+	void WriteFloat(float &f);
+	void WriteString(const char *string);
+	void WriteCoord(float &c);
+	void WriteAngle(float &a);
+	void WriteData(byte * data, int len);
+
 	CNetChan m_netChan;
 
 	//Flags and States

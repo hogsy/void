@@ -290,7 +290,7 @@ void CServer::LoadEntities()
 Get a handle to all the
 ======================================
 */
-void CServer::WriteSignOnBuffer() //NetSignOnBufs &signOnBuf)
+void CServer::WriteSignOnBuffer()
 {
 	CBuffer buffer;
 	int numBufs, i;
@@ -418,6 +418,12 @@ void CServer::WriteSignOnBuffer() //NetSignOnBufs &signOnBuf)
 }
 
 
+/*
+======================================
+Return the number of buffers for the given
+config string
+======================================
+*/
 int CServer::NumConfigStringBufs(int stringId) const
 {
 	switch(stringId)
@@ -438,6 +444,13 @@ int CServer::NumConfigStringBufs(int stringId) const
 	return 0;
 }
 
+
+/*
+======================================
+Write the requested config string to 
+the given buffer
+======================================
+*/
 bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 {
 	switch(stringId)
@@ -477,7 +490,19 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 		}
 	case SVC_CLIENTINFO:
 		{
-			//Write info about currently connected clients
+			//This shouldn't go above max packet size
+			//Write info about all currently connected clients
+			for(int i=0; i< m_svState.numClients; i++)
+			{
+				if(!m_clients[i] ||!m_clients[i]->spawned)
+					continue;
+				buffer.WriteShort(m_clients[i]->num);
+				buffer.WriteString(m_clients[i]->name);
+				buffer.WriteShort(m_clients[i]->modelIndex);
+				buffer.WriteString(m_clients[i]->modelName);
+				buffer.WriteShort(m_clients[i]->skinNum);
+				buffer.WriteString(m_clients[i]->skinName);
+			}
 			return true;
 		}
 	}

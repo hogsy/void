@@ -13,23 +13,21 @@ Process game message
 void CClient::HandleGameMsg(CBuffer &buffer)
 {
 	byte msgId = 0;
-	
 	while(msgId != 255)
 	{
 		msgId= buffer.ReadByte();
-		
 		//bad message
 		if(msgId == 255)
-			break;
+		{	break;
+		}
 
 		switch(msgId)
 		{
 		case SV_TALK:
 			{
-				char name[32];
-				strcpy(name,buffer.ReadString());
+				int clNum = buffer.ReadByte();
 				m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
-				ComPrintf("%s: %s\n",name,buffer.ReadString());
+				ComPrintf("%s: %s\n",m_clients[clNum].name ,buffer.ReadString());
 				break;
 			}
 		case SV_DISCONNECT:
@@ -50,9 +48,9 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 				m_pNetCl->Reconnect(true);
 				break;
 			}
-		case SV_CLIENTINFO:
+		case SV_CLINFO:
 			{
-				int num = buffer.ReadShort();
+				int num = buffer.ReadByte();
 				m_clients[num].Reset();
 				strcpy(m_clients[num].name, buffer.ReadString());
 
@@ -111,8 +109,6 @@ void CClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 	{
 	case SVC_GAMEINFO:
 		{
-//			int slotNum = buffer.ReadInt();
-
 			char * game = buffer.ReadString();
 ComPrintf("CL: Game: %s\n", game);
 			char * map = buffer.ReadString();
@@ -224,13 +220,31 @@ ComPrintf("CL: Map: %s\n", map);
 			ComPrintf("CL: Parsed %d entities\n", m_numEnts);
 			break;
 		}
-	case SVC_BEGIN:
+	case SVC_CLIENTINFO:
+		{
+			HandleGameMsg(buffer);
+			break;
+		}
+/*	case SVC_BEGIN:
 		{
 			HandleGameMsg(buffer);
 			BeginGame();
 			break;
 		}
+*/
 	}
+}
+
+void CClient::BeginGame(int clNum, CBuffer &buffer)
+{
+	//Initialize local Client
+	m_pClient = &m_clients[clNum];
+	m_pClient->Reset();
+	strcpy(m_pClient->name, m_cvName.string);
+	m_pClient->inUse = true;
+
+	HandleGameMsg(buffer);
+	BeginGame();
 }
 
 /*

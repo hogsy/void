@@ -340,6 +340,10 @@ SOURCE=..\Shared\Game_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\I_game.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Sv_main.cpp
 # End Source File
 # Begin Source File
@@ -413,10 +417,6 @@ SOURCE=..\Shared\I_file.h
 # Begin Source File
 
 SOURCE=..\Shared\I_filesystem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\I_game.h
 # End Source File
 # Begin Source File
 

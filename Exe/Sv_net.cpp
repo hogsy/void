@@ -21,8 +21,9 @@ bool CServer::ValidateClConnection(int clNum,
 	
 	m_svState.numClients = m_pGame->numClients;
 
-	int len = 10 + strlen(m_clients[clNum]->name) + 
-		strlen(m_clients[clNum]->modelName) + strlen(m_clients[clNum]->skinName);
+	int len = strlen(m_clients[clNum]->name) + 
+			  strlen(m_clients[clNum]->modelName) + 
+			  strlen(m_clients[clNum]->skinName) + 10;
 
 	//Add client info to all connected clients
 	for(int i=0;i<m_svState.maxClients;i++)
@@ -33,8 +34,8 @@ bool CServer::ValidateClConnection(int clNum,
 
 		if(m_clients[i] && m_clients[i]->spawned)
 		{
-			m_net.ChanBeginWrite(i,SV_CLIENTINFO, len);
-			m_net.ChanWriteShort(m_clients[clNum]->num);
+			m_net.ChanBeginWrite(i,SV_CLINFO, len);
+			m_net.ChanWriteByte(m_clients[clNum]->num);
 			m_net.ChanWriteString(m_clients[clNum]->name);
 			m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
 			m_net.ChanWriteString(m_clients[clNum]->modelName);
@@ -55,7 +56,6 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 {
 	//Check packet id to see what the client send
 	byte packetId = buffer.ReadByte();
-
 	while(packetId != 255)
 	{
 		switch(packetId)
@@ -65,26 +65,15 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 			{
 				char msg[256];
 				strcpy(msg,buffer.ReadString());
-
-				int len = strlen(msg);
+				int len = strlen(msg) + 8;
 				msg[len] = 0;
-				len += 4;
-				len += strlen(m_clients[clNum]->name);
-				
-				//Add this to all other connected clients outgoing buffers
-				for(int i=0;i<m_svState.maxClients;i++)
-				{
-					//dont send to source
-					if(i == clNum)
-						continue;
-					if(m_clients[i])
-					{
-						m_net.ChanBeginWrite(i,SV_TALK, len);
-						m_net.ChanWriteString(m_clients[clNum]->name);
-						m_net.ChanWriteString(msg);
-						m_net.ChanFinishWrite();
-					}
-				}
+
+				//Write to other clients
+				GetMultiCastSet(m_multiCastSet,MULTICAST_ALL_X,clNum);
+				m_net.ChanBeginWrite(m_multiCastSet, SV_TALK, len);
+				m_net.ChanWriteByte(clNum);
+				m_net.ChanWriteString(msg);
+				m_net.ChanFinishWrite();
 				break;	
 			}
 		//client updating its local info
@@ -100,7 +89,7 @@ void CServer::HandleClientMsg(int clNum, CBuffer &buffer)
 				else if (id == 'r')
 				{
 					int rate = buffer.ReadInt();
-	ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
+ComPrintf("SV: %s changed rate to %d\n", m_clients[clNum]->name, rate);
 					m_net.ChanSetRate(clNum,rate);
 				}
 				break;
@@ -140,6 +129,12 @@ void CServer::OnClientDrop(int clNum, const DisconnectReason &reason)
 {
 	if(reason.broadcastMsg)
 		BroadcastPrintf(reason.broadcastMsg, m_clients[clNum]->name);
+/*
+	m_net.ChanBeginWrite(
+	m_net.ChanBeginWrite(i,SV_CLINFO, len);
+	m_net.ChanWriteByte(m_clients[clNum]->num);
+	m_net.ChanWriteString(m_clients[clNum]->name);
+*/
 	
 	m_pGame->ClientDisconnect(clNum);
 	m_svState.numClients = m_pGame->numClients;
@@ -161,25 +156,8 @@ Handle Client spawning
 */
 void CServer::OnClientBegin(int clNum)
 {
+	//This should set the clients spawn pos, and write an temp effects
 	m_pGame->ClientBegin(clNum);
-
-	//HAAAAAAAAAAAAACK
-	//send other clients info
-	for(int i=0; i< m_svState.numClients; i++)
-	{
-		if(i == clNum || !m_clients[i] ||
-			!m_clients[i]->inUse)
-			continue;
-		
-		m_net.ChanBeginWrite(clNum,SV_CLIENTINFO, 0);
-		m_net.ChanWriteShort(m_clients[i]->num);
-		m_net.ChanWriteString(m_clients[i]->name);
-		m_net.ChanWriteShort(m_clients[i]->modelIndex);
-		m_net.ChanWriteString(m_clients[i]->modelName);
-		m_net.ChanWriteShort(m_clients[i]->skinNum);
-		m_net.ChanWriteString(m_clients[i]->skinName);
-		m_net.ChanFinishWrite();
-	}
 }
 
 /*
@@ -188,6 +166,32 @@ Handle Map change on client ?
 ======================================
 */
 void CServer::OnLevelChange(int clNum)
+{
+}
+
+
+void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId)
+{
+	if((type == MULTICAST_ALL) || (type == MULTICAST_ALL_X))
+	{
+		set.Reset();
+		for(int i=0;i<m_svState.numClients;i++)
+		{
+			if(m_clients[i] && m_clients[i]->spawned)
+					set.dest[i] = true;
+		}
+		if(type == MULTICAST_ALL_X)
+			set.dest[clId] = false;
+	}
+	else if((type == MULTICAST_PVS) || (type == MULTICAST_PVS_X))
+	{
+	}
+	else if((type == MULTICAST_PHS) || (type == MULTICAST_PHS_X))
+	{
+	}
+}
+
+void CServer::GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vector_t &source)
 {
 }
 

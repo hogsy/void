@@ -28,12 +28,14 @@ CNetServer::CNetServer()
 	m_pSock  = new CNetSocket(&m_recvBuf);
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 	m_clChan = 0;
+	m_pMultiCast = 0;
 }
 
 CNetServer::~CNetServer()
 {	
 	m_pSvState = 0;
 	m_pServer = 0;
+	m_pMultiCast = 0;
 	if(m_challenges)
 		delete [] m_challenges;
 	if(m_clChan)
@@ -168,6 +170,7 @@ void CNetServer::Shutdown()
 			continue;
 		SendDisconnect(i,DR_SVQUIT);
 	}
+	m_pMultiCast = 0;
 	m_pSock->Close();
 }
 
@@ -415,6 +418,7 @@ void CNetServer::SendSpawnParms(int chanId)
 		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SV_CONFIGSTRING);
 		m_clChan[chanId].m_netChan.m_buffer.WriteByte(SVC_BEGIN);
 		m_clChan[chanId].m_netChan.m_buffer.WriteInt((reqNum | (lastInSeq << 31)));
+		m_clChan[chanId].m_netChan.m_buffer.WriteByte(chanId);
 
 		//Begin client
 		m_clChan[chanId].m_spawnLevel = 0;

@@ -46,6 +46,9 @@ public:
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
 
+	//Put Client in game. The clNum is the clients num on the server
+	void BeginGame(int clNum, CBuffer &buffer);
+
 	//Write userInfo to the given buffer
 	void WriteUserInfo(CBuffer &buffer);
 
@@ -108,9 +111,6 @@ private:
 	CNetClient		  * m_pNetCl;
 
 	//==================================================
-	//the following should be accessible by the client game dll
-
-	//==================================================
 	//Client side stuff
 	int			m_hsTalk;		//handle to talk sound
 	int			m_hsMessage;	//handle to server message sound
@@ -118,14 +118,13 @@ private:
 	float		m_fFrameTime;
 	bool		m_ingame;
 
-	//This is the client we should do local prediction on
-
-	ClClient	m_gameClient;
-	ClClient 	m_clients[GAME_MAXCLIENTS];
+	int			m_numGameClient;
+	ClClient *	m_pClient;
 
 	int			m_numEnts;
 	ClEntity 	m_entities[GAME_MAXENTITIES];
-
+	ClClient 	m_clients[GAME_MAXCLIENTS];
+	
 	//This should hook up to the game client whne the client
 	//enters a game
 	CCamera	*	m_pCamera;

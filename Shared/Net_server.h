@@ -168,8 +168,8 @@ private:
 	VoidNet::CNetClChan * m_clChan;		//Client channels
 
 	//CNetChan destination data
-	int				m_curChanId;
-	MultiCastSet	m_multicastInfo;
+	int	  m_curChanId;
+	const MultiCastSet *  m_pMultiCast;
 };
 
 #endif

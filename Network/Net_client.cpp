@@ -215,6 +215,18 @@ void CNetClient::HandleSpawnStrings()
 				return;
 			}
 
+			//we just got a begin message from the server, which means we
+			//have recevied all the spawn messages we needed to
+			if(m_spawnLevel == SVC_BEGIN)
+			{
+//				void BeginGame(int clNum, CBuffer &buffer)=0;
+				m_pClient->BeginGame(m_buffer.ReadByte(), m_buffer);
+				m_spawnLevel = 0;
+				m_spawnNextPacket = 0;
+				m_netState = CL_INGAME;
+				return;
+			}
+
 //m_pClient->Print("CL: Got spawn level %d. Packet %d\n", m_spawnLevel, packNum);
 			m_pClient->HandleSpawnMsg(m_spawnLevel,m_buffer);
 
@@ -222,15 +234,6 @@ void CNetClient::HandleSpawnStrings()
 				m_spawnNextPacket++;
 			else
 			{
-				//we just got a begin message from the server, which means we
-				//have recevied all the spawn messages we needed to
-				if(m_spawnLevel == SVC_BEGIN)
-				{
-					m_spawnLevel = 0;
-					m_spawnNextPacket = 0;
-					m_netState = CL_INGAME;
-					return;
-				}
 				//increment to request next id
 				m_spawnLevel ++;
 				m_spawnNextPacket = 0;

@@ -11,9 +11,7 @@
 This info is sent to the client in a series of stages during the
 connection phase. Giving the client indexes for Images/Sounds/Models and
 Entity baselines will save a LOT of network traffic during gameplay.
-
 Therefore the Game Server NEEDs to update this data on every map change.
-
 The struct is HUGE in size, About 22k, 
 But making a list doesnt seem worth the hassle
 ============================================================================
@@ -29,11 +27,7 @@ struct NetSignOnBufs
 	};
 
 	NetSignOnBufs() 
-	{
-		numImageBufs = 1;
-		numModelBufs = 1;
-		numSoundBufs = 1;
-		numEntityBufs = 1;
+	{	Reset();
 	}
 
 	void Reset()
@@ -110,7 +104,9 @@ public:
 	void ClientPrintf(int clNum, const char * msg,...);
 
 	NetChanWriter & GetNetChanWriter();
-
+	void GetMultiCastSet(MultiCastSet &set, MultiCastType type, int clId);
+	void GetMultiCastSet(MultiCastSet &set, MultiCastType type, const vector_t &source);
+	
 	void PlaySnd(const Entity &ent, int index, int channel, float vol, float atten);
 	void PlaySnd(vector_t &origin,  int index, int channel, float vol, float atten);
 
@@ -164,6 +160,7 @@ private:
 	
 	CNetServer		m_net;
 	NetChanWriter & m_chanWriter;
+	MultiCastSet	m_multiCastSet;
 	
 	//The Game Interface
 	HINSTANCE m_hGameDll;

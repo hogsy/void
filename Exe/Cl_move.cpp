@@ -83,12 +83,12 @@ void CClient::Move(vector_t *dir, float time)
 
 	// figure out what dir we want to go if we're folling a path
 	if (m_campath != -1)
-		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_gameClient.origin, dir, time);
+		calc_cam_path(m_campath, System::g_fcurTime - m_camtime, &m_pClient->origin, dir, time);
 
 	// can we clip through walls?  it's simple then
 	if (!m_cvClip.ival)
 	{
-		VectorMA(&m_gameClient.origin, time, dir, &m_gameClient.origin);
+		VectorMA(&m_pClient->origin, time, dir, &m_pClient->origin);
 		return;
 	}
 
@@ -112,13 +112,13 @@ void CClient::Move(vector_t *dir, float time)
 
 	for (bumps=0; bumps<MAX_CLIP_PLANES; bumps++)
 	{
-		VectorAdd(m_gameClient.origin, (*dir), end);
-		tr = trace(m_gameClient.origin, end, &m_gameClient.mins, &m_gameClient.maxs);
+		VectorAdd(m_pClient->origin, (*dir), end);
+		tr = trace(m_pClient->origin, end, &m_pClient->mins, &m_pClient->maxs);
 
 
 		if (tr.fraction > 0)
 		{
-			VectorCopy(tr.endpos, m_gameClient.origin);
+			VectorCopy(tr.endpos, m_pClient->origin);
 			hits = 0;
 		}
 
@@ -259,7 +259,7 @@ void CClient::Move(vector_t *dir, float time)
 void CClient::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&m_gameClient.angle, &forward, NULL, NULL);
+	AngleToVector (&m_pClient->angle, &forward, NULL, NULL);
 	VectorNormalize(&forward);
 	VectorAdd2(desired_movement,forward);
 }
@@ -267,7 +267,7 @@ void CClient::MoveForward()
 void CClient::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&m_gameClient.angle, &backword, NULL, NULL);
+	AngleToVector (&m_pClient->angle, &backword, NULL, NULL);
 	VectorNormalize(&backword);
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
@@ -275,7 +275,7 @@ void CClient::MoveBackward()
 void CClient::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&m_gameClient.angle, NULL, &right, NULL);
+	AngleToVector (&m_pClient->angle, NULL, &right, NULL);
 	VectorNormalize(&right);
 	VectorAdd2(desired_movement,right);
 }
@@ -283,41 +283,41 @@ void CClient::MoveRight()
 void CClient::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&m_gameClient.angle, NULL, &left, NULL);
+	AngleToVector (&m_pClient->angle, NULL, &left, NULL);
 	VectorNormalize(&left);
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
 void CClient::RotateRight(const float &val)
 {
-	m_gameClient.angle.YAW += (val * CL_ROTATION_SENS);  
-	if (m_gameClient.angle.YAW > PI)
-		m_gameClient.angle.YAW -= 2*PI;
+	m_pClient->angle.YAW += (val * CL_ROTATION_SENS);  
+	if (m_pClient->angle.YAW > PI)
+		m_pClient->angle.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(const float &val)
 {
-	m_gameClient.angle.YAW -= (val * CL_ROTATION_SENS); 
-	if (m_gameClient.angle.YAW < -PI)
-		m_gameClient.angle.YAW += 2*PI;
+	m_pClient->angle.YAW -= (val * CL_ROTATION_SENS); 
+	if (m_pClient->angle.YAW < -PI)
+		m_pClient->angle.YAW += 2*PI;
 }
 
 void CClient::RotateUp(const float &val)
 {
-	m_gameClient.angle.PITCH +=  (val * CL_ROTATION_SENS);
-	if (m_gameClient.angle.PITCH < -PI/2)
-		m_gameClient.angle.PITCH = -PI/2;
-	if (m_gameClient.angle.PITCH > PI/2)
-		m_gameClient.angle.PITCH = PI/2;
+	m_pClient->angle.PITCH +=  (val * CL_ROTATION_SENS);
+	if (m_pClient->angle.PITCH < -PI/2)
+		m_pClient->angle.PITCH = -PI/2;
+	if (m_pClient->angle.PITCH > PI/2)
+		m_pClient->angle.PITCH = PI/2;
 }
 
 void CClient:: RotateDown(const float &val)
 {
-	m_gameClient.angle.PITCH -=  (val * CL_ROTATION_SENS); 
-	if (m_gameClient.angle.PITCH < -PI/2)
-		m_gameClient.angle.PITCH = -PI/2;
-	if (m_gameClient.angle.PITCH > PI/2)
-		m_gameClient.angle.PITCH = PI/2;
+	m_pClient->angle.PITCH -=  (val * CL_ROTATION_SENS); 
+	if (m_pClient->angle.PITCH < -PI/2)
+		m_pClient->angle.PITCH = -PI/2;
+	if (m_pClient->angle.PITCH > PI/2)
+		m_pClient->angle.PITCH = PI/2;
 }
 
 
@@ -339,7 +339,7 @@ void CClient::CamPath()
 
 			vector_t origin;
 			key_get_vector(g_pWorld, ent, "origin", origin);
-			VectorCopy(origin, m_gameClient.origin); // move to first point of path
+			VectorCopy(origin, m_pClient->origin); // move to first point of path
 			return;
 		}
 	}
