@@ -5,6 +5,7 @@
 #pragma warning(disable : 4305)		//truncation from const double to float
 
 #include "Com_defs.h"
+#include "Com_mem.h"
 #include "Com_cvar.h"
 #include "Com_vector.h"
 #include "Com_world.h"
