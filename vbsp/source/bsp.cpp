@@ -346,7 +346,7 @@ void clip_brush(bsp_brush_t *b, int plane)
 	}
 
 	// completely on backside - no effect
-	else if (side == -1)
+	else if (side == -0.01f)
 		return;
 
 	// else we have to add it and do clipping
@@ -402,17 +402,161 @@ void clip_brush(bsp_brush_t *b, int plane)
 bsp_add_sky_brush
 ============
 */
+bsp_brush_side_t* bsp_sky_side_clip(bsp_brush_side_t *clipper, bsp_brush_side_t *side)
+{
+	plane_t clipplanes[33];
+	side->next = NULL;
+
+
+	// create all the planes we need
+	for (int v=0; v<clipper->num_verts; v++)
+	{
+		int nv = (v+1) % clipper->num_verts;
+
+		vector_t a;
+		VectorSub(clipper->verts[v], clipper->verts[nv], a);
+		_CrossProduct(&clipper->verts[nv], &a, &clipplanes[v].norm);
+		VectorNormalize(&clipplanes[v].norm);
+		clipplanes[v].d = 0;
+	}
+
+	// the plane of the clip side
+	clipplanes[v] = planes[clipper->plane];
+
+
+	// first make sure side isn't entirely on front side of all planes
+	// this is a lot slower but will prevent breaking up a lot of polys
+	bsp_brush_side_t *test = new_bsp_brush_side();
+	memcpy(test, side, sizeof(bsp_brush_side_t));
+
+	for (v=0; v<=clipper->num_verts; v++)
+	{
+		clip_side_p(test, &clipplanes[v]);
+
+		if (test->num_verts == 0)
+		{
+			free_bsp_brush_side(test);
+			return side;
+		}
+	}
+	free_bsp_brush_side(test);
+
+
+	bsp_brush_side_t *newsides = NULL;
+	for (v=0; v<=clipper->num_verts; v++)
+	{
+		bsp_brush_side_t *front = new_bsp_brush_side();
+		memcpy(front, side, sizeof(bsp_brush_side_t));
+
+		plane_t p = clipplanes[v];
+
+		clip_side_p(side, &p);
+
+		VectorScale(&p.norm, -1, &p.norm);
+		p.d = -p.d;
+
+		clip_side_p(front, &p);
+
+		if (front->num_verts != 0)
+		{
+			// it's a keeper
+			front->next = newsides;
+			newsides = front;
+		}
+		else
+			free_bsp_brush_side(front);
+
+
+		if (side->num_verts == 0)
+//			break;
+			Error("clipped sky poly bad");
+
+	}
+
+	free_bsp_brush_side(side);
+	return newsides;
+}
+
+
+void bsp_add_sky_side(bsp_brush_side_t *side)
+{
+	// clip away any part of this side that is blocked and
+	// clip away any other sides that are blocked by this
+
+	bsp_brush_side_t *newsky = NULL;
+	bsp_brush_side_t *next, *walk;
+
+	// clip all existing sides to the new one
+	for (bsp_brush_side_t *s=sky_brush.sides; s; s=next)
+	{
+		next = s->next;
+
+		bsp_brush_side_t *sideclip = bsp_sky_side_clip(side, s);
+
+		if (sideclip)
+		{
+			walk = sideclip;
+			while (walk->next)
+				walk = walk->next;
+			walk->next = newsky;
+			newsky = sideclip;
+		}
+	}
+
+
+	// clip all new ones to existing sides
+	bsp_brush_side_t *clipsides = side;
+	clipsides->next = NULL;
+
+	for (s=newsky; s; s=s->next)
+	{
+		bsp_brush_side_t *newclipsides = clipsides;
+		clipsides = NULL;
+	
+		for (bsp_brush_side_t *s2=newclipsides; s2; s2=next)
+		{
+			next = s2->next;
+			bsp_brush_side_t *sideclip = bsp_sky_side_clip(s, s2);
+
+			if (sideclip)
+			{
+				walk = sideclip;
+				while(walk->next)
+					walk = walk->next;
+
+				walk->next = clipsides;
+				clipsides = sideclip;
+			}
+		}
+	}
+
+
+	walk = clipsides;
+	if (clipsides)
+	{
+		while(walk->next)
+			walk = walk->next;
+
+		walk->next = newsky;
+		newsky = clipsides;
+	}
+
+	sky_brush.sides = newsky;
+}
+
+
 void bsp_add_sky_brush(bsp_brush_t *b)
 {
 	bsp_brush_side_t *next;
-	for (bsp_brush_side_t *s = b->sides; s; s=next)
+	bsp_brush_side_t *s = b->sides;
+	b->sides = NULL;
+	for (; s; s=next)
 	{
 		next = s->next;
 
 		if (planes[s->plane].d < 0)
 		{
-			s->next = sky_brush.sides;
-			sky_brush.sides = s;
+			bsp_add_sky_side(s);
 		}
 		else
 			free_bsp_brush_side(s);

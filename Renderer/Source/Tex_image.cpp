@@ -475,31 +475,16 @@ void CImageReader::ImageReduce(int m)
 		{
 			for (s = 0; s < bpp; s++)
 			{
-/*
-                color =  mipmapdata[m][ ((2*r)	  	   *w*bpp*2) + ((2*c)		  *bpp)+ s];
-                color += mipmapdata[m][ ((2*r)		   *w*bpp*2) + ((2*c)+sfactor)*bpp + s];
-                color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)		  *bpp)+ s];
-                color += mipmapdata[m][(((2*r)+tfactor)*w*bpp*2) + ((2*c)+sfactor)*bpp + s];
-*/
-
-				color  = mipmapdata[m][(tfactor*r*w*bpp*2)     + (sfactor*c*bpp) + s];
-				color += mipmapdata[m][(tfactor*r*w*bpp*2)     + (sfactor*(c+1)*bpp) + s];
-				color += mipmapdata[m][(tfactor*(r+1)*w*bpp*2) + (sfactor*c*bpp) + s];
-				color += mipmapdata[m][(tfactor*(r+1)*w*bpp*2) + (sfactor*(c+1)*bpp) + s];
-/*
-				color  = mipmapdata[m][s];
-				color += mipmapdata[m][s];
-				color += mipmapdata[m][s];
-				color += mipmapdata[m][s];
-*/
-                color /= 4;
+				color  = mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           +  (sfactor*c*bpp) + s];
+				color += mipmapdata[m][(tfactor*r)*(sfactor*w)*bpp           + ((sfactor*c+sfactor-1)*bpp) + s];
+				color += mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp +  (sfactor*c*bpp) + s];
+				color += mipmapdata[m][(tfactor*r+tfactor-1)*(sfactor*w)*bpp + ((sfactor*c+sfactor-1)*bpp) + s];
+				color /= 4;
 
 				mipmapdata[m-1][(r*w*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
 	}
-
-	memset(mipmapdata[m-1], 100, bpp*w*h);
 }
 
 

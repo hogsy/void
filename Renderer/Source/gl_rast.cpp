@@ -157,8 +157,7 @@ bool COpenGLRast::Shutdown()
 		if(rect.left < 40)	rect.left= 40;
 		if(rect.top  < 20)	rect.top = 20;
 
-		m_cWndX.Set((float)rect.left);
-		m_cWndY.Set((float)rect.top);
+		SetWindowCoords(rect.left, rect.top);
 	}
 
 	_wglMakeCurrent(NULL, NULL);
@@ -361,7 +360,7 @@ Update Default window coords
 void COpenGLRast::SetWindowCoords(int wndX, int wndY)
 {
 	//Dont bother with initial co-ords
-	if(!m_bInitialized)
+	if(!m_bInitialized || (g_rInfo.rflags&RFLAG_FULLSCREEN))
 		return;
 	m_cWndX.Set(wndX);
 	m_cWndY.Set(wndY);
@@ -663,11 +662,11 @@ void COpenGLRast::TextureLoad(int bin, int num, const tex_load_t *texdata)
 		{
 			glTexImage2D(GL_TEXTURE_2D,
 					 texdata->mipmaps - m - 1,
-					 int_format,
+					 GL_RGB, //int_format,
 					 w,
 					 h,
 					 0,
-					 ext_format,
+					 GL_RGB, //ext_format,
 					 GL_UNSIGNED_BYTE,
 					 texdata->mipdata[m]);
 
@@ -806,7 +805,7 @@ void COpenGLRast::ClearBuffers(int buffers)
 	// should be first call of the frame - make current for all other calls
 	_wglMakeCurrent(hDC, hRC);
 
-	glClearColor(1, 0, 0, 1);
+	glClearColor(0, 0, 1, 1);
 	int b = 0;
 
 	if (buffers & VRAST_COLOR_BUFFER)

@@ -685,6 +685,7 @@ void write_bsp(entity_t *ents, char *file)
 	sky_brush.mins[0] = sky_brush.mins[1] = sky_brush.mins[2] = 0;
 	sky_brush.maxs[0] = sky_brush.maxs[1] = sky_brush.maxs[2] = 0;
 	fill_brushes(&sky_brush);
+	v_printf("%4d sky sides\n", num_sides);
 
 
 	for (entity_t *e=ents; e; e=e->next)
