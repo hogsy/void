@@ -54,7 +54,7 @@ IDirectSound3DListener * CPrimaryBuffer::Create(WAVEFORMATEX &pcmwf, float vol)
 		return 0;
 	}
 
-#if 1
+#if 0
 	if(!SetVolume(vol))
 	{
 		ComPrintf("CPrimaryBuffer::Create: Unable to set init volume\n");

@@ -26,11 +26,12 @@ maintains the Searchpaths with precedence
 class FILESYSTEM_API CFileSystem : public I_ConHandler
 {
 public:
-	CFileSystem();
+	CFileSystem(const char * exedir, const char *basedir);
 	~CFileSystem();
 
-	//Intialize the File system using this dir as the root
-	bool Init(const char *exedir, const char * basedir);				
+	//Check after creating it the first time
+	bool IsActive() const;
+
 
 	//Set current "Game" directory for over-ridable content
 	bool AddGameDir(const char *dir);
@@ -81,6 +82,7 @@ private:
 	char		m_basedir[COM_MAXPATH];			//Base Dir, IS NOT changed
 	char		m_curpath[COM_MAXPATH];
 
+	bool		m_bActive;
 	int			m_numsearchpaths;				//Number of searchpaths
 	SearchPath_t * m_searchpaths;				//DoublyLinked list of searchpaths
 	SearchPath_t * m_lastpath;					//Latest path
@@ -96,7 +98,8 @@ private:
 
 //====================================================================================
 
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp);
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp,
+						const char * exeDir, const char * baseDir);
 FILESYSTEM_API void FILESYSTEM_Free();
 
 #endif

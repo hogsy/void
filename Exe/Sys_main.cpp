@@ -69,9 +69,11 @@ CVoid::CVoid(const char * cmdLine)
 	m_pExport->console    = (I_Console*)&m_Console;
 	m_pExport->hunkManager= g_pHunkManager; 
 	
-	//Create the file system
-	m_pFileSystem = FILESYSTEM_Create(m_pExport);
-	
+	//================================
+	//Create and initialize the file system
+	m_pFileSystem = FILESYSTEM_Create(m_pExport, 
+									  m_exePath,
+									  VOID_DEFAULTGAMEDIR);
 	//Create the input system
 	m_pInput= new CInput();					
 	
@@ -83,7 +85,6 @@ CVoid::CVoid(const char * cmdLine)
 	System::GetConsole()->RegisterCommand("quit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("exit",CMD_QUIT,this);			
 	System::GetConsole()->RegisterCommand("contoggle", CMD_TOGGLECONS,this);
-//	System::GetConsole()->RegisterCommand("writeconfig",CMD_WRITECONFIG, this);
 
 	//Sound
 	m_pSound = new CSoundManager();
@@ -126,7 +127,6 @@ bool CVoid::Init()
 	}
 	m_pRParms->hWnd = System::GetHwnd();
 
-
 	//================================
 	//Init COM librarry
 	HRESULT hr = CoInitialize(NULL);
@@ -136,9 +136,7 @@ bool CVoid::Init()
 		return false;
 	}
 
-	//================================
-	//Initialize FileSystem
-	if(!m_pFileSystem->Init(m_exePath,VOID_DEFAULTGAMEDIR))
+	if(!m_pFileSystem->IsActive())
 	{
 		System::FatalError("CVoid::Init:Error Initializing File System");
 		return false;

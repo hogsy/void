@@ -21,14 +21,16 @@ Create the fileSystem and return it
 copy pointer to console for cvar/printing functions
 ==========================================
 */
-FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp)
+FILESYSTEM_API CFileSystem * FILESYSTEM_Create(I_Void * vexp, 
+											   const char * exeDir, 
+											   const char * baseDir)
 {
 	g_pVoid = vexp;
 	g_pHunkManager = vexp->hunkManager;
 	g_pConsole    = vexp->console;
 	
 	if(!g_pFileSystem)
-		g_pFileSystem = new CFileSystem();
+		g_pFileSystem = new CFileSystem(exeDir,baseDir);
 	return g_pFileSystem;
 }
 

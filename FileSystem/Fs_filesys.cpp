@@ -58,15 +58,61 @@ CFileSystem
 Constructor and Destructor
 ==========================================
 */
-CFileSystem::CFileSystem()
+CFileSystem::CFileSystem(const char * exedir, const char * basedir)
 {
+	m_bActive = false;
 	m_numsearchpaths = 0;
 	m_searchpaths = new SearchPath_t();
 	m_lastpath = m_searchpaths;
 
+	//Validate given base dir
+	if(!exedir)
+	{	ComPrintf("CFileSystem:: No Exe directory specified\n");
+		return;
+	}
+
+	//Validate EXE dir name
+	//check for length
+	int exepathlen =0;
+	exepathlen = strlen(exedir);
+	if(!exepathlen || (exepathlen) > COM_MAXPATH)		
+	{	ComPrintf("CFileSystem:: Exe directory exceeds COM_MAXPATH : %s\n",exedir);
+		return;
+	}
+	//make sure there is no trailing slash
+	strcpy(m_exepath,exedir);
+	--exepathlen;
+	if((m_exepath[exepathlen] == '/') || (m_exepath[exepathlen] == '\\'))
+		m_exepath[exepathlen] = '\0';
+
+	//Make sure the given path exists.
+	if(!FileUtil::PathExists(m_exepath))
+	{	ComPrintf("CFileSystem:: Exe directory does not exist : %s\n",m_exepath);
+		return;
+	}
+
+	//Validate given base dir
+	if(!basedir)
+	{	ComPrintf("CFileSystem:: No Base directory specified\n");
+		return;
+	}
+	//Add to search path now
+	if(!AddGameDir(basedir))
+	{
+		ComPrintf("CFileSystem:: Unable to add base dir, %s\n", basedir);
+		return;
+	}
+	strcpy(m_basedir,basedir);
+	
 	g_pConsole->RegisterCommand("fs_listarchives",CMD_LISTFILES,this);
 	g_pConsole->RegisterCommand("fs_path",CMD_LISTPATHS,this);
 	g_pConsole->RegisterCommand("fs_dir",CMD_DIRPATH,this);
+
+	m_bActive = true;
+}
+
+bool CFileSystem::IsActive() const
+{	return m_bActive;
 }
 
 CFileSystem::~CFileSystem()
@@ -79,54 +125,6 @@ CFileSystem::~CFileSystem()
 		iterator = m_lastpath;
 	}
 	delete iterator;
-}
-
-/*
-===========================================
-Initialize the file system
-expects the basedirectory passed to it
-===========================================
-*/
-bool CFileSystem::Init(const char *exedir, const char * basedir)
-{
-	//Validate given base dir
-	if(!exedir || !basedir)
-	{
-		ComPrintf("CFileSystem::Init: No Exe directory specified\n");
-		return false;
-	}
-
-	//Validate EXE dir name
-
-	//check for length
-	int exepathlen =0;
-	exepathlen = strlen(exedir);
-	if(!exepathlen || (exepathlen) > COM_MAXPATH)		
-	{
-		ComPrintf("CFileSystem::Init: Exe directory exceeds COM_MAXPATH : %s\n",exedir);
-		return false;
-	}
-	//make sure there is no trailing slash
-	strcpy(m_exepath,exedir);
-	--exepathlen;
-	if((m_exepath[exepathlen] == '/') || (m_exepath[exepathlen] == '\\'))
-		m_exepath[exepathlen] = '\0';
-
-	//Make sure the given path exists.
-	if(!FileUtil::PathExists(m_exepath))
-	{
-		ComPrintf("CFileSystem::Init: Exe directory does not exist : %s\n",m_exepath);
-		return false;
-	}
-
-	//Add to search path now
-	if(!AddGameDir(basedir))
-	{
-		ComPrintf("CFileSystem::Init: Unable to add base dir, %s\n", basedir);
-		return false;
-	}
-	strcpy(m_basedir,basedir);
-	return true;
 }
 
 /*
