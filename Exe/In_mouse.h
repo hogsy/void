@@ -1,9 +1,6 @@
 #ifndef VOID_MOUSE_INTERFACE
 #define VOID_MOUSE_INTERFACE
 
-#include "In_main.h"
-#include "In_state.h"
-
 namespace VoidInput {
 
 /*

@@ -127,7 +127,9 @@ private:
 	ClClient 	m_clients[GAME_MAXCLIENTS];
 
 	ClClient *	m_pClient;
+	
 	ClCmd		m_cmd;
+	ClCmd		m_oldCmd;
 
 	void WriteUpdate();
 	void UpdateView();

@@ -1,9 +1,6 @@
 #ifndef VOID_KEYBOARD_INTERFACE
 #define VOID_KEYBOARD_INTERFACE
 
-#include "In_main.h"
-#include "In_state.h"
-
 namespace VoidInput{
 
 LRESULT CALLBACK Win32_KeyboardProc(int code,      // hook code

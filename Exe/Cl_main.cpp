@@ -6,6 +6,7 @@
 #include "Com_util.h"
 #include "Net_defs.h"
 #include "Net_protocol.h"
+#include "Com_camera.h"
 #include "Com_World.h"
 
 //======================================================================================
@@ -280,8 +281,11 @@ void CClient::RunFrame()
 	//Print Stats
 	m_pClRen->HudPrintf(0, 50,0, "%.2f, %.2f, %.2f", 
 			m_pClient->origin.x,  m_pClient->origin.y, m_pClient->origin.z);
-	m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f : %.4f", 
-		1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime(), System::GetFrameTime());
+	m_pClRen->HudPrintf(0, 70,0, "%3.2f : %4.2f", 
+		1/(System::GetCurTime() - m_fFrameTime), System::GetCurTime());
+	
+	m_pClRen->HudPrintf(0, 150,0, "%d", (int)(System::GetFrameTime() * 1000));
+
 	m_fFrameTime = System::GetCurTime();
 
 	vector_t forward, up, velocity;

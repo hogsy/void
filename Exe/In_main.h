@@ -1,15 +1,14 @@
 #ifndef VOID_INPUT_INTERFACE
 #define VOID_INPUT_INTERFACE
 
-#include "Sys_hdr.h"
 #include "In_defs.h"
 
-//Heh, is this overkill ?
+//Forward declarations
 namespace VoidInput
 {
-class CInputState;
-class CMouse;
-class CKeyboard;
+	class CInputState;
+	class CMouse;
+	class CKeyboard;
 }
 
 /*

@@ -1,5 +1,6 @@
-#include "In_mouse.h"
+#include "Sys_hdr.h"
 #include "In_state.h"
+#include "In_mouse.h"
 
 namespace
 {	const char	SZ_DIMOUSEEVENT[]= "DI MouseEvent";

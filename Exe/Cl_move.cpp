@@ -13,14 +13,11 @@ void CClient::Move(vector_t &dir, float time)
 //	if (m_campath != -1)
 //		calc_cam_path(m_campath, System::GetCurrentTime() - m_camtime, &m_pClient->origin, &dir, time);
 
-	// can we clip through walls?  it's simple then
-	if (!m_cvClip.ival)
-	{
-		VectorMA(&m_pClient->origin, time, &dir, &m_pClient->origin);
-		return;
-	}
-
-	EntMove::ClientMove(m_pClient, dir, time);
+	//Clipping should be on by default
+	if (m_cvClip.ival)
+		EntMove::ClientMove(m_pClient, dir, time);
+	else
+		EntMove::NoClipMove(m_pClient, dir, time);
 }
 
 
@@ -163,104 +160,4 @@ void calc_cam_path(int &ent, float t, vector_t *origin, vector_t *dir, float &ti
 	time = VectorNormalize(dir);
 */
 }
-
-
-
-/*	VectorMA(&eye.origin, timeleft, velocity, &end);
-	tr = trace(&eye.origin, &end, &eye.mins, &eye.maxs);
-
-	tr;
-	VectorCopy(tr.endpos, eye.origin);
-	return;
-*/
-/*
-	for (bumps = 0; bumps < MAX_CLIP_PLANES; bumps++)
-	{
-		VectorMA(&eye.origin, timeleft, velocity, &end);
-		tr = trace(&eye.origin, &end, &eye.mins, &eye.maxs);
-
-		// we moved - move to where the trace ended
-		if (tr.fraction > 0)
-		{
-			VectorCopy(tr.endpos, eye.origin);
-			VectorCopy((*velocity), original_velocity);
-			hits = 0;
-		}
-
-		// moved the entire distance
-		if (tr.fraction == 1)
-			break;
-
-
-
-		timeleft -= timeleft * tr.fraction;
-
-		VectorCopy(tr.plane->norm, hitplanes[hits]);
-		hits++;
-
-
-		for (i = 0; i < hits; i++)
-		{
-			// make a velocity vector parallel to all hit planes
-			MakeVectorPlanar(&original_velocity, &new_velocity, &hitplanes[i]);
-
-// FIXME - how do i want to do this?
-#if 0
-			if ((new_velocity.x > -STOP_EPSILON) && (new_velocity.x < STOP_EPSILON)) new_velocity.x = 0;
-			if ((new_velocity.y > -STOP_EPSILON) && (new_velocity.y < STOP_EPSILON)) new_velocity.y = 0;
-			if ((new_velocity.z > -STOP_EPSILON) && (new_velocity.z < STOP_EPSILON)) new_velocity.z = 0;
-#endif
-			if ((VectorLength(&new_velocity) * timeleft) < STOP_EPSILON)
-			{
-				VectorSet(&new_velocity, 0, 0, 0);
-				return;
-			}
-
-			for (j = 0; j < hits; j++)
-			{
-				if ((j != i) && !VectorCompare(&hitplanes[i], &hitplanes[j]))
-				{
-					if (dot(new_velocity, hitplanes[j]) < 0)
-						break;	// going against a hit plane
-				}
-			}
-
-			if (j == hits)
-				break;	// found a good new velocity - not against any planes we've hit
-		}
-
-		if (i != hits)	// one of the velocities was good - not against any hit planes
-		{
-			VectorCopy(new_velocity, (*velocity));
-//			ComPrintf("going away from all planes\n");
-		}
-
-		else
-		{
-			if (hits != 2)
-			{
-				// running into a corner
-//				ComPrintf("num clip planes = %i\n", hits);
-				return;
-			}
-
-
-//			ComPrintf("using cross product thingy\n");
-			_CrossProduct(&hitplanes[0], &hitplanes[1], &dir);
-			d = dot(dir, original_velocity);
-			VectorScale (&dir, d, velocity);
-
-		}
-
-// FIXME - add friction to velocity here
-
-		if (dot(original_velocity, primal_velocity) <= 0)
-		{
-			VectorSet(velocity, 0, 0, 0);
-			ComPrintf("against original velocity\n");
-			return;
-		}
-	}
-*/
-
 

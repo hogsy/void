@@ -99,6 +99,10 @@ SOURCE=.\Game_ents.cpp
 
 SOURCE=.\Game_main.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Game_move.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
