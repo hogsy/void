@@ -589,7 +589,7 @@ void COpenGLRast::TextureBinDestroy(int bin)
 	}
 
 	glDeleteTextures(mTexBins[bin].num, mTexBins[bin].glnames);
-	delete mTexBins[bin].glnames;
+	delete [] mTexBins[bin].glnames;
 	mTexBins[bin].glnames = NULL;
 	mTexBins[bin].num = -1;
 }
