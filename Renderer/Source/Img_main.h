@@ -6,7 +6,7 @@
 #include "Img_entry.h"
 
 
-class CImageManager : public I_Image
+class CImageManager
 {
 public:
 	CImageManager();
@@ -15,7 +15,7 @@ public:
 	/* Interface functions */
 
 	// load a model into memory
-	hImg LoadImage(const char *image, hImg index, CacheType cache);
+	hImg LoadImage(const char *image, CacheType cache, hImg index=-1);
 
 	// unload images from memory
 	void UnloadImage(CacheType cache, hImg index);
@@ -36,7 +36,7 @@ private:
 };
 
 
-extern	CImageManager	*g_pImage;
+//extern	CImageManager	*g_pImage;
 
 
 #endif

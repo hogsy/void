@@ -9,6 +9,7 @@
 #include "Con_main.h"
 #include "Mdl_main.h"
 #include "Hud_main.h"
+#include "ClientRenderer.h"
 
 extern CRConsole * g_prCons;
 extern CVar *	g_pVidSynch;
@@ -286,7 +287,7 @@ void r_drawframe(const CCamera * pcamera)
 	r_draw_world();
 
 	// display any messages
-	g_prHud->DrawHud();
+	g_pClient->DrawHud();
 
 // draw the console if we need to
 	g_prCons->Draw();

@@ -20,10 +20,12 @@ public:
 	void DrawConsole();
 
 	I_ConsoleRenderer * GetConsole();
+	I_ClientRenderer  * GetClient();
+/*
 	I_RHud *			GetHud();
 	I_Model *			GetModel();
 	I_Image *			GetImage();
-
+*/
 	//Windowing
 	void MoveWindow(int x, int y);
 	void Resize();

@@ -8,6 +8,7 @@
 #include "Mdl_main.h"
 #include "Con_main.h"
 #include "Img_main.h"
+#include "ClientRenderer.h"
 
 #include "gl_rast.h"
 #include "Rast_none.h"
@@ -20,7 +21,7 @@
 RenderInfo_t  g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
 CRConsole   * g_prCons=0;
-
+CClientRenderer *g_pClient=0;
 //======================================================================================
 //======================================================================================
 
@@ -43,10 +44,12 @@ CRenExp::CRenExp() : m_cFull("r_full","0", CVAR_INT,CVAR_ARCHIVE),
 	//Start the console first thing
 	g_prCons= new CRConsole();
 	g_pTex  = new CTextureManager();
+	g_pClient = new CClientRenderer();
+/*
 	g_pModel= new CModelManager();
 	g_pImage= new CImageManager();
 	g_prHud = new CRHud();
-
+*/
 	// m_cRast has to be registered before rasterizer is started
 	g_pConsole->RegisterCVar(&m_cRast, this);
 
@@ -72,7 +75,7 @@ CRenExp::~CRenExp()
 	if(g_pTex)
 		delete g_pTex;
 	g_pTex = 0;
-
+/*
 	if (g_pModel)
 		delete g_pModel;
 	g_pModel = 0;
@@ -81,13 +84,18 @@ CRenExp::~CRenExp()
 		delete g_pImage;
 	g_pImage = 0;
 
-	if (g_pRast)
-		delete g_pRast;
-	g_pRast = 0;
-
 	if(g_prHud)
 		delete g_prHud;
 	g_prHud = 0;
+*/
+
+	if (g_pClient)
+		delete g_pClient;
+	g_pClient = 0;
+
+	if (g_pRast)
+		delete g_pRast;
+	g_pRast = 0;
 
 	if(g_prCons)
 		delete g_prCons;
@@ -177,8 +185,8 @@ bool CRenExp::Shutdown(void)
 	cache_destroy();
 	beam_shutdown();
 
-	g_pImage->UnLoadTextures();
-	g_pModel->UnLoadSkins();
+	g_pClient->UnLoadTextures();
+	g_pClient->UnLoadSkins();
 	g_pTex->Shutdown();
 	g_pRast->Shutdown();
 	g_prCons->Shutdown();
@@ -193,35 +201,42 @@ Returns the Console Interface
 I_ConsoleRenderer * CRenExp::GetConsole()
 {	return g_prCons;
 }
-
+/*
+==========================================
+Returns the ClientRenderer Interface
+==========================================
+*/
+I_ClientRenderer * CRenExp::GetClient()
+{	return g_pClient;
+}
 /*
 ==========================================
 Return the Hud interface
 ==========================================
-*/
 I_RHud * CRenExp::GetHud()
 {	return g_prHud;
 }
+*/
 
 
 /*
 ==========================================
 Return the Hud interface
 ==========================================
-*/
 I_Model * CRenExp::GetModel()
 {	return g_pModel;
 }
+*/
 
 
 /*
 ==========================================
 Return the Hud interface
 ==========================================
-*/
 I_Image * CRenExp::GetImage()
 {	return g_pImage;
 }
+*/
 
 
 /*
@@ -380,8 +395,8 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 
 	// shut the thing down
 	g_pTex->Shutdown();
-	g_pModel->UnLoadSkins();
-	g_pImage->UnLoadTextures();
+	g_pClient->UnLoadSkins();
+	g_pClient->UnLoadTextures();
 
 	g_pRast->UpdateDisplaySettings(width,height,bpp,fullscreen);
 
@@ -399,8 +414,8 @@ void CRenExp::ChangeDispSettings(unsigned int width,
 		return;
 	}
 
-	g_pImage->LoadTextures();
-	g_pModel->LoadSkins();
+	g_pClient->LoadTextures();
+	g_pClient->LoadSkins();
 
 	// make sure our console is up to date
 	g_prCons->UpdateRes();
@@ -418,8 +433,8 @@ bool CRenExp::Restart(void)
 	g_pRast->SetFocus();
 
 	g_pTex->Shutdown();
-	g_pModel->UnLoadSkins();
-	g_pImage->UnLoadTextures();
+	g_pClient->UnLoadSkins();
+	g_pClient->UnLoadTextures();
 
 
 	// shut the thing down
@@ -440,8 +455,8 @@ bool CRenExp::Restart(void)
 	}
 
 	//reload our model skins
-	g_pImage->LoadTextures();
-	g_pModel->LoadSkins();
+	g_pClient->LoadTextures();
+	g_pClient->LoadSkins();
 
 	//make sure our console is up to date
 	g_prCons->UpdateRes();

@@ -773,7 +773,7 @@ void CRastD3DX::FrameEnd(void)
 	m_pD3DDevice->EndScene();
 	// Update frame
   
-	HRESULT hr = m_pD3DX->UpdateFrame(/*mVidSynch ? 0 : */D3DX_UPDATE_NOVSYNC);
+	HRESULT hr = m_pD3DX->UpdateFrame(mVidSynch ? 0 : D3DX_UPDATE_NOVSYNC);
 	if (FAILED(hr))
 		mhError = hr;
 

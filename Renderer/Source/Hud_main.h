@@ -100,7 +100,7 @@ private:
 	CHudMessage  *  m_conmessages;//[MAX_TEXTLINES];		//text messages that appear on the top of the screen
 };
 
-extern CRHud * g_prHud;
+//extern CRHud * g_prHud;
 
 
 #endif

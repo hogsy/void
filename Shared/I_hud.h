@@ -24,13 +24,14 @@ enum EHudItemType
 Renderer HUD Interface
 ==========================================
 */
+
 struct I_RHud
 {
 	//Printing
 	virtual void __stdcall HudPrintf(int x, int y, float time,char *msg,...) =0;
 	virtual void __stdcall HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
 	virtual void __stdcall PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
-	
+
 //	virtual int  pascal AddHudItem(void *data, EHudItemType type, int x, int y, float time) = 0;
 //	virtual int  pascal AddHudGfx(int index, EHudItemType type, int x, int y, float time) = 0;
 //	virtual int  pascal AddHudMsg(char *data,  int x, int y, float time = HUD_DEFAULTMSGTIME) = 0;

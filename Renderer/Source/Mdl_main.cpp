@@ -1,7 +1,7 @@
 
 #include "Mdl_main.h"
 
-CModelManager	*g_pModel=0;
+//CModelManager	*g_pModel=0;
 
 
 
@@ -57,7 +57,7 @@ CModelManager::~CModelManager()
 LoadModel 
 =======================================
 */
-hMdl CModelManager::LoadModel(const char *model, hMdl index, CacheType cache)
+hMdl CModelManager::LoadModel(const char *model, CacheType cache, hMdl index)
 {
 	// find the first available spot in this cache
 	if (index == -1)

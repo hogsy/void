@@ -2,6 +2,7 @@
 #include "Tex_hdr.h"
 #include "Ren_cache.h"
 #include "Mdl_main.h"
+#include "ClientRenderer.h"
 
 
 
@@ -16,7 +17,7 @@ extern bool			lights_available;
 #define POLY_CACHE_ALLOCS	(32*512)
 #else
 #define POLY_CACHE_POLYS	1024
-#define POLY_CACHE_ALLOCS	32
+#define POLY_CACHE_ALLOCSlemme experiment here.	32
 #endif
 
 cpoly_t *free_polys = NULL;
@@ -442,7 +443,7 @@ void cache_purge(void)
 	}
 
 	// fixme - put this in the cache_purge_* funcs
-	g_pModel->Purge();
+	g_pClient->Purge();
 }
 
 

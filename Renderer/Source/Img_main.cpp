@@ -1,7 +1,7 @@
 
 #include "Img_main.h"
 
-CImageManager	*g_pImage=0;
+//CImageManager	*g_pImage=0;
 
 
 
@@ -50,7 +50,7 @@ CImageManager::~CImageManager()
 LoadModel 
 =======================================
 */
-hMdl CImageManager::LoadImage(const char *image, hImg index, CacheType cache)
+hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 {
 	// find the first available spot in this cache
 	if (index == -1)

@@ -126,7 +126,7 @@ struct R_EntState
 	vector_t origin;
 	vector_t angle;
 };
-
+/*
 struct I_Model
 {
 	virtual hMdl LoadModel(const char *model, hMdl index, CacheType cache)=0;
@@ -136,7 +136,7 @@ struct I_Model
 	virtual void UnloadModelAll(void)=0;
 	virtual void GetInfo(R_EntState &state)=0;
 };
-
+*/
 
 /*
 ==========================================
@@ -148,7 +148,7 @@ enum
 	IMAGE_CACHE_NUM	= 2,
 	IMAGE_CACHE_SIZE =256
 };
-
+/*
 struct I_Image
 {
 	virtual hImg LoadImage(const char *image, hImg index, CacheType cache)=0;
@@ -156,6 +156,37 @@ struct I_Image
 	virtual void UnloadImageCache(CacheType cache)=0;
 	virtual void UnloadImageAll(void)=0;
 };
+*/
+
+
+/*
+==========================================
+Renderer Model/Image/Hud Interface
+==========================================
+*/
+struct I_ClientRenderer
+{
+	/* Model Interface */
+	virtual hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1)=0;
+	virtual void DrawModel(const R_EntState &state)=0;
+	virtual void UnloadModel(CacheType cache, hMdl index)=0;
+	virtual void UnloadModelCache(CacheType cache)=0;
+	virtual void UnloadModelAll(void)=0;
+	virtual void GetInfo(R_EntState &state)=0;
+
+	/* Image Interface */
+	virtual hImg LoadImage(const char *image, CacheType cache, hImg index=-1)=0;
+	virtual void UnloadImage(CacheType cache, hImg index)=0;
+	virtual void UnloadImageCache(CacheType cache)=0;
+	virtual void UnloadImageAll(void)=0;
+
+	/* Hud Interface */
+	virtual void __stdcall HudPrintf(int x, int y, float time,char *msg,...) =0;
+	virtual void __stdcall HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
+	virtual void __stdcall PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
+};
+
+
 
 
 /*
@@ -173,11 +204,13 @@ struct I_Renderer
 	virtual void DrawConsole()= 0;
 	
 	//Get other interfaces
+	virtual I_ClientRenderer  * GetClient()=0;
 	virtual I_ConsoleRenderer * GetConsole()=0;
+/*
 	virtual I_RHud *			GetHud()=0;
 	virtual I_Model	*			GetModel()=0;
 	virtual I_Image *			GetImage()=0;
-
+*/
 	//Windowing
 	virtual void MoveWindow(int x, int y) = 0;
 	virtual void Resize() =0;

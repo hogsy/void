@@ -17,7 +17,7 @@
 #endif
 
 
-class CModelManager : public I_Model
+class CModelManager// : public I_Model
 {
 public:
 	CModelManager();
@@ -26,7 +26,7 @@ public:
 	/* Interface functions */
 
 	// load a model into memory
-	hMdl LoadModel(const char *model, hMdl index, CacheType cache);
+	hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1);
 
 	// add the model to the render cache
 	void DrawModel(const R_EntState &state);
@@ -69,7 +69,7 @@ private:
 };
 
 
-extern	CModelManager	*g_pModel;
+//extern	CModelManager	*g_pModel;
 
 
 

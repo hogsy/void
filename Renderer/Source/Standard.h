@@ -15,6 +15,7 @@
 #include "3dMath.h"
 #include "World.h"
 
+
 //Renderer Info
 extern RenderInfo_t g_rInfo;	
 

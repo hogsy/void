@@ -3,6 +3,7 @@
 #include "Mdl_entry.h"
 #include "Tex_image.h"
 #include "Img_main.h"
+#include "ClientRenderer.h"
 
 
 typedef struct
@@ -407,9 +408,9 @@ extern	I_Void		  *	g_pVoidExp;
 void CModelCacheEntry::Draw(int skin, int fframe, int cframe, float frac)
 {
 	if (skin & MODEL_SKIN_UNBOUND_GAME)
-		g_pImage->Set(CACHE_GAME, skin & ~MODEL_SKIN_UNBOUND_GAME);
+		g_pClient->Set(CACHE_GAME, skin & ~MODEL_SKIN_UNBOUND_GAME);
 	else if (skin & MODEL_SKIN_UNBOUND_LOCAL)
-		g_pImage->Set(CACHE_LOCAL, skin & ~MODEL_SKIN_UNBOUND_LOCAL);
+		g_pClient->Set(CACHE_LOCAL, skin & ~MODEL_SKIN_UNBOUND_LOCAL);
 	else
 		g_pRast->TextureSet(skin_bin, skin);
 
