@@ -52,10 +52,17 @@ inline float VectorLength(const vector_t &v)
 {	return (float)sqrt((v.x*v.x)+(v.y * v.y)+(v.z * v.z));
 }
 
+inline void VectorSub(const vector_t &a, const vector_t &b, vector_t &dest)
+{
+	dest.x = a.x - b.x;
+	dest.y = a.y - b.y;
+	dest.z = a.z - b.z;
+}
+
 inline float VectorDistance(const vector_t &a, const vector_t &b)
 {
 	vector_t dist;
-	VectorSub(dist,a,b);
+	VectorSub(a,b,dist);
 	return VectorLength(dist);
 }
 
