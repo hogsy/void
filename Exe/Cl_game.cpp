@@ -24,7 +24,13 @@ CGameClient::	CGameClient(CClient & rClient, I_ClientRenderer	   * pRenderer, I_
 				 CSoundManager * pSound,
 				CMusic		   * pMusic) : 
 			m_refClient(rClient), m_pRenderer(pRenderer), m_pHud(pHud), m_pSound(pSound), m_pMusic(pMusic),
-			m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE)
+			m_cvKbSpeed("cl_kbspeed","0.6", CVAR_FLOAT, CVAR_ARCHIVE),
+							m_cvClip("cl_clip","1",     CVAR_BOOL,0),
+					m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
+					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
+					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
+					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE)
 {
 
 	m_pCmdHandler = new CClientGameInput();
@@ -44,6 +50,15 @@ CGameClient::	CGameClient(CClient & rClient, I_ClientRenderer	   * pRenderer, I_
 	m_pWorld = 0;
 
 	System::GetConsole()->RegisterCVar(&m_cvKbSpeed,this);
+	System::GetConsole()->RegisterCVar(&m_cvClip);
+	System::GetConsole()->RegisterCVar(&m_cvNetStats);
+		
+	System::GetConsole()->RegisterCVar(&m_cvRate,this);
+	System::GetConsole()->RegisterCVar(&m_cvName,this);
+	System::GetConsole()->RegisterCVar(&m_cvModel,this);
+	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
+
+	
 
 	System::GetConsole()->RegisterCommand("+forward",CMD_MOVE_FORWARD,this);
 	System::GetConsole()->RegisterCommand("+back",CMD_MOVE_BACKWARD,this);
@@ -54,6 +69,7 @@ CGameClient::	CGameClient(CClient & rClient, I_ClientRenderer	   * pRenderer, I_
 	System::GetConsole()->RegisterCommand("+lookup",CMD_ROTATE_UP,this);
 	System::GetConsole()->RegisterCommand("+lookdown",CMD_ROTATE_DOWN,this);
 
+	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 	System::GetConsole()->RegisterCommand("bind",CMD_BIND,this);
 	System::GetConsole()->RegisterCommand("bindlist",CMD_BINDLIST,this);
 	System::GetConsole()->RegisterCommand("cam",CMD_CAM,this);
@@ -275,6 +291,9 @@ void CGameClient::HandleCommand(HCMD cmdId, const CParms &parms)
 	case CMD_UNBINDALL:
 		m_pCmdHandler->Unbindall();
 		break;
+	case CMD_TALK:
+		Talk(parms.String());
+		break;
 	}
 }
 
@@ -295,8 +314,100 @@ bool CGameClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvRate))
+		return ValidateRate(parms);
+	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
+		return ValidateName(parms);
 	return false;
 }
+
+
+
+
+/*
+======================================
+Say something
+======================================
+*/
+void CGameClient::Talk(const char * string)
+{
+	if(!m_ingame)
+		return;
+
+	//parse to right after "say"
+	const char * msg = string + 4;
+	while(*msg && *msg == ' ')
+		msg++;
+
+	if(!*msg || *msg == '\0')
+		return;
+
+	ComPrintf("%s: %s\n", m_cvName.string, msg);
+	m_pSound->PlaySnd2d(m_hsTalk, CACHE_LOCAL);
+
+	//Send this reliably ?
+	m_refClient.GetReliableSendBuffer().WriteByte(CL_TALK);
+	m_refClient.GetReliableSendBuffer().WriteString(msg);
+}
+
+/*
+======================================
+Validate name locally before asking 
+the server to update it
+======================================
+*/
+bool CGameClient::ValidateName(const CParms &parms)
+{
+	char name[24];
+	parms.StringTok(1,name,24);
+
+	if(!name[0])
+	{
+		ComPrintf("Name = \"%s\"\n", m_cvName.string);
+		return false;
+	}
+	if(!m_ingame)
+		return true;
+
+	m_refClient.GetReliableSendBuffer().WriteByte(CL_INFOCHANGE);
+	m_refClient.GetReliableSendBuffer().WriteChar('n');
+	m_refClient.GetReliableSendBuffer().WriteString(name);
+	return true;
+}
+
+/*
+======================================
+Validate Rate before updating it 
+on the server
+======================================
+*/
+bool CGameClient::ValidateRate(const CParms &parms)
+{
+	int rate = parms.IntTok(1);
+	if(rate == -1)
+	{
+		ComPrintf("Rate = \"%d\"\n", m_cvRate.ival);
+		return false;
+	}
+
+	if(rate < 1000 || rate > 10000)
+	{
+		ComPrintf("Rate is out of range\n");
+		return false;
+	}
+
+	m_refClient.SetNetworkRate(rate);
+
+	if(!m_ingame)
+		return true;
+
+	CBuffer &buffer = m_refClient.GetReliableSendBuffer();
+	buffer.WriteByte(CL_INFOCHANGE);
+	buffer.WriteChar('r');
+	buffer.WriteInt(rate);
+	return true;
+}
+
 
 
 
@@ -581,11 +692,6 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 	BeginGame();
 
 	m_refClient.SetState(CClient::CL_INGAME);
-
-//	m_refClient.BeginGame();
-
-//	System::SetGameState(INGAME);
-//	SetInputState(true);
 }
 
 
@@ -599,13 +705,10 @@ Write UserInfo to buffer
 */
 void CGameClient::WriteUserInfo(CBuffer &buffer)
 {
-	m_refClient.WriteUserInfo(buffer);
-/*
 	buffer.WriteString(m_cvName.string);
 	buffer.WriteString(m_cvModel.string);
 	buffer.WriteString(m_cvSkin.string);
 	buffer.WriteInt(m_cvRate.ival);
-*/
 }
 
 

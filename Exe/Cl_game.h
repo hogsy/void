@@ -68,7 +68,18 @@ public:
 	bool HandleCVar(const CVarBase * cvar, const CParms &parms);
 
 	vector_t m_moveAngles;
+	
 	CVar    m_cvKbSpeed;
+	CVar	m_cvName;
+	CVar	m_cvRate;
+	CVar    m_cvModel;
+	CVar    m_cvSkin;
+	CVar	m_cvClip;
+	CVar	m_cvNetStats;
+
+	void Talk(const char * string);
+	bool ValidateName(const CParms &parms);
+	bool ValidateRate(const CParms &parms);
 
 	//spawn for the first time.
 	void BeginGame();

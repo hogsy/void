@@ -30,13 +30,7 @@ Constructor
 CClient::CClient(I_Renderer * prenderer,
 				 CSoundManager * psound,
 				 CMusic	* pmusic):
-					m_cvClip("cl_clip","1",     CVAR_BOOL,0),
 					m_cvPort("cl_port","20011", CVAR_INT,	CVAR_ARCHIVE| CVAR_LATCH),
-					m_cvRate("cl_rate","2500",	CVAR_INT,	CVAR_ARCHIVE),
-					m_cvName("cl_name","Player",CVAR_STRING,CVAR_ARCHIVE),
-					m_cvModel("cl_model", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_cvSkin("cl_skin", "Ratamahatta", CVAR_STRING, CVAR_ARCHIVE),
-					m_cvNetStats("cl_netstats","1", CVAR_BOOL, CVAR_ARCHIVE),
 					m_pRender(prenderer),	
 					m_pSound(psound),
 					m_pMusic(pmusic)
@@ -51,23 +45,19 @@ CClient::CClient(I_Renderer * prenderer,
 
 	m_pWorld = 0;
 
-	System::GetConsole()->RegisterCVar(&m_cvClip);
-	System::GetConsole()->RegisterCVar(&m_cvNetStats);
 	System::GetConsole()->RegisterCVar(&m_cvPort,this);
-	
-	System::GetConsole()->RegisterCVar(&m_cvRate,this);
-	System::GetConsole()->RegisterCVar(&m_cvName,this);
-	System::GetConsole()->RegisterCVar(&m_cvModel,this);
-	System::GetConsole()->RegisterCVar(&m_cvSkin,this);
+
 
 	System::GetConsole()->RegisterCommand("connect", CMD_CONNECT, this);
 	System::GetConsole()->RegisterCommand("disconnect", CMD_DISCONNECT, this);
 	System::GetConsole()->RegisterCommand("reconnect", CMD_RECONNECT, this);
-	System::GetConsole()->RegisterCommand("say", CMD_TALK, this);
 
-	m_pNetCl->SetRate(m_cvRate.ival);
+//	m_pNetCl->SetRate(m_cvRate.ival);
 }
 
+void CClient::SetNetworkRate(int rate)
+{	m_pNetCl->SetRate(rate);
+}
 /*
 ======================================
 Destroy the client
@@ -193,8 +183,8 @@ void CClient::RunFrame()
 		m_pHud->Printf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pHud->Printf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
-		if(m_cvNetStats.bval)
-			ShowNetStats();
+//		if(m_cvNetStats.bval)
+//			ShowNetStats();
 
 		m_pSound->UpdateListener(m_pClState->m_pGameClient->origin, velocity, up, forward);
 
@@ -273,47 +263,6 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 {
 	switch(cmdId)
 	{
-/*	case CMD_MOVE_FORWARD:
-		m_pClState->MoveForward();
-		break;
-	case CMD_MOVE_BACKWARD:
-		m_pClState->MoveBackward();
-		break;
-	case CMD_MOVE_LEFT:
-		m_pClState->MoveLeft();
-		break;
-	case CMD_MOVE_RIGHT:
-		m_pClState->MoveRight();
-		break;
-	case CMD_ROTATE_LEFT:
-		m_pClState->RotateLeft(m_cvKbSpeed.fval);
-		break;
-	case CMD_ROTATE_RIGHT:
-		m_pClState->RotateRight(m_cvKbSpeed.fval);
-		break;
-	case CMD_ROTATE_UP:
-		m_pClState->RotateUp(m_cvKbSpeed.fval);
-		break;
-	case CMD_ROTATE_DOWN:
-		m_pClState->RotateDown(m_cvKbSpeed.fval);
-		break;
-	case CMD_BIND:
-		m_pCmdHandler->BindFuncToKey(parms);
-		break;
-	case CMD_BINDLIST:
-		m_pCmdHandler->BindList();
-		break;
-	case CMD_UNBIND:
-		m_pCmdHandler->Unbind(parms);
-		break;
-	case CMD_UNBINDALL:
-		m_pCmdHandler->Unbindall();
-		break;
-*/
-
-	case CMD_CAM:
-//		CamPath();
-		break;
 	case CMD_CONNECT:
 		{
 			char addr[NET_IPADDRLEN];
@@ -326,9 +275,6 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 		break;
 	case CMD_RECONNECT:
 		m_pNetCl->Reconnect(false);
-		break;
-	case CMD_TALK:
-		Talk(parms.String());
 		break;
 	}
 }
@@ -350,21 +296,6 @@ bool CClient::HandleCVar(const CVarBase * cvar, const CParms &parms)
 		}
 		return true;
 	}
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvRate))
-		return ValidateRate(parms);
-	else if(cvar == reinterpret_cast<CVarBase*>(&m_cvName))
-		return ValidateName(parms);
-/*	else if(cvar == reinterpret_cast<CVarBase *>(&m_cvKbSpeed))
-	{
-		float val = parms.FloatTok(1);
-		if(val <= 0.0 || val >= 1.0)
-		{
-			ComPrintf("Out of range. Should be between 0.0 and 1.0\n");
-			return false;
-		}
-		return true;
-	}
-*/
 	return false;
 }
 
@@ -386,3 +317,56 @@ void CClient::SetState(int state)
 	};
 }
 
+
+
+CBuffer & CClient::GetSendBuffer()
+{
+	return m_pNetCl->GetSendBuffer();
+}
+
+CBuffer & CClient::GetReliableSendBuffer()
+{
+	return m_pNetCl->GetReliableBuffer();
+}
+
+
+
+/*
+======================================
+Handle disconnect from server
+======================================
+*/
+void CClient::HandleDisconnect(bool listenserver)
+{
+
+	//	ComPrintf("CL: KILLING LOCAL SERVER\n");
+
+	//Kill server if local
+	if(listenserver)
+	{
+//		ComPrintf("CL: KILLING LOCAL SERVER\n");
+		System::GetConsole()->ExecString("killserver");
+	}
+	UnloadWorld();
+}
+
+
+/*
+======================================
+
+======================================
+*/
+void CClient::ShowNetStats()
+{
+	//Print Networking stats
+	const NetChanState & chanState = m_pNetCl->GetChanState();
+
+	m_pHud->Printf(0,390,0, "Latency %.2f ms", chanState.latency * 1000);
+	m_pHud->Printf(0,400,0, "Drop stats %d/%d. Choked %d", chanState.dropCount, 
+						chanState.dropCount + chanState.goodCount, chanState.numChokes);
+	m_pHud->Printf(0,410,0, "In      %d", chanState.inMsgId);
+	m_pHud->Printf(0,420,0, "In  Ack %d", chanState.inAckedId);
+	m_pHud->Printf(0,430,0, "Out     %d", chanState.outMsgId);
+	m_pHud->Printf(0,440,0, "Out Ack %d", chanState.lastOutReliableId);
+
+}

@@ -60,14 +60,11 @@ private:
 	void SetNetworkRate(int rate);
 
 	CBuffer & GetSendBuffer();
-	CBuffer & GetOutgoingSendBuffer();
+	CBuffer & GetReliableSendBuffer();
 
 
 	//Handle disconnect from server
 	void HandleDisconnect(bool listenserver);
-
-	//Write userInfo to the given buffer
-	void WriteUserInfo(CBuffer &buffer);
 
 
 	bool LoadWorld(const char *worldname);
@@ -75,22 +72,13 @@ private:
 
 	//==================================================
 	//Console commands
-	void Talk(const char * string);
-	bool ValidateName(const CParms &parms);
-	bool ValidateRate(const CParms &parms);
+
 	void ShowNetStats();
 
 	//==================================================
 	//Client CVars
 	CVar	m_cvPort;
-	CVar	m_cvName;
-	CVar	m_cvRate;
-	CVar    m_cvModel;
-	CVar    m_cvSkin;
 
-//	CVar    m_cvKbSpeed;
-	CVar	m_cvClip;
-	CVar	m_cvNetStats;
 
 	void WriteUpdate();
 
