@@ -162,7 +162,7 @@ void CClient::BeginGame()
 	
 	VectorSet(&desired_movement, 0, 0, 0);
 
-	VectorSet(&m_pClient->angle, 0.0f,0.0f,0.0f);
+	VectorSet(&m_pClient->angles, 0.0f,0.0f,0.0f);
 	VectorSet(&m_pClient->origin, 0.0f,0.0f,48.0f);	// FIXME - origin + view height
 	VectorSet(&m_pClient->mins, -10.0f, -10.0f, -40.0f);
 	VectorSet(&m_pClient->maxs, 10.0f, 10.0f, 10.0f);
@@ -171,7 +171,7 @@ void CClient::BeginGame()
 	//Register static sound sources with SoundManager
 	for(int i=0; i< GAME_MAXENTITIES; i++)
 	{
-		if(m_entities[i].inUse && m_entities[i].soundIndex > -1)
+		if(m_entities[i].inUse && m_entities[i].sndIndex > -1)
 		{
 			m_entities[i].sndCache = CACHE_GAME;
 			m_entities[i].volume = 10;
@@ -181,7 +181,7 @@ void CClient::BeginGame()
 	}
 	
 	
-	m_pCamera = new CCamera(m_pClient->origin, m_pClient->angle, m_screenBlend);
+	m_pCamera = new CCamera(m_pClient->origin, m_pClient->angles, m_screenBlend);
 
 	m_ingame = true;
 
@@ -224,7 +224,7 @@ ComPrintf("CL :UNLOADED MODELS\n");
 	for(i=0; i< GAME_MAXENTITIES; i++)
 		if(m_entities[i].inUse)
 		{
-			if(m_entities[i].soundIndex > -1)
+			if(m_entities[i].sndIndex > -1)
 				m_pSound->RemoveStaticSource(&m_entities[i]);
 			m_entities[i].Reset();
 		}
@@ -276,7 +276,7 @@ void CClient::RunFrame()
 
 		vector_t forward, up, velocity;
 		VectorSet(&velocity, 0,0,0);
-		AngleToVector(&m_pClient->angle, &forward, 0, &up);
+		AngleToVector(&m_pClient->angles, &forward, 0, &up);
 		m_pClRen->HudPrintf(0, 90,0, "FORWARD: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
 		m_pClRen->HudPrintf(0, 110,0,"UP     : %.2f, %.2f, %.2f", up.x,  up.y,  up.z);		
 
@@ -323,9 +323,9 @@ void CClient::RunFrame()
 			buf.WriteCoord(m_pClient->origin.x);
 			buf.WriteCoord(m_pClient->origin.y);
 			buf.WriteCoord(m_pClient->origin.z);
-			buf.WriteAngle(m_pClient->angle.x);
-			buf.WriteAngle(m_pClient->angle.y);
-			buf.WriteAngle(m_pClient->angle.z);
+			buf.WriteAngle(m_pClient->angles.x);
+			buf.WriteAngle(m_pClient->angles.y);
+			buf.WriteAngle(m_pClient->angles.z);
 		}
 	}
 	//Write updates

@@ -12,7 +12,7 @@ CImageManager::CImageManager()
 	// reset
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMIMAGES; e++)
+		for (int e=0; e<GAME_MAXIMAGES; e++)
 		{	caches[c][e] = NULL;
 		}
 	}
@@ -27,7 +27,7 @@ CImageManager::~CImageManager()
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMIMAGES; e++)
+		for (int e=0; e<GAME_MAXIMAGES; e++)
 		{
 			if (caches[c][e])
 			{
@@ -44,12 +44,12 @@ CImageManager::~CImageManager()
 LoadModel 
 =======================================
 */
-hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
+int CImageManager::LoadImage(const char *image, CacheType cache, int index)
 {
 	// find the first available spot in this cache
 	if (index == -1)
 	{
-		for (int i=0; i<CACHE_NUMIMAGES; i++)
+		for (int i=0; i<GAME_MAXIMAGES; i++)
 		{
 			if (!caches[cache][i])
 			{
@@ -58,7 +58,7 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 			}
 		}
 
-		if (i==CACHE_NUMIMAGES)
+		if (i==GAME_MAXIMAGES)
 		{
 			ComPrintf("CImageManager::LoadImage: no available cache entries for  %s\n", image);
 			return -1;
@@ -75,7 +75,7 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 	// search all caches to see if it is already loaded somewhere
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int i=0; i<CACHE_NUMIMAGES; i++)
+		for (int i=0; i<GAME_MAXIMAGES; i++)
 		{
 			if (caches[c][i] && caches[c][i]->IsFile(image))
 			{
@@ -95,7 +95,7 @@ hMdl CImageManager::LoadImage(const char *image, CacheType cache, hImg index)
 UnloadImage 
 =======================================
 */
-void CImageManager::UnloadImage(CacheType cache, hImg index)
+void CImageManager::UnloadImage(CacheType cache, int index)
 {
 	if (!caches[cache][index])
 		ComPrintf("CImageManager::UnloadImage: Image not loaded\n");
@@ -114,7 +114,7 @@ UnloadImageCache
 */
 void CImageManager::UnloadImageCache(CacheType cache)
 {
-	for (int i=0; i<CACHE_NUMIMAGES; i++)
+	for (int i=0; i<GAME_MAXIMAGES; i++)
 	{
 		if (caches[cache][i])
 			UnloadImage(cache, i);
@@ -141,7 +141,7 @@ void CImageManager::LoadTextures(void)
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMIMAGES; e++)
+		for (int e=0; e<GAME_MAXIMAGES; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->LoadTexture();
@@ -160,7 +160,7 @@ void CImageManager::UnLoadTextures(void)
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMIMAGES; e++)
+		for (int e=0; e<GAME_MAXIMAGES; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->UnLoadTexture();

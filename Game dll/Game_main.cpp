@@ -99,7 +99,7 @@ bool CGame::ClientConnect(int clNum, CBuffer &userInfo, bool reconnect)
 
 	strcpy(clients[clNum]->name, userInfo.ReadString());
 	strcpy(clients[clNum]->modelName,userInfo.ReadString());
-	clients[clNum]->modelIndex = g_pImports->RegisterModel(clients[clNum]->modelName);
+	clients[clNum]->mdlIndex = g_pImports->RegisterModel(clients[clNum]->modelName);
 
 	strcpy(clients[clNum]->skinName,userInfo.ReadString());
 	clients[clNum]->skinNum = g_pImports->RegisterImage(clients[clNum]->skinName);

@@ -564,7 +564,7 @@ bool CServer::WriteConfigString(CBuffer &buffer, int stringId, int numBuffer)
 				buffer.WriteByte(SV_CLFULLINFO);
 				buffer.WriteByte(m_clients[i]->num);
 				buffer.WriteString(m_clients[i]->name);
-				buffer.WriteShort(m_clients[i]->modelIndex);
+				buffer.WriteShort(m_clients[i]->mdlIndex);
 				buffer.WriteString(m_clients[i]->modelName);
 				buffer.WriteShort(m_clients[i]->skinNum);
 				buffer.WriteString(m_clients[i]->skinName);
@@ -630,7 +630,7 @@ Write baselines of entities
 bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 {
 	//we only write a baseline if the entity is using a model or soundIndex
-	if(ent->modelIndex >= 0 || ent->soundIndex >= 0)
+	if(ent->mdlIndex >= 0 || ent->sndIndex >= 0)
 	{
 		buf.WriteShort(ent->num);
 		buf.WriteCoord(ent->origin.x);
@@ -640,17 +640,17 @@ bool CServer::WriteEntBaseLine(const Entity * ent, CBuffer &buf) const
 		buf.WriteAngle(ent->angles.y);
 		buf.WriteAngle(ent->angles.z);
 
-		if(ent->modelIndex >=0)
+		if(ent->mdlIndex >=0)
 		{
 			buf.WriteChar('m');
-			buf.WriteShort(ent->modelIndex);
+			buf.WriteShort(ent->mdlIndex);
 			buf.WriteShort(ent->skinNum);
 			buf.WriteShort(ent->frameNum);
 		}
-		if(ent->soundIndex >=0)
+		if(ent->sndIndex >=0)
 		{
 			buf.WriteChar('s');
-			buf.WriteShort(ent->soundIndex);
+			buf.WriteShort(ent->sndIndex);
 			buf.WriteShort(ent->volume);
 			buf.WriteShort(ent->attenuation);
 		}

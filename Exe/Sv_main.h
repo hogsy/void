@@ -3,7 +3,6 @@
 
 #include "Sys_hdr.h"
 #include "Net_server.h"
-#include "Game_defs.h"
 #include "I_game.h"
 
 /*

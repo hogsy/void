@@ -18,7 +18,7 @@ CModelManager::CModelManager()
 	// reset
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMMODELS; e++)
+		for (int e=0; e<GAME_MAXMODELS; e++)
 		{	caches[c][e] = NULL;
 		}
 	}
@@ -33,7 +33,7 @@ CModelManager::~CModelManager()
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMMODELS; e++)
+		for (int e=0; e<GAME_MAXMODELS; e++)
 		{
 			if (caches[c][e])
 			{
@@ -54,12 +54,12 @@ CModelManager::~CModelManager()
 LoadModel 
 =======================================
 */
-hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlIndex)
+int CModelManager::LoadModel(const char *model, CacheType mdlCache, int mdlIndex)
 {
 	// find the first available spot in this mdlCache
 	if (mdlIndex == -1)
 	{
-		for (int i=0; i<CACHE_NUMMODELS; i++)
+		for (int i=0; i<GAME_MAXMODELS; i++)
 		{
 			if (!caches[mdlCache][i])
 			{
@@ -68,7 +68,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 			}
 		}
 
-		if (i==CACHE_NUMMODELS)
+		if (i==GAME_MAXMODELS)
 		{
 			ComPrintf("no available mdlCache entries for model %s\n", model);
 			return -1;
@@ -86,7 +86,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 	// search all caches to see if it is already loaded somewhere
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int i=0; i<CACHE_NUMMODELS; i++)
+		for (int i=0; i<GAME_MAXMODELS; i++)
 		{
 			if (caches[c][i] && caches[c][i]->IsFile(model))
 			{
@@ -113,7 +113,7 @@ hMdl CModelManager::LoadModel(const char *model, CacheType mdlCache, hMdl mdlInd
 DrawModel 
 =======================================
 */
-void CModelManager::DrawModel(const EntState &state)
+void CModelManager::DrawModel(const ClEntity &state)
 {
 	// add model to list to be drawn
 	drawmodel_t *ndm = drawmodelGet();
@@ -128,7 +128,7 @@ void CModelManager::DrawModel(const EntState &state)
 UnloadModel 
 =======================================
 */
-void CModelManager::UnloadModel(CacheType mdlCache, hMdl mdlIndex)
+void CModelManager::UnloadModel(CacheType mdlCache, int mdlIndex)
 {
 	if (!caches[mdlCache][mdlIndex])
 		ComPrintf("CModelManager::UnloadModel - model not loaded\n");
@@ -150,7 +150,7 @@ UnloadModelCache
 */
 void CModelManager::UnloadModelCache(CacheType mdlCache)
 {
-	for (int i=0; i<CACHE_NUMMODELS; i++)
+	for (int i=0; i<GAME_MAXMODELS; i++)
 	{
 		if (caches[mdlCache][i])
 			UnloadModel(mdlCache, i);
@@ -175,7 +175,7 @@ void CModelManager::UnloadModelAll(void)
 GetInfo 
 =======================================
 */
-void CModelManager::GetInfo(EntState &state)
+void CModelManager::GetInfo(ClEntity &state)
 {
 	state.numFrames = caches[state.mdlCache][state.mdlIndex]->GetNumFrames();
 	state.numSkins  = caches[state.mdlCache][state.mdlIndex]->GetNumSkins();
@@ -210,11 +210,11 @@ void CModelManager::Purge(void)
 		VectorInv2(walk->state->origin, trans);
 		g_pRast->MatrixTranslate(trans);
 
-		g_pRast->MatrixRotateY(-walk->state->angle.YAW   * 180/PI);
-		g_pRast->MatrixRotateX( walk->state->angle.PITCH * 180/PI);
-		g_pRast->MatrixRotateZ(-walk->state->angle.ROLL  * 180/PI);
+		g_pRast->MatrixRotateY(-walk->state->angles.YAW   * 180/PI);
+		g_pRast->MatrixRotateX( walk->state->angles.PITCH * 180/PI);
+		g_pRast->MatrixRotateZ(-walk->state->angles.ROLL  * 180/PI);
 
-		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, walk->state->frame,
+		caches[walk->state->mdlCache][walk->state->mdlIndex]->Draw(walk->state->skinNum, walk->state->frameNum,
 					walk->state->nextFrame, walk->state->frac);
 
 		g_pRast->MatrixPop();
@@ -235,7 +235,7 @@ void CModelManager::LoadSkins(void)
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMMODELS; e++)
+		for (int e=0; e<GAME_MAXMODELS; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->LoadSkins();
@@ -255,7 +255,7 @@ void CModelManager::UnLoadSkins(void)
 {
 	for (int c=0; c<CACHE_NUMCACHES; c++)
 	{
-		for (int e=0; e<CACHE_NUMMODELS; e++)
+		for (int e=0; e<GAME_MAXMODELS; e++)
 		{
 			if (caches[c][e])
 				caches[c][e]->UnLoadSkins();

@@ -112,7 +112,7 @@ SOURCE=..\Shared\Game_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\Void Game\Game_ents.h"
+SOURCE=.\Game_ents.h
 # End Source File
 # Begin Source File
 

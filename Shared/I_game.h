@@ -1,11 +1,7 @@
 #ifndef VOID_GAME_INTERFACE
 #define VOID_GAME_INTERFACE
 
-#include "Com_mem.h"
-#include "Com_vector.h"
-#include "Com_buffer.h"
-#include "Net_defs.h"
-#include "I_console.h"
+#include "Game_defs.h"
 
 const int ENT_MAXCLASSNAME = 32;
 const int ENT_MAXRESNAME = 64;
@@ -13,39 +9,19 @@ const int ENT_MAXSTRING = 128;
 const int ENT_MAXMESSAGE = 256;
 
 /*
-============================================================================
-The basic game entitiy. 
-This data will be propagated to connected clients
-============================================================================
+=======================================
+The Server-side game entitiy. 
+=======================================
 */
-struct Entity
+struct Entity : public BaseEntity
 {
 	Entity(const char * cname)
-	{
-		num = -1;
-		strcpy(classname,cname);
-		origin.x = origin.y = origin.z = 0.0f;
-		angles.x = angles.y = angles.z = 0.0f;
-		modelIndex = -1;
-		soundIndex = -1;
-		skinNum = frameNum = 0;
-		volume = attenuation = 0;
+	{	strcpy(classname,cname);
 	}
+	
 	virtual ~Entity() {}
 
-	int		num;
 	char	classname[ENT_MAXCLASSNAME];
-	
-	vector_t origin;
-	vector_t angles;
-
-	int		modelIndex;
-	int		skinNum;
-	int		frameNum;
-
-	int		soundIndex;
-	int		volume;
-	int		attenuation;
 };
 
 /*
@@ -70,9 +46,6 @@ struct EntClient : public Entity
 	char name[ENT_MAXCLASSNAME];
 	char modelName[ENT_MAXRESNAME];
 	char skinName[ENT_MAXRESNAME];
-
-	vector_t mins;
-	vector_t maxs;
 };
 
 /*

@@ -105,9 +105,9 @@ void CClient::HandleGameMsg(CBuffer &buffer)
 					m_clients[num].origin.x = buffer.ReadCoord();
 					m_clients[num].origin.y = buffer.ReadCoord();
 					m_clients[num].origin.z = buffer.ReadCoord();
-					m_clients[num].angle.x = buffer.ReadAngle();
-					m_clients[num].angle.y = buffer.ReadAngle();
-					m_clients[num].angle.z = buffer.ReadAngle();
+					m_clients[num].angles.x = buffer.ReadAngle();
+					m_clients[num].angles.y = buffer.ReadAngle();
+					m_clients[num].angles.z = buffer.ReadAngle();
 				}
 				break;
 			}
@@ -198,9 +198,9 @@ ComPrintf("CL: Map: %s\n", map);
 				m_entities[id].origin.y = buffer.ReadCoord();
 				m_entities[id].origin.z = buffer.ReadCoord();
 
-				m_entities[id].angle.x = buffer.ReadAngle();
-				m_entities[id].angle.y = buffer.ReadAngle();
-				m_entities[id].angle.z = buffer.ReadAngle();
+				m_entities[id].angles.x = buffer.ReadAngle();
+				m_entities[id].angles.y = buffer.ReadAngle();
+				m_entities[id].angles.z = buffer.ReadAngle();
 
 				type = buffer.ReadChar();
 				while(type != 0)
@@ -211,8 +211,8 @@ ComPrintf("CL: Map: %s\n", map);
 						{
 							m_entities[id].mdlIndex = buffer.ReadShort();
 							m_entities[id].skinNum = buffer.ReadShort();
-							m_entities[id].frame = buffer.ReadShort();
-							m_entities[id].nextFrame = m_entities[id].frame;
+							m_entities[id].frameNum = buffer.ReadShort();
+							m_entities[id].nextFrame = m_entities[id].frameNum;
 							m_entities[id].frac = 0;
 							m_entities[id].mdlCache = CACHE_GAME;
 							break;
@@ -220,7 +220,7 @@ ComPrintf("CL: Map: %s\n", map);
 					case 's':
 						{
 							m_entities[id].sndCache = CACHE_GAME;
-							m_entities[id].soundIndex = buffer.ReadShort();
+							m_entities[id].sndIndex = buffer.ReadShort();
 							m_entities[id].volume = buffer.ReadShort();
 							m_entities[id].attenuation = buffer.ReadShort();
 							break;

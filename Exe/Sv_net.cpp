@@ -31,7 +31,7 @@ bool CServer::ValidateClConnection(int clNum,
 	m_net.ChanBeginWrite(m_multiCastSet, SV_CLFULLINFO, len);
 	m_net.ChanWriteByte(m_clients[clNum]->num);
 	m_net.ChanWriteString(m_clients[clNum]->name);
-	m_net.ChanWriteShort(m_clients[clNum]->modelIndex);
+	m_net.ChanWriteShort(m_clients[clNum]->mdlIndex);
 	m_net.ChanWriteString(m_clients[clNum]->modelName);
 	m_net.ChanWriteShort(m_clients[clNum]->skinNum);
 	m_net.ChanWriteString(m_clients[clNum]->skinName);

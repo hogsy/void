@@ -14,13 +14,11 @@ namespace VoidSound
 	class C3DListener;		//The 3d Sound listener
 }
 
-
 /*
 ======================================
 Main Sound manager
 ======================================
 */
-
 class CSoundManager : public I_ConHandler 
 {
 public:
@@ -43,8 +41,8 @@ public:
 	void RunFrame();
 
 	//finds id, or creates new one, if index = -1, otherwise loads sound at give index
-	hSnd RegisterSound(const char *path, CacheType cache, hSnd index = -1);
-	void UnregisterSound(hSnd index, CacheType cache);
+	int  RegisterSound(const char *path, CacheType cache, int  index = -1);
+	void UnregisterSound(int index, CacheType cache);
 	void UnregisterCache(CacheType cache);
 	void UnregisterAll();
 

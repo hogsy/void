@@ -1,18 +1,15 @@
 #ifndef VOID_CLIENT_DEFS
 #define VOID_CLIENT_DEFS
+
+#include "Game_defs.h"
+
 /*
 ============================================================================
-Basic definitions shared by the client resource managers
-include the Renderer, Sound system and any clientside dll
+Basic client side definitions 
+There are needed by the client resource managers like
+the Renderer and Sound system etc
 ============================================================================
 */
-#include "Com_vector.h"
-
-typedef int hSnd;
-typedef int hMdl;
-typedef int hImg;
-
-//Cache type,
 enum CacheType
 {
 	CACHE_LOCAL = 0,	//Persistant through out the game, Client is reponsible for loading these.
@@ -20,45 +17,80 @@ enum CacheType
 	CACHE_TEMP	= 2,	//Temp object,  should release once it has been used
 };
 
-//These should be updated, 
-//if the games maxmodels/sounds/images vars change
-
-const int CACHE_NUMMODELS = 256;
-const int CACHE_NUMIMAGES = 256;
-const int CACHE_NUMSOUNDS = 256;
 const int CACHE_NUMCACHES = 3;
+
+enum SndChannelType
+{
+	CHAN_AUTO   = 0,		//first free
+	CHAN_UI		= 1,		//UI sound, no coordinates
+	CHAN_WORLD  = 2,		//ambient, world sounds etc
+	CHAN_CLIENT = 3,		//sounds from the player
+	CHAN_MONSTER= 4,		//Monster and player share channels
+	CHAN_PLAYER = 4,
+	CHAN_ITEM   = 5,		//item noises, pickups etc
+	CHAN_WEAPON	= 6,		//weapon noises
+	
+	CHAN_LOOPING = 128		//flagged
+};
 
 /*
 ======================================
-Entity info the renderer needs to know to
-renderer it in the game.
+Entity info the renderer needs to know to renderer it in the game.
+the Soundsystem needs to know this to figure out positions etc
 Visibility determination should be done client side ?
 ======================================
 */
-struct EntState 
+struct ClEntity : public BaseEntity
 {
-	EntState()
-	{
-		mdlCache = CACHE_LOCAL;
-		mdlIndex = -1;
-		numSkins = skinNum = 0;
-		numFrames = frame = nextFrame = 0;
-		frac = 0.0f;
+	ClEntity()
+	{	Reset();
 	}
 
-	CacheType	mdlCache;
-	hMdl		mdlIndex;
-	
-	int			numSkins;
-	int			skinNum;
-	
-	int			numFrames;
-	int			frame;
-	int			nextFrame;
-	float		frac;
+	virtual void Reset()
+	{
+		mdlCache = CACHE_LOCAL;
+		sndCache = CACHE_LOCAL;
+		frac = 0.0f;
+		numSkins = numFrames = 0;
+		inUse = false;
 
-	vector_t	origin;
-	vector_t	angle;
+		Void3d::VectorSet(origin,0,0,0);
+		Void3d::VectorSet(angles,0,0,0);
+		Void3d::VectorSet(velocity,0,0,0);
+		Void3d::VectorSet(mins,0,0,0);
+		Void3d::VectorSet(maxs,0,0,0);
+
+		mdlIndex = sndIndex = -1;
+		num = -1;
+		frameNum = nextFrame = skinNum = 0;
+		volume = attenuation = 0;
+	}
+
+	virtual ~ClEntity() {}
+
+	bool inUse;
+
+	CacheType	sndCache;
+	CacheType	mdlCache;
+
+	int			numSkins;
+	int			numFrames;
+	float		frac;
+};
+
+//A client side Client
+struct ClClient : public ClEntity
+{
+	ClClient() 
+	{	name[0] = 0;
+	}
+
+	virtual void Reset()
+	{
+		ClEntity::Reset();
+		name[0] = 0;
+	}
+	char name[32];
 };
 
 #endif

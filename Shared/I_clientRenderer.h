@@ -38,23 +38,23 @@ Renderer Model/Image/Hud Interface
 struct I_ClientRenderer
 {
 	/* Model Interface */
-	virtual hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1)=0;
-	virtual void DrawModel(const EntState &state)=0;
-	virtual void UnloadModel(CacheType cache, hMdl index)=0;
+	virtual int  LoadModel(const char *model, CacheType cache, int index=-1)=0;
+	virtual void DrawModel(const ClEntity &state)=0;
+	virtual void UnloadModel(CacheType cache, int index)=0;
 	virtual void UnloadModelCache(CacheType cache)=0;
 	virtual void UnloadModelAll(void)=0;
-	virtual void GetInfo(EntState &state)=0;
+	virtual void GetInfo(ClEntity &state)=0;
 
 	/* Image Interface */
-	virtual hImg LoadImage(const char *image, CacheType cache, hImg index=-1)=0;
-	virtual void UnloadImage(CacheType cache, hImg index)=0;
+	virtual int  LoadImage(const char *image, CacheType cache, int index=-1)=0;
+	virtual void UnloadImage(CacheType cache, int index)=0;
 	virtual void UnloadImageCache(CacheType cache)=0;
 	virtual void UnloadImageAll(void)=0;
 
 	/* Hud Interface */
-	virtual void  HudPrintf(int x, int y, float time,char *msg,...) =0;
-	virtual void  HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
-	virtual void  PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
+	virtual void HudPrintf(int x, int y, float time,char *msg,...) =0;
+	virtual void HudPrint(char *msg, int x, int y, float time =0.0, int color=0) =0;
+	virtual void PrintMessage(char *msg, int color=0, float time=HUD_DEFAULTMSGTIME) =0;
 };
 
 #endif

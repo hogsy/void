@@ -27,18 +27,18 @@ public:
 	/* Interface functions */
 
 	// load a model into memory
-	hMdl LoadModel(const char *model, CacheType cache, hMdl index=-1);
+	int LoadModel(const char *model, CacheType cache, int index=-1);
 
 	// add the model to the render cache
-	void DrawModel(const EntState &state);
+	void DrawModel(const ClEntity &state);
 	void Purge(void);
 
 	// unload models from memory
-	void UnloadModel(CacheType cache, hMdl index);
+	void UnloadModel(CacheType cache, int index);
 	void UnloadModelCache(CacheType cache);
 	void UnloadModelAll(void);
 
-	void GetInfo(EntState &state);
+	void GetInfo(ClEntity &state);
 
 	// funcs for vid restarts
 	void LoadSkins(void);
@@ -50,7 +50,7 @@ private:
 	// struct to hold a list of models to be drawn
 	typedef struct drawmodel_s
 	{
-		const EntState *state;
+		const ClEntity *state;
 		drawmodel_s *next;
 	} drawmodel_t;
 
@@ -66,7 +66,7 @@ private:
 	bool ready;
 
 
-	CModelCacheEntry *caches[CACHE_NUMCACHES][CACHE_NUMMODELS];
+	CModelCacheEntry *caches[CACHE_NUMCACHES][GAME_MAXMODELS];
 };
 
 

@@ -1,8 +1,6 @@
 #ifndef VOID_GAME_ENTITIES
 #define VOID_GAME_ENTITIES
 
-#include "I_game.h"
-#include "Com_keys.h"
 /*
 ============================================================================
 Subclassed game entities

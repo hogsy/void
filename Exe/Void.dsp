@@ -260,10 +260,6 @@ SOURCE=..\Shared\Cl_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Cl_game.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Cl_main.cpp
 # End Source File
 # Begin Source File
@@ -470,10 +466,6 @@ SOURCE=..\..\Mssdk\Include\WinEFS.h
 # Begin Group "Game"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\Bg_defs.h
-# End Source File
 # Begin Source File
 
 SOURCE=..\Shared\Game_defs.h

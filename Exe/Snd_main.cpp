@@ -1,6 +1,6 @@
 #include "Sys_hdr.h"
 #include "Com_vector.h"
-#include "Cl_game.h"
+#include "Cl_defs.h"
 #include "Snd_main.h"
 #include "Snd_hdr.h"
 #include "Snd_buf.h"
@@ -387,12 +387,12 @@ void CSoundManager::PlaySoundSource(SndSource &source)
 	if(i== MAX_CHANNELS)
 	{
 		ComPrintf("CSoundManager::PlayStaticSound: Unable to play %s, max sounds reached\n", 
-			m_bufferCache[source.ent->sndCache][source.ent->soundIndex].GetFilename());
+			m_bufferCache[source.ent->sndCache][source.ent->sndIndex].GetFilename());
 		return;
 	}
 
 	source.channel = &m_Channels[i];
-	m_Channels[i].Create3d(m_bufferCache[source.ent->sndCache][source.ent->soundIndex],
+	m_Channels[i].Create3d(m_bufferCache[source.ent->sndCache][source.ent->sndIndex],
 						   source.ent->origin,
 						   source.muteDist);
 
@@ -401,8 +401,8 @@ void CSoundManager::PlaySoundSource(SndSource &source)
 	if(!m_Channels[i].Play(loop))
 	{
 		ComPrintf("CSoundManager::PlayStaticSound: Error playing sound %s at index %d\n", 
-					source.ent->soundIndex, 
-					m_bufferCache[source.ent->sndCache][source.ent->soundIndex].GetFilename());
+					source.ent->sndIndex, 
+					m_bufferCache[source.ent->sndCache][source.ent->sndIndex].GetFilename());
 		source.Reset();
 		return;
 	}
@@ -451,10 +451,10 @@ void CSoundManager::PlaySnd2d(int index, CacheType cache,
 */
 void CSoundManager::AddStaticSource(const ClEntity * ent)
 {
-	if(!m_bufferCache[ent->sndCache][ent->soundIndex].InUse())
+	if(!m_bufferCache[ent->sndCache][ent->sndIndex].InUse())
 	{
 		ComPrintf("CSoundManager::AddStaticSource: no sound at index %d, cache %d\n", 
-			ent->soundIndex, ent->sndCache);
+			ent->sndIndex, ent->sndCache);
 		return;
 	}
 
@@ -504,7 +504,7 @@ Register a new sound at given index,
 or load and return new index if not specified
 ======================================
 */
-hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
+int CSoundManager::RegisterSound(const char *path, CacheType cache, int index)
 {
 	//we have to register a new sound, at the given index
 	if(index != -1)
@@ -551,7 +551,7 @@ hSnd CSoundManager::RegisterSound(const char *path, CacheType cache, hSnd index)
 Unregister the given sound
 ======================================
 */
-void CSoundManager::UnregisterSound(hSnd index, CacheType cache)
+void CSoundManager::UnregisterSound(int index, CacheType cache)
 {
 	if(m_bufferCache[cache][index].InUse())
 		m_bufferCache[cache][index].Destroy();
@@ -601,7 +601,7 @@ void CSoundManager::SPlay(const CParms &parms)
 	Util::SetDefaultExtension(wavefile,"wav");
 
 	//Run through buffers to see if it has been registered
-	hSnd index = RegisterSound(wavefile, CACHE_LOCAL);
+	int index = RegisterSound(wavefile, CACHE_LOCAL);
 	if(index == -1)
 	{
 		ComPrintf("Unable to find wavefile %s\n", wavefile);

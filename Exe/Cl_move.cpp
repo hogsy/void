@@ -96,7 +96,7 @@ void CClient::Move(vector_t *dir, float time)
 void CClient::MoveForward()
 {
 	static vector_t forward;
-	AngleToVector (&m_pClient->angle, &forward, NULL, NULL);
+	AngleToVector (&m_pClient->angles, &forward, NULL, NULL);
 	VectorNormalize(&forward);
 	VectorAdd2(desired_movement,forward);
 }
@@ -104,7 +104,7 @@ void CClient::MoveForward()
 void CClient::MoveBackward()
 {
 	static vector_t backword;
-	AngleToVector (&m_pClient->angle, &backword, NULL, NULL);
+	AngleToVector (&m_pClient->angles, &backword, NULL, NULL);
 	VectorNormalize(&backword);
 	VectorMA(&desired_movement, -1, &backword, &desired_movement);
 }
@@ -112,7 +112,7 @@ void CClient::MoveBackward()
 void CClient::MoveRight()
 {
 	static vector_t right;
-	AngleToVector (&m_pClient->angle, NULL, &right, NULL);
+	AngleToVector (&m_pClient->angles, NULL, &right, NULL);
 	VectorNormalize(&right);
 	VectorAdd2(desired_movement,right);
 }
@@ -120,41 +120,41 @@ void CClient::MoveRight()
 void CClient::MoveLeft()
 {
 	static vector_t left;
-	AngleToVector (&m_pClient->angle, NULL, &left, NULL);
+	AngleToVector (&m_pClient->angles, NULL, &left, NULL);
 	VectorNormalize(&left);
 	VectorMA(&desired_movement, -1, &left, &desired_movement);
 }
 
 void CClient::RotateRight(const float &val)
 {
-	m_pClient->angle.YAW += (val * CL_ROTATION_SENS);  
-	if (m_pClient->angle.YAW > PI)
-		m_pClient->angle.YAW -= 2*PI;
+	m_pClient->angles.YAW += (val * CL_ROTATION_SENS);  
+	if (m_pClient->angles.YAW > PI)
+		m_pClient->angles.YAW -= 2*PI;
 }
 
 void CClient:: RotateLeft(const float &val)
 {
-	m_pClient->angle.YAW -= (val * CL_ROTATION_SENS); 
-	if (m_pClient->angle.YAW < -PI)
-		m_pClient->angle.YAW += 2*PI;
+	m_pClient->angles.YAW -= (val * CL_ROTATION_SENS); 
+	if (m_pClient->angles.YAW < -PI)
+		m_pClient->angles.YAW += 2*PI;
 }
 
 void CClient::RotateUp(const float &val)
 {
-	m_pClient->angle.PITCH +=  (val * CL_ROTATION_SENS);
-	if (m_pClient->angle.PITCH < -PI/2)
-		m_pClient->angle.PITCH = -PI/2;
-	if (m_pClient->angle.PITCH > PI/2)
-		m_pClient->angle.PITCH = PI/2;
+	m_pClient->angles.PITCH +=  (val * CL_ROTATION_SENS);
+	if (m_pClient->angles.PITCH < -PI/2)
+		m_pClient->angles.PITCH = -PI/2;
+	if (m_pClient->angles.PITCH > PI/2)
+		m_pClient->angles.PITCH = PI/2;
 }
 
 void CClient:: RotateDown(const float &val)
 {
-	m_pClient->angle.PITCH -=  (val * CL_ROTATION_SENS); 
-	if (m_pClient->angle.PITCH < -PI/2)
-		m_pClient->angle.PITCH = -PI/2;
-	if (m_pClient->angle.PITCH > PI/2)
-		m_pClient->angle.PITCH = PI/2;
+	m_pClient->angles.PITCH -=  (val * CL_ROTATION_SENS); 
+	if (m_pClient->angles.PITCH < -PI/2)
+		m_pClient->angles.PITCH = -PI/2;
+	if (m_pClient->angles.PITCH > PI/2)
+		m_pClient->angles.PITCH = PI/2;
 }
 
 

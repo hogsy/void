@@ -1,5 +1,6 @@
 #include "Game_main.h"
 #include "Game_ents.h"
+#include "Com_keys.h"
 
 /*
 ======================================
@@ -62,9 +63,9 @@ protected:
 	{
 		//Handle resource Names differently
 		if(strcmp(key,"model")==0)
-			ent->modelIndex = g_pImports->RegisterModel(parms.ReadString());
+			ent->mdlIndex = g_pImports->RegisterModel(parms.ReadString());
 		else if(strcmp(key,"noise")==0)
-			ent->soundIndex = g_pImports->RegisterSound(parms.ReadString());
+			ent->sndIndex = g_pImports->RegisterSound(parms.ReadString());
 		else
 		{	
 			EntFields  * iterator = spawnFields;
