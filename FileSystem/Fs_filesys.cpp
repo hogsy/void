@@ -3,6 +3,7 @@
 #include "I_filesystem.h"
 #include "Fs_pakfile.h"
 #include "Fs_zipfile.h"
+#include "Com_cvar.h"
 
 //======================================================================================
 #define CMD_LISTFILES	0
@@ -112,7 +113,7 @@ bool CFileSystem::Init(const char *exedir, const char * basedir)
 		m_exepath[exepathlen] = '\0';
 
 	//Make sure the given path exists.
-	if(!PathExists(m_exepath))
+	if(!FileUtil::PathExists(m_exepath))
 	{
 		ComPrintf("CFileSystem::Init: Exe directory does not exist : %s\n",m_exepath);
 		return false;
@@ -164,7 +165,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 
 	//Check to see Dir exists.
 	sprintf(m_curpath,"%s/%s",m_exepath,gamedir);
-	if(!PathExists(m_curpath))
+	if(!FileUtil::PathExists(m_curpath))
 	{
 		ComPrintf("CFileSystem::AddGameDir: Game dir does not exist : %s\n",m_curpath);
 		memset(m_curpath,0, COM_MAXPATH);
@@ -187,7 +188,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 	
 	for(std::list<std::string>::iterator itor = archivelist.begin(); itor != archivelist.end(); itor++)
 	{
-		if(CompareExts(itor->c_str(),"zip"))
+		if(FileUtil::CompareExts(itor->c_str(),"zip"))
 		{
 			CZipFile * zipfile = new CZipFile();
 			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
@@ -198,7 +199,7 @@ bool CFileSystem::AddGameDir(const char *dir)
 				delete zipfile;
 		}
 		//Found a Pak file, try adding
-		if(CompareExts(itor->c_str(),"pak"))
+		if(FileUtil::CompareExts(itor->c_str(),"pak"))
 		{
 			CPakFile * pakfile = new CPakFile();
 			sprintf(archivepath,"%s/%s", gamedir,itor->c_str());
@@ -492,6 +493,64 @@ void CFileSystem::ListFiles(const char *path, const char *ext)
 	}
 }
 
+
+/*
+==========================================
+Find the full name of a file at the given path
+==========================================
+*/
+bool CFileSystem::FindFileName(char * buf, int buflen, const char * path)
+{
+	if(!m_lastpath)
+	{
+		ComPrintf("CFileSystem::ListFiles: File System is uninitialized\n");
+		return false;
+	}
+
+	WIN32_FIND_DATA	finddata;
+	HANDLE hsearch;
+	int pathlen = strlen(path);
+	char searchpath[COM_MAXPATH];
+	bool found = false;
+	
+	SearchPath_t *	iterator = m_lastpath;
+	
+	while(iterator->prev)
+	{
+		iterator = iterator->prev;
+		if(iterator->archive)
+		{
+			found = iterator->archive->FindFile(buf,buflen,path);
+			if(found == true)
+				return true;
+		}
+		else
+		{
+			sprintf(searchpath,"%s/%s/%s*", m_exepath, iterator->path, path);
+ComPrintf("Searching in %s\n",searchpath);
+			
+			hsearch= FindFirstFile(searchpath,&finddata);
+			if(hsearch != INVALID_HANDLE_VALUE)
+			{
+				char ext[8];
+				FileUtil::ParseExtension(finddata.cFileName,ext,8);
+
+				if(FindClose(hsearch) == FALSE)   // file search handle
+					ComPrintf("CFileSystem::FindFileName:Unable to close search handle\n");
+
+				if(strlen(ext) + pathlen < buflen)
+				{
+					sprintf(buf,"%s.%s", path,ext);
+					return true;
+				}
+			}
+			
+		}
+	}
+	return false;
+}
+
+
 /*
 ==========================================
 Console Command Hanlder
@@ -549,7 +608,7 @@ bool CFileSystem::GetFilesInPath(StringList &strlist, const char *path, const ch
 
 	while(!finished)
 	{
-//		if(!(finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+//		if(finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		strlist.push_back(std::string(finddata.cFileName));
 
 		if (!FindNextFile(hsearch, &finddata))
@@ -606,3 +665,8 @@ void CFileSystem::RemoveSearchPath(const char *path)
 			iterator = iterator->prev;
 	}
 }
+
+
+//======================================================================================
+//======================================================================================
+//Not sure

@@ -24,7 +24,7 @@ public:
 				  uint buffersize, 
 				  const char *ifilename);
 	
-	bool HasFile(const char * filename);
+	bool FindFile(char * buf, int buflen,const char * filename);
 	void ListFiles();
 	int  GetFileList (StringList &strlst, 
 					  const char * path,
@@ -60,9 +60,9 @@ private:
 	int				m_numOpenFiles;
 
 	bool BinarySearchForEntry(const char *name,	
-							  PakEntry_t ** array, 
 							  PakEntry_t ** item,
-							  int low, int high);
+							  int low, int high, 
+							  int nameoffset= -1);
 };
 
 #endif

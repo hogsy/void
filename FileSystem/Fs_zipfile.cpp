@@ -1,4 +1,5 @@
 #include "Fs_zipfile.h"
+#include "I_file.h"
 
 /*======================================================================================
 Private Declarations and definitions
@@ -455,7 +456,7 @@ int  CZipFile::GetFileList (StringList &strlst,
 		for(int i=0;i<m_numFiles;i++)
 		{
 			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
-			   (!ext || CompareExts(m_files[i]->filename,ext)))
+			   (!ext || FileUtil::CompareExts(m_files[i]->filename,ext)))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -466,7 +467,7 @@ int  CZipFile::GetFileList (StringList &strlst,
 	{
 		for(int i=0;i<m_numFiles;i++)
 		{
-			if(!ext || CompareExts(m_files[i]->filename,ext))
+			if(!ext || FileUtil::CompareExts(m_files[i]->filename,ext))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -482,11 +483,20 @@ int  CZipFile::GetFileList (StringList &strlst,
 Check to see if the archive has the file
 ==========================================
 */
-bool CZipFile::HasFile(const char * filename)
+bool CZipFile::FindFile(char * buf, int buflen,const char * filename)
 {
 	ZipEntry_t * entry=0;
-	if(BinarySearchForEntry(filename,m_files,&entry,0,m_numFiles))
-		return true;
+	int filelen = strlen(filename);
+	if(BinarySearchForEntry(filename,&entry,0,m_numFiles,filelen))
+	{
+		char ext[8];
+		FileUtil::ParseExtension(entry->filename,ext,8);
+		if(strlen(entry->filename) + strlen(m_archiveName) + 2 < buflen)
+		{
+			sprintf("%s/%s.%s",m_archiveName,entry->filename);
+			return true;
+		}
+	}
 	return false;	
 }
 
@@ -496,9 +506,8 @@ Search for given file name
 ==========================================
 */
 bool CZipFile::BinarySearchForEntry(const char *name,	
-									ZipEntry_t ** array, 
 									ZipEntry_t ** item,
-									int low, int high)
+									int low, int high,int nameoffset)
 {
 	//Array doenst have any items
 	if(low == high)
@@ -506,21 +515,21 @@ bool CZipFile::BinarySearchForEntry(const char *name,
 		item = 0;
 		return false;
 	}
-	
+
 	int mid = (low+high)/2;
-	int ret = _stricmp(name,array[mid]->filename);
+	int ret = _strnicmp(name,m_files[mid]->filename,nameoffset);
 
 	if(ret == 0)		//name is equal to entry in array
 	{
-		*item = array[mid];
+		*item = m_files[mid];
 		return true;
 	}
 	else if(mid == low)
 		return 0;
 	else if(ret > 0)	//name is greater than array entry
-		return BinarySearchForEntry(name,array,item,mid,high);
+		return BinarySearchForEntry(name,item,mid,high,nameoffset);
 	else if(ret < 0)	//name is less than array entry
-		return BinarySearchForEntry(name,array,item,low,mid);
+		return BinarySearchForEntry(name,item,low,mid,nameoffset);
 	return false;
 }
 
@@ -541,7 +550,7 @@ uint CZipFile::LoadFile(byte ** ibuffer,
 	}
 
 	ZipEntry_t * entry=0;
-	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
+	if(BinarySearchForEntry(ifilename,&entry,0,m_numFiles))
 	{
 		if(!buffersize)
 		{
@@ -592,7 +601,7 @@ HFS CZipFile::OpenFile(const char *ifilename)
 	}
 	//Finds file, and adds to openFiles list if successful
 	ZipEntry_t * entry= 0;
-	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
+	if(BinarySearchForEntry(ifilename,&entry,0,m_numFiles))
 	{
 		m_openFiles[i].file = entry;
 		m_openFiles[i].curpos= 0;

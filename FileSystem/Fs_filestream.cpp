@@ -35,7 +35,11 @@ CFileStream::~CFileStream()
 	}
 }
 
-
+/*
+==========================================
+Get current position
+==========================================
+*/
 uint CFileStream::GetPos() const  
 { 
 	if(m_fp)	
@@ -47,12 +51,11 @@ uint CFileStream::GetPos() const
 
 /*
 ==========================================
-Get Files size
+Access funcs
 ==========================================
 */
-uint CFileStream::GetSize() const 
-{ return m_size; 
-}
+uint CFileStream::GetSize() const  { return m_size;  }
+const char * CFileStream::GetFileName() const {	return m_filename; }
 
 /*
 =====================================

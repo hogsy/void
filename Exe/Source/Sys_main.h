@@ -2,10 +2,12 @@
 #define VOID_SYS_MAIN
 
 #include "Sys_hdr.h"
-#include "I_renderer.h"
 #include "Sys_time.h"
-#include "Sys_exp.h"
 #include "In_main.h"
+#include "Mus_main.h"
+#include "I_renderer.h"
+#include "I_filesystem.h"
+#include "Sys_exp.h"
 
 //========================================================================================
 
@@ -43,6 +45,8 @@ public:
 	void OnFocus();
 	void LostFocus();
 
+	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
+
 private:
 
 	//Give these friend access
@@ -52,13 +56,13 @@ private:
 	friend void	System::SetGameState(eGameState state);
 	friend I_InputFocusManager * System::GetInputFocusManager();
 
-
 	char		   m_exePath[COM_MAXPATH];
 	eGameState	   m_gameState;
 
 	CInput		 * m_pInput;		//Input 
 	CTime		 * m_pTime;			//Timer Class
 	CFileSystem  * m_pFileSystem;	//FileSystem
+	CMusic		 * m_pMusic;
 
 	RenderInfo_t * m_pRParms;		//Current Renderering info
 	VoidExport   * m_pExport;		//Exported Data
@@ -72,7 +76,6 @@ private:
 	void CFuncQuit(int argc, char** argv);		//quit game
 	void CFuncMap(int argc, char** argv);		//start local server with map + connect to it
 
-	void HandleCommand(HCMD cmdId, int numArgs, char ** szArgs);
 };
 
 #endif

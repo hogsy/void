@@ -4,14 +4,8 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <winsock2.h>
-#include <memory.h>
-#include <winuser.h>
-#include <objbase.h>
-#include <mmsystem.h>
-#include <direct.h>
 
   #define __VOIDALPHA	1
-//#define INCLUDE_MUSIC	1
 
 #pragma warning(disable : 4786)
 
@@ -21,7 +15,6 @@
 #include "I_hunkmem.h"
 #include "I_console.h"
 #include "I_file.h"
-#include "I_filesystem.h"
 
 #include "Com_cvar.h"
 #include "Com_util.h"
@@ -47,10 +40,11 @@ namespace System
 	extern float	g_fcurTime;
 
 	//Common System functions
-	I_Console *	GetConsole();
-	const char* GetExePath();
-	const char* GetCurrentPath();
-	eGameState  GetGameState();
+	I_Console  *	GetConsole();
+	const char *	GetExePath();
+	const char *	GetCurrentPath();
+	eGameState		GetGameState();
+	
 	void SetGameState(eGameState state);
 
 	//Windows specefic

@@ -1,6 +1,5 @@
 #include "Sys_time.h"
 
-
 namespace System
 {
 float	g_fframeTime=0;		//The Global Frame Time
@@ -68,7 +67,7 @@ bool CTime::Init()
 
 /*
 =====================================
-
+Reset the Timer
 =====================================
 */
 void CTime::Reset()
@@ -79,7 +78,7 @@ void CTime::Reset()
 
 /*
 =====================================
-
+Update time
 =====================================
 */
 

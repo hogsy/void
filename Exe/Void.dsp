@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 version.lib kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib ...\Debug\Out\FileSystem\vfs.lib ..\Debug\Out\Renderer\vrender.lib /nologo /subsystem:windows /profile /machine:I386 /out:"..\Void.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib ...\Debug\Out\FileSystem\vfs.lib ..\Debug\Out\Renderer\vrender.lib /nologo /subsystem:windows /profile /machine:I386 /out:"..\Void.exe"
 # SUBTRACT LINK32 /map /debug
 
 !ELSEIF  "$(CFG)" == "Void - Win32 Debug"
@@ -81,8 +81,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\Out\Renderer\vrender.lib ..\Debug\Out\FileSystem\vfs.lib /nologo /subsystem:windows /debug /machine:I386 /out:"..\Void.exe"
-# SUBTRACT LINK32 /verbose /profile /incremental:no /map /force
+# ADD LINK32 Delayimp.lib kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib fmodvc.lib Ws2_32.lib ..\Debug\Out\Renderer\vrender.lib ..\Debug\Out\FileSystem\vfs.lib /nologo /subsystem:windows /debug /machine:I386 /out:"..\Void.exe" /DELAYLOAD:fmod.dll
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -276,6 +276,14 @@ SOURCE=.\Source\resources.rc
 # Begin Source File
 
 SOURCE=..\Shared\Fmod\fmod.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_fmod.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Mus_fmod.h
 # End Source File
 # Begin Source File
 

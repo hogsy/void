@@ -10,7 +10,13 @@
 
 /*
 =====================================
-The client
+Client class
+-controls the camera
+-the game commands,
+-the hud while IN GAME
+-processes server messages to update world
+-predicts item positions
+-basically all the user interactive elements which are only available when in game
 =====================================
 */
 class CClient :	public I_CmdHandler 
@@ -70,10 +76,10 @@ private:
 	//Console funcs
 	void CamPath(int argc,char **argv);
 
-	 CVar 	m_clport;
-	 CVar 	m_clname;
-	 CVar 	m_clrate;
-	 CVar 	m_noclip;
+	CVar	m_clport;
+	CVar 	m_clname;
+	CVar 	m_clrate;
+	CVar 	m_noclip;
 
 	unsigned int	m_recvseq;		//packet num
 	CNBuffer		m_recvBuf;		//network buffer we read from

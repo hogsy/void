@@ -6,18 +6,12 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
-#include "Com_cvar.h"
 #include "I_hunkmem.h"
 
 //======================================================================================
 //======================================================================================
 
 typedef int HFS;
-
-
-//Shared Utility funcs. fs_main.cpp
-bool CompareExts(const char *file, const char *ext);		
-bool PathExists(const char * path);
 
 /*
 ===========================================
@@ -47,7 +41,7 @@ public:
 						  const char *ifilename)=0;
 
 	//Check for presence of given file
-	virtual bool HasFile(const char * filename)=0;
+	virtual bool FindFile(char * buf, int buflen, const char * filename)=0;
 
 	//Print file listing
 	virtual void ListFiles()=0;

@@ -1,4 +1,5 @@
 #include "Fs_pakfile.h"
+#include "I_file.h"
 
 //======================================================================================
 //Private definations
@@ -133,11 +134,20 @@ Check to see if the archive contains this file
 ==========================================
 */
 
-bool CPakFile::HasFile(const char * filename)
+bool CPakFile::FindFile(char * buf, int buflen,const char * filename)
 {
 	PakEntry_t * entry=0;
-	if(BinarySearchForEntry(filename,m_files,&entry,0,m_numFiles))
-		return true;
+	int filelen = strlen(filename);
+	if(BinarySearchForEntry(filename,&entry,0,m_numFiles,filelen))
+	{
+		char ext[8];
+		FileUtil::ParseExtension(entry->filename,ext,8);
+		if(strlen(entry->filename) + strlen(m_archiveName) + 2 < buflen)
+		{
+			sprintf("%s/%s.%s",m_archiveName,entry->filename);
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -159,7 +169,7 @@ uint CPakFile::LoadFile(byte ** ibuffer,
 	}
 
 	PakEntry_t * entry=0;
-	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
+	if(BinarySearchForEntry(ifilename,&entry,0,m_numFiles))
 	{
 		if(!buffersize)
 		{
@@ -202,7 +212,7 @@ int  CPakFile::GetFileList (StringList &strlst,
 		{
 			//Win32 specific
 			if((_strnicmp(path,m_files[i]->filename,plen) == 0) &&
-			   (!ext || CompareExts(m_files[i]->filename,ext)))
+			   (!ext || FileUtil::CompareExts(m_files[i]->filename,ext)))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -213,7 +223,7 @@ int  CPakFile::GetFileList (StringList &strlst,
 	{
 		for(int i=0;i<m_numFiles;i++)
 		{
-			if(!ext || CompareExts(m_files[i]->filename,ext))
+			if(!ext || FileUtil::CompareExts(m_files[i]->filename,ext))
 			{
 				strlst.push_back(std::string(m_files[i]->filename));
 				matched ++;
@@ -243,9 +253,9 @@ sets pointer, and returns true if finds it
 ===========================================
 */
 bool CPakFile::BinarySearchForEntry(const char *name,	
-									PakEntry_t ** array, 
 									PakEntry_t ** item,
-									int low, int high)
+									int low, int high,
+									int nameoffset)
 {
 	//Array doenst have any items
 	if(low == high)
@@ -255,19 +265,19 @@ bool CPakFile::BinarySearchForEntry(const char *name,
 	}
 	
 	int mid = (low+high)/2;
-	int ret = _stricmp(name,array[mid]->filename);
+	int ret = _strnicmp(name,m_files[mid]->filename,nameoffset);
 
 	if(ret == 0)		//name is equal to entry in array
 	{
-		*item = array[mid];
+		*item = m_files[mid];
 		return true;
 	}
 	else if(mid == low)
 		return 0;
 	else if(ret > 0)	//name is greater than array entry
-		return BinarySearchForEntry(name,array,item,mid,high);
+		return BinarySearchForEntry(name,item,mid,high,nameoffset);
 	else if(ret < 0)	//name is less than array entry
-		return BinarySearchForEntry(name,array,item,low,mid);
+		return BinarySearchForEntry(name,item,low,mid,nameoffset);
 	return false;
 }
 
@@ -302,7 +312,7 @@ HFS CPakFile::OpenFile(const char *ifilename)
 
 	//Finds file, and adds to openFiles list if successful
 	PakEntry_t * entry= 0;
-	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
+	if(BinarySearchForEntry(ifilename,&entry,0,m_numFiles))
 	{
 		m_openFiles[i].file = entry;
 		m_openFiles[i].curpos= 0;

@@ -3,8 +3,10 @@
 #include "Sv_main.h"
 #include "Cl_main.h"
 #include "Snd_main.h"
-#include "Mus_main.h"
 #include "Com_hunk.h"
+
+#include <objbase.h>
+#include <direct.h>
 
 //========================================================================================
 //The memory manager objects
@@ -18,12 +20,11 @@ I_Renderer  *	g_pRender  =0;	//Renderer
 CConsole	*	g_pConsole =0;	//Console
 CClient		*	g_pClient  =0;	//Client and UI
 
+
 #ifdef INCLUDE_SOUND
 CSound		*	g_pSound=0;		//Sound Subsystem
 #endif
-#ifdef INCLUDE_MUSIC
-CMusic		*	g_pMusic=0;		//Music Subsystem
-#endif
+
 #ifndef __VOIDALPHA
 CServer		*	g_pServer=0;	//Network Server
 #endif
@@ -53,7 +54,7 @@ namespace System
 	const char* GetCurrentPath(){ return g_pVoid->m_pFileSystem->GetCurrentPath(); }
 	eGameState  GetGameState()  { return g_pVoid->m_gameState;  }
 	void SetGameState(eGameState state) { g_pVoid->m_gameState = state; }
-	I_InputFocusManager * GetInputFocusManager() { return g_pVoid->m_pInput->GetFocusManager(); }
+	I_InputFocusManager * GetInputFocusManager(){ return g_pVoid->m_pInput->GetFocusManager(); }
 }
 
 /*
@@ -104,10 +105,8 @@ CVoid::CVoid(const char * cmdLine)
 	g_pSound = new CSound();
 #endif
 
-#ifdef INCLUDE_MUSIC
 	//Music
-	g_pMusic = new CMusic();
-#endif
+	m_pMusic = new CMusic();
 
 	//Set game state - full screen console - not connected
 	m_gameState = INCONSOLE;
@@ -145,12 +144,11 @@ CVoid::~CVoid()
 	}
 
 #endif
-#ifdef INCLUDE_MUSIC
-	if(g_pMusic)
-	{	delete g_pMusic;
-		g_pMusic = 0;
+
+	if(m_pMusic)
+	{	delete m_pMusic;
+		m_pMusic = 0;
 	}
-#endif
 	
 	if(m_pInput)
 	{	delete m_pInput;
@@ -285,17 +283,14 @@ bool CVoid::Init()
 	}
 #endif
 
-#ifdef INCLUDE_MUSIC
 	//================================
 	//Music
-	if(!g_pMusic->Init())
+	if(!m_pMusic->Init())
 	{
-		ComPrintf("CVoid::Init: couldnt music system\n");
-		delete g_pMusic;
-		g_pMusic = 0;
+		ComPrintf("CVoid::Init: couldnt init music system\n");
+		delete m_pMusic;
+		m_pMusic = 0;
 	}
-#endif
-
 
 #ifndef __VOIDALPHA
 	//================================
@@ -350,12 +345,9 @@ bool CVoid::Shutdown()
 		g_pSound->Shutdown();
 #endif
 
-
-#ifdef INCLUDE_MUSIC
 	//music
-	if(g_pMusic)
-		g_pMusic->Shutdown();
-#endif
+	if(m_pMusic)
+		m_pMusic->Shutdown();
 
 	//input
 	if(m_pInput)
@@ -453,7 +445,7 @@ bool CVoid::InitServer(char *map)
 	char mapname[128];
 	
 	strcpy(mapname, map);
-	Util::DefaultExtension(mapname,".bsp");
+	FileUtil::SetDefaultExtension(mapname,".bsp");
 	
 //	sprintf(worldname,"%s\\%s\\worlds\\%s",g_exedir,g_gamedir,mapname);
 	

@@ -596,12 +596,35 @@ Win32 Keyboard Poll function
 void CKeyboard::Update_Win32()
 {
 	//Get the input's device state, and put the state in dims
-    if(!GetKeyboardState(m_aKeyState))
+    if(!::GetKeyboardState(m_aKeyState))
 	{
 		ComPrintf("CKeyboard::Update_Win32: Unable to get device state\n");
-
 		FlushKeyBuffer();
 		return;
+	}
+
+	if(m_aKeyState[VK_SHIFT] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LSHIFT) & 0x80000000)
+			m_aKeyState[INKEY_LEFTSHIFT] = 0x80;
+		else 
+			m_aKeyState[INKEY_RIGHTSHIFT] = 0x80;
+	}
+
+	if(m_aKeyState[VK_MENU] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LMENU) & 0x80000000)
+			m_aKeyState[INKEY_LEFTALT] = 0x80;
+		else 
+			m_aKeyState[INKEY_RIGHTALT] = 0x80;
+	}
+
+	if(m_aKeyState[VK_CONTROL] & 0x80)
+	{
+		if(::GetAsyncKeyState(VK_LCONTROL) & 0x80000000)
+			m_aKeyState[INKEY_LEFTCTRL] = 0x80;
+		else 
+			m_aKeyState[INKEY_RIGHTCTRL] = 0x80;
 	}
 
 	for(int i=0;i<IN_NUMKEYS;i++)
@@ -970,7 +993,6 @@ LRESULT CALLBACK Win32_KeyboardProc(int code,       // hook code
 		if (wParam == VK_TAB && (wInfo & KF_ALTDOWN))
 			return CallNextHookEx( hWinKbHook, code, wParam, lParam );
 */
-		
 		if((wParam >= VK_F1 && wParam <= VK_F12) &&
 			((lParam >> 16) & KF_ALTDOWN))
 			return CallNextHookEx(m_pKeyboard->hWinKbHook, code, wParam, lParam );

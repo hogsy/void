@@ -24,7 +24,7 @@ public:
 				  uint buffersize, 
 				  const char *ifilename);
 	
-	bool HasFile(const char * filename);
+	bool FindFile(char * buf, int buflen,const char * filename);
 	
 	void ListFiles();
 	
@@ -63,10 +63,9 @@ private:
 	ulong GetLastRecordOffset(FILE *fin);
 	bool  BuildZipEntriesList(FILE * fp, int numfiles);
 	bool  BinarySearchForEntry(const char *name,	
-							  ZipEntry_t ** array, 
 							  ZipEntry_t ** item,
-							  int low, int high);
-
+							  int low, int high,
+							  int nameoffset = -1);
 };
 
 #endif

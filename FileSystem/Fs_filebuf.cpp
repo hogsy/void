@@ -163,29 +163,11 @@ bool CFileBuffer::Seek(uint offset, int origin)
 	return false;
 }
 
-/*
-==========================================
-Get current position in buffer
-==========================================
-*/
-uint CFileBuffer::GetPos() const  
-{ return m_curpos; 
-}
+//======================================================================================
+//Access funcs
+//======================================================================================
 
-/*
-==========================================
-Get files size
-==========================================
-*/
-uint CFileBuffer::GetSize() const 
-{ return m_size; 
-}
-
-/*
-==========================================
-
-==========================================
-*/
-byte * CFileBuffer::GetData() const
-{	return m_buffer;
-}
+uint	CFileBuffer::GetPos()  const  { return m_curpos; }
+uint	CFileBuffer::GetSize() const  { return m_size;   }
+byte *	CFileBuffer::GetData() const  {	return m_buffer; }
+const char * CFileBuffer::GetFileName() const {	return m_filename; }

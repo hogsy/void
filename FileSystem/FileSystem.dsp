@@ -113,6 +113,10 @@ SOURCE=.\Fs_pakfile.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Fs_util.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Fs_zipfile.cpp
 # End Source File
 # End Group
@@ -132,9 +136,13 @@ SOURCE=.\Fs_pakfile.h
 SOURCE=.\Fs_zipfile.h
 # End Source File
 # End Group
-# Begin Group "Common"
+# Begin Group "Shared"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
+# End Source File
 # Begin Source File
 
 SOURCE=..\Shared\Com_cvar.h
@@ -151,6 +159,10 @@ SOURCE=..\Shared\Com_mem.cpp
 
 SOURCE=..\Shared\Com_mem.h
 # End Source File
+# End Group
+# Begin Group "Interface"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\Shared\I_console.h

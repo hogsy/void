@@ -5,9 +5,16 @@ namespace
 {
 	const float KB_REPEATWAIT = 0.3f;
 }
-
 using namespace VoidInput;
 
+//======================================================================================
+//======================================================================================
+
+/*
+==========================================
+Constructor and destructor
+==========================================
+*/
 CInputState::CInputState()
 {
 	m_pCursorHandler = &m_defCurHandler;
@@ -22,6 +29,12 @@ CInputState::~CInputState()
 	m_pKeyHandler = 0;
 }
 
+/*
+==========================================
+Set the current Key listener,
+sets to self if 0
+==========================================
+*/
 void CInputState::SetKeyListener(I_InKeyListener * plistener,
 								 bool bRepeatEvents,
 								 float fRepeatRate)
@@ -35,7 +48,12 @@ void CInputState::SetKeyListener(I_InKeyListener * plistener,
 	m_fRepeatRate = fRepeatRate;
 }
 
-	
+/*
+==========================================
+Set current cursor listener,
+default to self if 0
+==========================================
+*/
 void CInputState::SetCursorListener(I_InCursorListener * plistener)
 {
 	if(plistener)
@@ -44,6 +62,14 @@ void CInputState::SetCursorListener(I_InCursorListener * plistener)
 		m_pCursorHandler = &m_defCurHandler;
 }
 
+
+/*
+==========================================
+A device has updated the state of a a key
+this will update input state, and see if
+an event needs to be dispatched
+==========================================
+*/
 void CInputState::UpdateKey(int keyid, EButtonState keyState)
 {
 	if(keyid >= INKEY_LEFTSHIFT && keyid <= INKEY_RIGHTALT)
@@ -113,6 +139,14 @@ void CInputState::UpdateKey(int keyid, EButtonState keyState)
 	}
 }
 
+
+/*
+==========================================
+Runs everyframe if Keylistener wants to be
+notified of held keys. dispatches any keys
+which have passed the repeate rate
+==========================================
+*/
 void CInputState::DispatchKeys()
 {
 	//Does the listener require repeat events ?
@@ -145,6 +179,11 @@ void CInputState::DispatchKeys()
 	}
 }
 
+/*
+==========================================
+A device messed up. release all the keys
+==========================================
+*/
 void CInputState::FlushKeys()
 {
 	//Send key up events for all keys currently down, to reset them
@@ -166,7 +205,6 @@ void CInputState::FlushKeys()
 		}
 	}
 }
-
 
 /*
 =====================================
