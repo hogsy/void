@@ -3,8 +3,8 @@
 
 #include "Sys_hdr.h"
 #include "I_renderer.h"
-#include "Com_buffer.h"
 #include "Net_defs.h"
+#include "Net_chan.h"
 #include "Snd_defs.h"
 
 //======================================================================================
@@ -13,6 +13,7 @@
 namespace VoidClient
 {
 	class CClientCmdHandler;
+//	class CClientNet;
 }
 
 /*
@@ -35,9 +36,6 @@ public:
 
 	void RunFrame();
 	
-	bool LoadWorld(world_t * world);
-	bool UnloadWorld();
-
 	//Command Handler Interface
 	void HandleCommand(HCMD cmdId, const CParms &parms);
 
@@ -48,6 +46,8 @@ public:
 	void WriteBindTable(FILE *fp);
 
 private:
+	void HandleSpawnParms();
+	void HandleOOBMessage();
 
 	//==================================================
 	//Console commands
@@ -68,8 +68,12 @@ private:
 	void CamPath();
 	void Talk(const char * msg);
 
+//	bool LoadWorld(world_t * world);
+	bool LoadWorld(const char *worldname);
+	bool UnloadWorld();
+
 	//==================================================
-	//Private Member funcs
+	//Network Specific Stuff
 
 	//Read any waiting packets
 	void ReadPackets();	
@@ -79,31 +83,8 @@ private:
 	void SendConnectReq();
 	void SendConnectParms();
 
-	//==================================================
-	//Client CVars
-	CVar		m_clport;
-	CVar 		m_clname;
-	CVar 		m_clrate;
-	CVar 		m_noclip;
-
-	enum EClState
-	{
-		CL_INACTIVE   = 0,  //Nothing doing, sitting in the Console/Menus
-		CL_CONNECTING = 1,	//Sent out a connection request
-		CL_SPAWNING   = 2,	//Established, getting baselines
-		CL_INGAME	  = 3	//In the game
-	};
-
-	//Command Handler
-	friend class VoidClient::CClientCmdHandler;
-	VoidClient::CClientCmdHandler * m_pCmdHandler;
-
-	//Renderer and HUD interfaces
-	I_Renderer* m_pRender;
-	I_RHud    *	m_pHud;
-
-	//Network Specific Stuff
 	CNetBuffer   m_buffer;
+	CNetChan	 m_netChan;
 	VoidNet::CNetSocket * m_pSock;
 	
 	char		m_svServerAddr[24];
@@ -112,7 +93,22 @@ private:
 	int			m_challenge;
 	const char* m_szLastOOBMsg;	//Keep Track of the last OOB message sent
 
-	EClState	m_clState;
+	int			m_state;
+
+	//==================================================
+	//Client CVars
+	CVar		m_clport;
+	CVar 		m_clname;
+	CVar 		m_clrate;
+	CVar 		m_noclip;
+
+	//Command Handler
+	friend class VoidClient::CClientCmdHandler;
+	VoidClient::CClientCmdHandler * m_pCmdHandler;
+
+	//Renderer and HUD interfaces
+	I_Renderer* m_pRender;
+	I_RHud    *	m_pHud;
 
 	bool m_ingame;
 

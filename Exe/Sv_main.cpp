@@ -17,10 +17,9 @@ namespace
 struct CServer::NetChallenge
 {
 	NetChallenge()	{ challenge = 0;	time = 0.0f;  }
-
-	VoidNet::CNetAddr	addr;
-	int		challenge;
-	float	time;
+	CNetAddr	addr;
+	int			challenge;
+	float		time;
 };
 
 using namespace VoidNet;
@@ -32,8 +31,8 @@ using namespace VoidNet;
 Constructor/Destructor
 ==========================================
 */
-CServer::CServer() : m_recvBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
-					 m_sendBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
+CServer::CServer() : m_recvBuf(MAX_BUFFER_SIZE),
+					 m_sendBuf(MAX_BUFFER_SIZE),
 					 m_cPort("sv_port", "20010", CVar::CVAR_INT, CVar::CVAR_ARCHIVE),
 					 m_cDedicated("sv_dedicated", "0", CVar::CVAR_BOOL, CVar::CVAR_LATCH),
 					 m_cHostname("sv_hostname", "Skidz", CVar::CVAR_STRING, CVar::CVAR_ARCHIVE),
@@ -45,7 +44,6 @@ CServer::CServer() : m_recvBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
 	m_challenges = new NetChallenge[MAX_CHALLENGES];
 
 	m_worldName[0] = 0;
-
 	m_pWorld = 0;
 	
 	m_active = false;
@@ -54,7 +52,6 @@ CServer::CServer() : m_recvBuf(CNetBuffer::DEFAULT_BUFFER_SIZE),
 	System::GetConsole()->RegisterCVar(&m_cDedicated);
 	System::GetConsole()->RegisterCVar(&m_cHostname);
 	System::GetConsole()->RegisterCVar(&m_cGame);
-	
 	System::GetConsole()->RegisterCVar(&m_cPort,this);
 	System::GetConsole()->RegisterCVar(&m_cMaxClients,this);
 	
@@ -112,7 +109,8 @@ bool CServer::Init()
 		addrFlags = localAddr[i].iiFlags;
 		if (addrFlags & IFF_UP)
 		{
-			if(!(addrFlags & IFF_LOOPBACK))
+			//if(!(addrFlags & IFF_LOOPBACK))
+			if(!(addrFlags & IFF_LOOPBACK) && pAddrString[0] != 0)
 			{
 				strcpy(boundAddr,pAddrString);
 				ComPrintf("  This interface is up");
@@ -161,6 +159,9 @@ void CServer::Shutdown()
 		if(!m_cDedicated.ival)
 			System::GetConsole()->ExecString("disconnect");
 
+		for(int i=0;i<m_cMaxClients.ival;i++)
+			m_clients[i].Reset();
+
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
 		m_worldName[0] = 0;
@@ -169,6 +170,36 @@ void CServer::Shutdown()
 	m_pSock->Close();
 	ComPrintf("CServer::Shutdown OK\n");
 }
+
+/*
+======================================
+Restart
+======================================
+*/
+void CServer::Restart()
+{
+	if(!m_active)
+		return;
+
+	m_active = false;
+	
+	//Send disconnect messages to clients, if active
+//FIXME change to reconnect here
+	if(m_pWorld)
+	{
+		if(!m_cDedicated.ival)
+			System::GetConsole()->ExecString("disconnect");
+
+		for(int i=0;i<m_cMaxClients.ival;i++)
+			m_clients[i].m_state = CL_INUSE;
+
+		world_destroy(m_pWorld);
+		m_pWorld = 0;
+		m_worldName[0] = 0;
+	}
+	ComPrintf("CServer::Restart OK\n");
+}
+
 
 
 //======================================================================================
@@ -195,13 +226,13 @@ void CServer::LoadWorld(const char * mapname)
 
 	//Shutdown if currently active
 	if(m_active)
-		Shutdown();
-	
-	if(!Init())
+		Restart();
+	else if(!Init())
 		return;
 
-	char mappath[COM_MAXPATH];
+	m_active = true;
 
+	char mappath[COM_MAXPATH];
 	strcpy(mappath, szWORLDDIR);
 	strcat(mappath, worldname);
 	Util::SetDefaultExtension(mappath,".bsp");
@@ -214,12 +245,11 @@ void CServer::LoadWorld(const char * mapname)
 		return;
 	}
 
-	//Create Sigon-message.
-	//=======================
-
 	//Set worldname
 	Util::RemoveExtension(m_worldName,COM_MAXPATH, worldname);
 
+	//Create Sigon-message. includes baselines
+	//=======================
 	//all we need is the map name right now
 	m_numSignOnBuffers = 1;
 	strcpy(m_szSignOnBuf[0], m_worldName);
@@ -302,19 +332,56 @@ void CServer::HandleConnectReq()
 		return;
 	}
 
-	//Client is ready to be accepted
+	//Check if this client is already connected
+	for(i=0;i<m_cMaxClients.ival;i++)
+	{
+		if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+		{
+			//Is connected, ignore dup connected
+			if(m_clients[i].m_state == CL_CONNECTED)
+			{
+				ComPrintf("DupConnect from %s\n", m_pSock->GetSource().ToString());
+				return;
+			}
+			
+			//last connection never finished
+			m_clients[i].Reset();
+			ComPrintf("Reconnect: %s\n", m_pSock->GetSource().ToString());
+			break;
+		}
+	}
+
+	//Didn't find any duplicates. now find an empty slot
+	if(i == m_cMaxClients.ival)
+	{
+		for(i=0;i<m_cMaxClients.ival; i++)
+		{
+			if(m_clients[i].m_state == CL_FREE)
+				break;
+		}
+		
+		//Reject if we didnt find a slot
+		if(i == m_cMaxClients.ival)
+		{
+			SendRejectMsg("Server full");
+			return;
+		}
+	}
 
 	m_sendBuf.Reset();
 	m_sendBuf += -1;
 	m_sendBuf += S2C_ACCEPT;
 	m_sendBuf += m_worldName;
-	
-//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(), m_pSock->GetSource());
 	m_pSock->Send(m_sendBuf);
 
-	//All clear, accept the client
-	m_numClients ++;
+	//We now have a new client slot. create it
+	m_clients[i].m_netChan.Setup(m_pSock->GetSource(),&m_recvBuf);
+	m_clients[i].m_state = CL_INUSE;
+
 	ComPrintf("%s connected\n", m_recvBuf.ReadString());
+
+	//update client counts
+	m_numClients ++;
 }
 
 /*
@@ -407,7 +474,19 @@ void CServer::ReadPackets()
 			continue;
 		}
 
-		//find out type of message
+		//otherwise, it must belong to a client
+		for(int i=0; i<m_cMaxClients.ival;i++)
+		{
+			if(m_clients[i].m_netChan.m_addr == m_pSock->GetSource())
+			{
+				m_clients[i].m_netChan.Read();
+				m_clients[i].m_bSend = true;
+				return;
+			}
+		}
+
+		//unknown packet
+		ComPrintf("unknown packet from %s\n", m_pSock->GetSource().ToString());
 	}
 }
 
@@ -432,7 +511,17 @@ void CServer::RunFrame()
 
 	//Run game
 
-	//send updates
+	//write to clients
+	for(int i=0; i<m_cMaxClients.ival;i++)
+	{
+		if(m_clients[i].m_state == CL_FREE)
+			continue;
+
+		//Send base lines
+		if(!m_clients[i].m_bSentSpawn)
+		{
+		}
+	}
 }
 
 

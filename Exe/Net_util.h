@@ -1,9 +1,9 @@
 #ifndef VOID_NET_UTIL
 #define VOID_NET_UTIL
 
-struct sockaddr_in;
+#include "Com_defs.h"
 
-namespace VoidNet {
+struct sockaddr_in;
 
 class  CNetAddr
 {
@@ -13,13 +13,13 @@ public:
 	CNetAddr(const char * szaddr);
 	
 	//Assignment operators
-	VoidNet::CNetAddr & operator = (const sockaddr_in &saddr);
-	VoidNet::CNetAddr & operator = (const VoidNet::CNetAddr &addr);
-	VoidNet::CNetAddr & operator = (const char * szaddr);
+	CNetAddr & operator = (const sockaddr_in &saddr);
+	CNetAddr & operator = (const CNetAddr &addr);
+	CNetAddr & operator = (const char * szaddr);
 
 //FIX ME ! How the hell do I get this to link outside ??
 	//Equality check
-	friend bool operator == (const VoidNet::CNetAddr &laddr, const VoidNet::CNetAddr &raddr)
+	friend bool operator == (const CNetAddr &laddr, const CNetAddr &raddr)
 	{
 		if((laddr.ip[0] == raddr.ip[0]) &&
 		   (laddr.ip[1] == raddr.ip[1]) &&
@@ -29,6 +29,8 @@ public:
 			return true;
 		return false;
 	}
+
+	void Reset();
 
 	//Conversion
 	const char * ToString() const;
@@ -51,5 +53,4 @@ private:
 	static char  m_szLocalAddress[24];
 };
 
-}
 #endif

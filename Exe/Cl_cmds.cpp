@@ -60,9 +60,6 @@ void CClientCmdHandler::RunCommands()
 
 			m_Parms = m_cmdBuffer[i]->szCommand;
 			m_cmdBuffer[i]->pCmd->handler->HandleCommand(m_cmdBuffer[i]->pCmd->id, m_Parms);
-			//m_parms = cmdString;
-			//cmd->handler->HandleCommand(cmd->id,m_parms);
-//			((CConsole*)System::GetConsole())->ExecCommand(m_cmdBuffer[i]->pCmd, m_cmdBuffer[i]->szCommand);
 			if(m_cmdBuffer[i]->szCommand[0] != '+')
 				m_cmdBuffer[i] = 0;
 		}
@@ -220,7 +217,6 @@ void CClientCmdHandler::Unbind(const CParms &parms)
 	if(m_cmdKeys[keynum].szCommand && m_cmdKeys[keynum].pCmd)
 	{
 		m_cmdKeys[keynum].pCmd = 0;
-//		delete [] m_cmdKeys[keynum].szCommand;
 		m_cmdKeys[keynum].szCommand[0] = 0;
 	}
 	ComPrintf("\"%s\" = \"\"\n",arg);

@@ -1,9 +1,9 @@
-#include "Net_chan.h"
 #include "Sys_hdr.h"
+#include "Net_chan.h"
+#include "Net_defs.h"
 
 enum
 {
-	CHAN_BUFFER_SIZE = 1450,
 	MAX_BACKUP =200
 };
 
@@ -12,26 +12,47 @@ using namespace VoidNet;
 //======================================================================================
 //======================================================================================
 
-CNetChan::CNetChan() : m_buffer(CHAN_BUFFER_SIZE),
-					   m_reliableBuffer(CHAN_BUFFER_SIZE),
-					   m_sockBuffer(CHAN_BUFFER_SIZE)
-{
-	m_inSeq = m_inAcked = m_outSeq= m_lastReliableSeq = 0;
-	m_dropCount = m_goodCount= 0;
+CNetChan::CNetChan() : m_buffer(MAX_DATAGRAM_SIZE),
+					   m_reliableBuffer(MAX_DATAGRAM_SIZE),
+					   m_sendBuffer(MAX_DATAGRAM_SIZE)
+{	
+	Reset();
+	m_pRecvBuffer = 0;
+}
 
-	m_bInReliableSeq = m_bInReliableAcked = m_bReliableSeq = 0;
+CNetChan::~CNetChan()
+{
+	m_pRecvBuffer =0;
+}
+
+
+void CNetChan::Setup(const CNetAddr &addr, CNetBuffer * recvBuffer )
+{
+	Reset();
+	m_addr = addr;
+	m_pRecvBuffer = recvBuffer;
+}
+
+void CNetChan::Reset()
+{
+	m_addr.Reset();
+	
+	m_inMsgId=0;				//Latest incoming messageId
+	m_inAckedMsgId=0;			//Latest remotely acked message.
+	m_outMsgId=0;				//Outgoing messageId
+	m_lastOutReliableMsgId=0;	//Id of the last reliable message sent
+
+	m_bInReliableMsg=0;			//Is the message recived supposed to be reliable ?
+	m_bInReliableAcked=0;		//Was the last reliabled message acked by the remote host ?
+
+	m_dropCount = m_goodCount= 0;
+	m_numChokes = 0;
 
 	m_clearTime = 0.0;
 	m_rate = 0.0;
 
 	m_bFatalError = false;
 }
-
-CNetChan::~CNetChan()
-{
-}
-
-
 
 /*
 ===============
@@ -42,6 +63,7 @@ bool CNetChan::CanSend()
 {
 	if (m_clearTime < System::g_fcurTime + MAX_BACKUP * m_rate)
 		return true;
+	m_numChokes ++;
 	return false;
 }
 
@@ -66,7 +88,7 @@ transmition / retransmition of the reliable messages.
 A 0 length will still generate a packet and deal with the reliable messages.
 ================
 */
-void CNetChan::Transmit(int length, byte *data)
+void CNetChan::Write(int length, byte *data)
 {
 	if(m_buffer.OverFlowed())
 	{
@@ -77,13 +99,13 @@ void CNetChan::Transmit(int length, byte *data)
 
 	int	send_reliable = 0;
 
-	//we got confirmation from the last reliable message we sent
-	//and if this message is
-	if((m_inAcked > m_lastReliableSeq)	&&	
-	   (m_bInReliableAcked != m_bInReliableSeq))
+	//send reliably, if the latest message we got has a higher id then the last 
+	//reliable message sent and if the last message received was reliable and hasn't been acked
+	if((m_inMsgId > m_lastOutReliableMsgId)	&&	
+	   (m_bInReliableMsg != m_bInReliableAcked))
 	   send_reliable = 1;
 
-	// if the reliable transmit buffer is empty, copy the current message out
+	//if the reliable transmit buffer is empty, then copy unreliable contents to it
 	if (!m_reliableBuffer.GetSize() && m_buffer.GetSize())
 	{
 		m_reliableBuffer.Reset();
@@ -97,33 +119,33 @@ void CNetChan::Transmit(int length, byte *data)
 	//write packet headers
 	
 	//Outgoing sequence num. add reliable bit if needed
-	h1 = m_outSeq | (send_reliable << 31);	
+	h1 = m_outMsgId | (send_reliable << 31);	
 	//Ack the last received message, add a reliable bit, if it was reliable
-	h2 = m_inSeq  | (m_bInReliableSeq << 31); 
+	h2 = m_inMsgId  | (m_bInReliableMsg << 31); 
 
-	m_sockBuffer.Reset();
-	m_sockBuffer += h1;
-	m_sockBuffer += h2;
+	m_sendBuffer.Reset();
+	m_sendBuffer += h1;
+	m_sendBuffer += h2;
 
 	// copy the reliable message to the packet first
 	if(send_reliable)
 	{
-		m_sockBuffer += m_reliableBuffer;
-		m_lastReliableSeq = m_outSeq;
+		m_sendBuffer += m_reliableBuffer;
+		m_lastOutReliableMsgId = m_outMsgId;
 	}
 
 // add the unreliable part if space is available
-	if (m_sockBuffer.GetMaxSize() - m_sockBuffer.GetSize() >= length)
-		m_sockBuffer.WriteData(data, length);
+	if (m_sendBuffer.GetMaxSize() - m_sendBuffer.GetSize() >= length)
+		m_sendBuffer.WriteData(data, length);
 
 	//increment outgoing sequence
-	m_outSeq++;
+	m_outMsgId++;
 
 	if (m_clearTime < System::g_fcurTime)
-		m_clearTime = System::g_fcurTime + m_sockBuffer.GetSize() * m_rate;
+		m_clearTime = System::g_fcurTime + m_sendBuffer.GetSize() * m_rate;
 	else
-		m_clearTime += m_sockBuffer.GetSize() * m_rate;
-		
+		m_clearTime += m_sendBuffer.GetSize() * m_rate;
+
 /*
 	NET_SendPacket (send.cursize, send.data, chan->remote_address);
 	if (showpackets.value)
@@ -135,298 +157,70 @@ void CNetChan::Transmit(int length, byte *data)
 			, send.cursize);
 */
 }
-/*
-
-bool CNetChan::Receive()
-{
-	unsigned		sequence, sequence_ack;
-	unsigned		reliable_ack, reliable_message;
-
-#ifdef SERVERONLY
-	int			qport;
-#endif
-	int i;
-
-	if (
-#ifndef SERVERONLY
-			!cls.demoplayback && 
-#endif
-			!NET_CompareAdr (net_from, chan->remote_address))
-		return false;
-	
-// get sequence numbers		
-	MSG_BeginReading ();
-	sequence = MSG_ReadLong ();
-	sequence_ack = MSG_ReadLong ();
-
-	// read the qport if we are a server
-#ifdef SERVERONLY
-	qport = MSG_ReadShort ();
-#endif
-
-	reliable_message = sequence >> 31;
-	reliable_ack = sequence_ack >> 31;
-
-	sequence &= ~(1<<31);	
-	sequence_ack &= ~(1<<31);	
-
-	if (showpackets.value)
-		Con_Printf ("<-- s=%i(%i) a=%i(%i) %i\n"
-			, sequence
-			, reliable_message
-			, sequence_ack
-			, reliable_ack
-			, net_message.cursize);
-
-// get a rate estimation
-#if 0
-	if (chan->outgoing_sequence - sequence_ack < MAX_LATENT)
-	{
-		int				i;
-		double			time, rate;
-	
-		i = sequence_ack & (MAX_LATENT - 1);
-		time = realtime - chan->outgoing_time[i];
-		time -= 0.1;	// subtract 100 ms
-		if (time <= 0)
-		{	// gotta be a digital link for <100 ms ping
-			if (chan->rate > 1.0/5000)
-				chan->rate = 1.0/5000;
-		}
-		else
-		{
-			if (chan->outgoing_size[i] < 512)
-			{	// only deal with small messages
-rate = chan->outgoing_size[i]/time;
-				if (rate > 5000)
-					rate = 5000;
-				rate = 1.0/rate;
-				if (chan->rate > rate)
-					chan->rate = rate;
-			}
-		}
-	}
-#endif
-
-//
-// discard stale or duplicated packets
-//
-	if (sequence <= (unsigned)chan->incoming_sequence)
-	{
-		if (showdrop.value)
-			Con_Printf ("%s:Out of order packet %i at %i\n"
-				, NET_AdrToString (chan->remote_address)
-				,  sequence
-				, chan->incoming_sequence);
-		return false;
-	}
-
-//
-// dropped packets don't keep the message from being used
-//
-	net_drop = sequence - (chan->incoming_sequence+1);
-	if (net_drop > 0)
-	{
-		chan->drop_count += 1;
-
-		if (showdrop.value)
-			Con_Printf ("%s:Dropped %i packets at %i\n"
-			, NET_AdrToString (chan->remote_address)
-			, sequence-(chan->incoming_sequence+1)
-			, sequence);
-	}
-
-//
-// if the current outgoing reliable message has been acknowledged
-// clear the buffer to make way for the next
-//
-	if (reliable_ack == (unsigned)chan->reliable_sequence)
-		chan->reliable_length = 0;	// it has been received
-	
-//
-// if this message contains a reliable message, bump incoming_reliable_sequence 
-//
-	chan->incoming_sequence = sequence;
-	chan->incoming_acknowledged = sequence_ack;
-	chan->incoming_reliable_acknowledged = reliable_ack;
-	if (reliable_message)
-		chan->incoming_reliable_sequence ^= 1;
-
-//
-// the message can now be read from the current message pointer
-// update statistics counters
-//
-	chan->frame_latency = chan->frame_latency*OLD_AVG	+ (chan->outgoing_sequence-sequence_ack)*(1.0-OLD_AVG);
-	chan->frame_rate = chan->frame_rate*OLD_AVG	+ (realtime-chan->last_received)*(1.0-OLD_AVG);		
-	
-	chan->good_count += 1;
-
-	chan->last_received = realtime;
-
-	return true;
-}
-
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0
 
 
 /*
-=================
-Netchan_Process
+======================================
 
-called when the current net_message is from remote_address
-modifies net_message so that it points to the packet payload
-=================
+======================================
 */
-qboolean Netchan_Process (netchan_t *chan)
+bool CNetChan::Read()
 {
-	unsigned		sequence, sequence_ack;
-	unsigned		reliable_ack, reliable_message;
-
+	//Check if addr matches ?
 #ifdef SERVERONLY
-	int			qport;
+//	qport = MSG_ReadShort ();
 #endif
-	int i;
 
-	if (
-#ifndef SERVERONLY
-			!cls.demoplayback && 
-#endif
-			!NET_CompareAdr (net_from, chan->remote_address))
-		return false;
+
+	int seq = m_pRecvBuffer->ReadInt();
+	int seqacked = m_pRecvBuffer->ReadInt();
 	
-// get sequence numbers		
-	MSG_BeginReading ();
-	sequence = MSG_ReadLong ();
-	sequence_ack = MSG_ReadLong ();
+	int bReliable = seq >> 31;
+	int bReliableAcked = seqacked >> 31;
 
-	// read the qport if we are a server
-#ifdef SERVERONLY
-	qport = MSG_ReadShort ();
-#endif
+	//get rid of high bits
+	seq &= ~(1<<31);	
+	seqacked &= ~(1<<31);	
 
-	reliable_message = sequence >> 31;
-	reliable_ack = sequence_ack >> 31;
-
-	sequence &= ~(1<<31);	
-	sequence_ack &= ~(1<<31);	
-
-	if (showpackets.value)
+/*	if (showpackets.value)
 		Con_Printf ("<-- s=%i(%i) a=%i(%i) %i\n"
-			, sequence
-			, reliable_message
-			, sequence_ack
-			, reliable_ack
-			, net_message.cursize);
+			, sequence, reliable_message, sequence_ack	, reliable_ack	, net_message.cursize);
+*/
 
-// get a rate estimation
-#if 0
-	if (chan->outgoing_sequence - sequence_ack < MAX_LATENT)
+	//Message was supposed to be received BEFORE, ignore it
+	if (seq <= m_inMsgId)
 	{
-		int				i;
-		double			time, rate;
-	
-		i = sequence_ack & (MAX_LATENT - 1);
-		time = realtime - chan->outgoing_time[i];
-		time -= 0.1;	// subtract 100 ms
-		if (time <= 0)
-		{	// gotta be a digital link for <100 ms ping
-			if (chan->rate > 1.0/5000)
-				chan->rate = 1.0/5000;
-		}
-		else
-		{
-			if (chan->outgoing_size[i] < 512)
-			{	// only deal with small messages
-rate = chan->outgoing_size[i]/time;
-				if (rate > 5000)
-					rate = 5000;
-				rate = 1.0/rate;
-				if (chan->rate > rate)
-					chan->rate = rate;
-			}
-		}
-	}
-#endif
-
-//
-// discard stale or duplicated packets
-//
-	if (sequence <= (unsigned)chan->incoming_sequence)
-	{
-		if (showdrop.value)
-			Con_Printf ("%s:Out of order packet %i at %i\n"
-				, NET_AdrToString (chan->remote_address)
-				,  sequence
-				, chan->incoming_sequence);
+//		if (showdrop.value)
+//			ComPrintf ("%s:Out of order packet %i at %i\n", m_addr.ToString(), seq, m_inMsgId);
 		return false;
 	}
 
-//
-// dropped packets don't keep the message from being used
-//
-	net_drop = sequence - (chan->incoming_sequence+1);
-	if (net_drop > 0)
+	//A message was never reccived. This one is more than just the next one in the sequence
+	if (seq - (m_inMsgId+1) > 0)
 	{
-		chan->drop_count += 1;
-
-		if (showdrop.value)
-			Con_Printf ("%s:Dropped %i packets at %i\n"
-			, NET_AdrToString (chan->remote_address)
-			, sequence-(chan->incoming_sequence+1)
-			, sequence);
+		m_dropCount += 1;
+//		if (showdrop.value)
+//			ComPrintf("%s:Dropped %i packets at %i\n",m_addr.ToString(),seq-(m_inMsgId+1),seq);
 	}
 
-//
-// if the current outgoing reliable message has been acknowledged
-// clear the buffer to make way for the next
-//
-	if (reliable_ack == (unsigned)chan->reliable_sequence)
-		chan->reliable_length = 0;	// it has been received
+	//If the last reliable message we send has been acknowledged
+	//then clear the buffer to make way for the next
+	if (bReliableAcked == m_bInReliableMsg)
+		m_reliableBuffer.Reset();
 	
-//
-// if this message contains a reliable message, bump incoming_reliable_sequence 
-//
-	chan->incoming_sequence = sequence;
-	chan->incoming_acknowledged = sequence_ack;
-	chan->incoming_reliable_acknowledged = reliable_ack;
-	if (reliable_message)
-		chan->incoming_reliable_sequence ^= 1;
+	//Update sequence numbers. set reliable flags if this was send reliably
+	m_inMsgId = seq;
+	m_inAckedMsgId = seqacked;
+	m_bInReliableAcked = bReliableAcked;
+	if (bReliable)
+		m_bInReliableMsg ^= 1;
 
-//
-// the message can now be read from the current message pointer
-// update statistics counters
-//
-	chan->frame_latency = chan->frame_latency*OLD_AVG	+ (chan->outgoing_sequence-sequence_ack)*(1.0-OLD_AVG);
-	chan->frame_rate = chan->frame_rate*OLD_AVG	+ (realtime-chan->last_received)*(1.0-OLD_AVG);		
+	//Update stats
+//	chan->frame_latency = chan->frame_latency*OLD_AVG	+ (chan->outgoing_sequence-sequence_ack)*(1.0-OLD_AVG);
+//	chan->frame_rate = chan->frame_rate*OLD_AVG	+ (realtime-chan->last_received)*(1.0-OLD_AVG);		
 	
-	chan->good_count += 1;
-
-	chan->last_received = realtime;
-
+	m_goodCount += 1;
+	m_lastReceived = System::g_fcurTime;
 	return true;
 }
 
-#endif

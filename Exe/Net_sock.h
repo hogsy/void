@@ -26,9 +26,9 @@ public:
 	void SendTo(const byte * data, int length, const CNetAddr &addr);
 	void SendTo(const CNetBuffer &buffer, const CNetAddr &addr);
 	
-
 	//Try to receive until there is no more data
 	bool Recv();
+
 	const CNetAddr & GetSource() const { return m_srcAddr; }
  
 	int  GetInterfaceList(INTERFACE_INFO ** addr, int numAddrs);

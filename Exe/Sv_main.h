@@ -4,6 +4,7 @@
 #include "Sys_hdr.h"
 #include "World.h"
 #include "Com_buffer.h"
+#include "Sv_client.h"
 #include "Net_defs.h"
 
 /*
@@ -26,8 +27,6 @@ class CServer : public I_CVarHandler,
 				public I_CmdHandler
 {
 public:
-
-	//HACK
 	CServer();
 	~CServer();
 
@@ -41,7 +40,8 @@ private:
 	enum
 	{
 		MAX_SIGNONBUFFERS = 8,
-		MAX_CHALLENGES =  512
+		MAX_CHALLENGES =  512,
+		MAX_CLIENTS = 16
 	};
 
 	struct NetChallenge;
@@ -53,6 +53,8 @@ private:
 	CNetBuffer  m_recvBuf;
 	CNetBuffer  m_sendBuf;
 
+	SVClient    m_clients[MAX_CLIENTS];
+
 	//world data currently loaded by the server.
 	world_t	* m_pWorld;
 	char	m_worldName[COM_MAXPATH];
@@ -63,13 +65,14 @@ private:
 	//Stores Entity baselines etc
 	int		m_numSignOnBuffers;
 	int		m_signOnBufSize[MAX_SIGNONBUFFERS];
-	char	m_szSignOnBuf[MAX_SIGNONBUFFERS][VoidNet::MAX_DATAGRAM];
+	char	m_szSignOnBuf[MAX_SIGNONBUFFERS][VoidNet::MAX_DATAGRAM_SIZE];
 
 	//=================================================
 	//These arent called by the Sysmain on startup
 	//The server is only initialized if/when needed
 	bool Init();
 	void Shutdown();
+	void Restart();
 
 	void LoadWorld(const char * mapname);
 

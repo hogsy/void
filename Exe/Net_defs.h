@@ -6,14 +6,14 @@ namespace VoidNet
 
 //just declarations so the client can get away with only including this header
 class CNetSocket;
-class CNetAddr;
 
 const char szWORLDDIR[]     = "Worlds/";
 
 const int  SV_DEFAULT_PORT = 20010;
 
-const int  PACKET_HEADER =	8;
-const int  MAX_DATAGRAM  =	1450;
+const int  PACKET_HEADER	  =	8;
+const int  MAX_DATAGRAM_SIZE  =	1450;
+const int  MAX_BUFFER_SIZE	  = 2900;
 
 const int  VOID_PROTOCOL_VERSION = 1;
 
@@ -31,8 +31,14 @@ const char S2C_ACCEPT[]			= "accept";
 //Commpn connectionless messages
 const char VNET_PING[]			= "ping";
 
+enum
+{
+	CL_FREE = 0,
+	CL_INUSE = 1,
+	CL_CONNECTED = 2,
+	CL_SPAWNED = 3
+};
 
-//
 
 }
 

@@ -19,14 +19,18 @@ Constructors
 ==========================================
 */
 CNetAddr::CNetAddr()
-{
-	ip[0] = ip[1] = ip[2] = ip[3] =0;
-	port = 0;
-	valid = true;
+{	Reset();
 }
 
 CNetAddr::CNetAddr(const char * szaddr)
 {	Set(szaddr);
+}
+
+void CNetAddr::Reset()
+{
+	ip[0] = ip[1] = ip[2] = ip[3] =0;
+	port = 0;
+	valid = true;
 }
 
 /*

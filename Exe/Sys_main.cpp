@@ -234,7 +234,7 @@ CVoid::~CVoid()
 
 	if(m_pClient)
 	{
-		m_pClient->UnloadWorld();
+//		m_pClient->UnloadWorld();
 		delete m_pClient;
 	}
 
