@@ -20,15 +20,15 @@ defs only needed for beam tree
 #define BEAM_SOLID_BACK		2
 
 
-#define MAX_SIL_ALLOCS		8
-#define SILS_PER_ALLOC		32
-#define MAX_BEAM_ALLOCS		16
-#define BEAMS_PER_ALLOC		128
+#define MAX_SIL_ALLOCS		(8*32)
+#define SILS_PER_ALLOC		(32/32)
+#define MAX_BEAM_ALLOCS		(16*8)
+#define BEAMS_PER_ALLOC		(128/8)
 
 
 struct beam_node_t
 {
-	beam_node_t() { stat = 0; children[0] = 0; children[1] = 0; }
+//	beam_node_t() { stat = 0; children[0] = 0; children[1] = 0; }
 
 	plane_t	p;
 	int		stat;
@@ -38,7 +38,7 @@ struct beam_node_t
 
 struct sil_t
 {
-	sil_t() { nedges = 0; area = 0.0f; polys = 0;  next = 0; }
+//	sil_t() { nedges = 0; area = 0.0f; polys = 0;  next = 0; }
 
 	vector_t		edges[32][2];
 	int				nedges;
@@ -89,7 +89,7 @@ void sil_alloc(void)
 
 	sil_a[sil_allocs] = new sil_t[SILS_PER_ALLOC];
 	if (!sil_a[sil_allocs])
-		FError("not enough mem for sils!");
+		FError("not enough mem for sils! - %d allocated", SILS_PER_ALLOC*sil_allocs);
 
 	free_sils = sil_a[sil_allocs];
 	sil_allocs++;
@@ -143,7 +143,7 @@ void beam_alloc(void)
 
 	beam_a[beam_allocs] = new beam_node_t[BEAMS_PER_ALLOC];
 	if (!beam_a[beam_allocs])
-		FError("not enough mem for beam nodes!");
+		FError("not enough mem for beam nodes! - %d allocated", BEAMS_PER_ALLOC*beam_allocs);
 
 	free_beams = beam_a[beam_allocs];
 	beam_allocs++;

@@ -12,8 +12,8 @@ extern light_info_t light;
 extern bool			lights_available;
 
 // !!! only map polys are cached !!!
-#define POLY_CACHE_POLYS	1024
-#define POLY_CACHE_ALLOCS	32
+#define POLY_CACHE_POLYS	(1024/512)
+#define POLY_CACHE_ALLOCS	(32*512)
 
 
 cpoly_t *free_polys = NULL;
@@ -33,7 +33,8 @@ cpoly_t* poly_alloc(void)
 
 	// free_polys must be NULL
 	free_polys = new cpoly_t[POLY_CACHE_POLYS];
-	if (!free_polys)	FError("mem for poly cache");
+	if (!free_polys)
+		FError("mem for poly cache - %d allocated", POLY_CACHE_POLYS*num_cache_allocs);
 
 	// set the linkage
 	for (int i=0; i<POLY_CACHE_POLYS-1; i++)

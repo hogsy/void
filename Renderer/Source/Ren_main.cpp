@@ -224,7 +224,7 @@ build and draw the world
 ***********************/
 void r_draw_world(vector_t *blend)
 {
-	glColor3fv(&blend->x);
+	glColor3f(blend->x, blend->y, blend->z);
 
 	build_frust();
 	beam_reset();
@@ -238,11 +238,10 @@ Draw the current frame
 ***********************/
 void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 {
+
 //FIXME !!!!!!!!!!!!!!!!!!!!!
 	eye.origin = *origin;
 	eye.angles = *angles;
-
-//	return;
 
 	AngleToVector (&eye.angles, &forward, &right, &up);
 	VectorNormalize(&forward);
