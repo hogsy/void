@@ -57,26 +57,26 @@ const int SVC_BEGIN			= 6;	//ready to spawnDynamic Spawning info. client is assu
 //===============================
 //Client to server
 
-const int CL_BAD			= 0;	//Drop me
-const int CL_NOP			= 1;	//Nothing doing. Keep alive
-const int CL_MOVE			= 2;	//angles/velocity
-const int CL_STRING			= 3;	//Command string
-const int CL_DELTA			= 4;	//update a specific field only ?
-const int CL_TALK			= 5;	//client said something
-const int CL_DISCONNECT		= 6;	//client is disconnecting
-const int CL_UPDATEINFO		= 7;	//client wants to update its info. name/rate/skin/model etc
+const byte CL_BAD			= 0;	//Drop me
+const byte CL_NOP			= 1;	//Nothing doing. Keep alive
+const byte CL_MOVE			= 2;	//angles/velocity
+const byte CL_STRING		= 3;	//Command string
+const byte CL_DELTA			= 4;	//update a specific field only ?
+const byte CL_TALK			= 5;	//client said something
+const byte CL_DISCONNECT	= 6;	//client is disconnecting
+const byte CL_UPDATEINFO	= 7;	//client wants to update its info. name/rate/skin/model etc
+									// n=name r=rate
 
 //===============================
 //Server to Client
-const int SV_BAD			= 0;
-const int SV_NOP			= 1;
-const int SV_DISCONNECT		= 2;	// Server going down
-const int SV_UPDATESTAT		= 3;	
-const int SV_STUFFCMD		= 4;	// Client will execute this locally
-const int SV_HUDPRINT		= 5;    // Client will print this locally
-const int SV_TALK			= 7;	// chat message
-const int SV_RECONNECT		= 8;	// Server is changing maps, tell all clients to reconnect
-
+const byte SV_BAD			= 0;
+const byte SV_NOP			= 1;
+const byte SV_DISCONNECT	= 2;	// Server going down
+const byte SV_UPDATESTAT	= 3;	
+const byte SV_STUFFCMD		= 4;	// Client will execute this locally
+const byte SV_PRINT			= 5;    // Client will print this locally
+const byte SV_TALK			= 7;	// chat message
+const byte SV_RECONNECT		= 8;	// Server is changing maps, tell all clients to reconnect
 
 
 /*

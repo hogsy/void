@@ -58,7 +58,7 @@ private:
 	VoidSound::CSoundChannel *	m_Channels;	//Channels which are actually played
 
 	int	 m_numBuffers;
-	int	 m_channelsInUse;
+//	int	 m_channelsInUse;
 
 	bool m_bHQSupport;
 	bool m_bStereoSupport;

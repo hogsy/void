@@ -373,6 +373,10 @@ SOURCE=.\Sv_main.cpp
 
 SOURCE=.\Sv_main.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Sv_net.cpp
+# End Source File
 # End Group
 # Begin Group "Input"
 

@@ -160,6 +160,10 @@ void CNetSocket::Send(const CNetBuffer &buffer)
 }
 
 
+void CNetSocket::Send(const CNetChan &netchan)
+{	SendTo(netchan.m_sendBuffer,netchan.m_addr);
+}
+
 
 void CNetSocket::SendTo(const CNetBuffer &buffer, const CNetAddr &addr)
 {

@@ -36,7 +36,7 @@ CSoundManager::CSoundManager() : m_cVolume("s_vol", "9", CVar::CVAR_INT, CVar::C
 	m_Channels = new CSoundChannel[MAX_CHANNELS];
 	
 	m_numBuffers = 0;
-	m_channelsInUse =0;
+//	m_channelsInUse =0;
 
 	m_bHQSupport=false;
 	m_bStereoSupport= false;
@@ -224,7 +224,7 @@ void CSoundManager::Play(hSnd index, int channel)
 	{
 //TEMP, dont really need this info during gameplay
 //		ComPrintf("Playing %s at channel %d\n", m_Buffers[index].GetFilename(),i);
-		m_channelsInUse ++;
+//		m_channelsInUse ++;
 	}
 }
 
@@ -299,7 +299,7 @@ void CSoundManager::SStop(int channel)
 		{
 			m_Channels[channel].Stop();
 			m_Channels[channel].Destroy();
-			m_channelsInUse--;
+//			m_channelsInUse--;
 			return;
 		}
 	}
@@ -317,7 +317,7 @@ void CSoundManager::SListSounds()
 		m_Buffers[i].PrintStats();
 
 	//Currently playing
-	ComPrintf("Currently playing %d channels\n", m_channelsInUse);
+//	ComPrintf("Currently playing %d channels\n", m_channelsInUse);
 }
 
 /*

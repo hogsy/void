@@ -54,8 +54,7 @@ void SVClient::ValidateBuffer()
 		//drop client if overflowed
 		if(m_backBuffer[m_numBuf]->OverFlowed())
 		{
-			ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",
-						m_numBuf, m_name, m_netChan.m_addr.ToString());
+ComPrintf("backbuffer[%d] overflowed for %s(%s)\n",	m_numBuf, m_name, m_netChan.m_addr.ToString());
 			m_bDropClient = true;
 		}
 	}
@@ -64,25 +63,26 @@ void SVClient::ValidateBuffer()
 /*
 ======================================
 make space for a data chunk of the given size
+change current backbuffer if needed
 ======================================
 */
-void SVClient::MakeSpace(int maxsize)
+void SVClient::MakeSpace(int reqsize)
 {
 	//a message of this size will overflow the buffer
-	if((m_netChan.m_buffer.GetSize() + maxsize) >= m_netChan.m_buffer.GetMaxSize())
+	if((m_netChan.m_buffer.GetSize() + reqsize) >= m_netChan.m_buffer.GetMaxSize())
 	{
-		//havent been using any backbuffers until now
+		//havent been using any backbuffers, so start now
 		if(!m_bBackbuf)
 			m_bBackbuf = true;
 		else
 		{
 			//if the current backbuffer doesnt have any space, then move to the next one
-			if(m_backBuffer[m_numBuf]->GetSize() + maxsize >= m_backBuffer[m_numBuf]->GetMaxSize())
+			if(m_backBuffer[m_numBuf]->GetSize() + reqsize >= m_backBuffer[m_numBuf]->GetMaxSize())
 			{
 				//drop client if we have filled up the LAST backbuffer,
 				if(m_numBuf + 1 == MAX_BACKBUFFERS)
 				{
-					ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.m_addr.ToString());
+ComPrintf("All backbuffers overflowed for %s(%s)\n", m_name, m_netChan.m_addr.ToString());
 					m_bDropClient = true;
 					return;
 				}
@@ -107,18 +107,10 @@ bool SVClient::ReadyToSend()
 		   m_netChan.m_buffer.GetMaxSize())
 		{
 ComPrintf("SV Writing to backbuffer\n");
-
 			//Write to sock buffer
 			m_netChan.m_buffer += (*m_backBuffer[m_numBuf]);
-
-			//rotate buffers
+			//reset buffer. 
 			m_backBuffer[m_numBuf]->Reset();
-			CNetBuffer * temp = m_backBuffer[m_numBuf];
-
-			for(int i=1;i<MAX_BACKBUFFERS;i++)
-				m_backBuffer[i-1] = m_backBuffer[i];
-			m_backBuffer[i] = temp;
-			temp = 0;
 
 			if(m_numBuf == 0)		
 				m_bBackbuf = false;	//No more backbuffers
@@ -144,23 +136,16 @@ ComPrintf("SV Writing to backbuffer\n");
 	// and the bandwidth is not choked
 	if(!m_bSend || !m_netChan.CanSend())
 		return false;
-
 	return true;
-/*
-	if (c->state == cs_spawned)
-		SV_SendClientDatagram (c);
-	else
-		Netchan_Transmit (&c->netchan, 0, NULL);	// just update reliable
-*/
 }
 
 //======================================================================================
 //======================================================================================
 
-void SVClient::BeginMessage(int msgid, int estSize)
+void SVClient::BeginMessage(byte msgid, int estSize)
 {
 	MakeSpace(estSize);
-	WriteInt(msgid);
+	WriteByte(msgid);
 }
 
 

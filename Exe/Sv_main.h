@@ -45,8 +45,16 @@ private:
 		MAX_CLIENTS = 16
 	};
 
-	struct NetChallenge;
-	NetChallenge * m_challenges;
+	
+	struct NetChallenge
+	{
+		NetChallenge()	{ challenge = 0;	time = 0.0f;  }
+		CNetAddr	addr;
+		int			challenge;
+		float		time;
+	};
+	
+	NetChallenge  m_challenges[MAX_CHALLENGES];
 
 	//private data
 	VoidNet::CNetSocket* m_pSock;
@@ -93,6 +101,8 @@ private:
 	void ReadPackets();
 	void WritePackets();
 
+	//Broadcast print message to all except
+	void BroadcastPrint(const char * message, int msglen, const SVClient * client);
 	void PrintServerStatus();
 	
 	void SendSpawnParms(SVClient &client);

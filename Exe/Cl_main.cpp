@@ -146,7 +146,8 @@ bool CClient::LoadWorld(const char *worldname)
 	eye.origin.y = 0;
 	eye.origin.z = 48;	// FIXME - origin + view height
 
-	m_hsTalk = System::GetSoundManager()->RegisterSound("sounds/talk.wav");
+	m_hsTalk    = System::GetSoundManager()->RegisterSound("sounds/talk.wav");
+	m_hsMessage = System::GetSoundManager()->RegisterSound("sounds/message.wav");
 
 	m_ingame = true;
 

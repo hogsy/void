@@ -2,7 +2,8 @@
 #define VOID_NET_SOCKET
 
 #include "Net_hdr.h"
-#include "Com_buffer.h"
+#include "Net_chan.h"
+
 
 namespace VoidNet {
 
@@ -21,6 +22,8 @@ public:
 	//Send to source
 	void Send(const byte * data, int length);
 	void Send(const CNetBuffer &buffer);
+	
+	void Send(const CNetChan &netchan);
 
 	//Send data to given dest
 	void SendTo(const byte * data, int length, const CNetAddr &addr);

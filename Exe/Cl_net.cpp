@@ -142,9 +142,13 @@ void CClient::ReadPackets()
 //ComPrintf("CL: Reading update\n");
 			m_netChan.BeginRead();
 
-			int msgId = m_buffer.ReadInt();
+			byte msgId = m_buffer.ReadByte();
+//			int msgId = m_buffer.ReadInt();
 			if(msgId == -1)
+			{
+				//bad message
 				continue;
+			}
 
 			switch(msgId)
 			{
@@ -152,15 +156,22 @@ void CClient::ReadPackets()
 				{
 					char name[32];
 					strcpy(name,m_buffer.ReadString());
-ComPrintf("%s: %s\n", name , m_buffer.ReadString());
-System::GetSoundManager()->Play(m_hsTalk);
+					ComPrintf("%s: %s\n", name , m_buffer.ReadString());
+					System::GetSoundManager()->Play(m_hsTalk);
 					m_canSend = true;
 					break;
 				}
 			case SV_DISCONNECT:
 				{
-ComPrintf("Server quit\n");
+					System::GetSoundManager()->Play(m_hsMessage);
+					ComPrintf("CL: Server quit\n");
 					Disconnect(true);
+					break;
+				}
+			case SV_PRINT:	//just a print message
+				{
+					ComPrintf("%s",m_buffer.ReadString());
+					System::GetSoundManager()->Play(m_hsMessage);
 					break;
 				}
 			}
@@ -451,13 +462,56 @@ void CClient::Talk(const char *string)
 	m_canSend = true;
 }
 
-
+/*
+======================================
+Validate name, then inform server
+======================================
+*/
 bool CClient::UpdateName(const CParms &parms)
 {
+	const char * name = parms.StringTok(1);
+	if(!name)
+	{
+		ComPrintf("Name = \"%s\"\n", m_clname.string);
+		return false;
+	}
+
+	//any validation ?
+	if(m_state == CL_SPAWNED)
+	{
+		m_netChan.m_buffer += CL_UPDATEINFO;
+		m_netChan.m_buffer += 'n';
+		m_netChan.m_buffer += name;
+	}
 	return true;
 }
 
+/*
+======================================
+Validate rate, then inform server
+======================================
+*/
 bool CClient::UpdateRate(const CParms &parms)
 {
+	int rate = parms.IntTok(1);
+	if(rate == -1)
+	{
+		ComPrintf("Rate = \"%d\"\n", m_clrate.ival);
+		return false;
+	}
+
+	if(rate < 1000 || rate > 30000)
+	{
+		ComPrintf("Rate is out of range\n");
+		return false;
+	}
+
+	m_netChan.m_rate = 1.0/rate;
+	if(m_state == CL_SPAWNED)
+	{
+		m_netChan.m_buffer += CL_UPDATEINFO;
+		m_netChan.m_buffer += 'r';
+		m_netChan.m_buffer += rate;
+	}
 	return true;
 }

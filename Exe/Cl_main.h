@@ -141,6 +141,7 @@ private:
 	//==================================================
 	//Client side stuff
 	int		m_hsTalk;		//handle to talk sound
+	int		m_hsMessage;	//handle to server message sound
 };
 
 #endif

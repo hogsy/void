@@ -22,7 +22,7 @@ struct SVClient
 	void Reset();
 	
 	//fix me, shoud be cahr
-	void BeginMessage(int msgid, int estSize);
+	void BeginMessage(byte msgid, int estSize);
 	
 	void WriteByte(byte b);
 	void WriteChar(char c);
