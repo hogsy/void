@@ -16,7 +16,7 @@ extern CVar *	g_pVidSynch;
 
 
 //eyepoint_t	eye;			// where we're gonna draw from
-CCamera * camera=0;
+const CCamera * camera=0;
 
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
 int			eye_leaf;
@@ -286,7 +286,7 @@ void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend)
 }
 */
 
-void r_drawframe(CCamera * pcamera)
+void r_drawframe(const CCamera * pcamera)
 {
 	camera = pcamera;
 

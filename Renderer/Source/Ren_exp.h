@@ -15,7 +15,7 @@ public:
 	bool InitRenderer();
 	bool Shutdown();
 
-	void Draw(CCamera * camera);
+	void Draw(const CCamera * camera);
 ///	void Draw(vector_t *origin,vector_t *angles, vector_t *blend);
 	void DrawConsole();
 

@@ -8,7 +8,7 @@
 // renderer.cpp
 //void r_drawframe(vector_t *origin, vector_t *angles, vector_t *blend);
 
-void r_drawframe(CCamera * pcamera);
+void r_drawframe(const CCamera * pcamera);
 
 void r_drawcons();
 void r_shutdown();

@@ -5,7 +5,7 @@ extern	vector_t	forward, right, up;	// view directions
 extern	plane_t frust[5];				// frustum
 
 //extern	eyepoint_t	eye;				// where we're gonna draw from
-extern CCamera * camera;
+extern const CCamera * camera;
 
 extern	CVar *	g_pBeamTolerance;
 

@@ -182,7 +182,7 @@ DrawFrame
 ==========================================
 */
 
-void CRenExp::Draw(CCamera * camera)
+void CRenExp::Draw(const CCamera * camera)
 {
 	r_drawframe(camera);
 
