@@ -21,7 +21,8 @@ bsp_node_t			bsp_nodes[MAX_MAP_NODES];
 int					num_bsp_brush_sides=0;
 bsp_brush_side_t	bsp_brush_sides[MAX_MAP_BRUSH_SIDES];
 
-bsp_brush_t			sky_brush;
+bsp_brush_t			sky_brush = { NULL, NULL, CONTENTS_SKY | CONTENTS_SOLID, {0,0,0}, {0,0,0}};
+
 
 //=======================================================
 
@@ -697,9 +698,6 @@ void build_bsp_brushes(entity_t *ent)
 	}
 
 	// separate out all of the sky brushes
-	sky_brush.contents = CONTENTS_SKY | CONTENTS_SOLID;
-	sky_brush.next = NULL;
-	sky_brush.sides = NULL;
 	bsp_brush_t *prev = NULL;
 	bsp_brush_t *next;
 	for (tbrush = ent->root->brushes; tbrush; tbrush = next)
