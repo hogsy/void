@@ -100,6 +100,7 @@ bool COpenGLRast::Init()
 	//get extension pointers
 	OpenGLGetExtensions();
 
+
 	//Check for GL flags
 	ComPrintf("\nGL_VENDOR: %s\n",glGetString(GL_VENDOR));
 	ComPrintf("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
@@ -135,6 +136,7 @@ bool COpenGLRast::Init()
 		}
 	}
 	delete [] ext2;
+
 	return true;
 }
 

@@ -86,8 +86,12 @@ enum EPolyType
 Rasterizer Interface
 ==========================================
 */
-struct I_Rasterizer
+class I_Rasterizer
 {
+public:
+	I_Rasterizer() { }
+	~I_Rasterizer() { }
+
 	//Startup/Shutdown
 	virtual bool Init()=0;
 	virtual bool Shutdown()=0;

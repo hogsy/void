@@ -58,7 +58,7 @@ CRenExp::~CRenExp()
 	g_pTex = 0;
 
 	if (g_pRast)
-		delete (g_pRast);
+		delete g_pRast;
 	g_pRast = 0;
 
 	if(g_prHud)

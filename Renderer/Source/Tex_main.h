@@ -25,12 +25,6 @@ public:
 
 private:
 
-	enum
-	{
-		TEX_MAXTEXTURESIZE = 1048832,
-		TEX_MAXMIPMAPSIZE  = 262400	
-	};
-
 	enum ETextures
 	{
 		NO_TEXTURES,
