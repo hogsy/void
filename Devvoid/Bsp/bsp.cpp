@@ -97,6 +97,16 @@ void free_bsp_brush(bsp_brush_t *b)
 
 void reset_bsp_brush(void)
 {
+	sky_brush.contents = CONTENTS_SKY | CONTENTS_SOLID;
+	sky_brush.mins[0] = 0;
+	sky_brush.mins[1] = 0;
+	sky_brush.mins[2] = 0;
+	sky_brush.maxs[0] = 0;
+	sky_brush.maxs[1] = 0;
+	sky_brush.maxs[2] = 0;
+	sky_brush.sides = NULL;
+	sky_brush.next = NULL;
+
 	// reset map structs
 	for (int i=0; i<MAX_MAP_BRUSHES; i++)
 		free_brushes[i] = true;
