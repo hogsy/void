@@ -15,28 +15,8 @@ typedef struct
 }PakHeader_t;
 
 
-struct CPakFile::PakEntry_t
-{
-	PakEntry_t() { filepos = filelen = 0; }
-	virtual ~PakEntry_t() {}
-
-	char filename[56];
-	long filepos, 
-		 filelen;
-};
-
-
-struct CPakFile::PakOpenFile_t : public CPakFile::PakEntry_t
-{
-	PakOpenFile_t() { curpos = 0; };
-	long curpos;
-};
-
-
 //======================================================================================
 //======================================================================================
-
-static int totalCOMPS = 0;
 
 /*
 ===========================================
@@ -49,7 +29,7 @@ CPakFile::CPakFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
-	memset(m_openFiles,0, sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 }
 
@@ -58,7 +38,7 @@ CPakFile::~CPakFile()
 	if(m_fp)
 		fclose(m_fp);
 
-	memset(m_openFiles,0, sizeof(PakOpenFile_t *) * ARCHIVEMAXOPENFILES);
+	memset(m_openFiles,0, sizeof(PakOpenFile_t) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)
@@ -110,8 +90,7 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 	//Seek to the fileinfo offset
 	fseek(m_fp,	phead.dirofs, SEEK_SET);
 
-	int i,j,
-		destIndex =0;		
+	int i,j, destIndex =0;		
 	PakEntry_t * temp= 0;
 
 	for(i= 0; i< m_numFiles;i++)
@@ -132,7 +111,6 @@ bool CPakFile::Init(const char * archivepath, const char * basepath)
 			if(strcmp(temp->filename, m_files[j]->filename) < 0)
 			{
 				destIndex = j;
-
 				//start from the last entry and
 				//move all the old pointers forward by one
 				j = i;
@@ -248,59 +226,6 @@ void CPakFile::ListFiles()
 		ComPrintf("%s\n",m_files[i]->filename);
 }
 
-
-
-/*
-===========================================
-QuickSort PakEntry array
-===========================================
-*/
-void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
-{
-/*	if(numitems < 2)
-		return;
-
-	int maxindex = numitems-1;
-	int left=0;
-	int right = maxindex; 
-	PakEntry_t ** sorted = new PakEntry_t * [numitems];
-
-	for(int i=1,comp=0;i<=maxindex;i++)
-	{
-		comp = _stricmp(list[i]->filename,list[0]->filename);
-
-		totalCOMPS++;
-
-		
-		if(comp < 0)
-		{
-			sorted[left] = list[i];
-			left++;
-		}
-		else if(comp >= 0)
-		{
-			sorted[right] = list[i];
-			right--;
-		}
-	}
-
-	//Copy the pivot point in the empty space
-	sorted[left] = list[0];
-	if(left > 1) 
-		QuickSortFileEntries(sorted,left);								
-	//starting from the one right after the pivot
-	if((numitems - (right+1)) > 1)
-		QuickSortFileEntries(&sorted[left+1],(numitems - (right+1)));		
-
-	for(i=0;i<numitems;i++)
-	{
-		list[i] = sorted[i];
-		sorted[i] = 0;
-	}
-	delete [] sorted;
-*/
-}
-
 /*
 ===========================================
 Searches for PakEntry 
@@ -356,20 +281,21 @@ HFS CPakFile::OpenFile(const char *ifilename)
 	//Find free space
 	for(int i=0;i<ARCHIVEMAXOPENFILES;i++)
 	{
-		if(!m_openFiles[i])
+		if(m_openFiles[i].file == 0)
 			break;
 	}
-	if(m_openFiles[i] != 0)
+	if(m_openFiles[i].file != 0)
 	{
 		ComPrintf("CPakFile::OpenFile: Unable to find unused file handle in %s\n", m_archiveName);
 		return -1;
 	}
+
 	//Finds file, and adds to openFiles list if successful
 	PakEntry_t * entry= 0;
 	if(BinarySearchForEntry(ifilename,m_files,&entry,0,m_numFiles))
 	{
-		m_openFiles[i] = (PakOpenFile_t *)entry;
-		m_openFiles[i]->curpos= 0;
+		m_openFiles[i].file = entry;
+		m_openFiles[i].curpos= 0;
 		m_numOpenFiles++;
 		return i;
 	}
@@ -383,10 +309,10 @@ Close file
 */
 void CPakFile::CloseFile(HFS handle)
 {
-	if(m_openFiles[handle])
+	if(m_openFiles[handle].file)
 	{
-		m_openFiles[handle]->curpos = 0;
-		m_openFiles[handle] = 0;
+		m_openFiles[handle].file = 0;
+		m_openFiles[handle].curpos = 0;
 		m_numOpenFiles--;
 	}
 }
@@ -402,27 +328,27 @@ uint CPakFile::Read(void * buf, uint size, uint count, HFS handle)
 	if(!buf || !size || !count)
 	{
 		ComPrintf("CPakFile::Read: Invalid parameters :%s\n",
-							m_openFiles[handle]->filename);
+							m_openFiles[handle].file->filename);
 		return 0;
 	}
 	
 	uint bytes_req = size * count;
 
-	if(m_openFiles[handle]->curpos + bytes_req > m_openFiles[handle]->filelen)
+	if(m_openFiles[handle].curpos + bytes_req > m_openFiles[handle].file->filelen)
 	{
 		ComPrintf("CPakFile::Read: FilePointer will overflow for given parms, %s\n", 
-			m_openFiles[handle]->filename);
+			m_openFiles[handle].file->filename);
 		return 0;
 	}
 
-	fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+	fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 	
 	int items_read = ::fread(buf,size,count,m_fp);
 	if(items_read != count) 
 		ComPrintf("CPakFile::Read: Warning, only read %d of %d items for %s\n",
-					items_read, count, m_openFiles[handle]->filename);	
+					items_read, count, m_openFiles[handle].file->filename);	
 	
-	m_openFiles[handle]->curpos += (size*items_read);
+	m_openFiles[handle].curpos += (size*items_read);
 	return items_read;
 }
 
@@ -433,9 +359,9 @@ return current character
 */
 int CPakFile::GetChar(HFS handle)
 {
-	if(m_openFiles[handle]->curpos +1 <= m_openFiles[handle]->filelen)
+	if(m_openFiles[handle].curpos +1 <= m_openFiles[handle].file->filelen)
 	{
-		::fseek(m_fp, m_openFiles[handle]->curpos + m_openFiles[handle]->filepos, SEEK_SET);
+		::fseek(m_fp, m_openFiles[handle].curpos + m_openFiles[handle].file->filepos, SEEK_SET);
 		return ::fgetc(m_fp);
 	}
 	return EOF;
@@ -449,26 +375,26 @@ requested offset
 */
 bool CPakFile::Seek(uint offset, int origin, HFS handle)
 {
-	uint newpos = m_openFiles[handle]->filepos;
+	uint newpos = m_openFiles[handle].file->filepos;
 	switch(origin)
 	{
 	case SEEK_SET:
 			newpos += offset;
 			break;
 	case SEEK_END:
-			newpos += (m_openFiles[handle]->filelen - offset);
+			newpos += (m_openFiles[handle].file->filelen - offset);
 			break;
 	case SEEK_CUR:
-			newpos += (m_openFiles[handle]->curpos + offset);
+			newpos += (m_openFiles[handle].curpos + offset);
 			break;
 	default:
-			ComPrintf("CPakFile::Seek: Bad origin specified %s\n", m_openFiles[handle]->filename);
+			ComPrintf("CPakFile::Seek: Bad origin specified %s\n", m_openFiles[handle].file->filename);
 			return false;
 	}
-	if((newpos > m_openFiles[handle]->filepos + m_openFiles[handle]->filelen) ||
-		(newpos < m_openFiles[handle]->filepos))
+	if((newpos > m_openFiles[handle].file->filepos + m_openFiles[handle].file->filelen) ||
+		(newpos < m_openFiles[handle].file->filepos))
 	{
-		ComPrintf("CPakFile::Seek: Bad parameters. %s\n", m_openFiles[handle]->filename);
+		ComPrintf("CPakFile::Seek: Bad parameters. %s\n", m_openFiles[handle].file->filename);
 		return false;
 	}
 	return(!::fseek(m_fp,newpos,SEEK_SET));
@@ -481,7 +407,7 @@ get file handles current pos
 ==========================================
 */
 uint CPakFile::GetPos(HFS handle)
-{	return m_openFiles[handle]->curpos;
+{	return m_openFiles[handle].curpos;
 }
 
 /*
@@ -490,5 +416,60 @@ get size of file belonging to handle
 ==========================================
 */
 uint CPakFile::GetSize(HFS handle)
-{	return m_openFiles[handle]->filelen;
+{	return m_openFiles[handle].file->filelen;
+}
+
+
+
+
+
+/*
+===========================================
+QuickSort PakEntry array
+===========================================
+*/
+void CPakFile::QuickSortFileEntries(PakEntry_t ** list, const int numitems)
+{
+/*	if(numitems < 2)
+		return;
+
+	int maxindex = numitems-1;
+	int left=0;
+	int right = maxindex; 
+	PakEntry_t ** sorted = new PakEntry_t * [numitems];
+
+	for(int i=1,comp=0;i<=maxindex;i++)
+	{
+		comp = _stricmp(list[i]->filename,list[0]->filename);
+
+		totalCOMPS++;
+
+		
+		if(comp < 0)
+		{
+			sorted[left] = list[i];
+			left++;
+		}
+		else if(comp >= 0)
+		{
+			sorted[right] = list[i];
+			right--;
+		}
+	}
+
+	//Copy the pivot point in the empty space
+	sorted[left] = list[0];
+	if(left > 1) 
+		QuickSortFileEntries(sorted,left);								
+	//starting from the one right after the pivot
+	if((numitems - (right+1)) > 1)
+		QuickSortFileEntries(&sorted[left+1],(numitems - (right+1)));		
+
+	for(i=0;i<numitems;i++)
+	{
+		list[i] = sorted[i];
+		sorted[i] = 0;
+	}
+	delete [] sorted;
+*/
 }

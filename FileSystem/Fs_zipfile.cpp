@@ -109,6 +109,7 @@ CZipFile::CZipFile()
 	m_files = 0; 
 	m_numFiles = 0;
 
+	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 }
 
@@ -117,6 +118,7 @@ CZipFile::~CZipFile()
 	if(m_fp)
 		fclose(m_fp);
 
+	memset(m_openFiles,0, sizeof(ZipOpenFile_t) * ARCHIVEMAXOPENFILES);
 	m_numOpenFiles = 0;
 
 	for(int i=0;i<m_numFiles;i++)

@@ -19,7 +19,7 @@ class  CArchive;
 //====================================================================================
 //====================================================================================
 
-struct FILESYSTEM_API I_FileReader
+struct I_FileReader
 {
 	virtual bool Open(const char * filename)=0;
 	virtual void Close()=0;

@@ -29,13 +29,27 @@ public:
 
 private:
 	
-	struct PakEntry_t;
-	struct PakOpenFile_t;
+	struct PakEntry_t
+	{
+		PakEntry_t() { filepos = filelen = 0; }
+		char filename[56];
+		long filepos, 
+			 filelen;
+	};
+
+	struct PakOpenFile_t
+	{
+		PakOpenFile_t() { file = 0; curpos = 0; };
+		~PakOpenFile_t(){ file = 0;}
+
+		PakEntry_t * file;
+		long	   curpos;
+	};
 
 	PakEntry_t **   m_files;
 	FILE	   *	m_fp;
 
-	PakOpenFile_t * m_openFiles[ARCHIVEMAXOPENFILES];
+	PakOpenFile_t   m_openFiles[ARCHIVEMAXOPENFILES];
 	int				m_numOpenFiles;
 
 	bool BinarySearchForEntry(const char *name,	
