@@ -107,7 +107,7 @@ void CNetClient::SendUpdate()
 	if(m_pNetChan->m_lastReceived + NET_TIMEOUT_INTERVAL < System::g_fcurTime)
 	{
 		m_pClient->Print("CL: Connection timed out\n");
-		Disconnect();
+		Disconnect(false);
 		return;
 	}
 
@@ -120,7 +120,7 @@ void CNetClient::SendUpdate()
 			if(m_pNetChan->m_bFatalError || m_reliableBuf.OverFlowed())
 			{
 				m_pClient->Print("CL: Connection overflowed\n");
-				Disconnect();
+				Disconnect(false);
 				return;
 			}
 
@@ -142,8 +142,8 @@ void CNetClient::SendUpdate()
 			{
 				m_pNetChan->m_buffer.Reset();
 				m_pNetChan->m_buffer.Write(m_levelId);
-				m_pNetChan->m_buffer.Write((byte)m_spawnLevel);
-				m_pNetChan->m_buffer.Write((int)m_spawnNextPacket);
+				m_pNetChan->m_buffer.Write(m_spawnLevel);
+				m_pNetChan->m_buffer.Write(m_spawnNextPacket);
 
 m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNextPacket);
 
@@ -154,11 +154,14 @@ m_pClient->Print("CL: Req spawn level %d. Packet %d\n", m_spawnLevel, m_spawnNex
 				//Switch to next sequence now, or in game mode, if this was
 				//the last sequence
 				//we got everything we needed
+/*
 				if(m_spawnLevel == SVC_BEGIN)
 				{
 					m_spawnLevel = 0;
+					m_spawnNextPacket = 0;
 					m_netState = CL_INGAME;
 				}
+*/
 			}
 		}
 		//Resent OOB queries
@@ -190,33 +193,63 @@ void CNetClient::HandleSpawnParms()
 {
 	byte id      = m_buffer.ReadByte();
 
-	//Reconnect, the server probably changed maps 
-	//while we were getting spawn info. start again
 	if(id == SV_DISCONNECT)
 	{
 		m_pClient->Print("Disconnected: %s\n", m_buffer.ReadString());
 		Disconnect(true);
 		return;
 	}
+
+	//Reconnect, the server probably changed maps 
+	//while we were getting spawn info. start again
 	if(id == SV_RECONNECT)
 	{
 		m_pClient->Print("CL: Server asked to reconnect\n");
 		Reconnect();
 		return;
 	}
+	
+	uint packNum = m_buffer.ReadInt();
+	uint lastinSeq = (packNum >> 31);		//Get last packet flag
+	
+	//get rid of high bits
+	packNum &= ~(1<<31);
+	
+	//Err, Packet is not what we requested
+	//ignore this and rerequest
+	if(packNum != m_spawnNextPacket)
+	{
+		m_pClient->Print("Error in getting spawn parms from server\n");
+		Disconnect(false);
+		return;
+	}
 
-	int  packNum = m_buffer.ReadInt();
 m_pClient->Print("CL: Got spawn level %d. Packet %d\n", id, packNum);
 
+/*
 	m_fNextSendTime = 0.0f;
-
 	//Update spawnstate
 	m_spawnLevel = id;
 	m_spawnNextPacket = packNum;
+*/
 
-	//Don't process if it was the last packet of the sequence. 
-	//Ack it then, switch to next stage
 	m_pClient->HandleSpawnMsg(m_spawnLevel,m_buffer);
+
+	if(!lastinSeq)
+		m_spawnNextPacket++;
+	else
+	{
+		//we just got a begin message from the server
+		if(m_spawnLevel == SVC_BEGIN)
+		{
+			m_spawnLevel = 0;
+			m_spawnNextPacket = 0;
+			m_netState = CL_INGAME;
+			return;
+		}
+		m_spawnLevel ++;
+		m_spawnNextPacket = 0;
+	}
 }
 
 /*
@@ -244,7 +277,7 @@ void CNetClient::HandleOOBMessage()
 
 	if(!strcmp(msg, S2C_REJECT))
 	{
-		Disconnect();
+		Disconnect(true);
 		m_pClient->Print("CL: Server rejected connection: %s\n", m_buffer.ReadString());
 		return;
 	}
@@ -258,8 +291,8 @@ void CNetClient::HandleOOBMessage()
 		m_szLastOOBMsg = 0;
 		m_fNextSendTime = 0.0f;
 
-		
 		m_spawnLevel = SVC_GAMEINFO;
+		m_spawnNextPacket = 0;
 		
 		//Setup the network channel. 
 		//Only reliable messages are sent until spawned
@@ -310,7 +343,7 @@ void CNetClient::SendChallengeReq()
 	if(!netAddr.IsValid())
 	{
 		m_pClient->Print("CL: ConnectTo: Invalid address\n");
-		Disconnect();
+		Disconnect(false);
 		return;
 	}
 
@@ -345,7 +378,7 @@ void CNetClient::ConnectTo(const char * ipaddr)
 	}
 
 	if(m_netState != CL_FREE)
-		Disconnect();
+		Disconnect(false);
 
 	//Create Socket
 	if(!m_pSock->ValidSocket())

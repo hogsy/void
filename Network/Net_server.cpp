@@ -401,18 +401,20 @@ Send requested spawn parms
 void CNetServer::SendSpawnParms(int chanId)
 {
 	bool error = false;
+	int  lastInSeq = 0;
+
 	int  reqNum = m_clChan[chanId].m_spawnReqId;
 
 	m_clChan[chanId].m_netChan.m_buffer.Reset();
 
 	//Give it the next thing to request
-	if(reqNum == SVC_LASTSPAWNMSG)
+/*	if(reqNum == SVC_LASTSPAWNMSG)
 	{
 		m_clChan[chanId].m_netChan.m_buffer.Write(m_clChan[chanId].m_spawnLevel+1);
 		m_clChan[chanId].m_netChan.m_buffer.Write(0);
 		return;
 	}
-
+*/
 	//What spawn level does the client want ?
 	switch(m_clChan[chanId].m_spawnLevel)
 	{
@@ -424,32 +426,33 @@ void CNetServer::SendSpawnParms(int chanId)
 				break;
 			}
 
+			lastInSeq = 1;
 			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_GAMEINFO);
-			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.gameInfo);
 			break;
 		}
 	case SVC_MODELLIST:
 		{
-			if(reqNum >= m_signOnBufs.numModelBufs)
+			if(reqNum + 1 > m_signOnBufs.numModelBufs )
 			{
 				error = true;
 				break;
 			}
 
 			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_MODELLIST);
+			
 			//Will this be the last packet in the sequence, then let the client known
 			//so it doesnt ask for anymore
 			if((reqNum + 1) == m_signOnBufs.numModelBufs)
-				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
-			else
-				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+				lastInSeq = 1;
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.modelList[reqNum]);
 			break;
 		}
 	case SVC_SOUNDLIST:
 		{
-			if(reqNum >= m_signOnBufs.numSoundBufs)
+			if(reqNum + 1 > m_signOnBufs.numSoundBufs)
 			{
 				error = true;
 				break;
@@ -458,15 +461,15 @@ void CNetServer::SendSpawnParms(int chanId)
 			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_SOUNDLIST);
 
 			if((reqNum + 1) >= m_signOnBufs.numSoundBufs)
-				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
-			else
-				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+				lastInSeq = 1;
+			
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.soundList[reqNum]);
 			break;
 		}
 	case SVC_IMAGELIST:
 		{
-			if(reqNum >= m_signOnBufs.numImageBufs)
+			if(reqNum + 1 > m_signOnBufs.numImageBufs)
 			{
 				error = true;
 				break;
@@ -475,15 +478,15 @@ void CNetServer::SendSpawnParms(int chanId)
 			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_IMAGELIST);
 
 			if((reqNum + 1) >= m_signOnBufs.numImageBufs)
-				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
-			else
-				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+				lastInSeq = 1;
+			
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.imageList[reqNum]);
 			break;
 		}
 	case SVC_BASELINES:
 		{
-			if(reqNum >= m_signOnBufs.numModelBufs)
+			if(reqNum + 1 > m_signOnBufs.numModelBufs)
 			{
 				error = true;
 				break;
@@ -492,10 +495,32 @@ void CNetServer::SendSpawnParms(int chanId)
 			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BASELINES);
 
 			if((reqNum + 1) >= m_signOnBufs.numEntityBufs)
-				m_clChan[chanId].m_netChan.m_buffer.Write(SVC_LASTSPAWNMSG);
-			else
-				m_clChan[chanId].m_netChan.m_buffer.Write(reqNum);
+				lastInSeq = 1;
+
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
 			m_clChan[chanId].m_netChan.m_buffer.Write(m_signOnBufs.entityList[reqNum]);
+			break;
+		}
+	case SVC_BEGIN:
+		{
+			if(reqNum > 0)
+			{
+				error = true;
+				break;
+			}
+
+			lastInSeq = 1;
+
+			m_clChan[chanId].m_netChan.m_buffer.Write(SVC_BEGIN);
+			m_clChan[chanId].m_netChan.m_buffer.Write((reqNum | (lastInSeq << 31)));
+
+			//Begin client
+			m_clChan[chanId].m_spawnLevel = 0;
+			m_clChan[chanId].m_state = CL_INGAME;
+			m_pServer->OnClientSpawn(chanId);
+
+			//Write spawn pos
+
 			break;
 		}
 	default:
@@ -567,8 +592,8 @@ void CNetServer::ParseSpawnMessage(int chanId)
 		return;	
 	}
 
-	//Just acked the last packet. change to ingame more
-	if((reqNum == 0) && (spawnparm == SVC_BEGIN))
+	//Just acked the last packet. change to ingame mode
+/*	if((reqNum == 0) && (spawnparm == SVC_BEGIN)) // + 1))
 	{
 		m_clChan[chanId].m_spawnLevel = 0;
 		m_clChan[chanId].m_state = CL_INGAME;
@@ -576,9 +601,10 @@ void CNetServer::ParseSpawnMessage(int chanId)
 	}
 	else
 	{
+*/
 		m_clChan[chanId].m_spawnReqId = reqNum;
 		m_clChan[chanId].m_spawnLevel = spawnparm;
-	}
+//	}
 }
 
 //======================================================================================
