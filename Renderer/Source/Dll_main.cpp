@@ -18,6 +18,71 @@ start memory logging if in debug mode
 ==========================================
 */
 
+
+RENDERER_API I_Renderer * CreateRenderer(RenderInfo_t *rinfo, 
+										 VoidExport_t * vexp)
+{
+#ifdef _DEBUG
+	
+	// memory debugging stuff
+	g_hmemlog = (HFILE*)CreateFile("mem_render.log", 
+					GENERIC_WRITE, FILE_SHARE_WRITE, NULL, 
+					CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	// Send all reports to STDOUT, since this example is a console app
+   _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+   _CrtSetReportFile(_CRT_WARN, g_hmemlog);
+   _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+   _CrtSetReportFile(_CRT_ERROR, g_hmemlog);
+   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+   _CrtSetReportFile(_CRT_ASSERT, g_hmemlog);
+
+#endif
+
+	if(!g_pRenExp)
+	{
+		g_pRenExp = new CRenExp(rinfo,vexp);
+		if(!g_pRenExp)
+		{
+			::MessageBox(0,"CreateRenderer:: Unable to create Renderer",
+							"Error : CreateRenderer",MB_OK|MB_ICONERROR);
+			return 0;
+		}
+		return g_pRenExp;
+	}
+	::MessageBox(0,"CreateRenderer:: Renderer is already intialized",
+					"Warning : CreateRenderer",MB_OK|MB_ICONERROR);
+	return 0;
+}
+
+/*
+==========================================
+Free the renderer interface, and
+end memory logging if in debug mode
+==========================================
+*/
+
+RENDERER_API void FreeRenderer()
+{
+	if(g_pRenExp)
+	{
+		delete g_pRenExp;
+		g_pRenExp = 0;
+	}
+
+#ifdef _DEBUG
+	// memory debugging stuff
+   _CrtDumpMemoryLeaks();
+	CloseHandle(g_hmemlog);
+#endif
+
+}
+
+
+
+
+
+/*
 HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp)
 {
 #ifdef _DEBUG
@@ -45,15 +110,8 @@ HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, Vo
 	}
 	return E_FAIL;
 }
-
-
-/*
-==========================================
-Free the renderer interface, and
-end memory logging if in debug mode
-==========================================
 */
-
+/*
 HRESULT __stdcall FreeRenderer(I_Renderer ** pRender)
 {
 	if(!*pRender)
@@ -71,3 +129,4 @@ HRESULT __stdcall FreeRenderer(I_Renderer ** pRender)
 
 	return S_OK;
 }
+*/
