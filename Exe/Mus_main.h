@@ -5,8 +5,7 @@
 
 /*
 ======================================================================================
-The music code is VERY bare bones right now.
-
+The music code is VERY messy and bare bones right now.
 Not doing anything special
 client code can just send console messages to play stuff
 ======================================================================================
@@ -23,8 +22,10 @@ namespace VoidMusic
 	};
 
 	class CMusCDAudio;
-	class CDirectMusic;
+//	class CDirectMusic;
 }
+
+struct FSOUND_STREAM;
 
 //======================================================================================
 //======================================================================================
@@ -39,6 +40,9 @@ public:
 	bool Init(); 
 	void Shutdown();
 
+	void PlayMp3(const char * szFile);
+	void StopMp3();
+
 	void HandleMCIMsg(uint &wParam, long &lParam);
 
 	void HandleCommand(int cmdId, const CParms &parms);
@@ -47,6 +51,10 @@ public:
 private:
 
 	VoidMusic::CMusCDAudio * m_pCDAudio;
+
+	bool m_bFMod;
+	int	 m_mp3Chan;
+	FSOUND_STREAM * m_pStream;
 
 	//playback volume
 	CVar m_cVolume;		

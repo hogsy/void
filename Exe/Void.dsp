@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib /nologo /subsystem:windows /profile /map:"..\Void.map" /debug /machine:I386 /out:"..\Void.exe" /libpath:"..\Shared\Libraries"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib winmm.lib dxguid.lib dinput.lib dsound.lib Ws2_32.lib ..\Debug\vrender.lib ..\Debug\vfs.lib ..\Debug\vnet.lib fmodvc.lib /nologo /subsystem:windows /profile /map:"..\Void.map" /debug /machine:I386 /out:"..\Void.exe" /libpath:"..\Shared\Libraries"
 # SUBTRACT LINK32 /nodefaultlib
 
 !ENDIF 
@@ -341,6 +341,18 @@ SOURCE=.\resources.rc
 # Begin Group "Music"
 
 # PROP Default_Filter ""
+# Begin Group "FMod"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\Shared\Fmod\fmod.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Fmod\fmod_errors.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Mus_cd.cpp

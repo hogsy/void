@@ -182,12 +182,20 @@ void CGameClient::HandleSpawnMsg(byte msgId, CBuffer &buffer)
 		{
 			char * game = buffer.ReadString();
 			ComPrintf("CL: Game: %s\n", game);
+
+			//All this should be moved into a special worldspawn msg
+			
 			char * map = buffer.ReadString();
 			ComPrintf("CL: Map: %s\n", map);
 
 			CWorld * pWorld = m_pClGame->LoadWorld(map);
 			if(pWorld)
 				LoadWorld(pWorld);
+
+			char music[64];
+			strcpy(music,"Zurich_Switzerland.mp3");
+			m_pClGame->PlayMusicTrack(music);
+
 			break;
 		}
 	case SVC_MODELLIST:
@@ -369,6 +377,10 @@ ComPrintf("CL: REMOTE: Loading player model: %s\n", path);
 	m_clients[num].mdlCache = CACHE_LOCAL;
 
 	//Setup bounding box. gravity,. friction etc here as well
+	m_clients[num].moveType = MOVETYPE_STEP;
+	m_clients[num].angles.Set(0.0f,0.0f,0.0f);
+	m_clients[num].velocity.Set(0,0,0);
+	m_clients[num].origin.Set(0.0f,0.0f,64.0f);
 	m_clients[num].mins = VEC_CLIENT_MINS;
 	m_clients[num].maxs = VEC_CLIENT_MAXS;
 	m_clients[num].inUse = true;
@@ -546,7 +558,6 @@ void CGameClient::BeginGame(int clNum, CBuffer &buffer)
 ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
 	
 	m_pGameClient->Reset();
-	m_pGameClient->inUse = true;
 	strcpy(m_pGameClient->name, m_cvName.string);
 	
 	//Load model Resources
@@ -556,7 +567,6 @@ ComPrintf("CL: LOCAL: CLIENT NUM %d\n", clNum);
 	if(skin)
 	{
 		strncpy(m_pGameClient->model, m_cvCharacter.string, skin - m_cvCharacter.string);
-		
 		skin++;
 		sprintf(path,"Models/Player/%s/%s", m_pGameClient->model,skin);
 	}
@@ -606,6 +616,8 @@ ComPrintf("CL: LOCAL: Loading player model: %s\n", path);
 							m_pGameClient->velocity);
 
 	m_pClGame->ForwardNetworkEvent(CLIENT_BEGINGAME);
+
+	m_pGameClient->inUse = true;
 	m_ingame = true;
 }
 

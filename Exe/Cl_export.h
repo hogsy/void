@@ -79,6 +79,15 @@ public:
 	{	m_refClient.m_pSound->PlaySnd2d(index, cache, volume, chantype);
 	}
 
+	//Music
+	inline void PlayMusicTrack(const char * path)
+	{	m_refClient.m_pMusic->PlayMp3(path);
+	}
+
+	inline void StopMusicTrack()
+	{	m_refClient.m_pMusic->StopMp3();
+	}
+
 	//Client
 	inline void ForwardNetworkEvent(EClEvent event)
 	{	m_refClient.ForwardNetworkEvent(static_cast<int>(event));

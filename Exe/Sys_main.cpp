@@ -217,9 +217,8 @@ bool CVoid::Init()
 	//Music
 	if(!m_pMusic->Init())
 	{
-		ComPrintf("CVoid::Init: couldnt init music system\n");
-		delete m_pMusic;
-		m_pMusic = 0;
+		System::FatalError("CVoid::Init: Could not initalize Music System");
+		return false;
 	}
 
 	//================================
@@ -258,10 +257,7 @@ CVoid::~CVoid()
 		delete m_pSound;
 
 	if(m_pMusic)
-	{
-		m_pMusic->Shutdown();
 		delete m_pMusic;
-	}
 	
 	//Shutdown, and free the Renderer Interface
 	if(m_pRender)

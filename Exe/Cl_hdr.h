@@ -68,6 +68,10 @@ struct I_ClientGame
 	virtual void PlaySnd2d(int index, CacheType cache,int volume = 10,
 				   int chantype = CHAN_AUTO)=0;
 
+	//Music
+	virtual void PlayMusicTrack(const char * path)=0;
+	virtual void StopMusicTrack()=0;
+
 	//Client
 	virtual void ForwardNetworkEvent(EClEvent event)=0;
 	virtual void SetNetworkRate(int rate)=0;

@@ -1,6 +1,10 @@
 #include "Mus_main.h"
-#include "I_file.h"
 #include "Mus_cd.h"
+#include "I_file.h"
+
+#include "fmod/fmod.h"
+#include "fmod/fmod_errors.h"
+
 
 //======================================================================================
 //======================================================================================
@@ -39,6 +43,10 @@ Constructor/Destructor
 */
 CMusic::CMusic() : m_cVolume("mus_vol","8", CVAR_INT,CVAR_ARCHIVE)
 {
+	m_bFMod  = false;
+	m_pStream = 0;
+	m_mp3Chan= -1;
+
 	m_pCDAudio = new CMusCDAudio();
 
 	System::GetConsole()->RegisterCVar(&m_cVolume,this);
@@ -65,7 +73,25 @@ Initialize Music drivers
 */
 bool CMusic::Init()
 {
-	//Just cd audio right now
+	//Initialize FMOD
+
+	if (FSOUND_GetVersion() != FMOD_VERSION)
+	{
+		ComPrintf("CMusic::Init:: Incorrect DLL version for FMOD: Need %.2f\n",FMOD_VERSION);
+		return false;
+	}
+
+	FSOUND_SetOutput(FSOUND_OUTPUT_DSOUND);
+	FSOUND_SetBufferSize(200);
+	FSOUND_SetDriver(0);
+
+	if (!FSOUND_Init(44100, 1, 0))
+	{
+		ComPrintf("CMusic::Init:: Error in FSOUND_Init(): %s\n", FMOD_ErrorString(FSOUND_GetError()));
+		FSOUND_Close();
+		return false;
+	}
+	m_bFMod = true;
 	return m_pCDAudio->Init();
 }
 
@@ -76,7 +102,57 @@ Shutdown the music driver
 */
 void CMusic::Shutdown()
 {	
+	if(m_bFMod)
+	{
+		StopMp3();
+		FSOUND_Close();
+		m_bFMod = false;
+	}
 	m_pCDAudio->Shutdown();
+}
+
+void CMusic::PlayMp3(const char * szFile)
+{
+	if(!m_bFMod)
+	{
+		ComPrintf("CMusic::PlayMp3: Error. Fmod inactive\n");
+		return;
+	}
+	
+	StopMp3();
+
+	char path[COM_MAXPATH];
+	sprintf(path,"%s/Music/%s", System::GetCurGamePath(), szFile);
+
+	m_pStream = FSOUND_Stream_OpenMpeg(path, FSOUND_NORMAL | FSOUND_LOOP_NORMAL);	
+	if (!m_pStream)
+	{
+		ComPrintf("CMusic::PlayMp3:Open: %s\n", FMOD_ErrorString(FSOUND_GetError()));
+		return;
+	}
+
+	m_mp3Chan = FSOUND_Stream_Play(FSOUND_FREE, m_pStream);
+	if(m_mp3Chan == -1)
+	{
+		ComPrintf("CMusic::PlayMp3:Play: %s\n", FMOD_ErrorString(FSOUND_GetError()));
+		return;
+	}
+
+	FSOUND_SetVolume(m_mp3Chan,255);
+	FSOUND_SetSFXMasterVolume(255);
+	ComPrintf("CMUSIC: Playing %s\n", szFile);
+}
+
+void CMusic::StopMp3()
+{
+	if(m_mp3Chan != -1)
+	{
+		m_mp3Chan = -1;
+		FSOUND_Stream_Stop(m_pStream);
+		FSOUND_Stream_Close(m_pStream);
+
+ComPrintf("CMusic::Stopped MP3\n");
+	}
 }
 
 /*
@@ -190,3 +266,4 @@ void CMusic::HandleMCIMsg(uint &wParam, long &lParam)
 	if(m_pCDAudio)
 		HandleMCIMsg(wParam,lParam);
 }
+

@@ -327,6 +327,8 @@ void CGameClient::UnloadWorld()
 	m_numClients = 0;
 	m_ingame = false;
 
+	m_pClGame->StopMusicTrack();
+
 	ComPrintf("CLGAME: Unload world\n");
 }
 
