@@ -11,7 +11,7 @@ bool FindFileExtension(char * ext, int extlen, const char * path)
 	char filename[COM_MAXPATH];
 	if(g_pFileSystem->FindFileName(filename,COM_MAXPATH,path))
 	{
-		ParseExtension(filename,ext,extlen);
+		ParseExtension(ext,extlen,filename);
 		return true;
 	}
 	return false;
@@ -22,7 +22,7 @@ bool FindFileExtension(char * ext, int extlen, const char * path)
 Returns the extension of the filename  passed to it
 =======================================
 */
-void ParseExtension(const char *filename, char *ext, int bufsize)
+void ParseExtension(char *ext, int bufsize, const char *filename)
 {
 	const char * p = filename;
 	while (*p && *p != '.')
@@ -30,8 +30,8 @@ void ParseExtension(const char *filename, char *ext, int bufsize)
 	if (!*p)
 		return;
 	p++;
-	for (int i=0 ; i<bufsize && *p ; i++,filename++)
-		ext[i] = *filename;
+	for (int i=0 ; i<bufsize && *p ; i++,p++)
+		ext[i] = *p;
 	ext[i] = 0;
 }
 
@@ -41,7 +41,7 @@ void ParseExtension(const char *filename, char *ext, int bufsize)
 Removes the file extension of a given file
 =======================================
 */
-void RemoveExtension (const char *in, char *out, int bufsize)
+void RemoveExtension (char *out, int bufsize, const char *in)
 {
 	int i=0;
 	while (*in && *in != '.' && i<bufsize)
@@ -57,7 +57,7 @@ void RemoveExtension (const char *in, char *out, int bufsize)
 Get File Path
 =======================================
 */
-void ParseFilePath(const char *file, char *path, int pathlen)
+void ParseFilePath(char *path, int pathlen,const char *file)
 {
 	const char *s;
 
@@ -94,10 +94,10 @@ void SetDefaultExtension (char *filename, const char *extension)
 		if (*src == '.')	// it has an extension
 		{
 			char ext[4];
-			ParseExtension(filename,ext,4);
+			ParseExtension(ext,4,filename);
 			if(strcmp(ext,extension))
 			{	
-				RemoveExtension(filename,filename,strlen(filename));
+				RemoveExtension(filename,strlen(filename),filename);
 				SetDefaultExtension(filename,extension);
 			}
 			return;                 

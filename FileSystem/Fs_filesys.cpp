@@ -533,7 +533,7 @@ ComPrintf("Searching in %s\n",searchpath);
 			if(hsearch != INVALID_HANDLE_VALUE)
 			{
 				char ext[8];
-				FileUtil::ParseExtension(finddata.cFileName,ext,8);
+				FileUtil::ParseExtension(ext,8,finddata.cFileName);
 
 				if(FindClose(hsearch) == FALSE)   // file search handle
 					ComPrintf("CFileSystem::FindFileName:Unable to close search handle\n");

@@ -490,7 +490,7 @@ bool CZipFile::FindFile(char * buf, int buflen,const char * filename)
 	if(BinarySearchForEntry(filename,&entry,0,m_numFiles,filelen))
 	{
 		char ext[8];
-		FileUtil::ParseExtension(entry->filename,ext,8);
+		FileUtil::ParseExtension(ext,8,entry->filename);
 		if(strlen(entry->filename) + strlen(m_archiveName) + 2 < buflen)
 		{
 			sprintf("%s/%s.%s",m_archiveName,entry->filename);
