@@ -12,6 +12,8 @@
 #include "Hud_main.h"
 
 extern CRConsole * g_prCons;
+extern CVar *	g_pVidSynch;
+
 
 eyepoint_t	eye;			// where we're gonna draw from
 vector_t	forward, right, up;	// FIXME - move into eyepoint_t ?
@@ -88,6 +90,16 @@ void r_init(void)
 	glDepthFunc(GL_ALWAYS);
 
 	glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
+
+
+	// reset last r_vidsynch
+	if (g_rInfo.rflags & RFLAG_SWAP_CONTROL)
+	{
+		if (g_pVidSynch->value)
+			wglSwapIntervalEXT(1);
+		else
+			wglSwapIntervalEXT(0);
+	}
 
 	g_rInfo.ready = true;
 }

@@ -77,8 +77,7 @@ bool CTextureManager::Init()
 	glGenTextures(m_numBaseTextures, tex->base_names);
 	for(count=0;count<m_numBaseTextures;count++)
 	{
-		LoadTexture(BaseTextureList[count],IMG_RGBA);
-		m_texReader->ColorKey();
+		LoadTexture(BaseTextureList[count]);
 
 		glBindTexture(GL_TEXTURE_2D, tex->base_names[count]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -86,50 +85,25 @@ bool CTextureManager::Init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-/*		//FIX ME, use something like this ?
-
-		switch(m_texReader->GetBpp())
+		int ext_format, int_format;
+		if (m_texReader->GetFormat() == IMG_RGB)
 		{
-			case 3:
-				format=GL_RGB;
-				switch(g_rInfo.bpp)
-				{
-					case 16:
-						outformat=GL_RGB5;
-						break;
-					case 32:
-						outformat=GL_RGB8;
-						break;
-					default:
-						outformat=GL_RGB;
-				};
-				break;
-			case 4:
-				format=GL_RGBA;
-				switch(g_rInfo.bpp)
-				{				
-					case 16:
-						outformat=GL_RGBA4;
-						break;
-					case 32:
-						outformat=GL_RGBA8;
-						break;
-					default:
-						outformat=GL_RGBA;
-				};
-				break;
-			default:
-				format = GL_RGB;
-				outformat = GL_RGB;
+			ext_format = GL_RGB;
+			int_format = GL_RGB8;
 		}
-*/
+		else
+		{
+			ext_format = GL_RGBA;
+			int_format = GL_RGBA8;
+		}
+
 		glTexImage2D(GL_TEXTURE_2D,
 				 0,
-				 GL_RGBA,
+				 int_format,
 				 m_texReader->GetWidth(),
 				 m_texReader->GetHeight(),
 				 0,
-				 GL_RGBA,
+				 ext_format,
 				 GL_UNSIGNED_BYTE,
 				 m_texReader->GetData());
 		
@@ -226,7 +200,7 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 	for (t = 0; t < tex->num_textures; t++)
 	{
-		LoadTexture(map->textures[t], IMG_RGB);
+		LoadTexture(map->textures[t]);
 		mipcount = m_texReader->GetMipCount();
 			
 		//Set initial dimensions
@@ -241,6 +215,18 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
+		int ext_format, int_format;
+		if (m_texReader->GetFormat() == IMG_RGB)
+		{
+			ext_format = GL_RGB;
+			int_format = GL_RGB8;
+		}
+		else
+		{
+			ext_format = GL_RGBA;
+			int_format = GL_RGBA8;
+		}
+
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
@@ -248,11 +234,11 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
-						 GL_RGB8, //GL_RGBA,
+						 int_format,
 						 m_texReader->GetWidth(),
 						 m_texReader->GetHeight(),
 						 0,
-						 GL_RGB, //GL_RGBA,
+						 ext_format,
 						 GL_UNSIGNED_BYTE,
 						 m_texReader->GetData());
 		}
@@ -286,6 +272,18 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
+		int ext_format, int_format;
+		if (m_texReader->GetFormat() == IMG_RGB)
+		{
+			ext_format = GL_RGB;
+			int_format = GL_RGB8;
+		}
+		else
+		{
+			ext_format = GL_RGBA;
+			int_format = GL_RGBA8;
+		}
+
 		for (m = 0; m < mipcount; m++)
 		{
 			if(m)
@@ -293,11 +291,11 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 
 			glTexImage2D(GL_TEXTURE_2D,
 						 m,
-						 GL_RGBA,
+						 int_format,
 						 m_texReader->GetWidth(),
 						 m_texReader->GetHeight(),
 						 0,
-						 GL_RGBA,
+						 ext_format,
 						 GL_UNSIGNED_BYTE,
 						 m_texReader->GetData());
 		}
@@ -361,12 +359,12 @@ bool CTextureManager::UnloadWorldTextures()
 Load a map texture
 ==========================================
 */
-void CTextureManager::LoadTexture(const char *filename, int bpp)
+void CTextureManager::LoadTexture(const char *filename)
 {
 	static char texname[COM_MAXPATH];
 	sprintf(texname,"%s/%s",m_textureDir,filename);
 
-	if(!m_texReader->Read(texname,(EImageFormat)bpp))
+	if(!m_texReader->Read(texname))
 	{
 		m_texReader->Reset();
 		m_texReader->DefaultTexture();

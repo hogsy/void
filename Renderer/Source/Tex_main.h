@@ -46,7 +46,7 @@ private:
 
 	CImageReader *	m_texReader;
 
-	void LoadTexture(const char *filename, int bpp=3);
+	void LoadTexture(const char *filename);
 };
 
 extern CTextureManager * g_pTex;

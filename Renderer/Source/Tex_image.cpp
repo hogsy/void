@@ -69,6 +69,8 @@ void CImageReader::ColorKey()
 	{
 		if ((data[p  ] == 228) && (data[p+1] == 41) &&	(data[p+2] == 226))
 			 data[p+3] = 0;
+		else
+			data[p+3] = 255;
 	}
 }
 
@@ -102,18 +104,16 @@ bool CImageReader::DefaultTexture()
 	height = DEFAULT_TEXTURE_HEIGHT;
 
 	// all raw pic data is 32 bits
-	if(buffersize < width * height * 4)
+	if(buffersize < width * height * 3)
 	{
-		buffersize = width * height * 4;
+		buffersize = width * height * 3;
 		LockBuffer(buffersize);
 	}
 
-	for (int p = 0; p < width * height * 4; p++)
-	{
+	for (int p = 0; p < width * height * 3; p++)
 		data[p] = rand();
-		if (format == IMG_RGBA && p%4 == 3)
-			data[p] = 255;	// make sure it's full alpha
-	}
+
+	format = IMG_RGB;
 	return true;
 }
 
@@ -122,7 +122,7 @@ bool CImageReader::DefaultTexture()
 Read a texture from the given path
 ==========================================
 */
-bool CImageReader::Read(const char * file, EImageFormat iformat)
+bool CImageReader::Read(const char * file)
 {
 	if(data)
 		Reset();
@@ -143,10 +143,7 @@ bool CImageReader::Read(const char * file, EImageFormat iformat)
 	sprintf(filename,"%s.tga",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		if(iformat == IMG_RGB)
-			err = Read_TGA();
-		else if(iformat == IMG_RGBA)
-			err = Read_TGA32();
+		err = Read_TGA();
 		m_fileReader.Close();
 		return err;
 	}
@@ -154,10 +151,7 @@ bool CImageReader::Read(const char * file, EImageFormat iformat)
 	sprintf(filename,"%s.pcx",file);
 	if(m_fileReader.Open(filename) == true)
 	{
-		if(iformat == IMG_RGB)
-			err = Read_PCX();
-		else if(iformat == IMG_RGBA)
-			err = Read_PCX32();
+		err = Read_PCX();
 		m_fileReader.Close();
 		return err;
 	}
@@ -178,6 +172,7 @@ Read a PCX file from current filereader
 bool CImageReader::Read_PCX()
 {
 	PCX_header header;
+	int bpp;
 
 	m_fileReader.Read(&header,sizeof(header),1);
 	if((header.manufacturer != 10) || 
@@ -189,16 +184,43 @@ bool CImageReader::Read_PCX()
 		return false;
 	}
 
-	if(header.num_planes != IMG_RGB)
+	// decide if we're going to need an alpha channel
+	// do we have a '_' for color keying?
+
+	bool colorkey = false;
+
+	const char *tname = m_fileReader.GetFileName();
+	for (int offset=strlen(tname)-1; offset>0; offset--)
 	{
-		ConPrint("CImageReader::Read_PCX: Image isn't in RGB\n");
-		return false;
+		if ((tname[offset] == '\\') || (tname[offset] == '/'))
+		{
+			if (tname[offset+1] == '_')
+				colorkey = true;
+			break;
+		}
 	}
 
-	int bpp = 3;
+	if (!offset)
+		if (tname[0] == '_')
+			colorkey = true;
+
+
+	if (colorkey || (header.num_planes==4))
+	{
+		ConPrint("               %s\n", m_fileReader.GetFileName());
+		format = IMG_RGBA;
+		bpp = 4;
+	}
+	else
+	{
+		format = IMG_RGB;
+		bpp = 3;
+	}
+
+
 	width = header.width - header.x + 1;
 	height= header.height - header.y + 1;
-	
+
 	if(buffersize < width * height * bpp)
 	{
 		buffersize = width * height * bpp;
@@ -214,7 +236,7 @@ bool CImageReader::Read_PCX()
 	for (county = 0; county < height; county++)
 	{
 		//decode this line for each r g b		
-		for (color = 0; color < bpp; color++)
+		for (color = 0; color < header.num_planes; color++)
 		{
 			for (countx = 0; countx < width; )
 			{
@@ -237,7 +259,9 @@ bool CImageReader::Read_PCX()
 			}
 		}
 	}
-	format = IMG_RGB;
+
+	if (colorkey)
+		ColorKey();
 	return true;
 }
 
@@ -256,14 +280,30 @@ bool CImageReader::Read_TGA()
 	height |= m_fileReader.GetChar() << 8;
 	int bpp = m_fileReader.GetChar() / 8;
 
-	if(bpp != IMG_RGB)
+	format = (EImageFormat)bpp;
+
+	bool colorkey = false;
+	const char *tname = m_fileReader.GetFileName();
+	for (int offset=strlen(tname)-1; offset>0; offset--)
 	{
-		ComPrintf("CImageReader::Read_TGA: Image is not RGB\n");
-		return false;
+		if ((tname[offset] == '\\') || (tname[offset] == '/'))
+		{
+			if (tname[offset+1] == '_')
+				colorkey = true;
+			break;
+		}
 	}
 
+	if (!offset)
+		if (tname[0] == '_')
+			colorkey = true;
+
+	if (colorkey)
+		format = IMG_RGBA;
+
+
 	// alpha/no alpha?  we already know that
-	m_fileReader.GetChar();	
+	m_fileReader.GetChar();
 
 	if(buffersize < width * height * bpp)
 	{
@@ -271,17 +311,24 @@ bool CImageReader::Read_TGA()
 		LockBuffer(buffersize);
 	}
 	memset(data, 0xFF, width * height * bpp);
-	
+
 	for (int h= height-1; h>=0; h--)
 	{
 		for (int w=0; w<width; w++)
 		{
-			data[h*width*bpp + w*bpp + 2] = m_fileReader.GetChar(); 
-			data[h*width*bpp + w*bpp + 1] = m_fileReader.GetChar();
-			data[h*width*bpp + w*bpp    ] = m_fileReader.GetChar(); 
+			data[h*width*(int)format + w*(int)format + 2] = m_fileReader.GetChar();
+			data[h*width*(int)format + w*(int)format + 1] = m_fileReader.GetChar();
+			data[h*width*(int)format + w*(int)format    ] = m_fileReader.GetChar();
+
+			if (bpp == 4)
+				data[h*width*(int)format + w*(int)format + 3] = m_fileReader.GetChar();
 		}
 	}
-	format = IMG_RGB;
+
+
+	if (colorkey)
+		ColorKey();
+
 	return true;
 }
 
@@ -293,9 +340,9 @@ Read a jpeg
 bool CImageReader::Read_JPG()
 {
 	JPEG_CORE_PROPERTIES jcprop;
-	
+
 	memset(&jcprop,0,sizeof(JPEG_CORE_PROPERTIES));
-	
+
 	if(ijlInit( &jcprop ) != IJL_OK ) 
 	{
 		ComPrintf("CImageReader::Read_JPG: Unable to initialize the Intel JPEG library\n");
@@ -349,152 +396,6 @@ bool CImageReader::Read_JPG()
 	}
 	format=IMG_RGB;
 	return true;
-}
-
-
-//======================================================================================
-//32 bit image reader funcs
-//======================================================================================
-
-/*
-==========================================
-Read a PCX file from current filereader
-==========================================
-*/
-bool CImageReader::Read_PCX32()
-{
-	PCX_header header;
-
-	m_fileReader.Read(&header,sizeof(header),1);
-	if((header.manufacturer != 10) || 
-	   (header.version != 5) || 
-	   (header.encoding != 1)|| 
-	   (header.bits_per_pixel != 8))
-	{
-		ConPrint("CImageReader::Read_PCX:Bad texture file");
-		return false;
-	}
-
-	width = header.width - header.x + 1;
-	height= header.height - header.y + 1;
-
-	// always store the pic in 32 bit rgba WHY ?
-	if(buffersize < width * height * 4)
-	{
-		buffersize = width * height * 4;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0xFF, width * height * 4);
-
-	byte ch;
-	int number, color;
-	int countx, county, index;
-
-	//for every line
-	for (county = 0; county < height; county++)
-	{
-		//decode this line for each r g b a
-		for (color = 0; color < header.num_planes; color++)
-		{
-			for (countx = 0; countx < width; )
-			{
-				ch = m_fileReader.GetChar();
-
-				// Verify if the uppers two bits are sets
-				if ((ch >= 192) && (ch <= 255))
-				{
-					number = ch - 192;
-					ch = m_fileReader.GetChar();
-				}
-				else
-					number = 1;
-
-				for (index = 0; index < number; index++)
-				{
-					data[(county * 4 * (width)) + (4 * countx) + color] = ch;
-					countx++;
-				}
-			}
-		}
-	}
-
-	// de-paletteify if we have to
-	if (header.num_planes == 1)
-	{
-		byte palette[768]; // r,g,b 256 times
-		//int index;
-
-		m_fileReader.Read(palette,1,1);
-
-		if (palette[0] != 0x0c)
-		{
-			ConPrint("CPCX_Texture::Read:palette not found!");
-			return false;
-		}
-		m_fileReader.Read(palette,786,1);
-		
-		for (county = 0; county < height; county++)
-		{
-			for (countx = 0; countx < width; countx++)
-			{
-				index = data[(county*4*(width)) + (4*countx)];
-
-				data[(county*4*(width)) + (4*countx)    ] = palette[index*3  ];
-				data[(county*4*(width)) + (4*countx) + 1] = palette[index*3+1];
-				data[(county*4*(width)) + (4*countx) + 2] = palette[index*3+2];
-			}
-		}
-	}
-	format= IMG_RGBA;
-	return true;
-}
-
-/*
-==========================================
-Read a TGA file from the given stream
-==========================================
-*/
-bool CImageReader::Read_TGA32()
-{
-	m_fileReader.Seek(12,SEEK_SET);
-
-	width   = m_fileReader.GetChar();
-	width  |= m_fileReader.GetChar() << 8;
-	height  = m_fileReader.GetChar();
-	height |= m_fileReader.GetChar() << 8;
-	int bpp     = m_fileReader.GetChar() / 8;
-
-	// alpha/no alpha?  we already know that
-	m_fileReader.GetChar();	
-
-	if(buffersize < width * height * 4)
-	{
-		buffersize = width * height * 4;
-		LockBuffer(buffersize);
-	}
-	memset(data, 0xFF, width * height * 4);
-	
-	for (int h= height-1; h>=0; h--)
-	{
-		for (int w=0; w<width; w++)
-		{
-			data[h*width*4 + w*4 + 2] = m_fileReader.GetChar(); 
-			data[h*width*4 + w*4 + 1] = m_fileReader.GetChar();
-			data[h*width*4 + w*4    ] = m_fileReader.GetChar(); 
-			data[h*width*4 + w*4 + 3] = m_fileReader.GetChar(); 
-		}
-	}
-	format= IMG_RGBA;;
-	return true;
-}
-
-/*
-==========================================
-Read a jpeg
-==========================================
-*/
-bool CImageReader::Read_JPG32()
-{	return false;
 }
 
 
@@ -579,11 +480,12 @@ void CImageReader::ImageReduce()
 		{
 			for (s = 0; s < bpp; s++)
 			{
-				color =  data[ ((2*r)		  *width*8) + ((2*c)		 *bpp)+ s];
-				color += data[ ((2*r)		  *width*8) + ((2*c)+sfactor)*bpp + s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)		 *bpp)+ s];
-				color += data[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*bpp + s];
-				color /= bpp;
+                color =  data[ ((2*r)		  *width*bpp*2) + ((2*c)		 *bpp)+ s];
+                color += data[ ((2*r)		  *width*bpp*2) + ((2*c)+sfactor)*bpp + s];
+                color += data[(((2*r)+tfactor)*width*bpp*2) + ((2*c)		 *bpp)+ s];
+                color += data[(((2*r)+tfactor)*width*bpp*2) + ((2*c)+sfactor)*bpp + s];
+                color /= 4;
+
 				mipmapdata[(r*width*bpp) + (c*bpp) + s] = (byte) color;
 			}
 		}
@@ -612,24 +514,18 @@ bool CImageReader::ReadLightMap(unsigned char **stream)
 	if (!width || !height)
 		return false;
 
-	// all raw pic data is 32 bits
-	if(buffersize < width * height * 4)
+	if(buffersize < width * height * 3)
 	{
-		buffersize = width * height * 4;
+		buffersize = width * height * 3;
 		LockBuffer(buffersize);
 	}
 
-	for (int p = 0; p < width * height * 4; p++)
+	for (int p = 0; p < width * height * 3; p++)
 	{
-		if (p%4 == 3)
-			data[p] = 255;	//make sure it's full alpha
-		else
-		{
-			data[p] = **stream;
-			(*stream)++;
-		}
+		data[p] = **stream;
+		(*stream)++;
 	}
-	format = IMG_RGBA;
+	format = IMG_RGB;
 	return true;
 }
 
@@ -909,148 +805,6 @@ Image Type           Description
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//======================================================================================================
-//	FUNCTIONS TO MANIPULATE IMAGES
-//======================================================================================================
-#if 0
-
-/**********************************************************
-reduce dimensions of an 8888 tex by 2.  !!assumes dimensions allow it!!
-**********************************************************/
-void ImageReduce32(byte *dest, byte *src, int &width, int &height)
-{
-	DWORD color;
-	int r, c, s;
-
-	int sfactor = 0;
-	int tfactor = 0;
-
-	if (width/2 != 0)
-	{
-		sfactor = 1;
-		width /= 2;
-	}
-
-	if (height/2 != 0)
-	{
-		tfactor = 1;
-		height /= 2;
-	}
-
-	for (r = 0; r < height; r++)
-	{
-		for (c = 0; c < width; c++)
-		{
-			for (s = 0; s < 4; s++)
-			{
-				color =  src[ ((2*r)		 *width*8) + ((2*c)			*4)+ s];
-				color += src[ ((2*r)		 *width*8) + ((2*c)+sfactor)*4 + s];
-				color += src[(((2*r)+tfactor)*width*8) + ((2*c)			*4)+ s];
-				color += src[(((2*r)+tfactor)*width*8) + ((2*c)+sfactor)*4 + s];
-				color /= 4;
-
-				dest[(r*width*4) + (c*4) + s] = (byte) color;
-			}
-		}
-	}
-}
-
-/**********************************************************
-reduce dimensions of an 888 tex by 2.  !!assumes dimensions allow it!!
-**********************************************************/
-void ImageReduce24(byte *dest, byte *src, int nwidth, int nheight)
-{
-	DWORD color;
-	int r, c, s;
-
-	for (r = 0; r < nheight; r++)
-	{
-		for (c = 0; c < nwidth; c++)
-		{
-			for (s = 0; s < 3; s++)
-			{
-				color =  src[ ((2*r)   *nwidth*6) + ((2*c)   *3)+ s];
-				color += src[ ((2*r)   *nwidth*6) + ((2*c)+1)*3 + s];
-				color += src[(((2*r)+1)*nwidth*6) + ((2*c)   *3)+ s];
-				color += src[(((2*r)+1)*nwidth*6) + ((2*c)+1)*3 + s];
-				color /= 4;
-
-				dest[(r*nwidth*3) + (c*3) + s] = (byte) color;
-			}
-		}
-	}
-}
-
-/**********************************************************
-convert a tex format from 8888 to something else
-**********************************************************/
-byte* ImageConvert(byte *src, int format, uint width, uint height)
-{
-	byte *dest = new byte[width * height * 2];
-	if (dest == NULL) FError("mem for pic format conversion");
-
-// convert from 8888 to 565
-	if (format == IMAGE_565)
-	{
-		for (unsigned int p = 0; p < width * height; p++)
-		{
-			dest[p*2+1]  = (src[(p*4)]   * 32 / 256) << 3;
-			dest[p*2+1] |= (src[(p*4)+1] * 64 / 256) >> 3;
-
-			dest[p*2]    = (src[(p*4)+1] * 64 / 256) << 5;
-			dest[p*2]   |= (src[(p*4)+2] * 32 / 256);
-		}
-	}
-// convert from 8888 to 1555
-// FIXME - also do convertions to 4444
-	else
-	{
-		for (unsigned int p = 0; p < width * height; p++)
-		{
-			dest[p*2  ]	= 0x00;
-			dest[p*2+1]	= 0x00;
-
-		// alpha
-			if (!(dest[(p*4)  ] == 228) &&
-				!(dest[(p*4)+1] == 41) &&
-				!(dest[(p*4)+2] == 226))
-			{	
-				dest[p*2+1] |= (src[(p*4)]   * 32 / 256) << 2;
-				dest[p*2+1] |= (src[(p*4)+1] * 32 / 256) >> 3;
-
-				dest[p*2]   |= (src[(p*4)+1] * 32 / 256) << 5;
-				dest[p*2]   |= (src[(p*4)+2] * 32 / 256);
-
-				dest[p*2+1] |= 0x80;
-			}
-		}
-	}
-	return dest;
-}
-
-
-#endif
 
 
 #if 0

@@ -40,7 +40,7 @@ public:
 	const byte * GetData()   const { return data; }
 	const EImageFormat & GetFormat()  const { return format; }	//BYTES per pixel
 
-	bool Read(const char * file, EImageFormat iformat = IMG_RGB);
+	bool Read(const char * file);
 	
 //FIXME, should this really be there ?
 	//Read lightmap textures from world file
@@ -80,10 +80,6 @@ protected:
 	bool Read_PCX();
 	bool Read_TGA();
 	bool Read_JPG();
-
-	bool Read_PCX32();
-	bool Read_TGA32();
-	bool Read_JPG32();
 };
 
 /*
