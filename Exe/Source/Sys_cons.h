@@ -8,8 +8,34 @@
 #include "Com_queue.h"
 #include "Com_list.h"
 
+#include "I_renderer.h"
+
 //#define VOID_DOS_CONSOLE	1
 #define CON_MAXARGSIZE 80
+
+
+
+struct CCommand
+{
+	CCommand(const char * iname,
+			 HCMD iid, 
+			 I_CmdHandler * ihandler) : handler(ihandler), id(iid)
+	{
+		name = new char[strlen(iname)+1];
+		strcpy(name,iname);
+	}
+
+	~CCommand()
+	{
+		delete [] name;
+		handler = 0;
+	}
+
+	HCMD	id;
+	char *	name;
+	I_CmdHandler * handler;
+};
+
 
 /*
 ==========================================
@@ -35,7 +61,7 @@ public:
 	//I_Console Interface
 
 	//CVar Registration
-	void RegisterCVar(	CVar * var,
+	void RegisterCVar(	CVarBase * var,
 						I_CVarHandler * handler=0);
 	void RegisterCommand(const char *cmdname,
 						HCMD id,
@@ -76,10 +102,10 @@ public:
 
 private:
 
-	void HandleBool   (CVar *var, int argc,  char** argv);
-	void HandleInt    (CVar *var, int argc,  char** argv);
-	void HandleString (CVar *var, int argc,  char** argv);
-	void HandleFloat  (CVar *var, int argc,  char** argv);
+	void HandleBool   (CVarBase *var, int argc,  char** argv);
+	void HandleInt    (CVarBase *var, int argc,  char** argv);
+	void HandleString (CVarBase *var, int argc,  char** argv);
+	void HandleFloat  (CVarBase *var, int argc,  char** argv);
 
 	void HandleInput(const int &c);
 
@@ -90,7 +116,7 @@ private:
 	void CCmdList(int argc, char** argv);
 	void CFunctest(int argc, char** argv);
 
-	CPRefList<CVar>    *m_pcList;	//List of Cvars
+	CPRefList<CVarBase>    *m_pcList;	//List of Cvars
 	CPtrList<CCommand> *m_pfList;	//List of Cfuncs
 
 	//Args

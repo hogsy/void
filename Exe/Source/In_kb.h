@@ -35,7 +35,7 @@ public:
 	bool	UnAcquire();
 
 	//CVar Handler
-	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
 	//Toggle Exclusive mode
 	HRESULT	SetExclusive(bool exclusive);

@@ -39,7 +39,7 @@ public:
 	void UpdateCursor();		//Update the cursor position
 
 	//CVar Handler
-	bool HandleCVar(const CVar * cvar, int numArgs, char ** szArgs);
+	bool HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs);
 
 	//Input Focus Manager Implementation
 

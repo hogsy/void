@@ -28,13 +28,13 @@ CConsole::CConsole()
 	m_pflog = NULL;
 	m_prCons = NULL;
 
-	m_pcList = new CPRefList<CVar>;
+	m_pcList = new CPRefList<CVarBase>;
 	m_pfList = new CPtrList<CCommand>;
 
 	m_CmdBuffer = new CQueue<char>;
 
 	m_szargv = new char * [BMAX_ARGS];
-	for(int i=0;i<CVar::CVAR_MAXARGS;i++)
+	for(int i=0;i<CVarBase::CVAR_MAXARGS;i++)
 	{
 		m_szargv[i] = new char[CON_MAXARGSIZE];;
 	}
@@ -241,7 +241,7 @@ void CConsole::HandleInput(const int &i)
 			//Print all the CVars and cmds that match the given string
 			const char * p = m_szCBuffer.GetString();
 			char * lastmatch=0;
-			CPRefList<CVar> * pcvar = g_pConsole->m_pcList;
+			CPRefList<CVarBase> * pcvar = g_pConsole->m_pcList;
 			CPtrList<CCommand> * pcfunc = g_pConsole->m_pfList;
 
 			ComPrintf("\n");
@@ -320,8 +320,8 @@ bool CConsole::Exec(int argc, char** argv)
 	}
 
 	//is it a cvar ?
-	CVar * pcvar = 0;
-	for (CPRefList<CVar> *temp= m_pcList;temp->item; temp=temp->next)
+	CVarBase * pcvar = 0;
+	for (CPRefList<CVarBase> *temp= m_pcList;temp->item; temp=temp->next)
 	{
 		pcvar = temp->item;
 		if(!strcmp(argv[0],pcvar->name))
@@ -332,16 +332,16 @@ bool CConsole::Exec(int argc, char** argv)
 			{
 				switch(pcvar->type)
 				{
-				case CVar::CVAR_INT:
+				case CVarBase::CVAR_INT:
 					HandleInt(pcvar,argc,argv);
 					break;
-				case CVar::CVAR_FLOAT:
+				case CVarBase::CVAR_FLOAT:
 					HandleFloat(pcvar,argc,argv);
 					break;
-				case CVar::CVAR_STRING:
+				case CVarBase::CVAR_STRING:
 					HandleString(pcvar,argc,argv);
 					break;
-				case CVar::CVAR_BOOL:
+				case CVarBase::CVAR_BOOL:
 					HandleBool(pcvar,argc,argv);
 					break;
 				}
@@ -450,11 +450,11 @@ Write CVars to given file
 void CConsole::WriteCVars(FILE * fp)
 {
 	//write all the archive flaged vars in the config file
-	CVar * var = 0;
-	for (CPRefList<CVar> *temp=m_pcList; temp->item; temp=temp->next)
+	CVarBase * var = 0;
+	for (CPRefList<CVarBase> *temp=m_pcList; temp->item; temp=temp->next)
 	{
 		var = temp->item;
-		if(var->flags & CVar::CVAR_ARCHIVE)
+		if(var->flags & CVarBase::CVAR_ARCHIVE)
 		{
 			char line[80];
 			strcpy(line,var->name);
@@ -524,7 +524,7 @@ void CConsole::CVarlist(int argc,  char** argv)
 	if(argc==2)
 	{
 		int len= strlen(argv[1]);
-		for (CPRefList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
+		for (CPRefList<CVarBase> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			if(strncmp(temp->item->name,argv[1], len)==0)
 				ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
@@ -532,7 +532,7 @@ void CConsole::CVarlist(int argc,  char** argv)
 	}
 	else
 	{	
-		for (CPRefList<CVar> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
+		for (CPRefList<CVarBase> *temp= g_pConsole->m_pcList ; temp->item ; temp=temp->next)
 		{
 			ComPrintf("\"%s\" is \"%s\"\n",temp->item->name,temp->item->string);
 		}
@@ -575,7 +575,7 @@ Handle arguments to the CVar containing
 a string and assign new values
 =======================================
 */
-void CConsole::HandleString (CVar *var, int argc,  char** argv)
+void CConsole::HandleString (CVarBase *var, int argc,  char** argv)
 {
 	if(argc >= 2 && argv[1])
 	{
@@ -603,7 +603,7 @@ Handle arguments to the CVar containing
 an int value and assign new values
 =======================================
 */
-void  CConsole::HandleInt (CVar *var, int argc,  char** argv)
+void  CConsole::HandleInt (CVarBase *var, int argc,  char** argv)
 {
 //FIXME - add parser for special chars like "" and =
 	if(argc >=2 && argv[1])
@@ -624,7 +624,7 @@ Handle arguments to the CVar containing
 a float value and assign new values
 =======================================
 */
-void CConsole::HandleFloat (CVar *var, int argc,  char** argv)
+void CConsole::HandleFloat (CVarBase *var, int argc,  char** argv)
 {
 //FIXME - add parser for special chars like "" and =
 	if(argc>=2 && argv[1])
@@ -645,7 +645,7 @@ Handle arguments to the CVar containing
 a bool value and assign new values
 =======================================
 */
-void CConsole::HandleBool (CVar *var , int argc,  char** argv)
+void CConsole::HandleBool (CVarBase *var , int argc,  char** argv)
 {
 //FIXME - add parser for special chars like "" and =
 	if(argc>=2 && argv[1])
@@ -701,3 +701,133 @@ if ( OpenClipboard() ) {
 }
 */
 }
+
+
+
+//======================================================================================
+//======================================================================================
+
+
+/*
+==========================================
+Register CVar
+
+Initialize CVar and alphabetically add to list
+==========================================
+*/
+
+void CConsole::RegisterCVar(CVarBase * var,
+							I_CVarHandler * handler)
+{
+	if(handler)
+		var->handler = handler;
+
+	//Add Item to CvarList
+	CPRefList<CVarBase>* i1 = m_pcList;
+	CPRefList<CVarBase>* i2 = 0;
+	
+	//Loop till there are no more items in list, or the variable name is 
+	//bigger than the item in the list
+	while(i1->next && i1->item && (strcmp(var->name, i1->item->name) > 0))
+	{
+		i2 = i1;
+		i1 = i1->next;
+	}
+
+	//didnt loop
+	if(i2 == 0)
+	{
+		//New item comes before the first item in the list
+		if(m_pcList->item)
+		{
+			CPRefList<CVarBase> * newentry = new CPRefList <CVarBase>;
+			newentry->item = var;
+			newentry->next = i1;
+			m_pcList = newentry;
+		}
+		//List is empty, add to it
+		else
+		{
+			i1->item = var;
+			i1->next = new CPRefList<CVarBase>;
+		}
+	}
+	//Item comes after the item in list pointer to by i2, and before i1
+	else
+	{
+		CPRefList<CVarBase> * newentry = new CPRefList <CVarBase>;
+		newentry->item = var;
+		i2->next = newentry;
+		newentry->next = i1;
+	}
+}
+
+/*
+==========================================
+Register CFunc
+==========================================
+*/
+
+void CConsole::RegisterCommand(const char *cmdname,
+							   HCMD id,
+							   I_CmdHandler * handler)
+{
+	CCommand * newfunc = new CCommand(cmdname,id,handler);
+	
+	//Add Item to CvarList
+	CPtrList<CCommand>* i1 = m_pfList;
+	CPtrList<CCommand>* i2 = 0;
+	
+	//Loop till there are no more items in list, or the variable name is 
+	//bigger than the item in the list
+	while(i1->next && i1->item && (strcmp(newfunc->name, i1->item->name) > 0))
+	{
+		i2 = i1;
+		i1 = i1->next;
+	}
+
+	//didnt loop
+	if(i2 == 0)
+	{
+		//New item comes before the first item in the list
+		if(m_pfList->item)
+		{
+			CPtrList<CCommand> * newentry = new CPtrList <CCommand>;
+			newentry->item = newfunc;
+			newentry->next = i1;
+			m_pfList = newentry;
+		}
+		//List is empty, add to it
+		else
+		{
+			i1->item = newfunc;
+			i1->next = new CPtrList<CCommand>;
+		}
+	}
+	//Item comes after the item in list pointer to by i2, and before i1
+	else
+	{
+		CPtrList<CCommand> * newentry = new CPtrList <CCommand>;
+		newentry->item = newfunc;
+		i2->next = newentry;
+		newentry->next = i1;
+	}
+}
+
+
+CCommand * CConsole::GetCommandByName(const char * cmdString)
+{
+	CPtrList<CCommand>* iterator = m_pfList;
+	while(iterator->next && iterator->item)
+	{
+		if(strcmp(cmdString,iterator->item->name) ==0)
+		{
+			//*phandler = iterator->item->handler;
+			return iterator->item; //->id;
+		}
+		iterator = iterator->next;
+	}
+	return 0;
+}
+
+

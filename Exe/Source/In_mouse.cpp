@@ -93,20 +93,20 @@ static bool CMouseFilter(const CVar *var, int argc, char** argv);
 
 //CVar Handler
 
-bool CMouse::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+bool CMouse::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
 	if(cvar == &m_pVarXSens)
-		return CXSens(cvar,numArgs,szArgs);
+		return CXSens((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_pVarYSens)
-		return CYSens(cvar,numArgs,szArgs);
+		return CYSens((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_pVarSens)
-		return CSens(cvar,numArgs,szArgs);
+		return CSens((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_pVarInvert)
-		return CInvert(cvar,numArgs,szArgs);
+		return CInvert((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_pVarMode)
-		return CMouseMode(cvar,numArgs,szArgs);
+		return CMouseMode((CVar*)cvar,numArgs,szArgs);
 	else if(cvar == &m_pVarFilter)
-		return CMouseFilter(cvar,numArgs,szArgs);
+		return CMouseFilter((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 

@@ -33,6 +33,8 @@ List of all the Keys and a pointer to
 the function they are bound to
 =========================================
 */
+struct CCommand;
+
 struct ClientKey
 {
 	ClientKey()	{ szCommand = 0; pCmd = 0;	}

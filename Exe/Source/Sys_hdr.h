@@ -15,12 +15,14 @@
 
 #include "Com_defs.h"
 #include "Com_mem.h"
-#include "Com_util.h"
 
 #include "I_hunkmem.h"
 #include "I_console.h"
 #include "I_file.h"
 #include "I_filesystem.h"
+
+#include "Com_cvar.h"
+#include "Com_util.h"
 
 #include "World.h"
 

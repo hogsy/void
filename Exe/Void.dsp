@@ -131,10 +131,6 @@ SOURCE=.\Source\Sys_cons.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Sys_cvar.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Sys_exp.h
 # End Source File
 # Begin Source File
@@ -183,7 +179,51 @@ SOURCE=..\Shared\clip.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Shared\Com_buffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_buffer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\Shared\Com_cvar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_hunk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_hunk.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_list.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_mem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_mem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_parms.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_queue.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Shared\Com_util.h
 # End Source File
 # Begin Source File
 
@@ -229,6 +269,10 @@ SOURCE=.\Source\Cl_move.cpp
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\DevStudio\VC98\Include\BASETSD.H
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\icon1.ico
@@ -342,46 +386,6 @@ SOURCE=.\Source\In_mouse.cpp
 SOURCE=.\Source\In_mouse.h
 # End Source File
 # End Group
-# Begin Group "Util"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\Shared\Com_buffer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_buffer.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_list.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_mem.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_mem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_parms.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_queue.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_util.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\Shared\Com_util.h
-# End Source File
-# End Group
 # Begin Group "Interface"
 
 # PROP Default_Filter ""
@@ -403,7 +407,7 @@ SOURCE=..\Shared\I_hud.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Shared\I_mem.h
+SOURCE=..\Shared\I_hunkmem.h
 # End Source File
 # Begin Source File
 

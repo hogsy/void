@@ -54,11 +54,11 @@ void In_UpdateKey(int keyid, EButtonState keyState)
 //========================================================================================
 //========================================================================================
 
-bool CKeyboard::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+bool CKeyboard::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
 	if(cvar == &m_pVarKbMode)
 	{
-		return CKBMode(cvar, numArgs,szArgs);
+		return CKBMode((CVar*)cvar, numArgs,szArgs);
 	}
 	return false;
 }

@@ -8,8 +8,8 @@ Console stuff
 -paste from windows console
 
 clean up input classes.
+
 CVar/Command/CmdLine Parms class
 error/logging/handling
-
 proper cleaner gl driver code
 

@@ -22,10 +22,10 @@ bool g_bDIAvailable = false;
 //========================================================================================
 //========================================================================================
 
-bool CInput::HandleCVar(const CVar * cvar, int numArgs, char ** szArgs)
+bool CInput::HandleCVar(const CVarBase * cvar, int numArgs, char ** szArgs)
 {
 	if(cvar == &m_pVarExclusive)
-		return CSetExclusive(cvar,numArgs,szArgs);
+		return CSetExclusive((CVar*)cvar,numArgs,szArgs);
 	return false;
 }
 
