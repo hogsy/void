@@ -65,7 +65,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 			char * map = buffer.ReadString();
 //ComPrintf("CL: Map: %s\n", map);
 			if(!LoadWorld(map))
-				m_pNetCl->Disconnect();
+				m_pNetCl->Disconnect(false);
 			break;
 		}
 	case SVC_MODELLIST:
@@ -90,6 +90,7 @@ void CClient::HandleSpawnMsg(const byte &msgId, CBuffer &buffer)
 		}
 	case SVC_BEGIN:
 		{
+			HandleGameMsg(buffer);
 			BeginGame();
 			break;
 		}

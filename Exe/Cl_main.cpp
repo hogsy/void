@@ -77,7 +77,7 @@ Destroy the client
 */
 CClient::~CClient()
 {
-	m_pNetCl->Disconnect();
+	m_pNetCl->Disconnect(false);
 
 	if(m_pCamera)
 		delete m_pCamera;
@@ -363,7 +363,7 @@ void CClient::HandleCommand(HCMD cmdId, const CParms &parms)
 			break;
 		}
 	case CMD_DISCONNECT:
-		m_pNetCl->Disconnect();
+		m_pNetCl->Disconnect(true);
 		break;
 	case CMD_RECONNECT:
 		m_pNetCl->Reconnect();

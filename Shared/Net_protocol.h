@@ -7,7 +7,8 @@ Contains common definitions needed by both the Network library
 and the game code.
 ======================================================================================
 */
-const int  VOID_PROTOCOL_VERSION = 1;		//Current protcol version
+//Current protcol version
+const int  VOID_PROTOCOL_VERSION= 1;		
 
 //Connnectionless client to Server messages
 const char C2S_GETSTATUS[]		= "getstatus";
@@ -24,7 +25,6 @@ const char S2C_ACCEPT[]			= "accept";
 
 //Common connectionless messages
 const char VNET_PING[]			= "ping";
-
 
 /*
 ======================================================================================
@@ -49,13 +49,13 @@ Once the client has received and acked all the messages it switches to Ingame mo
 once the server has received all the acks it switches its netclient to Ingame mode
 ======================================================================================
 */
-const int  SVC_LASTSPAWNMSG  = 999;
-const byte SVC_GAMEINFO		 = 1;	//Send the server vars, map info
-const byte SVC_MODELLIST	 = 2;	//Sequenced list of models in use
-const byte SVC_SOUNDLIST	 = 3;	//Sequenced list of sounds in use 
-const byte SVC_IMAGELIST	 = 4;	//Sequenced list of images in use 
-const byte SVC_BASELINES	 = 5;	//Static entity baselines data
-const byte SVC_BEGIN		 = 6;   //Spawn NOW !
+const byte SVC_GAMEINFO		= 1;			//Send the server vars, map info
+const byte SVC_MODELLIST	= 2;			//Sequenced list of models in use
+const byte SVC_SOUNDLIST	= 3;			//Sequenced list of sounds in use 
+const byte SVC_IMAGELIST	= 4;			//Sequenced list of images in use 
+const byte SVC_BASELINES	= 5;			//Static entity baselines data
+const byte SVC_BEGIN		= 6;			//Spawn NOW !
+
 
 /*
 ======================================================================================

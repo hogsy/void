@@ -59,7 +59,7 @@ public:
 	CBuffer & GetReliableBuffer();		//Access reliable buffer
 
 	void ConnectTo(const char * ipaddr);
-	void Disconnect(bool serverPrompted = false);
+	void Disconnect(bool serverPrompted);
 	void Reconnect();
 
 	void SetPort(short port);
