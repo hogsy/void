@@ -553,7 +553,10 @@ namespace System
 	I_SoundManager * GetSoundManager() { return g_pVoid->m_pSound; }
 
 	void SetGameState(eGameState state) 
-	{ 
+	{
+		if(state == g_pVoid->m_gameState)
+			return;
+
 		g_pVoid->m_gameState = state; 
 		if(state == INCONSOLE)
 		{

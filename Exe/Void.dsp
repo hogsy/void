@@ -349,6 +349,10 @@ SOURCE=.\Net_sock.h
 
 SOURCE=.\Net_util.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\Net_util.h
+# End Source File
 # End Group
 # Begin Group "Server"
 

@@ -1,3 +1,50 @@
+#ifndef VOID_SV_CLIENT
+#define VOID_SV_CLIENT
+
+#include "Net_defs.h"
+
+
+class CNetChan;
+
+
+class CSVClient
+{
+public:
+	CSVClient();
+	~CSVClient();
+
+private:
+
+	friend class CServer;
+
+	CNetChan *	m_pNetChan;
+
+	//Game specifc
+	char		m_name[32];
+};
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #if 0
 
 //This is what the server runs
@@ -40,20 +87,6 @@ public:
 
 	
 	//Net info vars
-	int			m_port;				//this will be the clients port
-	float		m_lastmessagetime;	//reliable messages must be sent
-	int			m_retries;			//message retries
-	float		m_rate;
-	
-
-	CNBuffer	 m_recvBuf;			//message out, added to outgoing socket buffer
-	CNBuffer	 m_sendBuf;			//this gets updated with data coming in the socket
-
-	CSocket	 	 m_sock;
-	
-	unsigned int m_sendseq;
-	unsigned int m_recvseq;
-
 	
 	//Game specific
 	//these could be moved to a seperate struct or class

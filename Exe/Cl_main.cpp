@@ -154,6 +154,9 @@ Unload the world
 */
 bool CClient::UnloadWorld()
 {
+	if(!m_ingame)
+		return true;
+
 	if(!m_pRender->UnloadWorld())
 	{
 		ComPrintf("CClient::UnloadWorld - Renderer couldnt unload world\n");
@@ -179,20 +182,20 @@ void CClient::SendConnectParms()
 {
 	//Create Connection less packet
 	m_buffer.Reset();
-	m_buffer.WriteInt(-1);
+	m_buffer += -1;
 
 	//Write Connection Parms
-	m_buffer.WriteString(C2S_CONNECT);			//Header
-	m_buffer.WriteInt(VOID_PROTOCOL_VERSION);	//Protocol Version
-	m_buffer.WriteInt(m_challenge);				//Challenge Req
-//	m_buffer.WriteInt(m_virtualPort);			//Virtual Port
+	m_buffer += C2S_CONNECT;			//Header
+	m_buffer += VOID_PROTOCOL_VERSION;	//Protocol Version
+	m_buffer += m_challenge;			//Challenge Req
+//	m_buffer += m_virtualPort;			//Virtual Port
 	
 	//User Info
-	m_buffer.WriteString(m_clname.string);
+	m_buffer += m_clname.string;
 
-	m_pSock->Send(m_pSock->m_srcAddr, m_buffer.GetData(), m_buffer.GetSize());
+	m_pSock->Send(m_buffer);
+
 	m_szLastOOBMsg = C2S_CONNECT;
-	
 	m_fNextConReq = System::g_fcurTime + 2.0f;
 
 	ComPrintf("Sending Connection Parms %s\n", m_svServerAddr);
@@ -331,11 +334,11 @@ void CClient::SendConnectReq()
 
 	//Create Connection less packet
 	m_buffer.Reset();
-	m_buffer.WriteInt(-1);
-	m_buffer.WriteString(C2S_GETCHALLENGE);
+	m_buffer += -1;
+	m_buffer += C2S_GETCHALLENGE;
 
-	m_pSock->Send(netAddr, m_buffer.GetData(), m_buffer.GetSize());
-	
+	m_pSock->SendTo(m_buffer, netAddr);
+
 	m_szLastOOBMsg = C2S_GETCHALLENGE;
 	m_fNextConReq = System::g_fcurTime + 2.0f;
 

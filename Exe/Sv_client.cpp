@@ -1,3 +1,31 @@
+#include "Net_chan.h"
+#include "Sv_main.h"
+#include "Sv_client.h"
+
+//======================================================================================
+//======================================================================================
+
+CSVClient::CSVClient()
+{
+	m_pNetChan = new CNetChan();	
+}
+
+
+CSVClient::~CSVClient()
+{
+	delete m_pNetChan;
+}
+
+
+
+
+
+
+
+
+
+
+
 #if 0
 
 #include "Sv_client.h"
@@ -258,8 +286,6 @@ void CSVClient::Run()
 Disconnect the client
 =====================================
 */
-
-
 bool CSVClient::SV_Disconnect()
 {
 	if(m_active)
@@ -286,6 +312,5 @@ bool CSVClient::SV_Disconnect()
 
 	return m_sock.Close();
 }
-
 
 #endif

@@ -127,12 +127,11 @@ bool CServer::Init()
 	strcat(boundAddr,":");
 	strcat(boundAddr, m_cPort.string);
 
-	CNetAddr netaddr;
-	netaddr= (const char*)boundAddr;
-	
+	CNetAddr netaddr(boundAddr);
+
 	//Save Local Address
 	CNetAddr::SetLocalAddress(boundAddr);
-
+	
 	if(!m_pSock->Bind(netaddr))
 	{
 		ComPrintf("CServer::Init:Unable to bind socket\n");
@@ -162,6 +161,7 @@ void CServer::Shutdown()
 
 		world_destroy(m_pWorld);
 		m_pWorld = 0;
+		m_worldName[0] = 0;
 	}
 
 	m_pSock->Close();
@@ -178,6 +178,15 @@ Load the World
 */
 void CServer::LoadWorld(const char * mapname)
 {
+	if(!mapname)
+	{
+		if(m_worldName[0])
+			ComPrintf("Playing %s\n",m_worldName);
+		else
+			ComPrintf("No world loaded\n");
+		return;
+	}
+
 	//Shutdown if currently active
 	if(m_active)
 		Shutdown();
@@ -227,10 +236,10 @@ Send a rejection message to the client
 void CServer::SendRejectMsg(const char * reason)
 {
 	m_sendBuf.Reset();
-	m_sendBuf.WriteInt(-1);
-	m_sendBuf.WriteString(S2C_REJECT);
-	m_sendBuf.WriteString(reason);
-	m_pSock->Send(m_pSock->m_srcAddr, m_sendBuf.GetData(), m_sendBuf.GetSize());
+	m_sendBuf += -1;
+	m_sendBuf += S2C_REJECT;
+	m_sendBuf += reason;
+	m_pSock->Send(m_sendBuf);
 }
 
 /*
@@ -240,6 +249,21 @@ Handle a status request
 */
 void CServer::HandleStatusReq()
 {
+	//Header
+	m_sendBuf.Reset();
+	m_sendBuf += -1;
+	m_sendBuf += S2C_STATUS;
+
+	//Status info
+	m_sendBuf += VOID_PROTOCOL_VERSION;	//Protocol
+	m_sendBuf += m_cGame.string;		//Game
+	m_sendBuf += m_cHostname.string;	//Hostname
+	m_sendBuf += m_worldName;			//Map name
+	m_sendBuf += m_numClients;			//cur clients
+	m_sendBuf += m_cMaxClients.ival;		//max clients
+	
+//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(), m_pSock->GetSource());
+	m_pSock->Send(m_sendBuf);
 }
 
 /*
@@ -264,7 +288,7 @@ void CServer::HandleConnectReq()
 	int challenge = m_recvBuf.ReadInt();
 	for(int i=0; i< MAX_CHALLENGES; i++)
 	{
-		if((m_challenges[i].addr == m_pSock->m_srcAddr) &&
+		if((m_challenges[i].addr == m_pSock->GetSource()) &&
 		   (m_challenges[i].challenge = challenge))
 		   break;
 	}
@@ -273,12 +297,16 @@ void CServer::HandleConnectReq()
 		SendRejectMsg("Bad Challenge");
 		return;
 	}
+
+	//Client is ready to be accepted
+
 	m_sendBuf.Reset();
-	m_sendBuf.WriteInt(-1);
-	m_sendBuf.WriteString(S2C_ACCEPT);
-	m_sendBuf.WriteString(m_worldName);
+	m_sendBuf += -1;
+	m_sendBuf += S2C_ACCEPT;
+	m_sendBuf += m_worldName;
 	
-	m_pSock->Send(m_pSock->m_srcAddr, m_sendBuf.GetData(), m_sendBuf.GetSize());
+//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(), m_pSock->GetSource());
+	m_pSock->Send(m_sendBuf);
 
 	//All clear, accept the client
 	m_numClients ++;
@@ -304,7 +332,7 @@ void CServer::HandleChallengeReq()
 	for(int i=0; i< MAX_CHALLENGES; i++)
 	{
 		//Found a match, we already got a request from this guy
-		if(m_challenges[i].addr == m_pSock->m_srcAddr)
+		if(m_challenges[i].addr == m_pSock->GetSource())
 			break;
 		
 		//Keep a track of what the oldest challenge is
@@ -321,17 +349,18 @@ void CServer::HandleChallengeReq()
 		// overwrite the oldest
 		i = oldestchallenge;
 		m_challenges[i].challenge = (rand() << 16) ^ rand();
-		m_challenges[i].addr = m_pSock->m_srcAddr;
+		m_challenges[i].addr = m_pSock->GetSource();
 		m_challenges[i].time = System::g_fcurTime;
 	}
 
 	m_sendBuf.Reset();
-	m_sendBuf.WriteInt(-1);
-	m_sendBuf.WriteString(S2C_CHALLENGE);
-	m_sendBuf.WriteInt(m_challenges[i].challenge);
+	m_sendBuf += -1;
+	m_sendBuf += S2C_CHALLENGE;
+	m_sendBuf += m_challenges[i].challenge;
 
 	//Send response packet
-	m_pSock->Send(m_challenges[i].addr, m_sendBuf.GetData(), m_sendBuf.GetSize());
+//	m_pSock->SendTo(m_sendBuf.GetData(), m_sendBuf.GetSize(),m_challenges[i].addr);
+	m_pSock->SendTo(m_sendBuf, m_challenges[i].addr); 
 
 	ComPrintf("Sent CHAL %d to %s\n", m_challenges[i].challenge, m_challenges[i].addr.ToString());
 }
@@ -347,7 +376,8 @@ void CServer::ProcessQueryPacket()
 	
 	//Ping Request
 	if(strcmp(msg, VNET_PING) == 0)
-		m_pSock->Send(m_pSock->m_srcAddr, (byte*)VNET_PING, strlen(VNET_PING));
+		m_pSock->Send((byte*)VNET_PING, strlen(VNET_PING));
+//		m_pSock->SendTo((byte*)VNET_PING, strlen(VNET_PING), m_pSock->GetSource());
 	else if(strcmp(msg, C2S_GETSTATUS) == 0)
 		HandleStatusReq();
 	else if(strcmp(msg, C2S_CONNECT) == 0)
@@ -365,7 +395,6 @@ Read any waiting packets
 void CServer::ReadPackets()
 {
 	int packetId = 0;
-	
 	while(m_pSock->Recv())
 	{
 		packetId = m_recvBuf.ReadInt();
@@ -375,6 +404,8 @@ void CServer::ReadPackets()
 			ProcessQueryPacket();
 			continue;
 		}
+
+		//find out type of message
 	}
 }
 
@@ -394,8 +425,12 @@ void CServer::RunFrame()
 	//Re-seed current time
 	srand((uint)System::g_fcurTime);
 
-	//Process messages
+	//Get updates
 	ReadPackets();
+
+	//Run game
+
+	//send updates
 }
 
 
@@ -431,126 +466,3 @@ void CServer::HandleCommand(HCMD cmdId, const CParms &parms)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0
-
-/*
-=====================================
-send server info to this address
-=====================================
-*/
-
-void CServer::WriteInfoMsg(CNBuffer *dest)
-{
-	if(!dest)
-		return;
-
-	char msg[256];
-	char temp[8];
-
-	memset(msg,0,256);
-	memset(temp,0,8);
-	
-	strcpy(msg,"svinfo");
-
-	strcat(msg,"\\map\\");
-	strcat(msg,m_mapname);
-
-	strcat(msg,"\\protocol\\");
-	sprintf(temp,"%d",m_protocolversion);
-	strcat(msg,temp);
-	memset(temp,0,8);
-
-	strcat(msg,"\\game\\");
-	strcat(msg,g_gamedir);
-
-	strcat(msg,"\\hostname\\");
-	strcat(msg,m_hostname->string);
-
-	strcat(msg,"\\maxclients\\");
-	sprintf(temp,"%d",(short)m_maxclients->value);
-	strcat(msg, temp);
-	memset(temp,0,8);
-
-	strcat(msg,"\\numclients\\");
-	sprintf(temp,"%d",g_netclients.m_curclients);
-	strcat(msg, temp);
-
-	dest->WriteString(msg);
-
-	
-/*	dest->WriteString("svinfo");
-
-	dest->WriteString("\\protocol\\");
-	dest->WriteShort(m_protocolversion);
-	
-	dest->WriteString("\\game\\");
-	dest->WriteString(g_gamedir);
-	
-	dest->WriteString("\\map\\");
-	dest->WriteString("untitled");
-
-	dest->WriteString("\\hostname\\");
-	dest->WriteString(m_maxclients->string);
-
-	dest->WriteString("\\numclients\\");
-	dest->WriteShort(g_netclients.m_curclients);
-
-	dest->WriteString("\\maxclients\\");
-	dest->WriteShort((short)m_maxclients->value);
-*/
-	//dest->WriteString("\\map\\");
-	//dest->WriteString(mapname);
-	//dest->WriteString("\\version\\");
-	//dest->WriteString(
-}
-/*
-=====================================
-send server status info to this address
-=====================================
-*/
-
-
-void CServer::WriteStatusMsg(CNBuffer *dest)
-{
-	dest->WriteString("svstatus\\");
-	
-	dest->WriteString("game\\");
-	dest->WriteString(g_gamedir);
-
-	dest->WriteString("\\protocol\\");
-	dest->WriteShort(m_protocolversion);
-
-	dest->WriteString("\\hostname\\");
-	dest->WriteString(m_maxclients->string);
-
-	dest->WriteString("\\maxclients\\");
-	dest->WriteShort((short)m_maxclients->value);
-
-	dest->WriteString("\\numclients\\");
-	dest->WriteShort(g_netclients.m_curclients);
-	
-	//dest.WriteString("\\map\\");
-	//dest.WriteString(mapname);
-	//dest.WriteString("\\version\\");
-	//dest.WriteString(
-
-	//client info, fraglimits etc
-}
-#endif

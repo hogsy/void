@@ -1,64 +1,58 @@
-#if 0
+#ifndef VOID_NET_CHANNEL
+#define VOID_NET_CHANNEL
 
-#define	OLD_AVG		0.99		// total = oldtotal*OLD_AVG + new*(1-OLD_AVG)
+#include "Net_sock.h"
 
-#define	MAX_LATENT	32
-
-typedef struct
+/*
+======================================
+Network channel
+======================================
+*/
+class CNetChan
 {
-	qboolean	fatal_error;
+public:
 
-	float		last_received;		// for timeouts
+	CNetChan();
+	~CNetChan();
 
-// the statistics are cleared at each client begin, because
-// the server connecting process gives a bogus picture of the data
-	float		frame_latency;		// rolling average
-	float		frame_rate;
+	bool CanSend();
+	bool CanSendReliable();
+	
+	void Transmit(int length, byte *data);
+	bool Receive();
 
-	int			drop_count;			// dropped packets, cleared each level
-	int			good_count;			// cleared each level
+private:
 
-	netadr_t	remote_address;
-	int			qport;
+	VoidNet::CNetAddr	m_addr;
 
-// bandwidth estimator
-	double		cleartime;			// if realtime > nc->cleartime, free to go
-	double		rate;				// seconds / byte
+	bool		m_bFatalError;
+	
+	int			m_port;				//Client port
 
-// sequencing variables
-	int			incoming_sequence;
-	int			incoming_acknowledged;
-	int			incoming_reliable_acknowledged;	// single bit
+	CNetBuffer	m_sockBuffer;	//used internally to send/receive data from the socket
 
-	int			incoming_reliable_sequence;		// single bit, maintained local
+	//This is what the client writes to send to the server
+	//and the server uses this to send/recv unreliable messages to the client
+	CNetBuffer	m_buffer;
+	int			m_inSeq;	//every unrelabled packet has an id
+	int			m_inAcked;	//don't need to ack on every unreliable msg
+	int			m_outSeq;	//used by server mostly.
 
-	int			outgoing_sequence;
-	int			reliable_sequence;			// single bit
-	int			last_reliable_sequence;		// sequence number of last send
+	CNetBuffer  m_reliableBuffer;
+	int			m_lastReliableSeq;		// sequence number of last send
 
-// reliable staging and holding areas
-	sizebuf_t	message;		// writing buffer to send to server
-	byte		message_buf[MAX_MSGLEN];
+	//true/false bits
+	int			m_bInReliableSeq;	
+	int			m_bInReliableAcked;
+	int			m_bReliableSeq;
 
-	int			reliable_length;
-	byte		reliable_buf[MAX_MSGLEN];	// unacked reliable message
+		//Stats
+	int			m_dropCount;
+	int			m_goodCount;
 
-// time and size data to calculate bandwidth
-	int			outgoing_size[MAX_LATENT];
-	double		outgoing_time[MAX_LATENT];
-} netchan_t;
+	double		m_clearTime;
+	double		m_rate;			// Seconds/Byte
 
-extern	int	net_drop;		// packets dropped before this one
-
-void Netchan_Init (void);
-void Netchan_Transmit (netchan_t *chan, int length, byte *data);
-void Netchan_OutOfBand (netadr_t adr, int length, byte *data);
-void Netchan_OutOfBandPrint (netadr_t adr, char *format, ...);
-qboolean Netchan_Process (netchan_t *chan);
-void Netchan_Setup (netchan_t *chan, netadr_t adr, int qport);
-
-qboolean Netchan_CanPacket (netchan_t *chan);
-qboolean Netchan_CanReliable (netchan_t *chan);
-
+};
 
 #endif

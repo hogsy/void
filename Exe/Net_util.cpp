@@ -1,4 +1,5 @@
 #include "Net_hdr.h"
+#include "Net_util.h"
 #include "Net_defs.h"
 
 using namespace VoidNet;
@@ -33,7 +34,7 @@ CNetAddr::CNetAddr(const char * szaddr)
 Assignment operators
 ==========================================
 */
-CNetAddr & CNetAddr::operator = (const SOCKADDR_IN &saddr)
+CNetAddr & CNetAddr::operator = (const sockaddr_in &saddr)
 {
 	*(int *)&ip = *(int *)&saddr.sin_addr;
 	port = saddr.sin_port;
@@ -62,7 +63,7 @@ CNetAddr & CNetAddr::operator = (const char * szaddr)
 void CNetAddr::Set(const char * szaddr)
 {
 	char		stringaddr[128];
-	SOCKADDR_IN sockAddr;
+	sockaddr_in sockAddr;
 	
 	if(!szaddr || !strcmp(szaddr,"localhost"))
 		strcpy(stringaddr, m_szLocalAddress);
@@ -121,7 +122,7 @@ const char * CNetAddr::ToString() const
 }
 
 //Set the sockADDR struct to self
-void CNetAddr::ToSockAddr(SOCKADDR_IN &saddr) const
+void CNetAddr::ToSockAddr(sockaddr_in &saddr) const
 {
 	saddr.sin_port = port;
 	saddr.sin_family  = AF_INET;

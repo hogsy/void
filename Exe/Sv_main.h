@@ -7,14 +7,12 @@
 #include "Net_defs.h"
 
 /*
-==========================================
-Public defs
-==========================================
+======================================
+Expose to system
+======================================
 */
 namespace VoidNet
 {
-	class CNetSocket;
-	
 	bool InitNetwork();
 	void ShutdownNetwork();
 }

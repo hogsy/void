@@ -31,6 +31,9 @@ const char S2C_ACCEPT[]			= "accept";
 //Commpn connectionless messages
 const char VNET_PING[]			= "ping";
 
+
+//
+
 }
 
 #endif
