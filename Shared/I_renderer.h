@@ -3,6 +3,7 @@
 
 #include "I_console.h"
 #include "I_hud.h"
+#include "I_void.h"
 #include "World.h"
 
 
@@ -41,33 +42,12 @@ typedef struct RenderInfo_t
 
 /*
 ==========================================
-This is what the exe exports
-==========================================
-*/
-typedef struct VoidExport_s
-{
-	 char * basedir;
-	 char * gamedir;
-
-	 float* curtime;
-	 float* frametime;
-
-	 //Add interfaces here
-	 I_ExeConsole * vconsole;
-
-}VoidExport_t;
-
-
-/*
-==========================================
 Renderer Interface
 ==========================================
 */
 struct I_Renderer
 {
 	//Startup/Shutdown
-	virtual bool PreInit(RenderInfo_t *rinfo, VoidExport_t ** vexp)=0;
-
 	virtual bool InitRenderer()=0;
 	virtual bool Shutdown()=0;
 
@@ -92,8 +72,8 @@ struct I_Renderer
 extern "C"
 {
 
-HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender);
-typedef HRESULT (*GETRENDERERAPI)(I_Renderer ** pRender);
+HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp);
+typedef HRESULT (*GETRENDERERAPI)(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp);
 
 HRESULT  __stdcall FreeRenderer(I_Renderer ** pRender);
 typedef HRESULT (*FREERENDERER)(I_Renderer ** pRender);

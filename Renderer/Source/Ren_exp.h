@@ -9,8 +9,6 @@ class CRenExp : public I_Renderer
 public:
 
 	//Startup/Shutdown
-	bool PreInit(RenderInfo_t *rinfo, VoidExport_t ** vexp);
-
 	bool InitRenderer();
 	bool Shutdown();
 
@@ -35,9 +33,9 @@ public:
 	static bool CVar_FullScreen(const CVar * var, int argc, char** argv);
 	static bool CVar_Res(const CVar * var, int argc, char** argv);
 	static bool CVar_Bpp(const CVar * var, int argc, char** argv);
-		
 
-	CRenExp();
+	
+	CRenExp(RenderInfo_t *pRInfo, VoidExport_t * pVExp);
 	~CRenExp();
 
 private:

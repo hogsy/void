@@ -1,22 +1,15 @@
 #include "Standard.h"
 #include "Tex_main.h"
 
-
-tex_t *tex;
-CTextureManager * g_pTex;
-
-
-//Need to setup an image list that gets processed when
-//the texture manager is initialized 
-#define NUM_BASETEXTURES	1
-
 const char * BaseTextureList[] =
 {
-	"base\\_ascii",
-	"base\\conback",
+	"base/_ascii",
+	"base/conback",
 	0
 };
 
+tex_t			* tex=0;
+CTextureManager * g_pTex=0;
 
 /*
 ==========================================
@@ -36,7 +29,6 @@ CTextureManager::CTextureManager()
 Destructor
 ==========================================
 */
-
 CTextureManager::~CTextureManager()
 {
 }
@@ -48,7 +40,6 @@ Initialize
 Load base game textures
 ==========================================
 */
-
 bool CTextureManager::Init(char *basepath)
 {
 	if(!basepath)
@@ -57,29 +48,25 @@ bool CTextureManager::Init(char *basepath)
 	//allocate all mem
 	tex = (tex_t*)MALLOC(sizeof(tex_t));
 	if (tex == NULL) 
-		FError("mem for tex struct");
+		FError("CTextureManager::Init:No mem for tex struct");
 	memset (tex, 0, sizeof(tex_t));
 
+	strcpy(CImage::m_texturepath,"textures");
 
-	int count=0;
-	CImage texture;
-	
-	strcpy(CImage::m_texturepath,basepath);
-	strcat(CImage::m_texturepath,"\\textures");
-
-	ConPrint("Creating base textures: ");
+	ConPrint("CTextureManager::Init:Creating base textures");
 
 	//Get count of base textures
-	for(count=0;BaseTextureList[count];count++);
+	for(int count=0;BaseTextureList[count];count++);
 		m_numBaseTextures = count+1;
 
-	
+	//Alloc space for base textures
 	tex->base_names = (GLuint*)MALLOC(sizeof(GLuint) * m_numBaseTextures);
 	if (tex->base_names == NULL) 
-			FError("mem for base texture names");
+		FError("CTextureManager::Init:No mem for base texture names");
 
+	//Generate and load base textures
+	CImage texture;
 	glGenTextures(m_numBaseTextures, tex->base_names);
-
 	for(count=0;count<m_numBaseTextures;count++)
 	{
 		LoadBaseTexture(&texture,BaseTextureList[count]);
@@ -101,7 +88,6 @@ bool CTextureManager::Init(char *basepath)
 				 texture.data);
 		texture.Reset();
 	}
-
 	m_loaded = BASE_TEXTURES;
 	return true;
 }
@@ -120,7 +106,7 @@ bool CTextureManager::Shutdown()
 
 	UnloadWorldTextures();
 
-	ConPrint("Destroying base textures: ");
+	ConPrint("CTextureManager::Shutdown:Destroying base textures :");
 
 	glDeleteTextures(m_numBaseTextures, tex->base_names);
 	free (tex->base_names);
@@ -131,7 +117,6 @@ bool CTextureManager::Shutdown()
 	m_loaded = NO_TEXTURES;
 
 	ConPrint("OK\n");
-
 	return true;
 }
 
@@ -176,7 +161,6 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 	m_numWorldTextures = tex->num_textures;
 
 	CImage texture;
-	texture.AllocFileBuffer();
 
 	glGenTextures(tex->num_textures, tex->tex_names);
 
@@ -213,8 +197,6 @@ bool CTextureManager::LoadWorldTextures(world_t *map)
 		}
 		texture.Reset();
 	}
-
-	texture.FreeFileBuffer();	
 	m_loaded = ALL_TEXTURES;
 
 
@@ -307,7 +289,6 @@ bool CTextureManager::UnloadWorldTextures()
 	ConPrint("OK\n");
 
 	m_loaded = BASE_TEXTURES;
-
 	return true;
 }
 

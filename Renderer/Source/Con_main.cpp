@@ -14,7 +14,6 @@ FILE	  * m_logfile;			// console log
 
 
 CRConsole * g_prCons;
-
 CVar *	CRConsole::g_pConspeed;
 
 /*
@@ -23,22 +22,34 @@ Constructor and Destructor
 =======================================
 */
 
-CRConsole::CRConsole(I_ExeConsole * p_eCons): m_seperatorchar('^')
+CRConsole::CRConsole(I_ExeConsole * p_eCons): m_seperatorchar('^'), 
+												m_pExeCons(p_eCons)
 {
 	m_statuslen = 0;
 	m_statusline = 0;
 	m_alpha = 0.0;
 	m_curline = 0;
-	m_pExeCons = p_eCons;
 
 	memset(m_lines,0,sizeof(Conline_t *) * CON_MAX_LINES);
-
 	RegisterFuncs();
+
+#if RENDERER_LOGFILE 
+	//open logfile
+	char f[260];
+	strcpy(f, rInfo->working_dir);
+	strcat(f, "\\console.log");
+	m_logfile = fopen(f, "w");
+#endif
 }
 
 
 CRConsole::~CRConsole()
 {
+#if RENDERER_LOGFILE 
+	// close the log
+	if (m_logfile)
+		fclose(m_logfile);
+#endif
 	m_pExeCons = 0;
 }
 
@@ -50,15 +61,13 @@ Con_Init()
 
 bool CRConsole::Init(bool fullscreen, bool down)
 {
-	int i;
-
 	m_status = CON_OPENING;
 	m_fullscreen = fullscreen;
 	UpdateRes();
 	m_condown = down;
 
 	//allocate all mem that will be needed
-	for (i = 0; i < CON_MAX_LINES; i++)
+	for (int i = 0; i < CON_MAX_LINES; i++)
 	{
 		m_lines[i] = (Conline_t*) MALLOC(sizeof(Conline_t));
 		if (m_lines[i] == NULL) 
@@ -68,15 +77,6 @@ bool CRConsole::Init(bool fullscreen, bool down)
 		}
 		memset (m_lines[i], 0, sizeof(Conline_t));
 	}
-
-#if RENDERER_LOGFILE 
-	//open logfile
-	char f[260];
-	strcpy(f, rInfo->working_dir);
-	strcat(f, "\\console.log");
-	m_logfile = fopen(f, "w");
-#endif
-
 	return true;
 }
 
@@ -89,12 +89,6 @@ Console Shutdown Func
 
 bool CRConsole::Shutdown()
 {
-#if RENDERER_LOGFILE 
-	// close the log
-	if (m_logfile)
-		fclose(m_logfile);
-#endif
-
 //
 // free all mem
 //
@@ -127,7 +121,6 @@ void CRConsole::Printf(char *msg, ...)
 	vsprintf(buff, msg, args);
 	va_end(args);
 
-//	m_pECons->DPrint(buff);
 	m_pExeCons->dprint(buff);
 
 	//write to log

@@ -138,7 +138,6 @@ void r_draw_leaf(int l)
 	{
 		// we really only need to test 1 corner
 		// find that corner
-
 		point.x = (float)((frust[p].norm.x > 0) ? (world->leafs[l].maxs[0]) : (world->leafs[l].mins[0]));
 		point.y = (float)((frust[p].norm.y > 0) ? (world->leafs[l].maxs[1]) : (world->leafs[l].mins[1]));
 		point.z = (float)((frust[p].norm.z > 0) ? (world->leafs[l].maxs[2]) : (world->leafs[l].mins[2]));
@@ -147,15 +146,12 @@ void r_draw_leaf(int l)
 			return;
 	}
 
-
-
 	// pvs cull
 	if (world->leafvis_size > 0)
 	{
 		if (!(*(world->leafvis + world->leafs[eye_leaf].vis + (l>>3)) & (1<<(l&7))))
 			return;
 	}
-
 
 	int endb = world->leafs[l].first_brush + world->leafs[l].num_brushes;
 	for (int b=world->leafs[l].first_brush; b < endb; b++)
@@ -166,7 +162,6 @@ void r_draw_leaf(int l)
 
 void r_draw_node(int n)
 {
-
 	//
 	//frustum cull - check this nodes bounding box to the frustum
 	//
@@ -175,7 +170,6 @@ void r_draw_node(int n)
 	{
 		// we really only need to test 1 corner
 		// find that corner
-
 		point.x = (float)((frust[p].norm.x > 0) ? (world->nodes[n].maxs[0]) : (world->nodes[n].mins[0]));
 		point.y = (float)((frust[p].norm.y > 0) ? (world->nodes[n].maxs[1]) : (world->nodes[n].mins[1]));
 		point.z = (float)((frust[p].norm.z > 0) ? (world->nodes[n].maxs[2]) : (world->nodes[n].mins[2]));
@@ -196,7 +190,6 @@ void r_draw_node(int n)
 		nn = world->nodes[n].children[1];
 		(nn>0) ? r_draw_node(nn) : r_draw_leaf(-nn);
 	}
-
 	else
 	{
 		nn = world->nodes[n].children[1];
@@ -281,7 +274,6 @@ void r_drawframe(vector_t *origin, vector_t *angles)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 // set up the view transformation
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -300,7 +292,6 @@ void r_drawframe(vector_t *origin, vector_t *angles)
 	
 	g_prHud->DrawHud();
 
-
 // draw the console if we need to
 	g_prCons->Draw();
 
@@ -309,8 +300,6 @@ void r_drawframe(vector_t *origin, vector_t *angles)
 }
 
 
-
-//Skid added
 /*
 ======================================
 Just draw the console
@@ -326,27 +315,3 @@ void r_drawcons()
 	glFlush();
 	_SwapBuffers(rInfo->hDC);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

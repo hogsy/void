@@ -11,7 +11,6 @@
 #include "Tex_main.h"
 #include "Mdl_main.h"
 
-
 //Static CVars
 CVar *	CRenExp::m_cFull=0;		//Fullscreen
 CVar *	CRenExp::m_cRes=0;		//Resolution
@@ -33,37 +32,19 @@ CRenExp		* g_pRenExp=0;
 /*
 =======================================
 Constructor 
-=======================================
-*/
-CRenExp::CRenExp()
-{	m_pImport = 0;
-}
-
-/*
-==========================================
-Destructor
-==========================================
-*/
-CRenExp::~CRenExp()
-{	m_pImport = 0;
-}
-
-
-/*
-==========================================
-Init
 Creates all the objects and registers CVars
 the Renderer itself wont be initialized until the 
 configs have been excuted to update the cvars with the
 saved rendering info
-==========================================
+=======================================
 */
-bool CRenExp::PreInit(RenderInfo_t *rinfo, VoidExport_t ** vexp)
+
+CRenExp::CRenExp(RenderInfo_t *pRInfo, VoidExport_t * pVExp)
 {
-	rInfo = rinfo;
+	rInfo = pRInfo;
 	rInfo->ready = false;
 
-	m_pImport = *vexp;
+	m_pImport = pVExp;
 	
 	//Set Global Time pointers
 	g_pCurTime = m_pImport->curtime; 
@@ -81,7 +62,7 @@ bool CRenExp::PreInit(RenderInfo_t *rinfo, VoidExport_t ** vexp)
 	{
 		ConPrint("Unable to load opengl driver");
 		Shutdown();
-		return false;
+		return;
 	}
 
 	g_szGamePath = new char[256];
@@ -92,7 +73,35 @@ bool CRenExp::PreInit(RenderInfo_t *rinfo, VoidExport_t ** vexp)
 	g_prCons->RegCVar(&m_cWndX,"r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_prCons->RegCVar(&m_cWndY,"r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	g_prCons->RegCVar(&m_cRes,"r_res",  "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
-	return true;
+}
+
+/*
+==========================================
+Destructor
+==========================================
+*/
+CRenExp::~CRenExp()
+{
+	m_pImport = 0;
+	if(g_pTex)
+		delete g_pTex;
+	g_pTex = 0;
+	
+	if(g_pGL)
+		delete g_pGL;
+	g_pGL = 0;
+	
+	if(g_prHud)
+		delete g_prHud;
+	g_prHud = 0;
+
+	if(g_prCons)
+		delete g_prCons;
+	g_prCons = 0;
+	
+	delete [] g_szGamePath;
+	g_szGamePath = 0;
+	rInfo = 0;
 }
 
 
@@ -103,23 +112,25 @@ in by the exe, so we directly start the renderer
 in the correct mode
 ==========================================
 */
-
 bool CRenExp::InitRenderer()
 {
+	//Set all global pointers to null
+	world	= NULL;
+
+
 	//Setup initial state
 	rInfo->bpp = (int)m_cBpp->value;
 	if(m_cFull->value)
 		rInfo->rflags |= RFLAG_FULLSCREEN;
 
 	//parse width and height out of string
-	int i=0;
 	char *c = strchr(m_cRes->string, ' ');
 	if(c)
 	{
 		char tmp[8];
-
+		
 		//Read Width
-		i = c - m_cRes->string;
+		int i = c - m_cRes->string;
 		strncpy(tmp,m_cRes->string,i);
 		sscanf(tmp,"%d",&rInfo->width);
 
@@ -127,17 +138,13 @@ bool CRenExp::InitRenderer()
 		c++;
 		strcpy(tmp,m_cRes->string+i+1);
 		sscanf(tmp,"%d",&rInfo->height);
-
-		rInfo->width;
-		rInfo->height;
 	}
 
 	//Intialize the Console now
 	g_prCons->Init(true, true);
-	ConPrint("\n***** Renderer Intialization *****\n\n");
+	g_prCons->UpdateRes();
 
-	//Set all global pointers to null
-	world	= NULL;
+	ConPrint("\n***** Renderer Intialization *****\n\n");
 
 	//Start up opengl
 	g_pGL->SetWindowCoords((int)m_cWndX->value,(int)m_cWndY->value);
@@ -148,48 +155,18 @@ bool CRenExp::InitRenderer()
 		return false;
 	}
 
-	//Print Extensions info
-	ConPrint("\nGL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	ConPrint("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-	ConPrint("GL_VERSION: %s\n", glGetString(GL_VERSION));
-
-	const char *ext = (const char*)glGetString(GL_EXTENSIONS);
-	int l = strlen(ext);
-	char *ext2 = (char*)MALLOC(l);
-	memcpy(ext2, ext, l);
-	char *start = ext2;
-
-	ConPrint("GL_EXTENSIONS:\n");
-	for (i = 0; i < l; i++)
-	{
-		if (ext2[i] == ' ')
-		{
-			ext2[i] = NULL;
-			ConPrint("%s\n", start);
-
-			// check for extensions we want
-			if (!strcmp(start, "GL_ARB_multitexture"))
-				rInfo->rflags |= RFLAG_MULTITEXTURE;
-
-			start = &ext2[i+1];
-		}
-	}
-	free(ext2);
-
 	//Start up the texture manager
 	if(!g_pTex->Init(g_szGamePath))
 	{
-		ConPrint("failed to init texture base\n");
+		ConPrint("CRenExp::InitRenderer:Failed to initialize Texture manager\n");
+		Shutdown();
 		return false;
 	}
 
 	//Start up the renderer
-//	r_preinit(); 
 	r_init();
-//	cache_init();
 
 	ConPrint("\n***** Renderer Initialization Successful *****\n\n");
-	g_prCons->UpdateRes();
 	return true;
 }
 
@@ -229,24 +206,8 @@ bool CRenExp::Shutdown(void)
 	beam_shutdown();
 
 	g_pTex->Shutdown();
-	if(g_pTex)
-		delete g_pTex;
-
 	g_pGL->Shutdown();
-	if(g_pGL)
-		delete g_pGL;
-
-	if(g_prHud)
-		delete g_prHud;
-
 	g_prCons->Shutdown();
-	if(g_prCons)
-		delete g_prCons;
-	
-	delete [] g_szGamePath;
-	g_szGamePath = 0;
-
-	rInfo = 0;
 	return true;
 }
 

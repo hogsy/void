@@ -25,7 +25,7 @@ public:
 	void  AddLine(char *line, int color=0, int size=0);
 
 
-	CRConsole( I_ExeConsole * p_eCons);
+	CRConsole(I_ExeConsole * p_eCons);
 	~CRConsole();
 
 	bool Init(bool fullscreen, bool down);
@@ -39,22 +39,18 @@ public:
 				  int varinfo, 
 				  CVAR_FUNC varfunc=0);
 
-//	void RegCVar (CVar *cvar);
-
-
-
 	void RegCFunc(const char *funcname, 
 				  CFUNC pfunc);
 
 	
 	void Printf(char *msg,...);
 
-	void RegisterFuncs();
-	
 	void UpdateRes();
 	void Draw(); 
 
 private:
+
+	void RegisterFuncs();
 
 	//struct to store a line in the console
 	typedef struct Conline_s
@@ -80,7 +76,6 @@ private:
 	void PrintBuffer();
 
 	//Interface to executable functions
-
 	I_ExeConsole * m_pExeCons;
 	
 	//CVars

@@ -1,9 +1,9 @@
 #ifndef VOID_COMMON_DEFINATIONS
 #define VOID_COMMON_DEFINATIONS
 
-#include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <windows.h>
 
 #ifdef _DEBUG
 

@@ -1,7 +1,5 @@
 #include "Tex_image.h"
 
-
-
 #define IMAGE_565	0
 #define IMAGE_1555	1
 #define IMAGE_4444	2
@@ -47,15 +45,15 @@ typedef struct TGA_Header
 Image ID - Field 6 (variable):......................10
 Color Map Data - Field 7 (variable):................10
 Image Data - Field 8 (variable):....................10
-Image Type                   Description
 
-         0                No Image Data Included
-         1                Uncompressed, Color-mapped Image
-         2                Uncompressed, True-color Image
-         3                Uncompressed, Black-and-white image
-         9                Run-length encoded, Color-mapped Image
-         10               Run-length encoded, True-color Image
-         11               Run-length encoded, Black-and-white image
+Image Type           Description
+	0                No Image Data Included
+	1                Uncompressed, Color-mapped Image
+	2                Uncompressed, True-color Image
+	3                Uncompressed, Black-and-white image
+	9                Run-length encoded, Color-mapped Image
+	10               Run-length encoded, True-color Image
+	11               Run-length encoded, Black-and-white image
 */
 
 
@@ -70,16 +68,19 @@ CImage::CImage()
 	width = height = 0;
 	type = 0;
 	format = FORMAT_NONE;
+
+	m_fileReader.LockStaticBuffer(MAX_TEXTURESIZE);
 }
 
 CImage::~CImage()		
-{	Reset();
+{	
+	Reset();
+	m_fileReader.ReleaseStaticBuffer();
 }
 
 /*
 ==========================================
-Pretty bad.
-Sets up the transparent color
+Key the transparent color
 ==========================================
 */
 void CImage::ColorKey()
@@ -107,14 +108,13 @@ void CImage::Reset()
 {
 	if(data)
 		free(data);
-		//delete [] data;
+
 	data = 0;
 	type = 0;
 	height = 0;
 	width = 0;
 	format = FORMAT_NONE;
 }
-
 
 
 /*
@@ -129,9 +129,7 @@ bool CImage::DefaultTexture()
 	height = 64;
 
 	// all raw pic data is 32 bits
-//	data = new byte[(width * height * 4)];
 	data = (byte *) MALLOC(width * height * 4);
-
 	if (data == NULL) 
 	{
 		FError("CImage::DefaultTexture: No mem for pic data");
@@ -166,7 +164,6 @@ bool CImage::SnapShot()
 	width  = rInfo->width;
 	height = rInfo->height;
 	type   = 0;
-//	data   = new byte[(width * height * 4)];
 	data = (byte *) MALLOC(width * height * 4);
 
 	if (data == NULL) 
@@ -178,8 +175,6 @@ bool CImage::SnapShot()
 	format = FORMAT_TGA;
 	return true;
 }
-
-
 
 /*
 ==========================================
@@ -199,7 +194,6 @@ bool CImage::Read(unsigned char **stream)
 		return false;
 
 	// all raw pic data is 32 bits
-//	data = new byte[(width * height * 4)];	
 	data = (byte *) MALLOC(width * height * 4);
 
 
@@ -235,150 +229,40 @@ bool CImage::Read(const char *file)
 	if(data)
 		Reset();
 
-	EImageFormat fileformat;
-	char filename[MAX_PATH];
+	char  filename[MAX_PATH];
 
 	//default to a pcx
 	sprintf(filename,"%s/%s.tga",m_texturepath,file);
-
-
-/*	HANDLE hfile;
-	hfile = CreateFile(filename,		//pointer to name of the file
-					   GENERIC_READ,    //access (read-write) mode
-					   0,               //DWORD dwShareMode,  // share mode
-					   0,				//LPSECURITY_ATTRIBUTES lpSecurityAttributes,//pointer to security attributes
-					   OPEN_EXISTING,	//how to create
-					   FILE_ATTRIBUTE_NORMAL, // file attributes //FILE_FLAG_SEQUENTIAL_SCAN
-					   0				//handle to file with attributes to 
-					   );
-
-
-	if(hfile == INVALID_HANDLE_VALUE)
+	if(m_fileReader.Open(filename) == true)
 	{
-		sprintf(filename,"%s/%s.pcx",m_texturepath,file);
-		hfile = CreateFile(filename,		//pointer to name of the file
-				   GENERIC_READ,    //access (read-write) mode
-				   0,               //DWORD dwShareMode,  // share mode
-				   0,				//LPSECURITY_ATTRIBUTES lpSecurityAttributes,//pointer to security attributes
-				   OPEN_EXISTING,	//how to create
-				   FILE_ATTRIBUTE_NORMAL, // file attributes //FILE_FLAG_SEQUENTIAL_SCAN
-				   0				//handle to file with attributes to 
-				   );
-		if(hfile == INVALID_HANDLE_VALUE)
-		{
-			ConPrint("CImage::Read: Couldnt open %s\n",filename);
-			return false;
-		}
-		fileformat = FORMAT_PCX;
+		bool err = Read_TGA();
+		m_fileReader.Close();
+		return err;
 	}
-	else
-		fileformat = FORMAT_TGA;
- 
-	unsigned long fsize = GetFileSize(hfile,NULL);
-	unsigned long fread = 0;
 
-	if(fsize == 0xFFFFFFFF)
+	sprintf(filename,"%s/%s.pcx",m_texturepath,file);
+	if(m_fileReader.Open(filename) == true)
 	{
-		ConPrint("CImage::Read: Couldnt get size of %s\n",filename);
-		fileformat = FORMAT_NONE;
-		return false;
+		bool err = Read_PCX();
+		m_fileReader.Close();
+		return err;
 	}
-
-	byte * imagedata;
-	bool err=false;
-
-	if(m_filebuffer)
-		imagedata = m_filebuffer;
-	else
-	    imagedata = (unsigned char *)MALLOC(fsize);
-
-
-	if(!ReadFile(hfile,          // handle of file to read
-				imagedata,      // pointer to buffer that receives data
-				fsize,			// number of bytes to read
-				&fread,			// pointer to number of bytes read
-				0))				// pointer to structure for data
-	{
-		ConPrint("CImage::Read: Couldnt read %s\n",filename);
-		fileformat = FORMAT_NONE;
-		return false;
-	}
-
-	if(fileformat == FORMAT_PCX)
-		err = Read_PCX(imagedata);
-	else if(fileformat == FORMAT_TGA)
-		err = Read_TGA(imagedata);
-
-	CloseHandle(hfile);
-*/ 
-
-	
-	
-
-
-	
-
-	FILE  *fp =  ::fopen(filename,"rb");
-
-	if(fp == NULL)
-	{	
-		//try a tga
-		sprintf(filename,"%s/%s.pcx",m_texturepath,file);
-		if((fp = fopen(filename,"rb")) == NULL)
-		{
-			ConPrint("CImage::Read: COuldnt open %s\n",filename);
-			return false;
-		}
-		fileformat = FORMAT_PCX;
-	}
-	else
-		fileformat = FORMAT_TGA;
-
-	bool err=false;
-	fseek(fp,0,SEEK_END);
-	long filesize = ftell(fp);
-	fseek(fp,0,SEEK_SET);
-	
-	if(filesize)
-	{
-		byte * imagedata;
-		if(m_filebuffer)
-			imagedata = m_filebuffer;
-		else
-		    imagedata = (unsigned char *)MALLOC(filesize);
-		fread(imagedata,filesize,1,fp);
-
-		if(fileformat == FORMAT_PCX)
-			err = Read_PCX(imagedata);
-		else if(fileformat == FORMAT_TGA)
-			err = Read_TGA(imagedata);
-
-		if(!m_filebuffer)
-			free(imagedata);
-	}
-//	::fflush(fp);
-	::fclose(fp);
-
-
-	if(err==false)
-		ConPrint("CImage::Read:Error Reading %s\n", filename);
-
-	return err;
+	ConPrint("CImage::Read: Couldnt open %s\n",filename);
+	return false;
 }
+
 
 
 /*
 ==========================================
-Read a PCX file from the given stream
+Read a PCX file from current filereader
 ==========================================
 */
-bool CImage::Read_PCX(const byte * stream)
+bool CImage::Read_PCX()
 {
 	PCX_header header;
-	int pos = sizeof(header);
 
-	memcpy((unsigned char *)&header,stream,pos);
-
+	m_fileReader.Read(&header,sizeof(header),1);
 	if((header.manufacturer != 10) || 
 	   (header.version != 5) || 
 	   (header.encoding != 1)|| 
@@ -388,43 +272,37 @@ bool CImage::Read_PCX(const byte * stream)
 		return false;
 	}
 
-	byte ch;
-	int number, color;
-	int countx, county, i;
-
 	width = header.width - header.x + 1;
 	height = header.height - header.y + 1;
 
 	// always store the pic in 32 bit rgba
-//	data = new byte[(width*height*4)];
 	data = (byte *) MALLOC(width * height * 4);
-
 	if(data == NULL)
 	{
 		FError("CPCX_Texture::Read:Not enough memory for texture");
 		return false;
 	}
-
 	memset(data, 0xFF, width * height * 4);
 
-	// for every line
+	byte ch;
+	int number, color;
+	int countx, county, i;
 
+	//for every line
 	for (county = 0; county < height; county++)
 	{
-		// decode this line for each r g b a
+		//decode this line for each r g b a
 		for (color = 0; color < header.num_planes; color++)
 		{
 			for (countx = 0; countx < width; )
 			{
-				//ch = getc(fp);
-				ch = stream[pos++];
+				ch = m_fileReader.GetChar();
 
 				// Verify if the uppers two bits are sets
 				if ((ch >= 192) && (ch <= 255))
 				{
 					number = ch - 192;
-					//ch = getc(fp);
-					ch = stream[pos++];
+					ch = m_fileReader.GetChar();
 				}
 				else
 					number = 1;
@@ -444,18 +322,15 @@ bool CImage::Read_PCX(const byte * stream)
 		byte palette[768]; // r,g,b 256 times
 		int index;
 
-		//fread(palette, 1, 1, fp);
-		palette[0] = stream[pos];
+		m_fileReader.Read(palette,1,1);
 
 		if (palette[0] != 0x0c)
 		{
 			ConPrint("CPCX_Texture::Read:palette not found!");
 			return false;
 		}
-
-		//fread(palette, 768, 1, fp);
-		memcpy((unsigned char *)palette,stream+pos,768);
-
+		m_fileReader.Read(palette,786,1);
+		
 		for (county = 0; county < height; county++)
 		{
 			for (countx = 0; countx < width; countx++)
@@ -468,7 +343,6 @@ bool CImage::Read_PCX(const byte * stream)
 			}
 		}
 	}
-
 	type = IMAGE_565;
 	format=FORMAT_PCX;
 	return true;
@@ -480,53 +354,45 @@ bool CImage::Read_PCX(const byte * stream)
 Read a TGA file from the given stream
 ==========================================
 */
-bool CImage::Read_TGA(const byte *imagedata)
+bool CImage::Read_TGA()
 {
-	int pos = 12;
-	
-	//UG
-	width   = imagedata[pos++];
-	width  |= imagedata[pos++] << 8;
-	height  = imagedata[pos++];
-	height |= imagedata[pos++] << 8;
+	m_fileReader.Seek(12,CFileReader::EFILE_START);
 
-	int comp = imagedata[pos++] / 8;
+	width   = m_fileReader.GetChar();
+	width  |= m_fileReader.GetChar() << 8;
+	height  = m_fileReader.GetChar();
+	height |= m_fileReader.GetChar() << 8;
 
-	imagedata[pos++];	// alpha/no alpha?  we already know that
+	int comp = m_fileReader.GetChar() / 8;
 
+	// alpha/no alpha?  we already know that
+	m_fileReader.GetChar();	
 
 	// always store the pic in 32 bit rgba
-//	data = new byte[(width * height * 4)];
 	data = (byte *) MALLOC(width * height * 4);
-
-
 	if (!data)
 	{	
 		Error("CImage::Read_TGA:Not enough memory for texture");
 		return false;
 	}
-	
 	memset(data, 0xFF, width * height * 4);
-
-	int w=0, h=0;
-
-	for (h=height-1; h>=0; h--)
+	
+	for (int h=height-1; h>=0; h--)
 	{
-		for (w=0; w<width; w++)
+		for (int w=0; w<width; w++)
 		{
-			data[h*width*4 + w*4 + 2] = imagedata[pos++];
-			data[h*width*4 + w*4 + 1] = imagedata[pos++];
-			data[h*width*4 + w*4    ] = imagedata[pos++];
+			data[h*width*4 + w*4 + 2] = m_fileReader.GetChar(); 
+			data[h*width*4 + w*4 + 1] = m_fileReader.GetChar();
+			data[h*width*4 + w*4    ] = m_fileReader.GetChar(); 
 			if (comp == 4)
-				data[h*width*4 + w*4 + 3] = imagedata[pos++];
+				data[h*width*4 + w*4 + 3] = m_fileReader.GetChar(); 
 		}
 	}
-
 	type = IMAGE_565;
 	format=FORMAT_TGA;
 	return true;
-
 }
+
 
 /*
 ==========================================
@@ -725,7 +591,6 @@ void CImage::ImageReduce()
 
 	int size = (width)*(height)*4;
 
-//	byte *temp = new byte[size];
 	byte * temp = (byte *) MALLOC(size);
 
 	if(!temp)
@@ -754,39 +619,6 @@ void CImage::ImageReduce()
 	free(data);
 	data = temp;
 }
-
-
-
-/*
-==========================================
-Buffer alloc/free functions
-Buffer is used to speed up texture reading
-==========================================
-*/
-void CImage::AllocFileBuffer()
-{
-	if(m_filebuffer != 0)
-	{
-		m_filebuffer = (unsigned char *)
-			::VirtualAlloc(NULL,						// address of region to reserve or commit
-					     MAX_TEXTURESIZE,				// size of region
-						 MEM_COMMIT,					// type of allocation
-						 PAGE_READWRITE|PAGE_EXECUTE);	// type of access protection
-	}
-}
-
-void CImage::FreeFileBuffer()
-{
-	if(m_filebuffer == 0)
-		return;
-	::VirtualFree(m_filebuffer,// address of region of committed pages
-				  0,		   // size of region, needs to be Zero for MEM_RELEASE
-				  MEM_RELEASE);// type of free operation
-	m_filebuffer = 0;
-}
-
-
-
 
 
 //======================================================================================================

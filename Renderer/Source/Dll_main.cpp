@@ -18,7 +18,7 @@ start memory logging if in debug mode
 ==========================================
 */
 
-HRESULT __stdcall GetRendererAPI(I_Renderer ** pRender)
+HRESULT  __stdcall GetRendererAPI(I_Renderer ** pRender, RenderInfo_t *rinfo, VoidExport_t * vexp)
 {
 #ifdef _DEBUG
 	
@@ -39,8 +39,7 @@ HRESULT __stdcall GetRendererAPI(I_Renderer ** pRender)
 
 	if(!*pRender)
 	{
-		g_pRenExp = new CRenExp;
-		//* pRender = new CRenExp;
+		g_pRenExp = new CRenExp(rinfo,vexp);
 		*pRender = g_pRenExp;
 		return S_OK;
 	}
@@ -63,11 +62,6 @@ HRESULT __stdcall FreeRenderer(I_Renderer ** pRender)
 	*pRender = 0;
 	delete g_pRenExp;
 	g_pRenExp = 0;
-/*
-	g_pRenExp = 0;
-	delete *pRender;
-	*pRender = 0;
-*/
 
 #ifdef _DEBUG
 	// memory debugging stuff

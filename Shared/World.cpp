@@ -1,4 +1,3 @@
-
 #include "World.h"
 
 #include <stdio.h>
@@ -6,11 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-// hack so that printing debug messages works for what project we're compiling
+//Include proper project header
 #ifdef _VOID_EXE_
-	#include "Com_defs.h"
+	#include "../Exe/Source/Sys_hdr.h"
 	#define PRINT ComPrintf
+
 #elif defined _VVIS
 	#include "../vvis/source/std_lib.h"
 	#define PRINT v_printf
@@ -19,18 +18,9 @@
 	#include "../vlight/source/std_lib.h"
 	#define PRINT v_printf
 #else
-	#include "Com_defs.h"
+	#include "../Exe/Source/Sys_hdr.h"
 	#define PRINT ComPrintf
 #endif
-
-
-#ifdef _DEBUG
-	#include <crtdbg.h>
-	#define MALLOC(size) _malloc_dbg(size, _NORMAL_BLOCK, __FILE__, __LINE__);
-	#else
-	#define MALLOC(size) malloc(size)
-#endif
-
 
 
 /**************************************************************
@@ -111,8 +101,27 @@ Read a world file from disk
 load_lump
 ===========
 */
-bspf_header_t header;
-FILE *bsp_file;
+static bspf_header_t header;
+
+#ifdef _VOID_EXE_
+
+static CFileReader  * m_pFile=0;
+
+int load_lump(int l, void **data)
+{
+	*data = MALLOC(header.lumps[l].length+1);
+	memset(*data, 0, header.lumps[l].length+1);
+
+	m_pFile->Seek(header.lumps[l].offset, CFileReader::EFILE_START);
+	m_pFile->Read(*data, header.lumps[l].length, 1);
+
+	return header.lumps[l].length;
+}
+
+#else
+
+static FILE *bsp_file;
+
 int load_lump(int l, void **data)
 {
 	*data = MALLOC(header.lumps[l].length+1);
@@ -124,8 +133,67 @@ int load_lump(int l, void **data)
 }
 
 
+#endif
+
+
 world_t* world_read(char *filename)
 {
+#ifdef _VOID_EXE_
+	
+	m_pFile = new CFileReader();
+	if(!m_pFile->Open(filename))
+	{
+		PRINT("World_Read:Could not open %s\n",filename);
+		delete m_pFile;
+		m_pFile = 0;
+		return 0;
+	}
+
+	m_pFile->Read(&header,sizeof(bspf_header_t),1);
+	if (header.id != BSP_FILE_ID)
+	{
+		PRINT("World_Read: %s not a void bsp file!", filename);
+		m_pFile->Close();
+		delete m_pFile;
+		m_pFile = 0;
+		return 0;
+	}
+
+	if (header.version != BSP_VERSION)
+	{
+		PRINT("World_Read: bsp version %d, need %d\n", header.version, BSP_VERSION);
+		m_pFile->Close();
+		delete m_pFile;
+		m_pFile = 0;
+		return 0;
+	}
+
+	world_t *w = (world_t*)MALLOC(sizeof(world_t));
+
+	// read in all the lumps
+	w->nnodes		= load_lump(LUMP_NODES,	        (void**)&w->nodes)	 / sizeof(bspf_node_t);
+	w->nleafs		= load_lump(LUMP_LEAFS,			(void**)&w->leafs)	 / sizeof(bspf_leaf_t);
+	w->nplanes		= load_lump(LUMP_PLANES,		(void**)&w->planes)  / sizeof(plane_t);
+	w->nsides		= load_lump(LUMP_SIDES,			(void**)&w->sides)	 / sizeof(bspf_side_t);
+	w->nverts		= load_lump(LUMP_VERTICES,		(void**)&w->verts)	 / sizeof(vector_t);
+	w->niverts		= load_lump(LUMP_VERT_INDICES,	(void**)&w->iverts)	 / sizeof(int);
+	w->nbrushes		= load_lump(LUMP_BRUSHES,		(void**)&w->brushes) / sizeof(bspf_brush_t);
+	w->ntexdefs		= load_lump(LUMP_TEXDEF,		(void**)&w->texdefs) / sizeof(bspf_texdef_t);
+	w->ntextures	= load_lump(LUMP_TEXNAMES,		(void**)&w->textures)/ sizeof(texname_t);
+	w->nedges		= load_lump(LUMP_EDGES,			(void**)&w->edges)	 / sizeof(bspf_edge_t);
+	w->nentities	= load_lump(LUMP_ENTITIES,		(void**)&w->entities)/ sizeof(bspf_entity_t);
+	w->nkeys		= load_lump(LUMP_KEYS,			(void**)&w->keys)	 / sizeof(key_t);
+	w->leafvis_size	= load_lump(LUMP_LEAF_VIS,		(void**)&w->leafvis) / w->nleafs;
+	w->light_size	= load_lump(LUMP_LIGHTMAP,		(void**)&w->lightdata);
+	w->nlightdefs	= load_lump(LUMP_LIGHTDEF,		(void**)&w->lightdefs)/sizeof(bspf_texdef_t);
+
+	m_pFile->Close();
+	delete m_pFile;
+	m_pFile = 0;
+	return w;
+
+#else
+
 	bsp_file = fopen(filename, "rb");
 	if (!bsp_file)
 	{
@@ -169,6 +237,7 @@ world_t* world_read(char *filename)
 
 	fclose(bsp_file);
 	return w;
+#endif
 }
 
 
@@ -183,7 +252,6 @@ world_t* world_create(char *filename)
 	w = world_read(filename);
 
 	PRINT("OK\n");
-
 	return w;
 }
 

@@ -143,6 +143,36 @@ bool CGLUtil::Init()
 
 	if (rInfo->rflags & RFLAG_FULLSCREEN)
 		g_pGL->GoFull(rInfo->width, rInfo->height, rInfo->bpp);
+
+
+	//Check for GL flags
+	ConPrint("\nGL_VENDOR: %s\n", glGetString(GL_VENDOR));
+	ConPrint("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+	ConPrint("GL_VERSION: %s\n", glGetString(GL_VERSION));
+
+	const char *ext = (const char*)glGetString(GL_EXTENSIONS);
+	int l = strlen(ext);
+	char *ext2 = (char*)MALLOC(l);
+	memcpy(ext2, ext, l);
+	char *start = ext2;
+
+	ConPrint("GL_EXTENSIONS:\n");
+	for (int i = 0; i < l; i++)
+	{
+		if (ext2[i] == ' ')
+		{
+			ext2[i] = NULL;
+			ConPrint("%s\n", start);
+
+			// check for extensions we want
+			if (!strcmp(start, "GL_ARB_multitexture"))
+				rInfo->rflags |= RFLAG_MULTITEXTURE;
+
+			start = &ext2[i+1];
+		}
+	}
+	free(ext2);
+
 	return true;
 }
 

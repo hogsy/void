@@ -1,5 +1,5 @@
-#ifndef INC_INTERFACE_HUD
-#define INC_INTERFACE_HUD
+#ifndef INC_HUD_INTERFACE
+#define INC_HUD_INTERFACE
 
 
 //Need to be able to pass some sort of layout info to the hud

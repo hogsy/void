@@ -23,6 +23,7 @@
 
 #include "gl.h"
 #include "I_renderer.h"
+#include "I_filesystem.h"
 
 #include "Con_main.h"
 
@@ -40,8 +41,8 @@ typedef unsigned char byte;
 
 extern RenderInfo_t* rInfo;
 
-extern float * g_pCurTime;			//Current Time
-extern float * g_pFrameTime;		//Frame Time
+extern float * g_pCurTime;		//Current Time
+extern float * g_pFrameTime;	//Frame Time
 extern char  * g_szGamePath;	//Path to game dir
 
 extern world_t	*world;

@@ -1,11 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-//#include "gl.h"
 #include "Tex_image.h"
 #include "Ren_cache.h"
-
-
 
 typedef int dimension_t[2];
 typedef struct

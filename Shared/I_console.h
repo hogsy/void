@@ -1,5 +1,5 @@
-#ifndef INC_INTERFACE_CONSOLE
-#define INC_INTERFACE_CONSOLE
+#ifndef INC_CONSOLE_INTERFACE
+#define INC_CONSOLE_INTERFACE
 
 #include "Com_cvar.h"
 
