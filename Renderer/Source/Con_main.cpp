@@ -18,7 +18,7 @@ Constructor and Destructor
 =======================================
 */
 
-CRConsole::CRConsole(I_ExeConsole * p_eCons): m_seperatorchar('^'), 
+CRConsole::CRConsole(I_Console * p_eCons): m_seperatorchar('^'), 
 												m_pExeCons(p_eCons)
 {
 	m_statuslen = 0;
@@ -648,9 +648,9 @@ void  CRConsole::AddLine(char *line, int color, int size)
 Pass over to the Exe
 ==========================================
 */
-void CRConsole::RegCVar (CVar **cvar, const char *varname, const char *varval, 
+CVar * CRConsole::RegCVar ( const char *varname, const char *varval, 
 						 CVar::CVarType vartype, int varinfo, CVAR_FUNC varfunc)
-{	m_pExeCons->RegisterCVar(cvar,varname,varval,vartype,varinfo,varfunc);
+{	return m_pExeCons->RegisterCVar(varname,varval,vartype,varinfo,varfunc);
 }
 
 void CRConsole::RegCFunc(const char *funcname, CFUNC pfunc)

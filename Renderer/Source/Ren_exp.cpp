@@ -59,11 +59,11 @@ CRenExp::CRenExp(VoidExport_t * pVExp)
 		return;
 	}
 
-	g_prCons->RegCVar(&m_cFull,"r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
-	g_prCons->RegCVar(&m_cBpp,"r_bpp",  "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
-	g_prCons->RegCVar(&m_cWndX,"r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	g_prCons->RegCVar(&m_cWndY,"r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	g_prCons->RegCVar(&m_cRes,"r_res",  "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
+	m_cFull = g_prCons->RegCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
+	m_cBpp = g_prCons->RegCVar("r_bpp",  "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
+	m_cWndX = g_prCons->RegCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	m_cWndY = g_prCons->RegCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	m_cRes = g_prCons->RegCVar("r_res",  "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
 }
 
 /*
@@ -201,7 +201,7 @@ bool CRenExp::Shutdown(void)
 Returns the Console Interface
 ==========================================
 */
-I_RConsole * CRenExp::GetConsole()
+I_ConsoleRenderer * CRenExp::GetConsole()
 {	return g_prCons;
 }
 

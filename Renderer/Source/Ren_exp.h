@@ -14,7 +14,7 @@ public:
 
 	void DrawFrame(vector_t *origin,vector_t *angles);
 
-	I_RConsole * GetConsole();
+	I_ConsoleRenderer * GetConsole();
 	I_RHud *	 GetHud();
 
 

@@ -10,7 +10,7 @@
 //Shouldnt need to worry about logging here.
 //Just display the data it accumulates 
 
-class CRConsole:public I_RConsole
+class CRConsole:public I_ConsoleRenderer
 {
 public:
 
@@ -23,15 +23,14 @@ public:
 	void  AddLine(char *line, int color=0, int size=0);
 
 
-	CRConsole(I_ExeConsole * p_eCons);
+	CRConsole(I_Console * p_eCons);
 	~CRConsole();
 
 	bool Init(bool fullscreen, bool down);
 	bool Shutdown();
 
 	
-	void RegCVar (CVar **cvar, 
-				  const char *varname,
+	CVar * RegCVar (const char *varname,
 				  const char *varval, 
 				  CVar::CVarType vartype, 
 				  int varinfo, 
@@ -74,7 +73,7 @@ private:
 	void PrintBuffer();
 
 	//Interface to executable functions
-	I_ExeConsole * m_pExeCons;
+	I_Console * m_pExeCons;
 	
 	//CVars
 	static CVar *	g_pConspeed;

@@ -242,11 +242,11 @@ Register Cvars and Commands
 void CRConsole::RegisterFuncs()
 {
 	
-	RegCVar(&g_pFullbright,"r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullBright);
-	RegCVar(&g_pConspeed,"r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
-	RegCVar(&g_pFov, "r_fov", "90", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_Fov);
-	RegCVar(&g_pMultiTexture, "r_multitexture", "1", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_MultiTexture);
-	RegCVar(&g_pVidSynch, "r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
+	g_pFullbright = RegCVar("r_fullbright","0",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullBright);
+	g_pConspeed = RegCVar("r_conspeed","500",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,0);
+	g_pFov = RegCVar("r_fov", "90", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_Fov);
+	g_pMultiTexture = RegCVar("r_multitexture", "1", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_MultiTexture);
+	g_pVidSynch = RegCVar("r_vidsynch", "0", CVar::CVAR_INT, CVar::CVAR_ARCHIVE, &CVar_VidSynch);
 
 	RegCFunc("screenshot", &CFunc_PCXShot);
 	RegCFunc("tgashot", &CFunc_TGAShot);
