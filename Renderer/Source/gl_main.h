@@ -24,6 +24,7 @@ public:
 
 	void Resize();
 	void SetWindowCoords(int wndX, int wndY);
+	void SetInitializePos();
 
 	bool UpdateDisplaySettings(unsigned int width, 
 							   unsigned int height, 
@@ -34,29 +35,30 @@ public:
 
 private:
 
-	bool GoFull(unsigned int width, 
-				unsigned int height, 
-				unsigned int bpp);
-	
-	bool GoWindowed(unsigned int width, 
-					unsigned int height);
+	bool GoFull(uint width, uint height, uint bpp);
+	bool GoWindowed(uint width, uint height);
 
 	void EnumDisplayModes();
 	bool SetupPixelFormat();
 
-	bool			m_loadeddriver;
-	char			m_gldriver[256];
-	
-	DEVMODE	   *	m_devmodes;	//all available display modes
-	int				m_nummodes; //Number of display modes
+	DEVMODE	*m_devmodes;//all available display modes
+	int		m_nummodes; //Number of display modes
 
+	bool	m_loadeddriver;
+	bool	m_initialized;
+	char	m_gldriver[256];
+	
 	//Default to these if any windowed modes fail
-	unsigned int	m_safeX;
-	unsigned int    m_safeY;
+	uint	m_safeX;
+	uint    m_safeY;
 
 	//Windowed Screen Co-ordinates
-	int	m_wndXpos;
-	int m_wndYpos;
+	int		m_wndXpos;
+	int		m_wndYpos;
+
+	CVar *	m_cWndX;	//Windowed X pos
+	CVar *  m_cWndY;	//Windowed Y pos
+	CVar *  m_cGLExt;	//Store GL Exts
 };
 
 extern CGLUtil * g_pGL;

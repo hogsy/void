@@ -6,6 +6,9 @@
 class CRenExp : public I_Renderer
 {
 public:
+	
+	CRenExp(VoidExport_t * pVExp);
+	~CRenExp();
 
 	//Startup/Shutdown
 	bool InitRenderer();
@@ -15,7 +18,6 @@ public:
 
 	I_ConsoleRenderer * GetConsole();
 	I_RHud *	 GetHud();
-
 
 	//Windowing
 	void MoveWindow(int x, int y);
@@ -28,27 +30,18 @@ public:
 
 	bool Restart(void);
 
-	//CVar Handlers
-	static bool CVar_FullScreen(const CVar * var, int argc, char** argv);
-	static bool CVar_Res(const CVar * var, int argc, char** argv);
-	static bool CVar_Bpp(const CVar * var, int argc, char** argv);
-
-	
-	CRenExp(VoidExport_t * pVExp);
-	~CRenExp();
-
 private:
 
 	static CVar *	m_cFull;		//fullscreen
 	static CVar *   m_cRes;			//resolution
 	static CVar *   m_cBpp;			//bpp
-	static CVar *	m_cWndX;
-	static CVar *   m_cWndY;
-	static CVar *   m_cGLExt;
+
+	//CVar Handlers
+	static bool CVar_FullScreen(const CVar * var, int argc, char** argv);
+	static bool CVar_Res(const CVar * var, int argc, char** argv);
+	static bool CVar_Bpp(const CVar * var, int argc, char** argv);
 };
 
 extern CRenExp * g_pRenExp;
 
 #endif
-
-

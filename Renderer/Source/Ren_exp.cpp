@@ -11,17 +11,8 @@
 
 //======================================================================================
 //======================================================================================
-
-//Static CVars
-CVar *	CRenExp::m_cFull=0;		//Fullscreen
-CVar *	CRenExp::m_cRes=0;		//Resolution
-CVar *  CRenExp::m_cBpp=0;		//Bpp
-CVar *	CRenExp::m_cWndX=0;		//Windowed X pos
-CVar *  CRenExp::m_cWndY=0;		//Windowed Y pos
-CVar *  CRenExp::m_cGLExt=0;	//Store GL Exts
-
 //Global Vars
-RenderInfo_t g_rInfo;			//Shared Rendering Info
+RenderInfo_t  g_rInfo;			//Shared Rendering Info
 world_t		* world=0;			//The World
 
 float		* g_pCurTime=0;		//Current Timer
@@ -31,6 +22,12 @@ I_Console   * g_pConsole=0;
 CRenExp		* g_pRenExp=0;
 
 //======================================================================================
+
+//Static CVars
+CVar *	CRenExp::m_cFull=0;		//Fullscreen
+CVar *	CRenExp::m_cRes=0;		//Resolution
+CVar *  CRenExp::m_cBpp=0;		//Bpp
+
 //======================================================================================
 
 /*
@@ -67,8 +64,6 @@ CRenExp::CRenExp(VoidExport_t * pVExp)
 
 	m_cFull= g_pConsole->RegisterCVar("r_full","0", CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_FullScreen);
 	m_cBpp = g_pConsole->RegisterCVar("r_bpp", "16",CVar::CVAR_INT,CVar::CVAR_ARCHIVE,&CVar_Bpp);
-	m_cWndX= g_pConsole->RegisterCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
-	m_cWndY= g_pConsole->RegisterCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 	m_cRes = g_pConsole->RegisterCVar("r_res", "640 480",CVar::CVAR_STRING,CVar::CVAR_ARCHIVE,&CVar_Res);
 }
 
@@ -97,7 +92,6 @@ CRenExp::~CRenExp()
 
 	g_pConsole = 0;
 }
-
 
 /*
 ==========================================
@@ -140,7 +134,7 @@ bool CRenExp::InitRenderer()
 	ConPrint("\n***** Renderer Intialization *****\n\n");
 
 	//Start up opengl
-	g_pGL->SetWindowCoords((int)m_cWndX->value,(int)m_cWndY->value);
+	g_pGL->SetInitializePos();
 	if(!g_pGL->Init())
 	{
 		ConPrint("CRenExp::InitRenderer:Failed to Init Opengl");
@@ -171,22 +165,6 @@ Shutdown
 */
 bool CRenExp::Shutdown(void)
 {
-	//Update Win Pos
-/*	RECT rect;
-	if(GetWindowRect(g_rInfo.hWnd, &rect))
-	{
-		if(rect.left >= 40)
-			m_cWndX->Set((float)rect.left);
-		else
-			m_cWndX->Set((float)40);
-
-		if(rect.top >= 20)
-			m_cWndY->Set((float)rect.top);
-		else
-			m_cWndY->Set((float)20);
-	}
-*/
-
 	//Destroy Subsystems
 	cache_destroy();
 	beam_shutdown();

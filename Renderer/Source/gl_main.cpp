@@ -35,7 +35,11 @@ CGLUtil::CGLUtil()
 	}
 	ConPrint("GL:Loaded GL driver: %s\n", m_gldriver);
 	m_loadeddriver = true;
+
+	m_cWndX= g_pConsole->RegisterCVar("r_wndx","80",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
+	m_cWndY= g_pConsole->RegisterCVar("r_wndy","40",CVar::CVAR_INT,CVar::CVAR_ARCHIVE);
 }
+
 
 CGLUtil::~CGLUtil()
 {
@@ -122,7 +126,7 @@ bool CGLUtil::Init()
 	const char * ext = (const char*)glGetString(GL_EXTENSIONS);
 	int l = strlen(ext) + 1;
 	char *ext2 = new char[l];
-	ext2[l] = '\0';
+	ext2[l-1] = '\0';
 	memcpy(ext2, ext, l);
 	
 	char *start = ext2;
@@ -144,7 +148,6 @@ bool CGLUtil::Init()
 		}
 	}
 	delete [] ext2;
-
 	return true;
 }
 
@@ -155,6 +158,17 @@ Shutdown opengl
 */
 bool CGLUtil::Shutdown()
 {
+	//Update Win Pos
+	RECT rect;
+	if(GetWindowRect(g_rInfo.hWnd, &rect))
+	{
+		if(rect.left < 40)	rect.left= 40;
+		if(rect.top  < 20)	rect.top = 20;
+
+		g_pConsole->CVarSet(&m_cWndX,(float)rect.left);
+		g_pConsole->CVarSet(&m_cWndY,(float)rect.top);
+	}
+
 	_wglMakeCurrent(NULL, NULL);
 	::ReleaseDC(g_rInfo.hWnd, g_rInfo.hDC);
 
@@ -321,15 +335,8 @@ Update Default window coords
 */
 void CGLUtil::SetWindowCoords(int wndX, int wndY)
 {
-	if(wndX >= 40)
-		m_wndXpos = wndX;
-	else
-		m_wndXpos = 40;
-
-	if(wndY >= 20)
-		m_wndYpos = wndY;
-	else
-		m_wndYpos = 20;
+	wndX < 80 ? m_wndXpos = 80: m_wndXpos = wndX;
+	wndY < 40 ? m_wndYpos = 40: m_wndYpos = wndY;
 }
 
 /*
@@ -346,6 +353,17 @@ void CGLUtil::Resize()
 
 	_wglMakeCurrent(g_rInfo.hDC, g_rInfo.hRC);
 	glViewport(0, 0, g_rInfo.width, g_rInfo.height);
+}
+
+/*
+==========================================
+Set Windows Initial Size
+==========================================
+*/
+void CGLUtil::SetInitializePos()
+{
+	//Initializing for the first time, set default Window Position
+	SetWindowCoords((int)m_cWndX->value,(int)m_cWndY->value);
 }
 
 
